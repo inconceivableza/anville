@@ -1,0 +1,44 @@
+# Operating system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# JavaScript and build output
+node_modules/
+dist/
+build/
+.vite/
+
+# Local databases and exports
+*.sqlite3
+*.db
+*.dump
+*.sql.gz
+
+# Editor and tooling state
+.idea/
+.vscode/*.log
