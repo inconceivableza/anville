@@ -1,3 +1,5 @@
+import re
+
 import pytest
 
 
@@ -20,6 +22,16 @@ def test_a_participant_sees_an_intentional_empty_state_when_no_pathway_is_publis
     content = response.content.decode()
     assert "Nothing to begin yet" in content
     assert "No pathway has been published here yet." in content
+
+
+@pytest.mark.django_db
+def test_the_hub_loads_the_built_javascript_module(signed_in_client):
+    response = signed_in_client.get("/")
+
+    assert re.search(
+        r'<script type="module" crossorigin="" src="/static/assets/main-[\w-]+\.js"></script>',
+        response.content.decode(),
+    )
 
 
 @pytest.mark.django_db

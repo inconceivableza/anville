@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "engine",
+    "django_vite",
 ]
 
 MIDDLEWARE = [
@@ -129,6 +130,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
+
+STATICFILES_DIRS = [BASE_DIR / "frontend" / "dist"]
+
+DJANGO_VITE = {
+    "default": {
+        "manifest_path": BASE_DIR / "frontend" / "dist" / "manifest.json",
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
