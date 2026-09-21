@@ -18,29 +18,30 @@ There is one developer, about 5–8 hours a day, with senior oversight, and 18 d
 
 ## Solution
 
-A server-rendered Django application in which the *Whatever You Do* **pathway** is not code but a **pathway document**, loaded as an immutable **pathway version**, that the engine renders to a **participant**. Everything the prototype hardcoded (the 36 **items**, the **constructs**, the bucket-to-points seeds, the scripture, the lens prompts, the gate messages, the mentor briefs) lives in that document. The engine owns the things that must not be authored: login, age confirmation, **consent**, the hub, progress, locks, gates, persistence and scoring.
+A server-rendered Django application in which the *Whatever You Do* **pathway** is not code but a **pathway document**, loaded as an immutable **pathway version**, that the engine renders to a **participant**. Everything the prototype hardcoded (the 36 **items**, the **constructs**, the bucket-to-points seeds, the scripture, the lens prompts, the gate messages, the mentor briefs) lives in that document. The engine owns the things that must not be authored: login, age confirmation, **consent**, the **hub**, progress, **locks**, gate evaluation, persistence and scoring.
 
 The work lands in three demo slices. Each slice is demonstrable on its own.
 
 ### Slice 1 — 25 Sept (screen-share, local)
 
-A real server-backed app, built on the participant's own content in a data file:
+A real server-backed app, built on the content owner's content in a data file:
 
-- login, enrolment code, 18+ confirmation, and a consent step before any answer is stored;
+- sign-up behind the enrolment code, and login;
 - the four baseline ratings, and one full **section** shaped as scripture read-confirm, then an activity, then a **gate**, then complete (the calling-statement section is the model, with a plain long-text activity in place of the sentence builder);
 - a hub showing all five sections, with locks enforced by the server;
 - progress that survives a reload and a second device;
 - the pathway document loaded by a command, so that editing one prompt in the file and reloading visibly changes the app.
 
-There is no studio in this slice.
+There is no studio in this slice. The 18+ confirmation and consent follow in slice 2; slice 1 holds fake data only, so storing answers before consent exists is acceptable for this slice and never beyond it.
 
 ### Slice 2 — 2 Oct (screen-share, local)
 
 The real instrument, and the first face of the studio:
 
 - the 36-item sort, slider fine-tune, scoring and results screen, with the prototype's descriptions and validity disclaimer, reproducing the prototype's output for the same inputs;
-- Section 1 end to end, with its gate;
+- Section 1 and the separate Strengths assessment section, end to end, with their gates;
 - the complete onboarding: baseline, reason, mentor contact, contact list;
+- the 18+ confirmation and the consent step before any answer is stored;
 - the studio's draft, preview and publish loop, with a schema-validated raw JSON editor as its first face.
 
 ### Slice 3 — 9 Oct (remote audience; private staging instance)
@@ -60,12 +61,12 @@ The distinctive claim, and a configurable pathway:
 Cut in this order, first item first:
 
 1. The simple real mentor flow (a tokenised, read-only view of shared sections); the mentor stays a stored contact plus the prototype's printable and copyable preview.
-2. The richness of Sections 4 and 5, which fall back to plain text and reflection blocks.
-3. The studio content forms, which fall back to the raw JSON editor alone.
-4. The real observer flow, which falls back to a deterministic fixture, labelled as illustrative on screen and flagged as preview data on the server.
+2. The studio content forms, which fall back to the raw JSON editor alone.
+3. Tracks and the offline hub. The content owner wants to keep offline, so it ranks below the studio forms.
+4. Observer invitations and the observer questionnaire. The aggregation, suppression and comparison screen are still built, fed by seeded observers marked as test data on the server and labelled as illustrative on screen.
 5. The sort, scoring and results are never cut.
 
-The offline track was not given a position in this order; see Further Notes.
+Sections 4 and 5 are already planned as plain text and reflection blocks, so there is nothing further to cut there.
 
 ## User Stories
 
@@ -164,7 +165,7 @@ The offline track was not given a position in this order; see Further Notes.
 
 ### Observers
 
-64. As an observer, I want a unique link that stops working after seven days or when the participant revokes it, so that access is limited.
+64. As an observer, I want a unique link that stops working after a configurable period (30 days by default) or when the participant revokes it, so that access is limited.
 65. As an observer, I want a privacy notice before the first question saying who asked, what is stored and what the participant will and will not see, so that I can decide whether to take part.
 66. As an observer, I want to sort the same 36 statements about the participant, phrased about them and not about me, so that my answers are about them.
 67. As an observer, I want to answer seven written questions about the participant, so that I can add what a sort cannot say.
@@ -211,7 +212,7 @@ The offline track was not given a position in this order; see Further Notes.
 - A **pathway document** is one JSON document holding the pathway's content, instrument, measurement and presentation. Identifiers for sections, blocks, items, constructs and buckets are stable, never positional and never reused for a different meaning.
 - The document is validated against a JSON Schema and by an additional linter covering cross-references (for example, an item loading onto a construct that does not exist, or a gate clause naming an absent block).
 - A pathway document is authored as a file in version control and loaded by a management command into an immutable **pathway version** row, stored with a content hash. Publishing from the studio creates a new immutable version the same way. A published version is never edited.
-- A **response** records the pathway version it was answered against. What happens to a participant already in progress when a later version is published is not decided for this milestone. The default is that they stay on the version they started.
+- A **response** records the pathway version it was answered against. What happens to a participant already in progress when a later version is published is not decided for this milestone. The default is that they stay on the version they started. A consequence for the demos: a republished change is seen by a participant who starts after it, not by one already in progress, so demonstrate content changes with a fresh participant.
 - The document configures named behaviours and is never a language (ADR 0003): a gate is a list of clauses drawn from a fixed set, a **recap** picks a named view with parameters and an authored empty-state message, and a scoring method is chosen by name and parametrised by data. Adding a behaviour is a code release.
 - A named scoring method is frozen once any response has been scored with it. A change in behaviour requires a new method name and never an edit.
 - Any text field may be a single string or a pair keyed by role (participant, observer). Blank observer text means the same as the participant's.
@@ -222,7 +223,7 @@ The offline track was not given a position in this order; see Further Notes.
 - Onboarding and closing are ordinary sections of the pathway. The engine owns account creation, the 18+ confirmation, consent, the hub, progress, locks and status; none of these are authored blocks. The participant's name and email come from the account, not a form block.
 - A **track** is a participant-chosen ordered list of the pathway's sections with its own hub. A section may belong to more than one track. Answers are keyed by block, so they persist when a participant switches track. The track is chosen by a choice block in onboarding.
 - Section order is a per-section list of the sections it requires. Locks and access are decided by the server on every request, never by hidden markup.
-- A **gate** is a list of clauses from a fixed set (a count of items, a count of distinct values, a minimum text length, "every entry has a value for a field", and combinations), each with its own authored message for the case where that clause fails. A gate is optional on a section.
+- A **gate** is a list of clauses from a fixed set (a block has an answer, a count of entries (optionally only those with any content), a count of distinct values, a minimum text length, "every entry has a value for a field", and combinations), each with its own authored message for the case where that clause fails. A gate is optional on a section. A clause that needs something other than an answer (such as "the comparison has been visited") is a new named clause type, added in code (ADR 0003).
 - The engine re-checks a gate when a section is completed. Completing a section is an explicit participant action, enabled only when the gate passes.
 - The hub, status chips, locks and next-step banner are derived by the engine from progress and are not authored blocks.
 - Progress counts only the interactive blocks reachable in the participant's track.
@@ -268,13 +269,16 @@ The offline track was not given a position in this order; see Further Notes.
 
 ### Observers (ADR 0005)
 
-- An observer is identified by the contact record the participant created and a single-use token bound to it, held separately from the observer's answers. Observers type no name. A relationship is asked and stored but is never used to slice or filter results.
-- A token is 32 random bytes, stored only as a hash. The link lives for seven days, set in the pathway document, and can be revoked. The participant copies the link and sends it themselves; the application sends no email in this milestone.
+- An observer is identified by the contact record the participant created and a token unique to them, bound to it and held separately from the observer's answers. Each token accepts one submission. Observers type no name. A relationship is asked and stored but is never used to slice or filter results.
+- A token is 32 random bytes, stored only as a hash. The link lives for a period set in the pathway document, 30 days by default, and can be revoked. The participant copies the link and sends it themselves; the application sends no email in this milestone.
 - The observer sees a privacy notice before any question, stating who asked, what is stored and what the participant will and will not see. The copy states that their name is never shown to the participant and never that they are "completely anonymous".
 - The observer sorts the same 36 items. Thirty-two are shared with the participant verbatim. Four say "you" or "yours" in the participant's wording and get observer wording: outlast them, different from theirs, matters to them, they could explain it. The observer screens are in the third person about the participant. The Christian framing is kept.
 - The seven written questions are stored and never shown to the participant.
 - Aggregation normalises per observer before averaging, keeps the per-observer values for the distribution strip, and hides every number below the minimum number of observers. That minimum is three and is set in the pathway document. Below it the participant sees an explanation and nothing else.
 - Withdrawing deletes the observer's answers.
+- The participant sees only how many observers have answered, never which invited person has (ADR 0005).
+- Section 1's "comparison viewed" requirement is satisfied by visiting the comparison in either state, including the below-minimum explanation. Otherwise a participant would be locked out of every later section until three observers had answered, which could take weeks. (The prototype has the same trap: its empty state never sets the flag.)
+- The fallback for the demo, if observer invitations are cut, is the same mechanism as seeding: observers created directly as server-marked test data, passing through the real aggregation and suppression, with an on-screen label whenever every contributing observer is test data. There is no separate fixture.
 
 ### Participants, access and consent (ADR 0004)
 
@@ -285,14 +289,15 @@ The offline track was not given a position in this order; see Further Notes.
 
 ### Offline track
 
-- The offline track lists its own hub composed from ordinary blocks: a download of the paper workbook, the online strengths assessment, a target date the participant records, and the closing ratings, which unlock once the assessment is done. Switching to the online track is allowed at any time.
+- The offline track's hub is derived like any other hub, from the track's sections: a paper-workbook section (a download and a target date the participant records), the online strengths assessment, and the closing ratings, which require the assessment. Switching to the online track is allowed at any time.
+- The sort and its results are their own section, "Strengths assessment", belonging to both tracks and requiring only onboarding. In the online track, Section 1 keeps its scripture and reflection, links to the Strengths assessment section, and its gate requires the sort to be answered. Offline participants do the Strengths assessment section alone, as in the prototype. One consequence: the participant can reach the sort from the hub before reading Section 1's scripture, so scripture-first is no longer enforced.
 - The paper workbook is assumed to exist as a file from the trial and is served as an asset attached to the pathway. If it does not, the download says plainly that it is coming.
 - The target date is stored. The prototype's on-screen promise of a reminder email is removed until email delivery exists.
 
 ### Mentor
 
 - The mentor is a stored contact with the prototype's per-section printable and copyable preview, and mentor briefs are authored content in the document.
-- If time allows, a participant marks sections as shared and the mentor opens a tokenised, read-only link to exactly those sections, reusing the observer token machinery. There is no mentor account and no mentor answers.
+- If time allows, a participant marks sections as shared and the mentor opens a tokenised, read-only link to exactly those sections, reusing the observer token machinery, including the same configurable link lifetime (30 days by default). There is no mentor account and no mentor answers.
 
 ### Studio
 
@@ -320,7 +325,7 @@ The offline track was not given a position in this order; see Further Notes.
   - a participant resumes on a fresh session with all answers present;
   - declining consent stores nothing beyond the account;
   - the enrolment code is required and the 18+ confirmation is enforced;
-  - an observer token is refused when wrong, expired after seven days or revoked, and only its hash is stored;
+  - an observer token is refused when wrong, expired after its configured lifetime or revoked, and only its hash is stored;
   - observer answers never appear to the participant, and no aggregate appears below the minimum;
   - switching track keeps every answer;
   - publishing from the studio creates an immutable version and never modifies an existing one, and a preview creates no response;
@@ -372,7 +377,7 @@ Both UK and EU data protection law apply. The workbook's free text may contain s
 
 - **Unbalanced item matrix.** Shepherd and deacon items can never earn Ponder points, and Teacher items can never earn Rally points. The scoring is also compositional, so "strong across the board" cannot be expressed. Both are ported as they are and raised with the content owner as content debt. Fixing either changes every participant's results and would need a new scoring method or a new version.
 - **Retake**, **letter scheduling and delivery**, **the growth-plan board** and **structural studio editing** are all deferred and are recorded above as out of scope.
-- **Position of the offline track in the cut order** was not agreed. A reasonable proposal is to cut it alongside the richness of Sections 4 and 5, since much of it is placeholder-heavy.
+- **Observer withdrawal after expiry.** An observer withdraws through their link while it is valid. How they withdraw once it has expired (for example, by contacting the deployment's operator) is not decided.
 
 ### Defaults assumed but not explicitly agreed
 
@@ -385,11 +390,11 @@ These were not discussed in detail. They are stated so the implementer does not 
 
 ### Glossary gaps
 
-`CONTEXT.md` does not yet define **invitation**, **enrolment code**, **hub**, **milestone** or **content owner** (the person who owns the content and direction of the first pathway). They are used in this spec in their ordinary sense. If any of them turns out to carry a domain meaning of its own, add it through `/domain-modeling`.
+`CONTEXT.md` does not yet define **milestone** or **content owner** (the person who owns the content and direction of the first pathway). They are used in this spec in their ordinary sense. If any of them turns out to carry a domain meaning of its own, add it through `/domain-modeling`.
 
 ### Risk
 
-Sections 1–3, the studio, the real observer flow and the offline track in 18 days, by one developer, is more than comfortably fits. The cut order exists for that reason. Watch slice 2 in particular: the instrument, Section 1, full onboarding and the studio's first face all land on 2 Oct.
+Sections 1–3, the studio, the real observer flow and the offline track in 18 days, by one developer, is more than fits comfortably. The cut order exists for that reason. Watch slice 2 in particular: the instrument, Section 1, full onboarding and the studio's first face all land on 2 Oct.
 
 ### Sources
 

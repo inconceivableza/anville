@@ -18,7 +18,7 @@ Recaps, scoring and gates all need logic that depends on a participant's answers
 
 ## Consequences
 
-- A gate is a list of clauses drawn from a fixed set (a count, a distinct count, a minimum text length, "every item has a chapter"), each with its own authored message.
+- A gate is a list of clauses drawn from a fixed set (a count, a distinct count, a minimum text length, "every entry has a value for a field"), each with its own authored message.
 - A named scoring method is part of the measurement, so once any response has been scored with it, its behaviour is frozen. A change in behaviour needs a new method name, never an edit, or historical results silently stop being comparable.
 - The document's JSON Schema must be stable before studio forms are built, since the forms are generated from it.
 - Adding a behaviour is a code release. That is the price of keeping the document safe to import, and it is accepted.

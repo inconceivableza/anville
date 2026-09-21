@@ -54,9 +54,17 @@ _Avoid_: journey, path, route.
 A configured unit of content or interaction within a section. Some blocks capture a response; some do not.
 _Avoid_: element, field, widget, component.
 
+**Hub**:
+The engine-derived overview of a participant's track: its sections, their status and locks, and the next step. Never authored.
+_Avoid_: dashboard, home, menu.
+
+**Lock**:
+The state of a section whose required sections are not yet complete. Locks come from section order; gates come from a section's own requirements.
+_Avoid_: gate, padlock, block.
+
 **Gate**:
-A predicate that must pass before a participant may proceed, together with the authored copy explaining which clause failed.
-_Avoid_: lock, check, validation. (The prior plans used "Gate" for delivery milestones; in this repo a milestone is a *milestone*.)
+A predicate that must pass before a participant may complete a section, together with the authored copy explaining which clause failed.
+_Avoid_: check, validation, lock. (The prior plans used "Gate" for delivery milestones; in this repo a milestone is a *milestone*.)
 
 **Recap**:
 A block that shows a participant's earlier answers back to them through a named view, with an authored message for when there is nothing to show yet.
@@ -91,8 +99,12 @@ The person completing a pathway, who owns their responses and controls what is s
 _Avoid_: user, client, respondent, coachee.
 
 **Observer**:
-An invited person who answers a parallel instrument *about* a participant, without an account.
+An invited person who answers the pathway's instrument *about* a participant, in wording addressed to them, without an account.
 _Avoid_: trusted contact, respondent, rater, referee.
+
+**Invitation**:
+A participant's revocable, expiring grant to one named person to act as an observer, carried by a link unique to that person.
+_Avoid_: invite link, survey link, access code.
 
 **Mentor**:
 A person the participant names, who receives only what the participant chooses to share.
@@ -115,6 +127,10 @@ _Avoid_: field value, datum.
 **Result**:
 The scores and presentation computed from a response against the pathway version it was answered on, persisted once rather than recomputed.
 _Avoid_: report, profile, outcome.
+
+**Enrolment code**:
+A shared code that admits a person to sign up to a deployment. It grants access only and never stands in for consent.
+_Avoid_: invite code, access code, password.
 
 **Consent**:
 A participant's explicit, withdrawable agreement to how their answers are processed, recorded against the version of the text they agreed to and kept separate from enrolment.
