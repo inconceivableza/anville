@@ -16,6 +16,10 @@ Behavioural reference for the prototype lives in [docs/prototype/](docs/prototyp
 The engine that renders a pathway to a participant, and the studio in which a pathway is authored.
 _Avoid_: the platform, the app, the workbook system.
 
+**Studio**:
+The authoring surface in which an author edits a pathway, previews it as a participant would see it, and publishes a new pathway version.
+_Avoid_: admin, CMS, backend, builder.
+
 **Whatever You Do**:
 The first pathway. A Christian vocational-calling and discernment workbook.
 _Avoid_: WYD, the workbook, the calling workbook.
@@ -65,7 +69,7 @@ A named quality an instrument measures. Items load onto constructs; items never 
 _Avoid_: dimension, axis, trait, category, pillar.
 
 **Bucket**:
-One of the coarse piles a participant sorts items into before fine-tuning. In the prototype the stored bucket integers run *inverted* to strength.
+One of five named, ordered piles a participant sorts items into before fine-tuning, from weakest to strongest.
 _Avoid_: pile, band, tier.
 
 **Compositional score**:
