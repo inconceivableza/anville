@@ -17,4 +17,6 @@ class EnrolmentCodeSignupForm(forms.Form):
         return submitted
 
     def signup(self, request, user):
+        # ✨ Required by allauth's ACCOUNT_SIGNUP_FORM_CLASS contract. Nothing to save:
+        # the enrolment code grants access only and is never stored against the account.
         pass
