@@ -52,3 +52,15 @@ def test_a_missing_enrolment_code_is_refused(client, settings):
 
     assert not get_user(client).is_authenticated
     assert "Enter the enrolment code you were given." in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_a_participant_can_log_out_and_log_back_in(client, settings):
+    settings.ANVILLE_ENROLMENT_CODE = "GRACE-2026"
+    sign_up(client)
+
+    client.post("/accounts/logout/")
+    assert not get_user(client).is_authenticated
+
+    client.post("/accounts/login/", {"login": "participant@example.com", "password": PASSWORD})
+    assert get_user(client).email == "participant@example.com"
