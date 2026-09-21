@@ -35,6 +35,16 @@ def test_a_visitor_with_the_enrolment_code_can_sign_up(client, settings):
 
 
 @pytest.mark.django_db
+def test_signing_up_leads_to_the_hub(client, settings):
+    settings.ANVILLE_ENROLMENT_CODE = "GRACE-2026"
+
+    response = sign_up(client)
+
+    assert response.status_code == 302
+    assert response.url == "/"
+
+
+@pytest.mark.django_db
 def test_a_wrong_enrolment_code_is_refused(client, settings):
     settings.ANVILLE_ENROLMENT_CODE = "GRACE-2026"
 

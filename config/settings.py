@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "allauth",
     "allauth.account",
+    "engine",
 ]
 
 MIDDLEWARE = [
@@ -63,6 +64,7 @@ AUTHENTICATION_BACKENDS = [
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "none"
+LOGIN_REDIRECT_URL = "hub"
 ACCOUNT_SIGNUP_FORM_CLASS = "access.forms.EnrolmentCodeSignupForm"
 ANVILLE_ENROLMENT_CODE = env("ANVILLE_ENROLMENT_CODE", default="")
 
