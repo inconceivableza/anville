@@ -143,6 +143,12 @@ From `submitObserverForm()` L6375. Identity: `respondentName`, `respondentRelati
 
 **CONFIGURABLE:** all seven are hardcoded DOM ids read by hand. In the rebuild these are a configured question set attached to an observer questionnaire.
 
+#### The observer flow is unreachable in normal use
+
+Nothing calls `showScreen('screen-resp-questions')`: the only references are that screen's own Back button and the demo jump list (L6557–6559). `startRespondentForm()` (L6358) builds the *participant's* sort screens, and `submitScores()` (L4023) then calls the participant's `buildResults()`, which has no observer branch. An observer who follows the link therefore ends on a screen headed "…, here's your profile" and never reaches the seven questions. `submitObserverForm()` and the thank-you screen are reachable only through the demo menu.
+
+The sort and slider screens also carry the participant's own first-person wording ("Sort your strengths", "How strong is each one?", the bucket labels), and four of the 36 items say "you" or "yours": `a5`, `e1`, `e3`, `t1`.
+
 #### Where observer answers go
 
 ```js

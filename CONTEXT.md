@@ -46,6 +46,10 @@ _Avoid_: config, schema, definition file.
 A top-level division of a pathway, presented to the participant as one unit of work.
 _Avoid_: pillar, chapter, step, module.
 
+**Track**:
+A participant-chosen, ordered list of a pathway's sections with its own hub. A section may belong to more than one track, and a participant's answers persist when they switch.
+_Avoid_: journey, path, route.
+
 **Block**:
 A configured unit of content or interaction within a section. Some blocks capture a response; some do not.
 _Avoid_: element, field, widget, component.
