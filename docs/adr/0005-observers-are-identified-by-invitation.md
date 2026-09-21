@@ -20,6 +20,7 @@ An observer's identity is the contact record the participant created and the sin
 
 - Observer identity and observer answers live in separate records, so identity can be erased without destroying the contribution, or the contribution withdrawn without touching identity.
 - Withdrawing deletes the observer's answers.
+- An invitation link lives for seven days, set in the pathway document, and can be revoked. The task takes ten to fifteen minutes, so a short life limits exposure; the cost is that a participant may need to issue a fresh link to an observer who was slow.
 - Below the minimum, the participant sees an explanation and no numbers, never a partial distribution.
 - The observer's written answers are personal data about the participant even while hidden, so they remain subject to access requests. The policy for those requests (Article 15(4)) is still open and is not decided here.
 - The prototype's observer flow is unreachable in normal use (see `docs/prototype/`), so nothing is being migrated; this is designed from scratch.
