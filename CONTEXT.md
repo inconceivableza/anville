@@ -54,6 +54,10 @@ _Avoid_: element, field, widget, component.
 A predicate that must pass before a participant may proceed, together with the authored copy explaining which clause failed.
 _Avoid_: lock, check, validation. (The prior plans used "Gate" for delivery milestones; in this repo a milestone is a *milestone*.)
 
+**Recap**:
+A block that shows a participant's earlier answers back to them through a named view, with an authored message for when there is nothing to show yet.
+_Avoid_: summary, snapshot, derived block.
+
 ### Measurement
 
 **Instrument**:
@@ -107,3 +111,7 @@ _Avoid_: field value, datum.
 **Result**:
 The scores and presentation computed from a response against the pathway version it was answered on, persisted once rather than recomputed.
 _Avoid_: report, profile, outcome.
+
+**Consent**:
+A participant's explicit, withdrawable agreement to how their answers are processed, recorded against the version of the text they agreed to and kept separate from enrolment.
+_Avoid_: opt-in, agreement, terms.
