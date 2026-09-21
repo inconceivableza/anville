@@ -65,6 +65,17 @@ def test_a_missing_enrolment_code_is_refused(client, settings):
 
 
 @pytest.mark.django_db
+def test_text_a_visitor_typed_is_shown_back_escaped_and_unaltered(client, settings):
+    settings.ANVILLE_ENROLMENT_CODE = "GRACE-2026"
+
+    response = sign_up(client, enrolment_code='<script>alert("x")</script>')
+
+    content = response.content.decode()
+    assert '<script>alert("x")</script>' not in content
+    assert "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;" in content
+
+
+@pytest.mark.django_db
 def test_a_participant_can_log_out_and_log_back_in(client, settings):
     settings.ANVILLE_ENROLMENT_CODE = "GRACE-2026"
     sign_up(client)
