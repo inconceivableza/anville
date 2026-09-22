@@ -96,6 +96,13 @@ def test_an_overlong_text_answer_is_refused(signed_in):
 
 
 @pytest.mark.django_db
+def test_a_long_text_box_tells_the_browser_the_length_the_server_accepts(signed_in):
+    page = signed_in.get("/").content.decode()
+
+    assert re.search(r'<textarea id="answer-statement"[^>]*maxlength="20000"', page)
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize("block_id", ["no-such-block", "welcome"])
 def test_an_answer_to_a_block_that_takes_none_is_refused(signed_in, block_id):
     refused = answer(signed_in, block_id, "Anything")

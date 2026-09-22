@@ -322,6 +322,12 @@ h2 {
   color: var(--red-soft);
 }
 
+.length-left {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-top: 6px;
+}
+
 /* With JavaScript, answers save themselves, so the fallback button is not needed. */
 html[data-javascript="loaded"] .save-fallback {
   display: none;

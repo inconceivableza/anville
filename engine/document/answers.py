@@ -7,9 +7,12 @@ from jsonschema import Draft202012Validator
 # ✨ The points of an agreement scale. The answer schema, the refusal and the rendered buttons all use these.
 SCALE_POINTS = range(1, 11)
 
+# ✨ The longest long-text answer accepted. The rendered text box carries the same limit.
+LONG_TEXT_MAX_LENGTH = 20_000
+
 # ✨ The answer schema of every block type that captures an answer. A type missing here captures nothing.
 ANSWER_SCHEMAS = {
-    "long_text": {"type": "string", "maxLength": 20_000},
+    "long_text": {"type": "string", "maxLength": LONG_TEXT_MAX_LENGTH},
     "agreement_scale": {"type": "integer", "minimum": SCALE_POINTS[0], "maximum": SCALE_POINTS[-1]},
 }
 
@@ -52,4 +55,9 @@ def answer_from_form(block, submitted):
 def _parse(block_type, submitted):
     if block_type == "agreement_scale" and re.fullmatch(r"[0-9]+", submitted):
         return int(submitted)
+    if block_type == "long_text":
+        # ✨ The one exception to "text is never altered on input": forms send each typed line break as
+        # CRLF, while the text box showed (and its maxlength counted) a single "\n". Converting it back
+        # stores what the participant typed, and keeps the server's length limit the same as the browser's.
+        return submitted.replace("\r\n", "\n")
     return submitted  # ✨ anything else is left for the schema to accept or refuse

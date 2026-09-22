@@ -20,3 +20,8 @@
 **Carried from 02**
 
 - [ ] The linter (`engine/document/lint.py`) refuses a gate clause naming a block in another section, and a clause that cannot apply to its block's type (for example `min_text_length` on rich text). Today it checks only that the block exists
+
+**Carried from 03**
+
+- [ ] Decide where a scripture note lives. Ticket 03 gave rich text a `note` variant (rendered with the prototype's `scripture-note` class) so notes could be written before the scripture reading block existed. Once that block has its own note field, remove the variant or keep it for notes that are not attached to scripture, so authors do not have two ways to write the same thing
+- [ ] Gather each block type's definition in one place before adding the scripture reading block. Today a new type touches the schema (`pathway.schema.json`), `_TEXT_FIELDS` in `engine/views.py`, `ANSWER_SCHEMAS` and `_REFUSALS` in `engine/document/answers.py` (if it captures an answer), and a template in `engine/templates/engine/blocks/`. One registry per block type would keep these together

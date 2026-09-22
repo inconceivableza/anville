@@ -10,6 +10,20 @@ def test_a_long_text_answer_is_kept_exactly_as_written():
     assert answer_from_form(block, "  To serve <people>\n& build.  ") == "  To serve <people>\n& build.  "
 
 
+def test_a_long_text_answer_keeps_the_line_breaks_typed_not_the_ones_forms_send():
+    """✨ Browsers send each typed line break as CRLF; the text box showed, and counted, one character."""
+    block = answerable_block(pathway_document(), "statement")
+
+    assert answer_from_form(block, "First line.\r\nSecond line.") == "First line.\nSecond line."
+
+
+def test_a_long_text_answer_at_the_limit_is_accepted_however_its_line_breaks_were_sent():
+    block = answerable_block(pathway_document(), "statement")
+    at_limit = ("x" * 99 + "\n") * 200
+
+    assert answer_from_form(block, at_limit.replace("\n", "\r\n")) == at_limit
+
+
 def test_a_long_text_answer_may_be_cleared():
     block = answerable_block(pathway_document(), "statement")
 
