@@ -1,0 +1,8 @@
+from typing import NamedTuple
+
+
+class Problem(NamedTuple):
+    """✨ Something wrong with a pathway document, located by a JSON Pointer into it."""
+
+    path: str
+    message: str

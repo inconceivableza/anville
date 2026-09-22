@@ -15,3 +15,8 @@
 - [ ] An invalid draft cannot be published
 - [ ] The behaviour of a participant already in progress when a new version is published follows the default in the spec (they stay on the version they started)
 - [ ] Journey tests cover publish creating a new version, refusing an invalid draft, and leaving prior versions unmodified
+
+**Carried from 02**
+
+- [ ] Publishing refuses an identifier reused for a different meaning, by comparing the draft with the current version (for example a block identifier that changes type). This can't be linted from one document alone
+- [ ] Confirm the republish behaviour. `load_pathway` publishes an earlier version again when its content is loaded again, with no new version row, and studio publish should follow the same rule or change it deliberately

@@ -40,9 +40,21 @@ cd ..
 python manage.py runserver
 ```
 
-Open http://localhost:8000 and sign up with an `@example.com` address and your enrolment code. Use fake data only.
+Open http://localhost:8000 and sign up with an `@example.com` address and your enrolment code. Use fake data only. If you are already signed in, the sign-up page sends you back to the hub. There is no sign-out button yet, so sign out at http://localhost:8000/accounts/logout/ or use a private window.
 
 After changing anything in `frontend/src/`, run `npm run build` again in `frontend/`.
+
+## Loading a pathway
+
+A pathway is a JSON file in `pathways/`, checked against `engine/document/pathway.schema.json` and then a linter for cross-references and duplicate identifiers. Load one with:
+
+```sh
+python manage.py load_pathway pathways/example.json
+```
+
+Loading validates the file and prints any problems with their document paths. A valid file becomes an immutable pathway version, which is then published. Loading unchanged content again does nothing. Loading content you had before publishes that earlier version again.
+
+For now a participant always sees the latest published version. Once answers are stored (ticket 03), a participant already in progress will stay on the version they started. So check a content change by signing out and signing up as a new participant; that check will stay valid after ticket 03.
 
 ## Tests
 

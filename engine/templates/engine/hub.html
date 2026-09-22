@@ -4,13 +4,25 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Anville</title>
+    <title>{% if pathway %}{{ pathway.title }}{% else %}Anville{% endif %}</title>
     {% vite_asset 'src/main.js' %}
   </head>
   <body>
     <main>
-      <h1>Nothing to begin yet</h1>
-      <p>No pathway has been published here yet. When one is, it will appear on this page.</p>
+      {% if pathway %}
+        <h1>{{ pathway.title }}</h1>
+        {% for section in pathway.sections %}
+          <section>
+            <h2>{{ section.title }}</h2>
+            {% for text in section.blocks %}
+              <p>{{ text }}</p>
+            {% endfor %}
+          </section>
+        {% endfor %}
+      {% else %}
+        <h1>Nothing to begin yet</h1>
+        <p>No pathway has been published here yet. When one is, it will appear on this page.</p>
+      {% endif %}
     </main>
   </body>
 </html>

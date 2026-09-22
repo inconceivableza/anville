@@ -1,0 +1,44 @@
+{
+  "format": 1,
+  "title": "Example pathway",
+  "content": {
+    "sections": [
+      {
+        "id": "onboarding",
+        "title": "Before we begin",
+        "blocks": [
+          {
+            "id": "welcome",
+            "type": "rich_text",
+            "body": "This is an example pathway for trying out the loader. Edit this text, load the file again, and sign in as a new participant to see the change."
+          }
+        ]
+      },
+      {
+        "id": "reflection",
+        "title": "A first reflection",
+        "requires": ["onboarding"],
+        "blocks": [
+          {
+            "id": "reflection-answer",
+            "type": "long_text",
+            "prompt": {
+              "participant": "What are you hoping to find out?",
+              "observer": ""
+            }
+          }
+        ],
+        "gate": {
+          "clauses": [
+            {
+              "type": "min_text_length",
+              "block": "reflection-answer",
+              "min": 10,
+              "message": "Write at least ten characters to continue."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

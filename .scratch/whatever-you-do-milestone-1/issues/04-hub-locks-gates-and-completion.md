@@ -16,3 +16,7 @@
 - [ ] The scripture reading block shows authored passages and a confirm control that opens the activity area beneath it
 - [ ] Progress counts only the interactive blocks reachable in the participant's track
 - [ ] Pure-core tests cover every clause type, combinations, and per-clause messages; journey tests cover locked-section refusal and refused completion when the gate fails
+
+**Carried from 02**
+
+- [ ] The linter (`engine/document/lint.py`) refuses a gate clause naming a block in another section, and a clause that cannot apply to its block's type (for example `min_text_length` on rich text). Today it checks only that the block exists

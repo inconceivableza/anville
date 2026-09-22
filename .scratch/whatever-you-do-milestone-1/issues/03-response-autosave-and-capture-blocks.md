@@ -15,3 +15,8 @@
 - [ ] A participant logging in on a fresh session or another device sees every earlier answer
 - [ ] Responses carry a test-data marker held on the server, never a client-side flag
 - [ ] Journey tests cover autosave isolation, rejection of invalid answers, and resume
+
+**Carried from 02**
+
+- [ ] A participant already in progress stays on the version their response was started against when a later version is published. Today the hub always shows `Publication.current_version()`, and the README says this ticket changes that
+- [ ] Replace the placeholder `_BLOCK_TEXT` rendering in `engine/views.py` with real block rendering. It raises `KeyError` for a block type it does not know

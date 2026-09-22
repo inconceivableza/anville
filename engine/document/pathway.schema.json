@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://anville.invalid/schemas/pathway.schema.json",
+  "title": "Pathway document",
+  "$comment": "✨ Drafted with AI assistance.",
+  "description": "One pathway's content, instrument, measurement and presentation. Data only: nothing in it is executable (ADR 0003).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "title", "content"],
+  "properties": {
+    "format": { "const": 1 },
+    "title": { "$ref": "#/$defs/text" },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sections"],
+      "properties": {
+        "sections": { "type": "array", "items": { "$ref": "#/$defs/section" } }
+      }
+    },
+    "instrument": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "buckets": {
+          "description": "Ordered from weakest to strongest.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/bucket" }
+        },
+        "items": { "type": "array", "items": { "$ref": "#/$defs/item" } }
+      }
+    },
+    "measurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "frameworks": { "type": "array", "items": { "$ref": "#/$defs/framework" } }
+      }
+    },
+    "presentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "constructs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["construct", "description"],
+            "properties": {
+              "construct": { "$ref": "#/$defs/identifier" },
+              "description": { "$ref": "#/$defs/text" }
+            }
+          }
+        },
+        "disclaimer": { "$ref": "#/$defs/text" }
+      }
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "description": "A stable name, never a position. Starts with a letter.",
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+      "maxLength": 64
+    },
+    "text": {
+      "description": "One string for every role, or wording per role. A blank observer wording means the same as the participant's.",
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["participant"],
+          "properties": {
+            "participant": { "type": "string" },
+            "observer": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "blocks"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "title": { "$ref": "#/$defs/text" },
+        "requires": { "type": "array", "items": { "$ref": "#/$defs/identifier" } },
+        "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } },
+        "gate": { "$ref": "#/$defs/gate" }
+      }
+    },
+    "block": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "type": { "enum": ["rich_text", "long_text"] }
+      },
+      "allOf": [
+        { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
+        { "if": { "properties": { "type": { "const": "long_text" } } }, "then": { "$ref": "#/$defs/long_text" } }
+      ]
+    },
+    "rich_text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "body"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "rich_text" },
+        "body": { "$ref": "#/$defs/text" }
+      }
+    },
+    "long_text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "prompt"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "long_text" },
+        "prompt": { "$ref": "#/$defs/text" }
+      }
+    },
+    "gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clauses"],
+      "properties": {
+        "clauses": { "type": "array", "items": { "$ref": "#/$defs/clause" } }
+      }
+    },
+    "clause": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["has_answer", "min_text_length"] }
+      },
+      "allOf": [
+        { "if": { "properties": { "type": { "const": "has_answer" } } }, "then": { "$ref": "#/$defs/has_answer" } },
+        { "if": { "properties": { "type": { "const": "min_text_length" } } }, "then": { "$ref": "#/$defs/min_text_length" } }
+      ]
+    },
+    "has_answer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "block", "message"],
+      "properties": {
+        "type": { "const": "has_answer" },
+        "block": { "$ref": "#/$defs/identifier" },
+        "message": { "$ref": "#/$defs/text" }
+      }
+    },
+    "min_text_length": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "block", "min", "message"],
+      "properties": {
+        "type": { "const": "min_text_length" },
+        "block": { "$ref": "#/$defs/identifier" },
+        "min": { "type": "integer", "minimum": 1 },
+        "message": { "$ref": "#/$defs/text" }
+      }
+    },
+    "bucket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "seed"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "label": { "$ref": "#/$defs/text" },
+        "seed": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text", "loads"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "text": { "$ref": "#/$defs/text" },
+        "loads": {
+          "description": "The constructs this item loads onto: exactly one in each framework.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/identifier" },
+          "minItems": 1
+        }
+      }
+    },
+    "framework": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "constructs"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "label": { "$ref": "#/$defs/text" },
+        "constructs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "label"],
+            "properties": {
+              "id": { "$ref": "#/$defs/identifier" },
+              "label": { "$ref": "#/$defs/text" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
