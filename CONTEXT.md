@@ -106,9 +106,9 @@ _Avoid_: trusted contact, respondent, rater, referee.
 A participant's revocable, expiring grant to one named person to act as an observer, carried by a link unique to that person.
 _Avoid_: invite link, survey link, access code.
 
-**Mentor**:
-A person the participant names, who receives only what the participant chooses to share.
-_Avoid_: coach, guide, supervisor.
+**Coach**:
+A person the participant names to walk alongside them, who draws out the participant's own conclusions rather than passing on their own experience, and who receives only what the participant chooses to share.
+_Avoid_: mentor, guide, supervisor.
 
 **Author**:
 The person who writes and edits a pathway. Assumed non-technical.

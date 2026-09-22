@@ -18,7 +18,7 @@ There is one developer, about 5–8 hours a day, with senior oversight, and 18 d
 
 ## Solution
 
-A server-rendered Django application in which the *Whatever You Do* **pathway** is not code but a **pathway document**, loaded as an immutable **pathway version**, that the engine renders to a **participant**. Everything the prototype hardcoded (the 36 **items**, the **constructs**, the bucket-to-points seeds, the scripture, the lens prompts, the gate messages, the mentor briefs) lives in that document. The engine owns the things that must not be authored: login, age confirmation, **consent**, the **hub**, progress, **locks**, gate evaluation, persistence and scoring.
+A server-rendered Django application in which the *Whatever You Do* **pathway** is not code but a **pathway document**, loaded as an immutable **pathway version**, that the engine renders to a **participant**. Everything the prototype hardcoded (the 36 **items**, the **constructs**, the bucket-to-points seeds, the scripture, the lens prompts, the gate messages, the coach briefs) lives in that document. The engine owns the things that must not be authored: login, age confirmation, **consent**, the **hub**, progress, **locks**, gate evaluation, persistence and scoring.
 
 The work lands in three demo slices. Each slice is demonstrable on its own.
 
@@ -41,7 +41,7 @@ The real instrument, and the first face of the studio:
 
 - the 36-item sort, slider fine-tune, scoring and results screen, with the prototype's descriptions and validity disclaimer, reproducing the prototype's output for the same inputs;
 - Section 1 and the separate Strengths assessment section, end to end, with their gates;
-- the complete onboarding: baseline, reason, mentor contact, contact list;
+- the complete onboarding: baseline, reason, coach contact, contact list;
 - the 18+ confirmation and the consent step before any answer is stored;
 - the studio's draft, preview and publish loop, with a schema-validated raw JSON editor as its first face.
 
@@ -61,7 +61,7 @@ The distinctive claim, and a configurable pathway:
 
 Cut in this order, first item first:
 
-1. The simple real mentor flow (a tokenised, read-only view of shared sections); the mentor stays a stored contact plus the prototype's printable and copyable preview.
+1. The simple real coach flow (a tokenised, read-only view of shared sections); the coach stays a stored contact plus the prototype's printable and copyable preview.
 2. The studio content forms, which fall back to the raw JSON editor alone.
 3. Tracks and the offline hub. The content owner wants to keep offline, so it ranks below the studio forms.
 4. Observer invitations and the observer questionnaire. The aggregation, suppression and comparison screen are still built, fed by seeded observers marked as test data on the server and labelled as illustrative on screen.
@@ -87,7 +87,7 @@ Sections 4 and 5 are already planned as plain text and reflection blocks, so the
 
 10. As a participant, I want to rate four statements about my understanding of work and calling on a 1–10 scale at the start, so that I have a baseline to compare against later.
 11. As a participant, I want to say why I am taking the workbook, so that my situation is on record.
-12. As a participant, I want to name a mentor, or skip that step, so that I can involve someone if I choose.
+12. As a participant, I want to name a coach, or skip that step, so that I can involve someone if I choose.
 13. As a participant, I want to list people who know me well, or skip the step, so that I can invite them to give feedback.
 14. As a participant, I want to choose between the online track and the offline track, so that the workbook fits how I like to work.
 
@@ -159,10 +159,10 @@ Sections 4 and 5 are already planned as plain text and reflection blocks, so the
 60. As a participant, I want to switch between tracks without losing any answer, so that changing my mind is safe.
 61. As a participant, I do not want to be promised an email reminder the system cannot send, so that I can trust what the screen says.
 
-### Mentor
+### Coach
 
-62. As a participant, I want my mentor stored with my response and a printable or copyable preview of each section to hand to them, so that I can share my work.
-63. As a participant, if time allows, I want to give my mentor a link that shows only the sections I have chosen to share, so that they can read without an account.
+62. As a participant, I want my coach stored with my response and a printable or copyable preview of each section to hand to them, so that I can share my work.
+63. As a participant, if time allows, I want to give my coach a link that shows only the sections I have chosen to share, so that they can read without an account.
 
 ### Observers
 
@@ -236,7 +236,7 @@ Sections 4 and 5 are already planned as plain text and reflection blocks, so the
   - content: rich text (absorbing hint boxes and checklists), scripture reading with a confirm gate, video (placeholder that says so);
   - capture: agreement scale, short text, long text, single select, checkbox confirm, contact list;
   - bespoke: sort assessment (sort, fine-tune and results), sentence builder, idea generator, card builder, timeline board;
-  - derived and mentor: recap, mentor brief.
+  - derived and coach: recap, coach brief.
 - The growth-plan board and letter scheduling are not in the first set. Sections 4 and 5 use plain text and reflection blocks.
 - Every block, however interactive, produces exactly one answer value. The server validates that value against the block's answer schema and never trusts the widget. Simple blocks use server-rendered HTMX. Interaction-heavy blocks (sort, timeline, idea generator) are named block types, each with a configuration schema and a Vite JavaScript module that owns its interaction. Adding a bespoke block is additive: a schema, a widget and a validator.
 - The prototype's 31 block types were a documentation taxonomy. Several (lock cards, status cards, the next-step banner, the completion gate) are engine-derived and are not blocks.
@@ -295,10 +295,11 @@ Sections 4 and 5 are already planned as plain text and reflection blocks, so the
 - The paper workbook is assumed to exist as a file from the trial and is served as an asset attached to the pathway. If it does not, the download says plainly that it is coming.
 - The target date is stored. The prototype's on-screen promise of a reminder email is removed until email delivery exists.
 
-### Mentor
+### Coach
 
-- The mentor is a stored contact with the prototype's per-section printable and copyable preview, and mentor briefs are authored content in the document.
-- If time allows, a participant marks sections as shared and the mentor opens a tokenised, read-only link to exactly those sections, reusing the observer token machinery, including the same configurable link lifetime (30 days by default). There is no mentor account and no mentor answers.
+- The coach is a stored contact with the prototype's per-section printable and copyable preview, and coach briefs are authored content in the document.
+- If time allows, a participant marks sections as shared and the coach opens a tokenised, read-only link to exactly those sections, reusing the observer token machinery, including the same configurable link lifetime (30 days by default). There is no coach account and no coach answers.
+- The prototype says "mentor"; the content owner's coach-selection mock-up changes this to "coach" throughout. Wording migrated from the prototype says "coach" wherever it meant the mentor role.
 
 ### Studio
 
@@ -346,8 +347,8 @@ Sections 4 and 5 are already planned as plain text and reflection blocks, so the
 - The growth-plan board, and letter scheduling and delivery. Sections 4 and 5 are plain text and reflection blocks.
 - Retake of the assessment.
 - Structural editing in the studio (adding, removing, reordering sections and blocks) and any drag-and-drop editing.
-- Real email delivery of any kind, including observer invitations, mentor invitations and reminders. Links are copied by hand.
-- Real mentor access, unless time allows (first item in the cut order).
+- Real email delivery of any kind, including observer invitations, coach invitations and reminders. Links are copied by hand.
+- Real coach access, unless time allows (first item in the cut order).
 - PDF generation. The offline workbook is a served file.
 - Real videos and resource-library content, which stay placeholders that say so.
 - Migrating existing prototype exports or `localStorage` data. Nothing in the prototype's save format is reusable.
