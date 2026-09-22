@@ -121,6 +121,10 @@ h2 {
   cursor: not-allowed;
 }
 
+.btn-full {
+  width: 100%;
+}
+
 .btn-secondary {
   background: var(--white);
   color: var(--ink);
@@ -300,6 +304,104 @@ h2 {
 .bl-btn:has(input:focus-visible) {
   outline: 2px solid var(--gold);
   outline-offset: 2px;
+}
+
+/* Form panel: the prototype's .name-section, used by the account pages' forms. The fields inside are
+   rendered by Django, so they are styled by element. */
+
+.name-section {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.name-section p {
+  margin-bottom: 20px;
+}
+
+.name-section label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.name-section input:not([type="checkbox"], [type="radio"], [type="hidden"]) {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: var(--font-body);
+  background: var(--white);
+  color: var(--ink);
+  transition: border-color 0.2s;
+}
+
+.name-section input:not([type="checkbox"], [type="radio"], [type="hidden"]):focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* A checkbox (such as "Remember me") sits beside its label; Django renders the label first. */
+.name-section p:has(> input[type="checkbox"]) {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.name-section p:has(> input[type="checkbox"]) label {
+  margin-bottom: 0;
+  font-weight: 500;
+}
+
+.name-section .helptext {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.name-section .helptext ul {
+  padding-left: 18px;
+}
+
+.name-section .errorlist {
+  list-style: none;
+  color: var(--red-soft);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+/* Account pages (sign in, sign up, sign out) */
+
+.account-page {
+  max-width: 520px;
+}
+
+.account-page > p {
+  color: var(--ink-light);
+  margin-bottom: 24px;
+}
+
+.account-page a:not(.btn) {
+  color: var(--gold);
+}
+
+.account-page .messages {
+  list-style: none;
+  background: var(--gold-pale);
+  border: 1px solid var(--gold-light);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--ink-light);
 }
 
 /* Autosave */

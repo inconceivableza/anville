@@ -40,9 +40,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "access",  # ✨ before allauth, so its templates override allauth's layout
     "allauth",
     "allauth.account",
-    "access",
     "engine",
     "django_vite",
 ]

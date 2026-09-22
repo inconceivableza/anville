@@ -1,0 +1,9 @@
+{% load allauth %}
+{# ✨ allauth's form element, given the prototype's form-panel class so the stylesheet's existing rules apply. #}
+<form class="name-section" method="{{ attrs.method }}"
+      {% if attrs.action %}action="{{ attrs.action }}"{% endif %}>
+    {% slot body %}
+    {% endslot %}
+    {% slot actions %}
+    {% endslot %}
+</form>

@@ -1,0 +1,31 @@
+{% load django_vite %}
+{% comment %}
+  ✨ Replaces allauth's own layout, which every account page (sign in, sign up, sign out) extends, so those
+  pages load the same stylesheet as the pathway. The form and button elements beside this file add the
+  prototype's class names. allauth's "Menu:" list is left out: sign in and sign up link to each other, and
+  the other entries lead to account pages Anville does not use.
+  This app is listed before allauth in INSTALLED_APPS so Django finds these files first.
+{% endcomment %}
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block head_title %}Anville{% endblock head_title %}</title>
+    {% vite_asset 'src/main.js' %}
+    {% block extra_head %}{% endblock extra_head %}
+  </head>
+  <body>
+    <main class="container account-page">
+      {% block body %}
+        {% if messages %}
+          <ul class="messages">
+            {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+        {% block content %}{% endblock content %}
+      {% endblock body %}
+    </main>
+    {% block extra_body %}{% endblock extra_body %}
+  </body>
+</html>

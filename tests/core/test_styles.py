@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 STYLESHEET = ROOT / "frontend" / "src" / "styles.css"
-TEMPLATES = sorted((ROOT / "engine" / "templates").rglob("*.html"))
+TEMPLATES = sorted(path for app in ("access", "engine") for path in (ROOT / app / "templates").rglob("*.html"))
 
 # Hex colours, functional colours and the named colours most likely to slip in (but not var(--white)).
 RAW_COLOUR = re.compile(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|lab|lch)\(|(?<![-\w])(?:white|black)\b")

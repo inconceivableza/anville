@@ -1,6 +1,8 @@
 import pytest
 from django.contrib.auth import get_user
 
+from tests.journeys.pages import loads_the_built_stylesheet
+
 PASSWORD = "correct-horse-battery-staple"
 
 
@@ -85,3 +87,28 @@ def test_a_participant_can_log_out_and_log_back_in(client, settings):
 
     client.post("/accounts/login/", {"login": "participant@example.com", "password": PASSWORD})
     assert get_user(client).email == "participant@example.com"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("address", ["/accounts/login/", "/accounts/signup/"])
+def test_the_sign_in_and_sign_up_pages_load_the_built_stylesheet(client, address):
+    assert loads_the_built_stylesheet(client.get(address).content.decode())
+
+
+@pytest.mark.django_db
+def test_the_sign_out_confirmation_loads_the_built_stylesheet(client, settings):
+    settings.ANVILLE_ENROLMENT_CODE = "GRACE-2026"
+    sign_up(client)
+
+    assert loads_the_built_stylesheet(client.get("/accounts/logout/").content.decode())
+
+
+
+@pytest.mark.django_db
+def test_a_refused_sign_up_still_says_why_on_the_styled_page(client, settings):
+    settings.ANVILLE_ENROLMENT_CODE = "GRACE-2026"
+
+    page = sign_up(client, enrolment_code="WRONG").content.decode()
+
+    assert loads_the_built_stylesheet(page)
+    assert "That enrolment code is not recognised." in page

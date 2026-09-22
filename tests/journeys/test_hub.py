@@ -4,6 +4,7 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from tests.documents import pathway_document
+from tests.journeys.pages import loads_the_built_stylesheet
 from tests.journeys.test_access import PASSWORD
 
 
@@ -141,9 +142,7 @@ def test_the_hub_loads_the_built_javascript_module(signed_in_client):
 
 @pytest.mark.django_db
 def test_the_hub_loads_the_built_stylesheet(signed_in_client):
-    response = signed_in_client.get("/")
-
-    assert re.search(r'<link\s+rel="stylesheet" href="/static/assets/main-[\w-]+\.css" />', response.content.decode())
+    assert loads_the_built_stylesheet(signed_in_client.get("/").content.decode())
 
 
 @pytest.mark.django_db
