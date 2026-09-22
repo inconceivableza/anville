@@ -13,6 +13,9 @@
 - [ ] The section's gate requires a statement of at least ten characters and shows an authored message when unmet
 - [ ] All five sections appear on the hub; locks and status are enforced by the server
 - [ ] In the full pathway the calling statement (Section 3) requires Sections 1 and 2, which have no content yet. So in the slice-1 document it requires only onboarding, and the lock is demonstrated on Sections 4 and 5, which require it. This is a document setting, not code, and is restored when Sections 1 and 2 exist
+- [ ] Section 5 holds the prototype's letter-to-your-future-self prompt as a long-text block, followed by the four baseline statements again as separate "after" rating blocks (same wording and anchors)
+- [ ] Section 5's gate requires the letter (minimum length) and all four after-ratings, so the letter cannot be sent (the section completed) without them; delivery is not built
+- [ ] The gate message for the after-ratings reuses the prototype's "Answer all four to continue" wording
 - [ ] Progress survives a reload and a second device
 - [ ] Wording is migrated verbatim from the prototype reference; nothing is invented
 - [ ] Demo check: editing a prompt in the document file and loading it again changes the running app for a fresh participant

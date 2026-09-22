@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Choosing a coach — prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,600;1,6..72,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#1a7a4c; --gold-light:#2e9e66; --gold-pale:#e8f5ee;
+  --ink:#1a2b20; --ink-muted:#5a6b60; --ink-light:#7a8b80;
+  --cream:#f4f7f5; --white:#fff; --border:#d0ddd4;
+  --warn:#B8860B; --warn-pale:#fdf6e3;
+  --stop:#C25B56; --stop-pale:#fbeeed;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--cream);color:var(--ink);
+  font-family:'Instrument Sans',-apple-system,sans-serif;font-size:15px;line-height:1.5;}
+.wrap{max-width:660px;margin:0 auto;padding:28px 22px 80px;}
+h1{font-family:'Newsreader',Georgia,serif;font-size:29px;font-weight:600;margin:0 0 6px;letter-spacing:-0.01em;}
+h2{font-family:'Newsreader',Georgia,serif;font-size:22px;font-weight:600;margin:0 0 8px;}
+.sub{color:var(--ink-muted);font-size:14px;margin:0 0 24px;}
+.panel{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px;}
+.hidden{display:none;}
+
+/* harness */
+.harness{background:#1a2b20;border-radius:14px;padding:16px 20px;margin-bottom:26px;color:#fff;}
+.harness h3{color:rgba(255,255,255,.65);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.12em;margin:0 0 11px;}
+.hrow{display:flex;gap:8px;flex-wrap:wrap;}
+.hbtn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;
+  border-radius:8px;padding:8px 13px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+.hbtn:hover{background:rgba(255,255,255,.18);}
+.hbtn.on{background:#fff;color:#1a2b20;border-color:#fff;}
+
+/* intro copy */
+.why{background:var(--gold-pale);border-radius:12px;padding:18px 20px;margin-bottom:20px;}
+.why p{margin:0 0 9px;font-size:14.5px;line-height:1.65;}
+.why p:last-child{margin-bottom:0;}
+.why .lead{font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.5;}
+.distinction{display:flex;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(26,122,76,.18);}
+.distinction div{flex:1;font-size:13px;line-height:1.55;}
+.distinction b{display:block;margin-bottom:2px;font-size:13px;}
+.distinction .no b{color:var(--ink-light);}
+.distinction .yes b{color:var(--gold);}
+
+/* name entry */
+.field label{display:block;font-size:14px;font-weight:600;margin-bottom:6px;}
+.field input{width:100%;padding:13px 15px;border:1px solid var(--border);border-radius:10px;
+  font-family:inherit;font-size:16px;color:var(--ink);background:var(--white);}
+.field input:focus{outline:none;border-color:var(--gold);}
+.field .hint{font-size:13px;color:var(--ink-light);margin-top:6px;}
+
+/* questions */
+.q{border-top:1px solid var(--border);padding:18px 0;}
+.q:first-of-type{border-top:none;padding-top:4px;}
+.q-text{font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.45;margin-bottom:4px;}
+.q-note{font-size:13px;color:var(--ink-light);line-height:1.5;margin-bottom:12px;}
+.opts{display:flex;gap:8px;}
+.opt{flex:1;background:var(--white);border:1.5px solid var(--border);border-radius:10px;
+  padding:11px 8px;font-family:inherit;font-size:14px;font-weight:600;color:var(--ink-muted);
+  cursor:pointer;transition:all .12s;}
+.opt:hover{border-color:var(--ink-light);}
+.opt.on-yes{border-color:var(--gold);background:var(--gold-pale);color:var(--gold);}
+.opt.on-maybe{border-color:var(--warn);background:var(--warn-pale);color:var(--warn);}
+.opt.on-no{border-color:var(--stop);background:var(--stop-pale);color:var(--stop);}
+
+/* outcomes */
+.outcome{border-radius:12px;padding:20px 22px;margin-bottom:16px;}
+.outcome.go{background:var(--gold-pale);border-left:4px solid var(--gold);}
+.outcome.check{background:var(--warn-pale);border-left:4px solid var(--warn);}
+.outcome.stop{background:var(--stop-pale);border-left:4px solid var(--stop);}
+.outcome h2{font-size:20px;}
+.outcome p{font-size:14.5px;line-height:1.65;margin:0 0 10px;}
+.outcome p:last-child{margin-bottom:0;}
+.flags{margin:14px 0 0;padding:0;list-style:none;}
+.flags li{background:rgba(255,255,255,.65);border-radius:9px;padding:11px 13px;margin-bottom:7px;
+  font-size:13.5px;line-height:1.55;}
+.flags b{display:block;margin-bottom:2px;}
+
+.btn{background:var(--gold);color:#fff;border:none;border-radius:10px;padding:13px 24px;
+  font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;}
+.btn:hover{background:var(--gold-light);}
+.btn:disabled{opacity:.35;cursor:default;}
+.btn.ghost{background:none;border:1px solid var(--border);color:var(--ink-muted);}
+.btn.ghost:hover{background:var(--cream);}
+.btn.warn{background:var(--warn);}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;}
+.btn-full{width:100%;}
+
+/* link share */
+.share{background:var(--cream);border-radius:10px;padding:14px 16px;margin-top:16px;}
+.share-label{font-size:13px;font-weight:600;margin-bottom:8px;}
+.share-row{display:flex;gap:8px;}
+.share-row input{flex:1;padding:10px 13px;border:1px solid var(--border);border-radius:9px;
+  font-family:inherit;font-size:13px;background:var(--white);color:var(--ink-muted);}
+.share-note{font-size:12.5px;color:var(--ink-light);margin-top:9px;line-height:1.5;}
+
+/* coach view */
+.coach-hero{background:#0f5c3c;border-radius:14px;padding:26px;color:#fff;margin-bottom:16px;}
+.coach-hero h2{color:#fff;font-size:24px;margin-bottom:8px;}
+.coach-hero p{font-size:15px;line-height:1.65;color:rgba(255,255,255,.85);margin:0 0 8px;}
+.coach-hero p:last-child{margin-bottom:0;}
+.commit{display:flex;gap:13px;align-items:flex-start;padding:15px 0;border-top:1px solid var(--border);cursor:pointer;}
+.commit:first-of-type{border-top:none;}
+.cbox{width:23px;height:23px;flex-shrink:0;border:2px solid var(--border);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff;
+  transition:all .12s;margin-top:1px;}
+.commit.on .cbox{background:var(--gold);border-color:var(--gold);}
+.commit-text{font-family:'Newsreader',Georgia,serif;font-size:17px;line-height:1.45;}
+.commit-note{font-size:13px;color:var(--ink-light);line-height:1.5;margin-top:3px;}
+.commit-count{font-size:13px;color:var(--ink-muted);text-align:center;margin-top:16px;}
+
+.notes{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:22px;margin-top:34px;}
+.notes h2{font-size:18px;}
+.notes h3{margin:18px 0 8px;color:var(--gold);font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;}
+.notes p,.notes li{font-size:14px;color:var(--ink-muted);line-height:1.65;}
+.notes code{background:var(--cream);border-radius:4px;padding:1px 5px;
+  font-family:ui-monospace,monospace;font-size:13px;color:var(--ink);}
+.notes pre{background:var(--cream);border-radius:9px;padding:14px;overflow-x:auto;
+  font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.55;color:var(--ink);}
+@media(max-width:520px){
+  .opts{flex-direction:column;}
+  .distinction{flex-direction:column;gap:10px;}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Choosing a coach</h1>
+<p class="sub">Prototype — a checklist that helps someone pick well, then puts the same commitments to the coach.</p>
+
+<div class="harness">
+  <h3>Test harness</h3>
+  <div class="hrow">
+    <button class="hbtn on" data-act="view" data-v="participant">Participant view</button>
+    <button class="hbtn" data-act="view" data-v="coach">Coach view</button>
+    <button class="hbtn" data-act="fill" data-v="all">Fill: all yes</button>
+    <button class="hbtn" data-act="fill" data-v="neutral">Fill: two unsure</button>
+    <button class="hbtn" data-act="fill" data-v="soft">Fill: one soft no</button>
+    <button class="hbtn" data-act="fill" data-v="critical">Fill: critical no</button>
+    <button class="hbtn" data-act="fill" data-v="bad">Fill: several no</button>
+  </div>
+</div>
+
+<!-- ================= PARTICIPANT ================= -->
+<div id="view-participant">
+
+  <div class="panel" id="p-intro">
+    <h2>Walking with a coach</h2>
+    <div class="why">
+      <p class="lead">This choice matters more than any other you'll make in the course.</p>
+      <p>The work ahead asks you to be honest about your gifts, your disappointments and what you actually want from your life. That only goes somewhere useful if the person walking alongside you is the right one.</p>
+      <p>The wrong choice usually isn't a bad person. It's someone who can't resist solving it for you, or who knows you too little to notice when you're avoiding something, or who won't have the time when it matters.</p>
+      <div class="distinction">
+        <div class="no"><b>Not what you need</b>Someone who tells you what they'd do in your position, or who has a view on where you should end up.</div>
+        <div class="yes"><b>What you need</b>Someone who asks the questions in the material, listens hard, and lets you reach your own conclusions.</div>
+      </div>
+    </div>
+    <p style="font-size:14px;color:var(--ink-muted);margin:0 0 18px;">We say <strong>coach</strong> rather than mentor deliberately. A mentor passes on their own experience. A coach draws out yours — which is the harder job, and the one this needs.</p>
+
+    <div class="field">
+      <label for="coachName">Who are you thinking of asking?</label>
+      <input type="text" id="coachName" placeholder="Their first name" data-act="name">
+      <div class="hint">Just a first name for now. Six quick questions follow — answer them honestly rather than generously.</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-full" id="startBtn" disabled data-act="start">Continue →</button>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="p-questions">
+    <h2 id="q-heading">About this person</h2>
+    <p class="sub" style="margin-bottom:18px;">There are no right answers here — an honest "not sure" is far more useful than an optimistic yes.</p>
+    <div id="q-list"></div>
+    <div class="btn-row">
+      <button class="btn ghost" data-act="back">Back</button>
+      <button class="btn" id="qSubmit" disabled data-act="evaluate" style="flex:1;">See how it looks →</button>
+    </div>
+  </div>
+
+  <div class="hidden" id="p-outcome"></div>
+</div>
+
+<!-- ================= COACH ================= -->
+<div id="view-coach" class="hidden">
+  <div class="coach-hero">
+    <h2>Sam has asked you to be their coach</h2>
+    <p>They're working through Whatever You Do, a course on discerning vocational calling. It asks some searching questions, and it works far better with someone alongside.</p>
+    <p>Before you say yes, read what's actually being asked. It's a real commitment, and saying no now is much better than fading out halfway.</p>
+  </div>
+
+  <div class="panel" id="c-commitments">
+    <h2>What you'd be agreeing to</h2>
+    <p class="sub" style="margin-bottom:6px;">Tick each one you can honestly commit to.</p>
+    <div id="c-list"></div>
+    <div class="commit-count" id="c-count"></div>
+    <div class="btn-row">
+      <button class="btn" id="cAccept" disabled data-act="c-accept" style="flex:1;">Accept and get the first session guide →</button>
+    </div>
+    <div class="btn-row" style="margin-top:8px;">
+      <button class="btn ghost btn-full" data-act="c-decline">I can't commit to all of this</button>
+    </div>
+  </div>
+
+  <div class="hidden" id="c-outcome"></div>
+</div>
+
+<!-- ================= NOTES ================= -->
+<div class="notes">
+  <h2>Notes for implementation</h2>
+
+  <h3>Why the questions are weighted</h3>
+  <p>Three of the six are treated as non-negotiable: shared faith, trusting their objectivity, and their ability to coach rather than advise. A "no" on any of those ends the flow — no "are you sure?" step, because those aren't things goodwill overcomes.</p>
+  <p>The other three — how well they know you, their wisdom, their time — are soft. A newer relationship can still work; time can be renegotiated. A single soft "no" produces a considered warning rather than a stop.</p>
+
+  <h3>Outcome rules</h3>
+  <pre>critical = [faith, objectivity, coaching]
+soft     = [knowsYou, wisdom, time]
+
+any critical === 'no'        → stop
+2+ answers === 'no'          → stop
+3+ answers !== 'yes'         → stop
+1 soft 'no', or 1–2 unsure   → confirm ("are you sure?")
+all yes                      → proceed</pre>
+
+  <h3>Naming the specific concern</h3>
+  <p>The confirm and stop screens list exactly which answers triggered them, each with a line on why that one matters. A generic "you might want to reconsider" gets dismissed; "you weren't sure they'd resist telling you what to do — that's the commonest way this goes wrong" gets thought about.</p>
+
+  <h3>The mirror</h3>
+  <p>The coach sees the same six commitments written as first-person promises, as tick-boxes. Every box must be ticked to accept. This matters for two reasons: the participant has effectively made claims about this person, and the coach should get the chance to confirm or quietly correct them; and a coach who has explicitly agreed to ask rather than tell is far more likely to do it.</p>
+  <p>The decline path is deliberately unapologetic — declining is a good outcome, not a failure.</p>
+
+  <h3>Integration contract</h3>
+  <pre>// participant side
+const result = evaluateCoach(answers);
+// result.verdict  → 'proceed' | 'confirm' | 'stop'
+// result.flags    → [{ id, label, why }]
+
+// on proceed (or confirmed), issue an invite
+POST /coach-invites { coachName, participantId }
+  → { inviteId, url }
+
+// coach side
+GET  /coach-invites/:id   → { participantName, commitments }
+POST /coach-invites/:id/accept
+  { accepted: true, commitments: [ids] }</pre>
+
+  <h3>Why event delegation</h3>
+  <p>All handlers are attached through a single delegated listener using <code>data-act</code> attributes, rather than inline <code>onclick</code> on generated markup. Inline handlers on interpolated HTML break in sandboxed frames and are awkward to test — worth keeping this pattern in production.</p>
+
+  <h3>Still to decide</h3>
+  <ul>
+    <li>What happens if the coach declines — does the participant get told, and are they returned to this screen to pick someone else?</li>
+    <li>Whether a coach's partial agreement (five of six) should be surfaced to the participant rather than simply blocked.</li>
+    <li>Whether to keep a record of rejected candidates, so the "try someone else" screen can avoid suggesting the same person.</li>
+    <li>The word "coach" now conflicts with "mentor" elsewhere in the app — needs changing throughout if this is adopted.</li>
+  </ul>
+</div>
+
+</div>
+
+<script>
+// ============ DATA ============
+const QUESTIONS = [
+  { id:'faith', critical:true,
+    q:"Is a genuine, practising Christian whose faith you'd want to learn from",
+    note:"The material is rooted in scripture. This only works if you share that starting point.",
+    why:"The whole course reads your life against what the Bible says about work and calling. Without shared ground there, the conversations have nowhere to stand.",
+    coachNote:"The material is rooted in scripture, and this only works if you share that starting point with them.",
+    coachWhy:"The whole course reads their life against what the Bible says about work and calling. Without shared ground there, the conversations have nowhere to stand.",
+    commit:"I'm walking with Jesus myself, and I'm willing to bring that to these conversations." },
+
+  { id:'knowsYou', critical:false,
+    q:"Knows you well enough to notice when you're not being straight with yourself",
+    note:"Not necessarily a close friend — but someone with enough history to spot the pattern.",
+    why:"Someone who barely knows you can only work with what you tell them. Much of the value here is someone noticing what you're skirting around.",
+    coachNote:"You don't need to be close friends — but you'll want enough history with them to spot the pattern.",
+    coachWhy:"If you barely know them, you can only work with what they tell you. Much of the value you can offer is noticing what they're skirting around.",
+    commit:"I know them well enough to notice when something doesn't ring true." },
+
+  { id:'objectivity', critical:true,
+    q:"Could hold their own hopes for you loosely",
+    note:"The people who love us most often find this hardest — not because they mean badly, but because they genuinely care where you end up.",
+    why:"Anyone quietly hoping for a particular answer will steer a little without intending to. It's a hard ask of anyone, and it's worth choosing someone who can hold the outcome lightly — or who will at least tell you when they can't.",
+    coachNote:"This is often hardest for the people who love someone most — not because they mean badly, but because they genuinely care where they end up.",
+    coachWhy:"If you're quietly hoping for a particular answer, you'll steer a little without meaning to. It's a hard ask of anyone. Notice if you're finding it hard to hold their outcome lightly — and say so if you are.",
+    commit:"I'll hold my own hopes for them loosely, and say so honestly if I notice I'm steering." },
+
+  { id:'wisdom', critical:false,
+    q:"Has wisdom you respect — ideally further down the road than you",
+    note:"Not necessarily older. But someone whose judgement you'd actually weigh.",
+    why:"You need to be able to take their questions seriously. If you don't respect their judgement, you'll quietly discount everything they say.",
+    coachNote:"You don't need to be older than them — just someone whose judgement they'd actually weigh.",
+    coachWhy:"They need to be able to take your questions seriously. If they don't respect your judgement, they'll quietly discount everything you say.",
+    commit:"I'll bring whatever experience and wisdom I have, honestly held." },
+
+  { id:'coaching', critical:true,
+    q:"Can ask questions rather than hand out answers",
+    note:"Some people genuinely can't resist solving it for you. Be realistic about this one.",
+    why:"This is the commonest way coaching relationships fail. A coach who tells you what to do produces their calling, not yours — and you'll comply rather than discern.",
+    coachNote:"Some people genuinely can't resist solving things for others. Be honest with yourself about this one.",
+    coachWhy:"This is the commonest way coaching relationships fail. If you tell them what to do, you'll produce your sense of their calling, not theirs — and they'll comply rather than discern.",
+    commit:"I'll ask the questions in the guide and let them find their own answers. I won't tell them what to do." },
+
+  { id:'time', critical:false,
+    q:"Would give you a few unhurried conversations over the next few months",
+    note:"Roughly an hour each. Worth asking yourself whether they have the room, not just the willingness.",
+    why:"Good intentions and a full diary produce a coach who cancels twice and then apologises. A few real conversations beats many that keep slipping.",
+    coachNote:"Roughly an hour each. Worth being honest with yourself about whether you have the room, not just the willingness.",
+    coachWhy:"Good intentions and a full diary produce cancelled sessions and an apology. A few real conversations beats many that keep slipping.",
+    commit:"I'll make time for a few unhurried conversations, and I'll protect them." }
+];
+
+let answers = {}, coachName = '', coachTicks = {};
+
+// ============ PARTICIPANT ============
+function nameChanged(){
+  coachName = document.getElementById('coachName').value.trim();
+  document.getElementById('startBtn').disabled = coachName.length < 1;
+}
+
+function startQs(){
+  document.getElementById('p-intro').classList.add('hidden');
+  document.getElementById('p-questions').classList.remove('hidden');
+  document.getElementById('q-heading').textContent = `About ${coachName}`;
+  renderQs();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function backToIntro(){
+  document.getElementById('p-questions').classList.add('hidden');
+  document.getElementById('p-intro').classList.remove('hidden');
+}
+
+function renderQs(){
+  const out = QUESTIONS.map(function(q){
+    const a = answers[q.id];
+    const opt = function(val,label,cls){
+      return '<button class="opt ' + (a===val?cls:'') + '" data-act="answer" data-q="' +
+             q.id + '" data-v="' + val + '">' + label + '</button>';
+    };
+    return '<div class="q">' +
+      '<div class="q-text">Do you think ' + escapeHtml(coachName) + '\u2026</div>' +
+      '<div class="q-text" style="font-weight:600;">' + q.q + '?</div>' +
+      '<div class="q-note">' + q.note + '</div>' +
+      '<div class="opts">' +
+        opt('yes','Yes','on-yes') +
+        opt('maybe','Not sure','on-maybe') +
+        opt('no','No','on-no') +
+      '</div></div>';
+  }).join('');
+  document.getElementById('q-list').innerHTML = out;
+  document.getElementById('qSubmit').disabled = QUESTIONS.some(function(q){ return !answers[q.id]; });
+}
+
+function answer(id,val){
+  answers[id]=val;
+  renderQs();
+}
+
+function evaluate(){
+  const flags = QUESTIONS.filter(q=>answers[q.id]!=='yes');
+  const nos = QUESTIONS.filter(q=>answers[q.id]==='no');
+  const criticalNo = nos.filter(q=>q.critical);
+
+  let verdict;
+  if (criticalNo.length) verdict='stop';
+  else if (nos.length>=2) verdict='stop';
+  else if (flags.length>=3) verdict='stop';
+  else if (flags.length) verdict='confirm';
+  else verdict='proceed';
+
+  renderOutcome(verdict, flags, criticalNo);
+}
+
+function renderOutcome(verdict, flags, criticalNo){
+  document.getElementById('p-questions').classList.add('hidden');
+  const el = document.getElementById('p-outcome');
+  el.classList.remove('hidden');
+  const n = escapeHtml(coachName);
+
+  const flagList = function(){
+    if (!flags.length) return '';
+    const rows = flags.map(function(f){
+      const said = answers[f.id]==='no' ? ' \u2014 you said no' : " \u2014 you weren't sure";
+      return '<li><b>' + f.q + said + '</b>' + f.why + '</li>';
+    }).join('');
+    return '<ul class="flags">' + rows + '</ul>';
+  };
+
+  let h = '';
+
+  if (verdict==='proceed'){
+    h = '<div class="outcome go">' +
+      '<h2>' + n + ' sounds like the right person</h2>' +
+      "<p>You've said yes to all six. That's worth something \u2014 most people find at least one they hesitate on.</p>" +
+      '<p>The next step is to ask them properly. Send them this link: it explains what\u2019s involved and asks them to commit to the same six things you\u2019ve just weighed up.</p>' +
+      '<div class="share">' +
+        '<div class="share-label">Send this to ' + n + '</div>' +
+        '<div class="share-row">' +
+          '<input type="text" readonly value="whateveryoudo.org/coach/8f3a-2c91" data-act="select">' +
+          '<button class="btn" style="padding:10px 18px;font-size:14px;" data-act="copy">Copy</button>' +
+        '</div>' +
+        '<div class="share-note">They\u2019ll see what you\u2019d be asking of them and can accept or decline. You\u2019ll be told either way. Placeholder link \u2014 the real one is generated per invitation.</div>' +
+      '</div>' +
+      '<div class="btn-row">' +
+        '<button class="btn ghost" data-act="restart">Choose someone else</button>' +
+        '<button class="btn ghost" data-act="view" data-v="coach">Preview what they\u2019ll see</button>' +
+      '</div></div>';
+  }
+
+  if (verdict==='confirm'){
+    h = '<div class="outcome check">' +
+      '<h2>Worth a second thought</h2>' +
+      '<p>Most of this looks right, but ' + (flags.length===1?'one thing':'a couple of things') +
+        ' gave you pause. That hesitation is usually worth listening to.</p>' +
+      flagList() +
+      '<p style="margin-top:14px;">None of this rules ' + n + ' out, and it may be worth simply raising it with them. ' +
+        '\u201cWould you be able to mostly ask questions rather than give me advice?\u201d is a fair thing to ask upfront.</p>' +
+      '<div class="btn-row">' +
+        '<button class="btn warn" data-act="force">I\u2019m still confident \u2014 ask ' + n + '</button>' +
+        '<button class="btn ghost" data-act="restart">Think about someone else</button>' +
+      '</div></div>';
+  }
+
+  if (verdict==='stop'){
+    const lead = criticalNo.length
+      ? 'You\u2019ve said no to something that isn\u2019t really negotiable.'
+      : 'There\u2019s enough here to suggest ' + n + ' may not be the right fit for this particular job.';
+    h = '<div class="outcome stop">' +
+      '<h2>Try someone else</h2>' +
+      '<p>' + lead + ' That\u2019s no reflection on them \u2014 it\u2019s about what this specific process asks for.</p>' +
+      flagList() +
+      '<p style="margin-top:14px;">Think about who else might fit. It doesn\u2019t have to be your closest friend or the most senior person you know \u2014 often the right coach is someone a little outside your immediate circle.</p>' +
+      '<div class="btn-row">' +
+        '<button class="btn" data-act="restart">Try someone else</button>' +
+        '<button class="btn ghost" data-act="restart">I\u2019ll come back to this</button>' +
+      '</div></div>';
+  }
+
+  el.innerHTML = h;
+  window.scrollTo(0,0);
+}
+
+function forceProceed(){
+  renderOutcome('proceed', [], []);
+}
+
+function restart(){
+  answers={};coachName='';
+  document.getElementById('coachName').value='';
+  document.getElementById('startBtn').disabled=true;
+  document.getElementById('p-outcome').classList.add('hidden');
+  document.getElementById('p-questions').classList.add('hidden');
+  document.getElementById('p-intro').classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function copied(btn){
+  btn.textContent='Copied';
+  setTimeout(()=>btn.textContent='Copy',1800);
+}
+
+// ============ COACH ============
+function renderCoach(){
+  document.getElementById('c-list').innerHTML = QUESTIONS.map(function(q){
+    const on = coachTicks[q.id];
+    return '<div class="commit ' + (on?'on':'') + '" data-act="tick" data-q="' + q.id + '">' +
+      '<div class="cbox">' + (on?'\u2713':'') + '</div>' +
+      '<div><div class="commit-text">' + q.commit + '</div>' +
+      '<div class="commit-note">' + q.coachNote + '</div></div></div>';
+  }).join('');
+  const n = Object.values(coachTicks).filter(Boolean).length;
+  document.getElementById('c-count').textContent = `${n} of ${QUESTIONS.length} agreed`;
+  document.getElementById('cAccept').disabled = n < QUESTIONS.length;
+}
+
+function tick(id){
+  coachTicks[id]=!coachTicks[id];
+  renderCoach();
+}
+
+function coachAccept(){
+  document.getElementById('c-commitments').classList.add('hidden');
+  const el=document.getElementById('c-outcome');
+  el.classList.remove('hidden');
+  el.innerHTML = `<div class="outcome go">
+    <h2>Thank you — Sam will be told</h2>
+    <p>You've agreed to all six. That's the contract, and it's worth returning to if a conversation starts drifting into advice.</p>
+    <p>We'll send the briefing pack and the questions for your first conversation. Nothing to prepare beyond reading them.</p>
+    <div class="share">
+      <div class="share-label">What happens next</div>
+      <div class="share-note" style="margin-top:0;">Sam finishes the first section and sends it to you. You'll get their results and a short guide to that conversation — what it's for, what to ask, what to watch for.</div>
+    </div>
+    <div class="btn-row"><button class="btn ghost" data-act="c-reset">Reset preview</button></div>
+  </div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function coachDecline(){
+  document.getElementById('c-commitments').classList.add('hidden');
+  const el=document.getElementById('c-outcome');
+  el.classList.remove('hidden');
+  el.innerHTML = `<div class="outcome check">
+    <h2>That's a good answer</h2>
+    <p>Saying no now is far better than agreeing and fading out halfway. Sam will simply be told you weren't able to, with no detail.</p>
+    <p>If it's only the time commitment, it's worth telling them directly — they may be able to work around it. If it's that you'd struggle to ask rather than advise, that's genuinely useful for them to know, and there's no shame in it. Most people would.</p>
+    <div class="btn-row"><button class="btn ghost" data-act="c-reset">Reset preview</button></div>
+  </div>`;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function resetCoach(){
+  coachTicks={};
+  document.getElementById('c-outcome').classList.add('hidden');
+  document.getElementById('c-commitments').classList.remove('hidden');
+  renderCoach();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ============ HARNESS ============
+function showView(v){
+  document.querySelectorAll('.harness .hbtn[data-act="view"]').forEach(function(b){
+    b.classList.toggle('on', b.dataset.v===v);
+  });
+  document.getElementById('view-participant').classList.toggle('hidden', v!=='participant');
+  document.getElementById('view-coach').classList.toggle('hidden', v==='participant');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function fill(mode){
+  showView('participant');
+  coachName = coachName || 'Rachel';
+  document.getElementById('coachName').value = coachName;
+  nameChanged();
+  const set = {};
+  QUESTIONS.forEach(q=>set[q.id]='yes');
+  if(mode==='neutral'){ set.knowsYou='maybe'; set.time='maybe'; }
+  if(mode==='soft'){ set.time='no'; }
+  if(mode==='critical'){ set.coaching='no'; }
+  if(mode==='bad'){ set.knowsYou='no'; set.time='no'; set.wisdom='maybe'; }
+  answers = set;
+  document.getElementById('p-intro').classList.add('hidden');
+  document.getElementById('p-outcome').classList.add('hidden');
+  document.getElementById('p-questions').classList.remove('hidden');
+  document.getElementById('q-heading').textContent = `About ${coachName}`;
+  renderQs();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ============ EVENT DELEGATION ============
+// One listener for everything. Generated markup carries data-act rather than
+// inline onclick, which keeps handlers working inside sandboxed frames.
+document.addEventListener('click', function(ev){
+  const t = ev.target.closest('[data-act]');
+  if (!t) return;
+  const act = t.dataset.act, v = t.dataset.v, q = t.dataset.q;
+
+  switch(act){
+    case 'view':      showView(v); break;
+    case 'fill':      fill(v); break;
+    case 'start':     startQs(); break;
+    case 'back':      backToIntro(); break;
+    case 'answer':    answer(q, v); break;
+    case 'evaluate':  evaluate(); break;
+    case 'force':     forceProceed(); break;
+    case 'restart':   restart(); break;
+    case 'copy':      copied(t); break;
+    case 'select':    t.select(); break;
+    case 'tick':      tick(q); break;
+    case 'c-accept':  coachAccept(); break;
+    case 'c-decline': coachDecline(); break;
+    case 'c-reset':   resetCoach(); break;
+  }
+});
+document.addEventListener('input', function(ev){
+  if (ev.target.dataset && ev.target.dataset.act === 'name') nameChanged();
+});
+
+renderCoach();
+</script>
+</body>
+</html>

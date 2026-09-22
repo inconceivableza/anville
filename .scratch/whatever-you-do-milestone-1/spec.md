@@ -28,6 +28,7 @@ A real server-backed app, built on the content owner's content in a data file:
 
 - sign-up behind the enrolment code, and login;
 - the four baseline ratings, and one full **section** shaped as scripture read-confirm, then an activity, then a **gate**, then complete (the calling-statement section is the model, with a plain long-text activity in place of the sentence builder);
+- Section 5's letter, with the four after-ratings required before it is sent (ticket 05);
 - a hub showing all five sections, with locks enforced by the server;
 - progress that survives a reload and a second device;
 - the pathway document loaded by a command, so that editing one prompt in the file and reloading visibly changes the app.

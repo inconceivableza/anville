@@ -4,6 +4,8 @@
 
 **Blocked by:** 13 (Observer invitations and landing), 25 (Mentor preview and briefs)
 
+**See also:** `Prototype for reference/coach-selection-prototype.html`, the content owner's mock-up of a mentee checklist and mentor commitments. Not yet in scope; the replanning session decides how it lands here.
+
 **Status:** ready-for-agent
 
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
