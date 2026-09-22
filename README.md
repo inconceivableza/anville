@@ -54,7 +54,11 @@ python manage.py load_pathway pathways/example.json
 
 Loading validates the file and prints any problems with their document paths. A valid file becomes an immutable pathway version, which is then published. Loading unchanged content again does nothing. Loading content you had before publishes that earlier version again.
 
-For now a participant always sees the latest published version. Once answers are stored (ticket 03), a participant already in progress will stay on the version they started. So check a content change by signing out and signing up as a new participant; that check will stay valid after ticket 03.
+A participant who has saved an answer stays on the version they started, even after a later one is published. Everyone else sees the latest published version. So check a content change by signing out and signing up as a new participant.
+
+## Answers
+
+Each answer saves by itself as the participant types or chooses, and only that answer is written. Answers are checked on the server against their block, and a participant signing in anywhere sees them all. Whether a response is test data is recorded on the server (`Response.is_test_data`), never set by a browser.
 
 ## Tests
 

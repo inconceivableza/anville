@@ -12,6 +12,13 @@ def pathway_document():
                     "title": "Before we begin",
                     "blocks": [
                         {"id": "welcome", "type": "rich_text", "body": "Welcome to the pathway."},
+                        {
+                            "id": "baseline-bible",
+                            "type": "agreement_scale",
+                            "prompt": "I understand what the Bible teaches about work.",
+                            "min_label": "Strongly disagree",
+                            "max_label": "Strongly agree",
+                        },
                     ],
                 },
                 {

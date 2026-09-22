@@ -17,10 +17,11 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
-from engine.views import hub
+from engine.views import hub, save_answer
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("allauth.urls")),
+    path("answers/<slug:block_id>/", save_answer, name="save_answer"),
     path("", hub, name="hub"),
 ]

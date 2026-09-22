@@ -46,3 +46,23 @@ def test_an_identifier_must_be_a_name_and_never_a_position():
 
     [problem] = validate(document)
     assert problem.path == "/content/sections/0/id"
+
+
+def test_an_agreement_scale_needs_its_prompt_and_both_anchor_labels():
+    document = pathway_document()
+    del document["content"]["sections"][0]["blocks"][1]["max_label"]
+
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/0/blocks/1"
+    assert "'max_label' is a required property" in problem.message
+
+
+def test_rich_text_may_be_set_off_as_a_hint_or_a_note_and_nothing_else():
+    document = pathway_document()
+    welcome = document["content"]["sections"][0]["blocks"][0]
+    welcome.update(variant="hint", label="The big question")
+    assert validate(document) == []
+
+    welcome["variant"] = "banner"
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/0/blocks/0/variant"

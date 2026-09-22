@@ -140,6 +140,13 @@ def test_the_hub_loads_the_built_javascript_module(signed_in_client):
 
 
 @pytest.mark.django_db
+def test_the_hub_loads_the_built_stylesheet(signed_in_client):
+    response = signed_in_client.get("/")
+
+    assert re.search(r'<link\s+rel="stylesheet" href="/static/assets/main-[\w-]+\.css" />', response.content.decode())
+
+
+@pytest.mark.django_db
 def test_an_anonymous_visitor_is_sent_to_log_in(client):
     response = client.get("/")
 

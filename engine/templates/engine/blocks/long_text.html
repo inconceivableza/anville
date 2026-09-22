@@ -1,0 +1,13 @@
+{% comment %}
+  ✨ Autosaves after a pause in typing. hx-sync queues saves so an older draft can never land after a newer one.
+  The newline after <textarea> is deliberate: browsers drop the first one, so an answer's own leading newline survives.
+{% endcomment %}
+<form id="block-{{ block.id }}" class="question-card" method="post" action="{% url 'save_answer' block.id %}">
+  {% csrf_token %}
+  <label for="answer-{{ block.id }}">{{ block.text.prompt }}</label>
+  <textarea id="answer-{{ block.id }}" name="value" rows="5"
+            hx-post="{% url 'save_answer' block.id %}" hx-trigger="input changed delay:800ms, change"
+            hx-sync="this:queue last" hx-target="next .save-status">
+{{ block.answer|default_if_none:"" }}</textarea>
+  {% include "engine/save_row.html" %}
+</form>

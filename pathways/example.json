@@ -11,6 +11,20 @@
             "id": "welcome",
             "type": "rich_text",
             "body": "This is an example pathway for trying out the loader. Edit this text, load the file again, and sign in as a new participant to see the change."
+          },
+          {
+            "id": "example-hint",
+            "type": "rich_text",
+            "variant": "hint",
+            "label": "The big question",
+            "body": "A hint box sets text apart from the page. A blank line in the body starts a new paragraph."
+          },
+          {
+            "id": "example-scale",
+            "type": "agreement_scale",
+            "prompt": "I know what I am hoping to get from this pathway.",
+            "min_label": "Strongly disagree",
+            "max_label": "Strongly agree"
           }
         ]
       },

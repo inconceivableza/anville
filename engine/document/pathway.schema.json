@@ -95,11 +95,12 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "long_text"] }
+        "type": { "enum": ["rich_text", "long_text", "agreement_scale"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
-        { "if": { "properties": { "type": { "const": "long_text" } } }, "then": { "$ref": "#/$defs/long_text" } }
+        { "if": { "properties": { "type": { "const": "long_text" } } }, "then": { "$ref": "#/$defs/long_text" } },
+        { "if": { "properties": { "type": { "const": "agreement_scale" } } }, "then": { "$ref": "#/$defs/agreement_scale" } }
       ]
     },
     "rich_text": {
@@ -109,7 +110,32 @@
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "rich_text" },
-        "body": { "$ref": "#/$defs/text" }
+        "variant": {
+          "description": "How the text is set off: plain prose, a hint box (such as 'The big question'), or a note beneath scripture.",
+          "enum": ["plain", "hint", "note"],
+          "default": "plain"
+        },
+        "label": {
+          "description": "An optional short lead-in shown above the body, such as 'The big question'.",
+          "$ref": "#/$defs/text"
+        },
+        "body": {
+          "description": "Plain text. A blank line starts a new paragraph.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "agreement_scale": {
+      "description": "A prompt the participant rates from 1 to 10, with a label at each end of the scale.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "prompt", "min_label", "max_label"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "agreement_scale" },
+        "prompt": { "$ref": "#/$defs/text" },
+        "min_label": { "$ref": "#/$defs/text" },
+        "max_label": { "$ref": "#/$defs/text" }
       }
     },
     "long_text": {

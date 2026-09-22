@@ -1,0 +1,9 @@
+{% comment %}
+  ✨ Where autosave reports back. The version is the one this page was rendered from, so a participant's first
+  answer is recorded against what they read. The button is for browsers without JavaScript and is hidden once it has loaded.
+{% endcomment %}
+<input type="hidden" name="version" value="{{ pathway.version_id }}">
+<div class="save-row">
+  <output class="save-status" aria-live="polite"></output>
+  <button type="submit" class="btn btn-secondary btn-sm save-fallback">Save</button>
+</div>

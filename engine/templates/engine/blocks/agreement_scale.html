@@ -1,0 +1,21 @@
+{# ✨ A 1–10 scale that saves as soon as a point is chosen. The two anchor labels describe the scale's ends. #}
+<form id="block-{{ block.id }}" class="baseline-q" method="post" action="{% url 'save_answer' block.id %}">
+  {% csrf_token %}
+  <fieldset hx-post="{% url 'save_answer' block.id %}" hx-trigger="change"
+            hx-sync="this:queue last" hx-target="next .save-status">
+    <legend class="baseline-label">{{ block.text.prompt }}</legend>
+    <div class="baseline-scale">
+      <span class="baseline-anchor" id="anchor-{{ block.id }}-min">{{ block.text.min_label }}</span>
+      <span class="baseline-anchor" id="anchor-{{ block.id }}-max">{{ block.text.max_label }}</span>
+    </div>
+    <div class="baseline-btns">
+      {% for point in pathway.scale_points %}
+        <label class="bl-btn">
+          <input type="radio" id="answer-{{ block.id }}-{{ point }}" name="value" value="{{ point }}"{% if block.answer == point %} checked{% endif %}{% if forloop.first %} aria-describedby="anchor-{{ block.id }}-min"{% elif forloop.last %} aria-describedby="anchor-{{ block.id }}-max"{% endif %}>
+          <span>{{ point }}</span>
+        </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  {% include "engine/save_row.html" %}
+</form>
