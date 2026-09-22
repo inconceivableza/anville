@@ -103,6 +103,16 @@ def test_the_sign_out_confirmation_loads_the_built_stylesheet(client, settings):
     assert loads_the_built_stylesheet(client.get("/accounts/logout/").content.decode())
 
 
+@pytest.mark.django_db
+def test_until_email_can_be_sent_password_reset_is_neither_offered_nor_reachable(client, mailoutbox):
+    """✨ Temporary: ticket 28 replaces this with tests of the working flow once email delivery exists.
+
+    Guards against an allauth upgrade quietly bringing back a link whose page crashes without a mail server.
+    """
+    assert "Forgot your password?" not in client.get("/accounts/login/").content.decode()
+    assert client.post("/accounts/password/reset/", {"email": "participant@example.com"}).status_code == 404
+    assert mailoutbox == []
+
 
 @pytest.mark.django_db
 def test_a_refused_sign_up_still_says_why_on_the_styled_page(client, settings):
