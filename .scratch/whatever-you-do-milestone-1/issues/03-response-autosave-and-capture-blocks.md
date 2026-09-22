@@ -14,6 +14,7 @@
 - [ ] The server validates each answer against that block's answer schema and rejects unknown block identifiers and malformed values
 - [ ] A participant logging in on a fresh session or another device sees every earlier answer
 - [ ] Responses carry a test-data marker held on the server, never a client-side flag
+- [ ] Pages use the prototype's look: its colour variables and fonts (self-hosted through Vite, not Google Fonts) and the base styles for page, buttons, panels, hint boxes, scripture notes and the 1–10 scale, in one stylesheet; templates use the colour variables rather than raw colours
 - [ ] Journey tests cover autosave isolation, rejection of invalid answers, and resume
 
 **Carried from 02**
