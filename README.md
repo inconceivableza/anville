@@ -51,8 +51,13 @@ After changing anything in `frontend/src/`, run `npm run build` again in `fronte
 A pathway is a JSON file in `pathways/`, checked against `engine/document/pathway.schema.json` and then a linter for cross-references and duplicate identifiers. Load one with:
 
 ```sh
-python manage.py load_pathway pathways/example.json
+python manage.py load_pathway pathways/whatever-you-do.json
 ```
+
+`pathways/whatever-you-do.json` is *Whatever You Do* itself, as far as it has been authored:
+the four baseline ratings, the calling-statement section and the letter, with Sections 1, 2 and 4
+carrying their hint text until their activities are built. `pathways/example.json` is a smaller
+file for trying the loader out.
 
 Loading validates the file and prints any problems with their document paths. A valid file becomes an immutable pathway version, which is then published. Loading unchanged content again does nothing. Loading content you had before publishes that earlier version again.
 
