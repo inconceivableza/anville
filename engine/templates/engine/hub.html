@@ -1,28 +1,48 @@
-{% load django_vite %}
-<!doctype html>
-<html lang="en-GB">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% if pathway %}{{ pathway.title }}{% else %}Anville{% endif %}</title>
-    {% vite_asset 'src/main.js' %}
-  </head>
-  <body>
-    <main class="container">
-      {% if pathway %}
-        <h1>{{ pathway.title }}</h1>
-        {% for section in pathway.sections %}
-          <section class="section">
-            <h2>{{ section.title }}</h2>
-            {% for block in section.blocks %}
-              {% include block.template %}
-            {% endfor %}
-          </section>
-        {% endfor %}
-      {% else %}
-        <h1>Nothing to begin yet</h1>
-        <p>No pathway has been published here yet. When one is, it will appear on this page.</p>
-      {% endif %}
-    </main>
-  </body>
-</html>
+{% extends "engine/base.html" %}
+{% comment %}
+  ✨ The hub. Every part of it is derived by the engine from what the participant has answered and completed:
+  an author writes sections and their gate messages, never a status chip, a lock or this banner.
+{% endcomment %}
+{% block head_title %}{% if hub %}{{ title }}{% else %}Anville{% endif %}{% endblock head_title %}
+
+{% block content %}
+  {% if hub %}
+    <h1>{{ title }}</h1>
+
+    {% if hub.next_step %}
+      <div class="next-step">
+        <p class="next-step-label">Your next step</p>
+        <p class="next-step-title">{{ hub.next_step.title }}</p>
+        <a class="btn btn-primary" href="{% url 'section' hub.next_step.id %}">
+          {% if hub.next_step.status == 'in-progress' %}Carry on{% else %}Begin{% endif %}
+        </a>
+      </div>
+    {% else %}
+      <div class="next-step">
+        <p class="next-step-label">Your next step</p>
+        <p class="next-step-title">Nothing is waiting for you right now.</p>
+      </div>
+    {% endif %}
+
+    {% if hub.of %}
+      <p class="progress">{{ hub.answered }} of {{ hub.of }} answered</p>
+    {% endif %}
+
+    <ol class="hub-sections">
+      {% for section in hub.sections %}
+        <li class="hub-section{% if section.is_next %} is-next{% endif %}">
+          <span class="status-chip status-{{ section.status }}">{{ section.label }}</span>
+          {% if section.is_locked %}
+            <span class="hub-section-title">{{ section.title }}</span>
+            <span class="hub-section-note">Complete what comes before this to open it.</span>
+          {% else %}
+            <a class="hub-section-title" href="{% url 'section' section.id %}">{{ section.title }}</a>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <h1>Nothing to begin yet</h1>
+    <p>No pathway has been published here yet. When one is, it will appear on this page.</p>
+  {% endif %}
+{% endblock content %}

@@ -40,6 +40,9 @@ class Response(models.Model):
     participant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="responses")
     version = models.ForeignKey(PathwayVersion, on_delete=models.PROTECT, related_name="responses")
     answers = models.JSONField(default=dict)
+    # ✨ When the participant said each section was finished. Completing is their own act, so it is recorded
+    # rather than derived: an answer changed afterwards does not quietly undo it.
+    completed_sections = models.JSONField(default=dict)
     is_test_data = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -59,8 +62,19 @@ class Response(models.Model):
         The rest of the response is never re-serialised, so a save from a stale copy of this object
         cannot undo an answer saved to another block since.
         """
+        self._merge(answers=Value({block_id: value}, output_field=models.JSONField()))
+
+    def complete_section(self, section_id):
+        """✨ Record that the participant completed a section, merged in the same way as an answer.
+
+        The caller has already re-checked the section's gate. Completing twice is harmless: the second
+        time replaces the timestamp and nothing else.
+        """
+        self._merge(completed_sections=Value({section_id: timezone.now().isoformat()}, output_field=models.JSONField()))
+
+    def _merge(self, **fields):
         Response.objects.filter(pk=self.pk).update(
-            answers=_MergeJson(F("answers"), Value({block_id: value}, output_field=models.JSONField())),
+            **{name: _MergeJson(F(name), value) for name, value in fields.items()},
             updated_at=timezone.now(),
         )
 

@@ -105,3 +105,11 @@ def blocks_of(document):
 def block_types_by_id(document):
     """✨ Each block's type, keyed by its identifier. Used wherever a block is known only by name."""
     return {block["id"]: BLOCK_TYPES[block["type"]] for block in blocks_of(document)}
+
+
+def section_of(document, block_id):
+    """✨ The section a block belongs to, or None. A block identifier is unique across the pathway."""
+    for section in document["content"]["sections"]:
+        if any(block["id"] == block_id for block in section["blocks"]):
+            return section
+    return None

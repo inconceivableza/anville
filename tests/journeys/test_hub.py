@@ -23,6 +23,12 @@ def a_fresh_participant(client, email):
     return client
 
 
+def the_calling_section(client):
+    """✨ The calling section as the participant reads it, once the onboarding it requires is complete."""
+    client.post("/sections/onboarding/complete/")
+    return client.get("/sections/calling/").content.decode()
+
+
 @pytest.mark.django_db
 def test_a_participant_sees_an_intentional_empty_state_when_no_pathway_is_published(
     signed_in_client,
@@ -36,7 +42,7 @@ def test_a_participant_sees_an_intentional_empty_state_when_no_pathway_is_publis
 
 
 @pytest.mark.django_db
-def test_a_signed_in_participant_is_shown_the_published_pathway(signed_in_client, load_pathway):
+def test_a_signed_in_participant_is_shown_the_published_pathways_hub(signed_in_client, load_pathway):
     load_pathway(pathway_document())
 
     content = signed_in_client.get("/").content.decode()
@@ -44,7 +50,6 @@ def test_a_signed_in_participant_is_shown_the_published_pathway(signed_in_client
     assert "Test Pathway" in content
     assert "Before we begin" in content
     assert "Putting your calling into words" in content
-    assert "Write your statement." in content
     assert "Nothing to begin yet" not in content
 
 
@@ -80,8 +85,9 @@ def test_a_participant_sees_their_own_wording_not_the_observers(signed_in_client
         "observer": "Describe their calling.",
     }
     load_pathway(document)
+    signed_in_client.post("/sections/onboarding/complete/")
 
-    content = signed_in_client.get("/").content.decode()
+    content = signed_in_client.get("/sections/calling/").content.decode()
 
     assert "Write your statement." in content
     assert "Describe their calling." not in content
@@ -93,7 +99,7 @@ def test_authored_text_is_shown_escaped_and_unaltered(signed_in_client, load_pat
     document["content"]["sections"][0]["blocks"][0]["body"] = '<script>alert("x")</script>'
     load_pathway(document)
 
-    content = signed_in_client.get("/").content.decode()
+    content = signed_in_client.get("/sections/onboarding/").content.decode()
 
     assert '<script>alert("x")</script>' not in content
     assert "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;" in content
@@ -104,13 +110,13 @@ def test_editing_one_prompt_and_loading_again_changes_the_app_for_a_participant_
     client, load_pathway
 ):
     load_pathway(pathway_document())
-    assert "Write your statement." in a_fresh_participant(client, "first@example.com").get("/").content.decode()
+    assert "Write your statement." in the_calling_section(a_fresh_participant(client, "first@example.com"))
 
     edited = pathway_document()
     edited["content"]["sections"][1]["blocks"][0]["prompt"] = "Write the sentence God has been shaping in you."
     load_pathway(edited)
 
-    content = a_fresh_participant(client, "second@example.com").get("/").content.decode()
+    content = the_calling_section(a_fresh_participant(client, "second@example.com"))
     assert "Write the sentence God has been shaping in you." in content
     assert "Write your statement." not in content
 
@@ -125,7 +131,7 @@ def test_loading_earlier_content_again_publishes_it_again_without_a_new_version(
     output = load_pathway(pathway_document())
 
     assert re.search(r"Republished pathway version \d+", output)
-    content = a_fresh_participant(client, "third@example.com").get("/").content.decode()
+    content = the_calling_section(a_fresh_participant(client, "third@example.com"))
     assert "Write your statement." in content
     assert "An edited prompt." not in content
 

@@ -40,7 +40,7 @@ def clauses_of(section):
 
 
 def _has_answer(clause, answer):
-    return _has_content(answer)
+    return has_content(answer)
 
 
 def _min_text_length(clause, answer):
@@ -57,12 +57,12 @@ def _entry_count(clause, answer):
 def _distinct_value_count(clause, answer):
     values = [_value_of(entry, clause["field"]) for entry in _entries(answer)]
     # ✨ Values are compared as stored, because the ones an author counts are chosen by a widget, not typed.
-    return len({_hashable(value) for value in values if _has_content(value)}) >= clause["min"]
+    return len({_hashable(value) for value in values if has_content(value)}) >= clause["min"]
 
 
 def _every_entry_has(clause, answer):
     # ✨ "Every" over no entries is true, so an author pairs this clause with a count of entries.
-    return all(_has_content(_value_of(entry, clause["field"])) for entry in _entries(answer))
+    return all(has_content(_value_of(entry, clause["field"])) for entry in _entries(answer))
 
 
 CLAUSES = {
@@ -74,7 +74,7 @@ CLAUSES = {
 }
 
 
-def _has_content(value):
+def has_content(value):
     """✨ Whether an answer, or one field of an entry, holds anything. A zero is an answer; blank space is not."""
     if value is None or value is False:
         return False
@@ -91,7 +91,7 @@ def _entries(answer):
 
 def _entry_has_content(entry):
     values = entry.values() if isinstance(entry, dict) else [entry]
-    return any(_has_content(value) for value in values)
+    return any(has_content(value) for value in values)
 
 
 def _value_of(entry, field):

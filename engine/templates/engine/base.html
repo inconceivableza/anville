@@ -1,0 +1,16 @@
+{% load django_vite %}
+{# ✨ Every engine page. The account pages have their own base, replacing allauth's. #}
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block head_title %}Anville{% endblock head_title %}</title>
+    {% vite_asset 'src/main.js' %}
+  </head>
+  <body>
+    <main class="container">
+      {% block content %}{% endblock content %}
+    </main>
+  </body>
+</html>

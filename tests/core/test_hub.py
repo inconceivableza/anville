@@ -1,0 +1,163 @@
+"""✨ The hub is derived, never authored (CONTEXT.md): status, locks, the next step and progress.
+
+These are the derivation itself, with no browser and no database. What a participant is actually allowed
+to open is enforced separately, over HTTP, in tests/journeys/test_sections.py.
+"""
+
+import pytest
+
+from engine.hub import COMPLETE, IN_PROGRESS, LOCKED, NOT_STARTED, hub_for, is_locked
+
+
+def section(id, requires=(), blocks=()):
+    return {"id": id, "title": id.title(), "requires": list(requires), "blocks": list(blocks)}
+
+
+def long_text(id):
+    return {"id": id, "type": "long_text", "prompt": "Write something."}
+
+
+def prose(id):
+    return {"id": id, "type": "rich_text", "body": "Something to read."}
+
+
+A_CHAIN = [
+    section("first", blocks=[long_text("a")]),
+    section("second", requires=["first"], blocks=[long_text("b")]),
+    section("third", requires=["second"], blocks=[long_text("c")]),
+]
+
+
+def statuses(sections, answers=None, completed=()):
+    return [state.status for state in hub_for(sections, answers or {}, completed).sections]
+
+
+# Status
+
+
+def test_a_section_nobody_has_touched_has_not_been_started():
+    assert statuses([section("first")]) == [NOT_STARTED]
+
+
+def test_a_section_with_an_answer_to_one_of_its_blocks_is_in_progress():
+    assert statuses(A_CHAIN, answers={"a": "Some writing"}) == [IN_PROGRESS, LOCKED, LOCKED]
+
+
+def test_a_section_the_participant_completed_is_complete():
+    assert statuses(A_CHAIN, completed=["first"]) == [COMPLETE, NOT_STARTED, LOCKED]
+
+
+def test_an_answer_to_another_sections_block_does_not_make_this_one_in_progress():
+    assert statuses(A_CHAIN, answers={"c": "Written"}, completed=["first"]) == [COMPLETE, NOT_STARTED, LOCKED]
+
+
+def test_a_section_stays_complete_even_once_everything_around_it_has_moved_on():
+    assert statuses(A_CHAIN, answers={"a": "Written"}, completed=["first", "second"])[:2] == [COMPLETE, COMPLETE]
+
+
+# Locks
+
+
+def test_a_section_is_locked_until_every_section_it_requires_is_complete():
+    assert statuses(A_CHAIN) == [NOT_STARTED, LOCKED, LOCKED]
+    assert statuses(A_CHAIN, completed=["first"]) == [COMPLETE, NOT_STARTED, LOCKED]
+    assert statuses(A_CHAIN, completed=["first", "second"]) == [COMPLETE, COMPLETE, NOT_STARTED]
+
+
+def test_a_section_requiring_several_sections_waits_for_all_of_them():
+    sections = [section("a"), section("b"), section("last", requires=["a", "b"])]
+
+    assert statuses(sections, completed=["a"]) == [COMPLETE, NOT_STARTED, LOCKED]
+    assert statuses(sections, completed=["a", "b"]) == [COMPLETE, COMPLETE, NOT_STARTED]
+
+
+def test_a_section_requiring_nothing_is_never_locked():
+    assert is_locked(section("first"), completed=set()) is False
+
+
+def test_locks_come_from_what_a_section_requires_and_not_from_its_position():
+    """✨ The third section requires nothing, so it opens straight away even though two sit above it."""
+    sections = [section("first"), section("second", requires=["first"]), section("third")]
+
+    assert statuses(sections) == [NOT_STARTED, LOCKED, NOT_STARTED]
+
+
+# The next step
+
+
+def test_the_next_step_is_the_first_section_that_is_open_and_not_yet_complete():
+    assert hub_for(A_CHAIN, {}, completed=[]).next_step.id == "first"
+    assert hub_for(A_CHAIN, {}, completed=["first"]).next_step.id == "second"
+
+
+def test_the_next_step_is_marked_on_the_section_itself_so_the_hub_can_point_at_it():
+    [first, second, third] = hub_for(A_CHAIN, {}, completed=["first"]).sections
+
+    assert [first.is_next, second.is_next, third.is_next] == [False, True, False]
+
+
+def test_a_section_in_progress_is_the_next_step_before_an_untouched_one_further_down():
+    assert hub_for(A_CHAIN, {"a": "Started writing"}, completed=[]).next_step.id == "first"
+
+
+def test_there_is_no_next_step_once_every_section_is_complete():
+    assert hub_for(A_CHAIN, {}, completed=["first", "second", "third"]).next_step is None
+
+
+def test_a_locked_section_is_never_the_next_step():
+    """✨ A pathway whose only unfinished sections are locked has nothing to offer, and says so."""
+    sections = [section("first"), section("second", requires=["never-completed"])]
+
+    assert hub_for(sections, {}, completed=["first"]).next_step is None
+
+
+# Progress
+
+
+def test_progress_counts_the_blocks_the_participant_does_something_with_and_no_others():
+    sections = [section("first", blocks=[prose("intro"), long_text("a"), prose("outro"), long_text("b")])]
+
+    hub = hub_for(sections, {"a": "Written"}, completed=[])
+    assert (hub.answered, hub.of) == (1, 2)
+
+
+def test_progress_counts_across_every_section_of_the_track():
+    hub = hub_for(A_CHAIN, {"a": "Written", "c": "Written"}, completed=[])
+
+    assert (hub.answered, hub.of) == (2, 3)
+
+
+@pytest.mark.parametrize("answer", ["", "   ", None])
+def test_a_block_left_blank_is_not_counted_as_answered(answer):
+    hub = hub_for([section("first", blocks=[long_text("a")])], {"a": answer}, completed=[])
+
+    assert (hub.answered, hub.of) == (0, 1)
+
+
+def test_a_pathway_with_nothing_interactive_in_it_reports_no_progress_rather_than_dividing_by_zero():
+    hub = hub_for([section("first", blocks=[prose("intro")])], {}, completed=[])
+
+    assert (hub.answered, hub.of) == (0, 0)
+
+
+def test_progress_counts_only_the_sections_it_is_given_so_a_track_counts_only_its_own():
+    """✨ Tracks arrive in ticket 23; the hub already counts only the sections handed to it."""
+    hub = hub_for(A_CHAIN[:2], {"a": "Written", "c": "Written"}, completed=[])
+
+    assert (hub.answered, hub.of) == (1, 2)
+
+
+# What the hub says about each section
+
+
+def test_each_section_carries_its_title_and_a_label_for_its_status():
+    [first, second, _] = hub_for(A_CHAIN, {}, completed=[]).sections
+
+    assert (first.id, first.title, first.label) == ("first", "First", "Not started")
+    assert second.label == "Locked"
+
+
+def test_a_sections_title_is_shown_in_the_participants_own_wording():
+    sections = [{"id": "first", "title": {"participant": "Your gifts", "observer": "Their gifts"}, "blocks": []}]
+
+    assert hub_for(sections, {}, completed=[]).sections[0].title == "Your gifts"

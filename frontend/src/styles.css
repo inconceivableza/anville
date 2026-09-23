@@ -89,6 +89,147 @@ h2 {
   margin-top: 12px;
 }
 
+/* The hub: the next-step banner, progress, and the section list with its status chips. All of it is
+   derived by the engine, so none of these rules are ever driven by authored content. */
+
+.next-step {
+  background: var(--gold-pale);
+  border: 1px solid var(--gold-light);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.next-step-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+.next-step-title {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.progress {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 20px;
+}
+
+.hub-sections {
+  list-style: none;
+}
+
+.hub-section {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 12px;
+}
+
+.hub-section.is-next {
+  border-color: var(--gold);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.hub-section-title {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+a.hub-section-title:hover {
+  color: var(--gold);
+}
+
+.hub-section-note {
+  flex-basis: 100%;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.status-chip {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--cream);
+  color: var(--ink-muted);
+}
+
+.status-in-progress {
+  background: var(--gold-pale);
+  color: var(--gold);
+}
+
+.status-complete {
+  background: var(--gold);
+  color: var(--white);
+}
+
+/* A section page: the way back, and the completion the participant chooses */
+
+.back-to-hub {
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.back-to-hub a {
+  color: var(--ink-muted);
+}
+
+.back-to-hub a:hover {
+  color: var(--gold);
+}
+
+.completion {
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  margin-top: 32px;
+}
+
+.completion-done {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gold);
+}
+
+.gate-messages {
+  list-style: none;
+  font-size: 14px;
+  color: var(--ink-light);
+  margin-bottom: 16px;
+}
+
+.gate-messages li {
+  padding: 10px 16px;
+  background: var(--cream);
+  border-left: 3px solid var(--border);
+  border-radius: 0 10px 10px 0;
+  margin-bottom: 8px;
+}
+
+.gate-refused {
+  font-size: 14px;
+  color: var(--red-soft);
+  margin-bottom: 16px;
+}
+
 /* Buttons */
 
 .btn {
