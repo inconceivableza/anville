@@ -78,7 +78,7 @@ Completing is also reversible: a completed section offers "Reopen this section",
 
 A clause may only name a block in its own section, and only one whose answer it can read; the linter refuses both. The three entry clauses have no block to name yet, because no block type captures a list of entries: they wait for the contact list and timeline board (tickets 09 and 17). A new kind of clause is a code change, never an expression in the document (ADR 0003).
 
-A `scripture_reading` block shows its authored passages and a confirm control. The activity beneath it is decided by the server too: until the confirmation is saved, the blocks after it are not sent to the browser at all.
+A `scripture_reading` block shows its authored passages and a confirm control. The activity beneath it is decided by the server too: until the confirmation is saved, the blocks after it are not sent to the browser and will not accept an answer.
 
 ## Answers
 

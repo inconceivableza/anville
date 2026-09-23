@@ -41,10 +41,12 @@ class SectionState(NamedTuple):
 
 
 class Hub(NamedTuple):
+    """✨ A participant's whole hub: their track's sections, the one to do next, and how much is answered."""
+
     sections: tuple
     next_step: SectionState | None
     answered: int
-    of: int
+    total: int
 
 
 def track_sections(document):
@@ -59,6 +61,21 @@ def track_sections(document):
 def section_by_id(document, section_id):
     """✨ The section with this identifier within the participant's track, or None."""
     return next((section for section in track_sections(document) if section["id"] == section_id), None)
+
+
+def open_blocks(section, answers):
+    """✨ The blocks of a section a participant has reached, and whether that is all of them.
+
+    A block that opens what follows it (a scripture reading) holds the rest of the section shut until it
+    has been answered. The server decides this on every request, so an activity a participant has not
+    opened is neither in the page nor answerable: it is not reachable at all, rather than merely unseen.
+    """
+    reached = []
+    for block in section["blocks"]:
+        reached.append(block)
+        if BLOCK_TYPES[block["type"]].opens_what_follows and not has_content(answers.get(block["id"])):
+            return reached, False
+    return reached, True
 
 
 def is_locked(section, completed):
@@ -82,7 +99,7 @@ def hub_for(sections, answers, completed, role="participant"):
         sections=tuple(states),
         next_step=next((state for state in states if state.is_next), None),
         answered=sum(1 for block in interactive if has_content(answers.get(block["id"]))),
-        of=len(interactive),
+        total=len(interactive),
     )
 
 

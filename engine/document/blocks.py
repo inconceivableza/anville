@@ -6,7 +6,8 @@ Nothing else needs to know the type exists: the answer schema, the refusal, the 
 which gate clauses may name it and whether it counts towards progress all follow from the entry.
 """
 
-from typing import NamedTuple
+import re
+from typing import Callable, NamedTuple
 
 from engine.document.text import text_for
 
@@ -17,28 +18,49 @@ SCALE_POINTS = range(1, 11)
 LONG_TEXT_MAX_LENGTH = 20_000
 
 
+def _text_from_form(submitted):
+    # ✨ The one exception to "text is never altered on input": forms send each typed line break as CRLF,
+    # while the text box showed (and its maxlength counted) a single "\n". Converting it back stores what
+    # the participant typed, and keeps the server's length limit the same as the browser's.
+    return submitted.replace("\r\n", "\n")
+
+
+def _scale_point_from_form(submitted):
+    return int(submitted) if re.fullmatch(r"[0-9]+", submitted) else submitted
+
+
+def _confirmation_from_form(submitted):
+    # ✨ A confirmation is made or not yet made, so the only value worth storing is that it was made.
+    return submitted == "true"
+
+
 class AnswerKind(NamedTuple):
-    """✨ What an answer is: the shape the server accepts, and what it says to a participant when it refuses.
+    """✨ What an answer is: the shape the server accepts, what a submitted form value means, and what the
+    server says to a participant when it refuses one.
 
     The refusal is shown in place of the schema's own message, which would echo the participant's text back.
+    `from_form` reads what a form sent; anything it does not recognise it passes on for the schema to refuse.
     Kinds are shared between block types, so a gate clause can say which kinds of answer it can read.
     """
 
     name: str
     schema: dict
     refusal: str
+    from_form: Callable[[str], object]
 
 
 TEXT = AnswerKind(
     "text",
     {"type": "string", "maxLength": LONG_TEXT_MAX_LENGTH},
     "This answer is too long to save.",
+    _text_from_form,
 )
 
 SCALE_POINT = AnswerKind(
     "scale_point",
     {"type": "integer", "minimum": SCALE_POINTS[0], "maximum": SCALE_POINTS[-1]},
     f"Choose a number from {SCALE_POINTS[0]} to {SCALE_POINTS[-1]}.",
+    _scale_point_from_form,
 )
 
 
@@ -46,6 +68,7 @@ CONFIRMATION = AnswerKind(
     "confirmation",
     {"const": True},
     "Confirm that you have read the passages to open the activity.",
+    _confirmation_from_form,
 )
 
 
@@ -54,13 +77,15 @@ class BlockType(NamedTuple):
 
     `text_fields` are the authored fields resolved to the reader's wording. `text_lists` are the same for
     a repeated sub-object, as `(list field, its text fields)`. `captures` is None when the block is content
-    only: such a block takes no answer and counts towards nothing.
+    only: such a block takes no answer and counts towards nothing. `opens_what_follows` marks a block that
+    holds the rest of its section shut until it has been answered.
     """
 
     name: str
     text_fields: tuple = ()
     text_lists: tuple = ()
     captures: AnswerKind | None = None
+    opens_what_follows: bool = False
 
     @property
     def is_interactive(self):
@@ -77,6 +102,7 @@ BLOCK_TYPES = {
             text_fields=("heading", "note", "confirm_label"),
             text_lists=(("passages", ("reference", "text")),),
             captures=CONFIRMATION,
+            opens_what_follows=True,
         ),
         BlockType("long_text", text_fields=("prompt",), captures=TEXT),
         BlockType("agreement_scale", text_fields=("prompt", "min_label", "max_label"), captures=SCALE_POINT),

@@ -6,7 +6,7 @@ to open is enforced separately, over HTTP, in tests/journeys/test_sections.py.
 
 import pytest
 
-from engine.hub import COMPLETE, IN_PROGRESS, LOCKED, NOT_STARTED, hub_for, is_locked
+from engine.hub import COMPLETE, IN_PROGRESS, LOCKED, NOT_STARTED, hub_for, is_locked, open_blocks
 
 
 def section(id, requires=(), blocks=()):
@@ -123,33 +123,74 @@ def test_progress_counts_the_blocks_the_participant_does_something_with_and_no_o
     sections = [section("first", blocks=[prose("intro"), long_text("a"), prose("outro"), long_text("b")])]
 
     hub = hub_for(sections, {"a": "Written"}, completed=[])
-    assert (hub.answered, hub.of) == (1, 2)
+    assert (hub.answered, hub.total) == (1, 2)
 
 
 def test_progress_counts_across_every_section_of_the_track():
     hub = hub_for(A_CHAIN, {"a": "Written", "c": "Written"}, completed=[])
 
-    assert (hub.answered, hub.of) == (2, 3)
+    assert (hub.answered, hub.total) == (2, 3)
 
 
 @pytest.mark.parametrize("answer", ["", "   ", None])
 def test_a_block_left_blank_is_not_counted_as_answered(answer):
     hub = hub_for([section("first", blocks=[long_text("a")])], {"a": answer}, completed=[])
 
-    assert (hub.answered, hub.of) == (0, 1)
+    assert (hub.answered, hub.total) == (0, 1)
 
 
 def test_a_pathway_with_nothing_interactive_in_it_reports_no_progress_rather_than_dividing_by_zero():
     hub = hub_for([section("first", blocks=[prose("intro")])], {}, completed=[])
 
-    assert (hub.answered, hub.of) == (0, 0)
+    assert (hub.answered, hub.total) == (0, 0)
 
 
 def test_progress_counts_only_the_sections_it_is_given_so_a_track_counts_only_its_own():
     """✨ Tracks arrive in ticket 23; the hub already counts only the sections handed to it."""
     hub = hub_for(A_CHAIN[:2], {"a": "Written", "c": "Written"}, completed=[])
 
-    assert (hub.answered, hub.of) == (1, 2)
+    assert (hub.answered, hub.total) == (1, 2)
+
+
+# What a participant has reached within a section
+
+
+def reading(id):
+    return {"id": id, "type": "scripture_reading", "passages": [{"reference": "Psalm 1", "text": "Blessed."}]}
+
+
+def test_a_section_with_no_reading_in_it_is_open_all_the_way_down():
+    blocks, all_of_it = open_blocks(section("first", blocks=[prose("intro"), long_text("a")]), {})
+
+    assert [block["id"] for block in blocks] == ["intro", "a"]
+    assert all_of_it is True
+
+
+def test_an_unconfirmed_reading_holds_back_everything_beneath_it():
+    gifts = section("first", blocks=[prose("intro"), reading("read"), long_text("a")])
+
+    blocks, all_of_it = open_blocks(gifts, {})
+
+    assert [block["id"] for block in blocks] == ["intro", "read"]
+    assert all_of_it is False
+
+
+def test_confirming_the_reading_opens_the_rest_of_the_section():
+    gifts = section("first", blocks=[prose("intro"), reading("read"), long_text("a")])
+
+    blocks, all_of_it = open_blocks(gifts, {"read": True})
+
+    assert [block["id"] for block in blocks] == ["intro", "read", "a"]
+    assert all_of_it is True
+
+
+def test_a_second_reading_holds_back_what_follows_it_in_turn():
+    gifts = section("first", blocks=[reading("first-read"), long_text("a"), reading("second-read"), long_text("b")])
+
+    blocks, all_of_it = open_blocks(gifts, {"first-read": True})
+
+    assert [block["id"] for block in blocks] == ["first-read", "a", "second-read"]
+    assert all_of_it is False
 
 
 # What the hub says about each section

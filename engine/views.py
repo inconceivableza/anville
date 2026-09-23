@@ -16,7 +16,7 @@ from engine.document import (
     unmet,
 )
 from engine.document.blocks import section_of
-from engine.hub import hub_for, is_locked, section_by_id, track_sections
+from engine.hub import hub_for, is_locked, open_blocks, section_by_id, track_sections
 from engine.models import PathwayVersion, Publication, Response
 
 
@@ -61,9 +61,7 @@ def complete_section(request, section_id):
     if participant_response is None:
         participant_response, _ = Response.objects.get_or_create(participant=request.user, version=version)
     participant_response.complete_section(section_id)
-    see_other = redirect("hub")
-    see_other.status_code = 303  # ✨ after a POST, the browser should GET the hub
-    return see_other
+    return _see_other("hub")
 
 
 @login_required
@@ -74,9 +72,7 @@ def reopen_section(request, section_id):
     _section_or_404(version, section_id)
     if participant_response is not None:
         participant_response.reopen_section(section_id)
-    see_other = redirect("hub")
-    see_other.status_code = 303  # ✨ after a POST, the browser should GET the hub
-    return see_other
+    return _see_other("hub")
 
 
 @login_required
@@ -95,11 +91,15 @@ def save_answer(request, block_id):
         block = answerable_block(version.document, block_id)
     except UnknownBlock:
         raise Http404("This pathway version has no block by that identifier that takes an answer.")
-    # ✨ A block in a locked section is as shut as the section page: otherwise a participant could fill a
-    # section in without ever opening it, and the lock would be decoration again.
+    # ✨ A block a participant has not reached is as shut as the page that would have shown it, whether a
+    # lock or an unconfirmed reading holds it. Otherwise they could fill it in without ever opening it, and
+    # both would be decoration again, which is exactly the prototype's mistake.
+    section = section_of(version.document, block_id)
+    answers = participant_response.answers if participant_response else {}
     completed = set(participant_response.completed_sections) if participant_response else set()
-    if is_locked(section_of(version.document, block_id), completed):
-        return render(request, "engine/save_status.html", {"refusal": "This section is not open yet."}, status=403)
+    reached, _ = open_blocks(section, answers)
+    if is_locked(section, completed) or block not in reached:
+        return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
     try:
         value = answer_from_form(block, request.POST.get("value"))
     except AnswerRefused as refused:
@@ -111,10 +111,14 @@ def save_answer(request, block_id):
 
     if request.headers.get("HX-Request") == "true":
         return render(request, "engine/save_status.html")
-    where = reverse("section", args=[section_of(version.document, block_id)["id"]])
-    see_other = redirect(f"{where}#block-{block_id}")
-    see_other.status_code = 303  # ✨ after a POST, the browser should GET the section again
-    return see_other
+    return _see_other(f"{reverse('section', args=[section['id']])}#block-{block_id}")
+
+
+def _see_other(where, *args):
+    """✨ After a POST, the browser should GET the page it lands on rather than repeat the POST."""
+    response = redirect(where, *args)
+    response.status_code = 303
+    return response
 
 
 def _participant(user):
@@ -142,7 +146,7 @@ def _section_or_404(version, section_id):
 
 
 def _section_page(version, section, answers, completed):
-    blocks, everything_open = _blocks_so_far(section, answers)
+    blocks, activity_open = open_blocks(section, answers)
     return {
         "pathway": {
             "version_id": version.pk,
@@ -155,23 +159,9 @@ def _section_page(version, section, answers, completed):
             "blocks": [_block_for_participant(block, answers) for block in blocks],
         },
         "is_complete": section["id"] in completed,
-        "everything_open": everything_open,
+        "activity_open": activity_open,
         "unmet": unmet(section, answers),
     }
-
-
-def _blocks_so_far(section, answers):
-    """✨ The blocks up to and including the first scripture reading the participant has not confirmed.
-
-    The confirmation opens what is beneath it, and the server decides that on every request: an activity
-    a participant has not opened is not in the page at all, so no amount of reading the markup reveals it.
-    """
-    blocks = []
-    for block in section["blocks"]:
-        blocks.append(block)
-        if block["type"] == "scripture_reading" and not answers.get(block["id"]):
-            return blocks, False
-    return blocks, True
 
 
 def _published_version(posted):

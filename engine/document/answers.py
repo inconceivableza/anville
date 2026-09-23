@@ -1,13 +1,12 @@
-"""✨ What each capturing block accepts as its answer, checked on the server and never trusted to the widget.
+"""✨ Accepting or refusing one submitted answer, on the server and never trusted to the widget.
 
-Which blocks capture what is decided in `blocks.py`; this module only accepts or refuses a submitted value.
+What each block captures, and what a form value means for it, is decided in `blocks.py`. This module
+only finds the block and holds it to its answer kind.
 """
-
-import re
 
 from jsonschema import Draft202012Validator
 
-from engine.document.blocks import BLOCK_TYPES, LONG_TEXT_MAX_LENGTH, SCALE_POINTS, AnswerKind
+from engine.document.blocks import BLOCK_TYPES
 
 _validators = {
     block_type.captures.name: Draft202012Validator(block_type.captures.schema)
@@ -38,31 +37,6 @@ def answer_from_form(block, submitted):
     if submitted is None:
         raise AnswerRefused("No answer was sent.")
     kind = BLOCK_TYPES[block["type"]].captures
-    value = _parse(kind, submitted)
-    if not _validators[kind.name].is_valid(value):
+    if not _validators[kind.name].is_valid(value := kind.from_form(submitted)):
         raise AnswerRefused(kind.refusal)
     return value
-
-
-def _parse(kind: AnswerKind, submitted):
-    if kind.name == "scale_point" and re.fullmatch(r"[0-9]+", submitted):
-        return int(submitted)
-    if kind.name == "confirmation":
-        # ✨ A confirmation is made or not yet made: the only value worth storing is that it was made.
-        return submitted == "true"
-    if kind.name == "text":
-        # ✨ The one exception to "text is never altered on input": forms send each typed line break as
-        # CRLF, while the text box showed (and its maxlength counted) a single "\n". Converting it back
-        # stores what the participant typed, and keeps the server's length limit the same as the browser's.
-        return submitted.replace("\r\n", "\n")
-    return submitted  # ✨ anything else is left for the schema to accept or refuse
-
-
-__all__ = [
-    "LONG_TEXT_MAX_LENGTH",
-    "SCALE_POINTS",
-    "AnswerRefused",
-    "UnknownBlock",
-    "answer_from_form",
-    "answerable_block",
-]

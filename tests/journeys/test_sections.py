@@ -328,6 +328,27 @@ def test_confirming_the_reading_opens_the_activity_beneath_it(open_calling, docu
 
 
 @pytest.mark.django_db
+def test_a_block_beneath_an_unconfirmed_reading_cannot_be_answered_either(open_calling, document_with_a_reading):
+    """✨ Withholding it from the page is not enough: the activity must be unanswerable until it is opened."""
+    client = open_calling(document_with_a_reading)
+
+    refused = client.post("/answers/statement/", {"value": LONG_ENOUGH, "version": _version_id()})
+
+    assert refused.status_code == 403
+    assert "statement" not in Response.objects.get().answers
+
+
+@pytest.mark.django_db
+def test_the_reading_itself_can_always_be_answered_since_it_is_what_opens_the_rest(
+    open_calling, document_with_a_reading
+):
+    client = open_calling(document_with_a_reading)
+
+    assert client.post("/answers/reading/", {"value": "true", "version": _version_id()}).status_code == 303
+    assert client.post("/answers/statement/", {"value": LONG_ENOUGH, "version": _version_id()}).status_code == 303
+
+
+@pytest.mark.django_db
 def test_confirming_a_reading_sends_the_participant_back_to_its_own_section(open_calling, document_with_a_reading):
     client = open_calling(document_with_a_reading)
 
