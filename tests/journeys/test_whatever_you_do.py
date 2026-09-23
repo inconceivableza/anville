@@ -191,6 +191,28 @@ def test_all_five_sections_appear_on_the_hub(participant):
 
 
 @pytest.mark.django_db
+def test_the_sections_with_no_activity_yet_still_say_what_they_are_for(participant):
+    """✨ Sections 1, 2 and 4 carry their prototype hint and nothing else until their activities are built."""
+    answer_the_baseline(participant)
+    complete(participant, "onboarding")
+
+    assert "what gifts and talents has God given (and not given) you?" in participant.get(
+        "/sections/designed/"
+    ).content.decode()
+    assert "Map out your life, then lay those things over the top" in participant.get(
+        "/sections/shape/"
+    ).content.decode()
+
+
+@pytest.mark.django_db
+def test_a_section_with_no_activity_counts_towards_no_progress(participant):
+    """✨ Progress counts blocks a participant does something with, and prose is not one of them."""
+    page = participant.get("/").content.decode()
+
+    assert "0 of 11 answered" in page  # ✨ four ratings, the reading and the statement, the letter and four more
+
+
+@pytest.mark.django_db
 def test_the_sections_after_the_calling_statement_are_locked_until_it_is_complete(participant):
     answer_the_baseline(participant)
     complete(participant, "onboarding")

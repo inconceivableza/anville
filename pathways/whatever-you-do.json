@@ -54,13 +54,29 @@
         "id": "designed",
         "title": "Section 1: How you've been designed",
         "requires": ["onboarding"],
-        "blocks": []
+        "blocks": [
+          {
+            "id": "gifts-question",
+            "type": "rich_text",
+            "variant": "hint",
+            "label": "The big question",
+            "body": "Based on what people you trust say about you, and your own self-examination, what gifts and talents has God given (and not given) you? Remember – you don't have 'church gifts' and 'non-church gifts'. A teaching gift looks different in a school vs in kids' work, but it's still a teaching gift."
+          }
+        ]
       },
       {
         "id": "shape",
         "title": "Section 2: The shape of your life",
         "requires": ["onboarding"],
-        "blocks": []
+        "blocks": [
+          {
+            "id": "timeline-task",
+            "type": "rich_text",
+            "variant": "hint",
+            "label": "The task",
+            "body": "Your gifts are only part of the picture. God also speaks through your circumstances, the people around you, the fruit of your work, and your prayers – and all of it happened somewhere in your story. Map out your life, then lay those things over the top and look for the threads."
+          }
+        ]
       },
       {
         "id": "calling",
@@ -124,7 +140,15 @@
         "id": "growth",
         "title": "Section 4: Growth plan",
         "requires": ["calling"],
-        "blocks": []
+        "blocks": [
+          {
+            "id": "growth-task",
+            "type": "rich_text",
+            "variant": "hint",
+            "label": "The task",
+            "body": "Now make a concrete plan: how will you refine your sense of calling, grow in it, and walk in it? This is where discernment turns into action."
+          }
+        ]
       },
       {
         "id": "letter",
