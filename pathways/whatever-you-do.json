@@ -1,0 +1,197 @@
+{
+  "format": 1,
+  "title": "Whatever You Do",
+  "content": {
+    "sections": [
+      {
+        "id": "onboarding",
+        "title": "Before we begin",
+        "blocks": [
+          {
+            "id": "baseline-intro",
+            "type": "rich_text",
+            "body": "This isn't a test – there are no right or wrong answers. We ask these questions now, and again at the end, simply to help you see how far you've travelled through the course.\n\nTo what extent would you agree with the following statements?"
+          },
+          {
+            "id": "bl-bible",
+            "type": "agreement_scale",
+            "prompt": "I have a detailed understanding of what the Bible teaches about 'work' and 'calling'",
+            "min_label": "Strongly disagree",
+            "max_label": "Strongly agree"
+          },
+          {
+            "id": "bl-gifts",
+            "type": "agreement_scale",
+            "prompt": "I have a detailed understanding of what my God-given talents/gifts and limitations are",
+            "min_label": "Strongly disagree",
+            "max_label": "Strongly agree"
+          },
+          {
+            "id": "bl-call",
+            "type": "agreement_scale",
+            "prompt": "I have a strong sense of what God's specific 'call' and purpose is for my life",
+            "min_label": "Strongly disagree",
+            "max_label": "Strongly agree"
+          },
+          {
+            "id": "bl-plan",
+            "type": "agreement_scale",
+            "prompt": "I have a clear, practical plan for how to pursue God's purpose for my life, in terms of 'work' / 'calling'",
+            "min_label": "Strongly disagree",
+            "max_label": "Strongly agree"
+          }
+        ],
+        "gate": {
+          "clauses": [
+            { "type": "has_answer", "block": "bl-bible", "message": "Answer all four to continue" },
+            { "type": "has_answer", "block": "bl-gifts", "message": "Answer all four to continue" },
+            { "type": "has_answer", "block": "bl-call", "message": "Answer all four to continue" },
+            { "type": "has_answer", "block": "bl-plan", "message": "Answer all four to continue" }
+          ]
+        }
+      },
+      {
+        "id": "designed",
+        "title": "Section 1: How you've been designed",
+        "requires": ["onboarding"],
+        "blocks": []
+      },
+      {
+        "id": "shape",
+        "title": "Section 2: The shape of your life",
+        "requires": ["onboarding"],
+        "blocks": []
+      },
+      {
+        "id": "calling",
+        "title": "Section 3: Putting your calling into words",
+        "requires": ["onboarding"],
+        "blocks": [
+          {
+            "id": "calling-task",
+            "type": "rich_text",
+            "variant": "hint",
+            "label": "The task",
+            "body": "First articulate your specific calling, drawing together everything from Sections 1 & 2. Then think through three different ways it could play out – in the marketplace and in a local church context – and how it might evolve over your lifetime."
+          },
+          {
+            "id": "s2a-reading",
+            "type": "scripture_reading",
+            "heading": "Read these passages before continuing",
+            "passages": [
+              {
+                "reference": "Matthew 28:18–20",
+                "text": "And Jesus came and said to them, \"All authority in heaven and on earth has been given to me. Go therefore and make disciples of all nations, baptising them in the name of the Father and of the Son and of the Holy Spirit, teaching them to observe all that I have commanded you. And behold, I am with you always, to the end of the age.\""
+              },
+              {
+                "reference": "Matthew 22:36–40",
+                "text": "\"Teacher, which is the great commandment in the Law?\" And he said to him, \"You shall love the Lord your God with all your heart and with all your soul and with all your mind. This is the great and first commandment. And a second is like it: You shall love your neighbour as yourself. On these two commandments depend all the Law and the Prophets.\""
+              },
+              {
+                "reference": "1 Corinthians 15:58",
+                "text": "Therefore, my beloved brothers, be steadfast, immovable, always abounding in the work of the Lord, knowing that in the Lord your labour is not in vain."
+              },
+              {
+                "reference": "Acts 18:1–4",
+                "text": "After this Paul left Athens and went to Corinth. And he found a Jew named Aquila, a native of Pontus, recently come from Italy with his wife Priscilla. And because he was of the same trade he stayed with them and worked, for they were tentmakers by trade. And he reasoned in the synagogue every Sabbath, and tried to persuade Jews and Greeks."
+              },
+              {
+                "reference": "Psalm 37:3–7",
+                "text": "Trust in the Lord, and do good; dwell in the land and befriend faithfulness. Delight yourself in the Lord, and he will give you the desires of your heart. Commit your way to the Lord; trust in him, and he will act. He will bring forth your righteousness as the light, and your justice as the noonday. Be still before the Lord and wait patiently for him."
+              }
+            ],
+            "note": "Our general calling is the great commission and greatest commandments. Our specific calling works within this – playing out in different contexts and seasons, with patient trust in God's timing running through it all.",
+            "confirm_label": "I've read these passages and I'm ready to continue"
+          },
+          {
+            "id": "cl-statement",
+            "type": "long_text",
+            "prompt": "Now write it in your own words. This is the sentence you will keep coming back to."
+          }
+        ],
+        "gate": {
+          "clauses": [
+            {
+              "type": "min_text_length",
+              "block": "cl-statement",
+              "min": 10,
+              "message": "Write your calling statement to continue."
+            }
+          ]
+        }
+      },
+      {
+        "id": "growth",
+        "title": "Section 4: Growth plan",
+        "requires": ["calling"],
+        "blocks": []
+      },
+      {
+        "id": "letter",
+        "title": "Section 5: A letter to your future self",
+        "requires": ["calling"],
+        "blocks": [
+          {
+            "id": "lt-task",
+            "type": "rich_text",
+            "variant": "hint",
+            "label": "The task",
+            "body": "Write to yourself as you will be in twelve months' time. You have just done a lot of thinking, and most of it fades faster than you would expect. Put it down now, while it is still warm, and let it find you again when you need it."
+          },
+          {
+            "id": "lt-message",
+            "type": "long_text",
+            "prompt": "Your letter"
+          },
+          {
+            "id": "pl-intro",
+            "type": "rich_text",
+            "body": "You answered these same questions at the start. Let's see where you are now.\n\nTo what extent would you agree with the following statements?"
+          },
+          {
+            "id": "pl-bible",
+            "type": "agreement_scale",
+            "prompt": "I have a detailed understanding of what the Bible teaches about 'work' and 'calling'",
+            "min_label": "Strongly disagree",
+            "max_label": "Strongly agree"
+          },
+          {
+            "id": "pl-gifts",
+            "type": "agreement_scale",
+            "prompt": "I have a detailed understanding of what my God-given talents/gifts and limitations are",
+            "min_label": "Strongly disagree",
+            "max_label": "Strongly agree"
+          },
+          {
+            "id": "pl-call",
+            "type": "agreement_scale",
+            "prompt": "I have a strong sense of what God's specific 'call' and purpose is for my life",
+            "min_label": "Strongly disagree",
+            "max_label": "Strongly agree"
+          },
+          {
+            "id": "pl-plan",
+            "type": "agreement_scale",
+            "prompt": "I have a clear, practical plan for how to pursue God's purpose for my life, in terms of 'work' / 'calling'",
+            "min_label": "Strongly disagree",
+            "max_label": "Strongly agree"
+          }
+        ],
+        "gate": {
+          "clauses": [
+            {
+              "type": "min_text_length",
+              "block": "lt-message",
+              "min": 10,
+              "message": "Write at least one part of your letter before sealing it."
+            },
+            { "type": "has_answer", "block": "pl-bible", "message": "Answer all four to continue" },
+            { "type": "has_answer", "block": "pl-gifts", "message": "Answer all four to continue" },
+            { "type": "has_answer", "block": "pl-call", "message": "Answer all four to continue" },
+            { "type": "has_answer", "block": "pl-plan", "message": "Answer all four to continue" }
+          ]
+        }
+      }
+    ]
+  }
+}
