@@ -3,6 +3,8 @@
 Runs only on a document that has already passed the schema, so it relies on the document's shape.
 """
 
+from engine.document.blocks import BLOCK_TYPES
+from engine.document.gates import CLAUSE_ANSWER_KINDS, clauses_of
 from engine.document.problem import Problem
 
 
@@ -12,7 +14,7 @@ def lint(document):
     return [
         *_duplicates(identifiers),
         *_missing_sections(document, _ids_of("section", identifiers)),
-        *_missing_blocks(document, _ids_of("block", identifiers)),
+        *_unreadable_clauses(document, _ids_of("block", identifiers)),
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
     ]
@@ -58,14 +60,37 @@ def _missing_sections(document, section_ids):
                 yield Problem(f"/content/sections/{s}/requires/{r}", f"There is no section '{required}' in this pathway.")
 
 
-def _missing_blocks(document, block_ids):
+def _unreadable_clauses(document, block_ids):
+    """✨ A gate clause the engine could never check when the participant reaches it.
+
+    A gate decides whether its own section is finished, so it may only name a block in that section, and
+    only one whose answer the clause can read. One problem per clause: the first thing wrong with it.
+    """
     for s, section in enumerate(document["content"]["sections"]):
-        for c, clause in enumerate(section.get("gate", {}).get("clauses", [])):
-            if clause["block"] not in block_ids:
+        own_blocks = {block["id"]: block["type"] for block in section["blocks"]}
+        for c, clause in enumerate(clauses_of(section)):
+            named, path = clause["block"], f"/content/sections/{s}/gate/clauses/{c}/block"
+            if named not in block_ids:
+                yield Problem(path, f"There is no block '{named}' in this pathway.")
+            elif named not in own_blocks:
                 yield Problem(
-                    f"/content/sections/{s}/gate/clauses/{c}/block",
-                    f"There is no block '{clause['block']}' in this pathway.",
+                    path,
+                    f"Block '{named}' is in another section; a gate clause may only name a block in its own section.",
                 )
+            elif not _can_read(clause["type"], BLOCK_TYPES[own_blocks[named]]):
+                article = "an" if own_blocks[named][0] in "aeiou" else "a"
+                yield Problem(
+                    path,
+                    f"A '{clause['type']}' clause cannot be checked against block '{named}', "
+                    f"which is {article} {own_blocks[named]}.",
+                )
+
+
+def _can_read(clause_type, block_type):
+    if not block_type.is_interactive:
+        return False
+    readable = CLAUSE_ANSWER_KINDS[clause_type]
+    return readable is None or block_type.captures.name in readable
 
 
 def _missing_constructs(document, construct_ids):

@@ -149,6 +149,7 @@
       }
     },
     "gate": {
+      "description": "What must be true before the participant may complete this section. Every clause must pass.",
       "type": "object",
       "additionalProperties": false,
       "required": ["clauses"],
@@ -157,27 +158,39 @@
       }
     },
     "clause": {
+      "description": "One requirement, chosen from a fixed set and configured. Never an expression (ADR 0003).",
       "type": "object",
       "required": ["type"],
       "properties": {
-        "type": { "enum": ["has_answer", "min_text_length"] }
+        "type": {
+          "enum": ["has_answer", "min_text_length", "entry_count", "distinct_value_count", "every_entry_has"]
+        }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "has_answer" } } }, "then": { "$ref": "#/$defs/has_answer" } },
-        { "if": { "properties": { "type": { "const": "min_text_length" } } }, "then": { "$ref": "#/$defs/min_text_length" } }
+        { "if": { "properties": { "type": { "const": "min_text_length" } } }, "then": { "$ref": "#/$defs/min_text_length" } },
+        { "if": { "properties": { "type": { "const": "entry_count" } } }, "then": { "$ref": "#/$defs/entry_count" } },
+        { "if": { "properties": { "type": { "const": "distinct_value_count" } } }, "then": { "$ref": "#/$defs/distinct_value_count" } },
+        { "if": { "properties": { "type": { "const": "every_entry_has" } } }, "then": { "$ref": "#/$defs/every_entry_has" } }
       ]
     },
+    "clause_message": {
+      "description": "Shown to the participant when this clause, and no other, is what is still missing.",
+      "$ref": "#/$defs/text"
+    },
     "has_answer": {
+      "description": "The block has been answered. Blank text and an empty list do not count as an answer.",
       "type": "object",
       "additionalProperties": false,
       "required": ["type", "block", "message"],
       "properties": {
         "type": { "const": "has_answer" },
         "block": { "$ref": "#/$defs/identifier" },
-        "message": { "$ref": "#/$defs/text" }
+        "message": { "$ref": "#/$defs/clause_message" }
       }
     },
     "min_text_length": {
+      "description": "The block's text answer is at least this long, not counting space at either end.",
       "type": "object",
       "additionalProperties": false,
       "required": ["type", "block", "min", "message"],
@@ -185,7 +198,49 @@
         "type": { "const": "min_text_length" },
         "block": { "$ref": "#/$defs/identifier" },
         "min": { "type": "integer", "minimum": 1 },
-        "message": { "$ref": "#/$defs/text" }
+        "message": { "$ref": "#/$defs/clause_message" }
+      }
+    },
+    "entry_count": {
+      "description": "The block holds at least this many entries.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "block", "min", "message"],
+      "properties": {
+        "type": { "const": "entry_count" },
+        "block": { "$ref": "#/$defs/identifier" },
+        "min": { "type": "integer", "minimum": 1 },
+        "only_with_content": {
+          "description": "Count only entries with something in them, so blank rows a widget seeded do not count.",
+          "type": "boolean",
+          "default": false
+        },
+        "message": { "$ref": "#/$defs/clause_message" }
+      }
+    },
+    "distinct_value_count": {
+      "description": "The block's entries hold at least this many different values for one field.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "block", "field", "min", "message"],
+      "properties": {
+        "type": { "const": "distinct_value_count" },
+        "block": { "$ref": "#/$defs/identifier" },
+        "field": { "$ref": "#/$defs/identifier" },
+        "min": { "type": "integer", "minimum": 1 },
+        "message": { "$ref": "#/$defs/clause_message" }
+      }
+    },
+    "every_entry_has": {
+      "description": "Every entry holds a value for this field. True of no entries at all, so pair it with entry_count.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "block", "field", "message"],
+      "properties": {
+        "type": { "const": "every_entry_has" },
+        "block": { "$ref": "#/$defs/identifier" },
+        "field": { "$ref": "#/$defs/identifier" },
+        "message": { "$ref": "#/$defs/clause_message" }
       }
     },
     "bucket": {

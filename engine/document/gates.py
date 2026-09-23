@@ -1,0 +1,102 @@
+"""✨ Whether a section's gate passes, and what to say to the participant when it does not.
+
+A gate is a list of clauses drawn from the fixed set below, never an expression (ADR 0003). Every clause
+must pass, and each one carries its own authored message for the case where that clause is what failed.
+A new kind of clause is a code change: an entry in CLAUSES here and its authored shape in the schema.
+
+Nothing in this module touches the database or a request. It reads a section as authored and a
+response's answers as stored, so the same evaluation serves the section page, the hub and completion.
+"""
+
+from engine.document.text import text_for
+
+# ✨ The answer kinds each clause can read (see blocks.py). None means any block that captures an answer.
+# The linter refuses a clause naming a block whose answer it could never read.
+CLAUSE_ANSWER_KINDS = {
+    "has_answer": None,
+    "min_text_length": ("text",),
+    "entry_count": ("entries",),
+    "distinct_value_count": ("entries",),
+    "every_entry_has": ("entries",),
+}
+
+
+def gate_passes(section, answers):
+    """✨ Whether this section may be completed. A section with no gate always may."""
+    return not unmet(section, answers)
+
+
+def unmet(section, answers, role="participant"):
+    """✨ The authored message of every clause this response does not satisfy, in the order authored."""
+    return [
+        text_for(clause["message"], role)
+        for clause in clauses_of(section)
+        if not CLAUSES[clause["type"]](clause, answers.get(clause["block"]))
+    ]
+
+
+def clauses_of(section):
+    return section.get("gate", {}).get("clauses", [])
+
+
+def _has_answer(clause, answer):
+    return _has_content(answer)
+
+
+def _min_text_length(clause, answer):
+    return len(str(answer or "").strip()) >= clause["min"]
+
+
+def _entry_count(clause, answer):
+    entries = _entries(answer)
+    if clause.get("only_with_content"):
+        entries = [entry for entry in entries if _entry_has_content(entry)]
+    return len(entries) >= clause["min"]
+
+
+def _distinct_value_count(clause, answer):
+    values = [_value_of(entry, clause["field"]) for entry in _entries(answer)]
+    # ✨ Values are compared as stored, because the ones an author counts are chosen by a widget, not typed.
+    return len({_hashable(value) for value in values if _has_content(value)}) >= clause["min"]
+
+
+def _every_entry_has(clause, answer):
+    # ✨ "Every" over no entries is true, so an author pairs this clause with a count of entries.
+    return all(_has_content(_value_of(entry, clause["field"])) for entry in _entries(answer))
+
+
+CLAUSES = {
+    "has_answer": _has_answer,
+    "min_text_length": _min_text_length,
+    "entry_count": _entry_count,
+    "distinct_value_count": _distinct_value_count,
+    "every_entry_has": _every_entry_has,
+}
+
+
+def _has_content(value):
+    """✨ Whether an answer, or one field of an entry, holds anything. A zero is an answer; blank space is not."""
+    if value is None or value is False:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (list, dict)):
+        return bool(value)
+    return True
+
+
+def _entries(answer):
+    return answer if isinstance(answer, list) else []
+
+
+def _entry_has_content(entry):
+    values = entry.values() if isinstance(entry, dict) else [entry]
+    return any(_has_content(value) for value in values)
+
+
+def _value_of(entry, field):
+    return entry.get(field) if isinstance(entry, dict) else None
+
+
+def _hashable(value):
+    return value if isinstance(value, (str, int, float, bool)) else repr(value)
