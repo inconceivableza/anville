@@ -1,27 +1,18 @@
-"""✨ What each capturing block accepts as its answer, checked on the server and never trusted to the widget."""
+"""✨ What each capturing block accepts as its answer, checked on the server and never trusted to the widget.
+
+Which blocks capture what is decided in `blocks.py`; this module only accepts or refuses a submitted value.
+"""
 
 import re
 
 from jsonschema import Draft202012Validator
 
-# ✨ The points of an agreement scale. The answer schema, the refusal and the rendered buttons all use these.
-SCALE_POINTS = range(1, 11)
+from engine.document.blocks import BLOCK_TYPES, LONG_TEXT_MAX_LENGTH, SCALE_POINTS, AnswerKind
 
-# ✨ The longest long-text answer accepted. The rendered text box carries the same limit.
-LONG_TEXT_MAX_LENGTH = 20_000
-
-# ✨ The answer schema of every block type that captures an answer. A type missing here captures nothing.
-ANSWER_SCHEMAS = {
-    "long_text": {"type": "string", "maxLength": LONG_TEXT_MAX_LENGTH},
-    "agreement_scale": {"type": "integer", "minimum": SCALE_POINTS[0], "maximum": SCALE_POINTS[-1]},
-}
-
-_validators = {block_type: Draft202012Validator(schema) for block_type, schema in ANSWER_SCHEMAS.items()}
-
-# ✨ Shown to the participant in place of the schema's own message, which would echo their text back.
-_REFUSALS = {
-    "long_text": "This answer is too long to save.",
-    "agreement_scale": f"Choose a number from {SCALE_POINTS[0]} to {SCALE_POINTS[-1]}.",
+_validators = {
+    block_type.captures.name: Draft202012Validator(block_type.captures.schema)
+    for block_type in BLOCK_TYPES.values()
+    if block_type.is_interactive
 }
 
 
@@ -37,7 +28,7 @@ def answerable_block(document, block_id):
     """✨ The block with this identifier, if it takes an answer; otherwise UnknownBlock."""
     for section in document["content"]["sections"]:
         for block in section["blocks"]:
-            if block["id"] == block_id and block["type"] in ANSWER_SCHEMAS:
+            if block["id"] == block_id and BLOCK_TYPES[block["type"]].is_interactive:
                 return block
     raise UnknownBlock(block_id)
 
@@ -46,18 +37,29 @@ def answer_from_form(block, submitted):
     """✨ The answer a submitted form value stands for, or AnswerRefused. Text is kept exactly as written."""
     if submitted is None:
         raise AnswerRefused("No answer was sent.")
-    value = _parse(block["type"], submitted)
-    if not _validators[block["type"]].is_valid(value):
-        raise AnswerRefused(_REFUSALS[block["type"]])
+    kind = BLOCK_TYPES[block["type"]].captures
+    value = _parse(kind, submitted)
+    if not _validators[kind.name].is_valid(value):
+        raise AnswerRefused(kind.refusal)
     return value
 
 
-def _parse(block_type, submitted):
-    if block_type == "agreement_scale" and re.fullmatch(r"[0-9]+", submitted):
+def _parse(kind: AnswerKind, submitted):
+    if kind.name == "scale_point" and re.fullmatch(r"[0-9]+", submitted):
         return int(submitted)
-    if block_type == "long_text":
+    if kind.name == "text":
         # ✨ The one exception to "text is never altered on input": forms send each typed line break as
         # CRLF, while the text box showed (and its maxlength counted) a single "\n". Converting it back
         # stores what the participant typed, and keeps the server's length limit the same as the browser's.
         return submitted.replace("\r\n", "\n")
     return submitted  # ✨ anything else is left for the schema to accept or refuse
+
+
+__all__ = [
+    "LONG_TEXT_MAX_LENGTH",
+    "SCALE_POINTS",
+    "AnswerRefused",
+    "UnknownBlock",
+    "answer_from_form",
+    "answerable_block",
+]

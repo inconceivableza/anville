@@ -4,15 +4,17 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from engine.document import LONG_TEXT_MAX_LENGTH, SCALE_POINTS, AnswerRefused, UnknownBlock, answer_from_form, answerable_block, text_for
+from engine.document import (
+    LONG_TEXT_MAX_LENGTH,
+    SCALE_POINTS,
+    AnswerRefused,
+    UnknownBlock,
+    answer_from_form,
+    answerable_block,
+    authored_text,
+    text_for,
+)
 from engine.models import PathwayVersion, Publication, Response
-
-# ✨ The authored text fields each block type shows, resolved to the participant's wording.
-_TEXT_FIELDS = {
-    "rich_text": ("label", "body"),
-    "long_text": ("prompt",),
-    "agreement_scale": ("prompt", "min_label", "max_label"),
-}
 
 
 @login_required
@@ -89,8 +91,6 @@ def _block_for_participant(block, answers):
         "type": block["type"],
         "template": f"engine/blocks/{block['type']}.html",
         "variant": block.get("variant", "plain"),
-        "text": {
-            field: text_for(block[field], "participant") for field in _TEXT_FIELDS[block["type"]] if field in block
-        },
+        "text": authored_text(block, "participant"),
         "answer": answers.get(block["id"]),
     }
