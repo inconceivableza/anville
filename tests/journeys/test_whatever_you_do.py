@@ -311,7 +311,7 @@ def test_progress_follows_the_participant_to_a_second_device(participant, django
     assert "Complete" in second_device.get("/").content.decode()
 
 
-# The demo check: the document is the app's content
+# Editing the document: the file is the app's content
 
 
 @pytest.mark.django_db
@@ -337,7 +337,7 @@ def test_editing_a_prompt_in_the_document_changes_the_app_for_a_fresh_participan
 
 @pytest.mark.django_db
 def test_a_participant_already_in_progress_stays_on_the_version_they_started(participant, load_pathway):  # noqa: F811
-    """✨ Pinning is the behaviour, not a bug: the demo is checked on someone who has not begun."""
+    """✨ Pinning is the behaviour, not a bug: an edit is checked on a participant who has not begun."""
     answer(participant, "bl-bible", "6")
 
     edited = the_pathway()
