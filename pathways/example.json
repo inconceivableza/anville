@@ -34,6 +34,19 @@
         "requires": ["onboarding"],
         "blocks": [
           {
+            "id": "reflection-reading",
+            "type": "scripture_reading",
+            "heading": "Read these first",
+            "passages": [
+              {
+                "reference": "Colossians 3:23-24",
+                "text": "Whatever you do, work at it with all your heart, as working for the Lord, not for human masters."
+              }
+            ],
+            "note": "Read it slowly. Notice which word you would not have chosen yourself.",
+            "confirm_label": "I have read this"
+          },
+          {
             "id": "reflection-answer",
             "type": "long_text",
             "prompt": {
@@ -44,6 +57,11 @@
         ],
         "gate": {
           "clauses": [
+            {
+              "type": "has_answer",
+              "block": "reflection-reading",
+              "message": "Confirm you have read the passage before finishing this section."
+            },
             {
               "type": "min_text_length",
               "block": "reflection-answer",

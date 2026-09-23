@@ -58,9 +58,29 @@ Loading validates the file and prints any problems with their document paths. A 
 
 A participant who has saved an answer stays on the version they started, even after a later one is published. Everyone else sees the latest published version. So check a content change by signing out and signing up as a new participant.
 
+## The hub, locks and gates
+
+The hub at `/` is derived by the engine from what a participant has answered and completed: each section's status, its lock, the next step and the counts. None of it is authored, so an author cannot write a status chip or forget a lock.
+
+A section has its own page at `/sections/<id>/`. It opens once every section in its `requires` list is complete. A locked section is decided on the request, never in the markup: its page redirects to the hub, and its blocks refuse an answer. Progress counts only the blocks a participant does something with.
+
+A section's `gate` is an optional list of clauses, all of which must pass before the participant may mark it complete. Completing is their own act, and the server re-checks the gate when the button is pressed, so re-enabling it in a browser achieves nothing. Every failing clause shows its own authored message. The clause types are:
+
+| Clause | Reads | Requires |
+|---|---|---|
+| `has_answer` | any answer | the block has been answered; blank text and an empty list do not count |
+| `min_text_length` | text | at least `min` characters, ignoring space at either end |
+| `entry_count` | entries | at least `min` entries, or with `only_with_content` only those with something in them |
+| `distinct_value_count` | entries | at least `min` different values of `field` |
+| `every_entry_has` | entries | every entry has a value for `field` — true of no entries, so pair it with `entry_count` |
+
+A clause may only name a block in its own section, and only one whose answer it can read; the linter refuses both. The three entry clauses have no block to name yet, because no block type captures a list of entries: they wait for the contact list and timeline board (tickets 09 and 17). A new kind of clause is a code change, never an expression in the document (ADR 0003).
+
+A `scripture_reading` block shows its authored passages and a confirm control. The activity beneath it is decided by the server too: until the confirmation is saved, the blocks after it are not sent to the browser at all.
+
 ## Answers
 
-Each answer saves by itself as the participant types or chooses, and only that answer is written. Answers are checked on the server against their block, and a participant signing in anywhere sees them all. Whether a response is test data is recorded on the server (`Response.is_test_data`), never set by a browser.
+Each answer saves by itself as the participant types or chooses, and only that answer is written. A block type is defined in one place, `engine/document/blocks.py`: its authored text, what it captures and whether it counts towards progress all follow from that entry. Answers are checked on the server against their block, and a participant signing in anywhere sees them all. Whether a response is test data is recorded on the server (`Response.is_test_data`), never set by a browser.
 
 Long-text answers are limited to 20,000 characters. The text box carries the same limit and says how much room is left near it. Line breaks are stored as `\n`, although forms send them as `\r\n`. This is the one change made to a participant's text on input, and it keeps the server's count the same as the browser's.
 
