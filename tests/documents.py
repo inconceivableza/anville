@@ -1,6 +1,19 @@
 """✨ Pathway documents for tests, built fresh on each call so a test can alter its copy freely."""
 
 
+def scripture_reading(**fields):
+    """✨ A scripture reading block, with its authored parts overridable one at a time."""
+    return {
+        "id": "reading",
+        "type": "scripture_reading",
+        "heading": "Read these first",
+        "passages": [{"reference": "1 Corinthians 12:4-11", "text": "There are different kinds of gifts."}],
+        "note": "Read slowly, and notice what stays with you.",
+        "confirm_label": "I have read these",
+        **fields,
+    }
+
+
 def pathway_document():
     return {
         "format": 1,

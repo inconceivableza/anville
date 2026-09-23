@@ -57,7 +57,8 @@ def test_an_agreement_scale_needs_its_prompt_and_both_anchor_labels():
     assert "'max_label' is a required property" in problem.message
 
 
-def test_rich_text_may_be_set_off_as_a_hint_or_a_note_and_nothing_else():
+def test_rich_text_may_be_set_off_as_a_hint_and_nothing_else():
+    """✨ A note beneath scripture belongs to the scripture reading block, so rich text no longer offers one."""
     document = pathway_document()
     welcome = document["content"]["sections"][0]["blocks"][0]
     welcome.update(variant="hint", label="The big question")

@@ -186,7 +186,7 @@ h2 {
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
-/* Hint boxes and scripture notes: rich text set off from the page */
+/* Hint boxes: rich text set off from the page */
 
 .hint-box {
   background: var(--gold-pale);
@@ -208,6 +208,42 @@ h2 {
   margin-bottom: 4px;
 }
 
+/* Scripture reading: the passages, the note beneath them, and the confirmation that opens the activity */
+
+.scripture {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.scripture-heading {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.scripture-passage {
+  border-left: 3px solid var(--gold-light);
+  padding-left: 16px;
+  margin-bottom: 16px;
+  font-family: var(--font-heading);
+  font-size: 16px;
+  color: var(--ink-light);
+}
+
+.scripture-ref {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--gold);
+}
+
 .scripture-note {
   font-size: 13px;
   color: var(--ink-muted);
@@ -218,9 +254,15 @@ h2 {
   line-height: 1.5;
 }
 
-.scripture-note strong {
-  display: block;
-  margin-bottom: 4px;
+.scripture-confirm {
+  margin-top: 20px;
+}
+
+.scripture-confirmed {
+  margin-top: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gold);
 }
 
 /* The 1–10 agreement scale. Each point is a radio button drawn as the prototype's square button. */

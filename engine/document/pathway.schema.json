@@ -95,10 +95,11 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "long_text", "agreement_scale"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
+        { "if": { "properties": { "type": { "const": "scripture_reading" } } }, "then": { "$ref": "#/$defs/scripture_reading" } },
         { "if": { "properties": { "type": { "const": "long_text" } } }, "then": { "$ref": "#/$defs/long_text" } },
         { "if": { "properties": { "type": { "const": "agreement_scale" } } }, "then": { "$ref": "#/$defs/agreement_scale" } }
       ]
@@ -111,8 +112,8 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "rich_text" },
         "variant": {
-          "description": "How the text is set off: plain prose, a hint box (such as 'The big question'), or a note beneath scripture.",
-          "enum": ["plain", "hint", "note"],
+          "description": "How the text is set off: plain prose, or a hint box (such as 'The big question').",
+          "enum": ["plain", "hint"],
           "default": "plain"
         },
         "label": {
@@ -121,6 +122,44 @@
         },
         "body": {
           "description": "Plain text. A blank line starts a new paragraph.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "scripture_reading": {
+      "description": "Passages to read, and a confirmation that opens the activity beneath them.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "passages"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "scripture_reading" },
+        "heading": { "$ref": "#/$defs/text" },
+        "passages": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["reference", "text"],
+            "properties": {
+              "reference": {
+                "description": "Where the passage is from, such as '1 Corinthians 12:4-11'.",
+                "$ref": "#/$defs/text"
+              },
+              "text": {
+                "description": "The passage itself. Plain text; a blank line starts a new paragraph.",
+                "$ref": "#/$defs/text"
+              }
+            }
+          }
+        },
+        "note": {
+          "description": "What to notice while reading, set beneath the passages.",
+          "$ref": "#/$defs/text"
+        },
+        "confirm_label": {
+          "description": "The wording of the confirm control. Defaults to \"I have read these\".",
           "$ref": "#/$defs/text"
         }
       }

@@ -47,6 +47,9 @@ def answer_from_form(block, submitted):
 def _parse(kind: AnswerKind, submitted):
     if kind.name == "scale_point" and re.fullmatch(r"[0-9]+", submitted):
         return int(submitted)
+    if kind.name == "confirmation":
+        # ✨ A confirmation is made or not yet made: the only value worth storing is that it was made.
+        return submitted == "true"
     if kind.name == "text":
         # ✨ The one exception to "text is never altered on input": forms send each typed line break as
         # CRLF, while the text box showed (and its maxlength counted) a single "\n". Converting it back

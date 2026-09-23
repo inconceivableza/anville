@@ -1,5 +1,5 @@
 {# ✨ Authored text, escaped on output. A blank line in the body starts a new paragraph. #}
-<div id="block-{{ block.id }}" class="rich-text{% if block.variant == 'hint' %} hint-box{% elif block.variant == 'note' %} scripture-note{% endif %}">
+<div id="block-{{ block.id }}" class="rich-text{% if block.variant == 'hint' %} hint-box{% endif %}">
   {% if block.text.label %}<strong>{{ block.text.label }}</strong>{% endif %}
   {{ block.text.body|linebreaks }}
 </div>

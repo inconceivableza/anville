@@ -42,6 +42,13 @@ SCALE_POINT = AnswerKind(
 )
 
 
+CONFIRMATION = AnswerKind(
+    "confirmation",
+    {"const": True},
+    "Confirm that you have read the passages to open the activity.",
+)
+
+
 class BlockType(NamedTuple):
     """✨ One authorable kind of block.
 
@@ -65,6 +72,12 @@ BLOCK_TYPES = {
     block_type.name: block_type
     for block_type in [
         BlockType("rich_text", text_fields=("label", "body")),
+        BlockType(
+            "scripture_reading",
+            text_fields=("heading", "note", "confirm_label"),
+            text_lists=(("passages", ("reference", "text")),),
+            captures=CONFIRMATION,
+        ),
         BlockType("long_text", text_fields=("prompt",), captures=TEXT),
         BlockType("agreement_scale", text_fields=("prompt", "min_label", "max_label"), captures=SCALE_POINT),
     ]
