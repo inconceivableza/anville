@@ -32,8 +32,8 @@
 - A gate's clauses combine conjunctively, and every failing clause shows its message at once. The prototype showed one message at a time in a priority cascade (`timelineGateMessage`, docs/prototype/02-sections.md); showing all of them tells the participant what is actually left.
 - A block in a locked section refuses an answer as well (403), not only the section page. Without it a participant could fill a section in by POSTing without ever opening it, which is the prototype's cosmetic lock in a new form.
 - `entry_count`, `distinct_value_count` and `every_entry_has` are implemented and covered in the pure core, but no block type captures a list of entries yet, so the linter refuses them against every block that exists today. They become authorable with the contact list and timeline board (tickets 09 and 17).
+- Completing is reversible, added beyond the ticket at Ryan's call. A completed section offers "Reopen this section", which removes that one completion record and touches no answer. Nothing cascades, and a section the participant completed is never locked again, whatever happens to what it required — otherwise the hub would call it complete, link to it and bounce them back. Changing an answer still never un-completes a section: with autosave, a gate re-evaluated on every keystroke would make the hub flicker and could re-lock a later section mid-sentence.
 
 **Carried to a later ticket**
 
 - Tracks. `engine/hub.py` has `track_sections()`, which is every section until a participant can choose (ticket 23). Everything that counts sections or blocks goes through it, so tracks change that one function.
-- Completion cannot be undone. A participant who completes a section cannot reopen it; nothing in this milestone asks for that, but it is worth a decision before the demos.

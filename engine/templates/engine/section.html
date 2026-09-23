@@ -20,6 +20,10 @@
     <div class="completion">
       {% if is_complete %}
         <p class="completion-done">You marked this section complete. Your answers are still here to reread and change.</p>
+        <form method="post" action="{% url 'reopen_section' section.id %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-secondary btn-sm">Reopen this section</button>
+        </form>
       {% else %}
         {% if unmet %}
           <ul class="gate-messages">

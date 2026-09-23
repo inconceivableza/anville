@@ -62,7 +62,13 @@ def section_by_id(document, section_id):
 
 
 def is_locked(section, completed):
-    """✨ Whether a section is still shut, because a section it requires has not been completed."""
+    """✨ Whether a section is still shut, because a section it requires has not been completed.
+
+    A section the participant has already completed is never shut again, whatever happens to the sections
+    it required. Otherwise the hub would show it as complete, link to it, and bounce them back here.
+    """
+    if section["id"] in completed:
+        return False
     return not set(section.get("requires", [])) <= set(completed)
 
 

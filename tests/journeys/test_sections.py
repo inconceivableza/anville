@@ -187,6 +187,76 @@ def test_a_completed_section_still_shows_the_participants_answers_so_they_can_re
     assert "You marked this section complete." in page
 
 
+# Reopening, the mirror of completing
+
+
+@pytest.fixture
+def completed_calling(open_calling):
+    """✨ A participant who has completed both sections of the test pathway."""
+    client = open_calling()
+    client.post("/answers/statement/", {"value": LONG_ENOUGH, "version": _version_id()})
+    client.post(COMPLETE_CALLING)
+    return client
+
+
+@pytest.mark.django_db
+def test_a_participant_reopens_a_section_they_marked_complete(completed_calling):
+    response = completed_calling.post("/sections/calling/reopen/")
+
+    assert (response.status_code, response.url) == (303, "/")
+    assert "calling" not in Response.objects.get().completed_sections
+
+
+@pytest.mark.django_db
+def test_a_reopened_section_keeps_every_answer_and_offers_the_way_on_again(completed_calling):
+    completed_calling.post("/sections/calling/reopen/")
+
+    page = completed_calling.get(CALLING).content.decode()
+
+    assert LONG_ENOUGH in page
+    assert "You marked this section complete." not in page
+    assert "Mark complete" in page
+
+
+@pytest.mark.django_db
+def test_reopening_a_section_does_not_touch_any_other_sections_completion(completed_calling):
+    completed_calling.post("/sections/onboarding/reopen/")
+
+    assert set(Response.objects.get().completed_sections) == {"calling"}
+
+
+@pytest.mark.django_db
+def test_a_section_stays_reachable_when_the_section_it_required_is_reopened(completed_calling):
+    """✨ The participant earned it, so reopening what came before never shuts it behind them."""
+    completed_calling.post("/sections/onboarding/reopen/")
+
+    assert completed_calling.get(CALLING).status_code == 200
+
+
+@pytest.mark.django_db
+def test_an_unfinished_section_locks_again_when_the_section_it_required_is_reopened(open_calling):
+    client = open_calling()
+
+    client.post("/sections/onboarding/reopen/")
+
+    assert client.get(CALLING).status_code == 302
+
+
+@pytest.mark.django_db
+def test_reopening_a_section_that_was_never_complete_changes_nothing(signed_in_client, load_pathway):  # noqa: F811
+    load_pathway(pathway_document())
+
+    response = signed_in_client.post("/sections/onboarding/reopen/")
+
+    assert response.status_code == 303
+    assert not Response.objects.exists()
+
+
+@pytest.mark.django_db
+def test_a_section_is_reopened_only_by_a_post(completed_calling):
+    assert completed_calling.get("/sections/calling/reopen/").status_code == 405
+
+
 # The hub, derived from all of it
 
 

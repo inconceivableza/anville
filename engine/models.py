@@ -72,6 +72,17 @@ class Response(models.Model):
         """
         self._merge(completed_sections=Value({section_id: timezone.now().isoformat()}, output_field=models.JSONField()))
 
+    def reopen_section(self, section_id):
+        """✨ Take back the participant's own act of completing a section, leaving every answer as it is.
+
+        Only this section's record goes: what they completed before or after it is theirs, and reopening
+        one section never discards another. Reopening one that was never complete does nothing.
+        """
+        Response.objects.filter(pk=self.pk).update(
+            completed_sections=_WithoutKey(F("completed_sections"), Value(section_id)),
+            updated_at=timezone.now(),
+        )
+
     def _merge(self, **fields):
         Response.objects.filter(pk=self.pk).update(
             **{name: _MergeJson(F(name), value) for name, value in fields.items()},
@@ -83,5 +94,13 @@ class _MergeJson(Func):
     """✨ PostgreSQL's jsonb `||`: the right-hand object's keys replace the left's, and every other key is kept."""
 
     arg_joiner = " || "
+    template = "%(expressions)s"
+    output_field = models.JSONField()
+
+
+class _WithoutKey(Func):
+    """✨ PostgreSQL's jsonb `-`: one key removed in a single UPDATE, every other key left as it was."""
+
+    arg_joiner = " - "
     template = "%(expressions)s"
     output_field = models.JSONField()

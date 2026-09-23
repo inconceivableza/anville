@@ -75,6 +75,11 @@ def test_a_section_requiring_nothing_is_never_locked():
     assert is_locked(section("first"), completed=set()) is False
 
 
+def test_a_section_the_participant_has_completed_is_never_locked_again():
+    """✨ Otherwise the hub would call it complete, link to it, and send the participant back here."""
+    assert is_locked(section("second", requires=["first"]), completed={"second"}) is False
+
+
 def test_locks_come_from_what_a_section_requires_and_not_from_its_position():
     """✨ The third section requires nothing, so it opens straight away even though two sit above it."""
     sections = [section("first"), section("second", requires=["first"]), section("third")]

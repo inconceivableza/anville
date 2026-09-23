@@ -68,6 +68,19 @@ def complete_section(request, section_id):
 
 @login_required
 @require_POST
+def reopen_section(request, section_id):
+    """✨ The participant taking back their own completion. Their answers stay exactly as they left them."""
+    participant_response, version, _, _ = _participant(request.user)
+    _section_or_404(version, section_id)
+    if participant_response is not None:
+        participant_response.reopen_section(section_id)
+    see_other = redirect("hub")
+    see_other.status_code = 303  # ✨ after a POST, the browser should GET the hub
+    return see_other
+
+
+@login_required
+@require_POST
 def save_answer(request, block_id):
     """✨ Autosave: validate and store one block's answer against the participant's pathway version.
 
