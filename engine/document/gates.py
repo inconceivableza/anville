@@ -27,12 +27,17 @@ def gate_passes(section, answers):
 
 
 def unmet(section, answers, role="participant"):
-    """✨ The authored message of every clause this response does not satisfy, in the order authored."""
-    return [
+    """✨ The authored message of every clause this response does not satisfy, in the order authored.
+
+    Clauses that share a message say it once. An author asking for four ratings writes four clauses and one
+    sentence ("Answer all four to continue"), and the participant should read that sentence, not four of it.
+    """
+    messages = (
         text_for(clause["message"], role)
         for clause in clauses_of(section)
         if not CLAUSES[clause["type"]](clause, answers.get(clause["block"]))
-    ]
+    )
+    return list(dict.fromkeys(messages))
 
 
 def clauses_of(section):

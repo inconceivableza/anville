@@ -76,6 +76,8 @@ A section's `gate` is an optional list of clauses, all of which must pass before
 
 The gate re-renders with each autosave, so the messages and the button keep up with what is being written without a reload. Completing is also reversible: a completed section stays editable and offers "Mark as not complete", which removes that one completion record and leaves every answer alone. Nothing cascades — sections completed before or after it keep their own records, and a section a participant has completed is never locked again, whatever happens to the sections it required. Changing an answer never un-completes a section by itself; with autosave that would make the hub flicker and could re-lock a later section mid-sentence.
 
+Clauses that carry the same message say it once, so "Answer all four to continue" is written as four `has_answer` clauses and one sentence.
+
 A clause may only name a block in its own section, and only one whose answer it can read; the linter refuses both. The three entry clauses have no block to name yet, because no block type captures a list of entries: they wait for the contact list and timeline board (tickets 09 and 17). A new kind of clause is a code change, never an expression in the document (ADR 0003).
 
 A `scripture_reading` block shows its authored passages and a confirm control. The activity beneath it is decided by the server too: until the confirmation is saved, the blocks after it are not sent to the browser and will not accept an answer.

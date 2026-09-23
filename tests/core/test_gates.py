@@ -203,6 +203,27 @@ def test_only_the_failing_clauses_say_anything():
     assert gate_passes(section, {"statement": "Short."}) is False
 
 
+def test_clauses_that_share_a_message_say_it_once():
+    """✨ Four after-ratings are four clauses and one sentence; the participant should read it once."""
+    section = section_gated_by(
+        *[clause("has_answer", block=f"after-{n}", message="Answer all four to continue.") for n in range(1, 5)]
+    )
+
+    assert unmet(section, {}) == ["Answer all four to continue."]
+    assert unmet(section, {"after-1": 5, "after-2": 5, "after-3": 5}) == ["Answer all four to continue."]
+    assert unmet(section, {f"after-{n}": 5 for n in range(1, 5)}) == []
+
+
+def test_clauses_that_are_worded_differently_each_still_speak():
+    section = section_gated_by(
+        clause("has_answer", block="letter", message="Write your letter."),
+        clause("has_answer", block="after-1", message="Answer all four to continue."),
+        clause("has_answer", block="after-2", message="Answer all four to continue."),
+    )
+
+    assert unmet(section, {}) == ["Write your letter.", "Answer all four to continue."]
+
+
 def test_a_clause_message_may_be_worded_per_role():
     section = section_gated_by({"type": "has_answer", "block": "statement", "message": {"participant": "Write yours."}})
 
