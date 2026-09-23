@@ -38,6 +38,8 @@
 
   Changing an answer still never un-completes a section. With autosave, a gate re-evaluated on every keystroke would make the hub flicker and could re-lock a later section mid-sentence.
 
+- The gate re-renders with each autosave, so the messages and the button follow what is being written. Found by Ryan walking the pathway: the button needed a page reload before it would enable, because the gate was rendered once at page load while the answer saved over htmx. The save now returns the completion area as an out-of-band swap beside the status. No new JavaScript, so ADR 0006 is untouched.
+- A completed section stays editable, and its button says "Mark as not complete" rather than "Reopen this section". Also from the walkthrough: the old wording implied the button unlocked the text box, when editing was never shut (user story 22, "revisit a completed section… reread and refine"). Making a completed section read-only was considered and rejected: fixing a typo in a completed section would then force a reopen, which re-locks in-progress work in a later section.
 - Progress counts every interactive block in the track, including ones in locked sections and beneath an unconfirmed reading. Raised in review as loose against "reachable". Kept deliberately: a denominator that grew as sections unlocked would make the count jump about, and "reachable" is read here as "in the participant's track", which is what changes when tracks arrive.
 
 **Carried to a later ticket**

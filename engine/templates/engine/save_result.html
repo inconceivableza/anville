@@ -1,0 +1,7 @@
+{% comment %}
+  ✨ What an autosave sends back: the status where the participant is looking, and the section's gate brought
+  up to date beside it. Without the second part the button would stay as it was rendered, and someone who had
+  just written enough to finish the section would have to reload before the engine would let them say so.
+{% endcomment %}
+{% include "engine/save_status.html" %}
+{% include "engine/completion.html" with out_of_band=True %}

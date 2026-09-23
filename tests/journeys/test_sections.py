@@ -187,6 +187,65 @@ def test_a_completed_section_still_shows_the_participants_answers_so_they_can_re
     assert "You marked this section complete." in page
 
 
+# The gate keeps up with what is being written, without a reload
+
+
+def autosave(client, block_id, value):
+    """✨ Save an answer the way the text box does, over htmx."""
+    return client.post(
+        f"/answers/{block_id}/", {"value": value, "version": _version_id()}, HTTP_HX_REQUEST="true"
+    ).content.decode()
+
+
+@pytest.mark.django_db
+def test_writing_enough_opens_the_way_on_without_the_participant_reloading(open_calling):
+    """✨ The gate is re-rendered beside the save, so the button follows what has just been written."""
+    client = open_calling()
+
+    sent_back = autosave(client, "statement", LONG_ENOUGH)
+
+    assert 'hx-swap-oob="true"' in sent_back
+    assert '<button type="submit" class="btn btn-primary">Mark complete</button>' in sent_back
+    assert "Write a statement of at least ten characters." not in sent_back
+
+
+@pytest.mark.django_db
+def test_writing_too_little_sends_back_the_gate_message_and_no_way_on(open_calling):
+    client = open_calling()
+
+    sent_back = autosave(client, "statement", "too short")
+
+    assert "Write a statement of at least ten characters." in sent_back
+    assert '<button type="submit" class="btn btn-primary" disabled>Mark complete</button>' in sent_back
+
+
+@pytest.mark.django_db
+def test_an_autosave_still_says_the_answer_was_saved(open_calling):
+    assert "Saved" in autosave(open_calling(), "statement", LONG_ENOUGH)
+
+
+@pytest.mark.django_db
+def test_a_refused_answer_leaves_the_gate_where_it_was(open_calling):
+    """✨ Nothing was stored, so nothing about the section has changed and the refusal is all there is to say."""
+    client = open_calling()
+
+    sent_back = autosave(client, "statement", "x" * 20_001)
+
+    assert "This answer is too long to save." in sent_back
+    assert "hx-swap-oob" not in sent_back
+
+
+@pytest.mark.django_db
+def test_the_gate_keeps_up_with_an_answer_taken_back_again(open_calling):
+    client = open_calling()
+    autosave(client, "statement", LONG_ENOUGH)
+
+    sent_back = autosave(client, "statement", "")
+
+    assert "Write a statement of at least ten characters." in sent_back
+    assert '<button type="submit" class="btn btn-primary" disabled>Mark complete</button>' in sent_back
+
+
 # Reopening, the mirror of completing
 
 

@@ -108,9 +108,11 @@ def save_answer(request, block_id):
     if participant_response is None:
         participant_response, _ = Response.objects.get_or_create(participant=request.user, version=version)
     participant_response.save_answer(block_id, value)
+    # ✨ The row was updated in place, so this object's answers are a step behind what was just stored.
+    answers = {**answers, block_id: value}
 
     if request.headers.get("HX-Request") == "true":
-        return render(request, "engine/save_status.html")
+        return render(request, "engine/save_result.html", _section_page(version, section, answers, completed))
     return _see_other(f"{reverse('section', args=[section['id']])}#block-{block_id}")
 
 
