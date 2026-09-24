@@ -6,6 +6,7 @@ Nothing else needs to know the type exists: the answer schema, the refusal, the 
 which gate clauses may name it and whether it counts towards progress all follow from the entry.
 """
 
+import json
 import re
 from typing import Callable, NamedTuple
 
@@ -34,6 +35,15 @@ def _confirmation_from_form(submitted):
     return submitted == "true"
 
 
+def _sort_from_form(submitted):
+    # ✨ The widget sends the whole sort as JSON. A decimal is kept as its text, so the schema refuses 50.0
+    # rather than storing a float (JSON Schema counts 50.0 as an integer). Text that is not JSON is passed on.
+    try:
+        return json.loads(submitted, parse_float=str)
+    except json.JSONDecodeError:
+        return submitted
+
+
 class AnswerKind(NamedTuple):
     """✨ What an answer is: the shape the server accepts, what a submitted form value means, and what the
     server says to a participant when it refuses one.
@@ -44,9 +54,14 @@ class AnswerKind(NamedTuple):
     """
 
     name: str
-    schema: dict
+    schema: dict | Callable[[dict], dict]
     refusal: str
     from_form: Callable[[str], object]
+
+    def schema_for(self, document):
+        """✨ The answer schema within one pathway document. Most kinds need nothing from it; a sort needs
+        the document's items and buckets."""
+        return self.schema(document) if callable(self.schema) else self.schema
 
 
 TEXT = AnswerKind(
@@ -69,6 +84,35 @@ CONFIRMATION = AnswerKind(
     {"const": True},
     "Confirm that you have read the passages to open the activity.",
     _confirmation_from_form,
+)
+
+
+def _sort_schema(document):
+    """✨ Every item of the instrument, each placed in one of its buckets with a whole value from 0 to 100."""
+    instrument = document["instrument"]
+    placement = {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["bucket", "value"],
+        "properties": {
+            "bucket": {"enum": [bucket["id"] for bucket in instrument["buckets"]]},
+            "value": {"type": "integer", "minimum": 0, "maximum": 100},
+        },
+    }
+    item_ids = [item["id"] for item in instrument["items"]]
+    return {
+        "type": "object",
+        "additionalProperties": False,
+        "required": item_ids,
+        "properties": {item_id: placement for item_id in item_ids},
+    }
+
+
+SORT = AnswerKind(
+    "sort",
+    _sort_schema,
+    "Sort every statement and give each one a score from 0 to 100, then submit again.",
+    _sort_from_form,
 )
 
 
@@ -106,6 +150,7 @@ BLOCK_TYPES = {
         ),
         BlockType("long_text", text_fields=("prompt",), captures=TEXT),
         BlockType("agreement_scale", text_fields=("prompt", "min_label", "max_label"), captures=SCALE_POINT),
+        BlockType("sort_assessment", captures=SORT),
     ]
 }
 

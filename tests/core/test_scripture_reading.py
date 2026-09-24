@@ -50,18 +50,20 @@ def test_a_passage_is_worded_per_role_like_any_other_authored_text():
 
 
 def test_a_reading_captures_the_participants_confirmation():
-    block = answerable_block(document_with_a_reading(), "reading")
+    document = document_with_a_reading()
+    block = answerable_block(document, "reading")
 
-    assert answer_from_form(block, "true") is True
+    assert answer_from_form(document, block, "true") is True
 
 
 @pytest.mark.parametrize("submitted", ["false", "", "no", "1", "maybe"])
 def test_nothing_but_a_confirmation_is_accepted_as_an_answer_to_a_reading(submitted):
     """✨ A reading is confirmed or not yet confirmed; there is no third state for the server to store."""
-    block = answerable_block(document_with_a_reading(), "reading")
+    document = document_with_a_reading()
+    block = answerable_block(document, "reading")
 
     with pytest.raises(AnswerRefused):
-        answer_from_form(block, submitted)
+        answer_from_form(document, block, submitted)
 
 
 def test_a_reading_can_be_what_a_gate_requires():

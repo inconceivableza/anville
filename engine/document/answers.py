@@ -8,13 +8,6 @@ from jsonschema import Draft202012Validator
 
 from engine.document.blocks import BLOCK_TYPES
 
-_validators = {
-    block_type.captures.name: Draft202012Validator(block_type.captures.schema)
-    for block_type in BLOCK_TYPES.values()
-    if block_type.is_interactive
-}
-
-
 class UnknownBlock(Exception):
     """✨ The pathway version has no block by that identifier that takes an answer."""
 
@@ -32,11 +25,14 @@ def answerable_block(document, block_id):
     raise UnknownBlock(block_id)
 
 
-def answer_from_form(block, submitted):
-    """✨ The answer a submitted form value stands for, or AnswerRefused. Text is kept exactly as written."""
+def answer_from_form(document, block, submitted):
+    """✨ The answer a submitted form value stands for, or AnswerRefused. Text is kept exactly as written.
+
+    The document is the block's own pathway version, since what a valid answer is can depend on it.
+    """
     if submitted is None:
         raise AnswerRefused("No answer was sent.")
     kind = BLOCK_TYPES[block["type"]].captures
-    if not _validators[kind.name].is_valid(value := kind.from_form(submitted)):
+    if not Draft202012Validator(kind.schema_for(document)).is_valid(value := kind.from_form(submitted)):
         raise AnswerRefused(kind.refusal)
     return value

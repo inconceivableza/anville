@@ -101,7 +101,7 @@ def save_answer(request, block_id):
     if is_locked(section, completed) or block not in reached:
         return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
     try:
-        value = answer_from_form(block, request.POST.get("value"))
+        value = answer_from_form(version.document, block, request.POST.get("value"))
     except AnswerRefused as refused:
         return render(request, "engine/save_status.html", {"refusal": str(refused)}, status=400)
 

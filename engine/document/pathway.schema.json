@@ -102,13 +102,14 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "sort_assessment"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
         { "if": { "properties": { "type": { "const": "scripture_reading" } } }, "then": { "$ref": "#/$defs/scripture_reading" } },
         { "if": { "properties": { "type": { "const": "long_text" } } }, "then": { "$ref": "#/$defs/long_text" } },
-        { "if": { "properties": { "type": { "const": "agreement_scale" } } }, "then": { "$ref": "#/$defs/agreement_scale" } }
+        { "if": { "properties": { "type": { "const": "agreement_scale" } } }, "then": { "$ref": "#/$defs/agreement_scale" } },
+        { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } }
       ]
     },
     "rich_text": {
@@ -182,6 +183,16 @@
         "prompt": { "$ref": "#/$defs/text" },
         "min_label": { "$ref": "#/$defs/text" },
         "max_label": { "$ref": "#/$defs/text" }
+      }
+    },
+    "sort_assessment": {
+      "description": "The instrument's sort: every item placed in a bucket and fine-tuned, then scored once as a result.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "sort_assessment" }
       }
     },
     "long_text": {

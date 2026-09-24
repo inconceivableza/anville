@@ -85,3 +85,32 @@ def pathway_document():
             "disclaimer": "These results are indicative, not definitive.",
         },
     }
+
+
+def sort_pathway():
+    """✨ The test pathway with a section holding the sort, over a two-item instrument.
+
+    Kept apart from `pathway_document()` so the sort's section does not change what the hub counts there.
+    """
+    document = pathway_document()
+    document["content"]["sections"].append(
+        {
+            "id": "strengths",
+            "title": "Strengths assessment",
+            "requires": ["onboarding"],
+            "blocks": [{"id": "strengths-sort", "type": "sort_assessment"}],
+        }
+    )
+    document["instrument"]["items"].append(
+        {"id": "p1", "text": "Going against the grain", "loads": ["prophet", "ponder"]}
+    )
+    apest, pep = document["measurement"]["frameworks"]
+    apest["constructs"].append({"id": "prophet", "label": "Prophet"})
+    pep["constructs"].insert(0, {"id": "ponder", "label": "Ponder"})
+    document["measurement"]["scoring"] = {"method": "compositional_share"}
+    return document
+
+
+def complete_sort(**overrides):
+    """✨ A sort of `sort_pathway()`'s two items, both placed and fine-tuned, with any item's entry replaced."""
+    return {"a5": {"bucket": "strength", "value": 90}, "p1": {"bucket": "not-me", "value": 10}, **overrides}
