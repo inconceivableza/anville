@@ -32,6 +32,19 @@
   --blue-soft: #4a6fa5;
   --border: #d0ddd4;
   --shadow: rgba(15, 92, 60, 0.06);
+  /* Results: the tones a pathway names for its constructs, and the colours of bars ranked strongest first. */
+  --tone-violet: #7b68ee;
+  --tone-rose: #c25b56;
+  --tone-green: #1a7a4c;
+  --tone-moss: #5b7a5e;
+  --tone-blue: #4a6fa5;
+  --tone-brown: #8b7355;
+  --rank-1: #2e7d32;
+  --rank-2: #4caf50;
+  --rank-3: #f9a825;
+  --rank-4: #ff9800;
+  --rank-5: #e53935;
+  --rank-6: #b71c1c;
   --radius: 16px;
   --font-heading: "Newsreader Variable", Georgia, serif;
   --font-body: "Instrument Sans Variable", system-ui, sans-serif;
@@ -612,6 +625,120 @@ a.hub-section-title:hover {
   color: var(--ink-muted);
   margin-top: 6px;
 }
+
+/* Results. Bars are SVG, sized by their own width attribute, so no template needs an inline style. */
+
+.results-section {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  margin-bottom: 20px;
+}
+
+.results-section h2 {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.results-desc {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.result-bar-row {
+  margin-bottom: 14px;
+}
+
+.result-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.result-bar-name,
+.result-bar-score {
+  font-weight: 600;
+}
+
+.result-bar-persona {
+  font-weight: 400;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.result-bar-track {
+  display: block;
+  width: 100%;
+  height: 10px;
+  background: var(--border);
+  border-radius: 5px;
+}
+
+.result-bar-subdesc {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.item-scores summary {
+  font-size: 13px;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.item-group {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 10px 0 4px;
+}
+
+.item-scores ul {
+  list-style: none;
+}
+
+.item-scores li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-light);
+}
+
+.item-score {
+  font-weight: 600;
+  min-width: 30px;
+  text-align: right;
+  color: var(--ink);
+}
+
+.results-disclaimer {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 20px;
+}
+
+.tone-violet { color: var(--tone-violet); fill: var(--tone-violet); }
+.tone-rose { color: var(--tone-rose); fill: var(--tone-rose); }
+.tone-green { color: var(--tone-green); fill: var(--tone-green); }
+.tone-moss { color: var(--tone-moss); fill: var(--tone-moss); }
+.tone-blue { color: var(--tone-blue); fill: var(--tone-blue); }
+.tone-brown { color: var(--tone-brown); fill: var(--tone-brown); }
+.rank-1 { color: var(--rank-1); fill: var(--rank-1); }
+.rank-2 { color: var(--rank-2); fill: var(--rank-2); }
+.rank-3 { color: var(--rank-3); fill: var(--rank-3); }
+.rank-4 { color: var(--rank-4); fill: var(--rank-4); }
+.rank-5 { color: var(--rank-5); fill: var(--rank-5); }
+.rank-6 { color: var(--rank-6); fill: var(--rank-6); }
 
 /* With JavaScript, answers save themselves, so the fallback button is not needed. */
 html[data-javascript="loaded"] .save-fallback {

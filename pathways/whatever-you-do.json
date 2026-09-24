@@ -293,5 +293,37 @@
       }
     ],
     "scoring": { "method": "compositional_share" }
+  },
+  "presentation": {
+    "results_title": "{name}, here’s your profile",
+    "frameworks": [
+      {
+        "framework": "apest",
+        "heading": "✨ Your APEST(d) Profile",
+        "subtitle": "Fivefold ministry gifting plus diaconal service",
+        "bars": "tone"
+      },
+      {
+        "framework": "pep",
+        "heading": "⚡ Your Professional Energy Profile (PEP)",
+        "subtitle": "Which types of work energise you most, and which drain you?",
+        "bars": "rank"
+      }
+    ],
+    "constructs": [
+      { "construct": "apostle", "tone": "violet", "description": "Envisioning, pioneering, designing foundations, developing content, raising leaders, building legacy" },
+      { "construct": "prophet", "tone": "rose", "description": "Challenging the status quo, strong instincts, sensing trends, advocating for justice, communicating hard truths" },
+      { "construct": "evangelist", "tone": "green", "description": "Empathy across difference, curiosity, one-to-one persuasion, motivating others, making ideas accessible" },
+      { "construct": "shepherd", "tone": "moss", "description": "Caring for those struggling, helping groups thrive, welcoming outsiders, correcting where needed, faithful presence" },
+      { "construct": "teacher", "tone": "blue", "description": "Going deep into source material, breaking down concepts, training to apply learning, communicating through media, evaluating accuracy" },
+      { "construct": "deacon", "tone": "brown", "description": "Supporting others’ initiatives, following through on detail, bringing order, improving processes, seeing and doing what’s needed" },
+      { "construct": "ponder", "tone": "violet", "persona": "The Philosopher", "description": "Stepping back to ask the big “what ifs?” and thinking deeply" },
+      { "construct": "ideate", "tone": "green", "persona": "The Creator", "description": "Generating options and creating potential solutions" },
+      { "construct": "assess", "tone": "blue", "persona": "The Judge", "description": "Applying a reality check to evaluate what will actually work" },
+      { "construct": "rally", "tone": "rose", "persona": "The Catalyst", "description": "Gathering the team, building energy and creating buy-in" },
+      { "construct": "facilitate", "tone": "moss", "persona": "The Coach", "description": "Clearing hurdles, navigating logistics and supporting the team" },
+      { "construct": "deliver", "tone": "brown", "persona": "The Doer", "description": "Rolling up sleeves and pushing the work over the finish line" }
+    ],
+    "disclaimer": "Important: This is a free, rapid, directional tool, designed to give you a useful starting point for reflection and conversation. It is not backed by extensive psychometric datasets or rigorous validation (yet). Please treat these results as indicative, not definitive."
   }
 }

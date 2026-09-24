@@ -108,6 +108,18 @@ def sort_pathway():
     apest["constructs"].append({"id": "prophet", "label": "Prophet"})
     pep["constructs"].insert(0, {"id": "ponder", "label": "Ponder"})
     document["measurement"]["scoring"] = {"method": "compositional_share"}
+    presentation = document["presentation"]
+    presentation["results_title"] = "{name}, here’s your profile"
+    presentation["frameworks"] = [
+        {"framework": "apest", "heading": "Your gifting", "subtitle": "Fivefold and more", "bars": "tone"},
+        {"framework": "pep", "heading": "Your energy", "subtitle": "What energises you", "bars": "rank"},
+    ]
+    presentation["constructs"] = [
+        {"construct": "apostle", "description": "Pioneers new things.", "tone": "violet"},
+        {"construct": "prophet", "description": "Challenges the status quo.", "tone": "rose"},
+        {"construct": "ponder", "description": "Thinks deeply.", "persona": "The Philosopher", "tone": "violet"},
+        {"construct": "deliver", "description": "Finishes the work.", "persona": "The Doer", "tone": "brown"},
+    ]
     return document
 
 

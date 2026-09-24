@@ -4,7 +4,7 @@
 {% endcomment %}
 <div id="block-{{ block.id }}" class="question-card">
   {% if block.answer %}
-    <p>Your sort is in.</p>
+    <p>Your sort is in. <a href="{% url 'results' block.id %}">See your results</a></p>
   {% else %}
     <p>The sort is not ready to use yet.</p>
   {% endif %}

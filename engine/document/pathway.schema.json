@@ -56,9 +56,39 @@
             "required": ["construct", "description"],
             "properties": {
               "construct": { "$ref": "#/$defs/identifier" },
-              "description": { "$ref": "#/$defs/text" }
+              "description": { "$ref": "#/$defs/text" },
+              "persona": {
+                "description": "A short name for the construct shown beside it, such as 'The Philosopher'.",
+                "$ref": "#/$defs/text"
+              },
+              "tone": {
+                "description": "The colour of the construct's bar and item scores, from the stylesheet's named tones.",
+                "enum": ["violet", "rose", "green", "moss", "blue", "brown"]
+              }
             }
           }
+        },
+        "frameworks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["framework", "heading"],
+            "properties": {
+              "framework": { "$ref": "#/$defs/identifier" },
+              "heading": { "$ref": "#/$defs/text" },
+              "subtitle": { "$ref": "#/$defs/text" },
+              "bars": {
+                "description": "How the framework's bars are coloured: by each construct's tone, or by rank so tied scores share a colour.",
+                "enum": ["tone", "rank"],
+                "default": "tone"
+              }
+            }
+          }
+        },
+        "results_title": {
+          "description": "The results page's title. {name} is replaced with the participant's name.",
+          "$ref": "#/$defs/text"
         },
         "disclaimer": { "$ref": "#/$defs/text" }
       }

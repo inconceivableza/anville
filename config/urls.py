@@ -18,7 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path, re_path
 from access.views import password_reset_unavailable
-from engine.views import complete_section, hub, reopen_section, save_answer, section
+from engine.views import complete_section, hub, reopen_section, results, save_answer, section
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -26,6 +26,7 @@ urlpatterns = [
     re_path(r"^accounts/password/reset/", password_reset_unavailable),
     path("accounts/", include("allauth.urls")),
     path("answers/<slug:block_id>/", save_answer, name="save_answer"),
+    path("results/<slug:block_id>/", results, name="results"),
     path("sections/<slug:section_id>/", section, name="section"),
     path("sections/<slug:section_id>/complete/", complete_section, name="complete_section"),
     path("sections/<slug:section_id>/reopen/", reopen_section, name="reopen_section"),

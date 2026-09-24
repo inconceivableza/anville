@@ -1,6 +1,10 @@
-"""✨ A sort is scored once, when it is submitted, and the result is kept against the response's pathway version."""
+"""✨ A sort is scored once, when it is submitted, and the result is kept against the response's pathway version.
+
+The results page shows that stored result with the pathway version's own wording.
+"""
 
 import json
+import re
 
 import pytest
 
@@ -8,6 +12,7 @@ from engine.document.scoring import score
 from engine.models import Response, Result
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.test_answers import answer, participant  # noqa: F401 (a fixture)
+from tests.journeys.test_hub import a_fresh_participant
 
 SORT, STRENGTHS = "strengths-sort", "strengths"
 
@@ -23,6 +28,21 @@ def signed_in(client, participant, load_pathway):
 
 def submit_sort(client, sort):
     return answer(client, SORT, json.dumps(sort), section=STRENGTHS)
+
+
+def results(client, block_id=SORT):
+    return client.get(f"/results/{block_id}/")
+
+
+def in_order(page, *texts):
+    """✨ Whether every text appears on the page, each after the one before it."""
+    position = 0
+    for text in texts:
+        position = page.find(text, position)
+        if position < 0:
+            return False
+        position += len(text)
+    return True
 
 
 @pytest.mark.django_db
@@ -70,3 +90,85 @@ def test_a_later_pathway_version_never_recomputes_a_stored_result(signed_in, par
     signed_in.get(f"/sections/{STRENGTHS}/")
 
     assert [result.scores for result in Result.objects.all()] == [score(sort_pathway(), complete_sort())]
+
+
+@pytest.mark.django_db
+def test_before_a_sort_is_submitted_the_results_page_sends_the_participant_to_the_sort(signed_in):
+    page = results(signed_in)
+
+    assert page.status_code == 302
+    assert page.url == f"/sections/{STRENGTHS}/"
+
+
+@pytest.mark.django_db
+def test_the_results_page_greets_the_participant_and_ranks_both_profiles(signed_in):
+    submit_sort(signed_in, complete_sort())
+
+    page = results(signed_in).content.decode()
+
+    assert "participant, here’s your profile" in page
+    assert in_order(page, "Your gifting", "Apostle", "90%", "Prophet", "10%")
+    assert in_order(page, "Your energy", "Deliver", "90%", "Ponder", "10%")
+
+
+@pytest.mark.django_db
+def test_each_profile_carries_its_subtitle_descriptions_and_personas(signed_in):
+    submit_sort(signed_in, complete_sort())
+
+    page = results(signed_in).content.decode()
+
+    assert in_order(page, "Fivefold and more", "Pioneers new things.", "Challenges the status quo.")
+    assert in_order(page, "What energises you", "The Doer", "Finishes the work.", "The Philosopher", "Thinks deeply.")
+
+
+@pytest.mark.django_db
+def test_the_item_scores_are_listed_in_an_expandable_list_with_the_participants_values(signed_in):
+    submit_sort(signed_in, complete_sort())
+
+    page = results(signed_in).content.decode()
+
+    listed = re.search(r"<details.*?</details>", page, re.S).group(0)
+    assert in_order(listed, "Apostle", "Building something that will outlast you", "90")
+    assert in_order(listed, "Prophet", "Going against the grain", "10")
+
+
+@pytest.mark.django_db
+def test_the_validity_disclaimer_is_shown_with_the_results(signed_in):
+    submit_sort(signed_in, complete_sort())
+
+    assert "These results are indicative, not definitive." in results(signed_in).content.decode()
+
+
+@pytest.mark.django_db
+def test_apest_bars_take_their_constructs_tone_and_tied_pep_bars_share_a_rank_colour(signed_in):
+    submit_sort(signed_in, complete_sort(a5={"bucket": "strength", "value": 50}, p1={"bucket": "not-me", "value": 50}))
+
+    page = results(signed_in).content.decode()
+
+    assert 'class="bar-fill tone-violet"' in page
+    assert 'class="bar-fill tone-rose"' in page
+    assert page.count('class="bar-fill rank-1"') == 2
+    assert "rank-2" not in page
+
+
+@pytest.mark.django_db
+def test_once_the_sort_is_in_its_section_links_to_the_results(signed_in):
+    submit_sort(signed_in, complete_sort())
+
+    assert f'href="/results/{SORT}/"' in signed_in.get(f"/sections/{STRENGTHS}/").content.decode()
+
+
+@pytest.mark.django_db
+def test_a_participant_never_sees_another_participants_results(signed_in):
+    submit_sort(signed_in, complete_sort())
+
+    someone_else = a_fresh_participant(signed_in, "someone@example.com")
+    someone_else.post("/sections/onboarding/complete/")
+
+    assert results(someone_else).status_code == 302
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("block_id", ["statement", "no-such-block"])
+def test_only_a_scored_block_has_a_results_page(signed_in, block_id):
+    assert results(signed_in, block_id).status_code == 404

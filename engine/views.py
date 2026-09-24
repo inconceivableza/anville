@@ -20,7 +20,8 @@ from engine.document import (
 from engine.document.blocks import section_of
 from engine.document.scoring import score
 from engine.hub import hub_for, is_locked, open_blocks, section_by_id, track_sections
-from engine.models import PathwayVersion, Publication, Response
+from engine.models import PathwayVersion, Publication, Response, Result
+from engine.results import results_page
 
 
 @login_required
@@ -124,6 +125,26 @@ def save_answer(request, block_id):
     if request.headers.get("HX-Request") == "true":
         return render(request, "engine/save_result.html", _section_page(version, section, answers, completed))
     return _see_other(f"{reverse('section', args=[section['id']])}#block-{block_id}")
+
+
+@login_required
+def results(request, block_id):
+    """✨ The participant's own stored result for a scored block, never recomputed and never anyone else's.
+
+    Before there is a result, the participant is sent to the block's section, where the sort is.
+    """
+    participant_response, version, answers, _ = _participant(request.user)
+    try:
+        block = answerable_block(version.document, block_id) if version else None
+    except UnknownBlock:
+        block = None
+    if block is None or not BLOCK_TYPES[block["type"]].scored:
+        raise Http404("This pathway version has no scored block by that identifier.")
+    result = Result.objects.filter(response=participant_response, block_id=block_id).first()
+    if result is None:
+        return redirect("section", section_of(version.document, block_id)["id"])
+    page = results_page(version.document, result.scores, answers[block_id], request.user.get_username())
+    return render(request, "engine/results.html", page)
 
 
 def _see_other(where, *args):
