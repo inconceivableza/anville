@@ -1,0 +1,11 @@
+{% comment %}
+  ✨ The sort's place in its section. The widget that sorts and fine-tunes arrives in ticket 07; until then this
+  says so plainly rather than pretending to be ready.
+{% endcomment %}
+<div id="block-{{ block.id }}" class="question-card">
+  {% if block.answer %}
+    <p>Your sort is in.</p>
+  {% else %}
+    <p>The sort is not ready to use yet.</p>
+  {% endif %}
+</div>

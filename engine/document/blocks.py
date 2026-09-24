@@ -122,7 +122,8 @@ class BlockType(NamedTuple):
     `text_fields` are the authored fields resolved to the reader's wording. `text_lists` are the same for
     a repeated sub-object, as `(list field, its text fields)`. `captures` is None when the block is content
     only: such a block takes no answer and counts towards nothing. `opens_what_follows` marks a block that
-    holds the rest of its section shut until it has been answered.
+    holds the rest of its section shut until it has been answered. `scored` marks a block whose answer is
+    scored into a result once, when it is submitted.
     """
 
     name: str
@@ -130,6 +131,7 @@ class BlockType(NamedTuple):
     text_lists: tuple = ()
     captures: AnswerKind | None = None
     opens_what_follows: bool = False
+    scored: bool = False
 
     @property
     def is_interactive(self):
@@ -150,7 +152,7 @@ BLOCK_TYPES = {
         ),
         BlockType("long_text", text_fields=("prompt",), captures=TEXT),
         BlockType("agreement_scale", text_fields=("prompt", "min_label", "max_label"), captures=SCALE_POINT),
-        BlockType("sort_assessment", captures=SORT),
+        BlockType("sort_assessment", captures=SORT, scored=True),
     ]
 }
 

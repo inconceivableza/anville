@@ -1,10 +1,12 @@
 from django.contrib.auth.decorators import login_required
+from django.db import IntegrityError
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from engine.document import (
+    BLOCK_TYPES,
     LONG_TEXT_MAX_LENGTH,
     SCALE_POINTS,
     AnswerRefused,
@@ -16,6 +18,7 @@ from engine.document import (
     unmet,
 )
 from engine.document.blocks import section_of
+from engine.document.scoring import score
 from engine.hub import hub_for, is_locked, open_blocks, section_by_id, track_sections
 from engine.models import PathwayVersion, Publication, Response
 
@@ -107,7 +110,14 @@ def save_answer(request, block_id):
 
     if participant_response is None:
         participant_response, _ = Response.objects.get_or_create(participant=request.user, version=version)
-    participant_response.save_answer(block_id, value)
+    if BLOCK_TYPES[block["type"]].scored:
+        try:
+            participant_response.submit_sort(block_id, value, score(version.document, value))
+        except IntegrityError:
+            refusal = "Your results are already in. Retaking the sort is not offered yet."
+            return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
+    else:
+        participant_response.save_answer(block_id, value)
     # ✨ The row was updated in place, so this object's answers are a step behind what was just stored.
     answers = {**answers, block_id: value}
 

@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F, Func, Value
 from django.utils import timezone
 
@@ -64,6 +64,16 @@ class Response(models.Model):
         """
         self._merge(answers=Value({block_id: value}, output_field=models.JSONField()))
 
+    def submit_sort(self, block_id, sort, scores):
+        """✨ Store a sort and the result scored from it together, or neither.
+
+        A second sort for the same block raises IntegrityError from the database and changes nothing,
+        since retake is not offered yet.
+        """
+        with transaction.atomic():
+            Result.objects.create(response=self, block_id=block_id, scores=scores)
+            self.save_answer(block_id, sort)
+
     def complete_section(self, section_id):
         """✨ Record that the participant completed a section, merged in the same way as an answer.
 
@@ -88,6 +98,24 @@ class Response(models.Model):
             **{name: _MergeJson(F(name), value) for name, value in fields.items()},
             updated_at=timezone.now(),
         )
+
+
+class Result(models.Model):
+    """✨ The scores computed from one sort answer, kept against its response and so its pathway version.
+
+    Computed once, when the sort is submitted, and never recomputed: a later version with different scoring
+    leaves it alone. The scores carry the name of the method that produced them.
+    """
+
+    response = models.ForeignKey(Response, on_delete=models.CASCADE, related_name="results")
+    block_id = models.CharField(max_length=64)
+    scores = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["response", "block_id"], name="one_result_per_sort_per_response"),
+        ]
 
 
 class _MergeJson(Func):
