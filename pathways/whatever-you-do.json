@@ -217,5 +217,81 @@
         }
       }
     ]
+  },
+  "instrument": {
+    "buckets": [
+      { "id": "definitely-not-me", "label": "Definitely not me", "seed": 10 },
+      { "id": "not-really-me", "label": "Not really me", "seed": 25 },
+      { "id": "average-not-sure", "label": "Average / not sure", "seed": 45 },
+      { "id": "good-at-this", "label": "Good at this", "seed": 65 },
+      { "id": "real-strength", "label": "Real strength", "seed": 85 }
+    ],
+    "items": [
+      { "id": "a1", "text": "Pioneering new ideas through iteration and experimentation", "loads": ["apostle", "ideate"] },
+      { "id": "a2", "text": "Identifying the right foundations and structures to put in place", "loads": ["apostle", "assess"] },
+      { "id": "a3", "text": "Casting a compelling vision that gets people on board", "loads": ["apostle", "rally"] },
+      { "id": "a4", "text": "Coaching and raising up other leaders", "loads": ["apostle", "facilitate"] },
+      { "id": "a5", "text": "Building something that will outlast you", "loads": ["apostle", "deliver"] },
+      { "id": "p1", "text": "Going against the grain and challenging the status quo", "loads": ["prophet", "ponder"] },
+      { "id": "p2", "text": "Having strong instincts about situations and people — and being proved right", "loads": ["prophet", "assess"] },
+      { "id": "p3", "text": "Sensing trends before others do", "loads": ["prophet", "ponder"] },
+      { "id": "p4", "text": "Using compelling, provocative methods to articulate what’s wrong", "loads": ["prophet", "ideate"] },
+      { "id": "p5", "text": "Speaking hard truths that shift how people think and act", "loads": ["prophet", "rally"] },
+      { "id": "e1", "text": "Naturally empathetic towards people whose lives and experiences are very different from yours", "loads": ["evangelist", "facilitate"] },
+      { "id": "e2", "text": "Genuinely curious about how people from different walks of life see the world", "loads": ["evangelist", "ponder"] },
+      { "id": "e3", "text": "Persuading someone one-to-one about something that really matters to you", "loads": ["evangelist", "rally"] },
+      { "id": "e4", "text": "Motivating others to spread a message or cause they believe in", "loads": ["evangelist", "rally"] },
+      { "id": "e5", "text": "Finding fresh ways to make important ideas accessible to new audiences", "loads": ["evangelist", "ideate"] },
+      { "id": "s1", "text": "Making sure nobody falls through the cracks", "loads": ["shepherd", "deliver"] },
+      { "id": "s2", "text": "Giving people the tools, opportunities or platform they need to succeed", "loads": ["shepherd", "facilitate"] },
+      { "id": "s3", "text": "Drawing people in and getting them involved", "loads": ["shepherd", "rally"] },
+      { "id": "s4", "text": "Seeing when someone is heading off track and needs redirecting", "loads": ["shepherd", "assess"] },
+      { "id": "s5", "text": "Walking with someone through a long difficult season", "loads": ["shepherd", "deliver"] },
+      { "id": "t1", "text": "Mastering a subject so thoroughly you could explain it to anyone", "loads": ["teacher", "ponder"] },
+      { "id": "t2", "text": "Creating fresh analogies and frameworks that make complex ideas simple", "loads": ["teacher", "ideate"] },
+      { "id": "t3", "text": "Training people to apply what they’ve learned to their everyday lives", "loads": ["teacher", "deliver"] },
+      { "id": "t4", "text": "Pulling together ideas from different fields and spotting the patterns between them", "loads": ["teacher", "ponder"] },
+      { "id": "t5", "text": "Assessing whether ideas and information are accurate and well-founded", "loads": ["teacher", "assess"] },
+      { "id": "d1", "text": "Supporting and resourcing other people’s initiatives", "loads": ["deacon", "facilitate"] },
+      { "id": "d2", "text": "Following through on the detail until the job is done properly", "loads": ["deacon", "deliver"] },
+      { "id": "d3", "text": "Bringing order to chaos — admin, systems, processes", "loads": ["deacon", "assess"] },
+      { "id": "d4", "text": "Improving how things work so processes are more effective", "loads": ["deacon", "ideate"] },
+      { "id": "d5", "text": "Seeing what needs doing and just getting on with it", "loads": ["deacon", "deliver"] },
+      { "id": "a6", "text": "Imagining what an organisation or community could become", "loads": ["apostle", "ponder"] },
+      { "id": "t6", "text": "Patiently helping someone work through a problem until they get it themselves", "loads": ["teacher", "facilitate"] },
+      { "id": "d6", "text": "Getting everyone organised and moving when something needs doing", "loads": ["deacon", "rally"] },
+      { "id": "e6", "text": "Reading a room and knowing exactly what will resonate", "loads": ["evangelist", "assess"] },
+      { "id": "p6", "text": "Spotting the talents and potential in others, and helping them see it too", "loads": ["prophet", "facilitate"] },
+      { "id": "s6", "text": "Creating environments where people genuinely connect and belong", "loads": ["shepherd", "ideate"] }
+    ]
+  },
+  "measurement": {
+    "frameworks": [
+      {
+        "id": "apest",
+        "label": "APEST(d)",
+        "constructs": [
+          { "id": "apostle", "label": "Apostle" },
+          { "id": "prophet", "label": "Prophet" },
+          { "id": "evangelist", "label": "Evangelist" },
+          { "id": "shepherd", "label": "Shepherd" },
+          { "id": "teacher", "label": "Teacher" },
+          { "id": "deacon", "label": "deacon" }
+        ]
+      },
+      {
+        "id": "pep",
+        "label": "PEP",
+        "constructs": [
+          { "id": "ponder", "label": "Ponder" },
+          { "id": "ideate", "label": "Ideate" },
+          { "id": "assess", "label": "Assess" },
+          { "id": "rally", "label": "Rally" },
+          { "id": "facilitate", "label": "Facilitate" },
+          { "id": "deliver", "label": "Deliver" }
+        ]
+      }
+    ],
+    "scoring": { "method": "compositional_share" }
   }
 }

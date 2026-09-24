@@ -34,7 +34,14 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "frameworks": { "type": "array", "items": { "$ref": "#/$defs/framework" } }
+        "frameworks": { "type": "array", "items": { "$ref": "#/$defs/framework" } },
+        "scoring": {
+          "description": "How a sort is scored: a named method, frozen once any response is scored with it (ADR 0003).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["method"],
+          "properties": { "method": { "enum": ["compositional_share"] } }
+        }
       }
     },
     "presentation": {
