@@ -1,0 +1,13 @@
+{% extends "allauth/layouts/base.html" %}
+{# ✨ What declining means. Nothing was recorded, not even the decision itself, so there is nothing to undo. #}
+{% block head_title %}Consent not given{% endblock head_title %}
+
+{% block content %}
+  <h1>Consent not given</h1>
+  <p>You have not given your consent, so nothing you write here will be stored.</p>
+  <p>
+    Your account stays as it is. If you change your mind, you can read the text again and agree at any time.
+  </p>
+  <a class="btn btn-secondary btn-full" href="{% url 'consent' %}">Read the text again</a>
+  <p><a href="{% url 'account_logout' %}">Sign out</a></p>
+{% endblock content %}

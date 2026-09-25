@@ -611,6 +611,14 @@ a.hub-section-title:hover {
   color: var(--ink-light);
 }
 
+/* Consent: agreeing and declining are equal choices, stacked with room between them */
+
+.consent-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 /* Autosave */
 
 .save-row {

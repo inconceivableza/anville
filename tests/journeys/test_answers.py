@@ -8,6 +8,7 @@ from engine.models import Response
 from tests.documents import pathway_document
 from tests.journeys.pages import version_on
 from tests.journeys.test_access import PASSWORD
+from tests.journeys.test_consent import give_consent
 from tests.journeys.test_hub import a_fresh_participant
 
 # ✨ Where the blocks these tests use live. An answer is typed on its section's page, never on the hub.
@@ -23,9 +24,10 @@ def participant(django_user_model):
 
 @pytest.fixture
 def newly_signed_in(client, participant, load_pathway):
-    """✨ A participant who has answered and completed nothing, so only the first section is open."""
+    """✨ A participant who has consented and answered and completed nothing, so only the first section is open."""
     load_pathway(pathway_document())
     client.force_login(participant)
+    give_consent(client)
     return client
 
 
@@ -236,6 +238,7 @@ def test_a_participant_cannot_answer_a_block_that_exists_only_in_a_later_version
 @pytest.mark.django_db
 def test_answering_with_no_pathway_published_is_refused(client, participant):
     client.force_login(participant)
+    give_consent(client)
 
     assert answer(client, "statement", "Nothing to answer.").status_code == 404
 

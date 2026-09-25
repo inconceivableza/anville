@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path, re_path
-from access.views import password_reset_unavailable
+from access.views import consent, password_reset_unavailable
 from engine.views import complete_section, hub, reopen_section, results, save_answer, section
 
 urlpatterns = [
@@ -25,6 +25,7 @@ urlpatterns = [
     # ✨ Ahead of allauth's own routes, so every password reset page is refused until email exists (ticket 28).
     re_path(r"^accounts/password/reset/", password_reset_unavailable),
     path("accounts/", include("allauth.urls")),
+    path("consent/", consent, name="consent"),
     path("answers/<slug:block_id>/", save_answer, name="save_answer"),
     path("results/<slug:block_id>/", results, name="results"),
     path("sections/<slug:section_id>/", section, name="section"),

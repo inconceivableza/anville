@@ -2,7 +2,16 @@ import json
 from io import StringIO
 
 import pytest
+from django.core.cache import cache
 from django.core.management import call_command
+
+
+@pytest.fixture(autouse=True)
+def fresh_rate_limits():
+    """✨ allauth counts sign-ups and sign-ins per address in the cache (20 sign-ups a minute), and the cache
+    outlives each test's database. Without this, a test's sign-up is refused once earlier tests have used
+    up the minute's allowance, and it fails only when run with the others."""
+    cache.clear()
 
 
 @pytest.fixture

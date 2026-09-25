@@ -5,6 +5,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from access.consent import consent_required
 from engine.document import (
     BLOCK_TYPES,
     LONG_TEXT_MAX_LENGTH,
@@ -25,6 +26,7 @@ from engine.results import results_page
 
 
 @login_required
+@consent_required
 def hub(request):
     """✨ Where the participant always starts: their track's sections, their status, and the next step."""
     _, version, answers, completed = _participant(request.user)
@@ -41,6 +43,7 @@ def hub(request):
 
 
 @login_required
+@consent_required
 def section(request, section_id):
     """✨ One section's blocks. A locked section is refused here, whatever the participant typed in the bar."""
     _, version, answers, completed = _participant(request.user)
@@ -51,6 +54,7 @@ def section(request, section_id):
 
 
 @login_required
+@consent_required
 @require_POST
 def complete_section(request, section_id):
     """✨ The participant's own act of finishing a section, re-checked here rather than trusted to the page."""
@@ -69,6 +73,7 @@ def complete_section(request, section_id):
 
 
 @login_required
+@consent_required
 @require_POST
 def reopen_section(request, section_id):
     """✨ The participant taking back their own completion. Their answers stay exactly as they left them."""
@@ -80,6 +85,7 @@ def reopen_section(request, section_id):
 
 
 @login_required
+@consent_required
 @require_POST
 def save_answer(request, block_id):
     """✨ Autosave: validate and store one block's answer against the participant's pathway version.
@@ -128,6 +134,7 @@ def save_answer(request, block_id):
 
 
 @login_required
+@consent_required
 def results(request, block_id):
     """✨ The participant's own stored result for a scored block, never recomputed and never anyone else's.
 

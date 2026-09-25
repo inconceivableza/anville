@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from tests.documents import pathway_document
 from tests.journeys.pages import loads_the_built_stylesheet
 from tests.journeys.test_access import PASSWORD
+from tests.journeys.test_consent import give_consent
 
 
 @pytest.fixture
@@ -14,12 +15,14 @@ def signed_in_client(client, django_user_model):
         username="participant", email="participant@example.com"
     )
     client.force_login(participant)
+    give_consent(client)
     return client
 
 
 def a_fresh_participant(client, email):
     client.logout()
     client.force_login(get_user_model().objects.create_user(username=email, email=email))
+    give_consent(client)
     return client
 
 
@@ -54,9 +57,23 @@ def test_a_signed_in_participant_is_shown_the_published_pathways_hub(signed_in_c
 
 
 @pytest.mark.django_db
-def test_logging_in_leads_straight_to_the_published_pathway(client, django_user_model, load_pathway):
+def test_logging_in_for_the_first_time_asks_for_consent_before_the_pathway(client, django_user_model, load_pathway):
     load_pathway(pathway_document())
     django_user_model.objects.create_user(username="p", email="participant@example.com", password=PASSWORD)
+
+    response = client.post("/accounts/login/", {"login": "participant@example.com", "password": PASSWORD}, follow=True)
+
+    assert response.redirect_chain[-1][0] == "/consent/"
+    assert "Test Pathway" not in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_logging_in_after_consenting_leads_straight_to_the_published_pathway(client, django_user_model, load_pathway):
+    load_pathway(pathway_document())
+    django_user_model.objects.create_user(username="p", email="participant@example.com", password=PASSWORD)
+    client.post("/accounts/login/", {"login": "participant@example.com", "password": PASSWORD})
+    give_consent(client)
+    client.post("/accounts/logout/")
 
     response = client.post("/accounts/login/", {"login": "participant@example.com", "password": PASSWORD}, follow=True)
 

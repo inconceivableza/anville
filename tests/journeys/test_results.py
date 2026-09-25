@@ -12,6 +12,7 @@ from engine.document.scoring import score
 from engine.models import Response, Result
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.test_answers import answer, participant  # noqa: F401 (a fixture)
+from tests.journeys.test_consent import give_consent
 from tests.journeys.test_hub import a_fresh_participant
 
 SORT, STRENGTHS = "strengths-sort", "strengths"
@@ -22,6 +23,7 @@ def signed_in(client, participant, load_pathway):
     """✨ A participant with onboarding complete, so the Strengths assessment section is open."""
     load_pathway(sort_pathway())
     client.force_login(participant)
+    give_consent(client)
     client.post("/sections/onboarding/complete/")
     return client
 

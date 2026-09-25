@@ -1,0 +1,57 @@
+{% extends "allauth/layouts/base.html" %}
+{% comment %}
+  ✨ The consent text and the participant's decision (ADR 0004). Owned by the engine, not the pathway: every
+  pathway on this deployment is covered by it.
+
+  DRAFT. This wording was written with AI assistance for fake-data demos and has had no legal review. It must
+  be rewritten before any real participant uses the app (spec, "Legalities are parked"): it names no
+  controller and no retention period, and what withdrawing does to stored answers is still undecided.
+  Raise CONSENT_TEXT_VERSION in access/consent.py whenever a change alters what is agreed to.
+{% endcomment %}
+{% block head_title %}Your consent{% endblock head_title %}
+
+{% block content %}
+  <h1>Before you begin</h1>
+
+  <div class="hint-box">
+    <strong>Draft wording</strong>
+    This text is a draft for trying the app out with made-up answers. Please do not write anything real
+    about yourself yet.
+  </div>
+
+  <h2>What is stored</h2>
+  <p>
+    Everything you write or choose in the pathway is saved to your account, so you can come back to it. Some
+    of it may be personal: your faith, your work, your health, or hard times you have been through. Because
+    it can be this sensitive, nothing is stored until you agree.
+  </p>
+
+  <h2>Who sees it</h2>
+  <p>
+    You do. Nothing is shared with a coach or anyone else unless you choose to share it. The people who run
+    this service can reach stored answers in order to keep it working.
+  </p>
+
+  <h2>Your choice</h2>
+  <p>
+    Agreeing is up to you, and your enrolment code does not agree for you. If you do not agree, nothing you
+    write is stored, and you can agree later. You can withdraw your consent at any time from this page.
+  </p>
+
+  <p>Version {{ version }} of this text.</p>
+
+  {% if given %}
+    <p>You agreed to version {{ given.text_version }} of this text on {{ given.given_at|date:"j F Y" }}.</p>
+    <a class="btn btn-primary btn-full" href="{% url 'hub' %}">Go to your pathway</a>
+  {% else %}
+    {% if text_changed %}
+      <p class="gate-refused" role="alert">The text has changed since you opened this page. Please read it again.</p>
+    {% endif %}
+    <form method="post" action="{% url 'consent' %}" class="consent-choices">
+      {% csrf_token %}
+      <input type="hidden" name="version" value="{{ version }}">
+      <button type="submit" name="decision" value="agree" class="btn btn-primary btn-full">I agree</button>
+      <button type="submit" name="decision" value="decline" class="btn btn-secondary btn-full">I do not agree</button>
+    </form>
+  {% endif %}
+{% endblock content %}

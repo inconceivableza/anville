@@ -22,6 +22,15 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Submitting with it unticked: the browser stops the form and points at the box. Without JavaScript the same happens, since the check is the browser's own `required`.
 - Keyboard only: Tab reaches the box and Space ticks it.
 
+## Consent
+
+- After signing up, and at a first sign-in, the consent page comes before the hub.
+- "I agree" and "I do not agree" are stacked with a gap between them and look like equal choices: neither is hidden, greyed out or smaller.
+- "I do not agree" says nothing will be stored, and "Read the text again" goes back to the page.
+- Without JavaScript, both buttons work: the page is a plain form.
+- Keyboard only: Tab reaches both buttons in order, and Enter presses the focused one.
+- Phone width: the text wraps and the buttons fill the width.
+
 ## Autosaved answers (long text, 1–10 scale)
 
 - Typing or choosing shows "Saved"; changing the answer again clears it; a slow save shows "Saving…".
