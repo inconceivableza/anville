@@ -7,13 +7,18 @@ ROOT = Path(__file__).resolve().parents[2]
 STYLESHEET = ROOT / "frontend" / "src" / "styles.css"
 TEMPLATES = sorted(path for app in ("access", "engine") for path in (ROOT / app / "templates").rglob("*.html"))
 
-# Hex colours, functional colours and the named colours most likely to slip in (but not var(--white)).
-RAW_COLOUR = re.compile(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|lab|lch)\(|(?<![-\w])(?:white|black)\b")
+# Hex colours, functional colours and the named colours most likely to slip in (but not var(--white) or white-space).
+RAW_COLOUR = re.compile(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|lab|lch)\(|(?<![-\w])(?:white|black)\b(?!-)")
 
 
 def _outside_root_block(css):
     css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
     return re.sub(r":root\s*\{[^}]*\}", "", css, count=1)
+
+
+def test_a_property_named_like_a_colour_is_not_taken_for_one():
+    assert RAW_COLOUR.findall("white-space: nowrap;") == []
+    assert RAW_COLOUR.findall("color: white;") == ["white"]
 
 
 def test_the_stylesheet_uses_raw_colours_only_to_define_its_colour_variables():

@@ -204,6 +204,51 @@ def test_a_sort_submitted_through_htmx_sends_the_browser_to_the_results(signed_i
     assert submitted.headers["HX-Redirect"] == f"/results/{SORT}/"
 
 
+def sort_form(page):
+    """✨ The form the sort widget fills in and submits, or nothing if the page has none."""
+    form = re.search(rf'<form id="block-{SORT}".*?</form>', page, re.S)
+    return form.group(0) if form else ""
+
+
+@pytest.mark.django_db
+def test_the_sort_is_sent_by_a_form_that_saves_the_whole_sort_against_the_pages_version(signed_in, participant):
+    """✨ The widget itself is checked by hand; what it relies on is here. It fills in `value`, the form sends it."""
+    form = sort_form(signed_in.get(f"/sections/{STRENGTHS}/").content.decode())
+
+    assert f'action="/answers/{SORT}/"' in form
+    assert '<input type="hidden" name="value">' in form
+    assert f'name="version" value="{Response.objects.get(participant=participant).version_id}"' in form
+
+
+@pytest.mark.django_db
+def test_without_javascript_the_sort_says_it_needs_it(signed_in):
+    shown = re.search(r"<noscript>(.*?)</noscript>", signed_in.get(f"/sections/{STRENGTHS}/").content.decode(), re.S)
+
+    assert shown is not None
+    assert "The sort needs JavaScript." in shown.group(1)
+
+
+@pytest.mark.django_db
+def test_while_the_sort_is_not_in_its_section_offers_no_way_to_complete_it(signed_in):
+    """✨ As in the prototype, the sort leads only to the results, so no Mark complete sits beside it to skip both."""
+    page = signed_in.get(f"/sections/{STRENGTHS}/").content.decode()
+
+    assert f"/sections/{STRENGTHS}/complete/" not in page
+
+
+@pytest.mark.django_db
+def test_the_sorts_section_is_refused_completion_before_the_sort_is_in(signed_in):
+    assert signed_in.post(f"/sections/{STRENGTHS}/complete/").status_code == 400
+
+
+@pytest.mark.django_db
+def test_once_the_sort_is_in_its_section_can_be_completed(signed_in):
+    submit_sort(signed_in, complete_sort())
+
+    assert f'action="/sections/{STRENGTHS}/complete/"' in signed_in.get(f"/sections/{STRENGTHS}/").content.decode()
+    assert signed_in.post(f"/sections/{STRENGTHS}/complete/").status_code == 303
+
+
 @pytest.mark.django_db
 def test_a_participant_never_sees_another_participants_results(signed_in):
     submit_sort(signed_in, complete_sort())

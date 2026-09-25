@@ -18,6 +18,7 @@ def lint(document):
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
         *_sort_needs(document),
+        *_ungated_sorts(document),
     ]
 
 
@@ -128,6 +129,20 @@ def _sort_needs(document):
                         f"/content/sections/{s}/blocks/{b}",
                         f"Block '{block['id']}' is a sort, so this pathway needs {needs}.",
                     )
+
+
+def _ungated_sorts(document):
+    """✨ A sort its section could be completed without. The participant would skip the sort and its results,
+    and open whatever requires the section. The engine hides the completion control until the sort is in,
+    and the gate is what makes the server refuse it too."""
+    for s, section in enumerate(document["content"]["sections"]):
+        required = {clause["block"] for clause in clauses_of(section) if clause["type"] == "has_answer"}
+        for b, block in enumerate(section["blocks"]):
+            if BLOCK_TYPES[block["type"]].scored and block["id"] not in required:
+                yield Problem(
+                    f"/content/sections/{s}/blocks/{b}",
+                    f"Block '{block['id']}' is a sort, so its section's gate needs a 'has_answer' clause for it.",
+                )
 
 
 def _loads_per_framework(document, construct_ids):

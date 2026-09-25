@@ -1,12 +1,26 @@
 {% comment %}
-  ✨ The sort's place in its section. The widget that sorts and fine-tunes arrives in ticket 07; until then this
-  says so plainly rather than pretending to be ready. The widget's items and buckets are handed over as JSON.
+  ✨ The sort, run by its widget (frontend/src/sort.js). The server hands over the items and buckets as JSON
+  beside the form; the widget's only output is the form's hidden value, the whole sort as JSON, which the
+  server checks, scores and answers by sending the browser to the results. The sort cannot be done without
+  JavaScript, so the page says so.
 {% endcomment %}
-<div id="block-{{ block.id }}" class="question-card">
-  {% if block.answer %}
+{% if block.answer %}
+  <div id="block-{{ block.id }}" class="question-card">
     <p>Your sort is in. <a href="{% url 'results' block.id %}">See your results</a></p>
-  {% else %}
-    {% with script_id="sort-"|add:block.id %}{{ block.widget|json_script:script_id }}{% endwith %}
-    <p>The sort is not ready to use yet.</p>
-  {% endif %}
-</div>
+  </div>
+{% else %}
+  {% with script_id="sort-"|add:block.id %}
+    {{ block.widget|json_script:script_id }}
+    <form id="block-{{ block.id }}" class="sort" method="post" action="{% url 'save_answer' block.id %}"
+          hx-post="{% url 'save_answer' block.id %}" hx-target="find .save-status"
+          hx-disabled-elt="find .sort-submit" data-sort="{{ script_id }}">
+      {% csrf_token %}
+      <input type="hidden" name="value">
+      <input type="hidden" name="version" value="{{ pathway.version_id }}">
+      <p class="visually-hidden" aria-live="polite" data-sort-announcer></p>
+      <div class="sort-stage"></div>
+      <output class="save-status" aria-live="polite"></output>
+      <noscript><p>The sort needs JavaScript. Turn it on in your browser, then reload this page.</p></noscript>
+    </form>
+  {% endwith %}
+{% endif %}

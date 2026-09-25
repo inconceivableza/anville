@@ -188,6 +188,9 @@ def _section_or_404(version, section_id):
 
 def _section_page(version, section, answers, completed):
     blocks, activity_open = open_blocks(section, answers)
+    # ✨ A sort leads only to its results, as in the prototype, so completing is not offered beside it until it
+    # is in. The linter makes its section's gate require it, so the server refuses completion before then too.
+    sort_pending = any(BLOCK_TYPES[block["type"]].scored and block["id"] not in answers for block in blocks)
     return {
         "pathway": {
             "version_id": version.pk,
@@ -200,7 +203,7 @@ def _section_page(version, section, answers, completed):
             "blocks": [_block_for_participant(version.document, block, answers) for block in blocks],
         },
         "is_complete": section["id"] in completed,
-        "activity_open": activity_open,
+        "offers_completion": activity_open and not sort_pending,
         "unmet": unmet(section, answers),
     }
 

@@ -99,6 +99,11 @@ def sort_pathway():
             "title": "Strengths assessment",
             "requires": ["onboarding"],
             "blocks": [{"id": "strengths-sort", "type": "sort_assessment"}],
+            "gate": {
+                "clauses": [
+                    {"type": "has_answer", "block": "strengths-sort", "message": "Finish the sort to see your results."}
+                ]
+            },
         }
     )
     document["instrument"]["items"].append(

@@ -98,9 +98,11 @@ The long-text and 1–10 scale forms also save without JavaScript, through a Sav
 
 ## Scoring and results
 
-A `sort_assessment` block's answer is the whole sort, sent as JSON: every item of the pathway's instrument, each with the `bucket` it was placed in and a whole `value` from 0 to 100. The server checks it against that pathway version's own items and buckets. The linter refuses a pathway with a sort but no buckets, items, frameworks or scoring method.
+A `sort_assessment` block's answer is the whole sort, sent as JSON: every item of the pathway's instrument, each with the `bucket` it was placed in and a whole `value` from 0 to 100. The server checks it against that pathway version's own items and buckets. The linter refuses a pathway with a sort but no buckets, items, frameworks or scoring method, and a sort whose section's gate has no `has_answer` clause for it. Until the sort is in, its section offers no way to complete it, as in the prototype.
 
 A sort is scored once, when it is submitted, by the method the document names in `measurement.scoring` (ADR 0003). There is one method, `compositional_share`, the prototype's: each construct's share of the grand total, rounded half up as JavaScript rounds, ranked with ties kept in declaration order. A method is frozen once any response has been scored with it, so a change in behaviour is a new name. The result is stored with the answer and never recomputed, and a second sort is refused because retake does not exist yet.
+
+The sort itself is a JavaScript widget, `frontend/src/sort.js`: one card at a time into the buckets, with undo, then a slider per item seeded from its bucket. It sends the whole sort once, and the server answers by sending the browser to the results.
 
 The results page, `/results/<block_id>/`, shows the stored result in the wording of the document's `presentation`: a heading and subtitle per framework, a description, persona and tone per construct, the disclaimer, and a title in which `{name}` is the participant's username. Colours stay in the stylesheet: a construct names a tone, and a framework's bars are coloured by tone, or with `"bars": "rank"` by rank, so tied scores share a colour.
 
@@ -116,6 +118,8 @@ Postgres must be running and the frontend must be built first. Tests sit at two 
 
 - `tests/journeys/`: the participant journey over HTTP, through Django's test client against real PostgreSQL
 - `tests/core/`: pure functions, with no browser and no database
+
+Nothing runs a browser, so what JavaScript, CSS and assistive technology do is checked by hand, using [docs/manual-checks.md](docs/manual-checks.md).
 
 ## Where decisions live
 

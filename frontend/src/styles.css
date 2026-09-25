@@ -45,6 +45,17 @@
   --rank-4: #ff9800;
   --rank-5: #e53935;
   --rank-6: #b71c1c;
+  /* The sort's buckets, weakest first, each with a pale shade for hover. */
+  --bucket-1: #c25b56;
+  --bucket-1-pale: #f5e8e8;
+  --bucket-2: #5a8b6a;
+  --bucket-2-pale: #e8f5ee;
+  --bucket-3: #5a6b60;
+  --bucket-3-pale: #f4f7f5;
+  --bucket-4: #4a6fa5;
+  --bucket-4-pale: #e8eef5;
+  --bucket-5: #5cb37a;
+  --bucket-5-pale: #e8f0e8;
   --radius: 16px;
   --font-heading: "Newsreader Variable", Georgia, serif;
   --font-body: "Instrument Sans Variable", system-ui, sans-serif;
@@ -740,6 +751,310 @@ a.hub-section-title:hover {
 .rank-5 { color: var(--rank-5); fill: var(--rank-5); }
 .rank-6 { color: var(--rank-6); fill: var(--rank-6); }
 
+/* The sort: one card at a time into buckets, then a slider per item. Ported from the prototype's card sort. */
+
+.sort {
+  overflow-x: clip; /* a card flying off to the side never makes the page scroll sideways */
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.section-header {
+  margin-bottom: 24px;
+}
+
+.section-header h2 {
+  margin-bottom: 8px;
+}
+
+.section-header h2:focus {
+  outline: none;
+}
+
+.step-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.bucket-1 { --bucket: var(--bucket-1); --bucket-pale: var(--bucket-1-pale); }
+.bucket-2 { --bucket: var(--bucket-2); --bucket-pale: var(--bucket-2-pale); }
+.bucket-3 { --bucket: var(--bucket-3); --bucket-pale: var(--bucket-3-pale); }
+.bucket-4 { --bucket: var(--bucket-4); --bucket-pale: var(--bucket-4-pale); }
+.bucket-5 { --bucket: var(--bucket-5); --bucket-pale: var(--bucket-5-pale); }
+
+.card-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sort-topline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  width: 100%;
+}
+
+.card-counter {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.sort-instruction {
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.sort-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90%;
+  max-width: 360px;
+  min-height: 100px;
+  margin: 0 auto 12px;
+  padding: 14px 20px;
+  background: var(--white);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 12px var(--shadow);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+  user-select: none;
+}
+
+@keyframes fly-left {
+  to { transform: translateX(-150vw) rotate(-30deg); opacity: 0; }
+}
+
+@keyframes fly-right {
+  to { transform: translateX(150vw) rotate(30deg); opacity: 0; }
+}
+
+@keyframes fly-down {
+  to { transform: translateY(60vh) scale(0.8); opacity: 0; }
+}
+
+.sort-card.fly-left { animation: fly-left 0.35s ease-in forwards; }
+.sort-card.fly-right { animation: fly-right 0.35s ease-in forwards; }
+.sort-card.fly-down { animation: fly-down 0.35s ease-in forwards; }
+
+.bucket-buttons {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.bucket-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 56px;
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bucket, var(--border));
+  border-radius: var(--radius);
+  background: var(--white);
+  box-shadow: 0 2px 8px var(--shadow);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ink-muted);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.bucket-btn:hover {
+  background: var(--bucket-pale, var(--gold-pale));
+  color: var(--ink);
+}
+
+.bucket-btn:active {
+  transform: scale(0.96);
+}
+
+.bucket-count {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 2px;
+}
+
+.undo-btn {
+  display: block;
+  margin: 12px auto 0;
+  padding: 8px 16px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.undo-btn:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--ink);
+}
+
+.undo-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.bucket-btn:focus-visible,
+.undo-btn:focus-visible,
+.score-slider:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.sort-done {
+  text-align: center;
+  padding: 32px 0;
+}
+
+.sort-done-mark {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.sort-done h3 {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+
+.sort-done-counts {
+  list-style: none;
+  margin-bottom: 24px;
+}
+
+.sort-done-counts li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.sort-done-counts strong {
+  font-size: 18px;
+}
+
+.bucket-name {
+  width: 140px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--bucket);
+}
+
+.bucket-heading {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 0 4px;
+  color: var(--bucket);
+}
+
+.score-section {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 8px;
+}
+
+.score-row {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.score-row:last-child {
+  border-bottom: none;
+}
+
+.score-label {
+  display: block;
+  font-size: 14px;
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+
+.score-scale {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.score-slider {
+  flex: 1;
+  appearance: none;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.score-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--gold);
+  border: 3px solid var(--white);
+  border-radius: 50%;
+  box-shadow: 0 1px 4px var(--gold-glow);
+  cursor: pointer;
+}
+
+.score-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: var(--gold);
+  border: 3px solid var(--white);
+  border-radius: 50%;
+  box-shadow: 0 1px 4px var(--gold-glow);
+  cursor: pointer;
+}
+
+.sort-submit {
+  margin-top: 20px;
+}
+
 /* With JavaScript, answers save themselves, so the fallback button is not needed. */
 html[data-javascript="loaded"] .save-fallback {
   display: none;
@@ -758,5 +1073,31 @@ html[data-javascript="loaded"] .save-fallback {
   .bl-btn {
     max-width: 36px;
     font-size: 13px;
+  }
+
+  .bucket-buttons {
+    flex-direction: column;
+    gap: 6px;
+    max-width: 360px;
+  }
+
+  .bucket-btn {
+    flex-direction: row;
+    gap: 10px;
+    min-height: 44px;
+    padding: 14px 16px;
+    justify-content: flex-start;
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .bucket-count {
+    font-size: 16px;
+    min-width: 24px;
+    margin-bottom: 0;
+  }
+
+  .score-section {
+    padding: 16px;
   }
 }

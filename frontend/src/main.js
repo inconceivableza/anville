@@ -1,12 +1,14 @@
 import "./styles.css";
 import htmx from "htmx.org";
+import { mountSorts } from "./sort.js";
 
 // ✨ Defence in depth: htmx may not run code from hx-* attributes. See ADR 0006 before changing.
 htmx.config.allowEval = false;
 
-// ✨ A refused answer (400) carries the reason, so show it where "Saved" would go. htmx's default
-// leaves every 4xx and 5xx unswapped.
-htmx.config.responseHandling = [{ code: "400", swap: true, error: true }, ...htmx.config.responseHandling];
+// ✨ A refused answer (400) or a second sort (409) carries the reason, so show it where "Saved" would go.
+// htmx's default leaves every 4xx and 5xx unswapped.
+const REFUSED_WITH_A_REASON = [400, 409];
+htmx.config.responseHandling = [{ code: "40[09]", swap: true, error: true }, ...htmx.config.responseHandling];
 
 window.htmx = htmx;
 document.documentElement.dataset.javascript = "loaded";
@@ -41,7 +43,7 @@ document.addEventListener("htmx:afterRequest", (event) => {
 
 function notSaved(event) {
   const status = saveStatus(event);
-  if (status && event.detail.xhr?.status !== 400) {
+  if (status && !REFUSED_WITH_A_REASON.includes(event.detail.xhr?.status)) {
     status.textContent = "Not saved. Check your connection, then try again.";
   }
 }
@@ -68,3 +70,5 @@ document.addEventListener("input", (event) => {
   if (event.target.matches("textarea[maxlength]")) showLengthLeft(event.target);
 });
 document.querySelectorAll("textarea[maxlength]").forEach(showLengthLeft);
+
+mountSorts();

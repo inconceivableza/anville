@@ -143,6 +143,19 @@ def test_a_sort_counts_an_empty_list_as_missing():
     ]
 
 
+def test_a_sort_whose_section_could_be_completed_without_it_is_reported():
+    """✨ Otherwise a participant could complete the section, and open what follows it, without ever sorting."""
+    document = sort_pathway()
+    del document["content"]["sections"][2]["gate"]
+
+    assert validate(document) == [
+        Problem(
+            path="/content/sections/2/blocks/0",
+            message="Block 'strengths-sort' is a sort, so its section's gate needs a 'has_answer' clause for it.",
+        )
+    ]
+
+
 def test_a_pathway_without_a_sort_needs_no_scoring_method():
     document = pathway_document()
     assert "scoring" not in document["measurement"]

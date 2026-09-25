@@ -1,14 +1,15 @@
 {% comment %}
   ✨ The gate and the way on. Rendered with the section, and again out of band after an autosave, so the
   messages and the button follow what the participant has just written rather than waiting for a reload.
-  What it shows depends only on the answers, so a save is enough to bring it up to date.
+  What it shows depends only on the answers, so a save is enough to bring it up to date. Nothing is offered
+  while the section's activity is shut behind a scripture reading, or while its sort is not yet in.
 
   The wrapper is always here, even with nothing in it, so the autosave always has something to swap into.
   It is the gate's own state that is refreshed, never the blocks: only a scripture reading opens more of a
   section, and confirming one reloads the page, so a save can never reveal a block that was not already here.
 {% endcomment %}
-<div id="completion"{% if activity_open %} class="completion"{% endif %}{% if out_of_band %} hx-swap-oob="true"{% endif %}>
-  {% if activity_open %}
+<div id="completion"{% if offers_completion %} class="completion"{% endif %}{% if out_of_band %} hx-swap-oob="true"{% endif %}>
+  {% if offers_completion %}
     {% if is_complete %}
       <p class="completion-done">You marked this section complete. You can still change your answers here.</p>
       <form method="post" action="{% url 'reopen_section' section.id %}">
