@@ -36,13 +36,15 @@ function mountSort(form) {
   };
 
   // ✨ Each screen is rebuilt whole. Keyboard focus stays on the control it was on, or moves to the new
-  // screen's heading, but never jumps into the widget from elsewhere on the page.
+  // screen's heading when that control is gone or disabled (undo, once there is nothing left to undo), but
+  // never jumps into the widget from elsewhere on the page.
   function render(screen) {
     const hadFocus = stage.contains(document.activeElement);
     const focused = document.activeElement?.dataset?.focus;
     stage.replaceChildren(...screen());
     if (!hadFocus) return;
-    (stage.querySelector(`[data-focus="${focused}"]`) ?? stage.querySelector("[data-focus-start]"))?.focus();
+    const same = stage.querySelector(`[data-focus="${focused}"]:not(:disabled)`);
+    (same ?? stage.querySelector("[data-focus-start]")).focus();
   }
 
   function sorting() {

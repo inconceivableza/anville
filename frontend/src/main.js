@@ -8,7 +8,10 @@ htmx.config.allowEval = false;
 // ✨ A refused answer (400) or a second sort (409) carries the reason, so show it where "Saved" would go.
 // htmx's default leaves every 4xx and 5xx unswapped.
 const REFUSED_WITH_A_REASON = [400, 409];
-htmx.config.responseHandling = [{ code: "40[09]", swap: true, error: true }, ...htmx.config.responseHandling];
+htmx.config.responseHandling = [
+  { code: `^(${REFUSED_WITH_A_REASON.join("|")})$`, swap: true, error: true },
+  ...htmx.config.responseHandling,
+];
 
 window.htmx = htmx;
 document.documentElement.dataset.javascript = "loaded";

@@ -29,16 +29,16 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 - The cards come in a different order on each visit. The counter reads "1/36" and counts up.
 - Each bucket button places the card, the card flies (left for the weaker buckets, right for the stronger, down for the middle one), and the bucket's count goes up.
-- Undo goes back one card at a time, all the way to the first, and is disabled when there is nothing to undo. It also works on the "All 36 sorted!" screen.
+- Undo goes back one card at a time, all the way to the first, and is disabled when there is nothing to undo. Undoing the last card by keyboard moves focus to the "Sort your strengths" heading rather than losing it. It also works on the "All 36 sorted!" screen.
 - Continuing is offered only once all 36 are sorted.
 - The step labels read "Step 1 of 2 — Sort" and "Step 2 of 2 — Fine-tune".
-- Fine-tuning groups the statements under their buckets, strongest first, leaves out any empty bucket, and starts each slider at its bucket's seed (85, 65, 45, 25, 10 in Whatever You Do).
+- Fine-tuning groups the items under their buckets, strongest first, leaves out any empty bucket, and starts each slider at its bucket's seed (85, 65, 45, 25, 10 in Whatever You Do).
 - Submitting without touching a slider still gives a complete result.
 - "See my results" goes to the results page, and cannot be pressed twice while it is sending.
 - After a sort is in, the section shows a link to the results instead of the sort. Submitting a second sort from another tab that still shows the sort says "Your results are already in…", not a connection error.
 - Without JavaScript, the sort's place says it needs JavaScript.
 - Keyboard only: the whole sort and fine-tune can be done. Focus stays on the bucket button just pressed, and moves to the new heading when the screen changes.
-- Screen reader: each new card is announced ("Card 2 of 36: …"), and each slider is read with its statement.
+- Screen reader: each new card is announced ("Card 2 of 36: …"), and each slider is read with its item's text.
 - Reduced motion: cards change without flying.
 - Phone width: the bucket buttons stack, and a flying card never makes the page scroll sideways.
 
