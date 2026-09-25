@@ -19,3 +19,8 @@
 - [ ] An observer can withdraw through their link while it is valid, which deletes their answers; how an observer withdraws after the link expires is open (see spec Further Notes)
 - [ ] A thank-you screen closes the flow; an observer can always reach the questions by following their link
 - [ ] Journey tests cover the full observer path, the lock after submission, and withdrawal
+
+**Carried from 07**
+
+- [ ] The sort widget's own wording is written into `frontend/src/sort.js`: "Sort your strengths", "Choose the bucket that fits best", "All 36 sorted!", "How strong is each one?", the fine-tune intro, and the slider anchors "Not me" and "Real strength". Observer wording needs it in the third person, so move it into the pathway document, role-keyed like other text, and hand it to the widget through the block type's `widget` entry, which already takes the role (`_sort_widget(document, role)` in `engine/document/blocks.py`)
+- The widget's contract: the page gives it `{"items": [{"id", "text"}], "buckets": [{"id", "label", "seed"}]}` (buckets weakest first) in a `json_script` beside a form it fills in. The form posts the whole sort once as `value`, and the server's `HX-Redirect` decides where the browser goes next, so an observer's flow can send them somewhere other than the results
