@@ -3,7 +3,7 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_http_methods
 
-from access.consent import CONSENT_TEXT_VERSION, current_consent
+from access.consent import current_consent, current_text_version, latest_consent, withdraw
 from access.models import Consent
 
 
@@ -19,24 +19,35 @@ def consent(request):
     """✨ The participant's own decision about the consent text, separate from the enrolment code (ADR 0004).
 
     Agreeing records the version of the text the page showed and when. Declining records nothing.
+    Withdrawing marks the agreement withdrawn, and the pathway waits for consent again.
     """
     given = current_consent(request.user)
+    version = current_text_version()
     decision = request.POST.get("decision")
     if given is None and decision == "decline":
         return render(request, "access/consent_declined.html")
     if given is None and decision == "agree":
         # ✨ Agreement is to the text that was read. If it changed while the page was open, read it again.
-        if request.POST.get("version") != str(CONSENT_TEXT_VERSION):
-            return render(request, "access/consent.html", _page(given, text_changed=True), status=400)
-        Consent.objects.create(participant=request.user, text_version=CONSENT_TEXT_VERSION)
+        if request.POST.get("version") != str(version):
+            return render(request, "access/consent.html", _page(request.user, version, text_changed=True), status=400)
+        Consent.objects.create(participant=request.user, text_version=version)
         return _see_other("hub")
+    if given is not None and decision == "withdraw":
+        withdraw(request.user)
+        return _see_other("consent")
     if request.method == "POST":
         return _see_other("consent")
-    return render(request, "access/consent.html", _page(given))
+    return render(request, "access/consent.html", _page(request.user, version))
 
 
-def _page(given, *, text_changed=False):
-    return {"version": CONSENT_TEXT_VERSION, "given": given, "text_changed": text_changed}
+def _page(participant, version, *, text_changed=False):
+    """✨ The text, and where the participant stands with it: agreed, withdrawn, or agreed to an earlier version."""
+    return {
+        "version": version,
+        "given": current_consent(participant),
+        "previous": latest_consent(participant),
+        "text_changed": text_changed,
+    }
 
 
 def _see_other(where):

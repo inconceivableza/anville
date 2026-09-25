@@ -619,6 +619,17 @@ a.hub-section-title:hover {
   gap: 12px;
 }
 
+/* The hub's quiet way to the consent page, below everything else */
+
+.hub-consent {
+  margin-top: 32px;
+  font-size: 14px;
+}
+
+.hub-consent a {
+  color: var(--gold);
+}
+
 /* Autosave */
 
 .save-row {

@@ -42,10 +42,22 @@
 
   {% if given %}
     <p>You agreed to version {{ given.text_version }} of this text on {{ given.given_at|date:"j F Y" }}.</p>
-    <a class="btn btn-primary btn-full" href="{% url 'hub' %}">Go to your pathway</a>
+    <form method="post" action="{% url 'consent' %}" class="consent-choices">
+      {% csrf_token %}
+      <a class="btn btn-primary btn-full" href="{% url 'hub' %}">Go to your pathway</a>
+      <button type="submit" name="decision" value="withdraw" class="btn btn-secondary btn-full">Withdraw my consent</button>
+    </form>
+    <p>
+      Withdrawing closes the pathway until you agree again. For now, what you have already written is kept;
+      what happens to it when consent is withdrawn has not been decided yet.
+    </p>
   {% else %}
     {% if text_changed %}
       <p class="gate-refused" role="alert">The text has changed since you opened this page. Please read it again.</p>
+    {% elif previous.withdrawn_at %}
+      <p>You withdrew your consent on {{ previous.withdrawn_at|date:"j F Y" }}.</p>
+    {% elif previous %}
+      <p class="gate-refused">The text has changed since you agreed to version {{ previous.text_version }}. Please read it again.</p>
     {% endif %}
     <form method="post" action="{% url 'consent' %}" class="consent-choices">
       {% csrf_token %}

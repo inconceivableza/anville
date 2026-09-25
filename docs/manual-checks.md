@@ -30,6 +30,9 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Without JavaScript, both buttons work: the page is a plain form.
 - Keyboard only: Tab reaches both buttons in order, and Enter presses the focused one.
 - Phone width: the text wraps and the buttons fill the width.
+- "Your consent" sits quietly at the foot of the hub, including on the empty "Nothing to begin yet" hub.
+- Once agreed, "Go to your pathway" and "Withdraw my consent" look alike in size, stacked as the first two buttons were.
+- With a section open in one tab, withdraw in another, then type in the first tab: the page goes to the consent page rather than showing "Saved" or an error.
 
 ## Autosaved answers (long text, 1–10 scale)
 

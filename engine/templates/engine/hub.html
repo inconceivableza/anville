@@ -45,4 +45,7 @@
     <h1>Nothing to begin yet</h1>
     <p>No pathway has been published here yet. When one is, it will appear on this page.</p>
   {% endif %}
+
+  {# ✨ Where a participant reviews or withdraws their consent, whatever state the pathway is in. #}
+  <p class="hub-consent"><a href="{% url 'consent' %}">Your consent</a></p>
 {% endblock content %}
