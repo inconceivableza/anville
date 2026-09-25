@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from django.contrib.auth import get_user
 
@@ -6,16 +8,15 @@ from tests.journeys.pages import loads_the_built_stylesheet
 PASSWORD = "correct-horse-battery-staple"
 
 
-def sign_up(client, *, email="participant@example.com", enrolment_code="GRACE-2026"):
-    return client.post(
-        "/accounts/signup/",
-        {
-            "email": email,
-            "password1": PASSWORD,
-            "password2": PASSWORD,
-            "enrolment_code": enrolment_code,
-        },
-    )
+def sign_up(client, *, email="participant@example.com", enrolment_code="GRACE-2026", is_adult=True):
+    form = {
+        "email": email,
+        "password1": PASSWORD,
+        "password2": PASSWORD,
+        "enrolment_code": enrolment_code,
+    }
+    # ✨ An unticked checkbox is left out of the form a browser sends, rather than sent empty.
+    return client.post("/accounts/signup/", {**form, "is_adult": "on"} if is_adult else form)
 
 
 @pytest.mark.django_db
@@ -64,6 +65,35 @@ def test_a_missing_enrolment_code_is_refused(client, settings):
 
     assert not get_user(client).is_authenticated
     assert "Enter the enrolment code you were given." in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_a_visitor_who_does_not_confirm_they_are_18_or_over_gets_no_account(client, settings, django_user_model):
+    settings.ANVILLE_ENROLMENT_CODE = "GRACE-2026"
+
+    response = sign_up(client, is_adult=False)
+
+    assert not get_user(client).is_authenticated
+    assert not django_user_model.objects.exists()
+    assert "You need to be 18 or over to take part." in response.content.decode()
+
+
+@pytest.mark.django_db
+def test_sign_up_asks_for_an_18_or_over_confirmation_and_never_a_date_of_birth(client):
+    page = client.get("/accounts/signup/").content.decode()
+
+    assert re.search(r'<input type="checkbox" name="is_adult"[^>]*required', page)
+    assert re.search(r">I am 18 or over</label>", page)
+    assert page.index('name="password2"') < page.index('name="is_adult"'), "the last thing ticked before signing up"
+    assert 'type="date"' not in page
+    assert "birth" not in page.casefold()
+
+
+@pytest.mark.django_db
+def test_sign_in_offers_remember_me_in_sentence_case_and_without_a_colon(client):
+    page = client.get("/accounts/login/").content.decode()
+
+    assert re.search(r">Remember me</label>", page)
 
 
 @pytest.mark.django_db

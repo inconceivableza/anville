@@ -68,6 +68,7 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "none"
 LOGIN_REDIRECT_URL = "hub"
 ACCOUNT_SIGNUP_FORM_CLASS = "access.forms.EnrolmentCodeSignupForm"
+ACCOUNT_FORMS = {"login": "access.forms.SignInForm"}
 ANVILLE_ENROLMENT_CODE = env("ANVILLE_ENROLMENT_CODE", default="")
 
 ROOT_URLCONF = "config.urls"

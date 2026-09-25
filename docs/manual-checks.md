@@ -16,6 +16,12 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 | Reduced motion | DevTools, the ⋮ menu, More tools, Rendering, then "Emulate CSS media feature prefers-reduced-motion: reduce". |
 | Phone width | DevTools' device toolbar (⌘⇧M), at a width around 375px. |
 
+## Sign up
+
+- "I am 18 or over" sits beside its checkbox, as "Remember me" does on sign in.
+- Submitting with it unticked: the browser stops the form and points at the box. Without JavaScript the same happens, since the check is the browser's own `required`.
+- Keyboard only: Tab reaches the box and Space ticks it.
+
 ## Autosaved answers (long text, 1–10 scale)
 
 - Typing or choosing shows "Saved"; changing the answer again clears it; a slow save shows "Saving…".
