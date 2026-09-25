@@ -1,29 +1,19 @@
 """✨ The Whatever You Do instrument, held to the prototype it was migrated from.
 
-The item bank is read out of the prototype file itself, so a statement mistyped in the migration fails here.
+The item bank is read out of the prototype file itself, so an item mistyped in the migration fails here.
 """
 
-import json
 import re
 from collections import Counter
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-PROTOTYPE = (ROOT / "Prototype for reference/vibe-coded-prototype.html").read_text(encoding="utf-8")
-
-APEST = {"A": "apostle", "P": "prophet", "E": "evangelist", "S": "shepherd", "T": "teacher", "d": "deacon"}
-PEP = {"Po": "ponder", "Id": "ideate", "As": "assess", "Ra": "rally", "Fa": "facilitate", "De": "deliver"}
-
-
-def whatever_you_do():
-    return json.loads((ROOT / "pathways/whatever-you-do.json").read_text(encoding="utf-8"))
+from tests.prototype import APEST, PEP, PROTOTYPE, js_string, whatever_you_do
 
 
 def prototype_items():
     """✨ The prototype's giftItems, in its array order, as items of a pathway document."""
     found = re.findall(r"\{id:'(\w+)',label:'((?:[^'\\]|\\.)*)',apest:'(\w)',pep:'(\w+)'\}", PROTOTYPE)
     return [
-        {"id": item_id, "text": json.loads(f'"{label}"'), "loads": [APEST[apest], PEP[pep]]}
+        {"id": item_id, "text": js_string(label), "loads": [APEST[apest], PEP[pep]]}
         for item_id, label, apest, pep in found
     ]
 

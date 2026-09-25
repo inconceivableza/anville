@@ -4,7 +4,7 @@ from engine.results import bar_ranks
 
 
 def test_bars_are_ranked_by_score_and_tied_scores_share_a_rank():
-    # ✨ The prototype's PEP profile for the golden sort left at its seeds: Rally and Deliver tie at 13.
+    # ✨ The prototype's PEP percentages for the golden sort left at its seeds: Rally and Deliver tie at 13.
     assert bar_ranks([23, 20, 17, 14, 13, 13]) == [1, 2, 3, 4, 5, 5]
 
 

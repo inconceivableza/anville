@@ -28,11 +28,11 @@ const ids = [...itemBank.matchAll(/id:'(\w+)'/g)].map((match) => match[1]);
 const sortOf = (bucketAndValue) => Object.fromEntries(ids.map((id, i) => [id, bucketAndValue(id, i)]));
 
 const cases = {
-  // Each bucket in turn, sliders left at their seeds: a sort alone gives a complete profile.
+  // Each bucket in turn, sliders left at their seeds: a sort alone gives a complete result.
   "sorted-and-left-at-seeds": sortOf((id, i) => [(i % 5) + 1, SEEDS[(i % 5) + 1]]),
   // Every slider moved, to values unrelated to the buckets.
   "fine-tuned": sortOf((id, i) => [(i % 5) + 1, (i * 37 + 11) % 101]),
-  // The compositional pair: these two give the same profile.
+  // The compositional pair: these two give the same result.
   "all-strongest": sortOf(() => [1, SEEDS[1]]),
   "all-weakest": sortOf(() => [5, SEEDS[5]]),
   // Apostle and Ideate each hold exactly 0.5% (1 of 200): Math.round gives 1, where Python's round() gives 0.

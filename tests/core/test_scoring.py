@@ -5,13 +5,12 @@ written in the prototype's terms, and translated to the new identifiers here and
 """
 
 import json
-from pathlib import Path
 
 import pytest
 
 from engine.document.scoring import score
+from tests.prototype import APEST, PEP, ROOT, whatever_you_do
 
-ROOT = Path(__file__).resolve().parents[2]
 GOLDEN = json.loads((ROOT / "tests/core/golden/prototype_scoring.json").read_text(encoding="utf-8"))
 
 # ✨ The prototype's stored bucket integers run the other way from strength: 1 is "Real strength".
@@ -23,19 +22,8 @@ PROTOTYPE_BUCKETS = {
     5: "definitely-not-me",
 }
 
-PROTOTYPE_CONSTRUCTS = {
-    "A": "apostle",
-    "P": "prophet",
-    "E": "evangelist",
-    "S": "shepherd",
-    "T": "teacher",
-    "d": "deacon",
-    **{name: name for name in ("ponder", "ideate", "assess", "rally", "facilitate", "deliver")},
-}
-
-
-def whatever_you_do():
-    return json.loads((ROOT / "pathways/whatever-you-do.json").read_text(encoding="utf-8"))
+# ✨ computeAll() names APEST(d) constructs by letter and PEP constructs by the new identifiers' own words.
+PROTOTYPE_CONSTRUCTS = {**APEST, **{name: name for name in PEP.values()}}
 
 
 def sort_answer(golden):
@@ -43,7 +31,8 @@ def sort_answer(golden):
     return {item: {"bucket": PROTOTYPE_BUCKETS[bucket], "value": value} for item, (bucket, value) in golden["sort"].items()}
 
 
-def profile(constructs):
+def ranked_constructs(constructs):
+    """✨ One framework of the prototype's output, in the shape and identifiers of a stored result."""
     return [
         {"construct": PROTOTYPE_CONSTRUCTS[construct["id"]], "raw": construct["raw"], "percent": construct["pct"]}
         for construct in constructs
@@ -57,13 +46,13 @@ def test_a_sort_scores_exactly_as_the_prototype_scored_it(golden):
     assert result == {
         "method": "compositional_share",
         "frameworks": [
-            {"framework": "apest", "constructs": profile(golden["prototype"]["apest"])},
-            {"framework": "pep", "constructs": profile(golden["prototype"]["pep"])},
+            {"framework": "apest", "constructs": ranked_constructs(golden["prototype"]["apest"])},
+            {"framework": "pep", "constructs": ranked_constructs(golden["prototype"]["pep"])},
         ],
     }
 
 
-def test_the_score_is_compositional_so_all_strongest_and_all_weakest_give_the_same_profile():
+def test_the_score_is_compositional_so_all_strongest_and_all_weakest_give_the_same_result():
     strongest, weakest = (
         score(whatever_you_do(), sort_answer(golden))
         for golden in GOLDEN
