@@ -70,4 +70,4 @@ def test_the_refusal_says_what_to_do_without_echoing_what_was_sent():
         submit(complete_sort(a5={"bucket": "<script>", "value": 50}))
 
     assert "<script>" not in str(refused.value)
-    assert str(refused.value) == "Sort every statement and give each one a score from 0 to 100, then submit again."
+    assert str(refused.value) == "Place every item in a bucket and give each one a score from 0 to 100, then submit again."

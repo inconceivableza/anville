@@ -1,5 +1,7 @@
+import pytest
+
 from engine.document import Problem, validate
-from tests.documents import pathway_document
+from tests.documents import pathway_document, sort_pathway
 
 
 def test_an_item_loading_onto_a_construct_that_does_not_exist_is_reported():
@@ -107,3 +109,42 @@ def test_cross_references_are_only_checked_once_the_document_has_the_right_shape
     assert validate(document) == [
         Problem(path="/content/sections/1/gate/clauses/0", message="'block' is a required property")
     ]
+
+
+@pytest.mark.parametrize(
+    "part, field, needs",
+    [
+        ("instrument", "buckets", "buckets in its instrument"),
+        ("instrument", "items", "items in its instrument"),
+        ("measurement", "frameworks", "frameworks in its measurement"),
+        ("measurement", "scoring", "a scoring method in its measurement"),
+    ],
+)
+def test_a_sort_in_a_pathway_without_what_it_is_scored_by_is_reported(part, field, needs):
+    """✨ Otherwise the document loads, and the participant's page fails when the sort is shown or submitted."""
+    document = sort_pathway()
+    del document[part][field]
+
+    assert Problem(
+        path="/content/sections/2/blocks/0",
+        message=f"Block 'strengths-sort' is a sort, so this pathway needs {needs}.",
+    ) in validate(document)
+
+
+def test_a_sort_counts_an_empty_list_as_missing():
+    document = sort_pathway()
+    document["instrument"]["buckets"] = []
+
+    assert validate(document) == [
+        Problem(
+            path="/content/sections/2/blocks/0",
+            message="Block 'strengths-sort' is a sort, so this pathway needs buckets in its instrument.",
+        )
+    ]
+
+
+def test_a_pathway_without_a_sort_needs_no_scoring_method():
+    document = pathway_document()
+    assert "scoring" not in document["measurement"]
+
+    assert validate(document) == []

@@ -17,6 +17,7 @@ def lint(document):
         *_unreadable_clauses(document, _ids_of("block", identifiers)),
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
+        *_sort_needs(document),
     ]
 
 
@@ -104,6 +105,29 @@ def _missing_constructs(document, construct_ids):
                 f"/presentation/constructs/{c}/construct",
                 f"There is no construct '{description['construct']}' in this pathway.",
             )
+
+
+# ✨ What a sort is scored by. Without any of these the document would load, and the participant's page
+# would fail when the sort is shown or submitted.
+_SORT_NEEDS = (
+    ("instrument", "buckets", "buckets in its instrument"),
+    ("instrument", "items", "items in its instrument"),
+    ("measurement", "frameworks", "frameworks in its measurement"),
+    ("measurement", "scoring", "a scoring method in its measurement"),
+)
+
+
+def _sort_needs(document):
+    for s, section in enumerate(document["content"]["sections"]):
+        for b, block in enumerate(section["blocks"]):
+            if not BLOCK_TYPES[block["type"]].scored:
+                continue
+            for part, field, needs in _SORT_NEEDS:
+                if not document.get(part, {}).get(field):
+                    yield Problem(
+                        f"/content/sections/{s}/blocks/{b}",
+                        f"Block '{block['id']}' is a sort, so this pathway needs {needs}.",
+                    )
 
 
 def _loads_per_framework(document, construct_ids):

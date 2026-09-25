@@ -111,7 +111,7 @@ def _sort_schema(document):
 SORT = AnswerKind(
     "sort",
     _sort_schema,
-    "Sort every statement and give each one a score from 0 to 100, then submit again.",
+    "Place every item in a bucket and give each one a score from 0 to 100, then submit again.",
     _sort_from_form,
 )
 
