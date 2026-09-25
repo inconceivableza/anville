@@ -286,7 +286,7 @@ Sections 4 and 5 are already planned as plain text and reflection blocks, so the
 - Login is email and password through `django-allauth`, with email verification off during the fake-data phase. Google sign-in is additive later.
 - Sign-up is closed by a shared enrolment code. There is no assignment model: anyone with an account sees the one pathway.
 - Age is confirmed by an 18+ checkbox and no date of birth is stored.
-- A consent step precedes any stored answer. It records the version of the consent text and a timestamp, is separate from enrolment, is withdrawable, and declining stores nothing beyond the account.
+- A consent step precedes any stored answer. It records the version of the consent text and a timestamp, is separate from enrolment, is withdrawable, and declining stores nothing beyond the account. There is no account page yet, so a "Your consent" link at the foot of the hub leads to it (ticket 08); when an account page exists, that link belongs there.
 
 ### Offline track
 
@@ -366,12 +366,12 @@ The developer does not want the legal detail to bog down the build, and it will 
 Still open, to be raised when the design touches them:
 
 - who the controller is once real participants arrive, and whether the arrangement (a Hetzner account owned by the content owner, with the developer deploying into it) works for everyone involved, which has not yet been checked;
-- a retention rule, and deletion and export when consent is withdrawn;
+- a retention rule, and deletion and export when consent is withdrawn. Until it is decided, withdrawing closes the pathway and keeps every stored answer, and a journey test pins that so any change is deliberate (ticket 08);
 - a data protection impact assessment;
 - the policy for a participant asking to see observer feedback about them (the Article 15(4) conflict);
 - processor agreements with the host and any email provider;
 - the choice of an email provider, which is also blocked on delivery being built;
-- the observer privacy notice wording and the consent text, which need writing before any real use.
+- the observer privacy notice wording and the consent text, which need writing before any real use. The consent text in `access/templates/access/consent.html` is a marked draft; raise `CONSENT_TEXT_VERSION` in `access/consent.py` when it is replaced, so everyone is asked again (ticket 08).
 
 Both UK and EU data protection law apply. The workbook's free text may contain special category data beyond religion (the hardship-and-loss markers solicit accounts of suffering), so the whole reflective corpus should be treated as potentially special category.
 

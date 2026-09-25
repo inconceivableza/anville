@@ -40,11 +40,19 @@ cd ..
 python manage.py runserver
 ```
 
-Open http://localhost:8000 and sign up with an `@example.com` address and your enrolment code. Use fake data only. If you are already signed in, the sign-up page sends you back to the hub. There is no sign-out button yet, so sign out at http://localhost:8000/accounts/logout/ or use a private window.
+Open http://localhost:8000 and sign up with an `@example.com` address and your enrolment code, ticking "I am 18 or over", then agree on the consent page. Use fake data only. If you are already signed in, the sign-up page sends you back to the hub. There is no sign-out button yet, so sign out at http://localhost:8000/accounts/logout/ or use a private window.
 
 Password reset is switched off until email delivery exists (ticket 28), so sign-in offers no "Forgot your password?" link. To reset a password, run `python manage.py changepassword <username>`. allauth derives each username from the start of the email address (`participant` for participant@example.com, with a suffix if that is taken), so check the admin if unsure.
 
 After changing anything in `frontend/src/`, run `npm run build` again in `frontend/`.
+
+## Age and consent
+
+Sign-up asks for an "I am 18 or over" confirmation beside the enrolment code, and keeps neither: there is no date of birth anywhere (ADR 0004).
+
+Consent is a separate step at `/consent/`, and every page of the pathway waits for it, so the enrolment code never stands in for it. Agreeing records the version of the consent text and when. Declining records nothing at all. A participant withdraws from the same page, reached by "Your consent" at the foot of the hub; the pathway then waits for consent again. Stored answers are kept on withdrawal for now, because what should happen to them is still open.
+
+The consent text is `access/templates/access/consent.html`, and it is a draft for fake data only. Its version is `CONSENT_TEXT_VERSION` in `access/consent.py`. Raise it whenever a change alters what participants consent to, not for a typo, and everyone is asked again before they continue.
 
 ## Loading a pathway
 
