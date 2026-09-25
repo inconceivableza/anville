@@ -29,7 +29,7 @@
 
 ## Answer
 
-Built in two steps. The first added `bl-peace` and `pl-peace` to `pathways/whatever-you-do.json` and kept the faithful port beside it, with `tests/journeys/test_whatever_you_do.py` holding the two documents together. The second added the `fixed_once_complete` flag on `agreement_scale` (`engine/document/pathway.schema.json`), `Response.fixed_answers` (migration `engine/0007`), `answers_fixed_on_completion()` in `engine/hub.py`, the 409 refusal in `save_answer`, and the disabled rendering; `tests/journeys/test_fixed_answers.py` covers the engine behaviour.
+Built in two steps. The first added `bl-peace` and `pl-peace` to `pathways/whatever-you-do.json` and kept the faithful port beside it, with `tests/journeys/test_whatever_you_do.py` holding the two documents together. The second added the `fixed_once_complete` flag on `agreement_scale` (`engine/document/pathway.schema.json`), `Response.fixed_answers` (migration `engine/0007`), `block_ids_fixed_on_completion()` in `engine/hub.py`, the 409 refusal in `save_answer`, and the disabled rendering; `tests/journeys/test_fixed_answers.py` covers the engine behaviour.
 
 Decisions:
 

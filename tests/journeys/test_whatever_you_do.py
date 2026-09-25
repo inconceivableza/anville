@@ -22,13 +22,14 @@ from tests.journeys.test_whatever_you_do_faithful_port import (
     answer,
     complete,
 )
+from tests.journeys.test_whatever_you_do_faithful_port import SLOTS as PROTOTYPE_SLOTS
 from tests.journeys.test_whatever_you_do_faithful_port import the_pathway as the_faithful_port
 
 DOCUMENT = Path(__file__).resolve().parents[2] / "pathways" / "whatever-you-do.json"
 
 PEACE = "I am at peace with God's plan for my life"
 ANSWER_ALL_FIVE = "Answer all five to continue"
-SLOTS = ("bible", "gifts", "call", "plan", "peace")
+SLOTS = (*PROTOTYPE_SLOTS, "peace")
 
 
 def the_pathway():
@@ -67,7 +68,7 @@ def test_the_fifth_statement_is_asked_after_the_original_prototypes_four(partici
 
 @pytest.mark.django_db
 def test_all_five_ratings_are_needed_before_the_participant_may_continue(participant):
-    for slot in SLOTS[:4]:
+    for slot in PROTOTYPE_SLOTS:
         answer(participant, f"bl-{slot}", "5")
 
     refused = complete(participant, "onboarding")
@@ -96,7 +97,7 @@ def test_the_fifth_statement_is_asked_again_at_the_end(participant):
 def test_the_letter_cannot_be_sent_without_the_fifth_after_rating(participant):
     client = through_to_the_letter(participant)
     answer(client, "lt-message", A_LETTER)
-    for slot in SLOTS[:4]:
+    for slot in PROTOTYPE_SLOTS:
         answer(client, f"pl-{slot}", "8")
 
     refused = complete(client, "letter")

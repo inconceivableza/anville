@@ -87,8 +87,8 @@ class Response(models.Model):
             Result.objects.create(response=self, block_id=block_id, scores=scores)
             self.save_answer(block_id, sort)
 
-    def complete_section(self, section_id, fixing=()):
-        """✨ Record that the participant completed a section, and fix the answers named in `fixing`, in one UPDATE.
+    def complete_section(self, section_id, fixed_block_ids=()):
+        """✨ Record that the participant completed a section, and fix the answers to `fixed_block_ids`, in one UPDATE.
 
         The caller has already re-checked the section's gate. Completing twice is harmless: the second
         time replaces the completion timestamp and nothing else. An answer fixed before keeps the time it
@@ -101,7 +101,7 @@ class Response(models.Model):
                 F("completed_sections"), Value({section_id: stamp}, output_field=models.JSONField())
             ),
             fixed_answers=_MergeJson(
-                Value({block_id: stamp for block_id in fixing}, output_field=models.JSONField()), F("fixed_answers")
+                Value({block_id: stamp for block_id in fixed_block_ids}, output_field=models.JSONField()), F("fixed_answers")
             ),
             updated_at=now,
         )

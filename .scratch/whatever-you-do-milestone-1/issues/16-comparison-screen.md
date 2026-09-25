@@ -19,3 +19,7 @@
 **Carried from 06**
 
 - The prototype's comparison screen used slightly different hexes for the same constructs (L4110) from its results screen (L4038). The results page kept the results screen's, as the stylesheet's `--tone-*` variables, and a construct's tone is named in the pathway document. Reuse those tones here rather than bringing the second set back
+
+**Carried from 29**
+
+- [ ] Before adding the "comparison visited" record, gather what `engine/views.py` reads from a participant's response into one value. Today `_participant()` returns the response, version, answers and completed sections, and each view calls `_fixed(participant_response)` separately; `answers`, `completed` and `fixed` are then passed one by one through `_section_page()` and `_block_for_participant()`. A visited record would be a fourth fact threaded the same way (review of ticket 29's second step: a data clump). Ticket 23's chosen track would be the next, if it lands first

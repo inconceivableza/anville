@@ -78,10 +78,10 @@ def open_blocks(section, answers):
     return reached, True
 
 
-def answers_fixed_on_completion(section, answers):
-    """✨ The answers completing this section fixes: those the author marked `fixed_once_complete` that hold
-    something. A marked block left unanswered is not fixed as a blank; it can still be answered, and is fixed
-    the next time the section is completed.
+def block_ids_fixed_on_completion(section, answers):
+    """✨ The blocks whose answers completing this section fixes: those the author marked `fixed_once_complete`
+    that hold something. A marked block left unanswered is not fixed as a blank; it can still be answered, and is
+    fixed the next time the section is completed.
     """
     return [
         block["id"]

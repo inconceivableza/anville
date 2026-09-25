@@ -20,7 +20,7 @@ from engine.document import (
 )
 from engine.document.blocks import section_of
 from engine.document.scoring import score
-from engine.hub import answers_fixed_on_completion, hub_for, is_locked, open_blocks, section_by_id, track_sections
+from engine.hub import block_ids_fixed_on_completion, hub_for, is_locked, open_blocks, section_by_id, track_sections
 from engine.models import PathwayVersion, Publication, Response, Result
 from engine.results import results_page
 
@@ -69,7 +69,7 @@ def complete_section(request, section_id):
 
     if participant_response is None:
         participant_response, _ = Response.objects.get_or_create(participant=request.user, version=version)
-    participant_response.complete_section(section_id, fixing=answers_fixed_on_completion(section, answers))
+    participant_response.complete_section(section_id, fixed_block_ids=block_ids_fixed_on_completion(section, answers))
     return _see_other("hub")
 
 

@@ -28,6 +28,7 @@ BASELINE_STATEMENTS = {
     ),
 }
 ANSWER_ALL_FOUR = "Answer all four to continue"
+SLOTS = ("bible", "gifts", "call", "plan")  # ✨ each rating's id after its `bl-` or `pl-` prefix
 A_STATEMENT = "God seems to have designed me to make difficult things clear."
 A_LETTER = "Dear me, remember what you found here."
 
@@ -56,7 +57,7 @@ def complete(client, section_id):
 
 
 def answer_the_baseline(client, prefix="bl"):
-    for slot in ("bible", "gifts", "call", "plan"):
+    for slot in SLOTS:
         answer(client, f"{prefix}-{slot}", "7")
 
 
@@ -132,7 +133,7 @@ def test_the_four_baseline_ratings_are_fixed_once_onboarding_is_complete(partici
     answer_the_baseline(participant)
     complete(participant, "onboarding")
 
-    for slot in ("bible", "gifts", "call", "plan"):
+    for slot in SLOTS:
         assert answer(participant, f"bl-{slot}", "2").status_code == 409
 
 
@@ -144,7 +145,7 @@ def test_the_four_end_ratings_are_fixed_once_the_letter_is_sent(participant):
     answer_the_baseline(client, prefix="pl")
     complete(client, "letter")
 
-    for slot in ("bible", "gifts", "call", "plan"):
+    for slot in SLOTS:
         assert answer(client, f"pl-{slot}", "2").status_code == 409
 
 
