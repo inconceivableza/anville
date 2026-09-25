@@ -15,3 +15,7 @@
 - [ ] When every contributing observer is marked as test data, a banner says the comparison is illustrative; the prototype's random, unlabelled fabrication is not reproduced and there is no separate fixture
 - [ ] Section 1's gate gains a "comparison visited" clause (a new named clause type, ADR 0003), satisfied by visiting the comparison in either state, including the below-minimum explanation. The prototype never sets its flag in the empty state, which would lock every later section until three observers had answered
 - [ ] Journey tests cover the shown state, the suppressed state, the illustrative banner, and that visiting the suppressed state satisfies the clause
+
+**Carried from 06**
+
+- The prototype's comparison screen used slightly different hexes for the same constructs (L4110) from its results screen (L4038). The results page kept the results screen's, as the stylesheet's `--tone-*` variables, and a construct's tone is named in the pathway document. Reuse those tones here rather than bringing the second set back

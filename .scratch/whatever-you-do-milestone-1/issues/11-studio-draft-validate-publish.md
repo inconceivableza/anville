@@ -20,3 +20,7 @@
 
 - [ ] Publishing refuses an identifier reused for a different meaning, by comparing the draft with the current version (for example a block identifier that changes type). This can't be linted from one document alone
 - [ ] Confirm the republish behaviour. `load_pathway` publishes an earlier version again when its content is loaded again, with no new version row, and studio publish should follow the same rule or change it deliberately
+
+**Carried from 06**
+
+- The results page (`/results/<block_id>/`) reads the participant's newest response, through `Response.in_progress`. That is right while a participant stays on the version they started, the spec default this ticket keeps. If publishing ever moves a participant onto a later version, they would have a second response, and the results page must then choose whose result it shows; today their first result would become unreachable

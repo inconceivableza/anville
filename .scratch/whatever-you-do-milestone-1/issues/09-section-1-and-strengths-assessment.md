@@ -16,3 +16,8 @@
 - [ ] The prototype's "comparison viewed" requirement is not present yet; it joins in ticket 16
 - [ ] Retake is not offered in this milestone
 - [ ] Content is migrated verbatim from the prototype reference
+
+**Carried from 06**
+
+- [ ] Section 1's gate cannot name the sort yet. The criterion above asks for "a block-has-an-answer clause referring to the sort block in the other section", and the linter refuses exactly that: "a gate clause may only name a block in its own section" (`engine/document/lint.py`, from ticket 04, which reasoned that a gate decides whether its own section is finished). Relax that rule for `has_answer`, or add a named clause for "a block in another section is answered" (ADR 0003). Decide before building the section
+- Placing the sort is document work: `{"id": "…", "type": "sort_assessment"}` in the Strengths assessment section. `pathways/whatever-you-do.json` already holds the instrument, both frameworks, the scoring method and the results wording, and the linter refuses a sort without them

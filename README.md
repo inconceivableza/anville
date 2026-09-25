@@ -56,7 +56,8 @@ python manage.py load_pathway pathways/whatever-you-do.json
 
 `pathways/whatever-you-do.json` is *Whatever You Do* itself, as far as it has been authored:
 the four baseline ratings, the calling-statement section and the letter, with Sections 1, 2 and 4
-carrying their hint text until their activities are built. `pathways/example.json` is a smaller
+carrying their hint text until their activities are built. It also holds the strengths instrument and
+its results wording, waiting for the sort to be placed in a section (ticket 09). `pathways/example.json` is a smaller
 file for trying the loader out.
 
 Loading validates the file and prints any problems with their document paths. A valid file becomes an immutable pathway version, which is then published. Loading unchanged content again does nothing. Loading content you had before publishes that earlier version again.
@@ -83,7 +84,7 @@ The gate re-renders with each autosave, so the messages and the button keep up w
 
 Clauses that carry the same message say it once, so "Answer all four to continue" is written as four `has_answer` clauses and one sentence.
 
-A clause may only name a block in its own section, and only one whose answer it can read; the linter refuses both. The three entry clauses have no block to name yet, because no block type captures a list of entries: they wait for the contact list and timeline board (tickets 09 and 17). A new kind of clause is a code change, never an expression in the document (ADR 0003).
+A clause may only name a block in its own section, and only one whose answer it can read; the linter refuses both. The three entry clauses have no block to name yet, because no block type captures a list of entries: they wait for the contact list and timeline board (tickets 10 and 17). A new kind of clause is a code change, never an expression in the document (ADR 0003).
 
 A `scripture_reading` block shows its authored passages and a confirm control. The activity beneath it is decided by the server too: until the confirmation is saved, the blocks after it are not sent to the browser and will not accept an answer.
 
@@ -94,6 +95,16 @@ Each answer saves by itself as the participant types or chooses, and only that a
 Long-text answers are limited to 20,000 characters. The text box carries the same limit and says how much room is left near it. Line breaks are stored as `\n`, although forms send them as `\r\n`. This is the one change made to a participant's text on input, and it keeps the server's count the same as the browser's.
 
 The long-text and 1–10 scale forms also save without JavaScript, through a Save button that is hidden once JavaScript loads. This was added in passing during ticket 03 and is not a standard: later blocks, especially the interactive ones such as the sort and the timeline, need not work without JavaScript, and this fallback may be removed.
+
+## Scoring and results
+
+A `sort_assessment` block's answer is the whole sort, sent as JSON: every item of the pathway's instrument, each with the `bucket` it was placed in and a whole `value` from 0 to 100. The server checks it against that pathway version's own items and buckets. The linter refuses a pathway with a sort but no buckets, items, frameworks or scoring method.
+
+A sort is scored once, when it is submitted, by the method the document names in `measurement.scoring` (ADR 0003). There is one method, `compositional_share`, the prototype's: each construct's share of the grand total, rounded half up as JavaScript rounds, ranked with ties kept in declaration order. A method is frozen once any response has been scored with it, so a change in behaviour is a new name. The result is stored with the answer and never recomputed, and a second sort is refused because retake does not exist yet.
+
+The results page, `/results/<block_id>/`, shows the stored result in the wording of the document's `presentation`: a heading and subtitle per framework, a description, persona and tone per construct, the disclaimer, and a title in which `{name}` is the participant's username. Colours stay in the stylesheet: a construct names a tone, and a framework's bars are coloured by tone, or with `"bars": "rank"` by rank, so tied scores share a colour.
+
+The golden fixtures in `tests/core/golden/` are the prototype's own scoring output. To add a case, edit `prototype_scoring.mjs` and run `node tests/core/golden/prototype_scoring.mjs` from the repository root.
 
 ## Tests
 

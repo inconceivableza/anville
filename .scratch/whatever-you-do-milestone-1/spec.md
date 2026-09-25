@@ -246,7 +246,7 @@ Sections 4 and 5 are already planned as plain text and reflection blocks, so the
 - There is one response per participant per pathway version, with answers stored as JSON keyed by block identifier. Autosave writes one block's answer at a time and never re-serialises the whole response.
 - Observer responses are separate records from the participant's and are owned separately. An observer never touches a participant's state (the prototype overwrote it).
 - A **result** is computed when the sort is submitted and stored against that pathway version. Later versions never recompute it.
-- There is no retake in this milestone. When retake is added it creates a new attempt and keeps the old ones, and comparisons always use the latest attempt.
+- There is no retake in this milestone. When retake is added it creates a new attempt and keeps the old ones, and comparisons always use the latest attempt. Until then the database refuses a second sort through the unique constraint `one_result_per_sort_per_response` (ticket 06), which retake has to replace with its attempt model.
 - Test and seed records are marked as such on the server. A client-side flag never distinguishes them.
 
 ### The instrument and scoring

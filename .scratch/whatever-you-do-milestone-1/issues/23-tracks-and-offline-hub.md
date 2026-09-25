@@ -17,3 +17,8 @@
 - [ ] A participant can switch tracks at any time and every stored answer persists
 - [ ] Progress and locks count only the sections in the participant's track
 - [ ] Journey tests cover choosing a track, the closing ratings unlocking after the assessment, and switching without loss
+
+**Carried from 06**
+
+- Rich text has no links or emphasis yet, and the workbook download above needs a link. Once rich text can carry one, two things the results page left out can come back: the prototype's "Want to go deeper?" block, with its outbound links to 5Q and Working Genius (`buildResults()`, after the disclaimer), and the bold on "Important:" at the start of the validity disclaimer, which is plain text in `presentation.disclaimer`
+- If the closing ratings' "require the sort to be answered" is a gate clause rather than a lock, it names a block in another section, which the linter refuses today. Ticket 09 meets the same rule for Section 1's gate and should settle it first
