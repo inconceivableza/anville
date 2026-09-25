@@ -337,7 +337,12 @@
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
         "label": { "$ref": "#/$defs/text" },
-        "seed": { "type": "number", "minimum": 0, "maximum": 100 }
+        "seed": {
+          "description": "Where this bucket's sliders start, and so the answer an untouched slider gives: a whole number, as every answer value is.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
       }
     },
     "item": {

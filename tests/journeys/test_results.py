@@ -158,6 +158,52 @@ def test_once_the_sort_is_in_its_section_links_to_the_results(signed_in):
     assert f'href="/results/{SORT}/"' in signed_in.get(f"/sections/{STRENGTHS}/").content.decode()
 
 
+def widget_data(page, block_id=SORT):
+    """✨ What the section page hands the sort widget, read the way the widget reads it."""
+    data = re.search(rf'<script id="sort-{block_id}" type="application/json">(.*?)</script>', page, re.S)
+    return json.loads(data.group(1)) if data else None
+
+
+@pytest.mark.django_db
+def test_the_sort_widget_is_given_every_item_in_the_participants_wording_and_the_buckets_weakest_first(signed_in):
+    page = signed_in.get(f"/sections/{STRENGTHS}/").content.decode()
+
+    assert widget_data(page) == {
+        "items": [
+            {"id": "a5", "text": "Building something that will outlast you"},
+            {"id": "p1", "text": "Going against the grain"},
+        ],
+        "buckets": [
+            {"id": "not-me", "label": "Not me", "seed": 10},
+            {"id": "strength", "label": "Real strength", "seed": 85},
+        ],
+    }
+
+
+@pytest.mark.django_db
+def test_once_the_sort_is_in_the_widget_is_not_offered_again(signed_in):
+    submit_sort(signed_in, complete_sort())
+
+    assert widget_data(signed_in.get(f"/sections/{STRENGTHS}/").content.decode()) is None
+
+
+@pytest.mark.django_db
+def test_a_submitted_sort_takes_the_participant_to_their_results(signed_in):
+    """✨ Without htmx. Completing onboarding gave the participant a response, so no version need be sent."""
+    submitted = signed_in.post(f"/answers/{SORT}/", {"value": json.dumps(complete_sort())})
+
+    assert submitted.status_code == 303
+    assert submitted.url == f"/results/{SORT}/"
+
+
+@pytest.mark.django_db
+def test_a_sort_submitted_through_htmx_sends_the_browser_to_the_results(signed_in):
+    submitted = submit_sort(signed_in, complete_sort())
+
+    assert submitted.status_code == 200
+    assert submitted.headers["HX-Redirect"] == f"/results/{SORT}/"
+
+
 @pytest.mark.django_db
 def test_a_participant_never_sees_another_participants_results(signed_in):
     submit_sort(signed_in, complete_sort())

@@ -116,6 +116,18 @@ SORT = AnswerKind(
 )
 
 
+def _sort_widget(document, role):
+    """✨ What the sort widget shows: every item in the reader's wording, and the buckets weakest first."""
+    instrument = document["instrument"]
+    return {
+        "items": [{"id": item["id"], "text": text_for(item["text"], role)} for item in instrument["items"]],
+        "buckets": [
+            {"id": bucket["id"], "label": text_for(bucket["label"], role), "seed": bucket["seed"]}
+            for bucket in instrument["buckets"]
+        ],
+    }
+
+
 class BlockType(NamedTuple):
     """✨ One authorable kind of block.
 
@@ -123,7 +135,8 @@ class BlockType(NamedTuple):
     a repeated sub-object, as `(list field, its text fields)`. `captures` is None when the block is content
     only: such a block takes no answer and counts towards nothing. `opens_what_follows` marks a block that
     holds the rest of its section shut until it has been answered. `scored` marks a block whose answer is
-    scored into a result once, when it is submitted.
+    scored into a result once, when it is submitted. `widget` gives a bespoke block's JavaScript what it
+    shows, from the document and in one role's wording; a block rendered by its template alone has none.
     """
 
     name: str
@@ -132,6 +145,7 @@ class BlockType(NamedTuple):
     captures: AnswerKind | None = None
     opens_what_follows: bool = False
     scored: bool = False
+    widget: Callable[[dict, str], dict] | None = None
 
     @property
     def is_interactive(self):
@@ -152,7 +166,7 @@ BLOCK_TYPES = {
         ),
         BlockType("long_text", text_fields=("prompt",), captures=TEXT),
         BlockType("agreement_scale", text_fields=("prompt", "min_label", "max_label"), captures=SCALE_POINT),
-        BlockType("sort_assessment", captures=SORT, scored=True),
+        BlockType("sort_assessment", captures=SORT, scored=True, widget=_sort_widget),
     ]
 }
 

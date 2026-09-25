@@ -1,11 +1,12 @@
 {% comment %}
   ✨ The sort's place in its section. The widget that sorts and fine-tunes arrives in ticket 07; until then this
-  says so plainly rather than pretending to be ready.
+  says so plainly rather than pretending to be ready. The widget's items and buckets are handed over as JSON.
 {% endcomment %}
 <div id="block-{{ block.id }}" class="question-card">
   {% if block.answer %}
     <p>Your sort is in. <a href="{% url 'results' block.id %}">See your results</a></p>
   {% else %}
+    {% with script_id="sort-"|add:block.id %}{{ block.widget|json_script:script_id }}{% endwith %}
     <p>The sort is not ready to use yet.</p>
   {% endif %}
 </div>

@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -117,8 +117,8 @@ def save_answer(request, block_id):
         except IntegrityError:
             refusal = "Your results are already in. Retaking the sort is not offered yet."
             return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
-    else:
-        participant_response.save_answer(block_id, value)
+        return _to_results(request, block_id)
+    participant_response.save_answer(block_id, value)
     # ✨ The row was updated in place, so this object's answers are a step behind what was just stored.
     answers = {**answers, block_id: value}
 
@@ -152,6 +152,14 @@ def _see_other(where, *args):
     response = redirect(where, *args)
     response.status_code = 303
     return response
+
+
+def _to_results(request, block_id):
+    """✨ A scored answer's next page is its result. htmx is told to go there rather than swap anything in."""
+    where = reverse("results", args=[block_id])
+    if request.headers.get("HX-Request") == "true":
+        return HttpResponse(headers={"HX-Redirect": where})
+    return _see_other(where)
 
 
 def _participant(user):
@@ -189,7 +197,7 @@ def _section_page(version, section, answers, completed):
         "section": {
             "id": section["id"],
             "title": text_for(section["title"], "participant"),
-            "blocks": [_block_for_participant(block, answers) for block in blocks],
+            "blocks": [_block_for_participant(version.document, block, answers) for block in blocks],
         },
         "is_complete": section["id"] in completed,
         "activity_open": activity_open,
@@ -204,7 +212,8 @@ def _published_version(posted):
     return PathwayVersion.objects.filter(pk=int(posted), publications__isnull=False).distinct().first()
 
 
-def _block_for_participant(block, answers):
+def _block_for_participant(document, block, answers):
+    widget = BLOCK_TYPES[block["type"]].widget
     return {
         "id": block["id"],
         "type": block["type"],
@@ -212,4 +221,5 @@ def _block_for_participant(block, answers):
         "variant": block.get("variant", "plain"),
         "text": authored_text(block, "participant"),
         "answer": answers.get(block["id"]),
+        "widget": widget(document, "participant") if widget else None,
     }

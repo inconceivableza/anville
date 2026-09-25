@@ -4,7 +4,7 @@
 
 **Blocked by:** 06 (Scoring core and results page)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Parent:** whatever-you-do-milestone-1 spec (Demo 2, 2 Oct)
 
@@ -19,5 +19,9 @@
 **Carried from 06**
 
 - The contract the widget sends: one POST to `/answers/<block_id>/` with `value` holding the whole sort as JSON, `{"<item id>": {"bucket": "<bucket id>", "value": <whole number 0–100>}, …}`, for every item and no others. `50.0` is refused. The server scores it and stores the result in the same transaction, and a second sort is refused with 409, since there is no retake. `engine/templates/engine/blocks/sort_assessment.html` is a placeholder for the widget to replace
-- [ ] Land on the results page. After a sort is stored, a non-htmx submit redirects to the section and an htmx one returns the section's save result; neither reaches `/results/<block_id>/`, which the criterion above asks for
+- [x] Land on the results page. After a sort is stored, a non-htmx submit redirects to the section and an htmx one returns the section's save result; neither reaches `/results/<block_id>/`, which the criterion above asks for
 - [ ] The prototype gave PEP bars a minimum width of 4% (`Math.max(4, pct)`), which the results page left out. Check by hand, with real sorts, whether a 0% bar needs the stub
+
+## Comments
+
+- First step: the server's side of the widget. The section page hands the widget every item in the participant's wording and the buckets weakest first (a `widget` entry on the block type), and a stored sort now goes to `/results/<block_id>/`: a 303 without htmx, `HX-Redirect` with it. A bucket's seed must now be a whole number, since it is the answer an untouched slider gives. That meets the carried "Land on the results page" item; the criterion "On completion the participant is taken to the results page" waits for the widget, which is the next step.

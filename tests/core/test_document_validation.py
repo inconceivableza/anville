@@ -57,6 +57,14 @@ def test_an_agreement_scale_needs_its_prompt_and_both_anchor_labels():
     assert "'max_label' is a required property" in problem.message
 
 
+def test_a_bucket_seed_is_a_whole_number_since_it_becomes_an_untouched_sliders_answer():
+    document = pathway_document()
+    document["instrument"]["buckets"][0]["seed"] = 45.5
+
+    [problem] = validate(document)
+    assert problem.path == "/instrument/buckets/0/seed"
+
+
 def test_rich_text_may_be_set_off_as_a_hint_and_nothing_else():
     """✨ A note beneath scripture belongs to the scripture reading block, so rich text no longer offers one."""
     document = pathway_document()
