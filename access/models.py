@@ -4,10 +4,10 @@ from django.utils import timezone
 
 
 class Consent(models.Model):
-    """✨ A participant's explicit agreement to one version of the consent text (ADR 0004).
+    """✨ A participant's explicit consent to one version of the consent text (ADR 0004).
 
-    Each agreement is its own row, so a new version of the text is agreed to afresh and the earlier
-    agreement stays on record. Declining leaves no row at all: declining stores nothing beyond the account.
+    Each consent is its own row, so a new version of the text is consented to afresh and the earlier
+    consent stays on record. Declining leaves no row at all: declining stores nothing beyond the account.
     """
 
     participant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="consents")

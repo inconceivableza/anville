@@ -5,6 +5,7 @@ records the version of the text agreed to. Declining stores nothing beyond the a
 import pytest
 from django.utils import dateformat, timezone
 
+from access.models import Consent
 from engine.models import Publication, Response
 from tests.documents import pathway_document
 from tests.journeys.pages import version_on
@@ -118,6 +119,7 @@ def test_declining_stores_nothing_and_answering_stays_shut(signed_up):
     answer(signed_up, "baseline-bible", "7")
     signed_up.post("/sections/onboarding/complete/")
     assert not Response.objects.exists()
+    assert not Consent.objects.exists(), "not even the decision to decline is recorded"
     assert signed_up.get("/").url == CONSENT
 
 

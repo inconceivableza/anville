@@ -19,7 +19,7 @@ def consent(request):
     """✨ The participant's own decision about the consent text, separate from the enrolment code (ADR 0004).
 
     Agreeing records the version of the text the page showed and when. Declining records nothing.
-    Withdrawing marks the agreement withdrawn, and the pathway waits for consent again.
+    Withdrawing marks their consent withdrawn, and the pathway waits for consent again.
     """
     given = current_consent(request.user)
     version = current_text_version()
@@ -27,9 +27,10 @@ def consent(request):
     if given is None and decision == "decline":
         return render(request, "access/consent_declined.html")
     if given is None and decision == "agree":
-        # ✨ Agreement is to the text that was read. If it changed while the page was open, read it again.
+        # ✨ Consent is to the text that was read. If it changed while the page was open, read it again.
         if request.POST.get("version") != str(version):
-            return render(request, "access/consent.html", _page(request.user, version, text_changed=True), status=400)
+            page = _page(request.user, version, given, text_changed=True)
+            return render(request, "access/consent.html", page, status=400)
         Consent.objects.create(participant=request.user, text_version=version)
         return _see_other("hub")
     if given is not None and decision == "withdraw":
@@ -37,14 +38,14 @@ def consent(request):
         return _see_other("consent")
     if request.method == "POST":
         return _see_other("consent")
-    return render(request, "access/consent.html", _page(request.user, version))
+    return render(request, "access/consent.html", _page(request.user, version, given))
 
 
-def _page(participant, version, *, text_changed=False):
+def _page(participant, version, given, *, text_changed=False):
     """✨ The text, and where the participant stands with it: agreed, withdrawn, or agreed to an earlier version."""
     return {
         "version": version,
-        "given": current_consent(participant),
+        "given": given,
         "previous": latest_consent(participant),
         "text_changed": text_changed,
     }

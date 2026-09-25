@@ -18,21 +18,23 @@ def current_text_version():
 
 
 def current_consent(participant):
-    """✨ The participant's agreement to the current text, or None if they have not given one."""
+    """✨ The participant's consent to the current text, or None if they have not given it."""
     return (
-        Consent.objects.filter(participant=participant, text_version=CONSENT_TEXT_VERSION, withdrawn_at__isnull=True)
+        Consent.objects.filter(
+            participant=participant, text_version=current_text_version(), withdrawn_at__isnull=True
+        )
         .order_by("-given_at")
         .first()
     )
 
 
 def latest_consent(participant):
-    """✨ The participant's most recent agreement, whatever has happened to it since, or None if they never gave one."""
+    """✨ The participant's most recent consent, whatever has happened to it since, or None if they never gave one."""
     return Consent.objects.filter(participant=participant).order_by("-given_at").first()
 
 
 def withdraw(participant):
-    """✨ Withdraw every agreement still standing. The rows stay, as the record of what was agreed and when.
+    """✨ Withdraw every consent still standing. The rows stay, as the record of what was consented to and when.
 
     Stored answers are kept for now: what withdrawal does to them is open (spec, "Legalities are parked").
     """
@@ -40,7 +42,7 @@ def withdraw(participant):
 
 
 def consent_required(view):
-    """✨ Nothing of the pathway is shown or stored until the participant has agreed to the current text.
+    """✨ Nothing of the pathway is shown or stored until the participant has consented to the current text.
 
     Goes beneath `login_required`, which decides who the participant is. htmx is told to go to the consent
     page rather than swap it into the middle of a section, in the way a sort is sent on to its results.
