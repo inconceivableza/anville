@@ -17,28 +17,32 @@
             "type": "agreement_scale",
             "prompt": "I have a detailed understanding of what the Bible teaches about 'work' and 'calling'",
             "min_label": "Strongly disagree",
-            "max_label": "Strongly agree"
+            "max_label": "Strongly agree",
+            "fixed_once_complete": true
           },
           {
             "id": "bl-gifts",
             "type": "agreement_scale",
             "prompt": "I have a detailed understanding of what my God-given talents/gifts and limitations are",
             "min_label": "Strongly disagree",
-            "max_label": "Strongly agree"
+            "max_label": "Strongly agree",
+            "fixed_once_complete": true
           },
           {
             "id": "bl-call",
             "type": "agreement_scale",
             "prompt": "I have a strong sense of what God's specific 'call' and purpose is for my life",
             "min_label": "Strongly disagree",
-            "max_label": "Strongly agree"
+            "max_label": "Strongly agree",
+            "fixed_once_complete": true
           },
           {
             "id": "bl-plan",
             "type": "agreement_scale",
             "prompt": "I have a clear, practical plan for how to pursue God's purpose for my life, in terms of 'work' / 'calling'",
             "min_label": "Strongly disagree",
-            "max_label": "Strongly agree"
+            "max_label": "Strongly agree",
+            "fixed_once_complete": true
           }
         ],
         "gate": {
@@ -177,28 +181,32 @@
             "type": "agreement_scale",
             "prompt": "I have a detailed understanding of what the Bible teaches about 'work' and 'calling'",
             "min_label": "Strongly disagree",
-            "max_label": "Strongly agree"
+            "max_label": "Strongly agree",
+            "fixed_once_complete": true
           },
           {
             "id": "pl-gifts",
             "type": "agreement_scale",
             "prompt": "I have a detailed understanding of what my God-given talents/gifts and limitations are",
             "min_label": "Strongly disagree",
-            "max_label": "Strongly agree"
+            "max_label": "Strongly agree",
+            "fixed_once_complete": true
           },
           {
             "id": "pl-call",
             "type": "agreement_scale",
             "prompt": "I have a strong sense of what God's specific 'call' and purpose is for my life",
             "min_label": "Strongly disagree",
-            "max_label": "Strongly agree"
+            "max_label": "Strongly agree",
+            "fixed_once_complete": true
           },
           {
             "id": "pl-plan",
             "type": "agreement_scale",
             "prompt": "I have a clear, practical plan for how to pursue God's purpose for my life, in terms of 'work' / 'calling'",
             "min_label": "Strongly disagree",
-            "max_label": "Strongly agree"
+            "max_label": "Strongly agree",
+            "fixed_once_complete": true
           }
         ],
         "gate": {

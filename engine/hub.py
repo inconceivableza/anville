@@ -78,6 +78,18 @@ def open_blocks(section, answers):
     return reached, True
 
 
+def answers_fixed_on_completion(section, answers):
+    """✨ The answers completing this section fixes: those the author marked `fixed_once_complete` that hold
+    something. A marked block left unanswered is not fixed as a blank; it can still be answered, and is fixed
+    the next time the section is completed.
+    """
+    return [
+        block["id"]
+        for block in section["blocks"]
+        if block.get("fixed_once_complete") and has_content(answers.get(block["id"]))
+    ]
+
+
 def is_locked(section, completed):
     """✨ Whether a section is still shut, because a section it requires has not been completed.
 

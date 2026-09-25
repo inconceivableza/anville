@@ -126,6 +126,28 @@ def test_the_way_on_opens_once_all_four_are_answered(participant):
     assert complete(participant, "onboarding").status_code == 303
 
 
+@pytest.mark.django_db
+def test_the_four_baseline_ratings_are_fixed_once_onboarding_is_complete(participant):
+    """✨ The original prototype's baseline screen cannot be returned to after "Continue", so its ratings stand."""
+    answer_the_baseline(participant)
+    complete(participant, "onboarding")
+
+    for slot in ("bible", "gifts", "call", "plan"):
+        assert answer(participant, f"bl-{slot}", "2").status_code == 409
+
+
+@pytest.mark.django_db
+def test_the_four_end_ratings_are_fixed_once_the_letter_is_sent(participant):
+    """✨ The original prototype offers its closing questions only until they are answered, then moves on for good."""
+    client = through_to_the_letter(participant)
+    answer(client, "lt-message", A_LETTER)
+    answer_the_baseline(client, prefix="pl")
+    complete(client, "letter")
+
+    for slot in ("bible", "gifts", "call", "plan"):
+        assert answer(client, f"pl-{slot}", "2").status_code == 409
+
+
 # The calling-statement section
 
 

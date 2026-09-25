@@ -20,7 +20,7 @@ from engine.document import (
 )
 from engine.document.blocks import section_of
 from engine.document.scoring import score
-from engine.hub import hub_for, is_locked, open_blocks, section_by_id, track_sections
+from engine.hub import answers_fixed_on_completion, hub_for, is_locked, open_blocks, section_by_id, track_sections
 from engine.models import PathwayVersion, Publication, Response, Result
 from engine.results import results_page
 
@@ -46,11 +46,12 @@ def hub(request):
 @consent_required
 def section(request, section_id):
     """✨ One section's blocks. A locked section is refused here, whatever the participant typed in the bar."""
-    _, version, answers, completed = _participant(request.user)
+    participant_response, version, answers, completed = _participant(request.user)
     section = _section_or_404(version, section_id)
     if is_locked(section, completed):
         return redirect("hub")
-    return render(request, "engine/section.html", _section_page(version, section, answers, completed))
+    page = _section_page(version, section, answers, completed, _fixed(participant_response))
+    return render(request, "engine/section.html", page)
 
 
 @login_required
@@ -63,12 +64,12 @@ def complete_section(request, section_id):
     if is_locked(section, completed):
         return redirect("hub")
     if unmet(section, answers):
-        page = _section_page(version, section, answers, completed)
+        page = _section_page(version, section, answers, completed, _fixed(participant_response))
         return render(request, "engine/section.html", {**page, "refused": True}, status=400)
 
     if participant_response is None:
         participant_response, _ = Response.objects.get_or_create(participant=request.user, version=version)
-    participant_response.complete_section(section_id)
+    participant_response.complete_section(section_id, fixing=answers_fixed_on_completion(section, answers))
     return _see_other("hub")
 
 
@@ -110,6 +111,10 @@ def save_answer(request, block_id):
     reached, _ = open_blocks(section, answers)
     if is_locked(section, completed) or block not in reached:
         return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
+    fixed = _fixed(participant_response)
+    if block_id in fixed:
+        # ✨ Refused here, not only disabled on the page, so a page left open from before completing cannot change it.
+        return _refuse_fixed(request)
     try:
         value = answer_from_form(version.document, block, request.POST.get("value"))
     except AnswerRefused as refused:
@@ -124,12 +129,13 @@ def save_answer(request, block_id):
             refusal = "Your results are already in. Retaking the sort is not offered yet."
             return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
         return _to_results(request, block_id)
-    participant_response.save_answer(block_id, value)
+    if not participant_response.save_answer(block_id, value):
+        return _refuse_fixed(request)  # ✨ a completion fixed it after the check above, and the UPDATE saw that
     # ✨ The row was updated in place, so this object's answers are a step behind what was just stored.
     answers = {**answers, block_id: value}
 
     if request.headers.get("HX-Request") == "true":
-        return render(request, "engine/save_result.html", _section_page(version, section, answers, completed))
+        return render(request, "engine/save_result.html", _section_page(version, section, answers, completed, fixed))
     return _see_other(f"{reverse('section', args=[section['id']])}#block-{block_id}")
 
 
@@ -186,6 +192,16 @@ def _participant(user):
     )
 
 
+def _refuse_fixed(request):
+    refusal = "This answer was fixed when you completed this section."
+    return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
+
+
+def _fixed(participant_response):
+    """✨ The block identifiers whose answers this participant can no longer change."""
+    return set(participant_response.fixed_answers) if participant_response else set()
+
+
 def _section_or_404(version, section_id):
     section = section_by_id(version.document, section_id) if version else None
     if section is None:
@@ -193,7 +209,7 @@ def _section_or_404(version, section_id):
     return section
 
 
-def _section_page(version, section, answers, completed):
+def _section_page(version, section, answers, completed, fixed):
     blocks, activity_open = open_blocks(section, answers)
     # ✨ A sort leads only to its results, as in the prototype, so completing is not offered beside it until it
     # is in. The linter makes its section's gate require it, so the server refuses completion before then too.
@@ -207,9 +223,10 @@ def _section_page(version, section, answers, completed):
         "section": {
             "id": section["id"],
             "title": text_for(section["title"], "participant"),
-            "blocks": [_block_for_participant(version.document, block, answers) for block in blocks],
+            "blocks": [_block_for_participant(version.document, block, answers, fixed) for block in blocks],
         },
         "is_complete": section["id"] in completed,
+        "holds_fixed_answers": any(block["id"] in fixed for block in blocks),
         "offers_completion": activity_open and not sort_pending,
         "unmet": unmet(section, answers),
     }
@@ -222,7 +239,7 @@ def _published_version(posted):
     return PathwayVersion.objects.filter(pk=int(posted), publications__isnull=False).distinct().first()
 
 
-def _block_for_participant(document, block, answers):
+def _block_for_participant(document, block, answers, fixed):
     widget = BLOCK_TYPES[block["type"]].widget
     return {
         "id": block["id"],
@@ -231,5 +248,6 @@ def _block_for_participant(document, block, answers):
         "variant": block.get("variant", "plain"),
         "text": authored_text(block, "participant"),
         "answer": answers.get(block["id"]),
+        "is_fixed": block["id"] in fixed,
         "widget": widget(document, "participant") if widget else None,
     }

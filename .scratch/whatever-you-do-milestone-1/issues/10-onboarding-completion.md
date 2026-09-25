@@ -17,3 +17,8 @@
 - [ ] Email is validated properly, not just for an "@"
 - [ ] Stored coach and contacts survive a reload
 - [ ] The participant's name and email come from the account, not a form block
+
+**Carried from 29**
+
+- The baseline ratings in onboarding are marked `fixed_once_complete`, so completing onboarding fixes them for good, even if it is reopened. Leave the reason, coach and contact blocks unmarked so a participant can reopen onboarding and correct them. The flag is only defined on `agreement_scale`, so the schema refuses it on the new block types anyway.
+- Both `pathways/whatever-you-do.json` and `pathways/whatever-you-do-faithful-port.json` take the new onboarding blocks; the drift test in `tests/journeys/test_whatever_you_do.py` fails if only one does

@@ -43,6 +43,14 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Without JavaScript, a Save button appears and saves the answer. With JavaScript it is hidden.
 - Screen reader: "Saved" and a refusal are announced.
 
+## Fixed ratings (after completing onboarding, or Section 5)
+
+- The chosen point keeps its colour; the other points don't react to hover, and nothing looks clickable.
+- "Fixed when you completed this section." shows under each fixed rating, and there is no Save button, with or without JavaScript.
+- Keyboard only: Tab moves past the fixed ratings rather than into them.
+- Screen reader: a fixed rating is read as its prompt with the chosen point, and announced as unavailable (dimmed).
+- A page left open from before completing, in another tab: choosing a new point says "Not saved. This answer was fixed when you completed this section."
+
 ## The sort
 
 - The cards come in a different order on each visit. The counter reads "1/36" and counts up.

@@ -14,3 +14,9 @@
 - [ ] A closing summary shows the participant's work from stored answers, and a congratulations screen ends the pathway
 - [ ] Section 4 has no gate; this is deliberate and carried from the prototype, so the section can be completed with no activities. Record it as a choice an author can change
 - [ ] Copy makes no promise the system cannot keep
+
+**Carried from 29**
+
+- [ ] The closing's comparison pairs every `bl-*` rating with its `pl-*` rating rather than assuming four: `pathways/whatever-you-do.json` has five (with `bl-peace`/`pl-peace`), while the faithful port keeps the prototype's four
+- Both sets of ratings are fixed once their section is complete (`fixed_once_complete`), so the comparison shows answers that can no longer change
+- Section 4 and the closing go into both pathway documents; the drift test fails if only one takes them

@@ -75,3 +75,14 @@ def test_rich_text_may_be_set_off_as_a_hint_and_nothing_else():
     welcome["variant"] = "banner"
     [problem] = validate(document)
     assert problem.path == "/content/sections/0/blocks/0/variant"
+
+
+def test_an_agreement_scale_may_be_fixed_once_its_section_is_complete_by_a_yes_or_no():
+    document = pathway_document()
+    rating = document["content"]["sections"][0]["blocks"][1]
+    rating["fixed_once_complete"] = True
+    assert validate(document) == []
+
+    rating["fixed_once_complete"] = "yes"
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/0/blocks/1/fixed_once_complete"

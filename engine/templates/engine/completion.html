@@ -11,7 +11,11 @@
 <div id="completion"{% if offers_completion %} class="completion"{% endif %}{% if out_of_band %} hx-swap-oob="true"{% endif %}>
   {% if offers_completion %}
     {% if is_complete %}
-      <p class="completion-done">You marked this section complete. You can still change your answers here.</p>
+      {% if holds_fixed_answers %}
+        <p class="completion-done">You marked this section complete. Ratings fixed when you completed this section can no longer be changed.</p>
+      {% else %}
+        <p class="completion-done">You marked this section complete. You can still change your answers here.</p>
+      {% endif %}
       <form method="post" action="{% url 'reopen_section' section.id %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-secondary btn-sm">Mark as not complete</button>

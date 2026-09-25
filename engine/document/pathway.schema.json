@@ -212,7 +212,12 @@
         "type": { "const": "agreement_scale" },
         "prompt": { "$ref": "#/$defs/text" },
         "min_label": { "$ref": "#/$defs/text" },
-        "max_label": { "$ref": "#/$defs/text" }
+        "max_label": { "$ref": "#/$defs/text" },
+        "fixed_once_complete": {
+          "description": "Once the rating has been answered and this section completed, it can no longer be changed, even if the section is reopened. For a baseline measured again later.",
+          "type": "boolean",
+          "default": false
+        }
       }
     },
     "sort_assessment": {

@@ -1,8 +1,11 @@
-{# ✨ A 1–10 scale that saves as soon as a point is chosen. The two anchor labels describe the scale's ends. #}
+{% comment %}
+  ✨ A 1–10 scale that saves as soon as a point is chosen. The two anchor labels describe the scale's ends.
+  A fixed rating shows the point chosen, with every point disabled and nothing to save; the server refuses it anyway.
+{% endcomment %}
 <form id="block-{{ block.id }}" class="baseline-q" method="post" action="{% url 'save_answer' block.id %}">
   {% csrf_token %}
-  <fieldset hx-post="{% url 'save_answer' block.id %}" hx-trigger="change"
-            hx-sync="this:queue last" hx-target="next .save-status">
+  <fieldset{% if not block.is_fixed %} hx-post="{% url 'save_answer' block.id %}" hx-trigger="change"
+            hx-sync="this:queue last" hx-target="next .save-status"{% endif %}>
     <legend class="baseline-label">{{ block.text.prompt }}</legend>
     <div class="baseline-scale">
       <span class="baseline-anchor" id="anchor-{{ block.id }}-min">{{ block.text.min_label }}</span>
@@ -11,11 +14,15 @@
     <div class="baseline-btns">
       {% for point in pathway.scale_points %}
         <label class="bl-btn">
-          <input type="radio" id="answer-{{ block.id }}-{{ point }}" name="value" value="{{ point }}"{% if block.answer == point %} checked{% endif %}{% if forloop.first %} aria-describedby="anchor-{{ block.id }}-min"{% elif forloop.last %} aria-describedby="anchor-{{ block.id }}-max"{% endif %}>
+          <input type="radio" id="answer-{{ block.id }}-{{ point }}" name="value" value="{{ point }}"{% if block.answer == point %} checked{% endif %}{% if block.is_fixed %} disabled{% endif %}{% if forloop.first %} aria-describedby="anchor-{{ block.id }}-min"{% elif forloop.last %} aria-describedby="anchor-{{ block.id }}-max"{% endif %}>
           <span>{{ point }}</span>
         </label>
       {% endfor %}
     </div>
   </fieldset>
-  {% include "engine/save_row.html" %}
+  {% if block.is_fixed %}
+    <p class="fixed-note">Fixed when you completed this section.</p>
+  {% else %}
+    {% include "engine/save_row.html" %}
+  {% endif %}
 </form>

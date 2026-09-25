@@ -513,6 +513,23 @@ a.hub-section-title:hover {
   outline-offset: 2px;
 }
 
+/* ✨ A fixed rating: the chosen point keeps its colour, and nothing invites a click or a hover. */
+.bl-btn:has(input:disabled),
+.bl-btn:has(input:disabled) input {
+  cursor: default;
+}
+
+.bl-btn:has(input:disabled):not(:has(input:checked)):hover {
+  border-color: var(--border);
+  color: var(--ink-muted);
+}
+
+.fixed-note {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-top: 8px;
+}
+
 /* Form panel: the prototype's .name-section, used by the account pages' forms. The fields inside are
    rendered by Django, so they are styled by element. */
 

@@ -85,6 +85,8 @@ The hub at `/` is derived by the engine from what a participant has answered and
 
 A section has its own page at `/sections/<id>/`. It opens once every section in its `requires` list is complete. A locked section is decided on the request, never in the markup: its page redirects to the hub, and its blocks refuse an answer. Progress counts only the blocks a participant does something with.
 
+An agreement scale marked `"fixed_once_complete": true` is fixed once it has been answered and its section completed: from then on it cannot be changed, even if the section is reopened. One left blank at completion can still be answered, and is fixed the next time the section is completed. *Whatever You Do* marks its start and end ratings this way, as the original prototype does not let either be revisited. The server refuses a change, and the page shows the rating as chosen but disabled.
+
 A section's `gate` is an optional list of clauses, all of which must pass before the participant may mark it complete. Completing is their own act, and the server re-checks the gate when the button is pressed, so re-enabling it in a browser achieves nothing. Every failing clause shows its own authored message. The clause types are:
 
 | Clause | Reads | Requires |

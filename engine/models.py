@@ -43,6 +43,9 @@ class Response(models.Model):
     # ✨ When the participant said each section was finished. Completing is their own act, so it is recorded
     # rather than derived: an answer changed afterwards does not quietly undo it.
     completed_sections = models.JSONField(default=dict)
+    # ✨ When each answer an author marked `fixed_once_complete` became fixed. Recorded, like completion, so that
+    # reopening the section afterwards does not quietly make it changeable again.
+    fixed_answers = models.JSONField(default=dict)
     is_test_data = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -60,9 +63,19 @@ class Response(models.Model):
         """✨ Store one block's answer in a single UPDATE that merges it into the stored answers.
 
         The rest of the response is never re-serialised, so a save from a stale copy of this object
-        cannot undo an answer saved to another block since.
+        cannot undo an answer saved to another block since. Nor can it change an answer fixed since: the
+        same UPDATE skips a fixed answer, so a save that raced a completion writes nothing. Returns whether
+        the answer was stored.
         """
-        self._merge(answers=Value({block_id: value}, output_field=models.JSONField()))
+        stored = (
+            Response.objects.filter(pk=self.pk)
+            .exclude(fixed_answers__has_key=block_id)
+            .update(
+                answers=_MergeJson(F("answers"), Value({block_id: value}, output_field=models.JSONField())),
+                updated_at=timezone.now(),
+            )
+        )
+        return stored == 1
 
     def submit_sort(self, block_id, sort, scores):
         """✨ Store a sort and the result scored from it together, or neither.
@@ -74,13 +87,24 @@ class Response(models.Model):
             Result.objects.create(response=self, block_id=block_id, scores=scores)
             self.save_answer(block_id, sort)
 
-    def complete_section(self, section_id):
-        """✨ Record that the participant completed a section, merged in the same way as an answer.
+    def complete_section(self, section_id, fixing=()):
+        """✨ Record that the participant completed a section, and fix the answers named in `fixing`, in one UPDATE.
 
         The caller has already re-checked the section's gate. Completing twice is harmless: the second
-        time replaces the timestamp and nothing else.
+        time replaces the completion timestamp and nothing else. An answer fixed before keeps the time it
+        was first fixed, since the stored entries are kept over the new ones.
         """
-        self._merge(completed_sections=Value({section_id: timezone.now().isoformat()}, output_field=models.JSONField()))
+        now = timezone.now()
+        stamp = now.isoformat()
+        Response.objects.filter(pk=self.pk).update(
+            completed_sections=_MergeJson(
+                F("completed_sections"), Value({section_id: stamp}, output_field=models.JSONField())
+            ),
+            fixed_answers=_MergeJson(
+                Value({block_id: stamp for block_id in fixing}, output_field=models.JSONField()), F("fixed_answers")
+            ),
+            updated_at=now,
+        )
 
     def reopen_section(self, section_id):
         """✨ Take back the participant's own act of completing a section, leaving every answer as it is.
@@ -90,12 +114,6 @@ class Response(models.Model):
         """
         Response.objects.filter(pk=self.pk).update(
             completed_sections=_WithoutKey(F("completed_sections"), Value(section_id)),
-            updated_at=timezone.now(),
-        )
-
-    def _merge(self, **fields):
-        Response.objects.filter(pk=self.pk).update(
-            **{name: _MergeJson(F(name), value) for name, value in fields.items()},
             updated_at=timezone.now(),
         )
 

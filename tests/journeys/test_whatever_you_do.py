@@ -113,6 +113,28 @@ def test_progress_counts_the_two_new_ratings(participant):
     assert "0 of 13 answered" in participant.get("/").content.decode()
 
 
+@pytest.mark.django_db
+def test_all_five_start_ratings_are_fixed_once_onboarding_is_complete(participant):
+    answer_all_five(participant)
+    complete(participant, "onboarding")
+
+    for slot in SLOTS:
+        assert answer(participant, f"bl-{slot}", "2").status_code == 409
+    assert set(Response.objects.get().answers.values()) == {7}
+
+
+@pytest.mark.django_db
+def test_all_five_end_ratings_are_fixed_once_the_letter_is_sent(participant):
+    client = through_to_the_letter(participant)
+    answer(client, "lt-message", A_LETTER)
+    answer_all_five(client, prefix="pl")
+    complete(client, "letter")
+
+    for slot in SLOTS:
+        assert answer(client, f"pl-{slot}", "2").status_code == 409
+    assert {Response.objects.get().answers[f"pl-{slot}"] for slot in SLOTS} == {7}
+
+
 def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else():
     """✨ The fifth rating is added to the faithful port here and the result compared whole, so a change made to
     one document and not the other fails, and so does a slip in the fifth rating itself (its place, its anchors,
