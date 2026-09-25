@@ -25,8 +25,12 @@ The first pathway. A Christian vocational-calling and discernment workbook.
 _Avoid_: WYD, the workbook, the calling workbook.
 
 **Prototype**:
-The single-file client-side HTML sketch of *Whatever You Do*. A behavioural and content reference, never production architecture.
-_Avoid_: v1, the old app, the demo.
+A client-side HTML sketch by the content owner of all or part of a pathway. A behavioural and content reference, never production architecture.
+_Avoid_: v1, the old app, the demo, mock-up.
+
+**Original prototype**:
+The first prototype, covering the whole of *Whatever You Do*, from which the engine and the faithful port are built.
+_Avoid_: the prototype (when another prototype could be meant).
 
 ### Pathway structure
 
@@ -41,6 +45,10 @@ _Avoid_: revision, release.
 **Pathway document**:
 The single versioned document holding a pathway version's content, instrument, measurement and presentation.
 _Avoid_: config, schema, definition file.
+
+**Faithful port**:
+The pathway document that reproduces the original prototype without the content owner's later changes, kept complete alongside the pathway so the two can be compared.
+_Avoid_: v1, original version, baseline document.
 
 **Section**:
 A top-level division of a pathway, presented to the participant as one unit of work.
@@ -109,6 +117,10 @@ _Avoid_: invite link, survey link, access code.
 **Coach**:
 A person the participant names to walk alongside them, who draws out the participant's own conclusions rather than passing on their own experience, and who receives only what the participant chooses to share.
 _Avoid_: mentor, guide, supervisor.
+
+**Content owner**:
+The person who owns the content and direction of *Whatever You Do*, and who writes its prototypes.
+_Avoid_: client, product owner, prototype builder.
 
 **Author**:
 The person who writes and edits a pathway. Assumed non-technical.

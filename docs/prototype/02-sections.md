@@ -2,7 +2,7 @@
 
 > ✨ Extracted from the prototype source with AI assistance; line references verified against the file.
 
-Extracted from `Prototype for reference/vibe-coded-prototype.html`. All line refs are to that file.
+Extracted from `Prototypes for reference/original-prototype.html`. All line refs are to that file.
 
 ### Naming trap — read this first
 

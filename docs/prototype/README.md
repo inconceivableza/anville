@@ -2,7 +2,7 @@
 
 > ✨ This document set was produced with AI assistance by extracting behaviour directly from the prototype source. Line references were verified against the file.
 
-Reference for `Prototype for reference/vibe-coded-prototype.html` — 7,881 lines, 477 KB, one self-contained file.
+Reference for `Prototypes for reference/original-prototype.html` — 7,881 lines, 477 KB, one self-contained file.
 
 **Purpose of this document set:** read these instead of the HTML. Orientation costs ~4k tokens here versus ~120k for the file. Work on one area costs one appendix.
 

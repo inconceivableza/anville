@@ -11,7 +11,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import vm from "node:vm";
 
-const html = readFileSync("Prototype for reference/vibe-coded-prototype.html", "utf8");
+const html = readFileSync("Prototypes for reference/original-prototype.html", "utf8");
 const itemBank = html.match(/var giftItems=\[[\s\S]*?\];/)[0];
 const computeAll = html.match(/function computeAll\(\)\{[\s\S]*?return s;\s*\}/)[0];
 

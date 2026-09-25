@@ -4,7 +4,7 @@
 
 **Blocked by:** 04 (Hub, locks, gates and explicit completion)
 
-**See also:** `Prototype for reference/coach-selection-prototype.html`, the content owner's mock-up of a participant checklist and coach commitments. Not yet in scope; the replanning session decides how it lands here.
+**See also:** `Prototypes for reference/coach-selection-prototype.html`, the content owner's mock-up of a participant checklist and coach commitments. Not yet in scope; the replanning session decides how it lands here.
 
 **Status:** ready-for-agent
 

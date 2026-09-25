@@ -2,7 +2,7 @@
 
 > ✨ Extracted from the prototype source with AI assistance; line references verified against the file.
 
-Source: `Prototype for reference/vibe-coded-prototype.html`. All logic lives in JS block 2 (L2809–6443), concentrated at **L3934–4272**.
+Source: `Prototypes for reference/original-prototype.html`. All logic lives in JS block 2 (L2809–6443), concentrated at **L3934–4272**.
 
 This is the whole engine. There is no server, no persistence of assessment results beyond `saState` in memory, and — importantly — **no thresholds, no weights, and no normalisation beyond a single percentage-of-total division**. The engine is far simpler than the prior prose summary implies. See "Corrections" at the end.
 

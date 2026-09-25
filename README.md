@@ -63,10 +63,17 @@ python manage.py load_pathway pathways/whatever-you-do.json
 ```
 
 `pathways/whatever-you-do.json` is *Whatever You Do* itself, as far as it has been authored:
-the four baseline ratings, the calling-statement section and the letter, with Sections 1, 2 and 4
+five baseline ratings, the calling-statement section and the letter, with Sections 1, 2 and 4
 carrying their hint text until their activities are built. It also holds the strengths instrument and
 its results wording, waiting for the sort to be placed in a section (ticket 09). `pathways/example.json` is a smaller
 file for trying the loader out.
+
+`pathways/whatever-you-do-faithful-port.json` is the faithful port: the same pathway as the original
+prototype has it, without the content owner's later changes (so far, only the fifth baseline rating).
+Both documents grow together, and a test fails if they differ in anything else, so the finished
+pathway can be compared with the original prototype's. Load it the same way to see the original prototype's
+version. Both are titled *Whatever You Do*, so loading one publishes it in place of the other: load
+`pathways/whatever-you-do.json` again afterwards to return new participants to the current pathway.
 
 Loading validates the file and prints any problems with their document paths. A valid file becomes an immutable pathway version, which is then published. Loading unchanged content again does nothing. Loading content you had before publishes that earlier version again.
 

@@ -392,7 +392,7 @@ These were not discussed in detail. They are stated so the implementer does not 
 
 ### Glossary gaps
 
-`CONTEXT.md` does not yet define **milestone** or **content owner** (the person who owns the content and direction of the first pathway). They are used in this spec in their ordinary sense. If any of them turns out to carry a domain meaning of its own, add it through `/domain-modeling`.
+`CONTEXT.md` does not yet define **milestone**. It is used in this spec in its ordinary sense. If it turns out to carry a domain meaning of its own, add it through `/domain-modeling`.
 
 ### Risk
 

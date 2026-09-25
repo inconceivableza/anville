@@ -39,22 +39,14 @@
             "prompt": "I have a clear, practical plan for how to pursue God's purpose for my life, in terms of 'work' / 'calling'",
             "min_label": "Strongly disagree",
             "max_label": "Strongly agree"
-          },
-          {
-            "id": "bl-peace",
-            "type": "agreement_scale",
-            "prompt": "I am at peace with God's plan for my life",
-            "min_label": "Strongly disagree",
-            "max_label": "Strongly agree"
           }
         ],
         "gate": {
           "clauses": [
-            { "type": "has_answer", "block": "bl-bible", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "bl-gifts", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "bl-call", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "bl-plan", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "bl-peace", "message": "Answer all five to continue" }
+            { "type": "has_answer", "block": "bl-bible", "message": "Answer all four to continue" },
+            { "type": "has_answer", "block": "bl-gifts", "message": "Answer all four to continue" },
+            { "type": "has_answer", "block": "bl-call", "message": "Answer all four to continue" },
+            { "type": "has_answer", "block": "bl-plan", "message": "Answer all four to continue" }
           ]
         }
       },
@@ -207,13 +199,6 @@
             "prompt": "I have a clear, practical plan for how to pursue God's purpose for my life, in terms of 'work' / 'calling'",
             "min_label": "Strongly disagree",
             "max_label": "Strongly agree"
-          },
-          {
-            "id": "pl-peace",
-            "type": "agreement_scale",
-            "prompt": "I am at peace with God's plan for my life",
-            "min_label": "Strongly disagree",
-            "max_label": "Strongly agree"
           }
         ],
         "gate": {
@@ -224,11 +209,10 @@
               "min": 10,
               "message": "Write at least one part of your letter before sealing it."
             },
-            { "type": "has_answer", "block": "pl-bible", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "pl-gifts", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "pl-call", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "pl-plan", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "pl-peace", "message": "Answer all five to continue" }
+            { "type": "has_answer", "block": "pl-bible", "message": "Answer all four to continue" },
+            { "type": "has_answer", "block": "pl-gifts", "message": "Answer all four to continue" },
+            { "type": "has_answer", "block": "pl-call", "message": "Answer all four to continue" },
+            { "type": "has_answer", "block": "pl-plan", "message": "Answer all four to continue" }
           ]
         }
       }

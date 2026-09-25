@@ -2,7 +2,7 @@
 
 > ✨ Extracted from the prototype source with AI assistance; line references verified against the file.
 
-Extracted from `Prototype for reference/vibe-coded-prototype.html` (7,881 lines). This section covers **what can be authored and rendered**. Scoring maths, gate predicates and persistence are covered by sibling documents.
+Extracted from `Prototypes for reference/original-prototype.html` (7,881 lines). This section covers **what can be authored and rendered**. Scoring maths, gate predicates and persistence are covered by sibling documents.
 
 ### Two surfaces, one file
 
