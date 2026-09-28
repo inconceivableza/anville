@@ -34,4 +34,5 @@
 - [ ] Only whether the coach accepted or declined is stored, not which boxes they ticked. One commitment affirms the coach's own faith, so individual ticks would be special category data about the coach
 - [ ] The participant is told whether the coach accepted or declined, with no detail of a decline. The mock-up leaves open whether a declined participant goes back to choose someone else, and whether a partial agreement is shown to them; decide both here
 - [ ] A coach has no account and writes nothing beyond accepting or declining
+- Known limit, recorded with the observers' one: the participant holds a copy of the coach's link, so they could accept the commitments on the coach's behalf. Nothing private leaks, but the participant could be told their coach agreed when they never did. Claiming doesn't help, since the participant can claim as easily as use; only the application reaching the coach itself (email, or a coach account) would, and neither is in this milestone
 - [ ] Journey tests cover accepting, declining, that accepting needs every commitment, and refusal of wrong, expired or revoked coach tokens
