@@ -22,7 +22,7 @@ from engine.views import complete_section, hub, reopen_section, results, save_an
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    # ✨ Ahead of allauth's own routes, so every password reset page is refused until email exists (ticket 28).
+    # ✨ Ahead of allauth's own routes, so every password reset page is refused until email exists (ticket 28a).
     re_path(r"^accounts/password/reset/", password_reset_unavailable),
     path("accounts/", include("allauth.urls")),
     path("consent/", consent, name="consent"),

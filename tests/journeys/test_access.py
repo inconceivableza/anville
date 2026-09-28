@@ -135,7 +135,7 @@ def test_the_sign_out_confirmation_loads_the_built_stylesheet(client, settings):
 
 @pytest.mark.django_db
 def test_until_email_can_be_sent_password_reset_is_neither_offered_nor_reachable(client, mailoutbox):
-    """✨ Temporary: ticket 28 replaces this with tests of the working flow once email delivery exists.
+    """✨ Temporary: ticket 28a replaces this with tests of the working flow once email delivery exists.
 
     Guards against an allauth upgrade quietly bringing back a link whose page crashes without a mail server.
     """

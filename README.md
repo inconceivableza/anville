@@ -42,7 +42,7 @@ python manage.py runserver
 
 Open http://localhost:8000 and sign up with an `@example.com` address and your enrolment code, ticking "I am 18 or over", then agree on the consent page. Use fake data only. If you are already signed in, the sign-up page sends you back to the hub. There is no sign-out button yet, so sign out at http://localhost:8000/accounts/logout/ or use a private window.
 
-Password reset is switched off until email delivery exists (ticket 28), so sign-in offers no "Forgot your password?" link. To reset a password, run `python manage.py changepassword <username>`. allauth derives each username from the start of the email address (`participant` for participant@example.com, with a suffix if that is taken), so check the admin if unsure.
+Password reset is switched off until email delivery exists (ticket 28a), so sign-in offers no "Forgot your password?" link. To reset a password, run `python manage.py changepassword <username>`. allauth derives each username from the start of the email address (`participant` for participant@example.com, with a suffix if that is taken), so check the admin if unsure.
 
 After changing anything in `frontend/src/`, run `npm run build` again in `frontend/`.
 
