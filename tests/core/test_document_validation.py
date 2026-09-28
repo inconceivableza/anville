@@ -86,3 +86,22 @@ def test_an_agreement_scale_may_be_fixed_once_its_section_is_complete_by_a_yes_o
     rating["fixed_once_complete"] = "yes"
     [problem] = validate(document)
     assert problem.path == "/content/sections/0/blocks/1/fixed_once_complete"
+
+
+def test_a_section_link_may_carry_a_button_label_and_hold_what_follows_by_a_yes_or_no():
+    document = pathway_document()
+    document["content"]["sections"][1]["blocks"].insert(
+        0,
+        {
+            "id": "to-onboarding",
+            "type": "section_link",
+            "section": "onboarding",
+            "button_label": "Open Strengths Assessment →",
+            "holds_what_follows": True,
+        },
+    )
+    assert validate(document) == []
+
+    document["content"]["sections"][1]["blocks"][0]["holds_what_follows"] = "yes"
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/1/blocks/0/holds_what_follows"

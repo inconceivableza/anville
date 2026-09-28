@@ -297,19 +297,40 @@ def test_section_1s_activity_waits_for_the_reading_to_be_confirmed(participant):
 
 
 @pytest.mark.django_db
-def test_after_the_reading_section_1_links_to_the_strengths_assessment_and_then_asks_for_the_reflection(participant):
+def test_after_the_reading_section_1_links_to_the_strengths_assessment_by_the_prototypes_button(participant):
     page = through_to_section_1s_activity(participant).get(SECTION_1).content.decode()
 
     assert "you sort and rate your strengths across 36 areas" in page
-    assert STRENGTHS_LINK in page
+    assert re.search(rf"{STRENGTHS_LINK}[^>]*>\s*Open Strengths Assessment →\s*</a>", page)
     assert "Sort your strengths into buckets, fine-tune the intensity of each" in page
     assert "status-chip status-not-started" in page
+
+
+@pytest.mark.django_db
+def test_section_1s_reflection_waits_for_the_sort_as_in_the_prototype(participant):
+    client = through_to_section_1s_activity(participant)
+    assert GIFTS_REFLECTION not in client.get(SECTION_1).content.decode()
+
+    submit_the_sort(client)
+
+    page = client.get(SECTION_1).content.decode()
     assert page.index(STRENGTHS_LINK) < page.index(GIFTS_REFLECTION)
 
 
 @pytest.mark.django_db
+def test_section_1s_reflection_cannot_be_written_before_the_sort_is_in(participant):
+    refused = answer(through_to_section_1s_activity(participant), "gifts-summary", A_REFLECTION)
+
+    assert refused.status_code == 403
+    assert "gifts-summary" not in Response.objects.get().answers
+
+
+@pytest.mark.django_db
 def test_section_1s_reflection_box_carries_the_prototypes_ghost_text(participant):
-    page = through_to_section_1s_activity(participant).get(SECTION_1).content.decode()
+    client = through_to_section_1s_activity(participant)
+    submit_the_sort(client)
+
+    page = client.get(SECTION_1).content.decode()
 
     assert 'placeholder="Draw on the scripture, your assessment results, and what others have told you..."' in page
 
@@ -325,14 +346,12 @@ def test_the_link_in_section_1_shows_how_far_the_strengths_assessment_has_got(pa
 
 @pytest.mark.django_db
 def test_section_1_cannot_be_completed_before_the_sort_is_in(participant):
-    client = through_to_section_1s_activity(participant)
-    answer(client, "gifts-summary", A_REFLECTION)
-
-    refused = complete(client, "designed")
+    """✨ Nothing after the link is open yet, so, as behind an unconfirmed reading, the page offers no gate messages
+    and no way on; the server refuses all the same."""
+    refused = complete(through_to_section_1s_activity(participant), "designed")
 
     assert refused.status_code == 400
-    assert COMPLETE_THE_ASSESSMENT in refused.content.decode()
-    assert COMPLETE_THE_REFLECTIONS not in refused.content.decode()
+    assert "Mark complete" not in refused.content.decode()
     assert "designed" not in Response.objects.get().completed_sections
 
 

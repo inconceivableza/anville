@@ -160,7 +160,9 @@ def reading(id):
 
 
 def test_a_section_with_no_reading_in_it_is_open_all_the_way_down():
-    blocks, all_of_it = open_blocks(section("first", blocks=[prose("intro"), long_text("a")]), {})
+    first = section("first", blocks=[prose("intro"), long_text("a")])
+
+    blocks, all_of_it = open_blocks(first, {}, [first])
 
     assert [block["id"] for block in blocks] == ["intro", "a"]
     assert all_of_it is True
@@ -169,7 +171,7 @@ def test_a_section_with_no_reading_in_it_is_open_all_the_way_down():
 def test_an_unconfirmed_reading_holds_back_everything_beneath_it():
     gifts = section("first", blocks=[prose("intro"), reading("read"), long_text("a")])
 
-    blocks, all_of_it = open_blocks(gifts, {})
+    blocks, all_of_it = open_blocks(gifts, {}, [gifts])
 
     assert [block["id"] for block in blocks] == ["intro", "read"]
     assert all_of_it is False
@@ -178,7 +180,7 @@ def test_an_unconfirmed_reading_holds_back_everything_beneath_it():
 def test_confirming_the_reading_opens_the_rest_of_the_section():
     gifts = section("first", blocks=[prose("intro"), reading("read"), long_text("a")])
 
-    blocks, all_of_it = open_blocks(gifts, {"read": True})
+    blocks, all_of_it = open_blocks(gifts, {"read": True}, [gifts])
 
     assert [block["id"] for block in blocks] == ["intro", "read", "a"]
     assert all_of_it is True
@@ -187,10 +189,61 @@ def test_confirming_the_reading_opens_the_rest_of_the_section():
 def test_a_second_reading_holds_back_what_follows_it_in_turn():
     gifts = section("first", blocks=[reading("first-read"), long_text("a"), reading("second-read"), long_text("b")])
 
-    blocks, all_of_it = open_blocks(gifts, {"first-read": True})
+    blocks, all_of_it = open_blocks(gifts, {"first-read": True}, [gifts])
 
     assert [block["id"] for block in blocks] == ["first-read", "a", "second-read"]
     assert all_of_it is False
+
+
+def link(id, to, **fields):
+    return {"id": id, "type": "section_link", "section": to, **fields}
+
+
+def gated_on(section, block_id):
+    return {**section, "gate": {"clauses": [{"type": "has_answer", "block": block_id, "message": "Do the sort."}]}}
+
+
+STRENGTHS = gated_on(section("strengths", blocks=[long_text("sort")]), "sort")
+
+
+def test_a_link_that_holds_what_follows_holds_it_until_the_linked_sections_gate_passes():
+    held = link("to-strengths", "strengths", holds_what_follows=True)
+    gifts = section("gifts", blocks=[prose("intro"), held, long_text("a")])
+
+    blocks, all_of_it = open_blocks(gifts, {}, [gifts, STRENGTHS])
+
+    assert [block["id"] for block in blocks] == ["intro", "to-strengths"]
+    assert all_of_it is False
+
+
+def test_the_linked_sections_gate_passing_opens_the_rest_without_that_section_being_completed():
+    """✨ As in the prototype, the reflection opens once the sort is in, not once its section is marked complete."""
+    gifts = section("gifts", blocks=[link("to-strengths", "strengths", holds_what_follows=True), long_text("a")])
+
+    blocks, all_of_it = open_blocks(gifts, {"sort": "Sorted"}, [gifts, STRENGTHS])
+
+    assert [block["id"] for block in blocks] == ["to-strengths", "a"]
+    assert all_of_it is True
+
+
+def test_a_held_link_to_a_section_with_no_gate_holds_nothing_back():
+    """✨ A section with no gate may always be completed, so there is nothing to wait for."""
+    ungated = section("strengths", blocks=[long_text("sort")])
+    gifts = section("gifts", blocks=[link("to-strengths", "strengths", holds_what_follows=True), long_text("a")])
+
+    blocks, all_of_it = open_blocks(gifts, {}, [gifts, ungated])
+
+    assert [block["id"] for block in blocks] == ["to-strengths", "a"]
+    assert all_of_it is True
+
+
+def test_a_link_holds_nothing_back_unless_its_author_asks_it_to():
+    gifts = section("gifts", blocks=[link("to-strengths", "strengths"), long_text("a")])
+
+    blocks, all_of_it = open_blocks(gifts, {}, [gifts, STRENGTHS])
+
+    assert [block["id"] for block in blocks] == ["to-strengths", "a"]
+    assert all_of_it is True
 
 
 # What the hub says about each section

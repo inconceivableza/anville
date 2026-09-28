@@ -108,7 +108,7 @@ def save_answer(request, block_id):
     section = section_of(version.document, block_id)
     answers = participant_response.answers if participant_response else {}
     completed = set(participant_response.completed_sections) if participant_response else set()
-    reached, _ = open_blocks(section, answers)
+    reached, _ = open_blocks(section, answers, track_sections(version.document))
     if is_locked(section, completed) or block not in reached:
         return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
     fixed = _fixed(participant_response)
@@ -210,7 +210,7 @@ def _section_or_404(version, section_id):
 
 
 def _section_page(version, section, answers, completed, fixed):
-    blocks, activity_open = open_blocks(section, answers)
+    blocks, activity_open = open_blocks(section, answers, track_sections(version.document))
     # ✨ A sort leads only to its results, as in the prototype, so completing is not offered beside it until it
     # is in. The linter makes its section's gate require it, so the server refuses completion before then too.
     sort_pending = any(BLOCK_TYPES[block["type"]].scored and block["id"] not in answers for block in blocks)

@@ -9,7 +9,7 @@ serves the hub page, the guard on a section page and the re-check when a section
 from typing import NamedTuple
 
 from engine.document.blocks import BLOCK_TYPES
-from engine.document.gates import has_content
+from engine.document.gates import gate_passes, has_content
 from engine.document.text import text_for
 
 LOCKED = "locked"
@@ -63,19 +63,31 @@ def section_by_id(document, section_id):
     return next((section for section in track_sections(document) if section["id"] == section_id), None)
 
 
-def open_blocks(section, answers):
+def open_blocks(section, answers, sections):
     """✨ The blocks of a section a participant has reached, and whether that is all of them.
 
     A block that opens what follows it (a scripture reading) holds the rest of the section shut until it
-    has been answered. The server decides this on every request, so an activity a participant has not
-    opened is neither in the page nor answerable: it is not reachable at all, rather than merely unseen.
+    has been answered. A link marked `holds_what_follows` holds it shut until the linked section's gate
+    passes, which is why the track's `sections` are needed. The server decides this on every request, so an
+    activity a participant has not opened is neither in the page nor answerable: it is not reachable at
+    all, rather than merely unseen.
     """
+    sections_by_id = {other["id"]: other for other in sections}
     reached = []
     for block in section["blocks"]:
         reached.append(block)
-        if BLOCK_TYPES[block["type"]].opens_what_follows and not has_content(answers.get(block["id"])):
+        if _holds_what_follows(block, answers, sections_by_id):
             return reached, False
     return reached, True
+
+
+def _holds_what_follows(block, answers, sections_by_id):
+    if BLOCK_TYPES[block["type"]].opens_what_follows:
+        return not has_content(answers.get(block["id"]))
+    if block.get("holds_what_follows"):
+        linked = sections_by_id.get(block["section"])
+        return linked is None or not gate_passes(linked, answers)  # ✨ a link outside the track opens nothing
+    return False
 
 
 def block_ids_fixed_on_completion(section, answers):

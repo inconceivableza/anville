@@ -243,6 +243,15 @@
         "body": {
           "description": "Plain text saying what is there. A blank line starts a new paragraph.",
           "$ref": "#/$defs/text"
+        },
+        "button_label": {
+          "description": "The wording of a button that leads there, such as 'Open Strengths Assessment →'. Without one, the section's title is the link.",
+          "$ref": "#/$defs/text"
+        },
+        "holds_what_follows": {
+          "description": "Hold the rest of this section shut until the linked section's gate passes, as a scripture reading does until it is confirmed.",
+          "type": "boolean",
+          "default": false
         }
       }
     },

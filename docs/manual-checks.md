@@ -54,10 +54,11 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 ## A link to another section (Section 1's Strengths assessment card)
 
-- The card reads as a way somewhere else: the Strengths assessment's title is the link, with its status chip beneath the text, coloured as on the hub.
-- Keyboard only: Tab reaches the link, its focus is visible, and Enter opens the Strengths assessment.
-- Screen reader: the link is read as "Strengths assessment", and the status is read after the text.
-- Phone width: the card's text wraps and the chip doesn't stretch.
+- The card reads as a way somewhere else: the Strengths assessment's title, the text, the "Open Strengths Assessment →" button, then its status chip on a line of its own, coloured as on the hub.
+- Before the sort is in, nothing follows the card: no reflection and no "Mark complete". After the sort, coming back to Section 1 shows the reflection.
+- Keyboard only: Tab reaches the button, its focus is visible, and Enter opens the Strengths assessment.
+- Screen reader: the button is read as "Open Strengths Assessment →", and the status is read after it.
+- Phone width: the card's text and button wrap, and the chip doesn't stretch.
 
 ## The sort
 

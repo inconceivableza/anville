@@ -106,7 +106,9 @@
             "id": "strengths-link",
             "type": "section_link",
             "section": "strengths",
-            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 5 trusted people to assess you too. [Not built yet: inviting people you trust comes in a later version.]"
+            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 5 trusted people to assess you too. [Not built yet: inviting people you trust comes in a later version.]",
+            "button_label": "Open Strengths Assessment →",
+            "holds_what_follows": true
           },
           {
             "id": "gifts-summary",

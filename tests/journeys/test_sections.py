@@ -485,6 +485,72 @@ def test_a_link_takes_no_answer(open_calling):
     assert "to-strengths" not in Response.objects.get().answers
 
 
+def holding_the_statement_for_the_sort():
+    """✨ The calling section's statement waits, as Section 1's reflection does, until the sort is in."""
+    document = linking_to_the_sort()
+    document["content"]["sections"][1]["blocks"][0]["holds_what_follows"] = True
+    return document
+
+
+@pytest.mark.django_db
+def test_a_link_can_hold_the_rest_of_its_section_until_the_linked_sections_gate_passes(open_calling):
+    client = open_calling(holding_the_statement_for_the_sort())
+
+    page = client.get(CALLING).content.decode()
+    assert STRENGTHS_LINK in page
+    assert "Write your statement." not in page
+    assert "Mark complete" not in page
+
+    client.post("/answers/strengths-sort/", {"value": json.dumps(complete_sort()), "version": _version_id()})
+    assert "Write your statement." in client.get(CALLING).content.decode()
+
+
+@pytest.mark.django_db
+def test_a_block_held_by_a_link_cannot_be_answered_either(open_calling):
+    """✨ Held back from the page and from the answer endpoint alike, as beneath an unconfirmed reading."""
+    client = open_calling(holding_the_statement_for_the_sort())
+
+    refused = client.post("/answers/statement/", {"value": LONG_ENOUGH, "version": _version_id()})
+
+    assert refused.status_code == 403
+    assert "statement" not in Response.objects.get().answers
+
+
+def with_a_button(label="Open Strengths Assessment →"):
+    document = linking_to_the_sort()
+    document["content"]["sections"][1]["blocks"][0]["button_label"] = label
+    return document
+
+
+@pytest.mark.django_db
+def test_a_link_with_a_button_label_leads_there_by_that_button(open_calling):
+    page = open_calling(with_a_button()).get(CALLING).content.decode()
+
+    assert re.search(r'href="/sections/strengths/"[^>]*>\s*Open Strengths Assessment →\s*</a>', page)
+    assert page.count(STRENGTHS_LINK) == 1  # ✨ the button is the way there, so the title is not a second one
+    assert "Strengths assessment" in page
+    assert "status-chip status-not-started" in page
+
+
+@pytest.mark.django_db
+def test_a_button_label_is_escaped_like_any_authored_text(open_calling):
+    page = open_calling(with_a_button("Open <b>now</b>")).get(CALLING).content.decode()
+
+    assert "Open &lt;b&gt;now&lt;/b&gt;" in page
+
+
+@pytest.mark.django_db
+def test_a_link_to_a_locked_section_offers_no_button(open_calling):
+    document = with_a_button()
+    document["content"]["sections"][2]["requires"] = ["calling"]
+
+    page = open_calling(document).get(CALLING).content.decode()
+
+    assert "Strengths assessment" in page
+    assert "Open Strengths Assessment →" not in page
+    assert STRENGTHS_LINK not in page
+
+
 # Ghost text in a long text box
 
 
