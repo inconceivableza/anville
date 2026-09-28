@@ -69,6 +69,16 @@ Cut in this order, first item first:
 
 Sections 4 and 5 are already planned as plain text and reflection blocks, so there is nothing further to cut there.
 
+### Sprints (planning session, 25 Sept)
+
+The planning session regrouped the tickets into sprints. Where this differs from the slices above, it replaces them. Each ticket records its sprint on a `**Sprint:**` line.
+
+- **Sprint 1, ends 2 Oct:** 09, 10, 13, 14, 15, 16, 25, 30 (tie-break).
+- **Sprint 2, ends 8 Oct, ready for the tech showcase on 9 Oct:** 26 (staging on Hetzner) and 31 (qualitative strengths). Google sign-in (28b) may join it, and takes precedence over the homepage (32), which is desirable if time allows.
+- **Sprint 3 or later:** 11 and 12 (the studio's JSON editor and preview; until then the document is edited as a file and loaded by command), 17–22 (Sections 2 and 3, recaps, Sections 4 and 5, closing ratings and summary), 23 (tracks and the offline hub), 24 (studio content forms and observer wording), 27 (real coach flow, sharing sections with the coach), any OAuth or OIDC work (28b, and a production identity provider), structural editing in the studio (adding components through the GUI), results that read better when scores are evenly high (a pie chart, absolute values, or a scoring method the author chooses), and a waitlist for the organisational version (churches, charities, leadership teams), which collects contact details and so needs a privacy notice. None of the last three has a ticket yet. Password reset (28a) is not yet placed.
+
+So the 9 Oct showcase shows slice 2, without the studio, plus the observer flow, the comparison and the coach preview, on staging. Sections 2–5 stay on the hub with only the content they already have (the calling section and the letter with its closing ratings, ticket 05); their full activities, the closing summary, the offline track and any studio are sprint 3 or later. The first three items of the cut order have been applied by moving those tickets to sprint 3. Item 4, seeded observers in place of invitations and the questionnaire (13 and 15), is the one cut still available.
+
 ## User Stories
 
 ### Access, age and consent
@@ -339,7 +349,7 @@ Sections 4 and 5 are already planned as plain text and reflection blocks, so the
 
 ## Out of Scope
 
-- Any change to the marketing brochure, blog, team pages, donate or newsletter surfaces of the prototype.
+- Any change to the marketing brochure, blog, team pages, donate or newsletter surfaces of the prototype. The homepage alone may come into scope for the 9 Oct showcase (ticket 32).
 - The prototype's demo and tester tooling.
 - Multi-tenancy (ADR 0002) and any organisation-management surface.
 - An assignment model, and any way for a participant to find or choose among pathways.

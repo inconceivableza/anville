@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Sprint:** 3 or later
+
 **Parent:** whatever-you-do-milestone-1 spec (Demo 2, 2 Oct)
 
 - [ ] An author can open any draft in preview and move through it as a participant would, including the hub, locks and gates

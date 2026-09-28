@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Sprint:** 3 or later
+
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
 
 - [ ] Section 4 (growth plan) presents the five categories (steps of faith, grow gifting, character, mentorship, disciple others) as reflection prompts with their questions, reasons and suggestions, captured as text; there is no quarter board

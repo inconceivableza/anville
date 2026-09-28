@@ -2,9 +2,11 @@
 
 **What to build:** The observer's questionnaire, working end to end. Following their invitation link, an observer sorts and fine-tunes the same 36 statements about the participant (in the third person), answers seven written questions, and finishes with a thank-you. Their answers are stored in the observer response record from ticket 14. The prototype's version is unreachable in normal use; this is designed fresh.
 
-**Blocked by:** 07 (Sort and fine-tune widget), 13 (Observer invitations and landing), 14 (Observer responses, aggregation and suppression)
+**Blocked by:** 07 (Sort and fine-tune widget), 13 (Observer and coach invitations), 14 (Observer responses, aggregation and suppression)
 
 **Status:** ready-for-agent
+
+**Sprint:** 1 (ends 2 Oct)
 
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
 
@@ -13,6 +15,7 @@
 - [ ] The sort and slider screens address the participant's first name in the third person and reuse the sort widget with observer wording
 - [ ] Thirty-two items are shared with the participant verbatim; the four that say "you" or "yours" carry observer wording: outlast them, different from theirs, matters to them, they could explain it
 - [ ] The Christian framing is kept; observers see no participant-facing first-person copy
+- [ ] Decide before building the written questions: the qualitative strengths work in sprint 2 (`Prototypes for reference/qualitative-strengths-prototype.html`) replaces the seven with six, asked of the participant too, and shows observers' answers back shuffled. Either this ticket builds the sort only and all written questions move to sprint 2, or it collects the six now, stored and not yet shown, or it keeps the seven below and sprint 2 reworks them
 - [ ] Seven written questions (what energises them, three best qualities, a new skill, an existing skill, a character area, the biggest change seen, what they struggle with) are stored and never shown to the participant
 - [ ] The observer chooses a relationship, stored but never used to slice or filter results
 - [ ] One submission per token, then locked

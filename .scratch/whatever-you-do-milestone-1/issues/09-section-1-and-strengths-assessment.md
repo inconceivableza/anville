@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Sprint:** 1 (ends 2 Oct)
+
 **Parent:** whatever-you-do-milestone-1 spec (Demo 2, 2 Oct)
 
 - [ ] A "Strengths assessment" section contains the sort block and the results, requires only onboarding, and appears on the hub as its own entry
@@ -16,6 +18,8 @@
 - [ ] The prototype's "comparison viewed" requirement is not present yet; it joins in ticket 16
 - [ ] Retake is not offered in this milestone
 - [ ] Content is migrated verbatim from the prototype reference
+- [ ] Each section can carry an authored time estimate ("About 15 minutes"), shown on its hub entry and at the top of the section; add one to every section with content, and one per activity where a section has several
+- [ ] Every minimum-length gate message says how much is needed, for example "Write at least 10 characters…", including the existing ones such as the letter's "Write at least one part of your letter before sealing it." (`pathways/whatever-you-do.json`). The faithful port keeps the prototype's wording, so the drift test in `tests/journeys/test_whatever_you_do.py`, which compares the two documents whole, must expect the new messages the way it already expects the fifth rating
 
 **Carried from 06**
 

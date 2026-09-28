@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Sprint:** 3 or later
+
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
 
 - [ ] The sentence builder block has a fixed template with named slots (contribution, who, outcome) with hints, and a live preview: "God seems to have designed me to [contribution] among [who], so that [outcome]."

@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Sprint:** 1 (ends 2 Oct)
+
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
 
 - [ ] The comparison shows APEST(d) and PEP for the participant and observers side by side, only when the minimum is met; below it, the explanation from ticket 14

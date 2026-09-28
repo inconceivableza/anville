@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Sprint:** 3 or later
+
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
 
 - [ ] A Vite module provides four lens tabs (who it serves, your part in it, what carries it, what if...), each with rotating prompts, free-text capture, star and unstar, and a "shake two lenses" prompt that mashes two lenses together

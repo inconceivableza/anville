@@ -6,6 +6,8 @@
 
 **Status:** ready-for-human
 
+**Sprint:** 2 (ends 8 Oct, for the 9 Oct tech showcase)
+
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
 
 This can start as soon as ticket 05 lands, so hosting surprises surface early.
@@ -20,4 +22,4 @@ This can start as soon as ticket 05 lands, so hosting surprises surface early.
 
 **Carried from 03**
 
-- [ ] Password reset stays hidden and refused on staging, since no email delivery exists; the runbook says how the operator resets a password (`manage.py changepassword`). Re-enabling reset is ticket 28
+- [ ] Password reset stays hidden and refused on staging, since no email delivery exists; the runbook says how the operator resets a password (`manage.py changepassword`). Re-enabling reset is ticket 28a

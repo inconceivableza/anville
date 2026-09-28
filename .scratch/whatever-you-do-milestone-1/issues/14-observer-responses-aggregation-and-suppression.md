@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Sprint:** 1 (ends 2 Oct)
+
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
 
 - [ ] An observer response record holds a sort answer and written answers, belongs to one participant's response, and is held separately from observer identity; it carries the server-side test-data marker

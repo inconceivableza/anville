@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Sprint:** 3 or later
+
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
 
 - [ ] The card builder block supports a minimum and maximum number of cards, a title placeholder, fixed sub-fields (who is it for, what would your days look like, what would it take, describe one Tuesday) and a collapsible worked example, all authored in the pathway document

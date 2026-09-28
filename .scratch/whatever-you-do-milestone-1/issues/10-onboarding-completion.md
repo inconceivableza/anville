@@ -1,17 +1,26 @@
 # 10: Onboarding completion
 
-**What to build:** The rest of onboarding as an ordinary section of the pathway: a reason for taking the workbook, a coach (name, email and confirmation, or skip), and a list of people who know the participant (or skip). Adds the single select, checkbox confirm and contact list blocks.
+**What to build:** The rest of onboarding as an ordinary section of the pathway: a reason for taking the workbook, choosing a coach as in the content owner's mock-up (or skip), and a list of people who know the participant (or skip). Adds the single select, checkbox confirm, coach checklist and contact list blocks.
 
 **Blocked by:** 04 (Hub, locks, gates and explicit completion)
 
-**See also:** `Prototypes for reference/coach-selection-prototype.html`, the content owner's mock-up of a participant checklist and coach commitments. Not yet in scope; the replanning session decides how it lands here.
+**See also:** `Prototypes for reference/coach-selection-prototype.html`, the content owner's mock-up of choosing a coach. Its participant half is built here. Its coach half (the coach accepting or declining the six commitments through a link) is ticket 13.
 
 **Status:** ready-for-agent
+
+**Sprint:** 1 (ends 2 Oct)
 
 **Parent:** whatever-you-do-milestone-1 spec (Demo 2, 2 Oct)
 
 - [ ] A single select block captures the reason for taking the workbook with the prototype's options (post-secondary, graduating, job change, redundancy, retirement, exploring, other)
-- [ ] The coach step captures name and email with a confirmation checkbox, or is skipped; a skip stores no coach and blocks nothing
+- [ ] The coach step follows the mock-up: the intro on why the choice matters (and why "coach", not "mentor"), the candidate's first name, then the six "Do you think …" questions, each answered Yes, Not sure or No
+- [ ] The outcome follows the mock-up's rules: any critical No, two or more Nos, or three or more answers that are not Yes stop ("Try someone else"); one soft No, or one or two Not sures, ask for a second thought, with an "I'm still confident" way on; all Yes proceeds. The stop and second-thought screens name each answer that caused them, with its reason
+- [ ] The questions, their notes and reasons, which are critical, and the coach's first-person commitments (for 13) are authored content in the document; the outcome rule is engine code (ADR 0003)
+- [ ] On proceeding, the participant records the coach's name and email with a confirmation checkbox, and the coach is stored. Ticket 13 issues the coach's link
+- [ ] "Try someone else" starts again with a new candidate
+- [ ] Nothing from the checklist is stored: not the six answers, not the outcome, and nothing about a candidate who is not chosen. Only the chosen coach's name and email are kept. The answers would record opinions about another person's faith, which is special category data, and no later step reads them. The server may evaluate the outcome from submitted answers but does not persist them
+- [ ] The checklist is the one block that does not autosave; a participant who leaves partway starts the six questions again. A journey test pins that a completed checklist leaves no stored answer
+- [ ] The coach step can still be skipped, unlike in the mock-up; a skip stores no coach and blocks nothing
 - [ ] The contact list block captures name and email per row with "add another"; the minimum number of rows is authored content with a default of five, and the step can be skipped
 - [ ] Contacts are stored as records that later become observers' invitations (ticket 13); they are held separately from any answers
 - [ ] Email is validated properly, not just for an "@"

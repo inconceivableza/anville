@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Sprint:** 1 (ends 2 Oct)
+
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
 
 - [ ] A participant can produce a printable and a copyable preview of one section or of the whole workbook, built from stored answers with output escaped

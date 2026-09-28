@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Sprint:** 3 or later
+
 **Parent:** whatever-you-do-milestone-1 spec (Demo 2, 2 Oct)
 
 - [ ] Only authors of the deployment can reach the studio; participants cannot. An author is an account marked as such on the server, created by a management command or Django admin; there is no self-service route to become one
