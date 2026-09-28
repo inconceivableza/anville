@@ -5,6 +5,7 @@ past them (docs/prototype/02-sections.md). Here every one of them is decided by 
 """
 
 import json
+import re
 
 import pytest
 
@@ -482,6 +483,44 @@ def test_a_link_takes_no_answer(open_calling):
     client.post("/answers/to-strengths/", {"value": "true", "version": _version_id()})
 
     assert "to-strengths" not in Response.objects.get().answers
+
+
+# Ghost text in a long text box
+
+
+def with_a_placeholder(placeholder):
+    document = pathway_document()
+    document["content"]["sections"][1]["blocks"][0]["placeholder"] = placeholder
+    return document
+
+
+@pytest.mark.django_db
+def test_a_long_text_box_shows_its_authored_placeholder(open_calling):
+    page = open_calling(with_a_placeholder("Dear me,")).get(CALLING).content.decode()
+
+    assert re.search(r'<textarea id="answer-statement"[^>]*placeholder="Dear me,"', page)
+
+
+@pytest.mark.django_db
+def test_a_placeholder_is_escaped_like_any_authored_text(open_calling):
+    page = open_calling(with_a_placeholder('Say "hello" <b>now</b>')).get(CALLING).content.decode()
+
+    assert 'placeholder="Say &quot;hello&quot; &lt;b&gt;now&lt;/b&gt;"' in page
+
+
+@pytest.mark.django_db
+def test_a_long_text_box_without_a_placeholder_has_none(open_calling):
+    page = open_calling().get(CALLING).content.decode()
+
+    assert "placeholder=" not in page
+
+
+@pytest.mark.django_db
+def test_a_placeholder_is_never_saved_as_the_answer(open_calling):
+    """✨ It is a hint in the empty box, so the gate still asks for a statement."""
+    client = open_calling(with_a_placeholder("A statement long enough to pass the gate by itself."))
+
+    assert client.post(COMPLETE_CALLING).status_code == 400
 
 
 def _version_id():

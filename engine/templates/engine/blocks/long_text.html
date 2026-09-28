@@ -7,7 +7,7 @@
   {% csrf_token %}
   <label for="answer-{{ block.id }}">{{ block.text.prompt }}</label>
   <textarea id="answer-{{ block.id }}" name="value" rows="5" maxlength="{{ pathway.long_text_max_length }}"
-            aria-describedby="length-{{ block.id }}"
+            aria-describedby="length-{{ block.id }}"{% if block.text.placeholder %} placeholder="{{ block.text.placeholder }}"{% endif %}
             hx-post="{% url 'save_answer' block.id %}" hx-trigger="input changed delay:800ms, change"
             hx-sync="this:queue last" hx-target="next .save-status">
 {{ block.answer|default_if_none:"" }}</textarea>

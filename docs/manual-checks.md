@@ -42,6 +42,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Near the 20,000-character limit, the text box says how many characters are left.
 - Without JavaScript, a Save button appears and saves the answer. With JavaScript it is hidden.
 - Screen reader: "Saved" and a refusal are announced.
+- Ghost text (Section 1's reflection, the letter): it shows in grey in the empty box, is readable against the background, and disappears as you type. A screen reader names the box by its prompt, not by the ghost text.
 
 ## Fixed ratings (after completing onboarding, or Section 5)
 

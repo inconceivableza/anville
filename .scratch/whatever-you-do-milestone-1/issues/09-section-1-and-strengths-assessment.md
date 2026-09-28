@@ -39,3 +39,13 @@
 - First step: the linter lets a `has_answer` clause name a block in another section; the other clauses stay in their own section (decided with the developer, 2026-09-28). Ticket 23's closing ratings can wait on the sort the same way.
 - Second step: a `section_link` block shows another section's title and status as the hub does, and names a locked section without linking it. Section 1 uses it for the Strengths assessment in the next step.
 - Third step: Section 1 and the Strengths assessment are in both pathway documents, the Strengths assessment straight after Section 1 on the hub. Content is verbatim except: the two sentences about inviting people keep the prototype's wording and add "[Not built yet: inviting people you trust comes in a later version.]" (the developer's call; remove when ticket 13 lands), verse numbers are dropped as in the calling section, the reflection's italic "not" is plain, and the reflection's placeholder waits for the next step. The prototype's reflection appears only once the sort is done; here it appears after the read-confirm, and the gate still needs the sort. Prototype's "Open Strengths Assessment →" button is the linked title instead.
+- Fourth step: `long_text` takes an optional `placeholder` (ghost text, escaped, never saved). Section 1's reflection has the prototype's "Draw on the scripture, your assessment results, and what others have told you..." and the letter has "Dear me,", which ticket 05 had left out.
+
+**Remaining plan** (agreed with the developer, 2026-09-28; each step red, then green, then a commit when the developer says so)
+
+- [ ] Step 5: the prototype shows the reflection only once the sort is done. Give `section_link` an option to hold the rest of its section shut until the linked section's gate passes (as a scripture reading does until confirmed), enforced by `open_blocks` so the answer endpoint refuses too. Also an optional authored button label on the link, for the prototype's "Open Strengths Assessment →" (and "Complete — view your results" once done)
+- [ ] Step 6: minimum-length gate messages say how much is needed (criterion above)
+- [ ] Step 7: time estimates (criterion above). First ask the developer how "one per activity where a section has several" is authored: on a block, or some other way
+- [ ] Then `/code-review` against `aa840a5`, fix what it finds, and run the hand checks carried from 07 and those added to `docs/manual-checks.md` (the section link card, ghost text)
+- [ ] On resolving: carry "remove the bracketed '[Not built yet: …]' note from Section 1's two invitation sentences" to ticket 13
+- Not in this ticket: inline formatting (the italic *not* in the reflection prompt, bold phrases, lists in hints) is on the spec's later list

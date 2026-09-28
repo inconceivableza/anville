@@ -164,7 +164,7 @@ BLOCK_TYPES = {
             captures=CONFIRMATION,
             opens_what_follows=True,
         ),
-        BlockType("long_text", text_fields=("prompt",), captures=TEXT),
+        BlockType("long_text", text_fields=("prompt", "placeholder"), captures=TEXT),
         BlockType("agreement_scale", text_fields=("prompt", "min_label", "max_label"), captures=SCALE_POINT),
         BlockType("sort_assessment", captures=SORT, scored=True, widget=_sort_widget),
         BlockType("section_link", text_fields=("body",)),

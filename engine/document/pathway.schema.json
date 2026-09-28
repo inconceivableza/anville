@@ -253,7 +253,11 @@
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "long_text" },
-        "prompt": { "$ref": "#/$defs/text" }
+        "prompt": { "$ref": "#/$defs/text" },
+        "placeholder": {
+          "description": "Ghost text in the empty box, such as 'Dear me,'. A hint only: it is never saved as the answer.",
+          "$ref": "#/$defs/text"
+        }
       }
     },
     "gate": {

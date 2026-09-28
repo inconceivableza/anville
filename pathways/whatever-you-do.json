@@ -111,7 +111,8 @@
           {
             "id": "gifts-summary",
             "type": "long_text",
-            "prompt": "Having completed the assessment and read the passages above, summarise: what gifts and talents has God given you? And what has He not given you?"
+            "prompt": "Having completed the assessment and read the passages above, summarise: what gifts and talents has God given you? And what has He not given you?",
+            "placeholder": "Draw on the scripture, your assessment results, and what others have told you..."
           }
         ],
         "gate": {
@@ -245,7 +246,8 @@
           {
             "id": "lt-message",
             "type": "long_text",
-            "prompt": "Your letter"
+            "prompt": "Your letter",
+            "placeholder": "Dear me,"
           },
           {
             "id": "pl-intro",

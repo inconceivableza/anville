@@ -7,6 +7,7 @@ behaviour that `test_sections.py` does not already cover; it is the slice-1 docu
 """
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -307,6 +308,13 @@ def test_after_the_reading_section_1_links_to_the_strengths_assessment_and_then_
 
 
 @pytest.mark.django_db
+def test_section_1s_reflection_box_carries_the_prototypes_ghost_text(participant):
+    page = through_to_section_1s_activity(participant).get(SECTION_1).content.decode()
+
+    assert 'placeholder="Draw on the scripture, your assessment results, and what others have told you..."' in page
+
+
+@pytest.mark.django_db
 def test_the_link_in_section_1_shows_how_far_the_strengths_assessment_has_got(participant):
     client = through_to_section_1s_activity(participant)
     submit_the_sort(client)
@@ -440,6 +448,13 @@ def test_the_letter_section_asks_for_the_letter_and_then_the_four_statements_aga
     assert "Your letter" in page
     for statement in BASELINE_STATEMENTS.values():
         assert escape(statement) in page
+
+
+@pytest.mark.django_db
+def test_the_letter_box_opens_with_the_prototypes_ghost_text(participant):
+    page = through_to_the_letter(participant).get("/sections/letter/").content.decode()
+
+    assert re.search(r'<textarea id="answer-lt-message"[^>]*placeholder="Dear me,"', page)
 
 
 @pytest.mark.django_db
