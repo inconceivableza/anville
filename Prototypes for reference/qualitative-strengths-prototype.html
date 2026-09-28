@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qualitative strengths — prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,600;1,6..72,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#1a7a4c; --gold-light:#2e9e66; --gold-pale:#e8f5ee;
+  --ink:#1a2b20; --ink-muted:#5a6b60; --ink-light:#7a8b80;
+  --cream:#f4f7f5; --white:#fff; --border:#d0ddd4;
+  --warn:#B8860B; --warn-pale:#fdf6e3;
+  --blue:#4A7FB5; --blue-pale:#eaf1f8;
+  --plum:#7B5EA7; --plum-pale:#f1ecf7;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--cream);color:var(--ink);
+  font-family:'Instrument Sans',-apple-system,sans-serif;font-size:15px;line-height:1.5;}
+.wrap{max-width:680px;margin:0 auto;padding:28px 22px 80px;}
+h1{font-family:'Newsreader',Georgia,serif;font-size:29px;font-weight:600;margin:0 0 6px;letter-spacing:-.01em;}
+h2{font-family:'Newsreader',Georgia,serif;font-size:22px;font-weight:600;margin:0 0 8px;}
+.sub{color:var(--ink-muted);font-size:14px;margin:0 0 24px;}
+.panel{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px;}
+.hidden{display:none;}
+
+.harness{background:#1a2b20;border-radius:14px;padding:16px 20px;margin-bottom:26px;color:#fff;}
+.harness h3{color:rgba(255,255,255,.65);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.12em;margin:0 0 11px;}
+.hrow{display:flex;gap:8px;flex-wrap:wrap;}
+.hbtn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;
+  border-radius:8px;padding:8px 13px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+.hbtn:hover{background:rgba(255,255,255,.18);}
+.hbtn.on{background:#fff;color:#1a2b20;border-color:#1a2b20;}
+
+/* progress */
+.prog{display:flex;align-items:center;gap:12px;margin-bottom:22px;}
+.prog-bar{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .35s;}
+.prog-txt{font-size:12.5px;color:var(--ink-muted);white-space:nowrap;}
+
+/* questions */
+.q{margin-bottom:26px;}
+.q-num{font-size:11px;font-weight:700;color:var(--ink-light);letter-spacing:.09em;margin-bottom:5px;}
+.q-text{font-family:'Newsreader',Georgia,serif;font-size:19px;line-height:1.42;margin-bottom:5px;}
+.q-hint{font-size:13px;color:var(--ink-light);line-height:1.5;margin-bottom:11px;}
+textarea{width:100%;padding:13px 15px;border:1px solid var(--border);border-radius:10px;
+  font-family:inherit;font-size:15px;color:var(--ink);line-height:1.6;resize:vertical;background:var(--white);}
+textarea:focus{outline:none;border-color:var(--gold);}
+.q-meta{display:flex;justify-content:space-between;align-items:center;margin-top:6px;
+  font-size:12px;color:var(--ink-light);}
+.skip{background:none;border:none;font-family:inherit;font-size:12px;
+  color:var(--ink-light);cursor:pointer;text-decoration:underline;padding:0;}
+
+/* three words */
+.words{display:flex;gap:9px;flex-wrap:wrap;}
+.word-in{flex:1;min-width:110px;padding:13px 15px;border:1px solid var(--border);border-radius:10px;
+  font-family:'Newsreader',Georgia,serif;font-size:17px;text-align:center;color:var(--ink);background:var(--white);}
+.word-in:focus{outline:none;border-color:var(--gold);}
+
+.btn{background:var(--gold);color:#fff;border:none;border-radius:10px;padding:13px 24px;
+  font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;}
+.btn:hover{background:var(--gold-light);}
+.btn:disabled{opacity:.35;cursor:default;}
+.btn.ghost{background:none;border:1px solid var(--border);color:var(--ink-muted);}
+.btn.ghost:hover{background:var(--cream);}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;}
+.btn-full{width:100%;}
+
+/* observer staging */
+.stage{border-radius:12px;padding:20px 22px;margin-bottom:16px;}
+.stage.done{background:var(--gold-pale);border-left:4px solid var(--gold);}
+.stage.offer{background:var(--white);border:1px solid var(--border);}
+.stage h2{font-size:20px;}
+.stage p{font-size:14.5px;line-height:1.65;margin:0 0 10px;}
+.stage p:last-child{margin:0;}
+.timebox{display:flex;gap:10px;align-items:center;background:var(--cream);
+  border-radius:9px;padding:11px 14px;margin:14px 0;font-size:13.5px;color:var(--ink-muted);}
+.timebox b{color:var(--ink);}
+
+/* comparison */
+.cmp-q{border-top:1px solid var(--border);padding:22px 0;}
+.cmp-q:first-of-type{border-top:none;padding-top:4px;}
+.cmp-label{font-family:'Newsreader',Georgia,serif;font-size:18px;line-height:1.4;margin-bottom:14px;}
+.cmp-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.cmp-col{border-radius:11px;padding:14px 16px;}
+.cmp-self{background:var(--gold-pale);}
+.cmp-others{background:var(--blue-pale);}
+.cmp-head{font-size:11px;font-weight:700;letter-spacing:.09em;margin-bottom:8px;}
+.cmp-self .cmp-head{color:var(--gold);}
+.cmp-others .cmp-head{color:var(--blue);}
+.cmp-body{font-size:14px;line-height:1.6;}
+.cmp-quote{font-size:13.5px;line-height:1.55;padding:7px 0;border-top:1px solid rgba(0,0,0,.06);}
+.cmp-quote:first-of-type{border-top:none;padding-top:0;}
+.cmp-who{font-size:11.5px;color:var(--ink-light);}
+
+/* word overlap */
+.wgrid{display:flex;flex-direction:column;gap:10px;}
+.wband{border-radius:11px;padding:14px 16px;}
+.wband.match{background:var(--gold-pale);}
+.wband.theirs{background:var(--blue-pale);}
+.wband.yours{background:var(--plum-pale);}
+.wband-head{font-size:11px;font-weight:700;letter-spacing:.09em;margin-bottom:3px;}
+.match .wband-head{color:var(--gold);}
+.theirs .wband-head{color:var(--blue);}
+.yours .wband-head{color:var(--plum);}
+.wband-note{font-size:12.5px;color:var(--ink-muted);line-height:1.5;margin-bottom:10px;}
+.chips{display:flex;gap:7px;flex-wrap:wrap;}
+.chip{background:var(--white);border-radius:999px;padding:6px 14px;
+  font-family:'Newsreader',Georgia,serif;font-size:16px;display:inline-flex;align-items:center;gap:7px;}
+.chip b{font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:700;
+  color:var(--ink-light);background:var(--cream);border-radius:999px;padding:1px 7px;}
+.chip.strong{font-size:18px;}
+
+.insight{background:var(--warn-pale);border-left:3px solid var(--warn);border-radius:9px;
+  padding:13px 15px;margin-top:14px;font-size:13.5px;line-height:1.6;}
+.insight b{display:block;margin-bottom:2px;}
+
+.status{display:flex;gap:9px;align-items:center;background:var(--cream);border-radius:10px;
+  padding:12px 14px;margin-bottom:14px;font-size:13.5px;}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.dot.full{background:var(--gold);}.dot.part{background:var(--warn);}
+
+.notes{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:22px;margin-top:34px;}
+.notes h2{font-size:18px;}
+.notes h3{margin:18px 0 8px;color:var(--gold);font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;}
+.notes p,.notes li{font-size:14px;color:var(--ink-muted);line-height:1.65;}
+.notes code{background:var(--cream);border-radius:4px;padding:1px 5px;
+  font-family:ui-monospace,monospace;font-size:13px;color:var(--ink);}
+.notes pre{background:var(--cream);border-radius:9px;padding:14px;overflow-x:auto;
+  font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.55;color:var(--ink);}
+.notes table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0;}
+.notes th,.notes td{padding:7px 9px;border:1px solid var(--border);text-align:left;}
+.notes th{background:var(--cream);font-weight:600;font-size:12px;}
+.notes td.no{color:var(--ink-light);}
+@media(max-width:560px){.cmp-pair{grid-template-columns:1fr;}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Qualitative strengths</h1>
+<p class="sub">Prototype — the written half of Gifts &amp; Talents, the shortened observer version, and the comparison they produce.</p>
+
+<div class="harness">
+  <h3>Test harness</h3>
+  <div class="hrow">
+    <button class="hbtn on" data-act="view" data-v="p">Participant</button>
+    <button class="hbtn" data-act="view" data-v="o">Observer</button>
+    <button class="hbtn" data-act="view" data-v="c">Comparison</button>
+    <button class="hbtn" data-act="fillp">Fill participant</button>
+  </div>
+</div>
+
+<!-- ============ PARTICIPANT ============ -->
+<div id="view-p">
+  <div class="panel">
+    <h2>In your own words</h2>
+    <p class="sub" style="margin-bottom:18px;">The card sort showed the shape of your gifts. These questions get at the texture — the things a score can't hold. Your trusted contacts answer a shorter version of the same questions, so you'll see where your account and theirs agree.</p>
+    <div class="prog">
+      <div class="prog-bar"><div class="prog-fill" id="p-fill" style="width:0%"></div></div>
+      <div class="prog-txt" id="p-txt">0 of 7</div>
+    </div>
+    <div id="p-questions"></div>
+    <div class="btn-row">
+      <button class="btn btn-full" id="p-submit" disabled data-act="p-submit">Save and continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ OBSERVER ============ -->
+<div id="view-o" class="hidden">
+  <div id="o-stage1">
+    <div class="stage done">
+      <h2>Thank you — that's sent</h2>
+      <p>Your card sort has gone to Sam. That's the core of it, and it's genuinely useful on its own.</p>
+    </div>
+    <div class="stage offer">
+      <h2>There's a second part, if you have a little longer</h2>
+      <p>Six short written questions. This is the part people tell us made the difference — a score shows the shape of someone's gifts, but your words are what they actually remember.</p>
+      <div class="timebox"><span>🕘</span><span>About <b>10 minutes</b>. You can stop partway and we'll keep what you've written.</span></div>
+      <p>If now isn't the moment, we'll send you a link to pick it up later. Sam already has your card sort either way.</p>
+      <div class="btn-row">
+        <button class="btn" data-act="o-start" style="flex:1;">Answer the six questions</button>
+        <button class="btn ghost" data-act="o-later">Send me a link for later</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="o-stage2" class="hidden">
+    <div class="panel">
+      <h2>About Sam</h2>
+      <p class="sub" style="margin-bottom:18px;">Answer as you actually see them, not as you think they'd like to be seen. Sam sees these answers, but not who wrote what.</p>
+      <div class="prog">
+        <div class="prog-bar"><div class="prog-fill" id="o-fill" style="width:0%"></div></div>
+        <div class="prog-txt" id="o-txt">0 of 5</div>
+      </div>
+      <div id="o-questions"></div>
+      <div class="btn-row">
+        <button class="btn btn-full" id="o-submit" data-act="o-submit">Send my answers →</button>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink-light);text-align:center;margin:12px 0 0;">
+        Skipped questions are fine — partial answers are still worth sending.</p>
+    </div>
+  </div>
+
+  <div id="o-stage3" class="hidden">
+    <div class="stage done">
+      <h2>Sent — thank you</h2>
+      <p>Sam will see your answers alongside everyone else's, without names attached.</p>
+      <p style="margin-top:10px;">The thing people find most useful is usually the words nobody expected. Yours might be one of them.</p>
+      <div class="btn-row"><button class="btn ghost" data-act="o-reset">Reset preview</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ COMPARISON ============ -->
+<div id="view-c" class="hidden">
+  <div class="panel">
+    <h2>What you said, what they saw</h2>
+    <p class="sub" style="margin-bottom:16px;">Your answers beside your contacts'. Names are never shown.</p>
+    <div class="status">
+      <span class="dot full"></span>
+      <span><b>5 of 5</b> sent their card sort · <b>4 of 5</b> also answered the written questions</span>
+    </div>
+    <div id="cmp"></div>
+  </div>
+</div>
+
+<!-- ============ NOTES ============ -->
+<div class="notes">
+  <h2>Notes for implementation</h2>
+
+  <h3>Six questions, asked to both sides</h3>
+  <p>The participant and their contacts answer the same six, phrased for each side. Matching sets are what make the comparison work \u2014 every answer has something to sit beside.</p>
+  <table>
+    <tr><th>Question</th><th>Why it survives</th></tr>
+    <tr><td>Most energised and happy</td><td>Observers often see this more clearly than you do</td></tr>
+    <tr><td>Three best qualities</td><td>Fastest question in the set and the richest to compare</td></tr>
+    <tr><td>One skill to grow or add</td><td>Merged from two: people don't reliably sort a skill into "new" or "existing", and the distinction changed nothing downstream</td></tr>
+    <tr><td>One area of character</td><td>Kept separate from skill \u2014 they produce genuinely different answers, and the gap between them is often the finding</td></tr>
+    <tr><td>Biggest change in recent years</td><td>Others notice change you've stopped seeing</td></tr>
+    <tr><td>Work you struggle with</td><td>The most useful and least comfortable answer</td></tr>
+  </table>
+  <p>The only question cut outright was "what new skill would open the most exciting doors" \u2014 as a standalone it depended on knowing which doors you want opened, which an observer can only guess at. Folding it into the skill question keeps the intent without the guesswork.</p>
+
+  <h3>Staged submission</h3>
+  <p>The card sort submits on completion and is never held hostage to the written part. The observer gets a genuine thank-you first, then the second part is offered as an addition. Framing matters: "there's a second part, if you have a little longer" performs very differently from a progress bar that was secretly only half full.</p>
+  <p>"Send me a link for later" should be a real deferral with one reminder, not a polite decline. Participants see partial data as it arrives, so the comparison is never blocked on the slowest contact.</p>
+
+  <h3>Making it faster still</h3>
+  <ul>
+    <li><strong>Three words as three small inputs</strong> rather than a textarea — it signals brevity and takes seconds.</li>
+    <li><strong>No mandatory "why"</strong> for observers. The participant explains their reasoning; observers just need the observation.</li>
+    <li><strong>Skippable for observers, not for the participant.</strong> Partial observer answers are still worth sending — four good ones beat six padded. The participant's own six are the core deliverable of the section, so all are required.</li>
+    <li><strong>Autosave per field.</strong> Losing eight minutes of typing is the most expensive failure here.</li>
+    <li>Worth testing: <strong>voice input</strong> on mobile. These are talking questions, and speaking is three times faster than thumb-typing.</li>
+  </ul>
+
+  <h3>The three-word comparison</h3>
+  <p>This is the centrepiece, and it's effectively a Johari window. Words are normalised (lowercased, stemmed, with a small synonym map) then bucketed three ways: said by both, said only by others, said only by you. Observer words carry a count, because four people independently choosing the same word is a much stronger signal than one.</p>
+  <p>The middle bucket — what others see that you didn't say — is where the value is. Worth giving it the most visual weight.</p>
+
+  <h3>Data shape</h3>
+  <pre>// same six fields both sides; participant also supplies `why`
+{ energised, qualities:[w,w,w], skill, character,
+  biggestChange, struggles }
+
+// observer record, all fields nullable
+{ ...answers, submittedAt, quantitativeAt }
+
+// submission is two independent events
+POST /observer/:id/quantitative   \u2192 always first, stands alone
+POST /observer/:id/qualitative    \u2192 optional, may never arrive</pre>
+
+  <h3>Still to decide</h3>
+  <ul>
+    <li>Whether observers see the participant's answers afterwards. Arguments both ways — it would help the coaching conversation, but it may make people write for an audience.</li>
+    <li>Whether "what do they struggle with" needs a softer frame. It's the highest-value and highest-risk question; anonymity is doing a lot of work.</li>
+    <li>Whether to show the participant how many observers skipped each question — useful signal, or discouraging?</li>
+    <li>Synonym mapping for the word comparison needs a real list. "Kind/caring/compassionate" should probably cluster; "driven/ambitious" maybe not.</li>
+  </ul>
+</div>
+
+</div>
+
+<script>
+// ============ QUESTION SETS ============
+const P_QS = [
+  { id:'energised', type:'text', rows:3,
+    q:"What are you doing, or talking about, when you're most energised and happy?",
+    hint:"Think of specific moments rather than general categories." },
+  { id:'qualities', type:'words',
+    q:"What are your three best qualities?",
+    hint:"One word each. First instinct is usually the honest one." },
+  { id:'skill', type:'text', rows:3,
+    q:"What one skill would make the most difference to you \u2014 whether growing one you have, or adding one you don't?",
+    hint:"And why that one?" },
+  { id:'character', type:'text', rows:3,
+    q:"What one area of your character, if you matured in it, would make the most difference?",
+    hint:"And why?" },
+  { id:'biggestChange', type:'text', rows:4,
+    q:"What's the biggest thing that's changed about you over the last few years?",
+    hint:"Specific examples help more than general statements." },
+  { id:'struggles', type:'text', rows:3,
+    q:"What types of work or tasks do you struggle with most?",
+    hint:"Honestly \u2014 this is as useful as knowing what you're good at." }
+];
+
+const O_QS = [
+  { id:'energised', type:'text', rows:3,
+    q:"What is Sam doing, or talking about, when they seem most energised and happy?",
+    hint:"A specific memory is more useful than a general impression." },
+  { id:'qualities', type:'words',
+    q:"What are Sam's three best qualities?",
+    hint:"One word each. Don't overthink it." },
+  { id:'skill', type:'text', rows:3,
+    q:"What one skill would make the most difference to Sam \u2014 whether growing one they have, or adding one they don't?",
+    hint:"You don't need to explain why unless you want to." },
+  { id:'character', type:'text', rows:3,
+    q:"What one area of Sam's character, if they matured in it, would make the most difference?",
+    hint:"Said kindly, but said. This is often the most useful answer of the six." },
+  { id:'biggestChange', type:'text', rows:4,
+    q:"What's the biggest thing that's changed about Sam over the last few years?",
+    hint:"People often can't see their own change. You might." },
+  { id:'struggles', type:'text', rows:3,
+    q:"What types of work or tasks does Sam seem to struggle with most?",
+    hint:"Sam won't know who wrote this. Being straight here is the kindest thing you can do." }
+];
+
+let pAns = {}, oAns = {};
+
+// ============ RENDER FORMS ============
+function renderForm(qs, ansStore, listId, fillId, txtId, submitId, prefix){
+  const html = qs.map(function(q,i){
+    const a = ansStore[q.id] || (q.type==='words' ? ['','',''] : '');
+    let field;
+    if (q.type==='words'){
+      field = '<div class="words">' + [0,1,2].map(function(n){
+        return '<input class="word-in" type="text" placeholder="' + (n+1) +
+          '" value="' + esc(a[n]||'') + '" data-act="word" data-p="' + prefix +
+          '" data-q="' + q.id + '" data-n="' + n + '">';
+      }).join('') + '</div>';
+    } else {
+      const skipBtn = prefix==='o'
+        ? '<button class="skip" data-act="skip" data-p="' + prefix + '" data-q="' + q.id + '">Skip this one</button>'
+        : '';
+      field = '<textarea rows="' + q.rows + '" data-act="text" data-p="' + prefix +
+        '" data-q="' + q.id + '">' + esc(a) + '</textarea>' +
+        '<div class="q-meta"><span></span>' + skipBtn + '</div>';
+    }
+    return '<div class="q"><div class="q-num">' + (i+1) + ' of ' + qs.length + '</div>' +
+      '<div class="q-text">' + q.q + '</div>' +
+      '<div class="q-hint">' + q.hint + '</div>' + field + '</div>';
+  }).join('');
+  document.getElementById(listId).innerHTML = html;
+  updateProgress(qs, ansStore, fillId, txtId, submitId);
+}
+
+function answered(q, ansStore){
+  const a = ansStore[q.id];
+  if (a === '__skip') return true;
+  if (q.type==='words') return Array.isArray(a) && a.filter(function(w){return w && w.trim();}).length===3;
+  return typeof a === 'string' && a.trim().length > 2;
+}
+
+function updateProgress(qs, ansStore, fillId, txtId, submitId){
+  const n = qs.filter(function(q){ return answered(q, ansStore); }).length;
+  document.getElementById(fillId).style.width = Math.round(n/qs.length*100) + '%';
+  document.getElementById(txtId).textContent = n + ' of ' + qs.length;
+  const btn = document.getElementById(submitId);
+  if (btn && submitId === 'p-submit') btn.disabled = n < qs.length;
+}
+
+function renderP(){ renderForm(P_QS, pAns, 'p-questions','p-fill','p-txt','p-submit','p'); }
+function renderO(){ renderForm(O_QS, oAns, 'o-questions','o-fill','o-txt','o-submit','o'); }
+
+function store(prefix){ return prefix==='p' ? pAns : oAns; }
+function qset(prefix){ return prefix==='p' ? P_QS : O_QS; }
+function refresh(prefix){ prefix==='p' ? renderP() : renderO(); }
+
+function bump(prefix){
+  const pfx = prefix==='p'
+    ? ['p-fill','p-txt','p-submit'] : ['o-fill','o-txt','o-submit'];
+  updateProgress(qset(prefix), store(prefix), pfx[0], pfx[1], pfx[2]);
+}
+
+// ============ DUMMY COMPARISON DATA ============
+const CMP = {
+  energised: {
+    self: "When I'm explaining something complicated to someone and I watch it land. Also the first week of a new project, before anyone's decided how it should work.",
+    others: [
+      "Teaching. Genuinely — put him in front of a whiteboard and he's a different person.",
+      "When he's untangling a mess nobody else wants to look at.",
+      "Talking to new people about an idea he's just had. He lights up.",
+      "Helping someone who's stuck. He'll drop what he's doing."
+    ]
+  },
+  qualities: {
+    self: ['thoughtful','determined','curious'],
+    others: [
+      ['patient','thoughtful','generous'],
+      ['patient','clear','curious'],
+      ['generous','patient','steady'],
+      ['thoughtful','patient','encouraging']
+    ]
+  },
+  skill: {
+    self: "Public speaking. I can do it one-to-one but I shrink in a room, and it limits what I can take on.",
+    others: [
+      "Speaking to a room. He has the substance, just not the stagecraft yet.",
+      "Writing. He explains brilliantly out loud and then the email doesn't land.",
+      "Public speaking, easily. It's the gap between what he knows and what people see.",
+      "Presenting. Watching him in a meeting is not watching the same person."
+    ]
+  },
+  character: {
+    self: "Impatience with people who don't get there as fast as I do.",
+    others: [
+      "Backing himself. He defers to people with less to say than him.",
+      "Confidence, honestly. He's better than he thinks he is.",
+      "Believing he's allowed to take up space.",
+      "Saying no \u2014 he takes on too much and then can't do it justice."
+    ]
+  },
+  biggestChange: {
+    self: "I've got more comfortable with not having the answer. Five years ago I'd have bluffed.",
+    others: [
+      "He's much calmer. He used to react to everything.",
+      "More willing to admit when he doesn't know. That's newer.",
+      "He listens now. He didn't always.",
+      "Less defensive when challenged."
+    ]
+  },
+  struggles: {
+    self: "Admin and anything repetitive. Long meetings where nothing gets decided.",
+    others: [
+      "Detail work. He'll get the shape right and the specifics wrong.",
+      "Finishing. He's brilliant at starting.",
+      "Repetitive things — you can see him die a little.",
+      "Saying no to work he shouldn't take on."
+    ]
+  }
+};
+
+const SYNONYMS = { caring:'generous', kind:'generous', compassionate:'generous',
+  calm:'steady', reliable:'steady', encouraging:'encouraging' };
+function norm(w){ w = String(w).toLowerCase().trim(); return SYNONYMS[w] || w; }
+
+function renderComparison(){
+  let h = '';
+
+  // --- three words (the centrepiece) ---
+  const selfWords = CMP.qualities.self.map(norm);
+  const counts = {};
+  CMP.qualities.others.forEach(function(set){
+    set.map(norm).forEach(function(w){ counts[w] = (counts[w]||0)+1; });
+  });
+  const otherWords = Object.keys(counts);
+  const both   = otherWords.filter(function(w){ return selfWords.indexOf(w)>=0; })
+                           .sort(function(a,b){ return counts[b]-counts[a]; });
+  const theirs = otherWords.filter(function(w){ return selfWords.indexOf(w)<0; })
+                           .sort(function(a,b){ return counts[b]-counts[a]; });
+  const yours  = selfWords.filter(function(w){ return otherWords.indexOf(w)<0; });
+
+  h += '<div class="cmp-q"><div class="cmp-label">Your three best qualities</div><div class="wgrid">';
+
+  if (both.length){
+    h += '<div class="wband match"><div class="wband-head">YOU BOTH SAID</div>' +
+      '<div class="wband-note">You and your contacts reached for the same word. Trust these.</div><div class="chips">' +
+      both.map(function(w){ return '<span class="chip strong">' + w + ' <b>' + counts[w] + '</b></span>'; }).join('') +
+      '</div></div>';
+  }
+  if (theirs.length){
+    h += '<div class="wband theirs"><div class="wband-head">THEY SAW, YOU DIDN\'T SAY</div>' +
+      '<div class="wband-note">The most interesting list. Words several people chose independently are worth sitting with — especially if you\'d never have picked them yourself.</div><div class="chips">' +
+      theirs.map(function(w){
+        return '<span class="chip' + (counts[w]>=3?' strong':'') + '">' + w + ' <b>' + counts[w] + '</b></span>';
+      }).join('') + '</div></div>';
+  }
+  if (yours.length){
+    h += '<div class="wband yours"><div class="wband-head">YOU SAID, THEY DIDN\'T</div>' +
+      '<div class="wband-note">Not wrong — it may be private, or newer than they\'ve noticed, or something you\'re reaching for rather than living in.</div><div class="chips">' +
+      yours.map(function(w){ return '<span class="chip">' + w + '</span>'; }).join('') + '</div></div>';
+  }
+
+  const topOther = theirs[0];
+  if (topOther && counts[topOther] >= 3){
+    h += '<div class="insight"><b>' + counts[topOther] + ' of 4 said "' + topOther + '"</b>' +
+      'You didn\'t use that word at all. When several people land on the same quality independently, it\'s usually describing something you do so naturally you\'ve stopped noticing it.</div>';
+  }
+  h += '</div>';
+
+  // --- the written pairs ---
+  h += pairBlock('When you\'re most energised', CMP.energised.self, CMP.energised.others);
+
+  h += pairBlock('The one skill that would make the most difference', CMP.skill.self, CMP.skill.others) +
+    '';
+  h += '<div class="insight" style="margin:-10px 0 0;"><b>You and they landed on the same thing</b>' +
+    'Agreement this clean is rarer than you\'d think, and it makes the decision easy: this is the skill to work on. Put it in your growth plan.</div>';
+
+  h += '<div class="cmp-q"><div class="cmp-label">The one area of character to grow in</div>' +
+    '<div class="cmp-pair">' +
+    '<div class="cmp-col cmp-self"><div class="cmp-head">YOU SAID</div><div class="cmp-body">' +
+      CMP.character.self + '</div></div>' +
+    '<div class="cmp-col cmp-others"><div class="cmp-head">THEY SAID</div><div class="cmp-body">' +
+      CMP.character.others.map(function(q){ return '<div class="cmp-quote">' + q + '</div>'; }).join('') +
+    '</div></div>' +
+    '<div class="insight"><b>You said impatience. Three of them said some version of confidence.</b>' +
+    'That is a real gap, and the more interesting half of this page. You are working on being kinder to people who are slower than you; they think you defer to people you shouldn\'t. Worth taking to your coach rather than resolving alone.</div></div>';
+
+  h += pairBlock('The biggest change in recent years', CMP.biggestChange.self, CMP.biggestChange.others);
+  h += pairBlock('What you struggle with', CMP.struggles.self, CMP.struggles.others);
+
+  document.getElementById('cmp').innerHTML = h;
+}
+
+function pairBlock(label, self, others){
+  return '<div class="cmp-q"><div class="cmp-label">' + label + '</div><div class="cmp-pair">' +
+    '<div class="cmp-col cmp-self"><div class="cmp-head">YOU SAID</div>' +
+    '<div class="cmp-body">' + self + '</div></div>' +
+    '<div class="cmp-col cmp-others"><div class="cmp-head">THEY SAID</div><div class="cmp-body">' +
+    others.map(function(q){ return '<div class="cmp-quote">' + q + '</div>'; }).join('') +
+    '</div></div></div></div>';
+}
+
+// ============ ACTIONS ============
+function showView(v){
+  document.querySelectorAll('.harness .hbtn[data-act="view"]').forEach(function(b){
+    b.classList.toggle('on', b.dataset.v===v);
+  });
+  ['p','o','c'].forEach(function(k){
+    document.getElementById('view-'+k).classList.toggle('hidden', k!==v);
+  });
+  if (v==='c') renderComparison();
+  window.scrollTo(0,0);
+}
+
+function fillParticipant(){
+  pAns = {
+    energised: CMP.energised.self,
+    qualities: CMP.qualities.self.slice(),
+    skill: CMP.skill.self,
+    character: CMP.character.self,
+    biggestChange: CMP.biggestChange.self,
+    struggles: CMP.struggles.self
+  };
+  showView('p'); renderP();
+}
+
+document.addEventListener('click', function(ev){
+  const t = ev.target.closest('[data-act]');
+  if (!t) return;
+  const act = t.dataset.act;
+  if (act==='view')  showView(t.dataset.v);
+  if (act==='fillp') fillParticipant();
+  if (act==='skip'){
+    store(t.dataset.p)[t.dataset.q] = '__skip';
+    refresh(t.dataset.p);
+  }
+  if (act==='p-submit'){ alert('Saved. In the app this returns to Gifts & Talents.'); }
+  if (act==='o-start'){
+    document.getElementById('o-stage1').classList.add('hidden');
+    document.getElementById('o-stage2').classList.remove('hidden');
+    renderO(); window.scrollTo(0,0);
+  }
+  if (act==='o-later'){
+    document.getElementById('o-stage1').classList.add('hidden');
+    document.getElementById('o-stage3').classList.remove('hidden');
+    document.querySelector('#o-stage3 h2').textContent = 'Link sent';
+    document.querySelector('#o-stage3 p').textContent =
+      'We\'ve emailed you a link to come back to. Sam already has your card sort, so nothing is lost if you don\'t.';
+    window.scrollTo(0,0);
+  }
+  if (act==='o-submit'){
+    document.getElementById('o-stage2').classList.add('hidden');
+    document.getElementById('o-stage3').classList.remove('hidden');
+    window.scrollTo(0,0);
+  }
+  if (act==='o-reset'){
+    oAns = {};
+    document.getElementById('o-stage3').classList.add('hidden');
+    document.getElementById('o-stage2').classList.add('hidden');
+    document.getElementById('o-stage1').classList.remove('hidden');
+    document.querySelector('#o-stage3 h2').textContent = 'Sent — thank you';
+    window.scrollTo(0,0);
+  }
+});
+
+document.addEventListener('input', function(ev){
+  const t = ev.target;
+  if (!t.dataset || !t.dataset.act) return;
+  const p = t.dataset.p, q = t.dataset.q;
+  if (t.dataset.act==='text'){ store(p)[q] = t.value; bump(p); }
+  if (t.dataset.act==='word'){
+    const s = store(p);
+    if (!Array.isArray(s[q])) s[q] = ['','',''];
+    s[q][+t.dataset.n] = t.value;
+    bump(p);
+  }
+});
+
+function esc(s){
+  return String(s==='__skip'?'':s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+renderP();
+</script>
+</body>
+</html>

@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adaptive tie-breaker — dual axis prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,600;1,6..72,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#1a7a4c; --gold-light:#2e9e66; --gold-pale:#e8f5ee;
+  --ink:#1a2b20; --ink-muted:#5a6b60; --ink-light:#7a8b80;
+  --cream:#f4f7f5; --white:#fff; --border:#d0ddd4;
+  --warn:#B8860B; --warn-pale:#fdf6e3;
+  --apest:#1a7a4c; --pep:#4A7FB5; --pep-pale:#eaf1f8;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--cream);color:var(--ink);
+  font-family:'Instrument Sans',-apple-system,sans-serif;font-size:15px;line-height:1.5;}
+.wrap{max-width:740px;margin:0 auto;padding:32px 24px 80px;}
+h1{font-family:'Newsreader',Georgia,serif;font-size:30px;font-weight:600;margin:0 0 6px;letter-spacing:-0.01em;}
+h2{font-family:'Newsreader',Georgia,serif;font-size:21px;font-weight:600;margin:0 0 4px;}
+.sub{color:var(--ink-muted);font-size:14px;margin:0 0 28px;}
+.panel{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;}
+
+.harness{background:#1a2b20;border-radius:14px;padding:18px 20px;margin-bottom:28px;color:#fff;}
+.harness h3{color:rgba(255,255,255,0.65);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.12em;margin:0 0 12px;}
+.harness-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.hbtn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;
+  border-radius:8px;padding:8px 14px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+.hbtn:hover{background:rgba(255,255,255,0.18);}
+.hbtn.on{background:#fff;color:#1a2b20;border-color:#fff;}
+.harness-opts{display:flex;gap:18px;flex-wrap:wrap;align-items:center;
+  font-size:13px;color:rgba(255,255,255,0.8);padding-top:12px;border-top:1px solid rgba(255,255,255,0.12);}
+.harness-opts label{display:flex;gap:7px;align-items:center;cursor:pointer;}
+.harness-opts input[type=range]{width:96px;accent-color:var(--gold-light);}
+.harness-opts b{color:#fff;font-variant-numeric:tabular-nums;}
+
+/* axis blocks */
+.axis{margin-bottom:22px;}
+.axis:last-child{margin-bottom:0;}
+.axis-head{display:flex;align-items:baseline;gap:9px;margin-bottom:11px;}
+.axis-name{font-family:'Newsreader',Georgia,serif;font-size:17px;font-weight:600;}
+.axis-tag{font-size:12px;color:var(--ink-light);}
+.axis-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.dot-apest{background:var(--apest);}.dot-pep{background:var(--pep);}
+
+.bars{display:flex;flex-direction:column;gap:6px;}
+.bar-row{display:flex;align-items:center;gap:10px;}
+.bar-name{width:92px;flex-shrink:0;font-size:13px;font-weight:600;}
+.bar-track{flex:1;height:14px;background:var(--cream);border-radius:7px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:7px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+.fill-apest{background:var(--apest);}.fill-pep{background:var(--pep);}
+.bar-pct{width:44px;text-align:right;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;}
+.bar-delta{width:40px;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;}
+.up{color:var(--gold);}.down{color:var(--ink-light);}
+.bar-row.tied .bar-name{color:var(--warn);}
+.bar-row.tied .bar-fill{background:repeating-linear-gradient(45deg,var(--warn) 0 6px,#d4a343 6px 12px);}
+
+.verdict{border-radius:10px;padding:13px 15px;margin-top:14px;font-size:14px;line-height:1.55;}
+.verdict.tied{background:var(--warn-pale);border-left:3px solid var(--warn);}
+.verdict.clear{background:var(--gold-pale);border-left:3px solid var(--gold);}
+.verdict strong{display:block;margin-bottom:3px;}
+.budget{font-size:13px;color:var(--ink-muted);margin-top:9px;padding-top:9px;border-top:1px solid rgba(0,0,0,.07);}
+
+.btn{background:var(--gold);color:#fff;border:none;border-radius:10px;padding:13px 26px;
+  font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;}
+.btn:hover{background:var(--gold-light);}
+.btn.ghost{background:none;border:1px solid var(--border);color:var(--ink-muted);}
+.btn-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+
+/* forced choice */
+.fc-progress{display:flex;gap:4px;margin-bottom:8px;}
+.fc-pip{flex:1;height:4px;background:var(--border);border-radius:2px;}
+.fc-pip.done-apest{background:var(--apest);}
+.fc-pip.done-pep{background:var(--pep);}
+.fc-pip.now{background:var(--gold-light);}
+.fc-lens{text-align:center;font-size:12px;color:var(--ink-light);margin-bottom:18px;}
+.fc-lens span{display:inline-flex;align-items:center;gap:6px;}
+.fc-q{font-family:'Newsreader',Georgia,serif;font-size:20px;font-weight:400;
+  text-align:center;margin-bottom:20px;}
+.fc-opts{display:flex;flex-direction:column;gap:11px;}
+.fc-opt{background:var(--white);border:2px solid var(--border);border-radius:12px;
+  padding:19px 22px;font-family:'Newsreader',Georgia,serif;font-size:17px;line-height:1.45;
+  text-align:left;cursor:pointer;transition:border-color .12s,transform .12s;}
+.fc-opt:hover{border-color:var(--gold);}
+.fc-opt:active{transform:scale(.99);}
+.fc-skip{display:block;margin:15px auto 0;background:none;border:none;
+  font-family:inherit;font-size:13px;color:var(--ink-light);cursor:pointer;text-decoration:underline;}
+.fc-meta{text-align:center;font-size:12px;color:var(--ink-light);margin-top:14px;}
+
+.matrix{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 16px;}
+.matrix th,.matrix td{padding:5px 8px;text-align:center;border:1px solid var(--border);}
+.matrix th{background:var(--cream);font-weight:600;font-size:12px;}
+.matrix td.self{background:var(--cream);color:var(--border);}
+.matrix td.win{background:var(--gold-pale);color:var(--gold);font-weight:700;}
+details{border-top:1px solid var(--border);margin-top:14px;padding-top:12px;}
+summary{font-size:13px;font-weight:600;color:var(--gold);cursor:pointer;}
+
+.notes{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:22px;margin-top:34px;}
+.notes h2{font-size:18px;}
+.notes h3{margin:18px 0 8px;color:var(--gold);font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.1em;}
+.notes p,.notes li{font-size:14px;color:var(--ink-muted);line-height:1.65;}
+.notes code{background:var(--cream);border-radius:4px;padding:1px 5px;
+  font-family:ui-monospace,monospace;font-size:13px;color:var(--ink);}
+.notes pre{background:var(--cream);border-radius:9px;padding:14px;overflow-x:auto;
+  font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.55;color:var(--ink);}
+.hidden{display:none;}
+@media(max-width:560px){.bar-name{width:74px;font-size:12px;}.fc-opt{font-size:16px;padding:16px 18px;}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Adaptive tie-breaker</h1>
+<p class="sub">Both scales come from the same card sort, so a flat sorter is usually flat on both. This version budgets and interleaves across the two.</p>
+
+<div class="harness">
+  <h3>Test harness</h3>
+  <div class="harness-row" id="scenarios"></div>
+  <div class="harness-opts">
+    <label>Threshold <input type="range" id="thresh" min="1" max="10" value="4"><b id="threshVal">4</b>pts</label>
+    <label>Budget <input type="range" id="budget" min="4" max="16" value="10"><b id="budgetVal">10</b>q</label>
+    <label>Max cluster <input type="range" id="maxc" min="2" max="5" value="4"><b id="maxcVal">4</b></label>
+    <label><input type="checkbox" id="interleave" checked> Interleave axes</label>
+  </div>
+</div>
+
+<div class="panel" id="panel-scores">
+  <h2>Card-sort result</h2>
+  <p class="sub" style="margin-bottom:18px;">Both profiles, before any tie-break.</p>
+  <div id="bars-before"></div>
+  <div id="verdict"></div>
+  <div class="btn-row" id="trigger-row"></div>
+</div>
+
+<div class="panel hidden" id="panel-fc">
+  <div class="fc-progress" id="fc-progress"></div>
+  <div class="fc-lens" id="fc-lens"></div>
+  <div class="fc-q">Which is more true of you?</div>
+  <div class="fc-opts" id="fc-opts"></div>
+  <button class="fc-skip" id="fc-skip">Neither fits — skip</button>
+  <div class="fc-meta" id="fc-meta"></div>
+</div>
+
+<div class="panel hidden" id="panel-after">
+  <h2>Resolved</h2>
+  <p class="sub" style="margin-bottom:18px;" id="after-sub"></p>
+  <div id="bars-after"></div>
+  <div id="after-verdict"></div>
+  <details><summary>How the comparisons went</summary><div id="matrix-wrap" style="margin-top:12px;"></div></details>
+  <div class="btn-row"><button class="btn ghost" onclick="reset()">Run again</button></div>
+</div>
+
+<div class="notes">
+  <h2>Notes for implementation</h2>
+
+  <h3>The dual-axis problem</h3>
+  <p>APEST(d) and PEP are scored from the same 36 cards, so they aren't independent in practice: someone who sorted everything into the middle buckets will be flat on both. Running two separate round-robins could mean 12–16 extra questions, which is longer than the assessment itself.</p>
+
+  <h3>Shared budget</h3>
+  <p>One budget covers both scales (default 10). Allocation rules:</p>
+  <ul>
+    <li>Only one scale tied → it can use up to the full budget, including a second round of different statements for extra reliability.</li>
+    <li>Both tied → second rounds are dropped first, then pairs are trimmed from whichever scale has more, until the total fits.</li>
+    <li>Pairs are priority-ordered before trimming: comparisons involving the top-ranked categories survive, comparisons between 3rd and 4th get cut first. Resolving who is <em>first</em> matters more than ordering the tail.</li>
+  </ul>
+
+  <h3>Interleaving</h3>
+  <p>Questions alternate between the two scales rather than running in blocks. Six consecutive questions about your role with people creates a consistency pull — people start answering to match what they've already said rather than what's true. Alternating breaks that. It also stops the second scale getting all the fatigued answers.</p>
+  <p>The cost is context-switching, which is why each question carries a quiet one-line label. Toggle interleaving off in the harness to compare.</p>
+
+  <h3>Comparisons never cross scales</h3>
+  <p>Every pair is within one scale. Comparing "I'd rather start something new" against "I finish what others start" would be meaningless — they're different axes, and someone can legitimately be high on both.</p>
+
+  <h3>Integration contract</h3>
+  <pre>const plan = planTieBreak(
+  { apest: apestScores, pep: pepScores },
+  { threshold: 4, maxCluster: 4, budget: 10, interleave: true }
+);
+
+if (plan) {
+  // plan.questions → flat ordered list, each tagged with its axis
+  // plan.axes      → per-axis cluster info, for the intro copy
+  // ...run UI, collect picks
+  const out = resolveAll(plan, picks);
+  // out.apest / out.pep → same shape in as out: [{id,label,pct}]
+  // out.cycles         → array of axes where preferences were circular
+}</pre>
+
+  <h3>Still to decide</h3>
+  <ul>
+    <li>Whether a person flat on both scales should be offered the tie-break at all, or simply told they're a generalist. Two flat profiles is itself a finding.</li>
+    <li>Whether to run this inline or offer it from the results screen.</li>
+    <li>Budget of 10 is a guess. Worth checking drop-off against your own data.</li>
+  </ul>
+</div>
+
+</div>
+
+<script>
+// ============ DATA ============
+const SETS = {
+  apest: {
+    name:'Your role among people', tag:'APEST(d)', cls:'apest',
+    cats:{
+      A:{label:'Apostle', st:["I'd rather start something new than improve what exists",
+                              "I'm drawn to places where nothing has been built yet",
+                              "I get restless once something is settled and running well"]},
+      P:{label:'Prophet', st:["I notice when something is wrong before other people do",
+                              "I'll say the uncomfortable thing if it needs saying",
+                              "I care more about what's right than what's comfortable"]},
+      E:{label:'Evangelist', st:["I naturally bring new people into things I care about",
+                                 "I find it easy to make an idea appealing to outsiders",
+                                 "I'm energised by talking with people who disagree with me"]},
+      S:{label:'Shepherd', st:["I notice when someone in a group is struggling",
+                               "I'd stay with one person who needs help rather than reach many",
+                               "I think about how a decision will affect the people in it"]},
+      T:{label:'Teacher', st:["I'm satisfied when someone finally understands something",
+                              "I break complicated things into simpler parts without thinking",
+                              "I want to know why something works, not just that it does"]},
+      d:{label:'Deacon', st:["I'd rather fix the practical problem than discuss it",
+                             "I notice what needs doing and quietly get on with it",
+                             "I get real satisfaction from things working properly"]}
+    }
+  },
+  pep: {
+    name:'How you work', tag:'PEP', cls:'pep',
+    cats:{
+      ponder:{label:'Ponder', st:["I need to sit with a question before I can answer it",
+                                  "I'm drawn to the problem underneath the problem",
+                                  "I'd rather understand deeply than decide quickly"]},
+      ideate:{label:'Ideate', st:["I generate more options than anyone asked for",
+                                  "I see possibilities that aren't obvious to other people",
+                                  "I'm energised by a blank page"]},
+      assess:{label:'Assess', st:["I can tell quite quickly whether an idea will work",
+                                  "I spot the flaw in a plan everyone else is excited about",
+                                  "People come to me for a straight verdict"]},
+      rally:{label:'Rally', st:["I can get people moving on something",
+                                "I'm the one who turns talk into commitment",
+                                "I build momentum when the energy is flagging"]},
+      facilitate:{label:'Facilitate', st:["I draw the quiet person into the conversation",
+                                          "I help a group find its own answer",
+                                          "I'm good at getting the best out of other people"]},
+      deliver:{label:'Deliver', st:["I finish what other people start",
+                                    "I'd rather ship something good than perfect it forever",
+                                    "I'm the one who makes sure it actually happens"]}
+    }
+  }
+};
+
+const SCENARIOS = [
+  {name:'Both flat', data:{
+    apest:{A:17,P:17,E:16,S:17,T:16,d:17},
+    pep:{ponder:17,ideate:16,assess:17,rally:17,facilitate:16,deliver:17}}},
+  {name:'Both tied at top', data:{
+    apest:{A:21,P:20,E:11,S:22,T:14,d:12},
+    pep:{ponder:12,ideate:22,assess:21,rally:10,facilitate:13,deliver:22}}},
+  {name:'Only role tied', data:{
+    apest:{A:13,P:26,E:9,S:25,T:16,d:11},
+    pep:{ponder:9,ideate:31,assess:14,rally:11,facilitate:12,deliver:23}}},
+  {name:'Only style tied', data:{
+    apest:{A:9,P:34,E:8,S:14,T:24,d:11},
+    pep:{ponder:18,ideate:17,assess:18,rally:15,facilitate:16,deliver:16}}},
+  {name:'Both clear', data:{
+    apest:{A:9,P:34,E:8,S:14,T:24,d:11},
+    pep:{ponder:8,ideate:33,assess:12,rally:10,facilitate:11,deliver:26}}}
+];
+
+// ============ STATE ============
+let scores = {}, plan = null, picks = [], qIdx = 0;
+
+// ============ LOGIC ============
+function opts(){
+  return {
+    threshold:+document.getElementById('thresh').value,
+    maxCluster:+document.getElementById('maxc').value,
+    budget:+document.getElementById('budget').value,
+    interleave:document.getElementById('interleave').checked
+  };
+}
+
+function detectTie(list,o){
+  const sorted=[...list].sort((a,b)=>b.pct-a.pct);
+  const c=sorted.filter(s=>sorted[0].pct-s.pct<=o.threshold);
+  return c.length<2?null:c.slice(0,o.maxCluster);
+}
+
+// pairs ordered by importance: those involving the top ranks come first
+function buildPairs(cluster,axis,round){
+  const out=[];
+  for(let i=0;i<cluster.length;i++)
+    for(let j=i+1;j<cluster.length;j++)
+      out.push({axis,a:cluster[i].id,b:cluster[j].id,priority:i+j,round});
+  return out.sort((x,y)=>x.priority-y.priority);
+}
+
+function planTieBreak(all,o){
+  const axes={};
+  ['apest','pep'].forEach(ax=>{
+    const c=detectTie(all[ax],o);
+    if(c) axes[ax]={cluster:c,pairs:[]};
+  });
+  const active=Object.keys(axes);
+  if(!active.length) return null;
+
+  // one axis tied → allow a second round of different statements
+  const rounds = active.length===1 ? 2 : 1;
+  active.forEach(ax=>{
+    for(let r=0;r<rounds;r++)
+      axes[ax].pairs.push(...buildPairs(axes[ax].cluster,ax,r));
+  });
+
+  // trim to budget, always from whichever axis currently has more
+  let total=active.reduce((s,ax)=>s+axes[ax].pairs.length,0);
+  while(total>o.budget){
+    const biggest=active.slice().sort((a,b)=>axes[b].pairs.length-axes[a].pairs.length)[0];
+    if(axes[biggest].pairs.length<=1) break;
+    axes[biggest].pairs.pop();   // lowest priority is last
+    total--;
+  }
+
+  // attach statements
+  active.forEach(ax=>{
+    axes[ax].pairs.forEach(p=>{
+      const cats=SETS[ax].cats;
+      p.aText=cats[p.a].st[p.round % cats[p.a].st.length];
+      p.bText=cats[p.b].st[(p.round+1) % cats[p.b].st.length];
+      p.flip=Math.random()<0.5;
+    });
+  });
+
+  // order the questions
+  let questions;
+  if(o.interleave && active.length>1){
+    const q=active.map(ax=>[...axes[ax].pairs]);
+    questions=[];
+    let i=0;
+    while(q.some(x=>x.length)){
+      const cur=q[i%q.length];
+      if(cur.length) questions.push(cur.shift());
+      i++;
+    }
+  } else {
+    questions=active.flatMap(ax=>axes[ax].pairs);
+  }
+  return {axes,questions,active};
+}
+
+function rescore(list,cluster,results){
+  const ids=cluster.map(x=>x.id);
+  const wins={},appear={};
+  ids.forEach(i=>{wins[i]=0;appear[i]=0;});
+  results.forEach(r=>{
+    appear[r.a]++;appear[r.b]++;
+    if(!r.skipped) wins[r.winner]++;
+  });
+  const total=cluster.reduce((s,x)=>s+x.pct,0);
+  const w={};
+  ids.forEach(i=>{w[i]=1+(appear[i]?wins[i]/appear[i]:0);});
+  const wSum=ids.reduce((s,i)=>s+w[i],0);
+  const updated=list.map(s=>ids.includes(s.id)
+    ? {...s,pct:Math.round(total*w[s.id]/wSum)} : {...s});
+  const diff=100-updated.reduce((s,x)=>s+x.pct,0);
+  if(diff){
+    const t=updated.filter(x=>ids.includes(x.id)).sort((a,b)=>b.pct-a.pct)[0];
+    if(t) t.pct+=diff;
+  }
+  return {scores:updated.sort((a,b)=>b.pct-a.pct),
+          cycle:hasCycle(ids,results),
+          skipped:results.filter(r=>r.skipped).length,wins,appear};
+}
+
+function hasCycle(ids,res){
+  const beat={};ids.forEach(i=>beat[i]=new Set());
+  res.forEach(r=>{if(!r.skipped) beat[r.winner].add(r.loser);});
+  for(const a of ids) for(const b of beat[a]) for(const c of (beat[b]||[]))
+    if(beat[c]&&beat[c].has(a)) return true;
+  return false;
+}
+
+// ============ RENDER ============
+function drawAxis(el,ax,list,highlight,compare){
+  const max=Math.max(...list.map(s=>s.pct));
+  const S=SETS[ax];
+  return `<div class="axis">
+    <div class="axis-head"><span class="axis-dot dot-${S.cls}"></span>
+      <span class="axis-name">${S.name}</span><span class="axis-tag">${S.tag}</span></div>
+    <div class="bars">${list.map(s=>{
+      const tied=highlight&&highlight.some(c=>c.id===s.id);
+      let delta='<span class="bar-delta"></span>';
+      if(compare){
+        const was=compare.find(x=>x.id===s.id);
+        const d=was?s.pct-was.pct:0;
+        if(d) delta=`<span class="bar-delta ${d>0?'up':'down'}">${d>0?'+':''}${d}</span>`;
+      }
+      return `<div class="bar-row ${tied?'tied':''}">
+        <span class="bar-name">${S.cats[s.id].label}</span>
+        <span class="bar-track"><span class="bar-fill fill-${S.cls}" style="width:${Math.round(s.pct/max*100)}%"></span></span>
+        <span class="bar-pct">${s.pct}%</span>${delta}</div>`;
+    }).join('')}</div></div>`;
+}
+
+function loadScenario(i){
+  const sc=SCENARIOS[i];
+  scores={};
+  ['apest','pep'].forEach(ax=>{
+    scores[ax]=Object.entries(sc.data[ax])
+      .map(([id,pct])=>({id,label:SETS[ax].cats[id].label,pct}))
+      .sort((a,b)=>b.pct-a.pct);
+  });
+  reset();
+}
+
+function reset(){
+  picks=[];qIdx=0;
+  document.getElementById('panel-fc').classList.add('hidden');
+  document.getElementById('panel-after').classList.add('hidden');
+  document.getElementById('panel-scores').classList.remove('hidden');
+
+  const o=opts();
+  plan=planTieBreak(scores,o);
+
+  document.getElementById('bars-before').innerHTML=
+    ['apest','pep'].map(ax=>drawAxis(document.getElementById('bars-before'),ax,scores[ax],
+      plan&&plan.axes[ax]?plan.axes[ax].cluster:null)).join('');
+
+  const v=document.getElementById('verdict');
+  const row=document.getElementById('trigger-row');
+
+  if(!plan){
+    v.className='verdict clear';
+    v.innerHTML=`<strong>Both clear enough</strong>
+      Each scale has a distinct leader. No tie-break — straight to results.`;
+    row.innerHTML='';
+    return;
+  }
+
+  const bits=plan.active.map(ax=>{
+    const c=plan.axes[ax].cluster;
+    return `${SETS[ax].name.toLowerCase()} (${c.map(x=>SETS[ax].cats[x.id].label).join(', ')})`;
+  });
+  const n=plan.questions.length;
+  const bothTied=plan.active.length>1;
+
+  v.className='verdict tied';
+  v.innerHTML=`<strong>${bothTied?'Both scales are too close to call':'One scale is too close to call'}</strong>
+    Inseparable on ${bits.join(' and ')}.
+    <div class="budget">${n} question${n===1?'':'s'} planned${
+      bothTied ? `, alternating between the two scales${
+        plan.questions.length < sumUntrimmed()
+          ? ` — trimmed from ${sumUntrimmed()} to stay within the budget of ${opts().budget}`
+          : ''}`
+      : plan.active.length===1 && plan.axes[plan.active[0]].pairs.some(p=>p.round===1)
+        ? ', including a second round of different statements for reliability'
+        : ''}.</div>`;
+  row.innerHTML=`<button class="btn" onclick="startFC()">Start ${n} comparison${n===1?'':'s'} →</button>`;
+}
+
+function sumUntrimmed(){
+  const o=opts();
+  let t=0;
+  plan.active.forEach(ax=>{
+    const k=plan.axes[ax].cluster.length;
+    t+=(k*(k-1)/2)*(plan.active.length===1?2:1);
+  });
+  return t;
+}
+
+function startFC(){
+  document.getElementById('panel-scores').classList.add('hidden');
+  document.getElementById('panel-fc').classList.remove('hidden');
+  showQ();
+}
+
+function showQ(){
+  const q=plan.questions[qIdx];
+  const S=SETS[q.axis];
+
+  document.getElementById('fc-progress').innerHTML=plan.questions.map((x,i)=>{
+    if(i<qIdx) return `<span class="fc-pip done-${SETS[x.axis].cls}"></span>`;
+    if(i===qIdx) return '<span class="fc-pip now"></span>';
+    return '<span class="fc-pip"></span>';
+  }).join('');
+
+  document.getElementById('fc-lens').innerHTML=
+    `<span><span class="axis-dot dot-${S.cls}"></span>${S.name}</span>`;
+
+  const L=q.flip?{id:q.b,t:q.bText}:{id:q.a,t:q.aText};
+  const R=q.flip?{id:q.a,t:q.aText}:{id:q.b,t:q.bText};
+  document.getElementById('fc-opts').innerHTML=
+    `<button class="fc-opt" onclick="pick('${L.id}','${R.id}')">${L.t}</button>
+     <button class="fc-opt" onclick="pick('${R.id}','${L.id}')">${R.t}</button>`;
+  document.getElementById('fc-meta').textContent=`${qIdx+1} of ${plan.questions.length}`;
+}
+
+function pick(w,l){
+  const q=plan.questions[qIdx];
+  picks.push({axis:q.axis,a:q.a,b:q.b,winner:w,loser:l,skipped:false});
+  next();
+}
+document.getElementById('fc-skip').onclick=()=>{
+  const q=plan.questions[qIdx];
+  picks.push({axis:q.axis,a:q.a,b:q.b,skipped:true});
+  next();
+};
+function next(){
+  qIdx++;
+  qIdx<plan.questions.length?showQ():finish();
+}
+
+function finish(){
+  const before={apest:scores.apest.map(s=>({...s})),pep:scores.pep.map(s=>({...s}))};
+  const out={};
+  plan.active.forEach(ax=>{
+    out[ax]=rescore(scores[ax],plan.axes[ax].cluster,picks.filter(p=>p.axis===ax));
+  });
+
+  document.getElementById('panel-fc').classList.add('hidden');
+  document.getElementById('panel-after').classList.remove('hidden');
+
+  const moved=plan.active.filter(ax=>out[ax].scores[0].id!==before[ax][0].id);
+  document.getElementById('after-sub').textContent = moved.length
+    ? `The top changed on ${moved.map(ax=>SETS[ax].name.toLowerCase()).join(' and ')}.`
+    : `The same categories led, now with clear separation.`;
+
+  document.getElementById('bars-after').innerHTML=['apest','pep'].map(ax=>
+    drawAxis(null,ax,out[ax]?out[ax].scores:scores[ax],null,before[ax])).join('');
+
+  const cycles=plan.active.filter(ax=>out[ax].cycle);
+  const v=document.getElementById('after-verdict');
+  if(cycles.length){
+    v.className='verdict tied';
+    v.innerHTML=`<strong>Genuinely balanced on ${cycles.map(ax=>SETS[ax].name.toLowerCase()).join(' and ')}</strong>
+      The answers went in a circle — each option beat one and lost to another.
+      That's a real result rather than an error: these sit equally in this person.
+      Better to say so than force a winner.`;
+  } else {
+    const untouched=['apest','pep'].filter(ax=>!plan.active.includes(ax));
+    v.className='verdict clear';
+    v.innerHTML=`<strong>Separated</strong>
+      ${plan.active.map(ax=>{
+        const s=out[ax].scores;
+        return `${SETS[ax].cats[s[0].id].label} leads on ${SETS[ax].name.toLowerCase()} by ${s[0].pct-s[1].pct} points`;
+      }).join('; ')}.
+      ${untouched.length?`The ${SETS[untouched[0]].name.toLowerCase()} scale was already clear and is untouched.`:''}`;
+  }
+
+  let html='';
+  plan.active.forEach(ax=>{
+    const ids=plan.axes[ax].cluster.map(c=>c.id);
+    const S=SETS[ax];
+    html+=`<div class="axis-head" style="margin-top:10px;">
+      <span class="axis-dot dot-${S.cls}"></span><span class="axis-name">${S.name}</span></div>`;
+    html+='<table class="matrix"><tr><th></th>'+
+      ids.map(i=>`<th>${S.cats[i].label.slice(0,4)}</th>`).join('')+'<th>Won</th></tr>';
+    ids.forEach(r=>{
+      html+=`<tr><th>${S.cats[r].label}</th>`;
+      ids.forEach(c=>{
+        if(r===c){html+='<td class="self">–</td>';return;}
+        const won=picks.some(p=>p.axis===ax&&!p.skipped&&p.winner===r&&p.loser===c);
+        html+=`<td class="${won?'win':''}">${won?'✓':''}</td>`;
+      });
+      html+=`<td><strong>${out[ax].wins[r]}/${out[ax].appear[r]}</strong></td></tr>`;
+    });
+    html+='</table>';
+  });
+  document.getElementById('matrix-wrap').innerHTML=html;
+}
+
+// ============ INIT ============
+document.getElementById('scenarios').innerHTML=SCENARIOS.map((s,i)=>
+  `<button class="hbtn" data-i="${i}" onclick="pickScenario(${i})">${s.name}</button>`).join('');
+function pickScenario(i){
+  document.querySelectorAll('#scenarios .hbtn').forEach(b=>b.classList.toggle('on',+b.dataset.i===i));
+  loadScenario(i);
+}
+['thresh','budget','maxc'].forEach(id=>{
+  document.getElementById(id).oninput=e=>{
+    document.getElementById(id+'Val').textContent=e.target.value;reset();};
+});
+document.getElementById('interleave').onchange=reset;
+pickScenario(1);
+</script>
+</body>
+</html>
