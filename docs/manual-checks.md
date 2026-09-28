@@ -51,6 +51,13 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Screen reader: a fixed rating is read as its prompt with the chosen point, and announced as unavailable (dimmed).
 - A page left open from before completing, in another tab: choosing a new point says "Not saved. This answer was fixed when you completed this section."
 
+## A link to another section (Section 1's Strengths assessment card)
+
+- The card reads as a way somewhere else: the Strengths assessment's title is the link, with its status chip beneath the text, coloured as on the hub.
+- Keyboard only: Tab reaches the link, its focus is visible, and Enter opens the Strengths assessment.
+- Screen reader: the link is read as "Strengths assessment", and the status is read after the text.
+- Phone width: the card's text wraps and the chip doesn't stretch.
+
 ## The sort
 
 - The cards come in a different order on each visit. The counter reads "1/36" and counts up.

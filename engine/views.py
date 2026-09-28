@@ -214,6 +214,9 @@ def _section_page(version, section, answers, completed, fixed):
     # ✨ A sort leads only to its results, as in the prototype, so completing is not offered beside it until it
     # is in. The linter makes its section's gate require it, so the server refuses completion before then too.
     sort_pending = any(BLOCK_TYPES[block["type"]].scored and block["id"] not in answers for block in blocks)
+    # ✨ A link shows the section it leads to exactly as the hub would: its title, its status and whether it is open.
+    hub = hub_for(track_sections(version.document), answers, completed)
+    states = {state.id: state for state in hub.sections}
     return {
         "pathway": {
             "version_id": version.pk,
@@ -223,7 +226,7 @@ def _section_page(version, section, answers, completed, fixed):
         "section": {
             "id": section["id"],
             "title": text_for(section["title"], "participant"),
-            "blocks": [_block_for_participant(version.document, block, answers, fixed) for block in blocks],
+            "blocks": [_block_for_participant(version.document, block, answers, fixed, states) for block in blocks],
         },
         "is_complete": section["id"] in completed,
         "holds_fixed_answers": any(block["id"] in fixed for block in blocks),
@@ -239,7 +242,9 @@ def _published_version(posted):
     return PathwayVersion.objects.filter(pk=int(posted), publications__isnull=False).distinct().first()
 
 
-def _block_for_participant(document, block, answers, fixed):
+def _block_for_participant(document, block, answers, fixed, states):
+    """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
+    identifier; a link to a section outside the participant's track has no state and shows nothing."""
     widget = BLOCK_TYPES[block["type"]].widget
     return {
         "id": block["id"],
@@ -250,4 +255,5 @@ def _block_for_participant(document, block, answers, fixed):
         "answer": answers.get(block["id"]),
         "is_fixed": block["id"] in fixed,
         "widget": widget(document, "participant") if widget else None,
+        "link": states.get(block["section"]) if block["type"] == "section_link" else None,
     }

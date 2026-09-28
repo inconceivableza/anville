@@ -11,9 +11,11 @@ from engine.document.problem import Problem
 def lint(document):
     identifiers = list(_identifiers(document))
     construct_ids = _ids_of("construct", identifiers)
+    section_ids = _ids_of("section", identifiers)
     return [
         *_duplicates(identifiers),
-        *_missing_sections(document, _ids_of("section", identifiers)),
+        *_missing_sections(document, section_ids),
+        *_unknown_linked_sections(document, section_ids),
         *_unreadable_clauses(document),
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
@@ -60,6 +62,16 @@ def _missing_sections(document, section_ids):
         for r, required in enumerate(section.get("requires", [])):
             if required not in section_ids:
                 yield Problem(f"/content/sections/{s}/requires/{r}", f"There is no section '{required}' in this pathway.")
+
+
+def _unknown_linked_sections(document, section_ids):
+    for s, section in enumerate(document["content"]["sections"]):
+        for b, block in enumerate(section["blocks"]):
+            if block["type"] == "section_link" and block["section"] not in section_ids:
+                yield Problem(
+                    f"/content/sections/{s}/blocks/{b}/section",
+                    f"There is no section '{block['section']}' in this pathway.",
+                )
 
 
 # ✨ "That has been done" is a fair condition on finishing a section, wherever it was done (ticket 09, where

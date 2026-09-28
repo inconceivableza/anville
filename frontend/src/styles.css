@@ -351,6 +351,33 @@ a.hub-section-title:hover {
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
+/* A link to another section, with that section's status (the prototype's assessment link card) */
+
+.section-link {
+  background: var(--gold-pale);
+  border: 1px solid var(--gold-light);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-light);
+}
+
+.section-link-title {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.section-link .status-chip {
+  display: inline-block;
+  margin-top: 8px;
+}
+
 /* Hint boxes: rich text set off from the page */
 
 .hint-box {

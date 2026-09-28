@@ -103,6 +103,8 @@ Clauses that carry the same message say it once, so "Answer all four to continue
 
 A clause may only name a block whose answer it can read and, except for `has_answer`, only one in its own section; the linter refuses both. `has_answer` may wait on another section's block ("the sort has been done"), which is how Section 1 waits on the Strengths assessment; what another section's answer holds is for that section's own gate. The three entry clauses have no block to name yet, because no block type captures a list of entries: they wait for the contact list and timeline board (tickets 10 and 17). A new kind of clause is a code change, never an expression in the document (ADR 0003).
 
+A `section_link` block leads to another section, named by `section`, with an optional `body`. It shows that section's title and status exactly as the hub does, and a locked section is named but not linked. It takes no answer and counts towards no progress.
+
 A `scripture_reading` block shows its authored passages and a confirm control. The activity beneath it is decided by the server too: until the confirmation is saved, the blocks after it are not sent to the browser and will not accept an answer.
 
 ## Answers

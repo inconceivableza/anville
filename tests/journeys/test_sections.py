@@ -4,10 +4,12 @@ The prototype's locks were `display:none` on a div, so anything that navigated d
 past them (docs/prototype/02-sections.md). Here every one of them is decided by the server on the request.
 """
 
+import json
+
 import pytest
 
 from engine.models import Response
-from tests.documents import pathway_document, scripture_reading
+from tests.documents import complete_sort, pathway_document, scripture_reading, sort_pathway
 from tests.journeys.pages import loads_the_built_stylesheet
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 
@@ -414,6 +416,72 @@ def test_confirming_a_reading_sends_the_participant_back_to_its_own_section(open
     response = client.post("/answers/reading/", {"value": "true", "version": _version_id()})
 
     assert (response.status_code, response.url) == (303, f"{CALLING}#block-reading")
+
+
+# A link to another section
+
+
+STRENGTHS_LINK = 'href="/sections/strengths/"'
+
+
+def linking_to_the_sort():
+    """✨ The sort pathway, with the calling section leading to the Strengths assessment before its statement."""
+    document = sort_pathway()
+    document["content"]["sections"][1]["blocks"].insert(
+        0, {"id": "to-strengths", "type": "section_link", "section": "strengths", "body": "Sort your strengths."}
+    )
+    return document
+
+
+@pytest.mark.django_db
+def test_a_link_shows_the_section_it_leads_to_with_that_sections_status(open_calling):
+    page = open_calling(linking_to_the_sort()).get(CALLING).content.decode()
+
+    assert STRENGTHS_LINK in page
+    assert "Strengths assessment" in page
+    assert "Sort your strengths." in page
+    assert "status-chip status-not-started" in page
+
+
+@pytest.mark.django_db
+def test_the_links_status_follows_the_participant_through_the_other_section(open_calling):
+    client = open_calling(linking_to_the_sort())
+
+    client.post("/answers/strengths-sort/", {"value": json.dumps(complete_sort()), "version": _version_id()})
+    assert "status-chip status-in-progress" in client.get(CALLING).content.decode()
+
+    client.post("/sections/strengths/complete/")
+    assert "status-chip status-complete" in client.get(CALLING).content.decode()
+
+
+@pytest.mark.django_db
+def test_a_link_to_a_locked_section_names_it_but_does_not_lead_there(open_calling):
+    document = linking_to_the_sort()
+    document["content"]["sections"][2]["requires"] = ["calling"]
+
+    page = open_calling(document).get(CALLING).content.decode()
+
+    assert "Strengths assessment" in page
+    assert "status-chip status-locked" in page
+    assert STRENGTHS_LINK not in page
+
+
+@pytest.mark.django_db
+def test_a_link_counts_towards_no_progress(signed_in_client, load_pathway):  # noqa: F811
+    """✨ It is a way to somewhere else, not something the participant answers: the rating, the statement and
+    the sort are the three."""
+    load_pathway(linking_to_the_sort())
+
+    assert "0 of 3 answered" in signed_in_client.get("/").content.decode()
+
+
+@pytest.mark.django_db
+def test_a_link_takes_no_answer(open_calling):
+    client = open_calling(linking_to_the_sort())
+
+    client.post("/answers/to-strengths/", {"value": "true", "version": _version_id()})
+
+    assert "to-strengths" not in Response.objects.get().answers
 
 
 def _version_id():

@@ -1,0 +1,17 @@
+{% comment %}
+  ✨ A way to another section, shown as the hub shows it: its title, then its status. A locked section is named
+  but not linked, as on the hub. A section outside the participant's track has no state, so nothing is shown.
+{% endcomment %}
+{% if block.link %}
+  <div id="block-{{ block.id }}" class="section-link">
+    <p class="section-link-title">
+      {% if block.link.is_locked %}
+        {{ block.link.title }}
+      {% else %}
+        <a href="{% url 'section' block.link.id %}">{{ block.link.title }}</a>
+      {% endif %}
+    </p>
+    {{ block.text.body|linebreaks }}
+    <span class="status-chip status-{{ block.link.status }}">{{ block.link.label }}</span>
+  </div>
+{% endif %}

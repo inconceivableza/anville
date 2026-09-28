@@ -161,3 +161,29 @@ def test_a_pathway_without_a_sort_needs_no_scoring_method():
     assert "scoring" not in document["measurement"]
 
     assert validate(document) == []
+
+
+def a_link_to(section_id):
+    """✨ The test pathway with a link from the calling section to another section."""
+    document = pathway_document()
+    document["content"]["sections"][1]["blocks"].append(
+        {"id": "to-onboarding", "type": "section_link", "section": section_id, "body": "Go back and look again."}
+    )
+    return document
+
+
+def test_a_link_to_a_section_of_the_pathway_is_accepted():
+    assert validate(a_link_to("onboarding")) == []
+
+
+def test_a_link_to_a_section_that_does_not_exist_is_reported():
+    assert validate(a_link_to("nowhere")) == [
+        Problem(path="/content/sections/1/blocks/1/section", message="There is no section 'nowhere' in this pathway.")
+    ]
+
+
+def test_a_link_must_say_which_section_it_leads_to():
+    document = a_link_to("onboarding")
+    del document["content"]["sections"][1]["blocks"][1]["section"]
+
+    assert validate(document) == [Problem(path="/content/sections/1/blocks/1", message="'section' is a required property")]

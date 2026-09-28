@@ -37,3 +37,4 @@
 
 - Sort as its own section confirmed with the developer (2026-09-28), as the spec has it.
 - First step: the linter lets a `has_answer` clause name a block in another section; the other clauses stay in their own section (decided with the developer, 2026-09-28). Ticket 23's closing ratings can wait on the sort the same way.
+- Second step: a `section_link` block shows another section's title and status as the hub does, and names a locked section without linking it. Section 1 uses it for the Strengths assessment in the next step.

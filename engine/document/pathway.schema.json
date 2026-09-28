@@ -132,14 +132,15 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "sort_assessment"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "sort_assessment", "section_link"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
         { "if": { "properties": { "type": { "const": "scripture_reading" } } }, "then": { "$ref": "#/$defs/scripture_reading" } },
         { "if": { "properties": { "type": { "const": "long_text" } } }, "then": { "$ref": "#/$defs/long_text" } },
         { "if": { "properties": { "type": { "const": "agreement_scale" } } }, "then": { "$ref": "#/$defs/agreement_scale" } },
-        { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } }
+        { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } },
+        { "if": { "properties": { "type": { "const": "section_link" } } }, "then": { "$ref": "#/$defs/section_link" } }
       ]
     },
     "rich_text": {
@@ -228,6 +229,21 @@
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "sort_assessment" }
+      }
+    },
+    "section_link": {
+      "description": "A way to another section, shown with that section's title and the participant's status there.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "section"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "section_link" },
+        "section": { "$ref": "#/$defs/identifier" },
+        "body": {
+          "description": "Plain text saying what is there. A blank line starts a new paragraph.",
+          "$ref": "#/$defs/text"
+        }
       }
     },
     "long_text": {
