@@ -10,13 +10,13 @@
 
 **Parent:** whatever-you-do-milestone-1 spec (Demo 2, 2 Oct)
 
-- [ ] A "Strengths assessment" section contains the sort block and the results, requires only onboarding, and appears on the hub as its own entry
-- [ ] Section 1 uses the prototype's scripture passages and hint text; after the read-confirm it shows a link to the Strengths assessment section with its status, then a written reflection prompt
-- [ ] Section 1's gate has a clause and message for each unmet requirement: the sort not answered (a block-has-an-answer clause referring to the sort block in the other section), and the reflection empty
-- [ ] Completing either section is an explicit action, refused by the server if its gate fails
-- [ ] Known consequence, accepted: a participant can reach the sort from the hub before reading Section 1's scripture
-- [ ] The prototype's "comparison viewed" requirement is not present yet; it joins in ticket 16
-- [ ] Retake is not offered in this milestone
+- [x] A "Strengths assessment" section contains the sort block and the results, requires only onboarding, and appears on the hub as its own entry
+- [x] Section 1 uses the prototype's scripture passages and hint text; after the read-confirm it shows a link to the Strengths assessment section with its status, then a written reflection prompt
+- [x] Section 1's gate has a clause and message for each unmet requirement: the sort not answered (a block-has-an-answer clause referring to the sort block in the other section), and the reflection empty
+- [x] Completing either section is an explicit action, refused by the server if its gate fails
+- [x] Known consequence, accepted: a participant can reach the sort from the hub before reading Section 1's scripture
+- [x] The prototype's "comparison viewed" requirement is not present yet; it joins in ticket 16
+- [x] Retake is not offered in this milestone
 - [ ] Content is migrated verbatim from the prototype reference
 - [ ] Each section can carry an authored time estimate ("About 15 minutes"), shown on its hub entry and at the top of the section; add one to every section with content, and one per activity where a section has several
 - [ ] Every minimum-length gate message says how much is needed, for example "Write at least 10 characters…", including the existing ones such as the letter's "Write at least one part of your letter before sealing it." (`pathways/whatever-you-do.json`). The faithful port keeps the prototype's wording, so the drift test in `tests/journeys/test_whatever_you_do.py`, which compares the two documents whole, must expect the new messages the way it already expects the fifth rating
@@ -38,3 +38,4 @@
 - Sort as its own section confirmed with the developer (2026-09-28), as the spec has it.
 - First step: the linter lets a `has_answer` clause name a block in another section; the other clauses stay in their own section (decided with the developer, 2026-09-28). Ticket 23's closing ratings can wait on the sort the same way.
 - Second step: a `section_link` block shows another section's title and status as the hub does, and names a locked section without linking it. Section 1 uses it for the Strengths assessment in the next step.
+- Third step: Section 1 and the Strengths assessment are in both pathway documents, the Strengths assessment straight after Section 1 on the hub. Content is verbatim except: the two sentences about inviting people keep the prototype's wording and add "[Not built yet: inviting people you trust comes in a later version.]" (the developer's call; remove when ticket 13 lands), verse numbers are dropped as in the calling section, the reflection's italic "not" is plain, and the reflection's placeholder waits for the next step. The prototype's reflection appears only once the sort is done; here it appears after the read-confirm, and the gate still needs the sort. Prototype's "Open Strengths Assessment →" button is the linked title instead.

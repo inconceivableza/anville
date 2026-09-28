@@ -63,10 +63,10 @@ python manage.py load_pathway pathways/whatever-you-do.json
 ```
 
 `pathways/whatever-you-do.json` is *Whatever You Do* itself, as far as it has been authored:
-five baseline ratings, the calling-statement section and the letter, with Sections 1, 2 and 4
-carrying their hint text until their activities are built. It also holds the strengths instrument and
-its results wording, waiting for the sort to be placed in a section (ticket 09). `pathways/example.json` is a smaller
-file for trying the loader out.
+five baseline ratings, Section 1 with its scripture and reflection, the Strengths assessment (the sort and
+its results, in a section of its own so the offline track can share it), the calling-statement section
+and the letter, with Sections 2 and 4 carrying their hint text until their activities are built.
+`pathways/example.json` is a smaller file for trying the loader out.
 
 `pathways/whatever-you-do-faithful-port.json` is the faithful port: the same pathway as the original
 prototype has it, without the content owner's later changes (so far, only the fifth baseline rating).

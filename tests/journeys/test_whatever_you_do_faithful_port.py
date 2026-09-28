@@ -199,40 +199,206 @@ def test_a_long_enough_statement_completes_the_calling_section(participant):
     assert "calling" in Response.objects.get().completed_sections
 
 
-# The hub: five sections, and locks the server enforces
+# The Strengths assessment, and Section 1 which links to it
+
+SECTION_1 = "/sections/designed/"
+STRENGTHS = "/sections/strengths/"
+STRENGTHS_LINK = f'href="{STRENGTHS}"'
+GIFTS_REFLECTION = "summarise: what gifts and talents has God given you?"
+COMPLETE_THE_ASSESSMENT = "Complete the Strengths Assessment to continue."
+COMPLETE_THE_REFLECTIONS = "Complete the gifts reflections to continue."
+A_REFLECTION = "Teaching, and patience with people. Not administration."
+
+
+def a_whole_sort():
+    """✨ Every item placed in "Good at this" at that bucket's seed, as untouched sliders leave it."""
+    return {item["id"]: {"bucket": "good-at-this", "value": 65} for item in the_pathway()["instrument"]["items"]}
+
+
+def submit_the_sort(client):
+    return answer(client, "strengths-sort", json.dumps(a_whole_sort()))
+
+
+def onboarded(client):
+    answer_the_baseline(client)
+    complete(client, "onboarding")
+    return client
+
+
+def through_to_section_1s_activity(client):
+    """✨ A participant who has done the baseline and confirmed Section 1's reading."""
+    answer(onboarded(client), "gifts-reading", "true")
+    return client
 
 
 @pytest.mark.django_db
-def test_all_five_sections_appear_on_the_hub(participant):
+def test_the_strengths_assessment_is_its_own_section_opened_by_onboarding_alone(participant):
+    assert participant.get(STRENGTHS).status_code == 302
+
+    page = onboarded(participant).get(STRENGTHS).content.decode()
+
+    assert 'data-sort="sort-strengths-sort"' in page
+
+
+@pytest.mark.django_db
+def test_the_sort_can_be_done_before_section_1s_passages_are_read(participant):
+    """✨ The accepted cost of giving the sort a section of its own, so the offline track can use it alone."""
+    response = submit_the_sort(onboarded(participant))
+
+    assert (response.status_code, response.url) == (303, "/results/strengths-sort/")
+    assert "gifts-reading" not in Response.objects.get().answers
+
+
+@pytest.mark.django_db
+def test_a_finished_sort_leads_to_its_results_and_offers_no_retake(participant):
+    client = onboarded(participant)
+    submit_the_sort(client)
+
+    page = client.get(STRENGTHS).content.decode()
+
+    assert 'href="/results/strengths-sort/"' in page
+    assert "data-sort=" not in page
+
+
+@pytest.mark.django_db
+def test_the_strengths_assessment_is_completed_only_once_the_sort_is_in(participant):
+    client = onboarded(participant)
+
+    assert complete(client, "strengths").status_code == 400
+
+    submit_the_sort(client)
+    assert complete(client, "strengths").status_code == 303
+
+
+@pytest.mark.django_db
+def test_section_1_reads_the_prototypes_question_and_passages(participant):
+    page = onboarded(participant).get(SECTION_1).content.decode()
+
+    assert "The big question" in page
+    assert escape("A teaching gift looks different in a school vs in kids' work, but it's still a teaching gift.") in page
+    assert "Romans 12:6–8" in page
+    assert "the one who does acts of mercy, with cheerfulness." in page
+    assert "1 Corinthians 12:8–10, 28–30" in page
+    assert "to another the interpretation of tongues." in page
+    assert "Do all speak with tongues? Do all interpret?" in page
+    assert "1 Peter 4:9–11" in page
+    assert "To him belong glory and dominion forever and ever. Amen." in page
+    assert "As you read, reflect: what gifts do you see in yourself?" in page
+    assert escape("I've read these passages and I'm ready to continue") in page
+
+
+@pytest.mark.django_db
+def test_section_1s_activity_waits_for_the_reading_to_be_confirmed(participant):
+    page = onboarded(participant).get(SECTION_1).content.decode()
+
+    assert STRENGTHS_LINK not in page
+    assert GIFTS_REFLECTION not in page
+
+
+@pytest.mark.django_db
+def test_after_the_reading_section_1_links_to_the_strengths_assessment_and_then_asks_for_the_reflection(participant):
+    page = through_to_section_1s_activity(participant).get(SECTION_1).content.decode()
+
+    assert "you sort and rate your strengths across 36 areas" in page
+    assert STRENGTHS_LINK in page
+    assert "Sort your strengths into buckets, fine-tune the intensity of each" in page
+    assert "status-chip status-not-started" in page
+    assert page.index(STRENGTHS_LINK) < page.index(GIFTS_REFLECTION)
+
+
+@pytest.mark.django_db
+def test_the_link_in_section_1_shows_how_far_the_strengths_assessment_has_got(participant):
+    client = through_to_section_1s_activity(participant)
+    submit_the_sort(client)
+    complete(client, "strengths")
+
+    assert "status-chip status-complete" in client.get(SECTION_1).content.decode()
+
+
+@pytest.mark.django_db
+def test_section_1_cannot_be_completed_before_the_sort_is_in(participant):
+    client = through_to_section_1s_activity(participant)
+    answer(client, "gifts-summary", A_REFLECTION)
+
+    refused = complete(client, "designed")
+
+    assert refused.status_code == 400
+    assert COMPLETE_THE_ASSESSMENT in refused.content.decode()
+    assert COMPLETE_THE_REFLECTIONS not in refused.content.decode()
+    assert "designed" not in Response.objects.get().completed_sections
+
+
+@pytest.mark.django_db
+def test_section_1_cannot_be_completed_without_the_reflection(participant):
+    client = through_to_section_1s_activity(participant)
+    submit_the_sort(client)
+
+    refused = complete(client, "designed")
+
+    assert refused.status_code == 400
+    assert COMPLETE_THE_REFLECTIONS in refused.content.decode()
+    assert COMPLETE_THE_ASSESSMENT not in refused.content.decode()
+
+
+@pytest.mark.django_db
+def test_section_1_is_completed_once_the_sort_is_in_and_the_reflection_written(participant):
+    """✨ The prototype also asked for the comparison with observers to have been viewed; that joins in ticket 16."""
+    client = through_to_section_1s_activity(participant)
+    submit_the_sort(client)
+    answer(client, "gifts-summary", A_REFLECTION)
+
+    assert complete(client, "designed").status_code == 303
+    assert "designed" in Response.objects.get().completed_sections
+
+
+@pytest.mark.django_db
+def test_completing_section_1_does_not_complete_the_strengths_assessment(participant):
+    """✨ Each section is completed by its own explicit act."""
+    client = through_to_section_1s_activity(participant)
+    submit_the_sort(client)
+    answer(client, "gifts-summary", A_REFLECTION)
+    complete(client, "designed")
+
+    assert "strengths" not in Response.objects.get().completed_sections
+
+
+# The hub: every section, and locks the server enforces
+
+
+@pytest.mark.django_db
+def test_every_section_appears_on_the_hub_with_the_strengths_assessment_after_section_1(participant):
     page = participant.get("/").content.decode()
 
     assert escape("Section 1: How you've been designed") in page
+    assert "Strengths assessment" in page
     assert "Section 2: The shape of your life" in page
     assert "Section 3: Putting your calling into words" in page
     assert "Section 4: Growth plan" in page
     assert "Section 5: A letter to your future self" in page
+    assert (
+        page.index(escape("Section 1: How you've been designed"))
+        < page.index("Strengths assessment")
+        < page.index("Section 2: The shape of your life")
+    )
 
 
 @pytest.mark.django_db
 def test_the_sections_with_no_activity_yet_still_say_what_they_are_for(participant):
-    """✨ Sections 1, 2 and 4 carry their prototype hint and nothing else until their activities are built."""
-    answer_the_baseline(participant)
-    complete(participant, "onboarding")
+    """✨ Sections 2 and 4 carry their prototype hint and nothing else until their activities are built."""
+    onboarded(participant)
 
-    assert "what gifts and talents has God given (and not given) you?" in participant.get(
-        "/sections/designed/"
-    ).content.decode()
     assert "Map out your life, then lay those things over the top" in participant.get(
         "/sections/shape/"
     ).content.decode()
 
 
 @pytest.mark.django_db
-def test_a_section_with_no_activity_counts_towards_no_progress(participant):
-    """✨ Progress counts blocks a participant does something with, and prose is not one of them."""
+def test_progress_counts_what_the_participant_does_and_not_the_prose_or_the_link(participant):
     page = participant.get("/").content.decode()
 
-    assert "0 of 11 answered" in page  # ✨ four ratings, the reading and the statement, the letter and four more
+    # ✨ four ratings; Section 1's reading and reflection; the sort; the calling reading and statement; the letter
+    # and four more
+    assert "0 of 14 answered" in page
 
 
 @pytest.mark.django_db
