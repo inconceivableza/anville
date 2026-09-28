@@ -17,8 +17,8 @@ def document_whose_gate_names(clause):
     return document
 
 
-def test_a_clause_naming_a_block_in_another_section_is_refused():
-    """✨ A gate decides whether its own section is finished, so it can only read what is in that section."""
+def test_a_clause_about_what_an_answer_holds_may_not_name_a_block_in_another_section():
+    """✨ Whether another section's text is long enough, or has enough entries, is for that section's own gate."""
     document = document_whose_gate_names(
         {"type": "min_text_length", "block": "elsewhere", "min": 10, "message": "Write more."}
     )
@@ -29,7 +29,25 @@ def test_a_clause_naming_a_block_in_another_section_is_refused():
     assert validate(document) == [
         Problem(
             path=f"{CLAUSE_PATH}/block",
-            message="Block 'elsewhere' is in another section; a gate clause may only name a block in its own section.",
+            message="Block 'elsewhere' is in another section; only a 'has_answer' clause may name a block outside its own section.",
+        )
+    ]
+
+
+def test_has_answer_may_name_a_block_in_another_section():
+    """✨ Ticket 09: Section 1 may not be completed until the sort, in a section of its own, has an answer."""
+    document = document_whose_gate_names({"type": "has_answer", "block": "baseline-bible", "message": "Rate this first."})
+
+    assert validate(document) == []
+
+
+def test_has_answer_in_another_section_still_needs_a_block_that_captures_an_answer():
+    document = document_whose_gate_names({"type": "has_answer", "block": "welcome", "message": "Read this first."})
+
+    assert validate(document) == [
+        Problem(
+            path=f"{CLAUSE_PATH}/block",
+            message="A 'has_answer' clause cannot be checked against block 'welcome', which is a rich_text.",
         )
     ]
 

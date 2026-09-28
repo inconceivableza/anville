@@ -4,7 +4,7 @@
 
 **Blocked by:** 04 (Hub, locks, gates and explicit completion), 07 (Sort and fine-tune widget)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 1 (ends 2 Oct)
 
@@ -23,7 +23,7 @@
 
 **Carried from 06**
 
-- [ ] Section 1's gate cannot name the sort yet. The criterion above asks for "a block-has-an-answer clause referring to the sort block in the other section", and the linter refuses exactly that: "a gate clause may only name a block in its own section" (`engine/document/lint.py`, from ticket 04, which reasoned that a gate decides whether its own section is finished). Relax that rule for `has_answer`, or add a named clause for "a block in another section is answered" (ADR 0003). Decide before building the section
+- [x] Section 1's gate cannot name the sort yet. The criterion above asks for "a block-has-an-answer clause referring to the sort block in the other section", and the linter refuses exactly that: "a gate clause may only name a block in its own section" (`engine/document/lint.py`, from ticket 04, which reasoned that a gate decides whether its own section is finished). Relax that rule for `has_answer`, or add a named clause for "a block in another section is answered" (ADR 0003). Decide before building the section
 - Placing the sort is document work: `{"id": "…", "type": "sort_assessment"}` in the Strengths assessment section. `pathways/whatever-you-do.json` already holds the instrument, both frameworks, the scoring method and the results wording, and the linter refuses a sort without them
 
 **Carried from 07**
@@ -32,3 +32,8 @@
 - [ ] Run the rest of `docs/manual-checks.md` for the sort against the real pathway: untouched sliders giving a complete result, no JavaScript, keyboard only, screen reader, reduced motion, phone width, and the second-sort message. Ticket 07 had one happy-path walkthrough only
 - [ ] The prototype gave PEP bars a minimum width of 4% (`Math.max(4, pct)`), which the results page left out. Check with real sorts whether a 0% bar needs the stub
 - [ ] Decide whether the sort needs the prototype's progress bar. The prototype filled 0–40% of its page-wide bar during the sort (`Math.round(done/36*40)`) and set 45% on fine-tuning; the widget shows only the card counter ("7/36"), and the hub shows progress by section. Judge it during the hand check above, with the developer or the owner
+
+## Comments
+
+- Sort as its own section confirmed with the developer (2026-09-28), as the spec has it.
+- First step: the linter lets a `has_answer` clause name a block in another section; the other clauses stay in their own section (decided with the developer, 2026-09-28). Ticket 23's closing ratings can wait on the sort the same way.
