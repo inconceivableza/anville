@@ -19,9 +19,11 @@
 - [ ] Seven written questions (what energises them, three best qualities, a new skill, an existing skill, a character area, the biggest change seen, what they struggle with) are stored and never shown to the participant
 - [ ] The observer chooses a relationship, stored but never used to slice or filter results
 - [ ] One submission per token, then locked
-- [ ] An observer can withdraw through their link while it is valid, which deletes their answers; how an observer withdraws after the link expires is open (see spec Further Notes)
-- [ ] A thank-you screen closes the flow; an observer can always reach the questions by following their link
-- [ ] Journey tests cover the full observer path, the lock after submission, and withdrawal
+- [ ] Submitted answers are never shown back through any link. The participant copies every link, so a read-back would show them one observer's answers and get round ticket 14's minimum of three
+- [ ] The questionnaire, and withdrawal, work only through the observer's claimed secret (ticket 13), never the participant's copy
+- [ ] An observer can withdraw through their claimed link while it is valid, which deletes their answers; how an observer withdraws after the link expires is open (see spec Further Notes)
+- [ ] A thank-you screen closes the flow; an observer following their claimed link before submitting reaches the questions, and after submitting sees only the thank-you and withdrawal
+- [ ] Journey tests cover the full observer path, the lock after submission, withdrawal, that no answer is shown after submission, and that the participant's copy of the link can neither answer nor withdraw once claimed
 
 **Carried from 07**
 
