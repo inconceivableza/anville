@@ -16,6 +16,7 @@ def lint(document):
         *_duplicates(identifiers),
         *_missing_sections(document, section_ids),
         *_unknown_linked_sections(document, section_ids),
+        *_links_holding_their_own_section(document),
         *_unreadable_clauses(document),
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
@@ -71,6 +72,23 @@ def _unknown_linked_sections(document, section_ids):
                 yield Problem(
                     f"/content/sections/{s}/blocks/{b}/section",
                     f"There is no section '{block['section']}' in this pathway.",
+                )
+
+
+def _links_holding_their_own_section(document):
+    """✨ A link holding the rest of its own section until that section's gate passes: if the gate needs a block
+    the link holds back, the section can never be finished.
+
+    Two sections each holding on the other can shut both the same way; that takes a search of the whole
+    pathway and is left until a pathway needs more than one held link (noted in ticket 09).
+    """
+    for s, section in enumerate(document["content"]["sections"]):
+        for b, block in enumerate(section["blocks"]):
+            holds = block["type"] == "section_link" and block.get("holds_what_follows")
+            if holds and block["section"] == section["id"]:
+                yield Problem(
+                    f"/content/sections/{s}/blocks/{b}/holds_what_follows",
+                    "A link cannot hold back the rest of its own section: that section could never be finished.",
                 )
 
 

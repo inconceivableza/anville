@@ -182,6 +182,29 @@ def test_a_link_to_a_section_that_does_not_exist_is_reported():
     ]
 
 
+def a_holding_link_to(section_id):
+    """✨ The test pathway with a link at the top of the calling section that holds the statement back."""
+    document = pathway_document()
+    document["content"]["sections"][1]["blocks"].insert(
+        0, {"id": "to-onboarding", "type": "section_link", "section": section_id, "holds_what_follows": True}
+    )
+    return document
+
+
+def test_a_link_may_hold_its_section_until_another_section_is_done():
+    assert validate(a_holding_link_to("onboarding")) == []
+
+
+def test_a_link_that_holds_its_own_section_until_that_section_is_done_is_reported():
+    """✨ Its gate needs the statement the link is holding back, so the section could never be completed."""
+    assert validate(a_holding_link_to("calling")) == [
+        Problem(
+            path="/content/sections/1/blocks/0/holds_what_follows",
+            message="A link cannot hold back the rest of its own section: that section could never be finished.",
+        )
+    ]
+
+
 def test_a_link_must_say_which_section_it_leads_to():
     document = a_link_to("onboarding")
     del document["content"]["sections"][1]["blocks"][1]["section"]
