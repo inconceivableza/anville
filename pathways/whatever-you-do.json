@@ -6,6 +6,7 @@
       {
         "id": "onboarding",
         "title": "Before we begin",
+        "estimate": "About 1 minute",
         "blocks": [
           {
             "id": "baseline-intro",
@@ -135,6 +136,7 @@
       {
         "id": "strengths",
         "title": "Strengths assessment",
+        "estimate": "About 10 minutes",
         "requires": ["onboarding"],
         "blocks": [{ "id": "strengths-sort", "type": "sort_assessment" }],
         "gate": {
@@ -150,6 +152,7 @@
       {
         "id": "shape",
         "title": "Section 2: The shape of your life",
+        "estimate": "? min",
         "requires": ["onboarding"],
         "blocks": [
           {
@@ -164,6 +167,7 @@
       {
         "id": "calling",
         "title": "Section 3: Putting your calling into words",
+        "estimate": "? min",
         "requires": ["onboarding"],
         "blocks": [
           {
@@ -222,6 +226,7 @@
       {
         "id": "growth",
         "title": "Section 4: Growth plan",
+        "estimate": "? min",
         "requires": ["calling"],
         "blocks": [
           {
@@ -236,11 +241,13 @@
       {
         "id": "letter",
         "title": "Section 5: A letter to your future self",
+        "estimate": "? min",
         "requires": ["calling"],
         "blocks": [
           {
             "id": "lt-task",
             "type": "rich_text",
+            "estimate": "? min",
             "variant": "hint",
             "label": "The task",
             "body": "Write to yourself as you will be in twelve months' time. You have just done a lot of thinking, and most of it fades faster than you would expect. Put it down now, while it is still warm, and let it find you again when you need it."
@@ -254,6 +261,7 @@
           {
             "id": "pl-intro",
             "type": "rich_text",
+            "estimate": "? min",
             "body": "You answered these same questions at the start. Let's see where you are now.\n\nTo what extent would you agree with the following statements?"
           },
           {

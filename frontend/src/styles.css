@@ -184,6 +184,17 @@ a.hub-section-title:hover {
   color: var(--ink-muted);
 }
 
+/* An authored "About 15 minutes": beside a hub entry's title, under a section's heading, above an activity */
+
+.time-estimate {
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+p.time-estimate {
+  margin-bottom: 16px;
+}
+
 .status-chip {
   flex-shrink: 0;
   font-size: 11px;

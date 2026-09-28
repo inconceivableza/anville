@@ -52,6 +52,14 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Screen reader: a fixed rating is read as its prompt with the chosen point, and announced as unavailable (dimmed).
 - A page left open from before completing, in another tab: choosing a new point says "Not saved. This answer was fixed when you completed this section."
 
+## Time estimates (the hub, each section, Section 5's two activities)
+
+- On the hub, each entry's estimate sits beside its title, quieter than it, and a locked entry's note stays on a line of its own beneath.
+- Once something in a section is answered (the sort submitted, one onboarding rating), its estimate has gone from its hub entry and its page.
+- Section 5's "? min" above its two activities stays after answering: judge whether it should go too.
+- On a section page the estimate sits under the heading; in Section 5, "? min" also sits above the letter's task and above the closing ratings' introduction, and reads as belonging to what follows it.
+- Phone width: a long title and its estimate wrap without the estimate stranding on a line with nothing else.
+
 ## A link to another section (Section 1's Strengths assessment card)
 
 - The card reads as a way somewhere else: the Strengths assessment's title, the text, the "Open Strengths Assessment →" button, then its status chip on a line of its own, coloured as on the hub.

@@ -172,10 +172,15 @@ BLOCK_TYPES = {
 }
 
 
+# ✨ Authored text any kind of block may carry: the time its activity takes, for a section with several.
+COMMON_TEXT_FIELDS = ("estimate",)
+
+
 def authored_text(block, role):
     """✨ Every authored text field of a block, resolved to one role's wording."""
     block_type = BLOCK_TYPES[block["type"]]
-    text = {field: text_for(block[field], role) for field in block_type.text_fields if field in block}
+    fields = (*COMMON_TEXT_FIELDS, *block_type.text_fields)
+    text = {field: text_for(block[field], role) for field in fields if field in block}
     for field, entry_fields in block_type.text_lists:
         text[field] = [
             {name: text_for(entry[name], role) for name in entry_fields if name in entry}

@@ -1,5 +1,11 @@
+import json
+from pathlib import Path
+
 from engine.document import Problem, validate
+from engine.document.blocks import BLOCK_TYPES
 from tests.documents import pathway_document
+
+WHATEVER_YOU_DO = Path(__file__).resolve().parents[2] / "pathways" / "whatever-you-do.json"
 
 
 def test_a_well_formed_document_has_no_problems():
@@ -105,3 +111,28 @@ def test_a_section_link_may_carry_a_button_label_and_hold_what_follows_by_a_yes_
     document["content"]["sections"][1]["blocks"][0]["holds_what_follows"] = "yes"
     [problem] = validate(document)
     assert problem.path == "/content/sections/1/blocks/0/holds_what_follows"
+
+
+def test_every_section_and_every_kind_of_block_may_carry_a_time_estimate():
+    """✨ The Whatever You Do pathway holds a block of every kind, so each gets one here."""
+    document = json.loads(WHATEVER_YOU_DO.read_text(encoding="utf-8"))
+    for section in document["content"]["sections"]:
+        section["estimate"] = "About 15 minutes"
+        for block in section["blocks"]:
+            block["estimate"] = {"participant": "About 5 minutes"}
+    assert {block["type"] for section in document["content"]["sections"] for block in section["blocks"]} == set(
+        BLOCK_TYPES
+    )
+
+    assert validate(document) == []
+
+
+def test_a_time_estimate_is_authored_text_not_a_number_of_minutes():
+    document = pathway_document()
+    document["content"]["sections"][1]["estimate"] = 15
+    document["content"]["sections"][1]["blocks"][0]["estimate"] = 5
+
+    assert [problem.path for problem in validate(document)] == [
+        "/content/sections/1/blocks/0/estimate",
+        "/content/sections/1/estimate",
+    ]

@@ -143,10 +143,51 @@ def test_all_five_end_ratings_are_fixed_once_the_letter_is_sent(participant):
     assert {Response.objects.get().answers[f"pl-{slot}"] for slot in SLOTS} == {7}
 
 
+def test_every_section_but_section_1_says_how_long_it_takes():
+    """✨ Our own figures, not the prototype's, which gave none: to confirm with the owner. A section that is not
+    mostly built yet says "? min" until it is (Sections 2 and 4, Section 3's sentence builder, and the letter,
+    until it has been timed by hand). Section 1 has none: it cannot be finished without the sort, so its own
+    few minutes would read as less than the Strengths assessment it leads to."""
+    sections = the_pathway()["content"]["sections"]
+
+    assert {section["id"]: section.get("estimate") for section in sections} == {
+        "onboarding": "About 1 minute",
+        "designed": None,
+        "strengths": "About 10 minutes",
+        "shape": "? min",
+        "calling": "? min",
+        "growth": "? min",
+        "letter": "? min",
+    }
+
+
+def test_the_letter_and_the_closing_ratings_each_say_how_long_they_take():
+    """✨ The letter section is the only one with two activities, so each carries its own estimate, on the
+    block that starts it. A scripture reading leads into an activity rather than being one (the spec)."""
+    estimated = [
+        (section["id"], block["id"], block["estimate"])
+        for section in the_pathway()["content"]["sections"]
+        for block in section["blocks"]
+        if block.get("estimate")
+    ]
+
+    assert estimated == [("letter", "lt-task", "? min"), ("letter", "pl-intro", "? min")]
+
+
+def without_estimates(document):
+    """✨ The faithful port has no estimates, since the prototype gave none."""
+    for section in document["content"]["sections"]:
+        section.pop("estimate", None)
+        for block in section["blocks"]:
+            block.pop("estimate", None)
+    return document
+
+
 def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else():
     """✨ The fifth rating is added to the faithful port here and the result compared whole, so a change made to
     one document and not the other fails, and so does a slip in the fifth rating itself (its place, its anchors,
-    its gate clause, or a message still saying four). The minimum-length messages are reworded the same way."""
+    its gate clause, or a message still saying four). The minimum-length messages are reworded the same way,
+    and the time estimates, checked above, are set aside."""
     expected = the_faithful_port()
     for section in expected["content"]["sections"]:
         for clause in section.get("gate", {}).get("clauses", []):
@@ -162,4 +203,4 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
                 clause["message"] = ANSWER_ALL_FIVE
         clauses.append({"type": "has_answer", "block": f"{prefix}-peace", "message": ANSWER_ALL_FIVE})
 
-    assert the_pathway() == expected
+    assert without_estimates(the_pathway()) == expected

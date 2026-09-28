@@ -13,6 +13,7 @@ from engine.models import Response
 from tests.documents import complete_sort, pathway_document, scripture_reading, sort_pathway
 from tests.journeys.pages import loads_the_built_stylesheet
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
+from tests.journeys.test_results import in_order
 
 CALLING = "/sections/calling/"
 COMPLETE_CALLING = "/sections/calling/complete/"
@@ -587,6 +588,64 @@ def test_a_placeholder_is_never_saved_as_the_answer(open_calling):
     client = open_calling(with_a_placeholder("A statement long enough to pass the gate by itself."))
 
     assert client.post(COMPLETE_CALLING).status_code == 400
+
+
+# Time estimates
+
+
+def with_estimates(section=None, block=None):
+    """✨ The test pathway with an estimate on the calling section, on onboarding's rating, or both."""
+    document = pathway_document()
+    onboarding, calling = document["content"]["sections"]
+    if section:
+        calling["estimate"] = section
+    if block:
+        onboarding["blocks"][1]["estimate"] = block
+    return document
+
+
+@pytest.mark.django_db
+def test_a_section_shows_its_time_estimate_at_the_top(open_calling):
+    page = open_calling(with_estimates(section="About 15 minutes")).get(CALLING).content.decode()
+
+    assert in_order(page, "<h1>Putting your calling into words</h1>", "About 15 minutes", "Write your statement.")
+
+
+@pytest.mark.django_db
+def test_a_sections_time_estimate_is_gone_once_something_in_it_is_answered(open_calling):
+    """✨ It says how long the section will take, which no longer holds once the participant has begun."""
+    client = open_calling(with_estimates(section="About 15 minutes"))
+    client.post("/answers/statement/", {"value": "Begun", "version": _version_id()})
+
+    assert "About 15 minutes" not in client.get(CALLING).content.decode()
+
+
+@pytest.mark.django_db
+def test_a_block_shows_its_time_estimate_just_above_it(signed_in_client, load_pathway):  # noqa: F811
+    """✨ Where a section has several activities, each one's first block carries its own."""
+    load_pathway(with_estimates(block="About 2 minutes"))
+
+    page = signed_in_client.get(ONBOARDING).content.decode()
+
+    rating = "I understand what the Bible teaches about work."
+    assert in_order(page, "Welcome to the pathway.", "About 2 minutes", rating)
+
+
+@pytest.mark.django_db
+def test_a_time_estimate_is_in_the_participants_wording(open_calling):
+    estimate = {"participant": "About 15 minutes", "observer": "About 5 minutes to read"}
+
+    page = open_calling(with_estimates(section=estimate)).get(CALLING).content.decode()
+
+    assert "About 15 minutes" in page
+    assert "About 5 minutes to read" not in page
+
+
+@pytest.mark.django_db
+def test_a_section_without_time_estimates_shows_none(open_calling):
+    page = open_calling().get(CALLING).content.decode()
+
+    assert "time-estimate" not in page
 
 
 def _version_id():

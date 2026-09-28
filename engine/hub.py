@@ -27,13 +27,15 @@ LABELS = {
 
 
 class SectionState(NamedTuple):
-    """✨ One section as the hub sees it. `is_next` marks the one section the hub points the participant at."""
+    """✨ One section as the hub sees it. `is_next` marks the one section the hub points the participant at.
+    `estimate` is the authored time it takes, or None once the section has been begun."""
 
     id: str
     title: str
     status: str
     label: str
     is_next: bool = False
+    estimate: str | None = None
 
     @property
     def is_locked(self):
@@ -134,7 +136,15 @@ def _state(section, answers, completed, role):
         title=text_for(section["title"], role),
         status=status,
         label=LABELS[status],
+        estimate=_estimate(section, status, role),
     )
+
+
+def _estimate(section, status, role):
+    """✨ How long the section takes, said only until the participant has begun it, after which it no longer holds."""
+    if "estimate" not in section or status not in (LOCKED, NOT_STARTED):
+        return None
+    return text_for(section["estimate"], role)
 
 
 def _status(section, answers, completed):

@@ -11,8 +11,11 @@
 {% block content %}
   <p class="back-to-hub"><a href="{% url 'hub' %}">← Back to the hub</a></p>
   <h1>{{ section.title }}</h1>
+  {% if section.estimate %}<p class="time-estimate">{{ section.estimate }}</p>{% endif %}
 
   {% for block in section.blocks %}
+    {# ✨ Where a section has several activities, the block that starts each one says how long it takes. #}
+    {% if block.text.estimate %}<p class="time-estimate">{{ block.text.estimate }}</p>{% endif %}
     {% include block.template %}
   {% endfor %}
 

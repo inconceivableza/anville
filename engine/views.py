@@ -229,6 +229,7 @@ def _section_page(version, section, answers, completed, fixed):
         "section": {
             "id": section["id"],
             "title": text_for(section["title"], "participant"),
+            "estimate": states[section["id"]].estimate,
             "blocks": [_block_for_participant(version.document, block, answers, fixed, states) for block in blocks],
         },
         "is_complete": section["id"] in completed,

@@ -34,9 +34,12 @@
           <span class="status-chip status-{{ section.status }}">{{ section.label }}</span>
           {% if section.is_locked %}
             <span class="hub-section-title">{{ section.title }}</span>
-            <span class="hub-section-note">Complete what comes before this to open it.</span>
           {% else %}
             <a class="hub-section-title" href="{% url 'section' section.id %}">{{ section.title }}</a>
+          {% endif %}
+          {% if section.estimate %}<span class="time-estimate">{{ section.estimate }}</span>{% endif %}
+          {% if section.is_locked %}
+            <span class="hub-section-note">Complete what comes before this to open it.</span>
           {% endif %}
         </li>
       {% endfor %}

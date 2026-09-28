@@ -4,7 +4,7 @@ import pytest
 from django.contrib.auth import get_user_model
 
 from tests.documents import pathway_document
-from tests.journeys.pages import loads_the_built_stylesheet
+from tests.journeys.pages import loads_the_built_stylesheet, version_on
 from tests.journeys.test_access import PASSWORD
 from tests.journeys.test_consent import give_consent
 
@@ -108,6 +108,37 @@ def test_a_participant_sees_their_own_wording_not_the_observers(signed_in_client
 
     assert "Write your statement." in content
     assert "Describe their calling." not in content
+
+
+def hub_entry(page, title):
+    """✨ The hub's entry for one section, found by its title."""
+    return next(entry for entry in re.findall(r'<li class="hub-section.*?</li>', page, re.S) if title in entry)
+
+
+@pytest.mark.django_db
+def test_each_hub_entry_shows_its_sections_time_estimate_even_while_locked(signed_in_client, load_pathway):
+    """✨ So a participant can see how long the calling section takes before onboarding opens it."""
+    document = pathway_document()
+    document["content"]["sections"][1]["estimate"] = "About 15 minutes"
+    load_pathway(document)
+
+    page = signed_in_client.get("/").content.decode()
+
+    assert "About 15 minutes" in hub_entry(page, "Putting your calling into words")
+    assert "Complete what comes before this to open it." in hub_entry(page, "Putting your calling into words")
+    assert "time-estimate" not in hub_entry(page, "Before we begin")
+
+
+@pytest.mark.django_db
+def test_a_hub_entry_drops_its_estimate_once_the_section_is_started(signed_in_client, load_pathway):
+    document = pathway_document()
+    document["content"]["sections"][0]["estimate"] = "About 1 minute"
+    load_pathway(document)
+    version = version_on(signed_in_client.get("/sections/onboarding/").content.decode())
+
+    signed_in_client.post("/answers/baseline-bible/", {"value": "5", "version": version})
+
+    assert "About 1 minute" not in hub_entry(signed_in_client.get("/").content.decode(), "Before we begin")
 
 
 @pytest.mark.django_db

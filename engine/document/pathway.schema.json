@@ -116,6 +116,10 @@
         }
       ]
     },
+    "estimate": {
+      "description": "How long this takes, worded as it is shown, such as 'About 15 minutes'. On a section it shows on the hub and at the top of the section; on a block, just above the block, for a section with several activities.",
+      "$ref": "#/$defs/text"
+    },
     "section": {
       "type": "object",
       "additionalProperties": false,
@@ -124,6 +128,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "title": { "$ref": "#/$defs/text" },
         "requires": { "type": "array", "items": { "$ref": "#/$defs/identifier" } },
+        "estimate": { "$ref": "#/$defs/estimate" },
         "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } },
         "gate": { "$ref": "#/$defs/gate" }
       }
@@ -150,6 +155,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "rich_text" },
+        "estimate": { "$ref": "#/$defs/estimate" },
         "variant": {
           "description": "How the text is set off: plain prose, or a hint box (such as 'The big question').",
           "enum": ["plain", "hint"],
@@ -173,6 +179,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "scripture_reading" },
+        "estimate": { "$ref": "#/$defs/estimate" },
         "heading": { "$ref": "#/$defs/text" },
         "passages": {
           "type": "array",
@@ -211,6 +218,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "agreement_scale" },
+        "estimate": { "$ref": "#/$defs/estimate" },
         "prompt": { "$ref": "#/$defs/text" },
         "min_label": { "$ref": "#/$defs/text" },
         "max_label": { "$ref": "#/$defs/text" },
@@ -228,7 +236,8 @@
       "required": ["id", "type"],
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
-        "type": { "const": "sort_assessment" }
+        "type": { "const": "sort_assessment" },
+        "estimate": { "$ref": "#/$defs/estimate" }
       }
     },
     "section_link": {
@@ -239,6 +248,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "section_link" },
+        "estimate": { "$ref": "#/$defs/estimate" },
         "section": { "$ref": "#/$defs/identifier" },
         "body": {
           "description": "Plain text saying what is there. A blank line starts a new paragraph.",
@@ -262,6 +272,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "long_text" },
+        "estimate": { "$ref": "#/$defs/estimate" },
         "prompt": { "$ref": "#/$defs/text" },
         "placeholder": {
           "description": "Ghost text in the empty box, such as 'Dear me,'. A hint only: it is never saved as the answer.",
