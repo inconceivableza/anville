@@ -29,6 +29,13 @@ DOCUMENT = Path(__file__).resolve().parents[2] / "pathways" / "whatever-you-do.j
 
 PEACE = "I am at peace with God's plan for my life"
 ANSWER_ALL_FIVE = "Answer all five to continue"
+# ✨ The prototype's two minimum-length messages, each with how much is needed added.
+SAYS_HOW_MUCH = {
+    "Write your calling statement to continue.": "Write your calling statement (at least 10 characters) to continue.",
+    "Write at least one part of your letter before sealing it.": (
+        "Write at least one part of your letter (10 characters or more) before sealing it."
+    ),
+}
 SLOTS = (*PROTOTYPE_SLOTS, "peace")
 
 
@@ -139,8 +146,11 @@ def test_all_five_end_ratings_are_fixed_once_the_letter_is_sent(participant):
 def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else():
     """✨ The fifth rating is added to the faithful port here and the result compared whole, so a change made to
     one document and not the other fails, and so does a slip in the fifth rating itself (its place, its anchors,
-    its gate clause, or a message still saying four)."""
+    its gate clause, or a message still saying four). The minimum-length messages are reworded the same way."""
     expected = the_faithful_port()
+    for section in expected["content"]["sections"]:
+        for clause in section.get("gate", {}).get("clauses", []):
+            clause["message"] = SAYS_HOW_MUCH.get(clause["message"], clause["message"])
     for section_id, prefix in (("onboarding", "bl"), ("letter", "pl")):
         section = next(section for section in expected["content"]["sections"] if section["id"] == section_id)
         blocks = section["blocks"]

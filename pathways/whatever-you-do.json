@@ -214,7 +214,7 @@
               "type": "min_text_length",
               "block": "cl-statement",
               "min": 10,
-              "message": "Write your calling statement to continue."
+              "message": "Write your calling statement (at least 10 characters) to continue."
             }
           ]
         }
@@ -303,7 +303,7 @@
               "type": "min_text_length",
               "block": "lt-message",
               "min": 10,
-              "message": "Write at least one part of your letter before sealing it."
+              "message": "Write at least one part of your letter (10 characters or more) before sealing it."
             },
             { "type": "has_answer", "block": "pl-bible", "message": "Answer all five to continue" },
             { "type": "has_answer", "block": "pl-gifts", "message": "Answer all five to continue" },

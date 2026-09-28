@@ -66,7 +66,7 @@
               "type": "min_text_length",
               "block": "reflection-answer",
               "min": 10,
-              "message": "Write at least ten characters to continue."
+              "message": "Write at least 10 characters to continue."
             }
           ]
         }
