@@ -160,6 +160,17 @@ def test_once_the_sort_is_in_its_section_links_to_the_results(signed_in):
     assert f'href="/results/{SORT}/"' in signed_in.get(f"/sections/{STRENGTHS}/").content.decode()
 
 
+@pytest.mark.django_db
+def test_the_results_page_leads_back_to_the_sorts_section_where_it_is_completed(signed_in):
+    """✨ The prototype returned to Section 1, but its assessment had nothing of its own to complete."""
+    submit_sort(signed_in, complete_sort())
+
+    page = results(signed_in).content.decode()
+
+    assert f'<a href="/sections/{STRENGTHS}/">← Back to Strengths assessment</a>' in page
+    assert "← Back to the hub" not in page
+
+
 def widget_data(page, block_id=SORT):
     """✨ What the section page hands the sort widget, read the way the widget reads it."""
     data = re.search(rf'<script id="sort-{block_id}" type="application/json">(.*?)</script>', page, re.S)

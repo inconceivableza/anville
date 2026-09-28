@@ -144,7 +144,8 @@ def save_answer(request, block_id):
 def results(request, block_id):
     """✨ The participant's own stored result for a scored block, never recomputed and never anyone else's.
 
-    Before there is a result, the participant is sent to the block's section, where the sort is.
+    Before there is a result, the participant is sent to the block's section, where the sort is. After, the page
+    leads back there too, since that is where the section is completed.
     """
     participant_response, version, answers, _ = _participant(request.user)
     try:
@@ -153,10 +154,12 @@ def results(request, block_id):
         block = None
     if block is None or not BLOCK_TYPES[block["type"]].scored:
         raise Http404("This pathway version has no scored block by that identifier.")
+    section = section_of(version.document, block_id)
     result = Result.objects.filter(response=participant_response, block_id=block_id).first()
     if result is None:
-        return redirect("section", section_of(version.document, block_id)["id"])
+        return redirect("section", section["id"])
     page = results_page(version.document, result.scores, answers[block_id], request.user.get_username())
+    page["section"] = {"id": section["id"], "title": text_for(section["title"], "participant")}
     return render(request, "engine/results.html", page)
 
 

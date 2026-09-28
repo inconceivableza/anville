@@ -7,7 +7,7 @@
 {% block head_title %}{{ title }}{% endblock head_title %}
 
 {% block content %}
-  <p class="back-to-hub"><a href="{% url 'hub' %}">← Back to the hub</a></p>
+  <p class="back-to-hub"><a href="{% url 'section' section.id %}">← Back to {{ section.title }}</a></p>
   <h1>{{ title }}</h1>
 
   {% for framework in frameworks %}
