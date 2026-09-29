@@ -47,19 +47,16 @@ from engine.results import results_page
 
 class ParticipantState(NamedTuple):
     """✨ Everything stored for one participant: their response (None before their first answer), the pathway version
-    it answers, and its state: answers, sections completed, pages moved past by section, and the blocks whose answers
-    are fixed."""
+    it answers and that version's track sections, and its state: answers, sections completed, pages moved past by
+    section, and the blocks whose answers are fixed."""
 
     response: Response | None
     version: PathwayVersion | None
+    sections: list
     answers: dict
     completed: set
     moved_past: dict
     fixed: set
-
-    @property
-    def sections(self):
-        return track_sections(self.version.document)
 
     def reached(self, section):
         """✨ The page of a section this participant has reached, or None while the section is locked. Every way into
@@ -263,7 +260,7 @@ def coach_checklist(request, block_id):
     screen = _checklist_step(block, request.POST["step"], request.POST)
     status = 400 if screen.get("refusal") else 200
     shown = _section_page(state, section, page_of(section, block_id))
-    checklist_block = next(block for block in shown["section"]["blocks"] if block["id"] == block_id)
+    checklist_block = next(on_page for on_page in shown["section"]["blocks"] if on_page["id"] == block_id)
     checklist_block["checklist"] = _checklist_screen(checklist_block["text"], **screen)
     if request.headers.get("HX-Request") == "true":
         context = {"block": checklist_block, "pathway": shown["pathway"]}
@@ -395,10 +392,13 @@ def _participant(user, first_version=Publication.current_version):
     """
     participant_response = Response.in_progress(user)
     if participant_response is None:
-        return ParticipantState(None, first_version(), {}, set(), {}, set())
+        version = first_version()
+        sections = track_sections(version.document) if version else []
+        return ParticipantState(None, version, sections, {}, set(), {}, set())
     return ParticipantState(
         response=participant_response,
         version=participant_response.version,
+        sections=track_sections(participant_response.version.document),
         answers=participant_response.answers_with_contacts(),
         completed=set(participant_response.completed_sections),
         moved_past=participant_response.moved_past_by_section(),

@@ -73,7 +73,8 @@ def clauses_of(section, page=None):
     clauses = section.get("gate", {}).get("clauses", [])
     if page is None:
         return clauses
-    return [clause for clause in clauses if (page_of(section, clause["block"]) or page_count(section)) == page]
+    last = page_count(section)
+    return [clause for clause in clauses if (page_of(section, clause["block"]) or last) == page]
 
 
 def _has_answer(clause, answer):
