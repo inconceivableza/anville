@@ -92,13 +92,15 @@ def open_blocks(section, answers, sections, up_to_page=1):
 
 
 def page_reached(section, moved_past, answers, sections):
-    """✨ The page of a section a participant has reached, from the pages they have moved past (`moved_past`).
+    """✨ The page of a section a participant has reached, from the pages they have moved past (`moved_past`, by
+    section).
 
     Each page is reached only through every page ahead of it, and the last is as far as there is to go. A block
     holding the rest shut holds the pages after its own too, even once gone past: a participant who went on past a
     held link, then made its section's gate fail again, is back on the link's page rather than on one with nothing.
     """
     last = len(pages_of(section))
+    moved_past = moved_past.get(section["id"], ())
     page = 1
     while page in moved_past and page < last:
         page += 1
@@ -141,9 +143,7 @@ def is_locked(section, completed):
 def hub_for(sections, answers, completed, role="participant", moved_past=None):
     """✨ A participant's hub over one track's sections. `moved_past` holds, by section, the pages moved past."""
     moved_past = moved_past or {}
-    states = [
-        _state(section, answers, completed, role, moved_past.get(section["id"], ()), sections) for section in sections
-    ]
+    states = [_state(section, answers, completed, role, moved_past, sections) for section in sections]
     next_step = next((state for state in states if state.status in (NOT_STARTED, IN_PROGRESS)), None)
     states = [state._replace(is_next=state is next_step) for state in states]
     interactive = [block for section in sections for block in _interactive_blocks(section)]

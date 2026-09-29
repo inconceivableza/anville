@@ -46,7 +46,7 @@ def test_a_block_is_on_the_page_its_break_puts_it_on_counting_from_one():
 
 def reached(moved_past):
     """✨ The page of THREE_PAGES reached, with nothing on it holding the rest shut."""
-    return page_reached(THREE_PAGES, moved_past, {}, [THREE_PAGES])
+    return page_reached(THREE_PAGES, {"onboarding": moved_past}, {}, [THREE_PAGES])
 
 
 def test_a_participant_starts_on_the_first_page():
