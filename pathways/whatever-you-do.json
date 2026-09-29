@@ -70,6 +70,10 @@
             "fixed_once_complete": true
           },
           {
+            "id": "to-coach",
+            "type": "page_break"
+          },
+          {
             "id": "coach",
             "type": "coach_checklist",
             "heading": "Walking with a coach",
@@ -143,6 +147,10 @@
                 "commitment": "I'll make time for a few unhurried conversations, and I'll protect them."
               }
             ]
+          },
+          {
+            "id": "to-contacts",
+            "type": "page_break"
           },
           {
             "id": "contacts-intro",

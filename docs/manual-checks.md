@@ -48,7 +48,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 ## The contact list (onboarding's "Who knows you best?")
 
-- It sits after the baseline ratings: a numbered row per person, "First name" narrower than "Email address", two rows in Whatever You Do (five in the faithful port), with "+ Add another person" full width beneath.
+- It sits on onboarding's last page, reached by "Continue →" from the baseline ratings' page (and, in Whatever You Do, the coach step's): a numbered row per person, "First name" narrower than "Email address", two rows in Whatever You Do (five in the faithful port), with "+ Add another person" full width beneath.
 - Typing a name and email and leaving the field shows "Saved"; a reload shows them again. Moving from a new row's name to its email shows "Not saved. Add both a name and an email address in row N." until the email is typed and left, then "Saved".
 - A bad address (`jo`, `jo@`, `jo@example`) shows "Not saved. Check the email address in row N.", and that email box turns red. The next save that goes through clears the red. A half-filled row marks its empty field the same way.
 - "+ Add another person" adds an empty numbered row without reloading, and the cursor goes into its name. At 50 rows it is disabled.
@@ -68,6 +68,20 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Every requirement is listed below the button, a met one ticked (✓) and quieter, an unmet one with a dot. As you type, an item changes between the two in place: scrolled to the very bottom of the page, nothing moves.
 - Screen reader: a met item is read as "Done: …", and the tick and dot are not read.
 - A refused completion ("This section was not marked complete…") also shows below the button.
+
+## Pages within a section (onboarding)
+
+- Onboarding plays as three pages in Whatever You Do (the reason and the five ratings; "Walking with a coach"; "Who knows you best?") and two in the faithful port (no coach step). Each page is headed by the section's title, with no page count.
+- Every page but the last ends in a full-width "Continue →", disabled until that page's own requirements are met, which are listed beneath it as the gate's are. The coach step's page lists none and its "Continue →" is never disabled. The last page ends in onboarding's own "Continue →", which completes it.
+- "Continue →" goes to the next page, at its top. Pressing it on a page with a requirement unmet (re-enable the button in DevTools) comes back with "This page is not finished yet." beneath it.
+- "← Back", a secondary button not the page's full width, sits beneath the way on and its checklist, not beside the button, so "Continue →" is in the same place on every page. It is on every page but the first and goes to the page before, with its answers as left. The first page has none.
+- Going back and clearing the reason, then going forward again: the last page's checklist also lists "Choose what's bringing you to the course…" unticked, and completing is refused with it.
+- Typing `/sections/onboarding/pages/3/` before reaching it lands on the page reached. The hub's "Carry on" and onboarding's entry lead to the page reached, not the first.
+- Refreshing any page keeps you on it.
+- Without JavaScript: "Continue →" and "← Back" both work, and the coach checklist's buttons come back to the coach step's page, not the first.
+- Keyboard only: after the page's fields, Tab reaches "Continue →", then "← Back".
+- Screen reader: each page's heading is read on arrival; "← Back" is read as a link.
+- Phone width: "Continue →" fills the width, and "← Back" sits on its own line beneath the checklist.
 
 ## Fixed ratings (after completing onboarding, or Section 5)
 

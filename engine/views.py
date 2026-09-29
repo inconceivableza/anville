@@ -102,8 +102,9 @@ def section(request, section_id, page=1):
 @consent_required
 @require_POST
 def move_past_page(request, section_id, page):
-    """✨ "Continue →" from one page of a section to the next, once that page's clauses pass, re-checked here rather
-    than trusted to the page. The last page has no way on but completing the section."""
+    """✨ "Continue →" from one page of a section to the next, allowed exactly when the page offers it: once that page's
+    clauses pass and nothing on the way to it (an unconfirmed reading, a held link) holds what follows. Re-checked here
+    rather than trusted to the page. The last page has no way on but completing the section."""
     participant_response, version, answers, completed, moved_past = _participant(request.user)
     section = _section_or_404(version, section_id)
     if is_locked(section, completed):
@@ -113,8 +114,8 @@ def move_past_page(request, section_id, page):
     reached = page_reached(section, moved_past.get(section_id, ()))
     if page > reached:
         return _see_other(page_url(section_id, reached))
-    if unmet(section, answers, page=page):
-        shown = _section_page(version, section, answers, completed, _fixed(participant_response), moved_past, page)
+    shown = _section_page(version, section, answers, completed, _fixed(participant_response), moved_past, page)
+    if not shown["offers_completion"] or shown["unmet"]:
         return render(request, "engine/section.html", {**shown, "refused": True}, status=400)
 
     if participant_response is None:
@@ -462,6 +463,7 @@ def _section_page(version, section, answers, completed, fixed, moved_past, page=
         "is_complete": section["id"] in completed,
         # ✨ Over the whole section, since the ratings it fixed may be on an earlier page than its completion.
         "holds_fixed_answers": any(block["id"] in fixed for block in section["blocks"]),
+        # ✨ The way on, "Continue →" or completion. Going on from a page is refused on exactly these and `unmet`.
         "offers_completion": activity_open and not sort_pending,
         "unmet": unmet(section, answers) if is_last else unmet(section, answers, page=page),
         "checklist": checklist(section, answers, page=page),

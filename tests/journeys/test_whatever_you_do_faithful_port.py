@@ -14,6 +14,7 @@ import pytest
 from django.test import Client
 from django.utils.html import escape
 
+from engine.document.blocks import pages_of
 from engine.models import Contact, Publication, Response
 from tests.journeys.pages import gate_checklist
 from tests.journeys.test_consent import give_consent
@@ -73,15 +74,27 @@ def complete(client, section_id):
     return client.post(f"/sections/{section_id}/complete/")
 
 
+def move_past(client, page):
+    """✨ "Continue →" from one page of onboarding to the next."""
+    return client.post(f"/sections/onboarding/pages/{page}/continue/")
+
+
 def answer_the_baseline(client, prefix="bl"):
     for slot in SLOTS:
         answer(client, f"{prefix}-{slot}", "7")
 
 
 def answer_onboarding(client):
-    """✨ Everything onboarding requires: the reason for taking the course, and the baseline."""
+    """✨ Everything onboarding requires: the reason for taking the course and the baseline, then on to the page
+    of the people who know the participant best, where onboarding is completed."""
     answer(client, "reason", "exploring")
     answer_the_baseline(client)
+    move_past(client, 1)
+
+
+def onboarding_pages(document):
+    """✨ Onboarding's blocks page by page, by identifier."""
+    return [[block["id"] for block in page] for page in pages_of(document["content"]["sections"][0])]
 
 
 def through_to_the_calling_statement(client):
@@ -137,7 +150,8 @@ def test_going_back_to_select_asks_for_a_reason_again(participant):
 
     refused = complete(participant, "onboarding")
     assert refused.status_code == 400
-    assert gate_checklist(refused.content.decode()) == {CHOOSE_A_REASON: False, ANSWER_ALL_FOUR: True, ADD_FIVE: True}
+    # ✨ Completed from the contacts' page, which also says what is left unmet on the page before it.
+    assert gate_checklist(refused.content.decode()) == {ADD_FIVE: True, CHOOSE_A_REASON: False}
 
 
 @pytest.mark.django_db
@@ -154,10 +168,11 @@ def test_onboarding_ends_with_the_prototypes_continue_and_leads_on_to_section_1(
 def test_onboarding_is_not_complete_without_a_reason(participant):
     answer_the_baseline(participant)
 
-    refused = complete(participant, "onboarding")
+    refused = move_past(participant, 1)
 
     assert refused.status_code == 400
-    assert gate_checklist(refused.content.decode()) == {CHOOSE_A_REASON: False, ANSWER_ALL_FOUR: True, ADD_FIVE: True}
+    assert gate_checklist(refused.content.decode()) == {CHOOSE_A_REASON: False, ANSWER_ALL_FOUR: True}
+    assert complete(participant, "onboarding").url == "/sections/onboarding/"
     assert "onboarding" not in Response.objects.get().completed_sections
 
 
@@ -197,11 +212,11 @@ def test_all_four_baseline_ratings_are_needed_before_the_participant_may_continu
     for slot in ("bible", "gifts", "call"):
         answer(participant, f"bl-{slot}", "5")
 
-    refused = complete(participant, "onboarding")
+    refused = move_past(participant, 1)
 
     assert refused.status_code == 400
     assert ANSWER_ALL_FOUR in refused.content.decode()
-    assert "onboarding" not in Response.objects.get().completed_sections
+    assert "onboarding" not in Response.objects.get().moved_past_by_section()
 
 
 @pytest.mark.django_db
@@ -217,7 +232,7 @@ def test_the_way_on_opens_once_all_four_are_answered(participant):
     answer_onboarding(participant)
 
     page = participant.get("/sections/onboarding/").content.decode()
-    assert gate_checklist(page) == {CHOOSE_A_REASON: True, ANSWER_ALL_FOUR: True, ADD_FIVE: True}
+    assert gate_checklist(page) == {CHOOSE_A_REASON: True, ANSWER_ALL_FOUR: True}
 
     assert complete(participant, "onboarding").status_code == 303
 
@@ -259,18 +274,34 @@ def add_people(client, count):
     )
 
 
-@pytest.mark.django_db
-def test_onboarding_asks_who_knows_the_participant_best_after_the_baseline(participant):
-    page = participant.get("/sections/onboarding/").content.decode()
+CONTACTS_PAGE = "/sections/onboarding/pages/2/"
 
-    assert page.index(escape(BASELINE_STATEMENTS["bl-plan"])) < page.index("Who knows you best?")
+
+def test_onboarding_is_the_prototypes_baseline_screen_then_its_contacts_screen():
+    """✨ Two pages, with the reason on the first as the account screen's question is kept with the baseline."""
+    assert onboarding_pages(the_pathway()) == [
+        ["reason", "baseline-intro", "bl-bible", "bl-gifts", "bl-call", "bl-plan"],
+        ["contacts-intro", "contacts"],
+    ]
+
+
+@pytest.mark.django_db
+def test_onboarding_asks_who_knows_the_participant_best_on_a_page_after_the_baseline(participant):
+    assert "Who knows you best?" not in participant.get("/sections/onboarding/").content.decode()
+    answer_onboarding(participant)
+
+    page = participant.get(CONTACTS_PAGE).content.decode()
+
+    assert escape(BASELINE_STATEMENTS["bl-plan"]) not in page
     assert page.index("Who knows you best?") < page.index('id="block-contacts"')
     assert "We need at least 5 people whose opinion you trust" in page
 
 
 @pytest.mark.django_db
 def test_the_contact_list_opens_with_the_prototypes_five_rows(participant):
-    page = participant.get("/sections/onboarding/").content.decode()
+    answer_onboarding(participant)
+
+    page = participant.get(CONTACTS_PAGE).content.decode()
     form = re.search(r'<form id="block-contacts".*?</form>', page, re.S).group(0)
 
     assert len(re.findall(r'<input[^>]*\bname="email"', form)) == 5
@@ -292,7 +323,7 @@ def test_once_anyone_is_added_onboarding_needs_five_as_the_prototype_did(partici
     refused = complete(participant, "onboarding")
 
     assert refused.status_code == 400
-    assert gate_checklist(refused.content.decode()) == {CHOOSE_A_REASON: True, ANSWER_ALL_FOUR: True, ADD_FIVE: False}
+    assert gate_checklist(refused.content.decode()) == {ADD_FIVE: False}
     add_people(participant, 5)
     assert complete(participant, "onboarding").status_code == 303
 

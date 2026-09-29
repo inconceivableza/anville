@@ -11,7 +11,8 @@ from html import unescape
 
 import pytest
 
-from tests.documents import pathway_document
+from engine.models import Response
+from tests.documents import pathway_document, scripture_reading
 from tests.journeys.pages import gate_checklist, version_on
 from tests.journeys.test_coach_checklist import step, the_coach_checklist
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
@@ -176,6 +177,41 @@ def test_going_on_from_a_page_not_yet_reached_changes_nothing(participant):
 
 
 @pytest.mark.django_db
+def test_going_on_past_an_unconfirmed_reading_is_refused_though_the_page_needs_nothing_else(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    """✨ The page offers no "Continue →" beneath an unconfirmed reading; a request made by hand is refused too."""
+    load_pathway(paged_onboarding(second_page=[scripture_reading()]))
+    through_to(signed_in_client, 2)
+
+    refused = move_past(signed_in_client, 2)
+
+    assert refused.status_code == 400
+    assert 2 not in Response.objects.get().moved_past_by_section()["onboarding"]
+    assert signed_in_client.get(THIRD).url == SECOND
+
+
+@pytest.mark.django_db
+def test_going_on_past_a_confirmed_reading_is_allowed(signed_in_client, load_pathway):  # noqa: F811
+    load_pathway(paged_onboarding(second_page=[scripture_reading()]))
+    through_to(signed_in_client, 2)
+    save(signed_in_client, "reading", "true")
+
+    assert move_past(signed_in_client, 2).url == THIRD
+
+
+@pytest.mark.django_db
+def test_going_on_past_a_link_still_holding_what_follows_is_refused(signed_in_client, load_pathway):  # noqa: F811
+    """✨ Held until the linked section's gate passes, as an unconfirmed reading holds."""
+    held = {"id": "to-calling", "type": "section_link", "section": "calling", "holds_what_follows": True}
+    load_pathway(paged_onboarding(second_page=[held]))
+    through_to(signed_in_client, 2)
+
+    assert move_past(signed_in_client, 2).status_code == 400
+    assert signed_in_client.get(THIRD).url == SECOND
+
+
+@pytest.mark.django_db
 def test_there_is_no_going_on_from_the_last_page(participant):
     through_to(participant, 3)
 
@@ -294,3 +330,27 @@ def test_the_hub_shows_a_paged_section_once_and_leads_to_the_page_reached(partic
 @pytest.mark.django_db
 def test_the_hub_leads_to_the_first_page_until_the_participant_goes_on(participant):
     assert f'href="{FIRST}"' in shown(participant, "/")
+
+
+# Progress and estimates are the section's, whatever its pages
+
+
+@pytest.mark.django_db
+def test_progress_counts_a_sections_blocks_wherever_they_sit(participant):
+    """✨ The rating and "why" on the first page, the story on the second, and the calling statement."""
+    assert "0 of 4 answered" in shown(participant, "/")
+
+    through_to(participant, 2)
+    save(participant, "story", "It began in a small town.")
+
+    assert "2 of 4 answered" in shown(participant, "/")
+
+
+@pytest.mark.django_db
+def test_a_paged_sections_estimate_is_said_once_for_the_whole_section(signed_in_client, load_pathway):  # noqa: F811
+    document = paged_onboarding()
+    document["content"]["sections"][0]["estimate"] = "About 3 minutes"
+    load_pathway(document)
+
+    assert shown(signed_in_client, "/").count("About 3 minutes") == 1
+    assert "Whole section: About 3 minutes" in shown(signed_in_client)

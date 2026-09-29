@@ -25,6 +25,8 @@ from tests.journeys.test_whatever_you_do_faithful_port import (
     add_people,
     answer,
     complete,
+    move_past,
+    onboarding_pages,
 )
 from tests.journeys.test_whatever_you_do_faithful_port import SLOTS as PROTOTYPE_SLOTS
 from tests.journeys.test_whatever_you_do_faithful_port import the_pathway as the_faithful_port
@@ -44,6 +46,8 @@ SLOTS = (*PROTOTYPE_SLOTS, "peace")
 # ✨ Two people rather than the prototype's five, for now, so the pathway can be tried without inventing five
 # (the developer's call, 2026-09-29).
 ADD_TWO = "Add at least 2 people, or leave the list empty to do this later."
+COACH_PAGE = "/sections/onboarding/pages/2/"
+CONTACTS_PAGE = "/sections/onboarding/pages/3/"
 
 
 def the_pathway():
@@ -62,9 +66,12 @@ def answer_all_five(client, prefix="bl"):
 
 
 def answer_onboarding(client):
-    """✨ Everything onboarding requires: the reason for taking the course, and all five ratings."""
+    """✨ Everything onboarding requires: the reason for taking the course and all five ratings, then on past the
+    coach step to the page of the people who know the participant best, where onboarding is completed."""
     answer(client, "reason", "exploring")
     answer_all_five(client)
+    move_past(client, 1)
+    move_past(client, 2)
 
 
 def through_to_the_letter(client):
@@ -91,11 +98,11 @@ def test_all_five_ratings_are_needed_before_the_participant_may_continue(partici
     for slot in PROTOTYPE_SLOTS:
         answer(participant, f"bl-{slot}", "5")
 
-    refused = complete(participant, "onboarding")
+    refused = move_past(participant, 1)
 
     assert refused.status_code == 400
     assert refused.content.decode().count(ANSWER_ALL_FIVE) == 1
-    assert "onboarding" not in Response.objects.get().completed_sections
+    assert "onboarding" not in Response.objects.get().moved_past_by_section()
 
 
 @pytest.mark.django_db
@@ -149,7 +156,9 @@ def test_once_anyone_is_added_onboarding_needs_only_two_for_now(participant):
 
 @pytest.mark.django_db
 def test_the_contact_list_opens_with_two_rows_and_says_two_are_needed(participant):
-    page = participant.get("/sections/onboarding/").content.decode()
+    answer_onboarding(participant)
+
+    page = participant.get(CONTACTS_PAGE).content.decode()
 
     assert page.count('name="email"') == 2
     assert "We need at least 2 people whose opinion you trust" in page
@@ -250,11 +259,26 @@ def test_the_coach_step_asks_the_mock_ups_six_questions_word_for_word():
     assert [question["id"] for question in questions if question["critical"]] == ["faith", "objectivity", "coaching"]
 
 
-def test_the_coach_step_comes_between_the_starting_ratings_and_the_contact_list():
+def test_the_coach_step_has_a_page_between_the_starting_ratings_and_the_contact_list():
     """✨ As the original prototype goes from its baseline screen to its mentor screen, then to its contacts."""
-    blocks = [block["id"] for block in the_pathway()["content"]["sections"][0]["blocks"]]
+    assert onboarding_pages(the_pathway()) == [
+        ["reason", "baseline-intro", "bl-bible", "bl-gifts", "bl-call", "bl-plan", "bl-peace"],
+        ["coach"],
+        ["contacts-intro", "contacts"],
+    ]
 
-    assert blocks.index("bl-peace") < blocks.index("coach") < blocks.index("contacts-intro")
+
+@pytest.mark.django_db
+def test_the_coach_steps_page_needs_nothing_to_go_on_from(participant):
+    answer(participant, "reason", "exploring")
+    answer_all_five(participant)
+    move_past(participant, 1)
+
+    page = participant.get(COACH_PAGE).content.decode()
+
+    assert "Walking with a coach" in page
+    assert '<button type="submit" class="btn btn-primary btn-full">Continue →</button>' in page
+    assert move_past(participant, 2).url == CONTACTS_PAGE
 
 
 def test_the_coach_step_is_introduced_as_the_mock_up_introduces_it():
@@ -278,9 +302,15 @@ def test_onboarding_can_be_completed_without_choosing_a_coach(participant):
 
 
 def without_the_coach_step(document):
-    """✨ Only this pathway asks for a coach the mock-up's way; the faithful port's own mentor screen is ticket 10b."""
+    """✨ Only this pathway asks for a coach the mock-up's way; the faithful port's own mentor screen is ticket 10b.
+    The coach step's page goes with it, so the break that opened that page goes too."""
     for section in document["content"]["sections"]:
-        section["blocks"] = [block for block in section["blocks"] if block["type"] != "coach_checklist"]
+        blocks = [block for block in section["blocks"] if block["type"] != "coach_checklist"]
+        section["blocks"] = [
+            block
+            for block, after in zip(blocks, [*blocks[1:], None])
+            if not (block["type"] == "page_break" and after and after["type"] == "page_break")
+        ]
     return document
 
 
