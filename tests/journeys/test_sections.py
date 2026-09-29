@@ -632,10 +632,12 @@ def with_estimates(section=None, block=None):
 
 
 @pytest.mark.django_db
-def test_a_section_shows_its_time_estimate_at_the_top(open_calling):
+def test_a_section_shows_its_time_estimate_at_the_top_as_the_whole_sections(open_calling):
+    """✨ Said in so many words, since an activity's own estimate may sit just beneath it (the letter's does)."""
     page = open_calling(with_estimates(section="About 15 minutes")).get(CALLING).content.decode()
 
-    assert in_order(page, "<h1>Putting your calling into words</h1>", "About 15 minutes", "Write your statement.")
+    heading = "<h1>Putting your calling into words</h1>"
+    assert in_order(page, heading, "Whole section:", "About 15 minutes", "Write your statement.")
 
 
 @pytest.mark.django_db
@@ -655,7 +657,7 @@ def test_a_block_shows_its_time_estimate_just_above_it(signed_in_client, load_pa
     page = signed_in_client.get(ONBOARDING).content.decode()
 
     rating = "I understand what the Bible teaches about work."
-    assert in_order(page, "Welcome to the pathway.", "About 2 minutes", rating)
+    assert in_order(page, "Welcome to the pathway.", "This part:", "About 2 minutes", rating)
 
 
 @pytest.mark.django_db

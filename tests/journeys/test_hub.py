@@ -125,6 +125,7 @@ def test_each_hub_entry_shows_its_sections_time_estimate_even_while_locked(signe
     page = signed_in_client.get("/").content.decode()
 
     assert "About 15 minutes" in hub_entry(page, "Putting your calling into words")
+    assert "Whole section:" not in hub_entry(page, "Putting your calling into words")  # ✨ plainly the section's here
     assert "Complete what comes before this to open it." in hub_entry(page, "Putting your calling into words")
     assert "time-estimate" not in hub_entry(page, "Before we begin")
 
