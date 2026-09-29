@@ -767,6 +767,19 @@ p.time-estimate {
   outline-offset: 2px;
 }
 
+/* ✨ Choosing again while a coach is kept: who stays, and the way back to them */
+.coach-kept {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.coach-kept p {
+  font-size: 14px;
+  color: var(--ink-muted);
+  margin: 0 0 10px;
+}
+
 .btn-primary.coach-warn {
   background: var(--warn);
 }

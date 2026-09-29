@@ -14,6 +14,7 @@ import pytest
 from django.utils.html import escape
 
 from engine.models import Contact, Response
+from tests.journeys.test_coach_checklist import choose
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.prototype import js_string
 from tests.journeys.test_whatever_you_do_faithful_port import (
@@ -268,13 +269,17 @@ def test_the_coach_page_comes_between_the_starting_ratings_and_the_contact_list(
     ]
 
 
+def to_the_coach_page(client):
+    """✨ The reason and the five ratings, then on to the coach page."""
+    answer(client, "reason", "exploring")
+    answer_all_five(client)
+    move_past(client, 1)
+    return client
+
+
 @pytest.mark.django_db
 def test_the_coach_page_needs_nothing_to_go_on_from(participant):
-    answer(participant, "reason", "exploring")
-    answer_all_five(participant)
-    move_past(participant, 1)
-
-    page = participant.get(COACH_PAGE).content.decode()
+    page = to_the_coach_page(participant).get(COACH_PAGE).content.decode()
 
     assert "Walking with a coach" in page
     assert f'<button type="submit" class="btn btn-secondary btn-full">{escape(SORT_LATER)}</button>' in page
@@ -282,38 +287,40 @@ def test_the_coach_page_needs_nothing_to_go_on_from(participant):
 
 
 SORT_LATER = "I'll sort this later →"  # ✨ the original prototype's way past its mentor screen without a mentor
-
-
-def save_the_coach(client, htmx=True, **fields):
-    form = {"step": "save", "name": "Sam", "email": "sam@example.com", "confirmed": "on", **fields}
-    form.update({f"answer-{question['id']}": "yes" for question in the_coach_step(the_pathway())["questions"]})
-    return client.post("/coach/coach/", form, **({"HTTP_HX_REQUEST": "true"} if htmx else {}))
+CONTINUE_WITH_SAM = '<button type="submit" class="btn btn-primary btn-full">Continue with Sam →</button>'
 
 
 @pytest.mark.django_db
-def test_the_coach_page_says_continue_once_a_coach_is_chosen_and_sort_later_once_removed(participant):
-    answer(participant, "reason", "exploring")
-    answer_all_five(participant)
-    move_past(participant, 1)
+def test_the_coach_page_goes_on_with_the_coach_once_chosen_and_says_sort_later_once_removed(participant):
+    to_the_coach_page(participant)
 
-    saved = save_the_coach(participant).content.decode()
+    saved = choose(participant).content.decode()
     reloaded = participant.get(COACH_PAGE).content.decode()
     removed = participant.post("/coach/coach/", {"step": "remove"}, HTTP_HX_REQUEST="true").content.decode()
 
-    continue_button = '<button type="submit" class="btn btn-primary btn-full">Continue →</button>'
-    assert continue_button in saved  # ✨ sent with the checklist, so the button changes without a reload
+    assert CONTINUE_WITH_SAM in saved  # ✨ sent with the checklist, so the button changes without a reload
     assert '<div id="completion" class="completion" hx-swap-oob="true">' in saved
-    assert continue_button in reloaded
+    assert CONTINUE_WITH_SAM in reloaded
     assert f'<button type="submit" class="btn btn-secondary btn-full">{escape(SORT_LATER)}</button>' in removed
 
 
 @pytest.mark.django_db
-def test_a_refused_coach_leaves_the_way_on_as_it_was(participant):
-    answer(participant, "reason", "exploring")
-    answer_all_five(participant)
-    move_past(participant, 1)
+def test_choosing_again_the_way_on_still_names_the_coach_kept_not_a_second_continue(participant):
+    """✨ The checklist's own "Continue →" sits above the page's way on, so the two must read apart."""
+    to_the_coach_page(participant)
+    choose(participant)
 
-    refused = save_the_coach(participant, confirmed="").content.decode()
+    choosing_again = participant.post("/coach/coach/", {"step": "restart"}).content.decode()
+
+    assert CONTINUE_WITH_SAM in choosing_again
+    assert choosing_again.count(">Continue →</button>") == 1  # ✨ the checklist's own, to its questions
+
+
+@pytest.mark.django_db
+def test_a_refused_coach_leaves_the_way_on_as_it_was(participant):
+    to_the_coach_page(participant)
+
+    refused = choose(participant, confirmed=False).content.decode()
 
     assert "hx-swap-oob" not in refused
 
@@ -340,13 +347,9 @@ def test_onboarding_can_be_completed_without_choosing_a_coach(participant):
 
 @pytest.mark.django_db
 def test_a_chosen_coach_is_kept_on_the_coach_page_and_apart_from_the_contacts(participant):
-    answer(participant, "reason", "exploring")
-    answer_all_five(participant)
-    move_past(participant, 1)
-    form = {"step": "save", "name": "Sam", "email": "sam@example.com", "confirmed": "on"}
-    form.update({f"answer-{question['id']}": "yes" for question in the_coach_step(the_pathway())["questions"]})
+    to_the_coach_page(participant)
 
-    saved = participant.post("/coach/coach/", form)
+    saved = choose(participant, htmx=False)
 
     assert saved.url == f"{COACH_PAGE}#block-coach"
     assert "Sam is your coach" in participant.get(COACH_PAGE).content.decode()

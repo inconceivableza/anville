@@ -402,9 +402,9 @@ Both UK and EU data protection law apply. The workbook's free text may contain s
   - The sort's progress bar fills to 80% over the 36 cards and holds there through fine-tuning.
 - **To show the content owner, from ticket 10a** (the developer's calls, to confirm, ideally at the 2 Oct demo):
   - The reason for taking the course is asked straight after consent, not on the sign-up form, and without the prototype's "– please choose".
-  - The coach step can be skipped, unlike in the mock-up. Its questions' button reads "Continue →", not "See how it looks →", and "I'm still confident" no longer says "You've said yes to all six".
-  - Going ahead asks for the coach's name and email with the original prototype's tick, reworded: "I've spoken to this person and they're happy to receive a link from me about coaching me through this course." Saving shows "Sam is your coach" on the coach page, with "Choose someone else" and "Remove".
-  - The coach page's way on reads "I'll sort this later →" until a coach is kept, then "Continue →".
+  - The coach step can be skipped, unlike in the coach-selection prototype. Its questions' button reads "Continue →", not "See how it looks →", and "I'm still confident" no longer says "You've said yes to all six".
+  - Going ahead asks for the coach's name and email with the original prototype's tick, reworded: "I've spoken to this person and they're happy to receive a link from me about coaching me through this course." Saving shows "Sam is your coach" on the coach page, with "Choose someone else" and "Remove"; choosing someone else says Sam stays until another is saved, with "Keep Sam".
+  - Saving stays on the coach page, in place of the original prototype's pair "I'll sort this later →" / "Save and continue →". The coach page's way on reads "I'll sort this later →" until a coach is kept, then "Continue with Sam →".
   - "Who knows you best?" asks for two people in *Whatever You Do* for now, not five, and leaves out "you can preview the exact email below".
 
 ### Defaults assumed but not explicitly agreed

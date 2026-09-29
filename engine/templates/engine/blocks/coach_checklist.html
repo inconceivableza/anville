@@ -35,6 +35,13 @@
     {% include "engine/blocks/coach_checklist_answers.html" %}
     {% if checklist.refusal %}<p class="coach-refusal" role="alert">{{ checklist.refusal }}</p>{% endif %}
     <button type="submit" name="step" value="questions" class="btn btn-primary btn-full">Continue →</button>
+    {# ✨ Choosing again with a coach kept: they stay until someone else is saved. After "Continue →", so Enter in the name still goes on. #}
+    {% if checklist.kept %}
+      <div class="coach-kept">
+        <p>{{ checklist.kept.name }} stays your coach until you save someone else.</p>
+        <button type="submit" name="step" value="keep" class="btn btn-secondary">Keep {{ checklist.kept.name }}</button>
+      </div>
+    {% endif %}
 
   {% elif checklist.screen == "questions" %}
     <input type="hidden" name="name" value="{{ checklist.name }}">

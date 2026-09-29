@@ -263,9 +263,9 @@ def coach_checklist(request, block_id):
     if to not in CHECKLIST_STEPS:
         return HttpResponseBadRequest("The coach checklist has no such step.")
 
-    screen = _checklist_step(block, to, request.POST)
+    screen = _checklist_step(block, to, request.POST, _coach_kept(state.answers, block_id))
     kept = state.answers
-    if screen["screen"] == "chosen":
+    if to == "save" and screen["screen"] == "chosen":
         state.stored_response(request.user).replace_contacts(block_id, [screen["coach"]], Contact.Role.COACH)
         kept = {**kept, block_id: [screen["coach"]]}
     elif to == "remove" and state.response is not None:
@@ -295,24 +295,29 @@ def coach_checklist(request, block_id):
 
 # ✨ The buttons of the coach checklist: back to the intro keeping what was given, on to the questions, to see how
 # it looks, "I'm still confident" past a second thought, starting again with someone else, saving the coach chosen,
-# and removing them.
-CHECKLIST_STEPS = ("intro", "questions", "outcome", "confident", "restart", "save", "remove")
+# removing them, and keeping the coach already chosen after all.
+CHECKLIST_STEPS = ("intro", "questions", "outcome", "confident", "restart", "save", "remove", "keep")
 
 
-def _checklist_step(block, to, posted):
-    """✨ Where a press of the checklist's button leads, from what its form held, as the screen's state. A coach
-    saved is "chosen", with the coach to keep."""
+def _checklist_step(block, to, posted, coach_kept=None):
+    """✨ Where a press of the checklist's button leads, from what its form held and the coach already kept (if any),
+    as the screen's state. A coach saved, or kept after all, is "chosen", with the coach; an intro while a coach is
+    kept says so."""
     questions = block["questions"]
-    if to in ("restart", "remove"):
+    if to == "keep" and coach_kept:
+        return {"screen": "chosen", "coach": coach_kept}
+    if to == "remove":
         return {"screen": "intro"}
+    if to in ("restart", "keep"):
+        return {"screen": "intro", "kept": coach_kept}
     name, given = (posted.get("name") or "").strip(), checklist_answers(questions, posted)
     if to == "intro":
-        return {"screen": "intro", "name": name, "answers": given}
+        return {"screen": "intro", "name": name, "answers": given, "kept": coach_kept}
     if to != "save":  # ✨ on the coach's details, the name is checked with their email, where it can be put right
         try:
             name = candidate_name_from_form(posted)
         except AnswerRefused as refused:
-            return {"screen": "intro", "name": name, "answers": given, "refusal": str(refused)}
+            return {"screen": "intro", "name": name, "answers": given, "refusal": str(refused), "kept": coach_kept}
     if to == "questions":
         return {"screen": "questions", "name": name, "answers": given}
     try:
@@ -344,10 +349,12 @@ def _checklist_screen(
     email="",
     confirmed=False,
     invalid=None,
+    kept=None,
 ):
     """✨ One screen of the coach checklist as its template needs it: the questions with any answers given, and on
     a second thought or a stop, each answer that was not Yes with why that question matters. On going ahead, the
-    coach's details as typed, and which of them a refusal is about; once chosen, the coach kept."""
+    coach's details as typed, and which of them a refusal is about; once chosen, the coach kept. On the intro while
+    choosing again, `kept` is the coach who stays until another is saved."""
     answers = answers or {}
     questions = [{**question, "answer": answers.get(question["id"])} for question in text["questions"]]
     flagged = set(outcome.flagged) if outcome else set()
@@ -365,7 +372,14 @@ def _checklist_screen(
         "email": email,
         "confirmed": confirmed,
         "invalid": invalid,
+        "kept": kept,
     }
+
+
+def _coach_kept(answers, block_id):
+    """✨ The coach kept for a coach checklist, as {"name", "email"}, or None: its answer is the one coach kept."""
+    kept = answers.get(block_id)
+    return kept[0] if kept else None
 
 
 def _saved(request, state, section, block_id):
@@ -514,7 +528,12 @@ def _section_page(state, section, page=1, asked_rows=0):
     gate_checklist = checklist(section, answers, page=page)
     states = {other.id: other for other in hub.sections}
     return {
-        "page": {"number": page, "is_last": is_last, "skip_label": _skip_label(section, page, answers)},
+        "page": {
+            "number": page,
+            "is_last": is_last,
+            "skip_label": _skip_label(section, page, answers),
+            "continue_label": _continue_label(section, page, answers),
+        },
         "pathway": {
             "version_id": version.pk,
             "scale_points": SCALE_POINTS,
@@ -553,6 +572,16 @@ def _skip_label(section, page, answers):
     return text_for(ends_in["skip_label"], "participant")
 
 
+def _continue_label(section, page, answers):
+    """✨ "Continue →", or on a page holding a coach kept, "Continue with Sam →". Choosing someone else shows the
+    checklist's own "Continue →" just above, so the page's way on names the coach it goes on with, to read apart."""
+    for block in pages_of(section)[page - 1]:
+        coach = _coach_kept(answers, block["id"]) if block["type"] == "coach_checklist" else None
+        if coach:
+            return f"Continue with {coach['name']} →"
+    return "Continue →"
+
+
 def _published_version(posted):
     """✨ The pathway version a form names, provided it has been published; otherwise None."""
     if not (posted or "").isdigit():
@@ -567,7 +596,9 @@ def _block_for_participant(document, block, answers, fixed, states, asked_rows=0
     text = authored_text(block, "participant")
     return {
         "rows": _contact_rows(block, answers, asked_rows) if block["type"] == "contact_list" else None,
-        "checklist": _opening_checklist(text, answers.get(block["id"])) if block["type"] == "coach_checklist" else None,
+        "checklist": (
+            _opening_checklist(text, _coach_kept(answers, block["id"])) if block["type"] == "coach_checklist" else None
+        ),
         "id": block["id"],
         "type": block["type"],
         "template": f"engine/blocks/{block['type']}.html",
@@ -584,7 +615,7 @@ def _opening_checklist(text, kept):
     """✨ A coach checklist as a page opens it: the coach kept, if one was chosen, and otherwise its intro, empty,
     since nothing from an earlier visit to the checklist itself was kept."""
     if kept:
-        return _checklist_screen(text, screen="chosen", coach=kept[0])
+        return _checklist_screen(text, screen="chosen", coach=kept)
     return _checklist_screen(text)
 
 

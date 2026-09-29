@@ -19,7 +19,7 @@
         {% if page.skip_label %}
           <button type="submit" class="btn btn-secondary btn-full"{% if unmet %} disabled{% endif %}>{{ page.skip_label }}</button>
         {% else %}
-          <button type="submit" class="btn btn-primary btn-full"{% if unmet %} disabled{% endif %}>Continue →</button>
+          <button type="submit" class="btn btn-primary btn-full"{% if unmet %} disabled{% endif %}>{{ page.continue_label }}</button>
         {% endif %}
       </form>
       {% include "engine/gate_checklist.html" %}

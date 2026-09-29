@@ -507,6 +507,46 @@ def test_choosing_someone_else_keeps_the_coach_until_another_is_saved(participan
 
 
 @pytest.mark.django_db
+def test_choosing_someone_else_says_the_coach_stays_until_another_is_saved(participant):
+    choose(participant)
+
+    page = step(participant, "restart").content.decode()
+
+    assert "Sam stays your coach until you save someone else." in text(checklist_of(page))
+    assert re.search(r'<button type="submit" name="step" value="keep"[^>]*>Keep Sam</button>', page)
+
+
+@pytest.mark.django_db
+def test_keeping_the_coach_goes_back_to_them_as_kept(participant):
+    choose(participant)
+    step(participant, "restart")
+
+    kept = step(participant, "keep", name="Priya")
+
+    assert kept.status_code == 200
+    assert screen(kept.content.decode()) == "chosen"
+    assert "Sam is your coach" in text(kept)
+    assert [(coach.name, coach.email) for coach in Contact.objects.all()] == [("Sam", "sam@example.com")]
+
+
+@pytest.mark.django_db
+def test_with_no_coach_kept_choosing_says_nothing_of_one_and_keeping_is_the_intro(participant):
+    assert "stays your coach" not in text(step(participant, "restart"))
+    assert 'value="keep"' not in step(participant, "restart").content.decode()
+    assert screen(step(participant, "keep").content.decode()) == "intro"
+
+
+@pytest.mark.django_db
+def test_the_kept_coach_is_named_as_typed_never_as_markup_while_choosing_again(participant):
+    choose(participant, name="<b>Sam</b>")
+
+    page = step(participant, "restart").content.decode()
+
+    assert "<b>Sam</b>" not in page
+    assert "Keep &lt;b&gt;Sam&lt;/b&gt;" in page
+
+
+@pytest.mark.django_db
 def test_removing_the_coach_leaves_none(participant):
     choose(participant)
 
