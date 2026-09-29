@@ -1,0 +1,18 @@
+{% comment %}
+  ✨ A drop-down that saves as soon as an option is chosen. The empty option always leads, placeholder or not:
+  a select with none marked shows its first option, which would look like an answer never given. What is sent
+  is the option's identifier; the server refuses anything that is not one of this block's options.
+{% endcomment %}
+<form id="block-{{ block.id }}" class="question-card" method="post" action="{% url 'save_answer' block.id %}">
+  {% csrf_token %}
+  <label for="answer-{{ block.id }}">{{ block.text.prompt }}</label>
+  <select id="answer-{{ block.id }}" name="value"
+          hx-post="{% url 'save_answer' block.id %}" hx-trigger="change"
+          hx-sync="this:queue last" hx-target="next .save-status">
+    <option value="">{{ block.text.placeholder|default:"" }}</option>
+    {% for option in block.text.options %}
+      <option value="{{ option.id }}"{% if block.answer == option.id %} selected{% endif %}>{{ option.label }}</option>
+    {% endfor %}
+  </select>
+  {% include "engine/save_row.html" %}
+</form>

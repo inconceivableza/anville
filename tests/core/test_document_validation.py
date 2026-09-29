@@ -113,6 +113,52 @@ def test_a_section_link_may_carry_a_button_label_and_hold_what_follows_by_a_yes_
     assert problem.path == "/content/sections/1/blocks/0/holds_what_follows"
 
 
+def a_single_select(**fields):
+    return {
+        "id": "reason",
+        "type": "single_select",
+        "prompt": "What's bringing you to the course?",
+        "options": [{"id": "exploring", "label": "Generally exploring calling"}],
+        **fields,
+    }
+
+
+def test_a_single_select_needs_a_prompt_and_at_least_one_option():
+    document = pathway_document()
+    blocks = document["content"]["sections"][0]["blocks"]
+    blocks.append(a_single_select(placeholder="Select..."))
+    assert validate(document) == []
+
+    blocks[-1] = a_single_select(options=[])
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/0/blocks/2/options"
+
+    del blocks[-1]["prompt"]
+    assert "/content/sections/0/blocks/2" in [problem.path for problem in validate(document)]
+
+
+def test_a_single_select_option_is_named_by_an_identifier_and_labelled_with_authored_text():
+    document = pathway_document()
+    document["content"]["sections"][0]["blocks"].append(
+        a_single_select(options=[{"id": "1st choice", "label": {"participant": "First"}}])
+    )
+
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/0/blocks/2/options/0/id"
+
+
+def test_a_single_selects_options_may_not_share_an_identifier():
+    """✨ The answer is the option's identifier, so two options sharing one could not be told apart."""
+    document = pathway_document()
+    document["content"]["sections"][0]["blocks"].append(
+        a_single_select(options=[{"id": "other", "label": "Other"}, {"id": "other", "label": "Something else"}])
+    )
+
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/0/blocks/2/options/1/id"
+    assert "'other'" in problem.message
+
+
 def test_every_section_and_every_kind_of_block_may_carry_a_time_estimate():
     """✨ The Whatever You Do pathway holds a block of every kind, so each gets one here."""
     document = json.loads(WHATEVER_YOU_DO.read_text(encoding="utf-8"))

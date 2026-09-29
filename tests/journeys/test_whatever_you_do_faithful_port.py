@@ -30,6 +30,18 @@ BASELINE_STATEMENTS = {
     ),
 }
 ANSWER_ALL_FOUR = "Answer all four to continue"
+# ✨ The prototype's reasons for taking the course, from its account screen, in its order.
+REASONS = {
+    "post-secondary": "Considering post-secondary options",
+    "graduating": "About to graduate third-level education",
+    "job-change": "Considering a job change",
+    "redundancy": "Facing redundancy",
+    "retirement": "Approaching retirement",
+    "exploring": "Generally exploring calling",
+    "other": "Other",
+}
+# ✨ The prototype said only "– please choose" beside the question, and left its button disabled until then.
+CHOOSE_A_REASON = "Choose what's bringing you to the course to continue."
 SLOTS = ("bible", "gifts", "call", "plan")  # ✨ each rating's id after its `bl-` or `pl-` prefix
 A_STATEMENT = "God seems to have designed me to make difficult things clear."
 A_LETTER = "Dear me, remember what you found here."
@@ -63,9 +75,15 @@ def answer_the_baseline(client, prefix="bl"):
         answer(client, f"{prefix}-{slot}", "7")
 
 
-def through_to_the_calling_statement(client):
-    """✨ A participant who has done the baseline and opened the calling activity."""
+def answer_onboarding(client):
+    """✨ Everything onboarding requires: the reason for taking the course, and the baseline."""
+    answer(client, "reason", "exploring")
     answer_the_baseline(client)
+
+
+def through_to_the_calling_statement(client):
+    """✨ A participant who has done onboarding and opened the calling activity."""
+    answer_onboarding(client)
     complete(client, "onboarding")
     answer(client, "s2a-reading", "true")
     return client
@@ -76,6 +94,44 @@ def through_to_the_letter(client):
     answer(client, "cl-statement", A_STATEMENT)
     complete(client, "calling")
     return client
+
+
+# The reason for taking the course
+
+
+def reason_options(page):
+    select = re.search(r'<select id="answer-reason".*?</select>', page, re.S).group(0)
+    return re.findall(r'<option value="([^"]+)">([^<]*)</option>', select)
+
+
+@pytest.mark.django_db
+def test_the_reason_is_asked_first_with_the_prototypes_options_in_its_order(participant):
+    page = participant.get("/sections/onboarding/").content.decode()
+
+    assert escape("What's bringing you to the course?") in page
+    assert reason_options(page) == [(value, escape(label)) for value, label in REASONS.items()]
+    assert page.index('id="answer-reason"') < page.index(escape(BASELINE_STATEMENTS["bl-bible"]))
+
+
+@pytest.mark.django_db
+def test_onboarding_is_not_complete_without_a_reason(participant):
+    answer_the_baseline(participant)
+
+    refused = complete(participant, "onboarding")
+
+    assert refused.status_code == 400
+    assert gate_checklist(refused.content.decode()) == {CHOOSE_A_REASON: False, ANSWER_ALL_FOUR: True}
+    assert "onboarding" not in Response.objects.get().completed_sections
+
+
+@pytest.mark.django_db
+def test_the_reason_can_be_corrected_after_onboarding_is_complete(participant):
+    """✨ Unlike the baseline ratings, which are fixed on completion so the closing ratings have something to meet."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+
+    assert answer(participant, "reason", "job-change").status_code == 303
+    assert Response.objects.get().answers["reason"] == "job-change"
 
 
 # The four baseline ratings
@@ -121,10 +177,10 @@ def test_the_four_missing_ratings_are_one_sentence_and_not_four(participant):
 
 @pytest.mark.django_db
 def test_the_way_on_opens_once_all_four_are_answered(participant):
-    answer_the_baseline(participant)
+    answer_onboarding(participant)
 
     page = participant.get("/sections/onboarding/").content.decode()
-    assert gate_checklist(page) == {ANSWER_ALL_FOUR: True}
+    assert gate_checklist(page) == {CHOOSE_A_REASON: True, ANSWER_ALL_FOUR: True}
 
     assert complete(participant, "onboarding").status_code == 303
 
@@ -132,7 +188,7 @@ def test_the_way_on_opens_once_all_four_are_answered(participant):
 @pytest.mark.django_db
 def test_the_four_baseline_ratings_are_fixed_once_onboarding_is_complete(participant):
     """✨ The original prototype's baseline screen cannot be returned to after "Continue", so its ratings stand."""
-    answer_the_baseline(participant)
+    answer_onboarding(participant)
     complete(participant, "onboarding")
 
     for slot in SLOTS:
@@ -156,7 +212,7 @@ def test_the_four_end_ratings_are_fixed_once_the_letter_is_sent(participant):
 
 @pytest.mark.django_db
 def test_the_calling_section_reads_the_passages_and_the_task_migrated_from_the_prototype(participant):
-    answer_the_baseline(participant)
+    answer_onboarding(participant)
     complete(participant, "onboarding")
 
     page = participant.get("/sections/calling/").content.decode()
@@ -169,7 +225,7 @@ def test_the_calling_section_reads_the_passages_and_the_task_migrated_from_the_p
 
 @pytest.mark.django_db
 def test_the_statement_activity_waits_for_the_reading_to_be_confirmed(participant):
-    answer_the_baseline(participant)
+    answer_onboarding(participant)
     complete(participant, "onboarding")
 
     page = participant.get("/sections/calling/").content.decode()
@@ -223,7 +279,7 @@ def submit_the_sort(client):
 
 
 def onboarded(client):
-    answer_the_baseline(client)
+    answer_onboarding(client)
     complete(client, "onboarding")
     return client
 
@@ -424,14 +480,14 @@ def test_the_sections_with_no_activity_yet_still_say_what_they_are_for(participa
 def test_progress_counts_what_the_participant_does_and_not_the_prose_or_the_link(participant):
     page = participant.get("/").content.decode()
 
-    # ✨ four ratings; Section 1's reading and reflection; the sort; the calling reading and statement; the letter
-    # and four more
-    assert "0 of 14 answered" in page
+    # ✨ the reason and four ratings; Section 1's reading and reflection; the sort; the calling reading and
+    # statement; the letter and four more
+    assert "0 of 15 answered" in page
 
 
 @pytest.mark.django_db
 def test_the_sections_after_the_calling_statement_are_locked_until_it_is_complete(participant):
-    answer_the_baseline(participant)
+    answer_onboarding(participant)
     complete(participant, "onboarding")
 
     for section_id in ("growth", "letter"):
@@ -542,7 +598,7 @@ def test_progress_follows_the_participant_to_a_second_device(participant, django
 def test_editing_a_prompt_in_the_document_changes_the_app_for_a_fresh_participant(client, load_pathway):  # noqa: F811
     load_pathway(the_pathway())
     first = a_fresh_participant(client, "first@example.com")
-    answer_the_baseline(first)
+    answer_onboarding(first)
     complete(first, "onboarding")
     assert "Read these passages before continuing" in first.get("/sections/calling/").content.decode()
 
@@ -552,7 +608,7 @@ def test_editing_a_prompt_in_the_document_changes_the_app_for_a_fresh_participan
     load_pathway(edited)
 
     second = a_fresh_participant(client, "second@example.com")
-    answer_the_baseline(second)
+    answer_onboarding(second)
     complete(second, "onboarding")
     page = second.get("/sections/calling/").content.decode()
     assert "Sit with these before you write" in page
@@ -565,7 +621,8 @@ def test_a_participant_already_in_progress_stays_on_the_version_they_started(par
     answer(participant, "bl-bible", "6")
 
     edited = the_pathway()
-    edited["content"]["sections"][0]["blocks"][0]["body"] = "Rewritten after they began."
+    onboarding = edited["content"]["sections"][0]
+    next(b for b in onboarding["blocks"] if b["id"] == "baseline-intro")["body"] = "Rewritten after they began."
     load_pathway(edited)
 
     assert "Rewritten after they began." not in participant.get("/sections/onboarding/").content.decode()

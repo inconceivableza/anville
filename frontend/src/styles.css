@@ -384,6 +384,25 @@ p.time-estimate {
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
+/* ✨ A single select, sized like the text box above it */
+.question-card select {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--white);
+  transition: border-color 0.2s;
+}
+
+.question-card select:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
 /* A link to another section, with that section's status (the prototype's assessment link card) */
 
 .section-link {

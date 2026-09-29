@@ -1,4 +1,4 @@
-# 10: Onboarding completion
+# 10a: Onboarding completion
 
 **What to build:** The rest of onboarding as an ordinary section of the pathway: a reason for taking the workbook, choosing a coach as in the content owner's mock-up (or skip), and a list of people who know the participant (or skip). Adds the single select, checkbox confirm, coach checklist and contact list blocks.
 
@@ -6,13 +6,13 @@
 
 **See also:** `Prototypes for reference/coach-selection-prototype.html`, the content owner's mock-up of choosing a coach. Its participant half is built here. Its coach half (the coach accepting or declining the six commitments through a link) is ticket 13.
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 1 (ends 2 Oct)
 
 **Parent:** whatever-you-do-milestone-1 spec (Demo 2, 2 Oct)
 
-- [ ] A single select block captures the reason for taking the workbook with the prototype's options (post-secondary, graduating, job change, redundancy, retirement, exploring, other)
+- [x] A single select block captures the reason for taking the workbook with the prototype's options (post-secondary, graduating, job change, redundancy, retirement, exploring, other)
 - [ ] The coach step follows the mock-up: the intro on why the choice matters (and why "coach", not "mentor"), the candidate's first name, then the six "Do you think …" questions, each answered Yes, Not sure or No
 - [ ] The outcome follows the mock-up's rules: any critical No, two or more Nos, or three or more answers that are not Yes stop ("Try someone else"); one soft No, or one or two Not sures, ask for a second thought, with an "I'm still confident" way on; all Yes proceeds. The stop and second-thought screens name each answer that caused them, with its reason
 - [ ] The questions, their notes and reasons, which are critical, and the coach's first-person commitments (for 13) are authored content in the document; the outcome rule is engine code (ADR 0003)
@@ -30,4 +30,10 @@
 **Carried from 29**
 
 - The baseline ratings in onboarding are marked `fixed_once_complete`, so completing onboarding fixes them for good, even if it is reopened. Leave the reason, coach and contact blocks unmarked so a participant can reopen onboarding and correct them. The flag is only defined on `agreement_scale`, so the schema refuses it on the new block types anyway.
-- Both `pathways/whatever-you-do.json` and `pathways/whatever-you-do-faithful-port.json` take the new onboarding blocks; the drift test in `tests/journeys/test_whatever_you_do.py` fails if only one does
+- Both `pathways/whatever-you-do.json` and `pathways/whatever-you-do-faithful-port.json` take the new onboarding blocks; the drift test in `tests/journeys/test_whatever_you_do.py` fails if only one does. Narrowed (the developer's call, 2026-09-29): both take the reason and the contact list, which the original prototype has; only `whatever-you-do.json` takes the coach step, and the drift test sets it aside. The faithful port's own coach step, the original prototype's "Walking with a mentor" screen, is ticket 10b
+
+## Comments
+
+- Decided with the developer (2026-09-29): the contact list's gate passes with no contacts (skipped) or at least the authored minimum, which defaults to five; `whatever-you-do.json` sets it to 2 for testing. The coach's confirmation box is part of the coach's details form, saved with the name and email, not a block of its own. The reason is required to complete onboarding, as in the prototype.
+- Split (2026-09-29): this ticket was 10; the faithful port's coach step moved to 10b.
+- First step: a `single_select` block (a drop-down of authored options, saved as the option's identifier). The reason is asked first in onboarding in both pathway documents, as on the prototype's account screen, and onboarding's gate requires it with "Choose what's bringing you to the course to continue." (the prototype said only "– please choose" beside the question). It is not fixed on completion, so it can be corrected.

@@ -8,6 +8,21 @@
         "title": "Before we begin",
         "blocks": [
           {
+            "id": "reason",
+            "type": "single_select",
+            "prompt": "What's bringing you to the course?",
+            "placeholder": "Select...",
+            "options": [
+              { "id": "post-secondary", "label": "Considering post-secondary options" },
+              { "id": "graduating", "label": "About to graduate third-level education" },
+              { "id": "job-change", "label": "Considering a job change" },
+              { "id": "redundancy", "label": "Facing redundancy" },
+              { "id": "retirement", "label": "Approaching retirement" },
+              { "id": "exploring", "label": "Generally exploring calling" },
+              { "id": "other", "label": "Other" }
+            ]
+          },
+          {
             "id": "baseline-intro",
             "type": "rich_text",
             "body": "This isn't a test – there are no right or wrong answers. We ask these questions now, and again at the end, simply to help you see how far you've travelled through the course.\n\nTo what extent would you agree with the following statements?"
@@ -47,6 +62,7 @@
         ],
         "gate": {
           "clauses": [
+            { "type": "has_answer", "block": "reason", "message": "Choose what's bringing you to the course to continue." },
             { "type": "has_answer", "block": "bl-bible", "message": "Answer all four to continue" },
             { "type": "has_answer", "block": "bl-gifts", "message": "Answer all four to continue" },
             { "type": "has_answer", "block": "bl-call", "message": "Answer all four to continue" },

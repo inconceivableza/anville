@@ -33,6 +33,6 @@ def answer_from_form(document, block, submitted):
     if submitted is None:
         raise AnswerRefused("No answer was sent.")
     kind = BLOCK_TYPES[block["type"]].captures
-    if not Draft202012Validator(kind.schema_for(document)).is_valid(value := kind.from_form(submitted)):
+    if not Draft202012Validator(kind.schema_for(document, block)).is_valid(value := kind.from_form(submitted)):
         raise AnswerRefused(kind.refusal)
     return value

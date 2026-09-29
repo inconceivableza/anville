@@ -54,8 +54,14 @@ def answer_all_five(client, prefix="bl"):
         answer(client, f"{prefix}-{slot}", "7")
 
 
-def through_to_the_letter(client):
+def answer_onboarding(client):
+    """✨ Everything onboarding requires: the reason for taking the course, and all five ratings."""
+    answer(client, "reason", "exploring")
     answer_all_five(client)
+
+
+def through_to_the_letter(client):
+    answer_onboarding(client)
     complete(client, "onboarding")
     answer(client, "s2a-reading", "true")
     answer(client, "cl-statement", A_STATEMENT)
@@ -87,7 +93,7 @@ def test_all_five_ratings_are_needed_before_the_participant_may_continue(partici
 
 @pytest.mark.django_db
 def test_the_way_on_opens_once_all_five_are_answered(participant):
-    answer_all_five(participant)
+    answer_onboarding(participant)
 
     assert complete(participant, "onboarding").status_code == 303
 
@@ -118,17 +124,17 @@ def test_the_letter_cannot_be_sent_without_the_fifth_after_rating(participant):
 
 @pytest.mark.django_db
 def test_progress_counts_the_two_new_ratings(participant):
-    assert "0 of 16 answered" in participant.get("/").content.decode()  # ✨ the faithful port's 14, and two more
+    assert "0 of 17 answered" in participant.get("/").content.decode()  # ✨ the faithful port's 15, and two more
 
 
 @pytest.mark.django_db
 def test_all_five_start_ratings_are_fixed_once_onboarding_is_complete(participant):
-    answer_all_five(participant)
+    answer_onboarding(participant)
     complete(participant, "onboarding")
 
     for slot in SLOTS:
         assert answer(participant, f"bl-{slot}", "2").status_code == 409
-    assert set(Response.objects.get().answers.values()) == {7}
+    assert {Response.objects.get().answers[f"bl-{slot}"] for slot in SLOTS} == {7}
 
 
 @pytest.mark.django_db

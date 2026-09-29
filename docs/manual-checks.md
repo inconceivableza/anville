@@ -34,7 +34,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Once agreed, "Go to your pathway" and "Withdraw my consent" look alike in size, stacked as the first two buttons were.
 - With a section open in one tab, withdraw in another, then type in the first tab: the page goes to the consent page rather than showing "Saved" or an error.
 
-## Autosaved answers (long text, 1–10 scale)
+## Autosaved answers (long text, 1–10 scale, single select)
 
 - Typing or choosing shows "Saved"; changing the answer again clears it; a slow save shows "Saving…".
 - With the server stopped, a save says "Not saved. Check your connection, then try again."
@@ -43,6 +43,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Without JavaScript, a Save button appears and saves the answer. With JavaScript it is hidden.
 - Screen reader: "Saved" and a refusal are announced.
 - Ghost text (Section 1's reflection, the letter): it shows in grey in the empty box, is readable against the background, and disappears as you type. A screen reader names the box by its prompt, not by the ghost text.
+- The reason in onboarding: the drop-down shows "Select..." until a reason is chosen, and choosing one shows "Saved" with no button press. Going back to "Select..." shows the refusal, and the reason chosen before stays saved (reload to see it). Keyboard only: Tab reaches it, and the arrow keys change it (each change saves). It fills the card's width at phone width.
 
 ## The gate and "Mark complete"
 

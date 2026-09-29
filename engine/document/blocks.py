@@ -54,14 +54,14 @@ class AnswerKind(NamedTuple):
     """
 
     name: str
-    schema: dict | Callable[[dict], dict]
+    schema: dict | Callable[[dict, dict], dict]
     refusal: str
     from_form: Callable[[str], object]
 
-    def schema_for(self, document):
-        """✨ The answer schema within one pathway document. Most kinds need nothing from it; a sort needs
-        the document's items and buckets."""
-        return self.schema(document) if callable(self.schema) else self.schema
+    def schema_for(self, document, block):
+        """✨ The answer schema for one block within its pathway document. Most kinds need neither; a sort
+        needs the document's items and buckets, and a choice its block's options."""
+        return self.schema(document, block) if callable(self.schema) else self.schema
 
 
 TEXT = AnswerKind(
@@ -87,7 +87,7 @@ CONFIRMATION = AnswerKind(
 )
 
 
-def _sort_schema(document):
+def _sort_schema(document, block):
     """✨ Every item of the instrument, each placed in one of its buckets with a whole value from 0 to 100."""
     instrument = document["instrument"]
     placement = {
@@ -114,6 +114,14 @@ SORT = AnswerKind(
     "Place every item in a bucket and give each one a score from 0 to 100, then submit again.",
     _sort_from_form,
 )
+
+
+def _choice_schema(document, block):
+    """✨ The identifier of one of the block's own options, never its label."""
+    return {"enum": [option["id"] for option in block["options"]]}
+
+
+CHOICE = AnswerKind("choice", _choice_schema, "Choose one of the options.", _text_from_form)
 
 
 def _sort_widget(document, role):
@@ -166,6 +174,12 @@ BLOCK_TYPES = {
         ),
         BlockType("long_text", text_fields=("prompt", "placeholder"), captures=TEXT),
         BlockType("agreement_scale", text_fields=("prompt", "min_label", "max_label"), captures=SCALE_POINT),
+        BlockType(
+            "single_select",
+            text_fields=("prompt", "placeholder"),
+            text_lists=(("options", ("label",)),),
+            captures=CHOICE,
+        ),
         BlockType("sort_assessment", captures=SORT, scored=True, widget=_sort_widget),
         BlockType("section_link", text_fields=("body", "button_label")),
     ]
@@ -182,8 +196,12 @@ def authored_text(block, role):
     fields = (*COMMON_TEXT_FIELDS, *block_type.text_fields)
     text = {field: text_for(block[field], role) for field in fields if field in block}
     for field, entry_fields in block_type.text_lists:
+        # ✨ An entry's identifier, where it has one, comes along untranslated: a choice's option is answered by it.
         text[field] = [
-            {name: text_for(entry[name], role) for name in entry_fields if name in entry}
+            {
+                **({"id": entry["id"]} if "id" in entry else {}),
+                **{name: text_for(entry[name], role) for name in entry_fields if name in entry},
+            }
             for entry in block.get(field, [])
         ]
     return text

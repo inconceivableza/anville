@@ -137,13 +137,14 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "sort_assessment", "section_link"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "sort_assessment", "section_link"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
         { "if": { "properties": { "type": { "const": "scripture_reading" } } }, "then": { "$ref": "#/$defs/scripture_reading" } },
         { "if": { "properties": { "type": { "const": "long_text" } } }, "then": { "$ref": "#/$defs/long_text" } },
         { "if": { "properties": { "type": { "const": "agreement_scale" } } }, "then": { "$ref": "#/$defs/agreement_scale" } },
+        { "if": { "properties": { "type": { "const": "single_select" } } }, "then": { "$ref": "#/$defs/single_select" } },
         { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } },
         { "if": { "properties": { "type": { "const": "section_link" } } }, "then": { "$ref": "#/$defs/section_link" } }
       ]
@@ -226,6 +227,38 @@
           "description": "Once the rating has been answered and this section completed, it can no longer be changed, even if the section is reopened. For a baseline measured again later.",
           "type": "boolean",
           "default": false
+        }
+      }
+    },
+    "single_select": {
+      "description": "One choice from a list, such as the reason for taking the course. The answer is the chosen option's identifier.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "prompt", "options"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "single_select" },
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "prompt": { "$ref": "#/$defs/text" },
+        "placeholder": {
+          "description": "What the list shows before anything is chosen, such as 'Select...'. It is never an answer.",
+          "$ref": "#/$defs/text"
+        },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "label"],
+            "properties": {
+              "id": {
+                "description": "What is stored when this option is chosen. Keep it when rewording the label.",
+                "$ref": "#/$defs/identifier"
+              },
+              "label": { "$ref": "#/$defs/text" }
+            }
+          }
         }
       }
     },

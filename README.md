@@ -115,9 +115,11 @@ Each answer saves by itself as the participant types or chooses, and only that a
 
 A `long_text` block may carry a `placeholder`: ghost text in the empty box, such as the letter's "Dear me,". It is a hint only; the prompt stays the box's label, and the placeholder is never saved as the answer.
 
+A `single_select` block is a drop-down of authored `options`, each an `id` and a `label`, and saves as soon as one is chosen. The answer is the option's `id`, so a label can be reworded without changing what earlier answers mean; the server refuses anything that is not one of the block's own options, and the linter refuses two options sharing an `id`. An empty choice always leads the list, showing the optional `placeholder` ("Select..."), so an unanswered select never looks answered. Onboarding asks the reason for taking the course this way, and its gate requires it.
+
 Long-text answers are limited to 20,000 characters. The text box carries the same limit and says how much room is left near it. Line breaks are stored as `\n`, although forms send them as `\r\n`. This is the one change made to a participant's text on input, and it keeps the server's count the same as the browser's.
 
-The long-text and 1–10 scale forms also save without JavaScript, through a Save button that is hidden once JavaScript loads. This was added in passing during ticket 03 and is not a standard: later blocks, especially the interactive ones such as the sort and the timeline, need not work without JavaScript, and this fallback may be removed.
+The long-text, single-select and 1–10 scale forms also save without JavaScript, through a Save button that is hidden once JavaScript loads. This was added in passing during ticket 03 and is not a standard: later blocks, especially the interactive ones such as the sort and the timeline, need not work without JavaScript, and this fallback may be removed.
 
 ## Scoring and results
 

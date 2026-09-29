@@ -2,7 +2,7 @@
 
 **What to build:** Tracks. A participant chooses online or offline in onboarding; the offline track is the same pathway worked mostly on paper, with its own hub: the paper workbook to download, the strengths assessment online, a target date, and the closing ratings once the assessment is done. Switching track keeps every answer.
 
-**Blocked by:** 09 (Section 1 and the Strengths assessment section), 10 (Onboarding completion), 22 (Sections 4 and 5 (plain), closing ratings and summary)
+**Blocked by:** 09 (Section 1 and the Strengths assessment section), 10a (Onboarding completion), 22 (Sections 4 and 5 (plain), closing ratings and summary)
 
 **Status:** ready-for-agent
 

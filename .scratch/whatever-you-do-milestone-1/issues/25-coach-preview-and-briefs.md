@@ -2,7 +2,7 @@
 
 **What to build:** The prototype's coach behaviour, done properly. The coach is a stored contact; the participant can produce a printable and copyable preview of a section (or the whole workbook) to hand over; and authored coach briefs appear as guidance attached to each section. This is not real coach access, which is ticket 27.
 
-**Blocked by:** 10 (Onboarding completion)
+**Blocked by:** 10a (Onboarding completion)
 
 **Status:** ready-for-agent
 

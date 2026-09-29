@@ -1,10 +1,10 @@
 # 13: Observer and coach invitations
 
-**What to build:** Invitations for observers (ADR 0005) and for the coach. From the contacts they entered, a participant issues a unique link per observer, copies it and sends it themselves. An observer following the link reaches a landing page with a privacy notice; expired, revoked or unknown links are refused. No email is sent. The coach the participant chose in onboarding (ticket 10) gets a link of the same kind, which asks them to accept or decline the six commitments from the content owner's mock-up.
+**What to build:** Invitations for observers (ADR 0005) and for the coach. From the contacts they entered, a participant issues a unique link per observer, copies it and sends it themselves. An observer following the link reaches a landing page with a privacy notice; expired, revoked or unknown links are refused. No email is sent. The coach the participant chose in onboarding (ticket 10a) gets a link of the same kind, which asks them to accept or decline the six commitments from the content owner's mock-up.
 
-**See also:** `Prototypes for reference/coach-selection-prototype.html`, the content owner's mock-up of choosing a coach. Its participant half is ticket 10; its coach half is built here. Letting the coach see shared sections is ticket 27.
+**See also:** `Prototypes for reference/coach-selection-prototype.html`, the content owner's mock-up of choosing a coach. Its participant half is ticket 10a; its coach half is built here. Letting the coach see shared sections is ticket 27.
 
-**Blocked by:** 10 (Onboarding completion)
+**Blocked by:** 10a (Onboarding completion)
 
 **Status:** ready-for-agent
 
@@ -29,8 +29,8 @@
 
 **The coach's link**
 
-- [ ] A participant who chose a coach in onboarding (ticket 10) issues the coach's link, copies it and sends it themselves, with the same token approach, lifetime, revocation and reissue as observers
-- [ ] Following the link, the coach sees the mock-up's invitation and the six commitments, written as first-person promises with their notes (authored in ticket 10), as tick-boxes. Accepting needs every box ticked; declining is always offered and is worded as a good outcome, not a failure
+- [ ] A participant who chose a coach in onboarding (ticket 10a) issues the coach's link, copies it and sends it themselves, with the same token approach, lifetime, revocation and reissue as observers
+- [ ] Following the link, the coach sees the mock-up's invitation and the six commitments, written as first-person promises with their notes (authored in ticket 10a), as tick-boxes. Accepting needs every box ticked; declining is always offered and is worded as a good outcome, not a failure
 - [ ] Only whether the coach accepted or declined is stored, not which boxes they ticked. One commitment affirms the coach's own faith, so individual ticks would be special category data about the coach
 - [ ] The participant is told whether the coach accepted or declined, with no detail of a decline. The mock-up leaves open whether a declined participant goes back to choose someone else, and whether a partial agreement is shown to them; decide both here
 - [ ] A coach has no account and writes nothing beyond accepting or declining

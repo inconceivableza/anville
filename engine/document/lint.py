@@ -14,6 +14,7 @@ def lint(document):
     section_ids = _ids_of("section", identifiers)
     return [
         *_duplicates(identifiers),
+        *_duplicate_options(document),
         *_missing_sections(document, section_ids),
         *_unknown_linked_sections(document, section_ids),
         *_links_holding_their_own_section(document),
@@ -56,6 +57,20 @@ def _duplicates(identifiers):
             )
         else:
             first_use[kind, identifier] = path
+
+
+def _duplicate_options(document):
+    """✨ A choice is stored as its option's identifier, so two options sharing one could not be told apart."""
+    for s, section in enumerate(document["content"]["sections"]):
+        for b, block in enumerate(section["blocks"]):
+            seen = set()
+            for o, option in enumerate(block.get("options", [])):
+                if option["id"] in seen:
+                    yield Problem(
+                        f"/content/sections/{s}/blocks/{b}/options/{o}/id",
+                        f"The option identifier '{option['id']}' is already used in this block.",
+                    )
+                seen.add(option["id"])
 
 
 def _missing_sections(document, section_ids):

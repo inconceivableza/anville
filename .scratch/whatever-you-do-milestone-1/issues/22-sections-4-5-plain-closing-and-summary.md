@@ -2,7 +2,7 @@
 
 **What to build:** The rest of the pathway, plainly. The growth plan as a reflection section (no planning board), then the closing: the four after-ratings from Section 5 (ticket 05) shown beside the first set, and a summary of the participant's work.
 
-**Blocked by:** 10 (Onboarding completion)
+**Blocked by:** 10a (Onboarding completion)
 
 **Status:** ready-for-agent
 
