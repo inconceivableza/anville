@@ -141,7 +141,7 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "sort_assessment", "section_link"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "sort_assessment", "section_link"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
@@ -149,6 +149,7 @@
         { "if": { "properties": { "type": { "const": "long_text" } } }, "then": { "$ref": "#/$defs/long_text" } },
         { "if": { "properties": { "type": { "const": "agreement_scale" } } }, "then": { "$ref": "#/$defs/agreement_scale" } },
         { "if": { "properties": { "type": { "const": "single_select" } } }, "then": { "$ref": "#/$defs/single_select" } },
+        { "if": { "properties": { "type": { "const": "contact_list" } } }, "then": { "$ref": "#/$defs/contact_list" } },
         { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } },
         { "if": { "properties": { "type": { "const": "section_link" } } }, "then": { "$ref": "#/$defs/section_link" } }
       ]
@@ -263,6 +264,24 @@
               "label": { "$ref": "#/$defs/text" }
             }
           }
+        }
+      }
+    },
+    "contact_list": {
+      "description": "People who know the participant, a first name and an email address per row, with a way to add another. They are kept as contacts, apart from the participant's answers. At most 50.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "contact_list" },
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "min_rows": {
+          "description": "How many empty rows the list opens with. The section's gate says how many people are needed.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 5
         }
       }
     },
@@ -381,6 +400,11 @@
         "min": { "type": "integer", "minimum": 1 },
         "only_with_content": {
           "description": "Count only entries with something in them, so blank rows a widget seeded do not count.",
+          "type": "boolean",
+          "default": false
+        },
+        "allow_none": {
+          "description": "Also pass with no entries at all, for a list the participant may leave for later.",
           "type": "boolean",
           "default": false
         },

@@ -46,6 +46,20 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Ghost text (Section 1's reflection, the letter): it shows in grey in the empty box, is readable against the background, and disappears as you type. A screen reader names the box by its prompt, not by the ghost text.
 - The reason in onboarding: it looks like the prototype's account-screen drop-down (a small dark caret at the right, not the browser's arrow), and is amber while "Select..." is showing, turning white once a reason is chosen, with or without JavaScript. The drop-down shows "Select..." until a reason is chosen, and choosing one shows "Saved" with no button press. Going back to "Select..." shows "Saved", turns the drop-down amber again, and unticks "Choose what's bringing you to the course" beneath the button; a reload still shows "Select...". Keyboard only: Tab reaches it, and the arrow keys change it (each change saves). It fills the card's width at phone width.
 
+## The contact list (onboarding's "Who knows you best?")
+
+- It sits after the baseline ratings: a numbered row per person, "First name" narrower than "Email address", two rows in Whatever You Do (five in the faithful port), with "+ Add another person" full width beneath.
+- Typing a name and email and leaving the field shows "Saved"; a reload shows them again. Moving from a new row's name to its email shows "Not saved. Add both a name and an email address in row N." until the email is typed and left, then "Saved".
+- A bad address (`jo`, `jo@`, `jo@example`) shows "Not saved. Check the email address in row N.", and that email box turns red. The next save that goes through clears the red. A half-filled row marks its empty field the same way.
+- "+ Add another person" adds an empty numbered row without reloading, and the cursor goes into its name. At 50 rows it is disabled.
+- Emptying every row and leaving the field shows "Saved"; a reload shows empty rows, and onboarding's "Add at least 2 people…" is ticked again.
+- With one person added, "Add at least 2 people…" is unticked beneath "Continue →"; with two it is ticked, as it is with none.
+- Without JavaScript: the Save button saves the list; "+ Add another person" saves it and comes back with one more row, at the list. A bad address is not stopped by the browser; the save comes back with the server's "Not saved. Check the email address in row N." on a plain page (as any refused save does without JavaScript).
+- Screen reader: after a refusal, the marked field is announced as invalid when Tab reaches it.
+- Keyboard only: Tab goes name, email, name, email down the rows, then to "+ Add another person"; Enter in a field saves.
+- Screen reader: each field is read as "Person 1, first name" and so on; the row numbers themselves are not read. A new row is numbered on.
+- Phone width: each row's name and email stack beneath its number, full width.
+
 ## The gate and "Mark complete"
 
 - The button fills the width of the page, in every section. Onboarding's reads "Continue →"; every other section's reads "Mark complete".

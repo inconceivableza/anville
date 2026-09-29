@@ -1,0 +1,33 @@
+{% comment %}
+  ✨ People who know the participant, a first name and an email address per row, as the prototype's contact
+  screen lays them out. The whole list saves as a field is left (or on Enter), and is kept as contacts, not
+  answers. "Add another" adds a row in the page with JavaScript (main.js); without it, the button saves the list
+  and asks for one more row, which the page comes back showing.
+
+  novalidate leaves the email addresses to the server. With the browser's own check on, htmx drops a save the
+  browser thinks invalid without a word, so the participant would never learn which row is wrong; the server's
+  refusal names the row, and main.js marks the field.
+{% endcomment %}
+<form id="block-{{ block.id }}" class="question-card contact-list" novalidate method="post" action="{% url 'save_answer' block.id %}"
+      hx-post="{% url 'save_answer' block.id %}" hx-trigger="change, submit"
+      hx-sync="this:queue last" hx-target="find .save-status">
+  {% csrf_token %}
+  <ol class="contact-rows">
+    {% for row in block.rows %}
+      <li class="contact-row">
+        <span class="contact-num" aria-hidden="true">{{ forloop.counter }}</span>
+        <label class="contact-field contact-name">
+          <span class="visually-hidden">Person {{ forloop.counter }}, first name</span>
+          <input type="text" name="name" placeholder="First name" value="{{ row.name }}" maxlength="150" autocomplete="off">
+        </label>
+        <label class="contact-field contact-email">
+          <span class="visually-hidden">Person {{ forloop.counter }}, email address</span>
+          <input type="email" name="email" placeholder="Email address" value="{{ row.email }}" maxlength="254" autocomplete="off">
+        </label>
+      </li>
+    {% endfor %}
+  </ol>
+  <button type="submit" class="btn btn-secondary btn-full" name="rows" value="{{ block.rows|length|add:1 }}"
+          data-add-row{% if block.rows|length >= pathway.max_contacts %} disabled{% endif %}>+ Add another person</button>
+  {% include "engine/save_row.html" %}
+</form>

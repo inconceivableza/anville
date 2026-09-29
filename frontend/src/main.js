@@ -74,4 +74,44 @@ document.addEventListener("input", (event) => {
 });
 document.querySelectorAll("textarea[maxlength]").forEach(showLengthLeft);
 
+// ✨ A contact list's "add another": with JavaScript a row is added in the page, rather than the button saving the
+// list and reloading. The new row copies the last one, emptied and numbered, and takes the focus. Nothing is
+// saved until something is typed into it, and an empty row is never kept.
+const MAX_CONTACT_ROWS = 50; // ✨ the server's MAX_CONTACTS
+
+function addContactRow(button) {
+  const rows = button.closest("form").querySelector(".contact-rows");
+  const row = rows.lastElementChild.cloneNode(true);
+  const number = rows.children.length + 1;
+  row.querySelector(".contact-num").textContent = number;
+  row.querySelectorAll(".visually-hidden").forEach((label) => {
+    label.textContent = label.textContent.replace(/^Person \d+/, `Person ${number}`);
+  });
+  row.querySelectorAll("input").forEach((input) => (input.value = ""));
+  rows.append(row);
+  button.value = number + 1;
+  button.disabled = number >= MAX_CONTACT_ROWS;
+  row.querySelector("input").focus();
+}
+
+// ✨ A refusal about one row of a list names the field at fault; mark it (red, and aria-invalid for a screen
+// reader) until a save goes through. Rows are counted from 1, as the refusal words them.
+document.addEventListener("htmx:afterSwap", (event) => {
+  const status = event.detail.target;
+  const rows = status.classList?.contains("save-status") && status.closest("form")?.querySelector(".contact-rows");
+  if (!rows) return;
+  rows.querySelectorAll("[aria-invalid]").forEach((input) => input.removeAttribute("aria-invalid"));
+  const marked = status.querySelector("[data-invalid-row]");
+  if (!marked) return;
+  const row = rows.children[Number(marked.dataset.invalidRow) - 1];
+  row?.querySelector(`input[name="${marked.dataset.invalidField}"]`)?.setAttribute("aria-invalid", "true");
+});
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-add-row]");
+  if (!button) return;
+  event.preventDefault();
+  addContactRow(button);
+});
+
 mountSorts();

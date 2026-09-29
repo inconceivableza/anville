@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from engine.document import Problem, validate
 from engine.document.blocks import BLOCK_TYPES
 from tests.documents import pathway_document
@@ -157,6 +159,39 @@ def test_a_single_selects_options_may_not_share_an_identifier():
     [problem] = validate(document)
     assert problem.path == "/content/sections/0/blocks/2/options/1/id"
     assert "'other'" in problem.message
+
+
+def test_a_contact_list_needs_nothing_but_may_say_how_many_rows_it_opens_with():
+    document = pathway_document()
+    blocks = document["content"]["sections"][0]["blocks"]
+    blocks.append({"id": "contacts", "type": "contact_list"})
+    assert validate(document) == []
+
+    blocks[-1]["min_rows"] = 5
+    assert validate(document) == []
+
+
+@pytest.mark.parametrize("min_rows", [0, 51, "5", 2.5])
+def test_a_contact_lists_rows_are_a_whole_number_from_one_to_fifty(min_rows):
+    """✨ Fifty is the most a participant may add, so a list may not open with more."""
+    document = pathway_document()
+    document["content"]["sections"][0]["blocks"].append({"id": "contacts", "type": "contact_list", "min_rows": min_rows})
+
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/0/blocks/2/min_rows"
+
+
+def test_a_count_of_entries_may_allow_none_by_a_yes_or_no():
+    document = pathway_document()
+    onboarding = document["content"]["sections"][0]
+    onboarding["blocks"].append({"id": "contacts", "type": "contact_list"})
+    clause = {"type": "entry_count", "block": "contacts", "min": 5, "allow_none": True, "message": "Five, or none."}
+    onboarding["gate"] = {"clauses": [clause]}
+    assert validate(document) == []
+
+    clause["allow_none"] = "yes"
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/0/gate/clauses/0/allow_none"
 
 
 def test_every_section_and_every_kind_of_block_may_carry_a_time_estimate():

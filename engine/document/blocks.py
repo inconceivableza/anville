@@ -50,13 +50,14 @@ class AnswerKind(NamedTuple):
 
     The refusal is shown in place of the schema's own message, which would echo the participant's text back.
     `from_form` reads what a form sent; anything it does not recognise it passes on for the schema to refuse.
+    It is None for a kind whose form sends more than one value.
     Kinds are shared between block types, so a gate clause can say which kinds of answer it can read.
     """
 
     name: str
     schema: dict | Callable[[dict, dict], dict]
     refusal: str
-    from_form: Callable[[str], object]
+    from_form: Callable[[str], object] | None
 
     def schema_for(self, document, block):
         """✨ The answer schema for one block within its pathway document. Most kinds need neither; a sort
@@ -124,6 +125,24 @@ def _choice_schema(document, block):
 
 CHOICE = AnswerKind("choice", _choice_schema, "Choose one of the options.", _text_from_form)
 
+# ✨ People other than the participant. A list is not sent as one form value: `contacts_from_form` reads its
+# rows and holds them to their rules, and they are kept as contacts rather than answers. The schema is what the
+# gate then reads.
+CONTACTS = AnswerKind(
+    "contacts",
+    {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["name", "email"],
+            "properties": {"name": {"type": "string"}, "email": {"type": "string"}},
+        },
+    },
+    "Check the names and email addresses.",
+    None,
+)
+
 
 def _sort_widget(document, role):
     """✨ What the sort widget shows: every item in the reader's wording, and the buckets weakest first."""
@@ -181,6 +200,7 @@ BLOCK_TYPES = {
             text_lists=(("options", ("label",)),),
             captures=CHOICE,
         ),
+        BlockType("contact_list", captures=CONTACTS),
         BlockType("sort_assessment", captures=SORT, scored=True, widget=_sort_widget),
         BlockType("section_link", text_fields=("body", "button_label")),
     ]

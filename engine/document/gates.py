@@ -15,9 +15,9 @@ from engine.document.text import text_for
 CLAUSE_ANSWER_KINDS = {
     "has_answer": None,
     "min_text_length": ("text",),
-    "entry_count": ("entries",),
-    "distinct_value_count": ("entries",),
-    "every_entry_has": ("entries",),
+    "entry_count": ("entries", "contacts"),
+    "distinct_value_count": ("entries", "contacts"),
+    "every_entry_has": ("entries", "contacts"),
 }
 
 
@@ -71,7 +71,8 @@ def _entry_count(clause, answer):
     entries = _entries(answer)
     if clause.get("only_with_content"):
         entries = [entry for entry in entries if _entry_has_content(entry)]
-    return len(entries) >= clause["min"]
+    # ✨ A list the participant may leave for later: none at all, or enough, but never a start left short.
+    return len(entries) >= clause["min"] or (clause.get("allow_none", False) and not entries)
 
 
 def _distinct_value_count(clause, answer):

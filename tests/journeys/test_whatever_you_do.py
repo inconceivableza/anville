@@ -17,8 +17,10 @@ from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, 
 from tests.journeys.test_whatever_you_do_faithful_port import (
     A_LETTER,
     A_STATEMENT,
+    ADD_FIVE,
     ANSWER_ALL_FOUR,
     BASELINE_STATEMENTS,
+    add_people,
     answer,
     complete,
 )
@@ -37,6 +39,9 @@ SAYS_HOW_MUCH = {
     ),
 }
 SLOTS = (*PROTOTYPE_SLOTS, "peace")
+# ✨ Two people rather than the prototype's five, for now, so the pathway can be tried without inventing five
+# (the developer's call, 2026-09-29).
+ADD_TWO = "Add at least 2 people, or leave the list empty to do this later."
 
 
 def the_pathway():
@@ -124,7 +129,28 @@ def test_the_letter_cannot_be_sent_without_the_fifth_after_rating(participant):
 
 @pytest.mark.django_db
 def test_progress_counts_the_two_new_ratings(participant):
-    assert "0 of 17 answered" in participant.get("/").content.decode()  # ✨ the faithful port's 15, and two more
+    assert "0 of 18 answered" in participant.get("/").content.decode()  # ✨ the faithful port's 16, and two more
+
+
+@pytest.mark.django_db
+def test_once_anyone_is_added_onboarding_needs_only_two_for_now(participant):
+    answer_onboarding(participant)
+    add_people(participant, 1)
+
+    refused = complete(participant, "onboarding")
+
+    assert refused.status_code == 400
+    assert ADD_TWO in refused.content.decode()
+    add_people(participant, 2)
+    assert complete(participant, "onboarding").status_code == 303
+
+
+@pytest.mark.django_db
+def test_the_contact_list_opens_with_two_rows_and_says_two_are_needed(participant):
+    page = participant.get("/sections/onboarding/").content.decode()
+
+    assert page.count('name="email"') == 2
+    assert "We need at least 2 people whose opinion you trust" in page
 
 
 @pytest.mark.django_db
@@ -207,6 +233,21 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
         for clause in clauses:
             if clause["message"] == ANSWER_ALL_FOUR:
                 clause["message"] = ANSWER_ALL_FIVE
-        clauses.append({"type": "has_answer", "block": f"{prefix}-peace", "message": ANSWER_ALL_FIVE})
+        plan_clause = next(index for index, clause in enumerate(clauses) if clause.get("block") == f"{prefix}-plan")
+        clauses.insert(plan_clause + 1, {"type": "has_answer", "block": f"{prefix}-peace", "message": ANSWER_ALL_FIVE})
+    two_contacts_for_now(expected)
 
     assert without_estimates(the_pathway()) == expected
+
+
+def two_contacts_for_now(document):
+    """✨ The faithful port asks for the prototype's five people; this pathway asks for two, in each place it says so."""
+    onboarding = document["content"]["sections"][0]
+    for block in onboarding["blocks"]:
+        if block["type"] == "contact_list":
+            block["min_rows"] = 2
+        if block["id"] == "contacts-intro":
+            block["body"] = block["body"].replace("at least 5 people", "at least 2 people")
+    for clause in onboarding["gate"]["clauses"]:
+        if clause["message"] == ADD_FIVE:
+            clause.update(min=2, message=ADD_TWO)

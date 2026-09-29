@@ -113,6 +113,25 @@ def test_a_clause_about_entries_cannot_be_asked_of_a_block_that_captures_text(cl
     ]
 
 
+def test_a_count_of_entries_may_be_asked_of_a_contact_list():
+    document = document_whose_gate_names({"type": "entry_count", "block": "people", "min": 2, "message": "Add two."})
+    document["content"]["sections"][1]["blocks"].append({"id": "people", "type": "contact_list"})
+
+    assert validate(document) == []
+
+
+def test_a_minimum_text_length_cannot_be_asked_of_a_contact_list():
+    document = document_whose_gate_names({"type": "min_text_length", "block": "people", "min": 2, "message": "More."})
+    document["content"]["sections"][1]["blocks"].append({"id": "people", "type": "contact_list"})
+
+    assert validate(document) == [
+        Problem(
+            path=f"{CLAUSE_PATH}/block",
+            message="A 'min_text_length' clause cannot be checked against block 'people', which is a contact_list.",
+        )
+    ]
+
+
 def test_has_answer_may_be_asked_of_any_block_that_captures_an_answer():
     document = document_whose_gate_names({"type": "has_answer", "block": "statement", "message": "Answer this."})
 

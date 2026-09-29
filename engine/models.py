@@ -118,6 +118,50 @@ class Response(models.Model):
         )
 
 
+    def replace_contacts(self, block_id, contacts, role):
+        """✨ Keep exactly these people for one block, in order, in place of whoever it held before.
+
+        Done together or not at all, so a list is never kept half-replaced. Someone taken off the list is
+        deleted, not merely hidden: they are another person's details, kept only while the participant wants them.
+        """
+        with transaction.atomic():
+            self.contacts.filter(block_id=block_id).delete()
+            Contact.objects.bulk_create(
+                Contact(response=self, block_id=block_id, role=role, position=position, **contact)
+                for position, contact in enumerate(contacts)
+            )
+        Response.objects.filter(pk=self.pk).update(updated_at=timezone.now())
+
+    def answers_with_contacts(self):
+        """✨ The stored answers, with each block's contacts read in as its answer, as the gate and progress read it."""
+        kept = {}
+        for contact in self.contacts.order_by("block_id", "position"):
+            kept.setdefault(contact.block_id, []).append({"name": contact.name, "email": contact.email})
+        return {**self.answers, **kept}
+
+
+class Contact(models.Model):
+    """✨ Someone the participant named: a coach, or a person who knows them well. Kept apart from the answers,
+    since these are other people's details, and later each becomes an invitation (ticket 13)."""
+
+    class Role(models.TextChoices):
+        COACH = "coach"
+        CONTACT = "contact"
+
+    response = models.ForeignKey(Response, on_delete=models.CASCADE, related_name="contacts")
+    block_id = models.CharField(max_length=64)
+    role = models.CharField(max_length=16, choices=Role.choices)
+    position = models.PositiveSmallIntegerField()
+    name = models.CharField(max_length=150)
+    email = models.EmailField(max_length=254)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["response", "block_id", "position"], name="one_contact_per_row"),
+        ]
+
+
 class Result(models.Model):
     """✨ The scores computed from one sort answer, kept against its response and so its pathway version.
 

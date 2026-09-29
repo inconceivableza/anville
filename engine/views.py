@@ -19,10 +19,11 @@ from engine.document import (
     text_for,
     unmet,
 )
-from engine.document.blocks import section_of
+from engine.document.blocks import CONTACTS, section_of
+from engine.document.contacts import MAX_CONTACTS, contacts_from_form, rows_to_show
 from engine.document.scoring import score
 from engine.hub import block_ids_fixed_on_completion, hub_for, is_locked, open_blocks, section_by_id, track_sections
-from engine.models import PathwayVersion, Publication, Response, Result
+from engine.models import Contact, PathwayVersion, Publication, Response, Result
 from engine.results import results_page
 
 
@@ -66,7 +67,9 @@ def section(request, section_id):
     section = _section_or_404(version, section_id)
     if is_locked(section, completed):
         return redirect("hub")
-    page = _section_page(version, section, answers, completed, _fixed(participant_response))
+    page = _section_page(
+        version, section, answers, completed, _fixed(participant_response), asked_rows=_asked_rows(request.GET)
+    )
     return render(request, "engine/section.html", page)
 
 
@@ -125,7 +128,7 @@ def save_answer(request, block_id):
     # lock or an unconfirmed reading holds it. Otherwise they could fill it in without ever opening it, and
     # both would be decoration again, which is exactly the prototype's mistake.
     section = section_of(version.document, block_id)
-    answers = participant_response.answers if participant_response else {}
+    answers = participant_response.answers_with_contacts() if participant_response else {}
     completed = set(participant_response.completed_sections) if participant_response else set()
     reached, _ = open_blocks(section, answers, track_sections(version.document))
     if is_locked(section, completed) or block not in reached:
@@ -134,14 +137,23 @@ def save_answer(request, block_id):
     if block_id in fixed:
         # ✨ Refused here, not only disabled on the page, so a page left open from before completing cannot change it.
         return _refuse_fixed(request)
+    block_type = BLOCK_TYPES[block["type"]]
     try:
-        value = answer_from_form(version.document, block, request.POST.get("value"))
+        if block_type.captures is CONTACTS:
+            value = contacts_from_form(request.POST.getlist("name"), request.POST.getlist("email"))
+        else:
+            value = answer_from_form(version.document, block, request.POST.get("value"))
     except AnswerRefused as refused:
-        return render(request, "engine/save_status.html", {"refusal": str(refused)}, status=400)
+        context = {"refusal": str(refused), "invalid_row": refused.row, "invalid_field": refused.field}
+        return render(request, "engine/save_status.html", context, status=400)
 
     if participant_response is None:
         participant_response, _ = Response.objects.get_or_create(participant=request.user, version=version)
-    if BLOCK_TYPES[block["type"]].scored:
+    if block_type.captures is CONTACTS:
+        participant_response.replace_contacts(block_id, value, Contact.Role.CONTACT)
+        answers = {**answers, block_id: value}
+        return _saved(request, version, section, answers, completed, fixed, block_id)
+    if block_type.scored:
         try:
             participant_response.submit_sort(block_id, value, score(version.document, value))
         except IntegrityError:
@@ -152,10 +164,20 @@ def save_answer(request, block_id):
         return _refuse_fixed(request)  # ✨ a completion fixed it after the check above, and the UPDATE saw that
     # ✨ The row was updated in place, so this object's answers are a step behind what was just stored.
     answers = {**answers, block_id: value}
+    return _saved(request, version, section, answers, completed, fixed, block_id)
 
+
+def _saved(request, version, section, answers, completed, fixed, block_id):
+    """✨ What a stored answer sends back: with htmx, the status and the gate; without, the section again.
+
+    A contact list's "add another" without JavaScript saves the list and asks for one more row than it showed,
+    which the section then shows.
+    """
     if request.headers.get("HX-Request") == "true":
         return render(request, "engine/save_result.html", _section_page(version, section, answers, completed, fixed))
-    return _see_other(f"{reverse('section', args=[section['id']])}#block-{block_id}")
+    rows = _asked_rows(request.POST)
+    query = f"?rows={rows}" if rows else ""
+    return _see_other(f"{reverse('section', args=[section['id']])}{query}#block-{block_id}")
 
 
 @login_required
@@ -209,7 +231,7 @@ def _participant(user):
     return (
         participant_response,
         participant_response.version,
-        participant_response.answers,
+        participant_response.answers_with_contacts(),
         set(participant_response.completed_sections),
     )
 
@@ -231,7 +253,13 @@ def _section_or_404(version, section_id):
     return section
 
 
-def _section_page(version, section, answers, completed, fixed):
+def _asked_rows(query):
+    """✨ How many rows a contact list's "add another" asked for without JavaScript, or 0. Capped when shown."""
+    asked = query.get("rows", "")
+    return min(int(asked), MAX_CONTACTS) if asked.isdigit() else 0
+
+
+def _section_page(version, section, answers, completed, fixed, asked_rows=0):
     blocks, activity_open = open_blocks(section, answers, track_sections(version.document))
     # ✨ A sort leads only to its results, as in the prototype, so completing is not offered beside it until it
     # is in. The linter makes its section's gate require it, so the server refuses completion before then too.
@@ -244,13 +272,16 @@ def _section_page(version, section, answers, completed, fixed):
             "version_id": version.pk,
             "scale_points": SCALE_POINTS,
             "long_text_max_length": LONG_TEXT_MAX_LENGTH,
+            "max_contacts": MAX_CONTACTS,
         },
         "section": {
             "id": section["id"],
             "title": text_for(section["title"], "participant"),
             "estimate": states[section["id"]].estimate,
             "complete_label": text_for(section.get("complete_label", "Mark complete"), "participant"),
-            "blocks": [_block_for_participant(version.document, block, answers, fixed, states) for block in blocks],
+            "blocks": [
+                _block_for_participant(version.document, block, answers, fixed, states, asked_rows) for block in blocks
+            ],
         },
         "is_complete": section["id"] in completed,
         "holds_fixed_answers": any(block["id"] in fixed for block in blocks),
@@ -267,11 +298,12 @@ def _published_version(posted):
     return PathwayVersion.objects.filter(pk=int(posted), publications__isnull=False).distinct().first()
 
 
-def _block_for_participant(document, block, answers, fixed, states):
+def _block_for_participant(document, block, answers, fixed, states, asked_rows=0):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
     identifier; a link to a section outside the participant's track has no state and shows nothing."""
     widget = BLOCK_TYPES[block["type"]].widget
     return {
+        "rows": _contact_rows(block, answers, asked_rows) if block["type"] == "contact_list" else None,
         "id": block["id"],
         "type": block["type"],
         "template": f"engine/blocks/{block['type']}.html",
@@ -282,3 +314,10 @@ def _block_for_participant(document, block, answers, fixed, states):
         "widget": widget(document, "participant") if widget else None,
         "link": states.get(block["section"]) if block["type"] == "section_link" else None,
     }
+
+
+def _contact_rows(block, answers, asked_rows):
+    """✨ A contact list's rows: every saved person in order, then empty rows up to the number to show."""
+    contacts = answers.get(block["id"]) or []
+    empty = {"name": "", "email": ""}
+    return [*contacts, *[empty] * (rows_to_show(block, contacts, asked_rows) - len(contacts))]

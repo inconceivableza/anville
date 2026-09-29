@@ -14,7 +14,7 @@ import pytest
 from django.test import Client
 from django.utils.html import escape
 
-from engine.models import Publication, Response
+from engine.models import Contact, Publication, Response
 from tests.journeys.pages import gate_checklist
 from tests.journeys.test_consent import give_consent
 from tests.journeys.test_hub import a_fresh_participant, signed_in_client  # noqa: F401  (a fixture, used by name)
@@ -43,6 +43,8 @@ REASONS = {
 }
 # ✨ The prototype said only "– please choose" beside the question, and left its button disabled until then.
 CHOOSE_A_REASON = "Choose what's bringing you to the course to continue."
+# ✨ The prototype left "Save and continue →" disabled until five were added, beside "I'll do this later →".
+ADD_FIVE = "Add at least 5 people, or leave the list empty to do this later."
 SLOTS = ("bible", "gifts", "call", "plan")  # ✨ each rating's id after its `bl-` or `pl-` prefix
 A_STATEMENT = "God seems to have designed me to make difficult things clear."
 A_LETTER = "Dear me, remember what you found here."
@@ -135,7 +137,7 @@ def test_going_back_to_select_asks_for_a_reason_again(participant):
 
     refused = complete(participant, "onboarding")
     assert refused.status_code == 400
-    assert gate_checklist(refused.content.decode()) == {CHOOSE_A_REASON: False, ANSWER_ALL_FOUR: True}
+    assert gate_checklist(refused.content.decode()) == {CHOOSE_A_REASON: False, ANSWER_ALL_FOUR: True, ADD_FIVE: True}
 
 
 @pytest.mark.django_db
@@ -155,7 +157,7 @@ def test_onboarding_is_not_complete_without_a_reason(participant):
     refused = complete(participant, "onboarding")
 
     assert refused.status_code == 400
-    assert gate_checklist(refused.content.decode()) == {CHOOSE_A_REASON: False, ANSWER_ALL_FOUR: True}
+    assert gate_checklist(refused.content.decode()) == {CHOOSE_A_REASON: False, ANSWER_ALL_FOUR: True, ADD_FIVE: True}
     assert "onboarding" not in Response.objects.get().completed_sections
 
 
@@ -215,7 +217,7 @@ def test_the_way_on_opens_once_all_four_are_answered(participant):
     answer_onboarding(participant)
 
     page = participant.get("/sections/onboarding/").content.decode()
-    assert gate_checklist(page) == {CHOOSE_A_REASON: True, ANSWER_ALL_FOUR: True}
+    assert gate_checklist(page) == {CHOOSE_A_REASON: True, ANSWER_ALL_FOUR: True, ADD_FIVE: True}
 
     assert complete(participant, "onboarding").status_code == 303
 
@@ -240,6 +242,69 @@ def test_the_four_end_ratings_are_fixed_once_the_letter_is_sent(participant):
 
     for slot in SLOTS:
         assert answer(client, f"pl-{slot}", "2").status_code == 409
+
+
+# The people who know the participant best
+
+
+def add_people(client, count):
+    """✨ Save a contact list of `count` people, with fake details as the prototype's pre-filled rows have."""
+    return client.post(
+        "/answers/contacts/",
+        {
+            "name": [f"Person {number}" for number in range(count)],
+            "email": [f"person{number}@example.com" for number in range(count)],
+            "version": version(),
+        },
+    )
+
+
+@pytest.mark.django_db
+def test_onboarding_asks_who_knows_the_participant_best_after_the_baseline(participant):
+    page = participant.get("/sections/onboarding/").content.decode()
+
+    assert page.index(escape(BASELINE_STATEMENTS["bl-plan"])) < page.index("Who knows you best?")
+    assert page.index("Who knows you best?") < page.index('id="block-contacts"')
+    assert "We need at least 5 people whose opinion you trust" in page
+
+
+@pytest.mark.django_db
+def test_the_contact_list_opens_with_the_prototypes_five_rows(participant):
+    page = participant.get("/sections/onboarding/").content.decode()
+    form = re.search(r'<form id="block-contacts".*?</form>', page, re.S).group(0)
+
+    assert len(re.findall(r'<input[^>]*\bname="email"', form)) == 5
+    assert "+ Add another person" in form
+
+
+@pytest.mark.django_db
+def test_onboarding_can_be_completed_without_adding_anyone_as_with_the_prototypes_i_will_do_this_later(participant):
+    answer_onboarding(participant)
+
+    assert complete(participant, "onboarding").status_code == 303
+
+
+@pytest.mark.django_db
+def test_once_anyone_is_added_onboarding_needs_five_as_the_prototype_did(participant):
+    answer_onboarding(participant)
+    add_people(participant, 4)
+
+    refused = complete(participant, "onboarding")
+
+    assert refused.status_code == 400
+    assert gate_checklist(refused.content.decode()) == {CHOOSE_A_REASON: True, ANSWER_ALL_FOUR: True, ADD_FIVE: False}
+    add_people(participant, 5)
+    assert complete(participant, "onboarding").status_code == 303
+
+
+@pytest.mark.django_db
+def test_the_contact_list_can_be_corrected_after_onboarding_is_complete(participant):
+    answer_onboarding(participant)
+    add_people(participant, 5)
+    complete(participant, "onboarding")
+
+    assert add_people(participant, 6).status_code == 303
+    assert Contact.objects.count() == 6
 
 
 # The calling-statement section
@@ -515,9 +580,9 @@ def test_the_sections_with_no_activity_yet_still_say_what_they_are_for(participa
 def test_progress_counts_what_the_participant_does_and_not_the_prose_or_the_link(participant):
     page = participant.get("/").content.decode()
 
-    # ✨ the reason and four ratings; Section 1's reading and reflection; the sort; the calling reading and
-    # statement; the letter and four more
-    assert "0 of 15 answered" in page
+    # ✨ the reason, four ratings and the contact list; Section 1's reading and reflection; the sort; the calling
+    # reading and statement; the letter and four more
+    assert "0 of 16 answered" in page
 
 
 @pytest.mark.django_db

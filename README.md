@@ -69,7 +69,8 @@ and the letter, with Sections 2 and 4 carrying their hint text until their activ
 `pathways/example.json` is a smaller file for trying the loader out.
 
 `pathways/whatever-you-do-faithful-port.json` is the faithful port: the same pathway as the original
-prototype has it, without the content owner's later changes (so far, only the fifth baseline rating).
+prototype has it, without the content owner's later changes (so far, the fifth baseline rating; it also asks for five
+contacts where *Whatever You Do* asks for two for now).
 Both documents grow together, and a test fails if they differ in anything else, so the finished
 pathway can be compared with the original prototype's. Load it the same way to see the original prototype's
 version. Both are titled *Whatever You Do*, so loading one publishes it in place of the other: load
@@ -95,7 +96,7 @@ A section's `gate` is an optional list of clauses, all of which must pass before
 |---|---|---|
 | `has_answer` | any answer | the block has been answered; blank text and an empty list do not count |
 | `min_text_length` | text | at least `min` characters, ignoring space at either end |
-| `entry_count` | entries | at least `min` entries, or with `only_with_content` only those with something in them |
+| `entry_count` | entries | at least `min` entries, or with `only_with_content` only those with something in them; with `allow_none`, no entries at all also passes |
 | `distinct_value_count` | entries | at least `min` different values of `field` |
 | `every_entry_has` | entries | every entry has a value for `field` — true of no entries, so pair it with `entry_count` |
 
@@ -103,7 +104,7 @@ The gate re-renders with each autosave, so the messages and the button keep up w
 
 Clauses that carry the same message say it once, so "Answer all four to continue" is written as four `has_answer` clauses and one sentence.
 
-A clause may only name a block whose answer it can read and, except for `has_answer`, only one in its own section; the linter refuses both. `has_answer` may wait on another section's block ("the sort has been done"), which is how Section 1 waits on the Strengths assessment; what another section's answer holds is for that section's own gate. The three entry clauses have no block to name yet, because no block type captures a list of entries: they wait for the contact list and timeline board (tickets 10 and 17). A new kind of clause is a code change, never an expression in the document (ADR 0003).
+A clause may only name a block whose answer it can read and, except for `has_answer`, only one in its own section; the linter refuses both. `has_answer` may wait on another section's block ("the sort has been done"), which is how Section 1 waits on the Strengths assessment; what another section's answer holds is for that section's own gate. The three entry clauses read a contact list, and later the timeline board (ticket 17). A new kind of clause is a code change, never an expression in the document (ADR 0003).
 
 A `section_link` block leads to another section, named by `section`, with an optional `body`. It shows that section's title and status exactly as the hub does, and a locked section is named but not linked. With a `button_label`, such as Section 1's "Open Strengths Assessment →", a button leads there and the title is plain text. With `"holds_what_follows": true`, the blocks after it are held back until the linked section's gate passes, as beneath an unconfirmed scripture reading: they are not sent to the browser and will not accept an answer. The linked section need not be completed. Section 1 holds its reflection this way until the sort is in. The linter refuses a link that holds back its own section, which could never be finished. It takes no answer and counts towards no progress.
 
@@ -117,9 +118,11 @@ A `long_text` block may carry a `placeholder`: ghost text in the empty box, such
 
 A `single_select` block is a drop-down of authored `options`, each an `id` and a `label`, and saves as soon as one is chosen. The answer is the option's `id`, so a label can be reworded without changing what earlier answers mean; the server refuses anything that is not one of the block's own options, and the linter refuses two options sharing an `id`. An empty choice always leads the list, showing the optional `placeholder` ("Select..."), so an unanswered select never looks answered; choosing it again takes the answer back, as emptying a text box does. Onboarding asks the reason for taking the course this way, and its gate requires it.
 
+A `contact_list` block asks for people who know the participant, a first name and an email address per row, and opens with `min_rows` empty rows (five unless the author says). "+ Add another person" adds a row, up to 50. The whole list saves as each field is left, with empty rows dropped; the server refuses it whole, naming the row, for a row with only a name or only an email, or an email address Django would not accept. These are other people's details, so they are kept as `Contact` records against the response, not among its answers, and someone taken off the list is deleted. The gate and progress still read the list as the block's answer. Onboarding asks this way, and its gate uses `entry_count` with `allow_none`, so the list may be left empty for later, as the prototype's "I'll do this later →" allowed, but not started short. The faithful port asks for the prototype's five; *Whatever You Do* asks for two for now, so it can be tried without inventing five.
+
 Long-text answers are limited to 20,000 characters. The text box carries the same limit and says how much room is left near it. Line breaks are stored as `\n`, although forms send them as `\r\n`. This is the one change made to a participant's text on input, and it keeps the server's count the same as the browser's.
 
-The long-text, single-select and 1–10 scale forms also save without JavaScript, through a Save button that is hidden once JavaScript loads. This was added in passing during ticket 03 and is not a standard: later blocks, especially the interactive ones such as the sort and the timeline, need not work without JavaScript, and this fallback may be removed.
+The long-text, single-select, contact-list and 1–10 scale forms also save without JavaScript, through a Save button that is hidden once JavaScript loads. This was added in passing during ticket 03 and is not a standard: later blocks, especially the interactive ones such as the sort and the timeline, need not work without JavaScript, and this fallback may be removed.
 
 ## Scoring and results
 

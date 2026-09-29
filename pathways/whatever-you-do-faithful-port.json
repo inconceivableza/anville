@@ -59,6 +59,17 @@
             "min_label": "Strongly disagree",
             "max_label": "Strongly agree",
             "fixed_once_complete": true
+          },
+          {
+            "id": "contacts-intro",
+            "type": "rich_text",
+            "label": "Who knows you best?",
+            "body": "One of the most valuable parts of this course is comparing how you see yourself with how others experience you. We often miss things about ourselves that others can see clearly.\n\nWe need at least 5 people whose opinion you trust – people who know you well enough to be honest. They'll receive a short, anonymous survey about your strengths."
+          },
+          {
+            "id": "contacts",
+            "type": "contact_list",
+            "min_rows": 5
           }
         ],
         "gate": {
@@ -67,7 +78,8 @@
             { "type": "has_answer", "block": "bl-bible", "message": "Answer all four to continue" },
             { "type": "has_answer", "block": "bl-gifts", "message": "Answer all four to continue" },
             { "type": "has_answer", "block": "bl-call", "message": "Answer all four to continue" },
-            { "type": "has_answer", "block": "bl-plan", "message": "Answer all four to continue" }
+            { "type": "has_answer", "block": "bl-plan", "message": "Answer all four to continue" },
+            { "type": "entry_count", "block": "contacts", "min": 5, "allow_none": true, "message": "Add at least 5 people, or leave the list empty to do this later." }
           ]
         }
       },

@@ -36,6 +36,8 @@
   --needs-choice-border: #e0b850;
   --needs-choice-bg: #fdf8ec;
   --needs-choice-ring: rgba(224, 184, 80, 0.18);
+  /* ✨ A field a refusal named: --red-soft, faintly, as the focus ring is --gold. */
+  --error-ring: rgba(194, 91, 86, 0.18);
   /* Results: the tones a pathway names for its constructs, and the colours of bars ranked strongest first. */
   --tone-violet: #7b68ee;
   --tone-rose: #c25b56;
@@ -426,6 +428,80 @@ p.time-estimate {
   outline: none;
   border-color: var(--gold);
   box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* ✨ A contact list, as the prototype's contact screen: a numbered row per person, the name narrower than the email. */
+.contact-rows {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.contact-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.contact-num {
+  flex: 0 0 24px;
+  height: 24px;
+  background: var(--gold-pale);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.question-card .contact-field {
+  margin: 0;
+  min-width: 0;
+}
+
+.contact-name {
+  flex: 2;
+}
+
+.contact-email {
+  flex: 3;
+}
+
+.contact-field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--white);
+}
+
+.contact-field input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* ✨ The field a refusal named, marked until a save goes through. */
+.contact-field input[aria-invalid="true"] {
+  border-color: var(--red-soft);
+  box-shadow: 0 0 0 3px var(--error-ring);
+}
+
+@media (max-width: 600px) {
+  .contact-row {
+    flex-wrap: wrap;
+  }
+
+  .contact-name,
+  .contact-email {
+    flex: 1 1 100%;
+  }
 }
 
 /* A link to another section, with that section's status (the prototype's assessment link card) */

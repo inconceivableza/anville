@@ -100,6 +100,20 @@ def test_entry_count_counts_every_entry_unless_the_author_asked_for_only_those_w
     assert unmet(counting_filled, seeded_blank) == ["Not yet."]
 
 
+@pytest.mark.parametrize("answers", [{}, {"contacts": []}, {"contacts": [{"name": "Jo"}, {"name": "Priya"}]}])
+def test_entry_count_may_allow_none_at_all_as_well_as_the_minimum(answers):
+    """✨ A list a participant may skip: empty, or at least the minimum, but never a start left short."""
+    section = section_gated_by(clause("entry_count", block="contacts", min=2, allow_none=True))
+
+    assert unmet(section, answers) == []
+
+
+def test_entry_count_allowing_none_still_fails_between_none_and_the_minimum():
+    section = section_gated_by(clause("entry_count", block="contacts", min=2, allow_none=True, message="Two, or none."))
+
+    assert unmet(section, {"contacts": [{"name": "Jo"}]}) == ["Two, or none."]
+
+
 def test_an_entry_has_content_when_any_one_of_its_fields_does():
     section = section_gated_by(clause("entry_count", block="roles", min=2, only_with_content=True))
 
