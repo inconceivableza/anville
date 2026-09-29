@@ -67,7 +67,7 @@ def answer_all_five(client, prefix="bl"):
 
 def answer_onboarding(client):
     """✨ Everything onboarding requires: the reason for taking the course and all five ratings, then on past the
-    coach step to the page of the people who know the participant best, where onboarding is completed."""
+    coach page to the page of the people who know the participant best, where onboarding is completed."""
     answer(client, "reason", "exploring")
     answer_all_five(client)
     move_past(client, 1)
@@ -259,7 +259,7 @@ def test_the_coach_step_asks_the_mock_ups_six_questions_word_for_word():
     assert [question["id"] for question in questions if question["critical"]] == ["faith", "objectivity", "coaching"]
 
 
-def test_the_coach_step_has_a_page_between_the_starting_ratings_and_the_contact_list():
+def test_the_coach_page_comes_between_the_starting_ratings_and_the_contact_list():
     """✨ As the original prototype goes from its baseline screen to its mentor screen, then to its contacts."""
     assert onboarding_pages(the_pathway()) == [
         ["reason", "baseline-intro", "bl-bible", "bl-gifts", "bl-call", "bl-plan", "bl-peace"],
@@ -269,7 +269,7 @@ def test_the_coach_step_has_a_page_between_the_starting_ratings_and_the_contact_
 
 
 @pytest.mark.django_db
-def test_the_coach_steps_page_needs_nothing_to_go_on_from(participant):
+def test_the_coach_page_needs_nothing_to_go_on_from(participant):
     answer(participant, "reason", "exploring")
     answer_all_five(participant)
     move_past(participant, 1)
@@ -303,7 +303,7 @@ def test_onboarding_can_be_completed_without_choosing_a_coach(participant):
 
 def without_the_coach_step(document):
     """✨ Only this pathway asks for a coach the mock-up's way; the faithful port's own mentor screen is ticket 10b.
-    The coach step's page goes with it, so the break that opened that page goes too."""
+    The coach page goes with it, so the break that opened that page goes too."""
     for section in document["content"]["sections"]:
         blocks = [block for block in section["blocks"] if block["type"] != "coach_checklist"]
         section["blocks"] = [

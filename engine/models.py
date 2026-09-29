@@ -47,7 +47,7 @@ class Response(models.Model):
     # reopening the section afterwards does not quietly make it changeable again.
     fixed_answers = models.JSONField(default=dict)
     # ✨ When the participant moved past each page of a section with "Continue →", keyed "<section>/<page>". Recorded
-    # rather than worked out from the answers, since a page that needs nothing (the coach step) would otherwise hold
+    # rather than worked out from the answers, since a page that needs nothing (the coach page) would otherwise hold
     # nobody back.
     pages_moved_past = models.JSONField(default=dict)
     is_test_data = models.BooleanField(default=False)
@@ -113,7 +113,7 @@ class Response(models.Model):
     def move_past_page(self, section_id, page):
         """✨ Record that the participant moved past one page of a section, in one UPDATE that merges it in.
 
-        The caller has already re-checked that page's clauses. Pages already moved past are kept, so a tab left
+        The caller has already re-checked that the page may be moved past. Pages already moved past are kept, so a tab left
         open on an earlier page never takes back the pages gone through since.
         """
         now = timezone.now()

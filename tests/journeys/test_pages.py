@@ -1,6 +1,6 @@
 """✨ Pages within a section over HTTP (ticket 33): one after another with "Continue →", as the prototype's screens are.
 
-Having moved past a page is stored, since a page with nothing it needs (the coach step, a contact list left empty)
+Having moved past a page is stored, since a page with nothing it needs (the coach page, a contact list left empty)
 would otherwise hold nobody back. As with locks and readings, every page is shut or open on the request itself, so
 a typed address, an autosave or a coach checklist step reaches no further than the pages the participant has gone
 through. Each page is a plain page with an address of its own, and going on is a plain form.

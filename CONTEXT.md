@@ -62,6 +62,10 @@ _Avoid_: journey, path, route.
 A configured unit of content or interaction within a section. Some blocks capture a response; some do not.
 _Avoid_: element, field, widget, component.
 
+**Page**:
+One of the parts an author may split a section into, reached by the participant one after another; the hub shows the section as one. A section not split is a single page.
+_Avoid_: screen, step, sub-section.
+
 **Hub**:
 The engine-derived overview of a participant's track: its sections, their status and locks, and the next step. Never authored.
 _Avoid_: dashboard, home, menu.
