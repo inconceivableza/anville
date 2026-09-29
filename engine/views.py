@@ -45,6 +45,21 @@ def hub(request):
 
 @login_required
 @consent_required
+def start(request):
+    """✨ Where agreeing to consent leads. A participant with nothing saved goes straight to their first step,
+    as the prototype goes from its account screen into onboarding; anyone who has begun goes to the hub."""
+    participant_response, version, answers, completed = _participant(request.user)
+    if participant_response is not None or version is None:
+        return redirect("hub")
+    sections = track_sections(version.document)
+    next_step = hub_for(sections, answers, completed).next_step
+    if next_step is None or not any(section["blocks"] for section in sections):
+        return redirect("hub")  # ✨ the hub's empty state says there is nothing to begin
+    return redirect("section", next_step.id)
+
+
+@login_required
+@consent_required
 def section(request, section_id):
     """✨ One section's blocks. A locked section is refused here, whatever the participant typed in the bar."""
     participant_response, version, answers, completed = _participant(request.user)
@@ -71,7 +86,10 @@ def complete_section(request, section_id):
     if participant_response is None:
         participant_response, _ = Response.objects.get_or_create(participant=request.user, version=version)
     participant_response.complete_section(section_id, fixed_block_ids=block_ids_fixed_on_completion(section, answers))
-    return _see_other("hub")
+    # ✨ On to whatever the hub would now point at, as the prototype moves from screen to screen; the hub once
+    # nothing is left.
+    next_step = hub_for(track_sections(version.document), answers, completed | {section_id}).next_step
+    return _see_other("section", next_step.id) if next_step else _see_other("hub")
 
 
 @login_required
@@ -231,6 +249,7 @@ def _section_page(version, section, answers, completed, fixed):
             "id": section["id"],
             "title": text_for(section["title"], "participant"),
             "estimate": states[section["id"]].estimate,
+            "complete_label": text_for(section.get("complete_label", "Mark complete"), "participant"),
             "blocks": [_block_for_participant(version.document, block, answers, fixed, states) for block in blocks],
         },
         "is_complete": section["id"] in completed,

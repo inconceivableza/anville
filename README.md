@@ -50,7 +50,7 @@ After changing anything in `frontend/src/`, run `npm run build` again in `fronte
 
 Sign-up asks for an "I am 18 or over" confirmation beside the enrolment code, and keeps neither: there is no date of birth anywhere (ADR 0004).
 
-Consent is a separate step at `/consent/`, and every page of the pathway waits for it, so the enrolment code never stands in for it. Agreeing records the version of the consent text and when. Declining records nothing at all. A participant withdraws from the same page, reached by "Your consent" at the foot of the hub; the pathway then waits for consent again. Stored answers are kept on withdrawal for now, because what should happen to them is still open.
+Consent is a separate step at `/consent/`, and every page of the pathway waits for it, so the enrolment code never stands in for it. Agreeing records the version of the consent text and when, then leads a participant with nothing saved straight to their first step, as the prototype goes from its account screen into onboarding (so *Whatever You Do* asks the reason for taking the course first); anyone who has begun goes to the hub. Declining records nothing at all. A participant withdraws from the same page, reached by "Your consent" at the foot of the hub; the pathway then waits for consent again. Stored answers are kept on withdrawal for now, because what should happen to them is still open.
 
 The consent text is `access/templates/access/consent.html`, and it is a draft for fake data only. Its version is `CONSENT_TEXT_VERSION` in `access/consent.py`. Raise it whenever a change alters what participants consent to, not for a typo, and everyone is asked again before they continue.
 
@@ -89,7 +89,7 @@ A section has its own page at `/sections/<id>/`. It opens once every section in 
 
 An agreement scale marked `"fixed_once_complete": true` is fixed once it has been answered and its section completed: from then on it cannot be changed, even if the section is reopened. One left blank at completion can still be answered, and is fixed the next time the section is completed. *Whatever You Do* marks its start and end ratings this way, as the original prototype does not let either be revisited. The server refuses a change, and the page shows the rating as chosen but disabled.
 
-A section's `gate` is an optional list of clauses, all of which must pass before the participant may mark it complete. Completing is their own act, and the server re-checks the gate when the button is pressed, so re-enabling it in a browser achieves nothing. Every clause's authored message is listed beneath the button, ticked once met, so the list keeps its place and height as answers change. The clause types are:
+A section's `gate` is an optional list of clauses, all of which must pass before the participant may mark it complete. Completing is their own act, and the server re-checks the gate when the button is pressed, so re-enabling it in a browser achieves nothing. The button reads "Mark complete" unless the section sets `complete_label`, as *Whatever You Do*'s onboarding does with the prototype's "Continue →". Completing leads on to whatever the hub would now point at, as the prototype moves from screen to screen, and to the hub once nothing is left. Every clause's authored message is listed beneath the button, ticked once met, so the list keeps its place and height as answers change. The clause types are:
 
 | Clause | Reads | Requires |
 |---|---|---|
@@ -115,7 +115,7 @@ Each answer saves by itself as the participant types or chooses, and only that a
 
 A `long_text` block may carry a `placeholder`: ghost text in the empty box, such as the letter's "Dear me,". It is a hint only; the prompt stays the box's label, and the placeholder is never saved as the answer.
 
-A `single_select` block is a drop-down of authored `options`, each an `id` and a `label`, and saves as soon as one is chosen. The answer is the option's `id`, so a label can be reworded without changing what earlier answers mean; the server refuses anything that is not one of the block's own options, and the linter refuses two options sharing an `id`. An empty choice always leads the list, showing the optional `placeholder` ("Select..."), so an unanswered select never looks answered. Onboarding asks the reason for taking the course this way, and its gate requires it.
+A `single_select` block is a drop-down of authored `options`, each an `id` and a `label`, and saves as soon as one is chosen. The answer is the option's `id`, so a label can be reworded without changing what earlier answers mean; the server refuses anything that is not one of the block's own options, and the linter refuses two options sharing an `id`. An empty choice always leads the list, showing the optional `placeholder` ("Select..."), so an unanswered select never looks answered; choosing it again takes the answer back, as emptying a text box does. Onboarding asks the reason for taking the course this way, and its gate requires it.
 
 Long-text answers are limited to 20,000 characters. The text box carries the same limit and says how much room is left near it. Line breaks are stored as `\n`, although forms send them as `\r\n`. This is the one change made to a participant's text on input, and it keeps the server's count the same as the browser's.
 

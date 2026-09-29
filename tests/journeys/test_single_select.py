@@ -75,13 +75,26 @@ def test_a_chosen_option_is_saved_and_shown_chosen_after_a_reload(participant):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("value", ["redundancy", "Approaching retirement", ""])
+@pytest.mark.parametrize("value", ["redundancy", "Approaching retirement"])
 def test_a_choice_that_is_not_one_of_the_options_is_refused_and_nothing_is_stored(participant, value):
     refused = answer(participant, "reason", value, section=ONBOARDING)
 
     assert refused.status_code == 400
     assert "Choose one of the options." in refused.content.decode()
     assert not Response.objects.filter(answers__has_key="reason").exists()
+
+
+@pytest.mark.django_db
+def test_choosing_the_empty_option_again_takes_the_answer_back(participant):
+    """✨ As in the prototype, going back to "Select..." leaves the question unanswered, rather than keeping
+    a choice the page no longer shows."""
+    answer(participant, "reason", "retirement", section=ONBOARDING)
+
+    cleared = answer(participant, "reason", "", section=ONBOARDING)
+
+    assert cleared.status_code == 200
+    assert chosen(shown(participant, ONBOARDING), "reason") is None
+    assert "0 of 3 answered" in participant.get("/").content.decode()
 
 
 @pytest.mark.django_db

@@ -130,7 +130,11 @@
         "requires": { "type": "array", "items": { "$ref": "#/$defs/identifier" } },
         "estimate": { "$ref": "#/$defs/estimate" },
         "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } },
-        "gate": { "$ref": "#/$defs/gate" }
+        "gate": { "$ref": "#/$defs/gate" },
+        "complete_label": {
+          "description": "The wording of the button that completes the section, such as 'Continue →'. Without one, it reads 'Mark complete'.",
+          "$ref": "#/$defs/text"
+        }
       }
     },
     "block": {

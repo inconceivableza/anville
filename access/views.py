@@ -32,7 +32,7 @@ def consent(request):
             page = _page(request.user, version, given, text_changed=True)
             return render(request, "access/consent.html", page, status=400)
         Consent.objects.create(participant=request.user, text_version=version)
-        return _see_other("hub")
+        return _see_other("start")
     if given is not None and decision == "withdraw":
         withdraw(request.user)
         return _see_other("consent")

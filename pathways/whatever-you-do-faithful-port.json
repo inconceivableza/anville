@@ -6,6 +6,7 @@
       {
         "id": "onboarding",
         "title": "Before we begin",
+        "complete_label": "Continue →",
         "blocks": [
           {
             "id": "reason",

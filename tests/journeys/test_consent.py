@@ -84,8 +84,7 @@ def test_the_consent_page_offers_agreeing_and_declining_as_separate_choices(sign
 def test_agreeing_opens_the_pathway(signed_up):
     agreed = give_consent(signed_up)
 
-    assert agreed.status_code == 303
-    assert agreed.url == "/"
+    assert agreed.status_code == 303  # ✨ where it leads is pinned by the tests after this one
     assert "Test Pathway" in signed_up.get("/").content.decode()
     answer(signed_up, "baseline-bible", "7")
     assert Response.objects.get().answers == {"baseline-bible": 7}
@@ -140,6 +139,36 @@ def consented(signed_up):
 
 def today():
     return dateformat.format(timezone.localdate(), "j F Y")
+
+
+def where_agreeing_leads(client):
+    """✨ The page the browser ends up on after agreeing, following every redirect."""
+    return client.get(give_consent(client).url, follow=True).request["PATH_INFO"]
+
+
+@pytest.mark.django_db
+def test_agreeing_for_the_first_time_leads_straight_to_the_first_step(signed_up):
+    """✨ As the prototype goes from its account screen straight into onboarding, without the hub between."""
+    assert where_agreeing_leads(signed_up) == "/sections/onboarding/"
+
+
+@pytest.mark.django_db
+def test_agreeing_again_once_started_leads_to_the_hub(consented):
+    answer(consented, "baseline-bible", "7")
+    withdraw_consent(consented)
+
+    assert where_agreeing_leads(consented) == "/"
+
+
+@pytest.mark.django_db
+def test_agreeing_with_nothing_to_begin_leads_to_the_hub(signed_up, load_pathway):
+    document = pathway_document()
+    for section in document["content"]["sections"]:
+        section["blocks"] = []
+        section.pop("gate", None)
+    load_pathway(document)
+
+    assert where_agreeing_leads(signed_up) == "/"
 
 
 @pytest.mark.django_db

@@ -32,6 +32,10 @@
   --blue-soft: #4a6fa5;
   --border: #d0ddd4;
   --shadow: rgba(15, 92, 60, 0.06);
+  /* ✨ A drop-down still waiting for a choice: the prototype's amber "needs-choice" highlight. */
+  --needs-choice-border: #e0b850;
+  --needs-choice-bg: #fdf8ec;
+  --needs-choice-ring: rgba(224, 184, 80, 0.18);
   /* Results: the tones a pathway names for its constructs, and the colours of bars ranked strongest first. */
   --tone-violet: #7b68ee;
   --tone-rose: #c25b56;
@@ -384,17 +388,38 @@ p.time-estimate {
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
-/* ✨ A single select, sized like the text box above it */
+/*
+ * ✨ A single select, as the prototype's account screen draws it: the browser's own arrow replaced by a
+ * small caret, drawn from two gradient halves so it takes --ink rather than a raw colour in an SVG.
+ * 16px text also stops iOS zooming in on it.
+ */
 .question-card select {
   width: 100%;
-  padding: 10px 14px;
+  padding: 14px 40px 14px 16px;
   border: 1px solid var(--border);
   border-radius: 10px;
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: 16px;
   color: var(--ink);
-  background: var(--white);
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: var(--white);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink) 50%),
+    linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+  background-position:
+    calc(100% - 20px) center,
+    calc(100% - 16px) center;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
   transition: border-color 0.2s;
+}
+
+/* ✨ Amber until something is chosen, as the prototype's "needs-choice"; no JavaScript needed to clear it. */
+.question-card select:has(option[value=""]:checked) {
+  border-color: var(--needs-choice-border);
+  background-color: var(--needs-choice-bg);
+  box-shadow: 0 0 0 3px var(--needs-choice-ring);
 }
 
 .question-card select:focus {

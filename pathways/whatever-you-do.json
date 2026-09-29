@@ -7,6 +7,7 @@
         "id": "onboarding",
         "title": "Before we begin",
         "estimate": "About 1 minute",
+        "complete_label": "Continue →",
         "blocks": [
           {
             "id": "reason",

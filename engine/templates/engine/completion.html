@@ -28,7 +28,7 @@
       {% endcomment %}
       <form method="post" action="{% url 'complete_section' section.id %}">
         {% csrf_token %}
-        <button type="submit" class="btn btn-primary"{% if unmet %} disabled{% endif %}>Mark complete</button>
+        <button type="submit" class="btn btn-primary btn-full"{% if unmet %} disabled{% endif %}>{{ section.complete_label }}</button>
       </form>
       {% if checklist %}
         <ul class="gate-messages">

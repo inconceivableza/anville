@@ -25,6 +25,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 ## Consent
 
 - After signing up, and at a first sign-in, the consent page comes before the hub.
+- Agreeing as a new participant opens onboarding, with the reason drop-down first, not the hub. "Back to the hub" still reaches the hub.
 - "I agree" and "I do not agree" are stacked with a gap between them and look like equal choices: neither is hidden, greyed out or smaller.
 - "I do not agree" says nothing will be stored, and "Read the text again" goes back to the page.
 - Without JavaScript, both buttons work: the page is a plain form.
@@ -43,9 +44,12 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Without JavaScript, a Save button appears and saves the answer. With JavaScript it is hidden.
 - Screen reader: "Saved" and a refusal are announced.
 - Ghost text (Section 1's reflection, the letter): it shows in grey in the empty box, is readable against the background, and disappears as you type. A screen reader names the box by its prompt, not by the ghost text.
-- The reason in onboarding: the drop-down shows "Select..." until a reason is chosen, and choosing one shows "Saved" with no button press. Going back to "Select..." shows the refusal, and the reason chosen before stays saved (reload to see it). Keyboard only: Tab reaches it, and the arrow keys change it (each change saves). It fills the card's width at phone width.
+- The reason in onboarding: it looks like the prototype's account-screen drop-down (a small dark caret at the right, not the browser's arrow), and is amber while "Select..." is showing, turning white once a reason is chosen, with or without JavaScript. The drop-down shows "Select..." until a reason is chosen, and choosing one shows "Saved" with no button press. Going back to "Select..." shows "Saved", turns the drop-down amber again, and unticks "Choose what's bringing you to the course" beneath the button; a reload still shows "Select...". Keyboard only: Tab reaches it, and the arrow keys change it (each change saves). It fills the card's width at phone width.
 
 ## The gate and "Mark complete"
+
+- The button fills the width of the page, in every section. Onboarding's reads "Continue →"; every other section's reads "Mark complete".
+- Completing onboarding opens Section 1, not the hub. Completing the last open section returns to the hub.
 
 - Every requirement is listed below the button, a met one ticked (✓) and quieter, an unmet one with a dot. As you type, an item changes between the two in place: scrolled to the very bottom of the page, nothing moves.
 - Screen reader: a met item is read as "Done: …", and the tick and dot are not read.

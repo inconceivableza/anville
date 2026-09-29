@@ -16,6 +16,7 @@ from django.utils.html import escape
 
 from engine.models import Publication, Response
 from tests.journeys.pages import gate_checklist
+from tests.journeys.test_consent import give_consent
 from tests.journeys.test_hub import a_fresh_participant, signed_in_client  # noqa: F401  (a fixture, used by name)
 
 DOCUMENT = Path(__file__).resolve().parents[2] / "pathways" / "whatever-you-do-faithful-port.json"
@@ -111,6 +112,40 @@ def test_the_reason_is_asked_first_with_the_prototypes_options_in_its_order(part
     assert escape("What's bringing you to the course?") in page
     assert reason_options(page) == [(value, escape(label)) for value, label in REASONS.items()]
     assert page.index('id="answer-reason"') < page.index(escape(BASELINE_STATEMENTS["bl-bible"]))
+
+
+@pytest.mark.django_db
+def test_the_reason_is_the_first_thing_asked_once_consent_is_given(client, django_user_model, load_pathway):
+    """✨ The prototype asks it on its account screen; here it comes straight after consent instead, since
+    nothing about a participant is kept before they have agreed."""
+    load_pathway(the_pathway())
+    client.force_login(django_user_model.objects.create_user(username="new", email="new@example.com"))
+
+    landed = client.get(give_consent(client).url, follow=True)
+
+    assert landed.request["PATH_INFO"] == "/sections/onboarding/"
+    assert 'id="answer-reason"' in landed.content.decode()
+
+
+@pytest.mark.django_db
+def test_going_back_to_select_asks_for_a_reason_again(participant):
+    answer_onboarding(participant)
+
+    answer(participant, "reason", "")
+
+    refused = complete(participant, "onboarding")
+    assert refused.status_code == 400
+    assert gate_checklist(refused.content.decode()) == {CHOOSE_A_REASON: False, ANSWER_ALL_FOUR: True}
+
+
+@pytest.mark.django_db
+def test_onboarding_ends_with_the_prototypes_continue_and_leads_on_to_section_1(participant):
+    """✨ The prototype's baseline button reads "Continue →" once all four are answered, and its first run
+    goes on into Section 1 rather than back to the hub."""
+    assert ">Continue →</button>" in participant.get("/sections/onboarding/").content.decode()
+    answer_onboarding(participant)
+
+    assert complete(participant, "onboarding").url == "/sections/designed/"
 
 
 @pytest.mark.django_db

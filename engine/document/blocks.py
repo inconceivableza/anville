@@ -117,8 +117,9 @@ SORT = AnswerKind(
 
 
 def _choice_schema(document, block):
-    """✨ The identifier of one of the block's own options, never its label."""
-    return {"enum": [option["id"] for option in block["options"]]}
+    """✨ The identifier of one of the block's own options, never its label. The empty choice ("Select...")
+    takes the answer back, as emptying a text box does: blank counts as unanswered everywhere."""
+    return {"enum": ["", *(option["id"] for option in block["options"])]}
 
 
 CHOICE = AnswerKind("choice", _choice_schema, "Choose one of the options.", _text_from_form)
