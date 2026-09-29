@@ -277,8 +277,45 @@ def test_the_coach_page_needs_nothing_to_go_on_from(participant):
     page = participant.get(COACH_PAGE).content.decode()
 
     assert "Walking with a coach" in page
-    assert '<button type="submit" class="btn btn-primary btn-full">Continue →</button>' in page
+    assert f'<button type="submit" class="btn btn-secondary btn-full">{escape(SORT_LATER)}</button>' in page
     assert move_past(participant, 2).url == CONTACTS_PAGE
+
+
+SORT_LATER = "I'll sort this later →"  # ✨ the original prototype's way past its mentor screen without a mentor
+
+
+def save_the_coach(client, htmx=True, **fields):
+    form = {"step": "save", "name": "Sam", "email": "sam@example.com", "confirmed": "on", **fields}
+    form.update({f"answer-{question['id']}": "yes" for question in the_coach_step(the_pathway())["questions"]})
+    return client.post("/coach/coach/", form, **({"HTTP_HX_REQUEST": "true"} if htmx else {}))
+
+
+@pytest.mark.django_db
+def test_the_coach_page_says_continue_once_a_coach_is_chosen_and_sort_later_once_removed(participant):
+    answer(participant, "reason", "exploring")
+    answer_all_five(participant)
+    move_past(participant, 1)
+
+    saved = save_the_coach(participant).content.decode()
+    reloaded = participant.get(COACH_PAGE).content.decode()
+    removed = participant.post("/coach/coach/", {"step": "remove"}, HTTP_HX_REQUEST="true").content.decode()
+
+    continue_button = '<button type="submit" class="btn btn-primary btn-full">Continue →</button>'
+    assert continue_button in saved  # ✨ sent with the checklist, so the button changes without a reload
+    assert '<div id="completion" class="completion" hx-swap-oob="true">' in saved
+    assert continue_button in reloaded
+    assert f'<button type="submit" class="btn btn-secondary btn-full">{escape(SORT_LATER)}</button>' in removed
+
+
+@pytest.mark.django_db
+def test_a_refused_coach_leaves_the_way_on_as_it_was(participant):
+    answer(participant, "reason", "exploring")
+    answer_all_five(participant)
+    move_past(participant, 1)
+
+    refused = save_the_coach(participant, confirmed="").content.decode()
+
+    assert "hx-swap-oob" not in refused
 
 
 def test_the_coach_step_is_introduced_as_the_mock_up_introduces_it():
@@ -319,7 +356,8 @@ def test_a_chosen_coach_is_kept_on_the_coach_page_and_apart_from_the_contacts(pa
 
 def without_the_coach_step(document):
     """✨ Only this pathway asks for a coach the mock-up's way; the faithful port's own mentor screen is ticket 10b.
-    The coach page goes with it, so the break that opened that page goes too."""
+    The coach page goes with it, so the break that opened that page goes too, and the skip label of the break that
+    closed it."""
     for section in document["content"]["sections"]:
         blocks = [block for block in section["blocks"] if block["type"] != "coach_checklist"]
         section["blocks"] = [
@@ -327,6 +365,9 @@ def without_the_coach_step(document):
             for block, after in zip(blocks, [*blocks[1:], None])
             if not (block["type"] == "page_break" and after and after["type"] == "page_break")
         ]
+        for block in section["blocks"]:
+            if block["id"] == "to-contacts":
+                block.pop("skip_label", None)
     return document
 
 

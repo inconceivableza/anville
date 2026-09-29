@@ -1,0 +1,6 @@
+{% comment %}
+  ✨ What a coach checklist step sends back to htmx: the checklist's next screen in its place and, when a coach was
+  just kept or removed, the page's way on brought up to date beside it, as after an autosave.
+{% endcomment %}
+{% include block.template %}
+{% if stored %}{% include "engine/completion.html" with out_of_band=True %}{% endif %}

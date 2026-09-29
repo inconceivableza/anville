@@ -19,6 +19,12 @@
 - Known limit, recorded with the observers' one (13b): the participant holds a copy of the coach's link, so they could accept the commitments on the coach's behalf. Nothing private leaks, but the participant could be told their coach agreed when they never did. Claiming doesn't help, since the participant can claim as easily as use; only the application reaching the coach itself (email, or a coach account) would, and neither is in this milestone
 - [ ] Journey tests cover accepting, declining, that accepting needs every commitment, and refusal of wrong, expired or revoked coach tokens
 
+**Carried from 10a**
+
+- The chosen coach is one `Contact` with the coach role, under the coach checklist's block id (`coach` in `whatever-you-do.json`), read into the answers under that id. Saving another coach replaces the row and "Remove" deletes it, so its id does not last: bind the coach's link to it with that in mind, as 13a must for contacts, and decide whether choosing someone else or removing revokes a link already issued
+- The coach page's "Choose someone else" already leads back to the checklist, so the way back after a decline can lead there
+- The participant's name is not asked anywhere; the account holds only an email. If the coach's invitation needs it, it belongs on the account, not in a block
+
 ## Comments
 
 - Decided with the developer (2026-09-29), the two points the mock-up left open: after a decline the participant is offered to choose someone else, back through the coach checklist, and may still carry on without a coach; a partial agreement is never shown, only "declined", since which boxes were ticked is never stored. The coach can explain in person if they want to. Blocked by 13b as well as 13a, so the coach's known limit is recorded beside the observers'.

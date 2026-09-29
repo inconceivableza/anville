@@ -6,7 +6,7 @@
 
 **See also:** `Prototypes for reference/coach-selection-prototype.html`, the content owner's mock-up of choosing a coach. Its participant half is built here. Its coach half (the coach accepting or declining the six commitments through a link) is ticket 13c.
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 1 (ends 2 Oct)
 
@@ -44,4 +44,24 @@
 - Decided with the developer (2026-09-29): the coach step and the contact list should each have a page of their own, as the prototype's screens do, rather than share one long onboarding page. Pages within a section are ticket 33, to be done before this ticket's fourth step (the coach's details form), so that form is built on the coach's own page.
 - Decided with the developer (2026-09-29), for the fourth step: saving the coach's details keeps the participant on the coach page, the checklist giving way to the coach kept, and the page's own "Continue →" goes on, as it does after a skip (not the original prototype's "Save and continue →", which would have put two ways on side by side). The tick adapts the original prototype's sentence: "I've spoken to this person and they're happy to receive a link from me about coaching me through this course.", since the participant sends the link themselves (13c) and nothing is emailed. Once a coach is kept, "Choose someone else" starts the checklist again, keeping that coach until another is saved, and "Remove" deletes them. The participant's name criterion is met as it stands: the account holds the email and no block asks for either; if a later ticket needs the participant's name (13a or 13c's wording), it goes on the account, not in a block.
 - Fourth step: going ahead (all Yes, or "I'm still confident") now asks for "Their name" (holding the first name given), "Their email" and the tick, beneath the mock-up's gold box, with "Save Sam as your coach". The `save` step re-works the outcome from the answers the form carries, refusing past a stop, and checks the name, then the email (the contacts' `EmailValidator` check), then the tick, naming the field at fault; only then is the coach kept, as one `Contact` with the coach role under the checklist's block. The tick is not kept. A save straight from a second thought is accepted, since the server cannot know "I'm still confident" was pressed; a test pins it as deliberate. The page opens on "Sam is your coach" with the email while a coach is kept. Without JavaScript, a save or removal that goes through redirects to the coach page, safe now that only the kept coach is shown; a refusal returns the page, as the other steps do.
+- From the hand check (the developer's call, 2026-09-29): the checklist's own "Continue →" sat straight above the coach page's, alike but doing different things. A `page_break` may now carry an authored `skip_label`, which words the way on from the page it ends while nothing on that page holds an answer, as a secondary button; once anything is answered it is the primary "Continue →" again. The coach page's is the original prototype's "I'll sort this later →" (`to-contacts`, `whatever-you-do.json` only; the drift test drops it with the coach page), and keeping or removing a coach brings the way on up to date out of band, as an autosave does.
 - For 13a (carried there when 13 was split): saving replaces a list's `Contact` rows, so their ids do not last between saves. Binding an invitation to a contact will need the rows updated in place, or the invitation keyed some other way.
+
+## Answer
+
+Resolved; every criterion is met. Onboarding is complete in both pathway documents: the reason straight after consent, the start ratings, the coach step (*Whatever You Do* only), and who knows the participant best, each on a page of its own (ticket 33). Checked by hand against the real pathway on 2026-09-29.
+
+Built along the way, each in the README and `docs/manual-checks.md`:
+
+- `single_select` (the reason), with the prototype's drop-down look; onboarding after consent through `/start/`; a section's `complete_label`, full-width completion, and completing leading on to the next step.
+- `contact_list`, kept as `Contact` records, with `entry_count`'s `allow_none`.
+- `coach_checklist`, its outcome rule in `engine/document/coach.py`, nothing of it stored; the chosen coach kept as a `Contact` with the coach role, with "Choose someone else" and "Remove".
+- `page_break`'s `skip_label`.
+
+Decisions, with the developer, are in Comments, each marked as the developer's call; those to show the content owner are gathered in the spec's open content and product items.
+
+Handed over:
+
+- 13c: where the chosen coach is kept, and that its row does not last between saves
+- 13a (when 13 was split): contact rows do not last between saves
+- Spec, open content and product items: what to show the content owner from this ticket

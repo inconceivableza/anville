@@ -150,7 +150,8 @@
           },
           {
             "id": "to-contacts",
-            "type": "page_break"
+            "type": "page_break",
+            "skip_label": "I'll sort this later →"
           },
           {
             "id": "contacts-intro",

@@ -150,6 +150,76 @@ def test_a_page_nothing_is_needed_on_still_ends_in_continue_and_no_checklist(par
     assert gate_checklist(page) == {}
 
 
+# A page that can be skipped
+
+SKIP = "I'll do this later →"
+
+
+def with_a_skip_label():
+    """✨ The paged test pathway, with the second page's way on reading as a skip while nothing on it is answered."""
+    document = paged_onboarding()
+    onboarding = document["content"]["sections"][0]
+    next(block for block in onboarding["blocks"] if block["id"] == "to-3")["skip_label"] = SKIP
+    return document
+
+
+@pytest.fixture
+def skippable(signed_in_client, load_pathway):  # noqa: F811
+    load_pathway(with_a_skip_label())
+    return signed_in_client
+
+
+def way_on_look(page):
+    """✨ How the way on at the foot of a page looks: "primary" or "secondary"."""
+    button = re.search(r'<div id="completion".*?<button type="submit" class="btn btn-(\w+)', page, re.S)
+    return button.group(1)
+
+
+@pytest.mark.django_db
+def test_a_page_with_nothing_answered_on_it_ends_in_its_breaks_skip_label(skippable):
+    page = shown(through_to(skippable, 2), SECOND)
+
+    assert way_on(page) == ("/sections/onboarding/pages/2/continue/", SKIP, False)
+    assert way_on_look(page) == "secondary"
+
+
+@pytest.mark.django_db
+def test_a_skip_label_is_only_for_the_page_its_break_ends(skippable):
+    page = shown(skippable)
+
+    assert way_on(page)[1] == "Continue →"
+    assert way_on_look(page) == "primary"
+
+
+@pytest.mark.django_db
+def test_once_anything_on_the_page_is_answered_it_ends_in_continue_again(skippable):
+    through_to(skippable, 2)
+    save(skippable, "story", "It began in a small town.")
+
+    page = shown(skippable, SECOND)
+
+    assert way_on(page)[1] == "Continue →"
+    assert way_on_look(page) == "primary"
+
+
+@pytest.mark.django_db
+def test_the_way_on_follows_an_answer_given_and_taken_back_without_a_reload(skippable):
+    through_to(skippable, 2)
+
+    answered = unescape(save(skippable, "story", "It began in a small town.").content.decode())
+    taken_back = unescape(save(skippable, "story", "").content.decode())
+
+    assert '<button type="submit" class="btn btn-primary btn-full">Continue →</button>' in answered
+    assert f'<button type="submit" class="btn btn-secondary btn-full">{SKIP}</button>' in taken_back
+
+
+@pytest.mark.django_db
+def test_skipping_goes_on_to_the_next_page(skippable):
+    through_to(skippable, 2)
+
+    assert move_past(skippable, 2).url == THIRD
+
+
 @pytest.mark.django_db
 def test_the_last_page_ends_in_the_sections_own_completion_button(participant):
     page = shown(through_to(participant, 3), THIRD)

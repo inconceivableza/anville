@@ -23,7 +23,7 @@ from engine.document import (
     text_for,
     unmet,
 )
-from engine.document.blocks import CONTACTS, blocks_of, page_count, page_of, pages_of, section_of
+from engine.document.blocks import CONTACTS, blocks_of, break_after, page_count, page_of, pages_of, section_of
 from engine.document.coach import (
     candidate_name_from_form,
     checklist_answers,
@@ -33,6 +33,7 @@ from engine.document.coach import (
     coach_from_form,
 )
 from engine.document.contacts import MAX_CONTACTS, contacts_from_form, rows_to_show
+from engine.document.gates import has_content
 from engine.document.scoring import score
 from engine.hub import (
     block_ids_fixed_on_completion,
@@ -263,24 +264,30 @@ def coach_checklist(request, block_id):
         return HttpResponseBadRequest("The coach checklist has no such step.")
 
     screen = _checklist_step(block, to, request.POST)
+    kept = state.answers
     if screen["screen"] == "chosen":
         state.stored_response(request.user).replace_contacts(block_id, [screen["coach"]], Contact.Role.COACH)
+        kept = {**kept, block_id: [screen["coach"]]}
     elif to == "remove" and state.response is not None:
         state.response.replace_contacts(block_id, [], Contact.Role.COACH)
+        kept = {key: value for key, value in kept.items() if key != block_id}
     # ✨ A save the outcome does not allow is refused, though its screen (a stop, say) has nothing to add.
     refused = screen.get("refusal") or (to == "save" and screen["screen"] != "chosen")
     status = 400 if refused else 200
+    stored = status == 200 and to in ("save", "remove")
     page = page_of(section, block_id)
     is_htmx = request.headers.get("HX-Request") == "true"
-    if not is_htmx and status == 200 and to in ("save", "remove"):
+    if not is_htmx and stored:
         # ✨ Once stored, the checklist is behind: the page shows only the coach kept, so it is safe to go back to.
         return _see_other(f"{page_url(section['id'], page)}#block-{block_id}")
-    shown = _section_page(state, section, page)
+    shown = _section_page(state._replace(answers=kept), section, page)
     checklist_block = next(on_page for on_page in shown["section"]["blocks"] if on_page["id"] == block_id)
     checklist_block["checklist"] = _checklist_screen(checklist_block["text"], **screen)
     if is_htmx:
-        context = {"block": checklist_block, "pathway": shown["pathway"]}
-        return render(request, checklist_block["template"], context, status=status)
+        # ✨ Keeping or removing a coach can change the page's way on (a skip label), so it comes too, as after an
+        # autosave; stepping through the checklist changes nothing stored, so the way on stays as it was.
+        context = {**shown, "block": checklist_block, "stored": stored}
+        return render(request, "engine/coach_checklist_result.html", context, status=status)
     # ✨ Never a redirect without JavaScript while choosing: the answers would have to go in the address, where they
     # are logged. The page returned is the one the checklist is on.
     return render(request, "engine/section.html", shown, status=status)
@@ -507,7 +514,7 @@ def _section_page(state, section, page=1, asked_rows=0):
     gate_checklist = checklist(section, answers, page=page)
     states = {other.id: other for other in hub.sections}
     return {
-        "page": {"number": page, "is_last": is_last},
+        "page": {"number": page, "is_last": is_last, "skip_label": _skip_label(section, page, answers)},
         "pathway": {
             "version_id": version.pk,
             "scale_points": SCALE_POINTS,
@@ -532,6 +539,18 @@ def _section_page(state, section, page=1, asked_rows=0):
         "unmet": [message for message, met in gate_checklist if not met],
         "checklist": gate_checklist,
     }
+
+
+def _skip_label(section, page, answers):
+    """✨ The way on from a page as its break words it for passing by, such as the original prototype's "I'll sort this
+    later →", while nothing on the page holds an answer; otherwise None, and the way on is "Continue →". A coach
+    checklist's answer is the coach kept, so choosing one turns the skip into "Continue →"."""
+    ends_in = break_after(section, page)
+    if ends_in is None or "skip_label" not in ends_in:
+        return None
+    if any(has_content(answers.get(block["id"])) for block in pages_of(section)[page - 1]):
+        return None
+    return text_for(ends_in["skip_label"], "participant")
 
 
 def _published_version(posted):

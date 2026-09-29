@@ -219,8 +219,8 @@ BLOCK_TYPES = {
         ),
         BlockType("sort_assessment", captures=SORT, scored=True, widget=_sort_widget),
         BlockType("section_link", text_fields=("body", "button_label")),
-        # ✨ Never shown: it splits its section into pages (`pages_of`).
-        BlockType("page_break"),
+        # ✨ Never shown: it splits its section into pages (`pages_of`), and may word the way on from the page it ends.
+        BlockType("page_break", text_fields=("skip_label",)),
     ]
 }
 
@@ -267,6 +267,12 @@ def pages_of(section):
         else:
             pages[-1].append(block)
     return pages
+
+
+def break_after(section, page):
+    """✨ The `page_break` that ends a page of a section, counting from 1, or None for the last page."""
+    breaks = [block for block in section["blocks"] if block["type"] == "page_break"]
+    return breaks[page - 1] if page <= len(breaks) else None
 
 
 def page_count(section):

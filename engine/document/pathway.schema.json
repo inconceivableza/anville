@@ -163,7 +163,11 @@
       "required": ["id", "type"],
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
-        "type": { "const": "page_break" }
+        "type": { "const": "page_break" },
+        "skip_label": {
+          "description": "The way on from the page before, while nothing on that page holds an answer, set apart as a way past it, such as 'I'll sort this later →'. 'Continue →' once anything is answered.",
+          "$ref": "#/$defs/text"
+        }
       }
     },
     "rich_text": {

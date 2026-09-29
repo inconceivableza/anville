@@ -12,10 +12,15 @@
 <div id="completion"{% if offers_way_on %} class="completion"{% endif %}{% if out_of_band %} hx-swap-oob="true"{% endif %}>
   {% if offers_way_on %}
     {% if not page.is_last %}
-      {# ✨ Every page but the last goes on to the next, held by that page's own requirements, listed as below. #}
+      {# ✨ Every page but the last goes on to the next, held by that page's own requirements, listed as below. While #}
+      {# ✨ nothing on it is answered, a break with a skip label words it as a way past, and it steps back from primary. #}
       <form method="post" action="{% url 'move_past_page' section.id page.number %}">
         {% csrf_token %}
-        <button type="submit" class="btn btn-primary btn-full"{% if unmet %} disabled{% endif %}>Continue →</button>
+        {% if page.skip_label %}
+          <button type="submit" class="btn btn-secondary btn-full"{% if unmet %} disabled{% endif %}>{{ page.skip_label }}</button>
+        {% else %}
+          <button type="submit" class="btn btn-primary btn-full"{% if unmet %} disabled{% endif %}>Continue →</button>
+        {% endif %}
       </form>
       {% include "engine/gate_checklist.html" %}
       {% if refused %}
