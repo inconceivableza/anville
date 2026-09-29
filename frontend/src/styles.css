@@ -566,7 +566,8 @@ p.time-estimate {
   margin: 0 0 18px;
 }
 
-.coach-checklist input[type="text"] {
+.coach-checklist input[type="text"],
+.coach-checklist input[type="email"] {
   width: 100%;
   padding: 13px 15px;
   border: 1px solid var(--border);
@@ -577,7 +578,8 @@ p.time-estimate {
   background: var(--white);
 }
 
-.coach-checklist input[type="text"]:focus {
+.coach-checklist input[type="text"]:focus,
+.coach-checklist input[type="email"]:focus {
   outline: none;
   border-color: var(--gold);
   box-shadow: 0 0 0 3px var(--focus-ring);
@@ -731,6 +733,38 @@ p.time-estimate {
 .coach-stop {
   background: var(--stop-pale);
   border-left: 4px solid var(--red-soft);
+}
+
+/* ✨ The coach's details beneath going ahead, as the original prototype's mentor screen asks for them */
+.coach-details {
+  margin-top: 20px;
+}
+
+.coach-details input[type="text"],
+.coach-details input[type="email"] {
+  margin-bottom: 16px;
+}
+
+.question-card .coach-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.coach-confirm input {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  accent-color: var(--gold);
+}
+
+.coach-confirm input[aria-invalid="true"] {
+  outline: 2px solid var(--red-soft);
+  outline-offset: 2px;
 }
 
 .btn-primary.coach-warn {

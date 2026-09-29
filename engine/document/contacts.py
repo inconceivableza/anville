@@ -35,7 +35,7 @@ def contacts_from_form(names, emails):
             raise AnswerRefused(f"Add both a name and an email address in row {number}.", number, missing)
         if len(name) > NAME_MAX_LENGTH:
             raise AnswerRefused(f"The name in row {number} is too long.", number, "name")
-        if not _looks_like_email(email):
+        if not is_email_address(email):
             raise AnswerRefused(f"Check the email address in row {number}.", number, "email")
         contacts.append({"name": name, "email": email})
     if len(contacts) > MAX_CONTACTS:
@@ -55,7 +55,8 @@ def _padded(names, emails):
     return zip([*names, *[""] * (length - len(names))], [*emails, *[""] * (length - len(emails))])
 
 
-def _looks_like_email(email):
+def is_email_address(email):
+    """✨ Whether mail could be sent to this address: Django's own check, within the longest address mail can carry."""
     if len(email) > EMAIL_MAX_LENGTH:
         return False
     try:

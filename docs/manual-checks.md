@@ -60,6 +60,17 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Screen reader: each field is read as "Person 1, first name" and so on; the row numbers themselves are not read. A new row is numbered on.
 - Phone width: each row's name and email stack beneath its number, full width.
 
+## The coach's details (Whatever You Do's coach page)
+
+- Going ahead (all Yes, or "I'm still confident — ask Sam"): beneath the gold box come "Their name" (already holding the first name typed on the intro), "Their email", the tick "I've spoken to this person and they're happy to receive a link from me about coaching me through this course.", a full-width "Save Sam as your coach", then "Choose someone else". The two boxes look like the intro's name box; the tick sits beside its words, not above them.
+- Saving with the box unticked says "Tick the box to confirm you've spoken to them." beneath the tick, with the name and email kept as typed; a bad address (`sam`, `sam@`, `sam@example`) says "Check their email address." and the email box turns red. Nothing is saved either way.
+- Saving shows "Sam is your coach" with their email, "Choose someone else" and "Remove", without reloading the page. A reload, or coming back through the hub, shows the same.
+- It is easy to see that the page's own "Continue →" beneath is the way on once saved, and that pressing "Continue →" with details typed but not saved leaves no coach.
+- "Choose someone else" starts the checklist again; a reload before saving anyone new still shows the coach saved before. "Remove" goes back to the intro, and a reload shows the intro.
+- Without JavaScript: saving and "Remove" come back to the coach page at the checklist; a refused save comes back as the whole coach page with its reason.
+- Screen reader: the refusal is announced; a refused field is announced as invalid when Tab reaches it.
+- Phone width: the details and buttons fill the card's width.
+
 ## The gate and "Mark complete"
 
 - The button fills the width of the page, in every section. Onboarding's reads "Continue →"; every other section's reads "Mark complete".

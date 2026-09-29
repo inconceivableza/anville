@@ -3,9 +3,10 @@
   name, the questions, then going ahead, a second thought, or trying someone else. Each button posts the form, and
   the server sends back the next screen in its place (htmx), or the whole section with it (without JavaScript).
 
-  Nothing here is saved. The name and the answers so far are carried in the form from screen to screen, and the
-  outcome is worked out again from them on the server. novalidate leaves every check to the server, as for the
-  contact list, so a refusal is always said in words.
+  Nothing of the checklist is saved. The name and the answers so far are carried in the form from screen to screen,
+  and the outcome is worked out again from them on the server. Going ahead asks for the coach's name and email,
+  which are all that is kept; once kept, the checklist opens on them. novalidate leaves every check to the server, as
+  for the contact list, so a refusal is always said in words.
 {% endcomment %}
 {% with checklist=block.checklist %}
 <form id="block-{{ block.id }}" data-screen="{{ checklist.screen }}" class="question-card coach-checklist" novalidate
@@ -57,15 +58,42 @@
     </div>
 
   {% elif checklist.screen == "proceed" %}
-    <input type="hidden" name="name" value="{{ checklist.name }}">
+    {# ✨ The answers go with the details, so saving is refused past a stop however the form was sent. #}
     {% include "engine/blocks/coach_checklist_answers.html" %}
     <div class="coach-outcome coach-go">
-      <h2>{{ checklist.name }} sounds like the right person</h2>
+      {# ✨ The name follows what is typed below, so a save refused with it cleared has a fallback. #}
+      <h2>{% if checklist.name %}{{ checklist.name }} sounds{% else %}This sounds{% endif %} like the right person</h2>
       {# ✨ Not after "I'm still confident", where the mock-up said it anyway. #}
       {% if not checklist.confident %}<p>You've said yes to all {{ checklist.count }}. That's worth something — most people find at least one they hesitate on.</p>{% endif %}
       <p>The next step is to ask them properly.</p>
+    </div>
+    {# ✨ The details the original prototype's mentor screen asks for, with the tick saying the link comes from the participant (ticket 13c), not an email from us. #}
+    <div class="coach-details">
+      <label for="coach-name-{{ block.id }}">Their name</label>
+      <input type="text" id="coach-name-{{ block.id }}" name="name" value="{{ checklist.name }}" maxlength="150" autocomplete="off"
+             {% if checklist.invalid == "name" %}aria-invalid="true"{% endif %}>
+      <label for="coach-email-{{ block.id }}">Their email</label>
+      <input type="email" id="coach-email-{{ block.id }}" name="email" value="{{ checklist.email }}" maxlength="254" autocomplete="off"
+             {% if checklist.invalid == "email" %}aria-invalid="true"{% endif %}>
+      <label class="coach-confirm">
+        <input type="checkbox" name="confirmed"{% if checklist.confirmed %} checked{% endif %}{% if checklist.invalid == "confirmed" %} aria-invalid="true"{% endif %}>
+        <span>I've spoken to this person and they're happy to receive a link from me about coaching me through this course.</span>
+      </label>
+      {% if checklist.refusal %}<p class="coach-refusal" role="alert">{{ checklist.refusal }}</p>{% endif %}
+      <button type="submit" name="step" value="save" class="btn btn-primary btn-full">Save {% if checklist.name %}{{ checklist.name }} {% endif %}as your coach</button>
       <div class="coach-buttons">
         <button type="submit" name="step" value="restart" class="btn btn-secondary">Choose someone else</button>
+      </div>
+    </div>
+
+  {% elif checklist.screen == "chosen" %}
+    {# ✨ Only the coach kept: nothing of the checklist that chose them. #}
+    <div class="coach-outcome coach-go">
+      <h2>{{ checklist.coach.name }} is your coach</h2>
+      <p>{{ checklist.coach.email }}</p>
+      <div class="coach-buttons">
+        <button type="submit" name="step" value="restart" class="btn btn-secondary">Choose someone else</button>
+        <button type="submit" name="step" value="remove" class="btn btn-secondary">Remove</button>
       </div>
     </div>
 

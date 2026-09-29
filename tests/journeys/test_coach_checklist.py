@@ -354,6 +354,224 @@ def test_the_coach_step_can_be_skipped_and_blocks_nothing(participant):
     assert Contact.objects.count() == 0
 
 
+# Choosing them
+
+
+def choose(client, name="Sam", email="sam@example.com", confirmed=True, answers=ALL_YES, htmx=True):
+    """✨ Send the coach's details from the screen that goes ahead, with the answers it carries."""
+    form = {
+        "step": "save",
+        "name": name,
+        "email": email,
+        **({"confirmed": "on"} if confirmed else {}),
+        **{f"answer-{key}": value for key, value in answers.items()},
+    }
+    headers = {"HTTP_HX_REQUEST": "true"} if htmx else {}
+    return client.post("/coach/coach/", form, **headers)
+
+
+def field_value(page, field):
+    found = re.search(rf'<input type="[a-z]+"[^>]*name="{field}"[^>]*value="([^"]*)"', checklist_of(page))
+    return unescape(found.group(1)) if found else None
+
+
+@pytest.mark.django_db
+def test_going_ahead_asks_for_the_coachs_name_and_email_starting_from_their_first_name(participant):
+    page = step(participant, "outcome", answers=ALL_YES).content.decode()
+
+    assert field_value(page, "name") == "Sam"
+    assert re.search(r'<input type="email"[^>]*name="email"', checklist_of(page))
+    assert "Their name" in text(page)
+    assert "Their email" in text(page)
+    assert re.search(r'<input type="checkbox"[^>]*name="confirmed"', checklist_of(page))
+    assert (
+        "I've spoken to this person and they're happy to receive a link from me about coaching me through this course."
+    ) in text(page)
+    assert re.search(r'<button type="submit" name="step" value="save"[^>]*>Save Sam as your coach</button>', page)
+
+
+@pytest.mark.django_db
+def test_still_confident_asks_for_the_coachs_details_too(participant):
+    page = step(participant, "confident", answers=answered(time="no")).content.decode()
+
+    assert re.search(r'<button type="submit" name="step" value="save"', page)
+
+
+@pytest.mark.django_db
+def test_saving_keeps_the_coachs_name_and_email_and_nothing_from_the_checklist(participant):
+    saved = choose(participant, answers=answered(time="no"))
+
+    assert saved.status_code == 200
+    assert screen(saved.content.decode()) == "chosen"
+    coach = Contact.objects.get()
+    assert (coach.role, coach.block_id, coach.name, coach.email) == (Contact.Role.COACH, "coach", "Sam", "sam@example.com")
+    assert Response.objects.get().answers == {}
+
+
+@pytest.mark.django_db
+def test_the_chosen_coach_is_shown_again_after_a_reload(participant):
+    choose(participant)
+
+    page = shown(participant, ONBOARDING)
+
+    assert screen(page) == "chosen"
+    assert "Sam is your coach" in text(checklist_of(page))
+    assert "sam@example.com" in text(checklist_of(page))
+    assert re.search(r'<button type="submit" name="step" value="restart"[^>]*>Choose someone else</button>', page)
+    assert re.search(r'<button type="submit" name="step" value="remove"[^>]*>Remove</button>', page)
+
+
+@pytest.mark.django_db
+def test_saving_without_the_box_ticked_is_refused_keeping_what_was_typed(participant):
+    refused = choose(participant, confirmed=False)
+
+    assert refused.status_code == 400
+    page = refused.content.decode()
+    assert screen(page) == "proceed"
+    assert "Tick the box to confirm you've spoken to them." in text(page)
+    assert field_value(page, "name") == "Sam"
+    assert field_value(page, "email") == "sam@example.com"
+    assert not Contact.objects.exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("email", "refusal"),
+    [
+        ("", "Add their email address to continue."),
+        ("sam", "Check their email address."),
+        ("sam@", "Check their email address."),
+        ("sam@example", "Check their email address."),
+        ("sam@@example.com", "Check their email address."),
+        ("s" * 250 + "@example.com", "Check their email address."),
+    ],
+)
+def test_an_email_address_that_mail_could_not_reach_is_refused(participant, email, refusal):
+    refused = choose(participant, email=email)
+
+    assert refused.status_code == 400
+    assert screen(refused.content.decode()) == "proceed"
+    assert refusal in text(refused)
+    assert re.search(r'<input type="email"[^>]*aria-invalid="true"', checklist_of(refused.content.decode()))
+    assert not Contact.objects.exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(("name", "refusal"), [("  ", "Add their first name to continue."), ("S" * 151, "That name is too long.")])
+def test_a_missing_or_overlong_name_is_refused(participant, name, refusal):
+    refused = choose(participant, name=name)
+
+    assert refused.status_code == 400
+    assert refusal in text(refused)
+    assert not Contact.objects.exists()
+
+
+@pytest.mark.django_db
+def test_a_coach_cannot_be_saved_past_a_stop(participant):
+    """✨ The outcome is worked out again from the answers the form carries, so a hand-made save is refused too."""
+    refused = choose(participant, answers=answered(coaching="no"))
+
+    assert refused.status_code == 400
+    assert screen(refused.content.decode()) == "stop"
+    assert not Contact.objects.exists()
+
+
+@pytest.mark.django_db
+def test_a_coach_can_be_saved_straight_from_a_second_thought(participant):
+    """✨ The server cannot know "I'm still confident" was pressed, since nothing is kept between screens; only a
+    stop is barred. The page offers the details only after it, so this is a hand-made save, allowed on purpose."""
+    saved = choose(participant, answers=answered(time="no"))
+
+    assert saved.status_code == 200
+    assert Contact.objects.filter(role=Contact.Role.COACH).count() == 1
+
+
+@pytest.mark.django_db
+def test_a_coach_cannot_be_saved_before_every_question_is_answered(participant):
+    refused = choose(participant, answers={"faith": "yes"})
+
+    assert refused.status_code == 400
+    assert not Contact.objects.exists()
+
+
+@pytest.mark.django_db
+def test_choosing_someone_else_keeps_the_coach_until_another_is_saved(participant):
+    choose(participant)
+
+    page = step(participant, "restart").content.decode()
+
+    assert screen(page) == "intro"
+    assert [(coach.name, coach.email) for coach in Contact.objects.all()] == [("Sam", "sam@example.com")]
+    choose(participant, name="Priya", email="priya@example.com")
+    assert [(coach.name, coach.email) for coach in Contact.objects.all()] == [("Priya", "priya@example.com")]
+
+
+@pytest.mark.django_db
+def test_removing_the_coach_leaves_none(participant):
+    choose(participant)
+
+    removed = step(participant, "remove")
+
+    assert removed.status_code == 200
+    assert screen(removed.content.decode()) == "intro"
+    assert not Contact.objects.exists()
+    assert screen(shown(participant, ONBOARDING)) == "intro"
+
+
+@pytest.mark.django_db
+def test_removing_with_no_coach_chosen_changes_nothing(participant):
+    assert step(participant, "remove").status_code == 200
+    assert Response.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_the_coach_is_shown_as_typed_never_as_markup(participant):
+    choose(participant, name="<b>Sam</b>")
+
+    page = shown(participant, ONBOARDING)
+
+    assert "<b>Sam</b>" not in page
+    assert "&lt;b&gt;Sam&lt;/b&gt; is your coach" in page
+
+
+@pytest.mark.django_db
+def test_the_coachs_details_are_never_logged(participant, caplog):
+    caplog.set_level(logging.DEBUG)
+
+    choose(participant, name="Zebedee", email="zebedee@example.com")
+    choose(participant, name="Zebedee", email="zebedee@", confirmed=False)  # ✨ and a refused one
+
+    assert "zebedee" not in caplog.text.lower()
+
+
+@pytest.mark.django_db
+def test_a_chosen_coach_does_not_count_towards_progress(participant):
+    choose(participant)
+
+    assert "0 of 2 answered" in participant.get("/").content.decode()
+
+
+@pytest.mark.django_db
+def test_without_javascript_saving_and_removing_lead_back_to_the_checklist(participant):
+    """✨ A redirect is safe once the checklist is behind: only the stored coach is shown, never the answers."""
+    saved = choose(participant, htmx=False)
+
+    assert saved.status_code == 303
+    assert saved.url == f"/sections/{ONBOARDING}/#block-coach"
+    removed = step(participant, "remove", htmx=False)
+    assert removed.status_code == 303
+    assert removed.url == f"/sections/{ONBOARDING}/#block-coach"
+
+
+@pytest.mark.django_db
+def test_without_javascript_a_refused_save_comes_back_as_the_whole_section(participant):
+    refused = choose(participant, confirmed=False, htmx=False)
+
+    assert refused.status_code == 400
+    assert "<h1>Before we begin</h1>" in refused.content.decode()
+    assert "Tick the box to confirm you've spoken to them." in text(refused)
+
+
 # With and without JavaScript
 
 

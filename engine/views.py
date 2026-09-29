@@ -29,6 +29,8 @@ from engine.document.coach import (
     checklist_answers,
     checklist_answers_from_form,
     checklist_outcome,
+    coach_details_as_typed,
+    coach_from_form,
 )
 from engine.document.contacts import MAX_CONTACTS, contacts_from_form, rows_to_show
 from engine.document.scoring import score
@@ -242,51 +244,68 @@ def save_answer(request, block_id):
 @consent_required
 @require_POST
 def coach_checklist(request, block_id):
-    """✨ One step of choosing a coach: from the intro to the questions, to an outcome, or back to the start.
+    """✨ One step of choosing a coach: from the intro to the questions, to an outcome, or back to the start; and
+    saving the coach chosen, or removing them.
 
-    Nothing is stored or logged. The candidate's name and the answers so far travel only in the form, screen to
-    screen, and the outcome is worked out again from what was posted, never taken from the button pressed. The
-    answers are opinions about another person, including their faith (special category data under GDPR), and no
-    later step reads them; `sensitive_post_parameters` keeps them out of error reports too.
+    Nothing from the checklist is stored or logged. The candidate's name and the answers so far travel only in the
+    form, screen to screen, and the outcome is worked out again from what was posted, never taken from the button
+    pressed. The answers are opinions about another person, including their faith (special category data under
+    GDPR), and no later step reads them; `sensitive_post_parameters` keeps them out of error reports too. Saving
+    keeps only the chosen coach's name and email address, as a contact, and only once the outcome allows it.
     """
     state = _participant(request.user)
     block = _block_of_type(state.version, block_id, "coach_checklist")
     section = section_of(state.version.document, block_id)
     if not _is_open(state, section, block):
         return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
-    if request.POST.get("step") not in CHECKLIST_STEPS:
+    to = request.POST.get("step")
+    if to not in CHECKLIST_STEPS:
         return HttpResponseBadRequest("The coach checklist has no such step.")
 
-    screen = _checklist_step(block, request.POST["step"], request.POST)
-    status = 400 if screen.get("refusal") else 200
-    shown = _section_page(state, section, page_of(section, block_id))
+    screen = _checklist_step(block, to, request.POST)
+    if screen["screen"] == "chosen":
+        state.stored_response(request.user).replace_contacts(block_id, [screen["coach"]], Contact.Role.COACH)
+    elif to == "remove" and state.response is not None:
+        state.response.replace_contacts(block_id, [], Contact.Role.COACH)
+    # ✨ A save the outcome does not allow is refused, though its screen (a stop, say) has nothing to add.
+    refused = screen.get("refusal") or (to == "save" and screen["screen"] != "chosen")
+    status = 400 if refused else 200
+    page = page_of(section, block_id)
+    is_htmx = request.headers.get("HX-Request") == "true"
+    if not is_htmx and status == 200 and to in ("save", "remove"):
+        # ✨ Once stored, the checklist is behind: the page shows only the coach kept, so it is safe to go back to.
+        return _see_other(f"{page_url(section['id'], page)}#block-{block_id}")
+    shown = _section_page(state, section, page)
     checklist_block = next(on_page for on_page in shown["section"]["blocks"] if on_page["id"] == block_id)
     checklist_block["checklist"] = _checklist_screen(checklist_block["text"], **screen)
-    if request.headers.get("HX-Request") == "true":
+    if is_htmx:
         context = {"block": checklist_block, "pathway": shown["pathway"]}
         return render(request, checklist_block["template"], context, status=status)
-    # ✨ Never a redirect without JavaScript: the answers would have to go in the address, where they are logged.
-    # The page returned is the one the checklist is on.
+    # ✨ Never a redirect without JavaScript while choosing: the answers would have to go in the address, where they
+    # are logged. The page returned is the one the checklist is on.
     return render(request, "engine/section.html", shown, status=status)
 
 
 # ✨ The buttons of the coach checklist: back to the intro keeping what was given, on to the questions, to see how
-# it looks, "I'm still confident" past a second thought, and starting again with someone else.
-CHECKLIST_STEPS = ("intro", "questions", "outcome", "confident", "restart")
+# it looks, "I'm still confident" past a second thought, starting again with someone else, saving the coach chosen,
+# and removing them.
+CHECKLIST_STEPS = ("intro", "questions", "outcome", "confident", "restart", "save", "remove")
 
 
 def _checklist_step(block, to, posted):
-    """✨ Where a press of the checklist's button leads, from what its form held, as the screen's state."""
+    """✨ Where a press of the checklist's button leads, from what its form held, as the screen's state. A coach
+    saved is "chosen", with the coach to keep."""
     questions = block["questions"]
-    if to == "restart":
+    if to in ("restart", "remove"):
         return {"screen": "intro"}
     name, given = (posted.get("name") or "").strip(), checklist_answers(questions, posted)
     if to == "intro":
         return {"screen": "intro", "name": name, "answers": given}
-    try:
-        name = candidate_name_from_form(posted)
-    except AnswerRefused as refused:
-        return {"screen": "intro", "name": name, "answers": given, "refusal": str(refused)}
+    if to != "save":  # ✨ on the coach's details, the name is checked with their email, where it can be put right
+        try:
+            name = candidate_name_from_form(posted)
+        except AnswerRefused as refused:
+            return {"screen": "intro", "name": name, "answers": given, "refusal": str(refused)}
     if to == "questions":
         return {"screen": "questions", "name": name, "answers": given}
     try:
@@ -294,14 +313,34 @@ def _checklist_step(block, to, posted):
     except AnswerRefused as refused:
         return {"screen": "questions", "name": name, "answers": given, "refusal": str(refused)}
     outcome = checklist_outcome(questions, given)
-    if to == "confident" and outcome.verdict == "confirm":
-        return {"screen": "proceed", "name": name, "answers": given, "confident": True}
-    return {"screen": outcome.verdict, "name": name, "answers": given, "outcome": outcome}
+    if outcome.verdict == "stop" or (outcome.verdict == "confirm" and to == "outcome"):
+        return {"screen": outcome.verdict, "name": name, "answers": given, "outcome": outcome}
+    # ✨ Going ahead: all Yes, or "I'm still confident" past a second thought.
+    going_ahead = {"screen": "proceed", "name": name, "answers": given, "confident": bool(outcome.flagged)}
+    if to != "save":
+        return going_ahead
+    try:
+        return {"screen": "chosen", "coach": coach_from_form(posted)}
+    except AnswerRefused as refused:
+        return {**going_ahead, **coach_details_as_typed(posted), "refusal": str(refused), "invalid": refused.field}
 
 
-def _checklist_screen(text, screen="intro", name="", answers=None, outcome=None, refusal=None, confident=False):
+def _checklist_screen(
+    text,
+    screen="intro",
+    name="",
+    answers=None,
+    outcome=None,
+    refusal=None,
+    confident=False,
+    coach=None,
+    email="",
+    confirmed=False,
+    invalid=None,
+):
     """✨ One screen of the coach checklist as its template needs it: the questions with any answers given, and on
-    a second thought or a stop, each answer that was not Yes with why that question matters."""
+    a second thought or a stop, each answer that was not Yes with why that question matters. On going ahead, the
+    coach's details as typed, and which of them a refusal is about; once chosen, the coach kept."""
     answers = answers or {}
     questions = [{**question, "answer": answers.get(question["id"])} for question in text["questions"]]
     flagged = set(outcome.flagged) if outcome else set()
@@ -315,6 +354,10 @@ def _checklist_screen(text, screen="intro", name="", answers=None, outcome=None,
         "critical_no": bool(outcome and outcome.critical_no),
         "confident": confident,
         "refusal": refusal,
+        "coach": coach,
+        "email": email,
+        "confirmed": confirmed,
+        "invalid": invalid,
     }
 
 
@@ -505,8 +548,7 @@ def _block_for_participant(document, block, answers, fixed, states, asked_rows=0
     text = authored_text(block, "participant")
     return {
         "rows": _contact_rows(block, answers, asked_rows) if block["type"] == "contact_list" else None,
-        # ✨ A coach checklist always opens on its intro, empty: nothing from an earlier visit was kept.
-        "checklist": _checklist_screen(text) if block["type"] == "coach_checklist" else None,
+        "checklist": _opening_checklist(text, answers.get(block["id"])) if block["type"] == "coach_checklist" else None,
         "id": block["id"],
         "type": block["type"],
         "template": f"engine/blocks/{block['type']}.html",
@@ -517,6 +559,14 @@ def _block_for_participant(document, block, answers, fixed, states, asked_rows=0
         "widget": widget(document, "participant") if widget else None,
         "link": states.get(block["section"]) if block["type"] == "section_link" else None,
     }
+
+
+def _opening_checklist(text, kept):
+    """✨ A coach checklist as a page opens it: the coach kept, if one was chosen, and otherwise its intro, empty,
+    since nothing from an earlier visit to the checklist itself was kept."""
+    if kept:
+        return _checklist_screen(text, screen="chosen", coach=kept[0])
+    return _checklist_screen(text)
 
 
 def _contact_rows(block, answers, asked_rows):

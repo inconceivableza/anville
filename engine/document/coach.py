@@ -2,7 +2,8 @@
 
 The questions, which of them are critical and why each matters are authored in the pathway document; turning
 the answers into an outcome is the engine's (ADR 0003). Nothing here is kept: the answers are opinions about
-another person, and are only ever read from a form and worked out again.
+another person, and are only ever read from a form and worked out again. Only the coach finally chosen, a name and
+an email address, is kept, and as a contact.
 """
 
 from dataclasses import dataclass, field
@@ -10,7 +11,7 @@ from dataclasses import dataclass, field
 from django.contrib.humanize.templatetags.humanize import apnumber
 
 from engine.document.answers import AnswerRefused
-from engine.document.contacts import NAME_MAX_LENGTH
+from engine.document.contacts import NAME_MAX_LENGTH, is_email_address
 
 # ✨ Yes, Not sure and No, as each answer is sent.
 ANSWERS = ("yes", "maybe", "no")
@@ -65,3 +66,25 @@ def candidate_name_from_form(posted):
     if len(name) > NAME_MAX_LENGTH:
         raise AnswerRefused("That name is too long.")
     return name
+
+
+def coach_from_form(posted):
+    """✨ The chosen coach as {"name", "email"}, or AnswerRefused naming the field at fault. Held to a contact's rules,
+    and only once the participant ticks that they have spoken to them; the tick itself is not kept."""
+    try:
+        name = candidate_name_from_form(posted)
+    except AnswerRefused as refused:
+        raise AnswerRefused(str(refused), field="name") from None
+    typed = coach_details_as_typed(posted)
+    if not typed["email"]:
+        raise AnswerRefused("Add their email address to continue.", field="email")
+    if not is_email_address(typed["email"]):
+        raise AnswerRefused("Check their email address.", field="email")
+    if not typed["confirmed"]:
+        raise AnswerRefused("Tick the box to confirm you've spoken to them.", field="confirmed")
+    return {"name": name, "email": typed["email"]}
+
+
+def coach_details_as_typed(posted):
+    """✨ The coach's email address, trimmed, and whether the box was ticked, as a form sent them, checked or not."""
+    return {"email": (posted.get("email") or "").strip(), "confirmed": bool(posted.get("confirmed"))}

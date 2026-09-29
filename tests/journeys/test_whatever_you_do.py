@@ -301,6 +301,22 @@ def test_onboarding_can_be_completed_without_choosing_a_coach(participant):
     assert not Contact.objects.filter(role=Contact.Role.COACH).exists()
 
 
+@pytest.mark.django_db
+def test_a_chosen_coach_is_kept_on_the_coach_page_and_apart_from_the_contacts(participant):
+    answer(participant, "reason", "exploring")
+    answer_all_five(participant)
+    move_past(participant, 1)
+    form = {"step": "save", "name": "Sam", "email": "sam@example.com", "confirmed": "on"}
+    form.update({f"answer-{question['id']}": "yes" for question in the_coach_step(the_pathway())["questions"]})
+
+    saved = participant.post("/coach/coach/", form)
+
+    assert saved.url == f"{COACH_PAGE}#block-coach"
+    assert "Sam is your coach" in participant.get(COACH_PAGE).content.decode()
+    move_past(participant, 2)
+    assert "sam@example.com" not in participant.get(CONTACTS_PAGE).content.decode()
+
+
 def without_the_coach_step(document):
     """✨ Only this pathway asks for a coach the mock-up's way; the faithful port's own mentor screen is ticket 10b.
     The coach page goes with it, so the break that opened that page goes too."""
