@@ -25,3 +25,8 @@
 **Carried from 29**
 
 - [ ] Before adding the "comparison visited" record, gather what `engine/views.py` reads from a participant's response into one value. Today `_participant()` returns the response, version, answers and completed sections, and each view calls `_fixed(participant_response)` separately; `answers`, `completed` and `fixed` are then passed one by one through `_section_page()` and `_block_for_participant()`. A visited record would be a fourth fact threaded the same way (review of ticket 29's second step: a data clump). Ticket 23's chosen track would be the next, if it lands first
+
+**Carried from 09**
+
+- The code review of ticket 09 found the same data clump again, and `_section_page()` now also works out `track_sections(version.document)` twice (once for `open_blocks`, once for the section link's hub states); gathering the participant's facts into one value is the place to fix both
+- Section 1's gate is shown as a checklist beneath "Mark complete", every clause's message listed and ticked once met, so the "comparison visited" clause appears there like any other, unticked until the comparison is visited. Section 1's reflection is held behind the Strengths assessment link until the sort is in (`holds_what_follows`), so while it is held the page shows no checklist at all

@@ -16,3 +16,7 @@
 - [ ] The gate has a clause and message for each requirement: at least three chapters, at least five markers, at least three distinct marker types, every marker in a chapter, and threads of at least ten characters
 - [ ] The section uses the prototype's scripture passages and hint text
 - [ ] The threads text is read from the stored answer only, never from the page (the prototype read it from the DOM and could read stale data after a restore)
+
+**Carried from 09**
+
+- [ ] Section 2's time estimate is "? min" in `pathways/whatever-you-do.json` until the board is built. Once it is, time it by hand and give the section its figure ("About 20 minutes"), agreed with the developer, and ideally the content owner; if the section has several activities, the block starting each one may carry its own (`estimate`, shown as "This part: …"). The faithful port has no estimates, and the drift test sets them aside

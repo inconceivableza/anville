@@ -16,3 +16,8 @@
 - [ ] The section's gate requires a statement of at least ten characters; the slots and the glory prompt are not required
 - [ ] Template, slot labels and hints are authored in the pathway document, not hardcoded
 - [ ] The Demo 1 section keeps working, now using this block
+
+**Carried from 09**
+
+- [ ] Section 3's time estimate is "? min" in `pathways/whatever-you-do.json` until the sentence builder is in. Once it is, time the section by hand and give it its figure, agreed with the developer, and ideally the content owner. The faithful port has no estimates, and the drift test sets them aside
+- The gate's minimum-length message keeps the prototype's sentence with the figure added, "Write your calling statement (at least 10 characters) to continue.", and a test holds every pathway document but the faithful port to saying how much

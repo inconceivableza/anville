@@ -36,3 +36,7 @@
 - [ ] A coach has no account and writes nothing beyond accepting or declining
 - Known limit, recorded with the observers' one: the participant holds a copy of the coach's link, so they could accept the commitments on the coach's behalf. Nothing private leaks, but the participant could be told their coach agreed when they never did. Claiming doesn't help, since the participant can claim as easily as use; only the application reaching the coach itself (email, or a coach account) would, and neither is in this milestone
 - [ ] Journey tests cover accepting, declining, that accepting needs every commitment, and refusal of wrong, expired or revoked coach tokens
+
+**Carried from 09**
+
+- [ ] Once invitations work, remove the bracketed "[Not built yet: inviting people you trust comes in a later version.]" from Section 1's two sentences about inviting people, in both `pathways/whatever-you-do.json` and `pathways/whatever-you-do-faithful-port.json`, leaving the prototype's wording as it is

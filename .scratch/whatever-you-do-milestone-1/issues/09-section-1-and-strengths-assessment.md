@@ -4,7 +4,9 @@
 
 **Blocked by:** 04 (Hub, locks, gates and explicit completion), 07 (Sort and fine-tune widget)
 
-**Status:** claimed
+**Status:** resolved
+
+**Handed over:** notes only, every criterion is met; see Answer.
 
 **Sprint:** 1 (ends 2 Oct)
 
@@ -56,5 +58,30 @@
 - [x] Step 8: time estimates (criterion above). First ask the developer how "one per activity where a section has several" is authored: on a block, or some other way
 - [x] Then `/code-review` against `46ba6eb` and fix what it finds
 - [x] Run the hand checks carried from 07 and those added to `docs/manual-checks.md` (the section link card, ghost text, time estimates), 2026-09-29, with the fixes recorded in Comments
-- [ ] On resolving: carry "remove the bracketed '[Not built yet: …]' note from Section 1's two invitation sentences" to ticket 13
+- [x] On resolving: carry "remove the bracketed '[Not built yet: …]' note from Section 1's two invitation sentences" to ticket 13
 - Not in this ticket: inline formatting (the italic *not* in the reflection prompt, bold phrases, lists in hints) is on the spec's later list
+
+## Answer
+
+Resolved with handovers of notes; every criterion is met. Section 1 and the Strengths assessment are in both pathway documents, end to end with their gates, and checked by hand against the real pathway on 2026-09-29.
+
+Built along the way, each in the README and `docs/manual-checks.md`:
+
+- `has_answer` may name a block in another section (`engine/document/lint.py`); the other clauses stay in their own.
+- `section_link` (`engine/templates/engine/blocks/section_link.html`): another section's title and status as the hub shows them, an optional `button_label`, and `holds_what_follows`, which holds the rest of its section shut until the linked section's gate passes. The linter refuses a link that holds back its own section.
+- `long_text` takes a `placeholder`.
+- The results page leads back to the sort's own section.
+- Minimum-length messages say how much is needed.
+- `estimate` on a section and on any block: shown on the hub and on the section page as "Whole section: …" until the section is begun, and above an activity as "This part: …".
+- The gate is a checklist beneath "Mark complete" (`checklist()` in `engine/document/gates.py`), so nothing moves as answers change.
+- The sort has a progress bar, set in one place in `frontend/src/sort.js`.
+
+Decisions, with the developer, are in Comments, each marked as the developer's call; those to show the content owner are gathered in the spec's open content and product items.
+
+Handed over:
+
+- 13: remove the "[Not built yet: …]" notes from Section 1's invitation sentences
+- 16: the data clump the review found again, and how the "comparison visited" clause will show in the checklist
+- 17, 18, 22: replace "? min" with timed figures for Sections 2, 3, 4 and 5 and Section 5's two activities
+- Spec, open content and product items: what to show the content owner (the step 5 departures, the way back from results, the message wording, the checklist, the estimates, the progress bar)
+- Spec, later items: engine tidying from the code review (`section_link` defined in one place, sections holding on each other, `CONTEXT.md` terms)
