@@ -4,7 +4,7 @@
 
 **Blocked by:** none (33 is resolved)
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** not yet placed
 
@@ -31,3 +31,12 @@
 - First step: `page_reached` now also reads the answers and the track's sections, and stops at the page of a block holding the rest shut, so the hub and every view guard lead a participant held again by a link back to the link's page. Before there is a result, the results address leads to the page the sort is on. The last page's checklist lists its messages and those left unmet on earlier pages in the order authored. A section link and completion's next step are tested leading to the page reached; the scenario is onboarding left part-way at page 2 beside an open calling section, since a reopened section has been completed and so has reached its last page. `test_going_back_to_select_asks_for_a_reason_again` compares a dict, which ignores order, so only the core checklist test records it.
 - Second step: a `ParticipantState` in `engine/views.py` replaces `_participant`'s five-tuple and carries the fixed answers too; `_section_page`, `_saved` and `_is_open` take it. Its `reached(section)` is the one lock and page-reached guard, None while locked, and `stored_response(user)` begins a response on the first thing stored. `page_reached` now takes the pages moved past by section and looks up its own, so `moved_past.get(…, ())` is spelled out nowhere else; the core page-reached tests' helper passes it that way.
 - Third step: `clauses_of` is the one place a clause's page is worked out, and the view takes `unmet` from the page's checklist, which on the last page already covers the whole gate. `page_count(section)` in `blocks.py` replaces each `len(pages_of(…))`, and `open_blocks` goes through `pages_of`. The linter's `_empty_pages` still checks `page_break` itself, since it reports each break's path, and so does the test helper `without_the_coach_step`. `shown` names the template's content in `coach_checklist` and `results`, `offers_completion` is `offers_way_on`, and `page_url` lives in `engine/views.py` with `section_pages.py` registering it as the tag.
+- Code review: "Continue →" and completion on a section whose link holds again are tested leading back to the link's page. A participant's sections and a gate's last page are each worked out once. `unmet` no longer takes a page and always checks the whole gate; what a page needs comes from its checklist, and the page tests now read `clauses_of`.
+
+## Answer
+
+All ten carried items done. Decided with the developer: a participant held again by a link goes back to the link's page from the hub, a typed address, "Continue →" and completion alike, so completion is refused too, though the section's own gate passes. The section-link and completion tests use onboarding left part-way at page 2 rather than a reopened section, which has reached its last page.
+
+Left as judgement calls from the review, with no owning ticket: the template tag imports `page_url` from `engine.views`, as this ticket asked; `engine/views.py` holds handlers, `ParticipantState` and `page_url`; `hub.py` still takes a participant's state in pieces.
+
+This ticket's own two judgement calls were weighed with the developer and kept. `pages_moved_past` keeps its flat `"<section>/<page>"` keys: jsonb `||` merges top-level keys only, so the flat shape lets moving past a page stay one UPDATE, and the decoding lives in `moved_past_by_section` alone; a nested shape would need a different write and a migration of stored rows. `page_break` stays a registered block type: it gets the schema, unique identifiers and linting for free and changes no existing document, and the editor grows a block type at a time; pages as section structure would change the document format. Revisit if a second nested per-section record appears, or if the visual editor wants pages as their own thing.

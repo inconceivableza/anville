@@ -7,6 +7,7 @@ tests/journeys/test_pages.py.
 
 from engine.document import Problem, checklist, unmet, validate
 from engine.document.blocks import page_of, pages_of
+from engine.document.gates import clauses_of
 from engine.hub import hub_for, open_blocks, page_reached
 from tests.core.test_hub import STRENGTHS, link, long_text, prose, reading, section
 from tests.documents import pathway_document
@@ -140,16 +141,20 @@ PAGED_GATE = gated(
 )
 
 
+def messages(clauses):
+    return [clause["message"] for clause in clauses]
+
+
 def test_a_page_is_held_by_the_clauses_naming_its_own_blocks():
-    assert unmet(PAGED_GATE, {}, page=1) == ["Answer a.", "Answer b."]
+    assert messages(clauses_of(PAGED_GATE, page=1)) == ["Answer a.", "Answer b."]
 
 
 def test_a_page_whose_blocks_no_clause_names_holds_nothing():
-    assert unmet(PAGED_GATE, {}, page=2) == []
+    assert messages(clauses_of(PAGED_GATE, page=2)) == []
 
 
 def test_a_clause_naming_a_block_in_another_section_is_checked_on_the_last_page():
-    assert unmet(PAGED_GATE, {}, page=3) == ["Answer d.", "Do the thing in another section."]
+    assert messages(clauses_of(PAGED_GATE, page=3)) == ["Answer d.", "Do the thing in another section."]
 
 
 def test_the_whole_gate_is_still_what_completing_the_section_checks():

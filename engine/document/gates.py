@@ -27,18 +27,14 @@ def gate_passes(section, answers):
     return not unmet(section, answers)
 
 
-def unmet(section, answers, role="participant", page=None):
-    """✨ The authored message of every clause this response does not satisfy, in the order authored.
+def unmet(section, answers, role="participant"):
+    """✨ The authored message of every clause of the whole gate this response does not satisfy, in the order authored.
 
     Clauses that share a message say it once. An author asking for four ratings writes four clauses and one
     sentence ("Answer all four to continue"), and the participant should read that sentence, not four of it.
-    With a `page`, only that page's clauses: what going on from it needs. Without, the whole gate.
+    What going on from one page needs is what that page's `checklist` marks unmet.
     """
-    return _unmet(clauses_of(section, page), answers, role)
-
-
-def _unmet(clauses, answers, role):
-    messages = (text_for(clause["message"], role) for clause in clauses if not _passes(clause, answers))
+    messages = (text_for(clause["message"], role) for clause in clauses_of(section) if not _passes(clause, answers))
     return list(dict.fromkeys(messages))
 
 
