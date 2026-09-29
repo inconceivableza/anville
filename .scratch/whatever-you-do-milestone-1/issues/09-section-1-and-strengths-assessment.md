@@ -58,7 +58,7 @@
 - [x] Step 8: time estimates (criterion above). First ask the developer how "one per activity where a section has several" is authored: on a block, or some other way
 - [x] Then `/code-review` against `46ba6eb` and fix what it finds
 - [x] Run the hand checks carried from 07 and those added to `docs/manual-checks.md` (the section link card, ghost text, time estimates), 2026-09-29, with the fixes recorded in Comments
-- [x] On resolving: carry "remove the bracketed '[Not built yet: …]' note from Section 1's two invitation sentences" to ticket 13
+- [x] On resolving: carry "remove the bracketed '[Not built yet: …]' note from Section 1's two invitation sentences" to ticket 13 (now 13b)
 - Not in this ticket: inline formatting (the italic *not* in the reflection prompt, bold phrases, lists in hints) is on the spec's later list
 
 ## Answer
@@ -80,7 +80,7 @@ Decisions, with the developer, are in Comments, each marked as the developer's c
 
 Handed over:
 
-- 13: remove the "[Not built yet: …]" notes from Section 1's invitation sentences
+- 13b (was 13): remove the "[Not built yet: …]" notes from Section 1's invitation sentences
 - 16: the data clump the review found again, and how the "comparison visited" clause will show in the checklist
 - 17, 18, 22: replace "? min" with timed figures for Sections 2, 3, 4 and 5 and Section 5's two activities
 - Spec, open content and product items: what to show the content owner (the step 5 departures, the way back from results, the message wording, the checklist, the estimates, the progress bar)
