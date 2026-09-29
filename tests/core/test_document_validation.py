@@ -287,16 +287,17 @@ def test_a_coach_checklists_questions_may_not_share_an_identifier():
     assert "'coaching'" in problem.message
 
 
-def test_every_section_and_every_kind_of_block_may_carry_a_time_estimate():
-    """✨ The Whatever You Do pathway holds a block of every kind, so each gets one here."""
+def test_every_section_and_every_kind_of_block_shown_may_carry_a_time_estimate():
+    """✨ The Whatever You Do pathway holds a block of every kind, so each gets one here. A page break is never
+    shown, so it takes no time of its own."""
     document = json.loads(WHATEVER_YOU_DO.read_text(encoding="utf-8"))
     for section in document["content"]["sections"]:
         section["estimate"] = "About 15 minutes"
         for block in section["blocks"]:
-            block["estimate"] = {"participant": "About 5 minutes"}
-    assert {block["type"] for section in document["content"]["sections"] for block in section["blocks"]} == set(
-        BLOCK_TYPES
-    )
+            if block["type"] != "page_break":
+                block["estimate"] = {"participant": "About 5 minutes"}
+    types = {block["type"] for section in document["content"]["sections"] for block in section["blocks"]}
+    assert types - {"page_break"} == set(BLOCK_TYPES) - {"page_break"}
 
     assert validate(document) == []
 

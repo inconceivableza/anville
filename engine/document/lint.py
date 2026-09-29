@@ -18,6 +18,7 @@ def lint(document):
         *_missing_sections(document, section_ids),
         *_unknown_linked_sections(document, section_ids),
         *_links_holding_their_own_section(document),
+        *_empty_pages(document),
         *_unreadable_clauses(document),
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
@@ -110,6 +111,19 @@ def _links_holding_their_own_section(document):
                 yield Problem(
                     f"/content/sections/{s}/blocks/{b}/holds_what_follows",
                     "A link cannot hold back the rest of its own section: that section could never be finished.",
+                )
+
+
+def _empty_pages(document):
+    """✨ A page break starting or ending a section, or right after another, would leave a page with nothing on it."""
+    for s, section in enumerate(document["content"]["sections"]):
+        blocks = section["blocks"]
+        for b, block in enumerate(blocks):
+            if block["type"] != "page_break":
+                continue
+            if b == 0 or b == len(blocks) - 1 or blocks[b - 1]["type"] == "page_break":
+                yield Problem(
+                    f"/content/sections/{s}/blocks/{b}", "A page break must come between blocks, not leave a page empty."
                 )
 
 

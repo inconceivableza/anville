@@ -4,7 +4,7 @@
 
 **Blocked by:** none (04 is resolved)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 1 (ends 2 Oct)
 
@@ -30,3 +30,8 @@
 - Whether going on from the ratings' page fixes them, as the prototype's baseline screen cannot be returned to after "Continue" (ticket 29), or they stay changeable until the section is completed, as now
 - Where the coach checklist's steps and its no-JavaScript fallback land once it has a page of its own (ticket 10a's `/coach/<block>/` returns the whole section page)
 - Whether the reason for taking the course gets a page of its own, as it had the prototype's account screen, or shares the first page with the ratings
+
+## Comments
+
+- Decided with the developer (2026-09-29): pages are authored as a `page_break` block between blocks, so no existing document changes. Having gone on from a page is stored, not worked out, so the coach step and an empty contact list still hold the participant until "Continue →". The start ratings stay changeable until the section is completed, as now. A page has no title of its own and no page count; the section's title heads every page. Taken as defaults: a gate clause belongs to the page of the block it names, and one naming a block in another section to the last page; the coach checklist's no-JavaScript fallback renders the page it is on; the reason shares the first page with the ratings; page 1 is `/sections/<id>/` and each page is also `/sections/<id>/pages/<n>/`.
+- First step: the `page_break` block in the schema, and the linter's refusal of a break that would leave a page empty. The gate can be checked page by page, with the last page's checklist also listing anything left unmet on an earlier one, since completing still checks the whole gate. The hub works out the page each participant has reached from the pages they have gone on from. Nothing is stored or shown yet.

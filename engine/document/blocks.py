@@ -219,6 +219,8 @@ BLOCK_TYPES = {
         ),
         BlockType("sort_assessment", captures=SORT, scored=True, widget=_sort_widget),
         BlockType("section_link", text_fields=("body", "button_label")),
+        # ✨ Never shown: it splits its section into pages (`pages_of`).
+        BlockType("page_break"),
     ]
 }
 
@@ -253,6 +255,26 @@ def blocks_of(document):
 def block_types_by_id(document):
     """✨ Each block's type, keyed by its identifier. Used wherever a block is known only by name."""
     return {block["id"]: BLOCK_TYPES[block["type"]] for block in blocks_of(document)}
+
+
+def pages_of(section):
+    """✨ A section's blocks, page by page. Each `page_break` starts a new page and is on none; a section without one
+    is a single page."""
+    pages = [[]]
+    for block in section["blocks"]:
+        if block["type"] == "page_break":
+            pages.append([])
+        else:
+            pages[-1].append(block)
+    return pages
+
+
+def page_of(section, block_id):
+    """✨ The page of its section a block is on, counting from 1, or None for a block not on any of them."""
+    for number, page in enumerate(pages_of(section), start=1):
+        if any(block["id"] == block_id for block in page):
+            return number
+    return None
 
 
 def section_of(document, block_id):

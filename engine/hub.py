@@ -8,7 +8,7 @@ serves the hub page, the guard on a section page and the re-check when a section
 
 from typing import NamedTuple
 
-from engine.document.blocks import BLOCK_TYPES
+from engine.document.blocks import BLOCK_TYPES, pages_of
 from engine.document.gates import gate_passes, has_content
 from engine.document.text import text_for
 
@@ -28,7 +28,8 @@ LABELS = {
 
 class SectionState(NamedTuple):
     """✨ One section as the hub sees it. `is_next` marks the one section the hub points the participant at.
-    `estimate` is the authored time it takes, or None once the section has been begun."""
+    `estimate` is the authored time it takes, or None once the section has been begun. `page` is the page of it
+    the participant has reached, which is where the hub leads."""
 
     id: str
     title: str
@@ -36,6 +37,7 @@ class SectionState(NamedTuple):
     label: str
     is_next: bool = False
     estimate: str | None = None
+    page: int = 1
 
     @property
     def is_locked(self):
@@ -65,22 +67,40 @@ def section_by_id(document, section_id):
     return next((section for section in track_sections(document) if section["id"] == section_id), None)
 
 
-def open_blocks(section, answers, sections):
-    """✨ The blocks of a section a participant has reached, and whether that is all of them.
+def open_blocks(section, answers, sections, up_to_page=1):
+    """✨ The blocks of a section a participant has reached, and whether nothing in them holds the rest shut.
 
     A block that opens what follows it (a scripture reading) holds the rest of the section shut until it
     has been answered. A link marked `holds_what_follows` holds it shut until the linked section's gate
-    passes, which is why the track's `sections` are needed. The server decides this on every request, so an
-    activity a participant has not opened is neither in the page nor answerable: it is not reachable at
-    all, rather than merely unseen.
+    passes, which is why the track's `sections` are needed. Pages after `up_to_page`, the page reached, are
+    shut too. The server decides this on every request, so an activity a participant has not opened is
+    neither in the page nor answerable: it is not reachable at all, rather than merely unseen.
     """
     sections_by_id = {other["id"]: other for other in sections}
     reached = []
+    page = 1
     for block in section["blocks"]:
+        if block["type"] == "page_break":
+            page += 1
+            if page > up_to_page:
+                break
+            continue
         reached.append(block)
         if _holds_what_follows(block, answers, sections_by_id):
             return reached, False
     return reached, True
+
+
+def page_reached(section, gone_on):
+    """✨ The page of a section a participant has reached, from the pages they have gone on from (`gone_on`).
+
+    Each page is reached only through every page ahead of it, and the last is as far as there is to go.
+    """
+    last = len(pages_of(section))
+    page = 1
+    while page in gone_on and page < last:
+        page += 1
+    return page
 
 
 def _holds_what_follows(block, answers, sections_by_id):
@@ -115,9 +135,10 @@ def is_locked(section, completed):
     return not set(section.get("requires", [])) <= set(completed)
 
 
-def hub_for(sections, answers, completed, role="participant"):
-    """✨ A participant's hub over one track's sections."""
-    states = [_state(section, answers, completed, role) for section in sections]
+def hub_for(sections, answers, completed, role="participant", gone_on=None):
+    """✨ A participant's hub over one track's sections. `gone_on` holds, by section, the pages gone on from."""
+    gone_on = gone_on or {}
+    states = [_state(section, answers, completed, role, gone_on.get(section["id"], ())) for section in sections]
     next_step = next((state for state in states if state.status in (NOT_STARTED, IN_PROGRESS)), None)
     states = [state._replace(is_next=state is next_step) for state in states]
     interactive = [block for section in sections for block in _interactive_blocks(section)]
@@ -129,7 +150,7 @@ def hub_for(sections, answers, completed, role="participant"):
     )
 
 
-def _state(section, answers, completed, role):
+def _state(section, answers, completed, role, gone_on):
     status = _status(section, answers, completed)
     return SectionState(
         id=section["id"],
@@ -137,6 +158,7 @@ def _state(section, answers, completed, role):
         status=status,
         label=LABELS[status],
         estimate=_estimate(section, status, role),
+        page=page_reached(section, gone_on),
     )
 
 

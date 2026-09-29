@@ -141,7 +141,7 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "section_link"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "section_link", "page_break"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
@@ -152,8 +152,19 @@
         { "if": { "properties": { "type": { "const": "contact_list" } } }, "then": { "$ref": "#/$defs/contact_list" } },
         { "if": { "properties": { "type": { "const": "coach_checklist" } } }, "then": { "$ref": "#/$defs/coach_checklist" } },
         { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } },
-        { "if": { "properties": { "type": { "const": "section_link" } } }, "then": { "$ref": "#/$defs/section_link" } }
+        { "if": { "properties": { "type": { "const": "section_link" } } }, "then": { "$ref": "#/$defs/section_link" } },
+        { "if": { "properties": { "type": { "const": "page_break" } } }, "then": { "$ref": "#/$defs/page_break" } }
       ]
+    },
+    "page_break": {
+      "description": "Where one page of a section ends and the next begins. The page before it ends in 'Continue →'; a section without one is a single page.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "page_break" }
+      }
     },
     "rich_text": {
       "type": "object",

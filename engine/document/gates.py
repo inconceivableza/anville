@@ -8,6 +8,7 @@ Nothing in this module touches the database or a request. It reads a section as 
 response's answers as stored, so the same evaluation serves the section page, the hub and completion.
 """
 
+from engine.document.blocks import page_of, pages_of
 from engine.document.text import text_for
 
 # ✨ The answer kinds each clause can read (see blocks.py). None means any block that captures an answer.
@@ -26,37 +27,54 @@ def gate_passes(section, answers):
     return not unmet(section, answers)
 
 
-def unmet(section, answers, role="participant"):
+def unmet(section, answers, role="participant", page=None):
     """✨ The authored message of every clause this response does not satisfy, in the order authored.
 
     Clauses that share a message say it once. An author asking for four ratings writes four clauses and one
     sentence ("Answer all four to continue"), and the participant should read that sentence, not four of it.
+    With a `page`, only that page's clauses: what going on from it needs. Without, the whole gate.
     """
+    return _unmet(clauses_of(section, page), answers, role)
+
+
+def _unmet(clauses, answers, role):
     messages = (
         text_for(clause["message"], role)
-        for clause in clauses_of(section)
+        for clause in clauses
         if not CLAUSES[clause["type"]](clause, answers.get(clause["block"]))
     )
     return list(dict.fromkeys(messages))
 
 
-def checklist(section, answers, role="participant"):
+def checklist(section, answers, role="participant", page=None):
     """✨ Every authored message with whether it is met, in the order authored, as (message, met) pairs.
 
     Shown beneath "Mark complete" in place of the unmet messages alone, so nothing comes and goes as answers
     change and the page never shortens under a participant scrolled to its foot. A message several clauses
     share is listed once, and is met only when all of them pass.
+
+    With a `page`, that page's clauses. The last page's also says anything left unmet on an earlier one, since
+    completing checks the whole gate: a rating cleared after going back would otherwise refuse without a reason.
     """
     met = {}
-    for clause in clauses_of(section):
+    for clause in clauses_of(section, page):
         message = text_for(clause["message"], role)
         passes = CLAUSES[clause["type"]](clause, answers.get(clause["block"]))
         met[message] = met.get(message, True) and passes
+    if page is not None and page == len(pages_of(section)):
+        earlier = [clause for clause in clauses_of(section) if (page_of(section, clause["block"]) or page) < page]
+        met.update(dict.fromkeys(_unmet(earlier, answers, role), False))
     return list(met.items())
 
 
-def clauses_of(section):
-    return section.get("gate", {}).get("clauses", [])
+def clauses_of(section, page=None):
+    """✨ A section's gate clauses, or one page's: those naming a block on it. A clause naming a block in another
+    section belongs to the last page, where the section is completed."""
+    clauses = section.get("gate", {}).get("clauses", [])
+    if page is None:
+        return clauses
+    last = len(pages_of(section))
+    return [clause for clause in clauses if (page_of(section, clause["block"]) or last) == page]
 
 
 def _has_answer(clause, answer):
