@@ -8,7 +8,7 @@ serves the hub page, the guard on a section page and the re-check when a section
 
 from typing import NamedTuple
 
-from engine.document.blocks import BLOCK_TYPES, page_of, pages_of
+from engine.document.blocks import BLOCK_TYPES, page_count, page_of, pages_of
 from engine.document.gates import gate_passes, has_content
 from engine.document.text import text_for
 
@@ -78,13 +78,7 @@ def open_blocks(section, answers, sections, up_to_page=1):
     """
     sections_by_id = {other["id"]: other for other in sections}
     reached = []
-    page = 1
-    for block in section["blocks"]:
-        if block["type"] == "page_break":
-            page += 1
-            if page > up_to_page:
-                break
-            continue
+    for block in (block for page in pages_of(section)[:up_to_page] for block in page):
         reached.append(block)
         if _holds_what_follows(block, answers, sections_by_id):
             return reached, False
@@ -99,7 +93,7 @@ def page_reached(section, moved_past, answers, sections):
     holding the rest shut holds the pages after its own too, even once gone past: a participant who went on past a
     held link, then made its section's gate fail again, is back on the link's page rather than on one with nothing.
     """
-    last = len(pages_of(section))
+    last = page_count(section)
     moved_past = moved_past.get(section["id"], ())
     page = 1
     while page in moved_past and page < last:

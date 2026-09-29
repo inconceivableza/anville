@@ -23,7 +23,7 @@ from engine.document import (
     text_for,
     unmet,
 )
-from engine.document.blocks import CONTACTS, blocks_of, page_of, pages_of, section_of
+from engine.document.blocks import CONTACTS, blocks_of, page_count, page_of, pages_of, section_of
 from engine.document.coach import (
     candidate_name_from_form,
     checklist_answers,
@@ -43,7 +43,6 @@ from engine.hub import (
 )
 from engine.models import Contact, PathwayVersion, Publication, Response, Result
 from engine.results import results_page
-from engine.templatetags.section_pages import page_url
 
 
 class ParticipantState(NamedTuple):
@@ -137,12 +136,12 @@ def move_past_page(request, section_id, page):
     reached = state.reached(section)
     if reached is None:
         return redirect("hub")
-    if _page_or_404(section, page) == len(pages_of(section)):
+    if _page_or_404(section, page) == page_count(section):
         raise Http404("The last page of a section is moved past by completing it.")
     if page > reached:
         return _see_other(page_url(section_id, reached))
     shown = _section_page(state, section, page)
-    if not shown["offers_completion"] or shown["unmet"]:
+    if not shown["offers_way_on"] or shown["unmet"]:
         return render(request, "engine/section.html", {**shown, "refused": True}, status=400)
 
     state.stored_response(request.user).move_past_page(section_id, page)
@@ -160,7 +159,7 @@ def complete_section(request, section_id):
     reached = state.reached(section)
     if reached is None:
         return redirect("hub")
-    last = len(pages_of(section))
+    last = page_count(section)
     if reached < last:
         return _see_other(page_url(section_id, reached))
     if unmet(section, state.answers):
@@ -263,14 +262,15 @@ def coach_checklist(request, block_id):
 
     screen = _checklist_step(block, request.POST["step"], request.POST)
     status = 400 if screen.get("refusal") else 200
-    page = _section_page(state, section, page_of(section, block_id))
-    shown = next(shown for shown in page["section"]["blocks"] if shown["id"] == block_id)
-    shown["checklist"] = _checklist_screen(shown["text"], **screen)
+    shown = _section_page(state, section, page_of(section, block_id))
+    checklist_block = next(block for block in shown["section"]["blocks"] if block["id"] == block_id)
+    checklist_block["checklist"] = _checklist_screen(checklist_block["text"], **screen)
     if request.headers.get("HX-Request") == "true":
-        return render(request, shown["template"], {"block": shown, "pathway": page["pathway"]}, status=status)
+        context = {"block": checklist_block, "pathway": shown["pathway"]}
+        return render(request, checklist_block["template"], context, status=status)
     # ✨ Never a redirect without JavaScript: the answers would have to go in the address, where they are logged.
     # The page returned is the one the checklist is on.
-    return render(request, "engine/section.html", page, status=status)
+    return render(request, "engine/section.html", shown, status=status)
 
 
 # ✨ The buttons of the coach checklist: back to the intro keeping what was given, on to the questions, to see how
@@ -355,13 +355,21 @@ def results(request, block_id):
     result = Result.objects.filter(response=state.response, block_id=block_id).first()
     if result is None:
         return redirect(page_url(section["id"], page_of(section, block_id)))
-    page = results_page(state.version.document, result.scores, state.answers[block_id], request.user.get_username())
-    page["section"] = {
+    shown = results_page(state.version.document, result.scores, state.answers[block_id], request.user.get_username())
+    shown["section"] = {
         "id": section["id"],
         "title": text_for(section["title"], "participant"),
         "page": page_of(section, block_id),
     }
-    return render(request, "engine/results.html", page)
+    return render(request, "engine/results.html", shown)
+
+
+def page_url(section_id, page=1):
+    """✨ The address of one page of a section. The first is the section's own address, as before it had pages.
+    Templates reach it as the `page_url` tag (`engine/templatetags/section_pages.py`)."""
+    if page == 1:
+        return reverse("section", args=[section_id])
+    return reverse("section_page", args=[section_id, page])
 
 
 def _see_other(where, *args):
@@ -409,7 +417,7 @@ def _is_open(state, section, block):
 
 
 def _page_or_404(section, page):
-    if not 1 <= page <= len(pages_of(section)):
+    if not 1 <= page <= page_count(section):
         raise Http404("This section has no page by that number.")
     return page
 
@@ -447,12 +455,13 @@ def _section_page(state, section, page=1, asked_rows=0):
     opened, activity_open = open_blocks(section, answers, state.sections, up_to_page=page)
     on_page = {block["id"] for block in pages_of(section)[page - 1]}
     blocks = [block for block in opened if block["id"] in on_page]
-    is_last = page == len(pages_of(section))
+    is_last = page == page_count(section)
     # ✨ A sort leads only to its results, as in the prototype, so completing is not offered beside it until it
     # is in. The linter makes its section's gate require it, so the server refuses completion before then too.
     sort_pending = any(BLOCK_TYPES[block["type"]].scored and block["id"] not in answers for block in blocks)
     # ✨ A link shows the section it leads to exactly as the hub would: its title, its status and whether it is open.
     hub = hub_for(state.sections, answers, state.completed, moved_past=state.moved_past)
+    gate_checklist = checklist(section, answers, page=page)
     states = {other.id: other for other in hub.sections}
     return {
         "page": {"number": page, "is_last": is_last},
@@ -475,9 +484,10 @@ def _section_page(state, section, page=1, asked_rows=0):
         # ✨ Over the whole section, since the ratings it fixed may be on an earlier page than its completion.
         "holds_fixed_answers": any(block["id"] in fixed for block in section["blocks"]),
         # ✨ The way on, "Continue →" or completion. Going on from a page is refused on exactly these and `unmet`.
-        "offers_completion": activity_open and not sort_pending,
-        "unmet": unmet(section, answers) if is_last else unmet(section, answers, page=page),
-        "checklist": checklist(section, answers, page=page),
+        "offers_way_on": activity_open and not sort_pending,
+        # ✨ What the checklist marks unmet: on the last page, where completing checks it, the whole gate.
+        "unmet": [message for message, met in gate_checklist if not met],
+        "checklist": gate_checklist,
     }
 
 

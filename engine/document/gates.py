@@ -8,7 +8,7 @@ Nothing in this module touches the database or a request. It reads a section as 
 response's answers as stored, so the same evaluation serves the section page, the hub and completion.
 """
 
-from engine.document.blocks import page_of, pages_of
+from engine.document.blocks import page_count, page_of
 from engine.document.text import text_for
 
 # ✨ The answer kinds each clause can read (see blocks.py). None means any block that captures an answer.
@@ -53,7 +53,7 @@ def checklist(section, answers, role="participant", page=None):
     completing checks the whole gate: a rating cleared after going back would otherwise refuse without a reason.
     """
     clauses = clauses_of(section, page)
-    if page is not None and page == len(pages_of(section)):
+    if page is not None and page == page_count(section):
         # ✨ The whole gate's clauses on this page or left unmet on an earlier one, still in the order authored.
         clauses = [clause for clause in clauses_of(section) if clause in clauses or not _passes(clause, answers)]
     met = {}
@@ -73,8 +73,7 @@ def clauses_of(section, page=None):
     clauses = section.get("gate", {}).get("clauses", [])
     if page is None:
         return clauses
-    last = len(pages_of(section))
-    return [clause for clause in clauses if (page_of(section, clause["block"]) or last) == page]
+    return [clause for clause in clauses if (page_of(section, clause["block"]) or page_count(section)) == page]
 
 
 def _has_answer(clause, answer):

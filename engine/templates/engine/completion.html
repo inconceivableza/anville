@@ -9,8 +9,8 @@
   It is the gate's own state that is refreshed, never the blocks: only a scripture reading opens more of a
   section, and confirming one reloads the page, so a save can never reveal a block that was not already here.
 {% endcomment %}
-<div id="completion"{% if offers_completion %} class="completion"{% endif %}{% if out_of_band %} hx-swap-oob="true"{% endif %}>
-  {% if offers_completion %}
+<div id="completion"{% if offers_way_on %} class="completion"{% endif %}{% if out_of_band %} hx-swap-oob="true"{% endif %}>
+  {% if offers_way_on %}
     {% if not page.is_last %}
       {# ✨ Every page but the last goes on to the next, held by that page's own requirements, listed as below. #}
       <form method="post" action="{% url 'move_past_page' section.id page.number %}">

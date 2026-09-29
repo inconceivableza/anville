@@ -269,6 +269,11 @@ def pages_of(section):
     return pages
 
 
+def page_count(section):
+    """✨ How many pages a section has, and so the number of its last."""
+    return len(pages_of(section))
+
+
 def page_of(section, block_id):
     """✨ The page of its section a block is on, counting from 1, or None for a block not on any of them."""
     for number, page in enumerate(pages_of(section), start=1):
