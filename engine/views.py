@@ -1,8 +1,10 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.humanize.templatetags.humanize import apnumber
 from django.db import IntegrityError
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_POST
 
 from access.consent import consent_required
@@ -19,7 +21,13 @@ from engine.document import (
     text_for,
     unmet,
 )
-from engine.document.blocks import CONTACTS, section_of
+from engine.document.blocks import CONTACTS, blocks_of, section_of
+from engine.document.coach import (
+    candidate_name_from_form,
+    checklist_answers,
+    checklist_answers_from_form,
+    checklist_outcome,
+)
 from engine.document.contacts import MAX_CONTACTS, contacts_from_form, rows_to_show
 from engine.document.scoring import score
 from engine.hub import block_ids_fixed_on_completion, hub_for, is_locked, open_blocks, section_by_id, track_sections
@@ -167,6 +175,86 @@ def save_answer(request, block_id):
     return _saved(request, version, section, answers, completed, fixed, block_id)
 
 
+@sensitive_post_parameters()
+@login_required
+@consent_required
+@require_POST
+def coach_checklist(request, block_id):
+    """✨ One step of choosing a coach: from the intro to the questions, to an outcome, or back to the start.
+
+    Nothing is stored or logged. The candidate's name and the answers so far travel only in the form, screen to
+    screen, and the outcome is worked out again from what was posted, never taken from the button pressed. The
+    answers are opinions about another person, including their faith (special category data under GDPR), and no
+    later step reads them; `sensitive_post_parameters` keeps them out of error reports too.
+    """
+    participant_response, version, answers, completed = _participant(request.user)
+    block = _block_of_type(version, block_id, "coach_checklist")
+    section = section_of(version.document, block_id)
+    reached, _ = open_blocks(section, answers, track_sections(version.document))
+    if is_locked(section, completed) or block not in reached:
+        return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
+    if request.POST.get("step") not in CHECKLIST_STEPS:
+        return HttpResponseBadRequest("The coach checklist has no such step.")
+
+    state = _checklist_step(block, request.POST["step"], request.POST)
+    status = 400 if state.get("refusal") else 200
+    page = _section_page(version, section, answers, completed, _fixed(participant_response))
+    shown = next(shown for shown in page["section"]["blocks"] if shown["id"] == block_id)
+    shown["checklist"] = _checklist_screen(shown["text"], **state)
+    if request.headers.get("HX-Request") == "true":
+        return render(request, shown["template"], {"block": shown, "pathway": page["pathway"]}, status=status)
+    # ✨ Never a redirect without JavaScript: the answers would have to go in the address, where they are logged.
+    return render(request, "engine/section.html", page, status=status)
+
+
+# ✨ The buttons of the coach checklist: back to the intro keeping what was given, on to the questions, to see how
+# it looks, "I'm still confident" past a second thought, and starting again with someone else.
+CHECKLIST_STEPS = ("intro", "questions", "outcome", "confident", "restart")
+
+
+def _checklist_step(block, to, posted):
+    """✨ Where a press of the checklist's button leads, from what its form held, as the screen's state."""
+    questions = block["questions"]
+    if to == "restart":
+        return {"screen": "intro"}
+    name, given = (posted.get("name") or "").strip(), checklist_answers(questions, posted)
+    if to == "intro":
+        return {"screen": "intro", "name": name, "answers": given}
+    try:
+        name = candidate_name_from_form(posted)
+    except AnswerRefused as refused:
+        return {"screen": "intro", "name": name, "answers": given, "refusal": str(refused)}
+    if to == "questions":
+        return {"screen": "questions", "name": name, "answers": given}
+    try:
+        given = checklist_answers_from_form(questions, posted)
+    except AnswerRefused as refused:
+        return {"screen": "questions", "name": name, "answers": given, "refusal": str(refused)}
+    outcome = checklist_outcome(questions, given)
+    if to == "confident" and outcome.verdict == "confirm":
+        return {"screen": "proceed", "name": name, "answers": given, "confident": True}
+    return {"screen": outcome.verdict, "name": name, "answers": given, "outcome": outcome}
+
+
+def _checklist_screen(text, screen="intro", name="", answers=None, outcome=None, refusal=None, confident=False):
+    """✨ One screen of the coach checklist as its template needs it: the questions with any answers given, and on
+    a second thought or a stop, each answer that was not Yes with why that question matters."""
+    answers = answers or {}
+    questions = [{**question, "answer": answers.get(question["id"])} for question in text["questions"]]
+    flagged = set(outcome.flagged) if outcome else set()
+    return {
+        "screen": screen,
+        "name": name,
+        "answers": answers,
+        "questions": questions,
+        "count": apnumber(len(questions)),
+        "flags": [question for question in questions if question["id"] in flagged],
+        "critical_no": bool(outcome and outcome.critical_no),
+        "confident": confident,
+        "refusal": refusal,
+    }
+
+
 def _saved(request, version, section, answers, completed, fixed, block_id):
     """✨ What a stored answer sends back: with htmx, the status and the gate; without, the section again.
 
@@ -246,6 +334,14 @@ def _fixed(participant_response):
     return set(participant_response.fixed_answers) if participant_response else set()
 
 
+def _block_of_type(version, block_id, block_type):
+    """✨ The version's block by that identifier, provided it is of that type; otherwise a 404."""
+    for block in blocks_of(version.document) if version else ():
+        if block["id"] == block_id and block["type"] == block_type:
+            return block
+    raise Http404(f"This pathway version has no {block_type} by that identifier.")
+
+
 def _section_or_404(version, section_id):
     section = section_by_id(version.document, section_id) if version else None
     if section is None:
@@ -302,13 +398,16 @@ def _block_for_participant(document, block, answers, fixed, states, asked_rows=0
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
     identifier; a link to a section outside the participant's track has no state and shows nothing."""
     widget = BLOCK_TYPES[block["type"]].widget
+    text = authored_text(block, "participant")
     return {
         "rows": _contact_rows(block, answers, asked_rows) if block["type"] == "contact_list" else None,
+        # ✨ A coach checklist always opens on its intro, empty: nothing from an earlier visit was kept.
+        "checklist": _checklist_screen(text) if block["type"] == "coach_checklist" else None,
         "id": block["id"],
         "type": block["type"],
         "template": f"engine/blocks/{block['type']}.html",
         "variant": block.get("variant", "plain"),
-        "text": authored_text(block, "participant"),
+        "text": text,
         "answer": answers.get(block["id"]),
         "is_fixed": block["id"] in fixed,
         "widget": widget(document, "participant") if widget else None,

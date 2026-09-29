@@ -132,6 +132,28 @@ def test_a_minimum_text_length_cannot_be_asked_of_a_contact_list():
     ]
 
 
+def test_a_gate_cannot_ask_anything_of_a_coach_checklist_since_none_of_it_is_kept():
+    """✨ The checklist's answers are never stored (ticket 10a), and choosing a coach may be skipped, so no gate
+    can wait on it."""
+    document = document_whose_gate_names({"type": "has_answer", "block": "coach", "message": "Choose a coach."})
+    document["content"]["sections"][1]["blocks"].append(
+        {
+            "id": "coach",
+            "type": "coach_checklist",
+            "heading": "Walking with a coach",
+            "name_prompt": "Who are you thinking of asking?",
+            "questions": [{"id": "faith", "question": "Shares your faith", "why": "It is rooted in scripture."}],
+        }
+    )
+
+    assert validate(document) == [
+        Problem(
+            path=f"{CLAUSE_PATH}/block",
+            message="A 'has_answer' clause cannot be checked against block 'coach', which is a coach_checklist.",
+        )
+    ]
+
+
 def test_has_answer_may_be_asked_of_any_block_that_captures_an_answer():
     document = document_whose_gate_names({"type": "has_answer", "block": "statement", "message": "Answer this."})
 

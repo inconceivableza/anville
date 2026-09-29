@@ -141,7 +141,7 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "sort_assessment", "section_link"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "section_link"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
@@ -150,6 +150,7 @@
         { "if": { "properties": { "type": { "const": "agreement_scale" } } }, "then": { "$ref": "#/$defs/agreement_scale" } },
         { "if": { "properties": { "type": { "const": "single_select" } } }, "then": { "$ref": "#/$defs/single_select" } },
         { "if": { "properties": { "type": { "const": "contact_list" } } }, "then": { "$ref": "#/$defs/contact_list" } },
+        { "if": { "properties": { "type": { "const": "coach_checklist" } } }, "then": { "$ref": "#/$defs/coach_checklist" } },
         { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } },
         { "if": { "properties": { "type": { "const": "section_link" } } }, "then": { "$ref": "#/$defs/section_link" } }
       ]
@@ -282,6 +283,53 @@
           "minimum": 1,
           "maximum": 50,
           "default": 5
+        }
+      }
+    },
+    "coach_checklist": {
+      "description": "Choosing a coach: why the choice matters, the candidate's first name, then a question per quality a coach needs, each answered Yes, Not sure or No. The engine's rule turns the answers into going ahead, a second thought or trying someone else. None of the answers is kept.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "heading", "name_prompt", "questions"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "coach_checklist" },
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "heading": { "$ref": "#/$defs/text" },
+        "lead": { "description": "One sentence set off above the body.", "$ref": "#/$defs/text" },
+        "body": { "description": "Why the choice matters. A blank line starts a new paragraph.", "$ref": "#/$defs/text" },
+        "not_needed": { "description": "The kind of person not to choose, set beside `needed`.", "$ref": "#/$defs/text" },
+        "needed": { "description": "The kind of person to choose.", "$ref": "#/$defs/text" },
+        "footnote": { "description": "A quieter note beneath, such as why 'coach' and not 'mentor'.", "$ref": "#/$defs/text" },
+        "name_prompt": { "$ref": "#/$defs/text" },
+        "name_placeholder": { "$ref": "#/$defs/text" },
+        "name_hint": { "$ref": "#/$defs/text" },
+        "questions": {
+          "description": "Asked in order as 'Do you think <name>…', then the question.",
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "question", "why"],
+            "properties": {
+              "id": {
+                "description": "What the answer is sent under. Keep it when rewording the question.",
+                "$ref": "#/$defs/identifier"
+              },
+              "critical": {
+                "description": "A No to a critical question means trying someone else, whatever the other answers.",
+                "type": "boolean",
+                "default": false
+              },
+              "question": { "description": "Completes 'Do you think <name>…', without a question mark.", "$ref": "#/$defs/text" },
+              "note": { "description": "Shown beneath the question.", "$ref": "#/$defs/text" },
+              "why": { "description": "Why the question matters, shown when an answer other than Yes is named.", "$ref": "#/$defs/text" },
+              "coach_note": { "description": "The note as the coach reads it (ticket 13).", "$ref": "#/$defs/text" },
+              "coach_why": { "description": "Why it matters, as the coach reads it (ticket 13).", "$ref": "#/$defs/text" },
+              "commitment": { "description": "The coach's first-person promise (ticket 13).", "$ref": "#/$defs/text" }
+            }
+          }
         }
       }
     },

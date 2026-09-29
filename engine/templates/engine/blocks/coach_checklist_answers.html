@@ -1,0 +1,4 @@
+{# ✨ The answers given so far, carried to the next screen in the form, since none of them is kept. #}
+{% for question in block.checklist.questions %}{% if question.answer %}
+  <input type="hidden" name="answer-{{ question.id }}" value="{{ question.answer }}">
+{% endif %}{% endfor %}

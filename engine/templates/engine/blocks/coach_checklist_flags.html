@@ -1,0 +1,6 @@
+{# ✨ Each answer that was not Yes, as the mock-up names them: the question, what was said, and why it matters. #}
+<ul class="coach-flags">
+  {% for flag in block.checklist.flags %}
+    <li><b>{{ flag.question }} — {% if flag.answer == "no" %}you said no{% else %}you weren't sure{% endif %}</b> {{ flag.why }}</li>
+  {% endfor %}
+</ul>

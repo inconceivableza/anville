@@ -59,18 +59,24 @@ def _duplicates(identifiers):
             first_use[kind, identifier] = path
 
 
+# ✨ A block's lists whose entries are told apart by identifier, and what each entry is called in a problem.
+_IDENTIFIED_ENTRIES = {"options": "option", "questions": "question"}
+
+
 def _duplicate_options(document):
-    """✨ A choice is stored as its option's identifier, so two options sharing one could not be told apart."""
+    """✨ A choice is stored as its option's identifier, and a coach checklist's answer is sent under its question's,
+    so two entries sharing one could not be told apart."""
     for s, section in enumerate(document["content"]["sections"]):
         for b, block in enumerate(section["blocks"]):
-            seen = set()
-            for o, option in enumerate(block.get("options", [])):
-                if option["id"] in seen:
-                    yield Problem(
-                        f"/content/sections/{s}/blocks/{b}/options/{o}/id",
-                        f"The option identifier '{option['id']}' is already used in this block.",
-                    )
-                seen.add(option["id"])
+            for field, entry_name in _IDENTIFIED_ENTRIES.items():
+                seen = set()
+                for e, entry in enumerate(block.get(field, [])):
+                    if entry["id"] in seen:
+                        yield Problem(
+                            f"/content/sections/{s}/blocks/{b}/{field}/{e}/id",
+                            f"The {entry_name} identifier '{entry['id']}' is already used in this block.",
+                        )
+                    seen.add(entry["id"])
 
 
 def _missing_sections(document, section_ids):

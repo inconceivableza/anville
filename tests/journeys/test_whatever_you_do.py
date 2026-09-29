@@ -7,13 +7,15 @@ any other way, so each can keep growing and be compared once everything is built
 """
 
 import json
+import re
 from pathlib import Path
 
 import pytest
 from django.utils.html import escape
 
-from engine.models import Response
+from engine.models import Contact, Response
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
+from tests.prototype import js_string
 from tests.journeys.test_whatever_you_do_faithful_port import (
     A_LETTER,
     A_STATEMENT,
@@ -206,6 +208,82 @@ def test_the_letter_and_the_closing_ratings_each_say_how_long_they_take():
     assert estimated == [("letter", "lt-task", "? min"), ("letter", "pl-intro", "? min")]
 
 
+COACH_PROTOTYPE = (DOCUMENT.parents[1] / "Prototypes for reference" / "coach-selection-prototype.html").read_text(
+    encoding="utf-8"
+)
+# ✨ The mock-up's names for each question's parts, and the document's.
+COACH_FIELDS = {
+    "q": "question",
+    "note": "note",
+    "why": "why",
+    "coachNote": "coach_note",
+    "coachWhy": "coach_why",
+    "commit": "commitment",
+}
+
+
+def the_mock_ups_questions():
+    """✨ The six questions as the coach mock-up's script holds them, in the document's field names."""
+    script = re.search(r"const QUESTIONS = \[(.*?)\n\];", COACH_PROTOTYPE, re.S).group(1)
+    questions = []
+    for entry in re.findall(r"\{(.*?)\}", script, re.S):
+        question = {
+            "id": re.search(r"id:'(\w+)'", entry).group(1),
+            "critical": re.search(r"critical:(true|false)", entry).group(1) == "true",
+        }
+        for field, text in re.findall(r'(\w+):"((?:[^"\\]|\\.)*)"', entry):
+            question[COACH_FIELDS[field]] = js_string(text)
+        questions.append(question)
+    return questions
+
+
+def the_coach_step(document):
+    return next(block for block in document["content"]["sections"][0]["blocks"] if block["type"] == "coach_checklist")
+
+
+def test_the_coach_step_asks_the_mock_ups_six_questions_word_for_word():
+    """✨ Their wording, which three are critical, why each matters, and the coach's side of each for ticket 13."""
+    questions = the_coach_step(the_pathway())["questions"]
+
+    assert len(questions) == 6
+    assert questions == the_mock_ups_questions()
+    assert [question["id"] for question in questions if question["critical"]] == ["faith", "objectivity", "coaching"]
+
+
+def test_the_coach_step_comes_between_the_starting_ratings_and_the_contact_list():
+    """✨ As the original prototype goes from its baseline screen to its mentor screen, then to its contacts."""
+    blocks = [block["id"] for block in the_pathway()["content"]["sections"][0]["blocks"]]
+
+    assert blocks.index("bl-peace") < blocks.index("coach") < blocks.index("contacts-intro")
+
+
+def test_the_coach_step_is_introduced_as_the_mock_up_introduces_it():
+    coach = the_coach_step(the_pathway())
+
+    assert coach["heading"] == "Walking with a coach"
+    assert coach["lead"] == "This choice matters more than any other you'll make in the course."
+    assert coach["name_prompt"] == "Who are you thinking of asking?"
+    assert coach["name_placeholder"] == "Their first name"
+    assert coach["name_hint"] == (
+        "Just a first name for now. Six quick questions follow — answer them honestly rather than generously."
+    )
+
+
+@pytest.mark.django_db
+def test_onboarding_can_be_completed_without_choosing_a_coach(participant):
+    answer_onboarding(participant)
+
+    assert complete(participant, "onboarding").status_code == 303
+    assert not Contact.objects.filter(role=Contact.Role.COACH).exists()
+
+
+def without_the_coach_step(document):
+    """✨ Only this pathway asks for a coach the mock-up's way; the faithful port's own mentor screen is ticket 10b."""
+    for section in document["content"]["sections"]:
+        section["blocks"] = [block for block in section["blocks"] if block["type"] != "coach_checklist"]
+    return document
+
+
 def without_estimates(document):
     """✨ The faithful port has no estimates, since the prototype gave none."""
     for section in document["content"]["sections"]:
@@ -237,7 +315,7 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
         clauses.insert(plan_clause + 1, {"type": "has_answer", "block": f"{prefix}-peace", "message": ANSWER_ALL_FIVE})
     two_contacts_for_now(expected)
 
-    assert without_estimates(the_pathway()) == expected
+    assert without_the_coach_step(without_estimates(the_pathway())) == expected
 
 
 def two_contacts_for_now(document):

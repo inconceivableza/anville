@@ -201,6 +201,22 @@ BLOCK_TYPES = {
             captures=CHOICE,
         ),
         BlockType("contact_list", captures=CONTACTS),
+        # ✨ Captures nothing: its answers are opinions about another person, never kept (see `coach.py`).
+        BlockType(
+            "coach_checklist",
+            text_fields=(
+                "heading",
+                "lead",
+                "body",
+                "not_needed",
+                "needed",
+                "footnote",
+                "name_prompt",
+                "name_placeholder",
+                "name_hint",
+            ),
+            text_lists=(("questions", ("question", "note", "why", "coach_note", "coach_why", "commitment")),),
+        ),
         BlockType("sort_assessment", captures=SORT, scored=True, widget=_sort_widget),
         BlockType("section_link", text_fields=("body", "button_label")),
     ]

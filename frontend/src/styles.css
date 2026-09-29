@@ -38,6 +38,12 @@
   --needs-choice-ring: rgba(224, 184, 80, 0.18);
   /* ✨ A field a refusal named: --red-soft, faintly, as the focus ring is --gold. */
   --error-ring: rgba(194, 91, 86, 0.18);
+  /* ✨ The coach checklist's outcomes, as the mock-up colours them: going ahead is --gold, a second thought amber, a stop --red-soft. */
+  --warn: #b8860b;
+  --warn-pale: #fdf6e3;
+  --stop-pale: #fbeeed;
+  --flag-bg: rgba(255, 255, 255, 0.65);
+  --distinction-rule: rgba(26, 122, 76, 0.18);
   /* Results: the tones a pathway names for its constructs, and the colours of bars ranked strongest first. */
   --tone-violet: #7b68ee;
   --tone-rose: #c25b56;
@@ -501,6 +507,254 @@ p.time-estimate {
   .contact-name,
   .contact-email {
     flex: 1 1 100%;
+  }
+}
+
+/* ✨ Choosing a coach, after the content owner's mock-up: an intro and a name, the questions, then an outcome */
+
+.coach-checklist h2 {
+  font-size: 22px;
+  margin: 0 0 8px;
+}
+
+.coach-lead {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.coach-why p {
+  line-height: 1.6;
+}
+
+.coach-distinction {
+  display: flex;
+  gap: 14px;
+  margin: 14px 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--distinction-rule);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.coach-distinction > div {
+  flex: 1;
+}
+
+.coach-distinction b {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.coach-not-needed b {
+  color: var(--ink-light);
+}
+
+.coach-needed b {
+  color: var(--gold);
+}
+
+.coach-footnote,
+.coach-sub {
+  font-size: 14px;
+  color: var(--ink-muted);
+  margin: 0 0 18px;
+}
+
+.coach-checklist input[type="text"] {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--white);
+}
+
+.coach-checklist input[type="text"]:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.coach-checklist input[aria-invalid="true"] {
+  border-color: var(--red-soft);
+  box-shadow: 0 0 0 3px var(--error-ring);
+}
+
+.coach-hint {
+  font-size: 13px;
+  color: var(--ink-light);
+  margin: 6px 0 18px;
+}
+
+.coach-refusal {
+  color: var(--red-soft);
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
+.coach-question {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0;
+  padding: 18px 0;
+}
+
+.coach-question:first-of-type {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.coach-question legend {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  line-height: 1.45;
+  margin-bottom: 4px;
+  padding: 0;
+}
+
+.coach-ask {
+  display: block;
+}
+
+.coach-q {
+  display: block;
+  font-weight: 600;
+}
+
+.coach-note {
+  font-size: 13px;
+  color: var(--ink-light);
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+.coach-options {
+  display: flex;
+  gap: 8px;
+}
+
+/* ✨ Each answer is a radio button drawn as the mock-up's option button; the radio itself stays for the keyboard. */
+.question-card .coach-option {
+  flex: 1;
+  position: relative;
+  margin: 0;
+}
+
+.coach-option input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
+.coach-option span {
+  display: block;
+  text-align: center;
+  padding: 11px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  background: var(--white);
+  transition: all 0.12s;
+}
+
+.coach-option:hover span {
+  border-color: var(--ink-light);
+}
+
+.coach-option input:focus-visible + span {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.coach-yes input:checked + span {
+  border-color: var(--gold);
+  background: var(--gold-pale);
+  color: var(--gold);
+}
+
+.coach-maybe input:checked + span {
+  border-color: var(--warn);
+  background: var(--warn-pale);
+  color: var(--warn);
+}
+
+.coach-no input:checked + span {
+  border-color: var(--red-soft);
+  background: var(--stop-pale);
+  color: var(--red-soft);
+}
+
+.coach-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.coach-grow {
+  flex: 1;
+}
+
+.coach-outcome {
+  border-radius: 12px;
+  padding: 20px 22px;
+}
+
+.coach-outcome p {
+  font-size: 14.5px;
+  line-height: 1.65;
+  margin: 0 0 10px;
+}
+
+.coach-go {
+  background: var(--gold-pale);
+  border-left: 4px solid var(--gold);
+}
+
+.coach-check {
+  background: var(--warn-pale);
+  border-left: 4px solid var(--warn);
+}
+
+.coach-stop {
+  background: var(--stop-pale);
+  border-left: 4px solid var(--red-soft);
+}
+
+.btn-primary.coach-warn {
+  background: var(--warn);
+}
+
+.coach-flags {
+  margin: 14px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.coach-flags li {
+  background: var(--flag-bg);
+  border-radius: 9px;
+  padding: 11px 13px;
+  margin-bottom: 7px;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+.coach-flags b {
+  display: block;
+  margin-bottom: 2px;
+}
+
+@media (max-width: 600px) {
+  .coach-distinction {
+    flex-direction: column;
   }
 }
 

@@ -70,6 +70,81 @@
             "fixed_once_complete": true
           },
           {
+            "id": "coach",
+            "type": "coach_checklist",
+            "heading": "Walking with a coach",
+            "lead": "This choice matters more than any other you'll make in the course.",
+            "body": "The work ahead asks you to be honest about your gifts, your disappointments and what you actually want from your life. That only goes somewhere useful if the person walking alongside you is the right one.\n\nThe wrong choice usually isn't a bad person. It's someone who can't resist solving it for you, or who knows you too little to notice when you're avoiding something, or who won't have the time when it matters.",
+            "not_needed": "Someone who tells you what they'd do in your position, or who has a view on where you should end up.",
+            "needed": "Someone who asks the questions in the material, listens hard, and lets you reach your own conclusions.",
+            "footnote": "We say coach rather than mentor deliberately. A mentor passes on their own experience. A coach draws out yours — which is the harder job, and the one this needs.",
+            "name_prompt": "Who are you thinking of asking?",
+            "name_placeholder": "Their first name",
+            "name_hint": "Just a first name for now. Six quick questions follow — answer them honestly rather than generously.",
+            "questions": [
+              {
+                "id": "faith",
+                "critical": true,
+                "question": "Is a genuine, practising Christian whose faith you'd want to learn from",
+                "note": "The material is rooted in scripture. This only works if you share that starting point.",
+                "why": "The whole course reads your life against what the Bible says about work and calling. Without shared ground there, the conversations have nowhere to stand.",
+                "coach_note": "The material is rooted in scripture, and this only works if you share that starting point with them.",
+                "coach_why": "The whole course reads their life against what the Bible says about work and calling. Without shared ground there, the conversations have nowhere to stand.",
+                "commitment": "I'm walking with Jesus myself, and I'm willing to bring that to these conversations."
+              },
+              {
+                "id": "knowsYou",
+                "critical": false,
+                "question": "Knows you well enough to notice when you're not being straight with yourself",
+                "note": "Not necessarily a close friend — but someone with enough history to spot the pattern.",
+                "why": "Someone who barely knows you can only work with what you tell them. Much of the value here is someone noticing what you're skirting around.",
+                "coach_note": "You don't need to be close friends — but you'll want enough history with them to spot the pattern.",
+                "coach_why": "If you barely know them, you can only work with what they tell you. Much of the value you can offer is noticing what they're skirting around.",
+                "commitment": "I know them well enough to notice when something doesn't ring true."
+              },
+              {
+                "id": "objectivity",
+                "critical": true,
+                "question": "Could hold their own hopes for you loosely",
+                "note": "The people who love us most often find this hardest — not because they mean badly, but because they genuinely care where you end up.",
+                "why": "Anyone quietly hoping for a particular answer will steer a little without intending to. It's a hard ask of anyone, and it's worth choosing someone who can hold the outcome lightly — or who will at least tell you when they can't.",
+                "coach_note": "This is often hardest for the people who love someone most — not because they mean badly, but because they genuinely care where they end up.",
+                "coach_why": "If you're quietly hoping for a particular answer, you'll steer a little without meaning to. It's a hard ask of anyone. Notice if you're finding it hard to hold their outcome lightly — and say so if you are.",
+                "commitment": "I'll hold my own hopes for them loosely, and say so honestly if I notice I'm steering."
+              },
+              {
+                "id": "wisdom",
+                "critical": false,
+                "question": "Has wisdom you respect — ideally further down the road than you",
+                "note": "Not necessarily older. But someone whose judgement you'd actually weigh.",
+                "why": "You need to be able to take their questions seriously. If you don't respect their judgement, you'll quietly discount everything they say.",
+                "coach_note": "You don't need to be older than them — just someone whose judgement they'd actually weigh.",
+                "coach_why": "They need to be able to take your questions seriously. If they don't respect your judgement, they'll quietly discount everything you say.",
+                "commitment": "I'll bring whatever experience and wisdom I have, honestly held."
+              },
+              {
+                "id": "coaching",
+                "critical": true,
+                "question": "Can ask questions rather than hand out answers",
+                "note": "Some people genuinely can't resist solving it for you. Be realistic about this one.",
+                "why": "This is the commonest way coaching relationships fail. A coach who tells you what to do produces their calling, not yours — and you'll comply rather than discern.",
+                "coach_note": "Some people genuinely can't resist solving things for others. Be honest with yourself about this one.",
+                "coach_why": "This is the commonest way coaching relationships fail. If you tell them what to do, you'll produce your sense of their calling, not theirs — and they'll comply rather than discern.",
+                "commitment": "I'll ask the questions in the guide and let them find their own answers. I won't tell them what to do."
+              },
+              {
+                "id": "time",
+                "critical": false,
+                "question": "Would give you a few unhurried conversations over the next few months",
+                "note": "Roughly an hour each. Worth asking yourself whether they have the room, not just the willingness.",
+                "why": "Good intentions and a full diary produce a coach who cancels twice and then apologises. A few real conversations beats many that keep slipping.",
+                "coach_note": "Roughly an hour each. Worth being honest with yourself about whether you have the room, not just the willingness.",
+                "coach_why": "Good intentions and a full diary produce cancelled sessions and an apology. A few real conversations beats many that keep slipping.",
+                "commitment": "I'll make time for a few unhurried conversations, and I'll protect them."
+              }
+            ]
+          },
+          {
             "id": "contacts-intro",
             "type": "rich_text",
             "label": "Who knows you best?",

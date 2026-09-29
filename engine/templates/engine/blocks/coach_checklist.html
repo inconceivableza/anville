@@ -1,0 +1,99 @@
+{% comment %}
+  ✨ Choosing a coach, one screen at a time as in the content owner's mock-up: the intro and the candidate's first
+  name, the questions, then going ahead, a second thought, or trying someone else. Each button posts the form, and
+  the server sends back the next screen in its place (htmx), or the whole section with it (without JavaScript).
+
+  Nothing here is saved. The name and the answers so far are carried in the form from screen to screen, and the
+  outcome is worked out again from them on the server. novalidate leaves every check to the server, as for the
+  contact list, so a refusal is always said in words.
+{% endcomment %}
+{% with checklist=block.checklist %}
+<form id="block-{{ block.id }}" data-screen="{{ checklist.screen }}" class="question-card coach-checklist" novalidate
+      method="post" action="{% url 'coach_checklist' block.id %}"
+      hx-post="{% url 'coach_checklist' block.id %}" hx-target="this" hx-swap="outerHTML">
+  {% csrf_token %}
+  {% if checklist.screen == "intro" %}
+    <h2>{{ block.text.heading }}</h2>
+    <div class="coach-why">
+      {% if block.text.lead %}<p class="coach-lead">{{ block.text.lead }}</p>{% endif %}
+      {{ block.text.body|linebreaks }}
+      {% if block.text.not_needed or block.text.needed %}
+        <div class="coach-distinction">
+          <div class="coach-not-needed"><b>Not what you need</b> {{ block.text.not_needed }}</div>
+          <div class="coach-needed"><b>What you need</b> {{ block.text.needed }}</div>
+        </div>
+      {% endif %}
+    </div>
+    {% if block.text.footnote %}<p class="coach-footnote">{{ block.text.footnote }}</p>{% endif %}
+    <label for="coach-name-{{ block.id }}">{{ block.text.name_prompt }}</label>
+    <input type="text" id="coach-name-{{ block.id }}" name="name" value="{{ checklist.name }}"
+           placeholder="{{ block.text.name_placeholder }}" maxlength="150" autocomplete="off"
+           {% if block.text.name_hint %}aria-describedby="coach-hint-{{ block.id }}"{% endif %}
+           {% if checklist.refusal %}aria-invalid="true"{% endif %}>
+    {% if block.text.name_hint %}<p id="coach-hint-{{ block.id }}" class="coach-hint">{{ block.text.name_hint }}</p>{% endif %}
+    {% include "engine/blocks/coach_checklist_answers.html" %}
+    {% if checklist.refusal %}<p class="coach-refusal" role="alert">{{ checklist.refusal }}</p>{% endif %}
+    <button type="submit" name="step" value="questions" class="btn btn-primary btn-full">Continue →</button>
+
+  {% elif checklist.screen == "questions" %}
+    <input type="hidden" name="name" value="{{ checklist.name }}">
+    <h2>About {{ checklist.name }}</h2>
+    <p class="coach-sub">There are no right answers here — an honest "not sure" is far more useful than an optimistic yes.</p>
+    {% for question in checklist.questions %}
+      <fieldset class="coach-question">
+        <legend><span class="coach-ask">Do you think {{ checklist.name }}…</span> <span class="coach-q">{{ question.question }}?</span></legend>
+        {% if question.note %}<p class="coach-note">{{ question.note }}</p>{% endif %}
+        <div class="coach-options">
+          <label class="coach-option coach-yes"><input type="radio" name="answer-{{ question.id }}" value="yes"{% if question.answer == "yes" %} checked{% endif %}> <span>Yes</span></label>
+          <label class="coach-option coach-maybe"><input type="radio" name="answer-{{ question.id }}" value="maybe"{% if question.answer == "maybe" %} checked{% endif %}> <span>Not sure</span></label>
+          <label class="coach-option coach-no"><input type="radio" name="answer-{{ question.id }}" value="no"{% if question.answer == "no" %} checked{% endif %}> <span>No</span></label>
+        </div>
+      </fieldset>
+    {% endfor %}
+    {% if checklist.refusal %}<p class="coach-refusal" role="alert">{{ checklist.refusal }}</p>{% endif %}
+    <div class="coach-buttons">
+      <button type="submit" name="step" value="intro" class="btn btn-secondary">Back</button>
+      <button type="submit" name="step" value="outcome" class="btn btn-primary coach-grow">Continue →</button>
+    </div>
+
+  {% elif checklist.screen == "proceed" %}
+    <input type="hidden" name="name" value="{{ checklist.name }}">
+    {% include "engine/blocks/coach_checklist_answers.html" %}
+    <div class="coach-outcome coach-go">
+      <h2>{{ checklist.name }} sounds like the right person</h2>
+      {# ✨ Not after "I'm still confident", where the mock-up said it anyway. #}
+      {% if not checklist.confident %}<p>You've said yes to all {{ checklist.count }}. That's worth something — most people find at least one they hesitate on.</p>{% endif %}
+      <p>The next step is to ask them properly.</p>
+      <div class="coach-buttons">
+        <button type="submit" name="step" value="restart" class="btn btn-secondary">Choose someone else</button>
+      </div>
+    </div>
+
+  {% elif checklist.screen == "confirm" %}
+    <input type="hidden" name="name" value="{{ checklist.name }}">
+    {% include "engine/blocks/coach_checklist_answers.html" %}
+    <div class="coach-outcome coach-check">
+      <h2>Worth a second thought</h2>
+      <p>Most of this looks right, but {% if checklist.flags|length == 1 %}one thing{% else %}a couple of things{% endif %} gave you pause. That hesitation is usually worth listening to.</p>
+      {% include "engine/blocks/coach_checklist_flags.html" %}
+      <p>None of this rules {{ checklist.name }} out, and it may be worth simply raising it with them. “Would you be able to mostly ask questions rather than give me advice?” is a fair thing to ask upfront.</p>
+      <div class="coach-buttons">
+        <button type="submit" name="step" value="confident" class="btn btn-primary coach-warn">I’m still confident — ask {{ checklist.name }}</button>
+        <button type="submit" name="step" value="restart" class="btn btn-secondary">Think about someone else</button>
+      </div>
+    </div>
+
+  {% elif checklist.screen == "stop" %}
+    <div class="coach-outcome coach-stop">
+      <h2>Try someone else</h2>
+      <p>{% if checklist.critical_no %}You’ve said no to something that isn’t really negotiable.{% else %}There’s enough here to suggest {{ checklist.name }} may not be the right fit for this particular job.{% endif %} That’s no reflection on them — it’s about what this specific process asks for.</p>
+      {% include "engine/blocks/coach_checklist_flags.html" %}
+      <p>Think about who else might fit. It doesn’t have to be your closest friend or the most senior person you know — often the right coach is someone a little outside your immediate circle.</p>
+      <div class="coach-buttons">
+        <button type="submit" name="step" value="restart" class="btn btn-primary">Try someone else</button>
+        <button type="submit" name="step" value="restart" class="btn btn-secondary">I’ll come back to this</button>
+      </div>
+    </div>
+  {% endif %}
+</form>
+{% endwith %}

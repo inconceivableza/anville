@@ -194,6 +194,99 @@ def test_a_count_of_entries_may_allow_none_by_a_yes_or_no():
     assert problem.path == "/content/sections/0/gate/clauses/0/allow_none"
 
 
+def a_coach_question(**fields):
+    return {
+        "id": "coaching",
+        "critical": True,
+        "question": "Can ask questions rather than hand out answers",
+        "note": "Some people genuinely can't resist solving it for you.",
+        "why": "This is the commonest way coaching relationships fail.",
+        "coach_note": "Some people genuinely can't resist solving things for others.",
+        "coach_why": "This is the commonest way coaching relationships fail.",
+        "commitment": "I'll ask the questions in the guide and let them find their own answers.",
+        **fields,
+    }
+
+
+def a_coach_checklist(**fields):
+    return {
+        "id": "coach",
+        "type": "coach_checklist",
+        "heading": "Walking with a coach",
+        "lead": "This choice matters more than any other you'll make in the course.",
+        "body": "The work ahead asks you to be honest.\n\nThe wrong choice usually isn't a bad person.",
+        "not_needed": "Someone who tells you what they'd do in your position.",
+        "needed": "Someone who asks the questions in the material.",
+        "footnote": "We say coach rather than mentor deliberately.",
+        "name_prompt": "Who are you thinking of asking?",
+        "name_placeholder": "Their first name",
+        "name_hint": "Just a first name for now.",
+        "questions": [a_coach_question()],
+        **fields,
+    }
+
+
+def test_a_coach_checklist_carries_its_intro_and_its_questions_as_authored_text():
+    document = pathway_document()
+    blocks = document["content"]["sections"][0]["blocks"]
+    blocks.append(a_coach_checklist(heading={"participant": "Walking with a coach"}))
+    assert validate(document) == []
+
+    blocks[-1] = {"id": "coach", "type": "coach_checklist", "heading": "Walking with a coach",
+                  "name_prompt": "Who are you thinking of asking?", "questions": [a_coach_question()]}
+    assert validate(document) == []
+
+
+@pytest.mark.parametrize("needed", ["heading", "name_prompt", "questions"])
+def test_a_coach_checklist_needs_a_heading_a_name_prompt_and_its_questions(needed):
+    document = pathway_document()
+    checklist = a_coach_checklist()
+    del checklist[needed]
+    document["content"]["sections"][0]["blocks"].append(checklist)
+
+    assert "/content/sections/0/blocks/2" in [problem.path for problem in validate(document)]
+
+
+def test_a_coach_checklist_asks_at_least_one_question():
+    document = pathway_document()
+    document["content"]["sections"][0]["blocks"].append(a_coach_checklist(questions=[]))
+
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/0/blocks/2/questions"
+
+
+@pytest.mark.parametrize("needed", ["id", "question", "why"])
+def test_a_coach_question_needs_an_identifier_its_wording_and_why_it_matters(needed):
+    """✨ The why is what a stop or a second thought says about the answer, so a question without one cannot be flagged."""
+    document = pathway_document()
+    question = a_coach_question()
+    del question[needed]
+    document["content"]["sections"][0]["blocks"].append(a_coach_checklist(questions=[question]))
+
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/0/blocks/2/questions/0"
+
+
+def test_a_coach_question_is_critical_by_a_yes_or_no():
+    document = pathway_document()
+    document["content"]["sections"][0]["blocks"].append(a_coach_checklist(questions=[a_coach_question(critical="yes")]))
+
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/0/blocks/2/questions/0/critical"
+
+
+def test_a_coach_checklists_questions_may_not_share_an_identifier():
+    """✨ Each answer is sent under its question's identifier, so two questions sharing one could not be told apart."""
+    document = pathway_document()
+    document["content"]["sections"][0]["blocks"].append(
+        a_coach_checklist(questions=[a_coach_question(), a_coach_question(critical=False)])
+    )
+
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/0/blocks/2/questions/1/id"
+    assert "'coaching'" in problem.message
+
+
 def test_every_section_and_every_kind_of_block_may_carry_a_time_estimate():
     """✨ The Whatever You Do pathway holds a block of every kind, so each gets one here."""
     document = json.loads(WHATEVER_YOU_DO.read_text(encoding="utf-8"))
