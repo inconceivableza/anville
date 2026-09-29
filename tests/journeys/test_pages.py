@@ -61,7 +61,11 @@ def save(client, block_id, value, htmx=True):
 
 
 def move_past(client, page):
-    return client.post(f"/sections/onboarding/pages/{page}/continue/")
+    return move_past_in(client, "onboarding", page)
+
+
+def move_past_in(client, section_id, page):
+    return client.post(f"/sections/{section_id}/pages/{page}/continue/")
 
 
 def through_to(client, page):
@@ -302,6 +306,59 @@ def test_a_link_holding_the_participant_again_leads_them_back_to_its_own_page(
 
     response = signed_in_client.get("/sections/calling/pages/2/")
     assert (response.status_code, response.get("Location")) == (302, "/sections/calling/")
+
+
+def calling_held_over_three_pages():
+    """✨ Calling opens with a link held until onboarding's gate passes, then its statement, then a last page."""
+    document = paged_onboarding()
+    calling = document["content"]["sections"][1]
+    calling["blocks"] = [
+        {"id": "to-onboarding", "type": "section_link", "section": "onboarding", "holds_what_follows": True},
+        {"id": "to-statement", "type": "page_break"},
+        *calling["blocks"],
+        {"id": "to-close", "type": "page_break"},
+        {"id": "close", "type": "rich_text", "body": "That is your statement written."},
+    ]
+    return document
+
+
+def into_calling_page_2(client):
+    """✨ Onboarding answered, gone through and completed, calling's first page moved past and its statement written."""
+    through_to(client, 3)
+    client.post("/sections/onboarding/complete/")
+    client.post("/sections/calling/pages/1/continue/")
+    save(client, "statement", "A statement long enough.")
+    return client
+
+
+@pytest.mark.django_db
+def test_going_on_past_a_page_behind_a_link_holding_the_participant_again_is_refused(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    load_pathway(calling_held_over_three_pages())
+    into_calling_page_2(signed_in_client)
+    save(signed_in_client, "why", "")
+
+    response = move_past_in(signed_in_client, "calling", 2)
+
+    assert (response.status_code, response.url) == (303, "/sections/calling/")
+    assert 2 not in Response.objects.get().moved_past_by_section()["calling"]
+
+
+@pytest.mark.django_db
+def test_completing_a_section_a_link_holds_again_leads_back_to_the_links_page(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    """✨ Though the last page had been reached and the section's own gate passes."""
+    load_pathway(calling_held_over_three_pages())
+    into_calling_page_2(signed_in_client)
+    move_past_in(signed_in_client, "calling", 2)
+    save(signed_in_client, "why", "")
+
+    response = signed_in_client.post("/sections/calling/complete/")
+
+    assert (response.status_code, response.url) == (303, "/sections/calling/")
+    assert "calling" not in Response.objects.get().completed_sections
 
 
 @pytest.mark.django_db
