@@ -44,6 +44,12 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Screen reader: "Saved" and a refusal are announced.
 - Ghost text (Section 1's reflection, the letter): it shows in grey in the empty box, is readable against the background, and disappears as you type. A screen reader names the box by its prompt, not by the ghost text.
 
+## The gate and "Mark complete"
+
+- Every requirement is listed below the button, a met one ticked (✓) and quieter, an unmet one with a dot. As you type, an item changes between the two in place: scrolled to the very bottom of the page, nothing moves.
+- Screen reader: a met item is read as "Done: …", and the tick and dot are not read.
+- A refused completion ("This section was not marked complete…") also shows below the button.
+
 ## Fixed ratings (after completing onboarding, or Section 5)
 
 - The chosen point keeps its colour; the other points don't react to hover, and nothing looks clickable.
@@ -54,23 +60,24 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 ## Time estimates (the hub, each section, Section 5's two activities)
 
-- On the hub, each entry's estimate sits beside its title, quieter than it, and a locked entry's note stays on a line of its own beneath.
+- On the hub, each entry's estimate is quieter than its title: at the right-hand end of the title's line on a wide screen, lined up down the page, and on a line of its own under the title at phone width. A locked entry's note sits beneath.
 - Once something in a section is answered (the sort submitted, one onboarding rating), its estimate has gone from its hub entry and its page.
 - Section 5's "? min" above its two activities stays after answering: judge whether it should go too.
 - On a section page the estimate sits under the heading; in Section 5, "? min" also sits above the letter's task and above the closing ratings' introduction, and reads as belonging to what follows it.
-- Phone width: a long title and its estimate wrap without the estimate stranding on a line with nothing else.
+- Phone width: a long title wraps, and its estimate stays on the line beneath it.
 
 ## A link to another section (Section 1's Strengths assessment card)
 
 - The card reads as a way somewhere else: the Strengths assessment's title, the text, the "Open Strengths Assessment →" button, then its status chip on a line of its own, coloured as on the hub.
 - Before the sort is in, nothing follows the card: no reflection and no "Mark complete". After the sort, coming back to Section 1 shows the reflection.
 - Keyboard only: Tab reaches the button, its focus is visible, and Enter opens the Strengths assessment.
-- Screen reader: the button is read as "Open Strengths Assessment →", and the status is read after it.
-- Phone width: the card's text and button wrap, and the chip doesn't stretch.
+- Screen reader: Tab to the button. It is a link styled as a button, since it goes to another page, so VoiceOver reads "Open Strengths Assessment, right arrow, link" and tells you how to follow it. Control-Option-Right arrow then reads the status.
+- Phone width: the card's text and button wrap, and the status chip stays a small pill the width of its words rather than stretching across the card.
 
 ## The sort
 
 - The cards come in a different order on each visit. The counter reads "1/36" and counts up.
+- A thin gold progress bar runs across the top of the sort, empty at the start. It grows a step with each card, only ever goes back on an undo, is at 80% on "All 36 sorted!" and stays there on fine-tuning. Without JavaScript it is not shown. VoiceOver passes over it.
 - Each bucket button places the card, the card flies (left for the weaker buckets, right for the stronger, down for the middle one), and the bucket's count goes up.
 - Undo goes back one card at a time, all the way to the first, and is disabled when there is nothing to undo. Undoing the last card by keyboard moves focus to the "Sort your strengths" heading rather than losing it. It also works on the "All 36 sorted!" screen.
 - Continuing is offered only once all 36 are sorted.
@@ -88,4 +95,3 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 ## Results
 
 - PEP bars that tie share a colour.
-- A 0% bar: the prototype gave every PEP bar at least 4% width so a zero still showed a stub. Check with real sorts whether it is missed (ticket 07).

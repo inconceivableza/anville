@@ -18,6 +18,8 @@
       <input type="hidden" name="value">
       <input type="hidden" name="version" value="{{ pathway.version_id }}">
       <p class="visually-hidden" aria-live="polite" data-sort-announcer></p>
+      {# ✨ Filled by the widget as cards are placed. Screen readers hear each card instead, so they skip it. #}
+      <progress class="sort-progress" max="100" value="0" aria-hidden="true"></progress>
       <div class="sort-stage"></div>
       <output class="save-status" aria-live="polite"></output>
       <noscript><p>The sort needs JavaScript. Turn it on in your browser, then reload this page.</p></noscript>

@@ -9,6 +9,8 @@
 
 const FLY_MS = 320;
 const BUCKET_TONES = 5; // ✨ The stylesheet colours bucket-1 (weakest) to bucket-5 (strongest).
+// ✨ How much of the progress bar placing every card fills; fine-tuning, a quicker look over, is the rest.
+const SORTED_PERCENT = 80;
 
 export function mountSorts() {
   document.querySelectorAll("form[data-sort]").forEach(mountSort);
@@ -18,6 +20,7 @@ function mountSort(form) {
   const { items, buckets } = JSON.parse(document.getElementById(form.dataset.sort).textContent);
   const stage = form.querySelector(".sort-stage");
   const announcer = form.querySelector("[data-sort-announcer]");
+  const progress = form.querySelector(".sort-progress");
   const deck = shuffled(items); // ✨ Still to sort; the first is the card on show.
   const history = []; // ✨ Every placement, { item, bucket }, in the order made, so undo can go all the way back.
   let flying = false;
@@ -38,10 +41,15 @@ function mountSort(form) {
   // ✨ Each screen is rebuilt whole. Keyboard focus stays on the control it was on, or moves to the new
   // screen's heading when that control is gone or disabled (undo, once there is nothing left to undo), but
   // never jumps into the widget from elsewhere on the page.
+  //
+  // The progress bar is set here and nowhere else, from what has been done, so it moves back only on an undo.
+  // The prototype set it from two places with figures that disagreed, and it jumped backwards.
   function render(screen) {
     const hadFocus = stage.contains(document.activeElement);
     const focused = document.activeElement?.dataset?.focus;
     stage.replaceChildren(...screen());
+    progress.value =
+      screen === fineTuning ? SORTED_PERCENT : Math.round((history.length / items.length) * SORTED_PERCENT);
     if (!hadFocus) return;
     const same = stage.querySelector(`[data-focus="${focused}"]:not(:disabled)`);
     (same ?? stage.querySelector("[data-focus-start]")).focus();

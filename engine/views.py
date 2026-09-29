@@ -15,6 +15,7 @@ from engine.document import (
     answer_from_form,
     answerable_block,
     authored_text,
+    checklist,
     text_for,
     unmet,
 )
@@ -236,6 +237,7 @@ def _section_page(version, section, answers, completed, fixed):
         "holds_fixed_answers": any(block["id"] in fixed for block in blocks),
         "offers_completion": activity_open and not sort_pending,
         "unmet": unmet(section, answers),
+        "checklist": checklist(section, answers),
     }
 
 

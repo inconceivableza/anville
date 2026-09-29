@@ -195,6 +195,12 @@ p.time-estimate {
   margin-bottom: 16px;
 }
 
+/* On the hub, at the right-hand end of the title's line, so the estimates line up down the page whatever the
+   titles' lengths; on a phone, a line of its own under the title (see the 600px breakpoint) */
+.hub-section .time-estimate {
+  margin-left: auto;
+}
+
 .status-chip {
   flex-shrink: 0;
   font-size: 11px;
@@ -248,7 +254,7 @@ p.time-estimate {
   list-style: none;
   font-size: 14px;
   color: var(--ink-light);
-  margin-bottom: 16px;
+  margin-top: 16px;
 }
 
 .gate-messages li {
@@ -259,10 +265,26 @@ p.time-estimate {
   margin-bottom: 8px;
 }
 
+.gate-mark {
+  display: inline-block;
+  width: 1em;
+}
+
+/* A requirement already met stays in its place, quieter, so the list keeps its height */
+.gate-messages li.is-met {
+  background: none;
+  border-left-color: var(--gold);
+  color: var(--ink-muted);
+}
+
+.gate-messages li.is-met .gate-mark {
+  color: var(--gold);
+}
+
 .gate-refused {
   font-size: 14px;
   color: var(--red-soft);
-  margin-bottom: 16px;
+  margin-top: 16px;
 }
 
 /* Buttons */
@@ -831,6 +853,38 @@ p.time-estimate {
   overflow-x: clip; /* a card flying off to the side never makes the page scroll sideways */
 }
 
+/* The prototype's thin gold bar across the page. Shown only once JavaScript has loaded, since the sort needs it */
+
+.sort-progress {
+  display: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border: none;
+  border-radius: 2px;
+  background: var(--border);
+  margin-bottom: 24px;
+}
+
+html[data-javascript="loaded"] .sort-progress {
+  display: block;
+}
+
+.sort-progress::-webkit-progress-bar {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.sort-progress::-webkit-progress-value {
+  background: var(--gold);
+  border-radius: 2px;
+}
+
+.sort-progress::-moz-progress-bar {
+  background: var(--gold);
+  border-radius: 2px;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -1173,5 +1227,10 @@ html[data-javascript="loaded"] .save-fallback {
 
   .score-section {
     padding: 16px;
+  }
+
+  .hub-section .time-estimate {
+    flex-basis: 100%;
+    margin-left: 0;
   }
 }

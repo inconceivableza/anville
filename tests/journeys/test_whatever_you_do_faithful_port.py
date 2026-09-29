@@ -15,6 +15,7 @@ from django.test import Client
 from django.utils.html import escape
 
 from engine.models import Publication, Response
+from tests.journeys.pages import gate_checklist
 from tests.journeys.test_hub import a_fresh_participant, signed_in_client  # noqa: F401  (a fixture, used by name)
 
 DOCUMENT = Path(__file__).resolve().parents[2] / "pathways" / "whatever-you-do-faithful-port.json"
@@ -123,7 +124,7 @@ def test_the_way_on_opens_once_all_four_are_answered(participant):
     answer_the_baseline(participant)
 
     page = participant.get("/sections/onboarding/").content.decode()
-    assert ANSWER_ALL_FOUR not in page
+    assert gate_checklist(page) == {ANSWER_ALL_FOUR: True}
 
     assert complete(participant, "onboarding").status_code == 303
 
@@ -195,7 +196,8 @@ def test_a_long_enough_statement_completes_the_calling_section(participant):
 
     answer(client, "cl-statement", A_STATEMENT)
 
-    assert "Write your calling statement to continue." not in client.get("/sections/calling/").content.decode()
+    shown = gate_checklist(client.get("/sections/calling/").content.decode())
+    assert shown == {"Write your calling statement to continue.": True}
     assert complete(client, "calling").status_code == 303
     assert "calling" in Response.objects.get().completed_sections
 
@@ -363,8 +365,7 @@ def test_section_1_cannot_be_completed_without_the_reflection(participant):
     refused = complete(client, "designed")
 
     assert refused.status_code == 400
-    assert COMPLETE_THE_REFLECTIONS in refused.content.decode()
-    assert COMPLETE_THE_ASSESSMENT not in refused.content.decode()
+    assert gate_checklist(refused.content.decode()) == {COMPLETE_THE_ASSESSMENT: True, COMPLETE_THE_REFLECTIONS: False}
 
 
 @pytest.mark.django_db

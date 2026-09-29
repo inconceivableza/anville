@@ -21,18 +21,28 @@
         <button type="submit" class="btn btn-secondary btn-sm">Mark as not complete</button>
       </form>
     {% else %}
-      {% if unmet %}
+      {% comment %}
+        ✨ Every requirement stays listed beneath the button, ticked once met, so nothing comes and goes with
+        each autosave: above the button a message moved it, and one that vanished shortened the page under a
+        participant scrolled to its foot. The tick is decoration; a screen reader is told "Done" in words.
+      {% endcomment %}
+      <form method="post" action="{% url 'complete_section' section.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary"{% if unmet %} disabled{% endif %}>Mark complete</button>
+      </form>
+      {% if checklist %}
         <ul class="gate-messages">
-          {% for message in unmet %}<li>{{ message }}</li>{% endfor %}
+          {% for message, met in checklist %}
+            <li class="gate-item{% if met %} is-met{% endif %}">
+              {% if met %}<span class="gate-mark" aria-hidden="true">✓</span> <span class="visually-hidden">Done:</span>{% else %}<span class="gate-mark" aria-hidden="true">•</span>{% endif %}
+              <span class="gate-message">{{ message }}</span>
+            </li>
+          {% endfor %}
         </ul>
       {% endif %}
       {% if refused %}
         <p class="gate-refused">This section was not marked complete: it is not finished yet.</p>
       {% endif %}
-      <form method="post" action="{% url 'complete_section' section.id %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-primary"{% if unmet %} disabled{% endif %}>Mark complete</button>
-      </form>
     {% endif %}
   {% endif %}
 </div>

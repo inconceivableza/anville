@@ -234,6 +234,17 @@ def test_the_sort_is_sent_by_a_form_that_saves_the_whole_sort_against_the_pages_
 
 
 @pytest.mark.django_db
+def test_the_sort_starts_with_an_empty_progress_bar_that_screen_readers_pass_over(signed_in):
+    """✨ The widget fills it as cards are placed; that, and fine-tuning's 80%, are checked by hand. Screen readers
+    already hear each card announced, so the bar would only repeat it."""
+    form = sort_form(signed_in.get(f"/sections/{STRENGTHS}/").content.decode())
+
+    bar = re.search(r"<progress([^>]*)>", form)
+    assert bar is not None
+    assert {'class="sort-progress"', 'max="100"', 'value="0"', 'aria-hidden="true"'} <= set(bar.group(1).split())
+
+
+@pytest.mark.django_db
 def test_without_javascript_the_sort_says_it_needs_it(signed_in):
     shown = re.search(r"<noscript>(.*?)</noscript>", signed_in.get(f"/sections/{STRENGTHS}/").content.decode(), re.S)
 

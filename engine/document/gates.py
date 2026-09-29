@@ -40,6 +40,21 @@ def unmet(section, answers, role="participant"):
     return list(dict.fromkeys(messages))
 
 
+def checklist(section, answers, role="participant"):
+    """✨ Every authored message with whether it is met, in the order authored, as (message, met) pairs.
+
+    Shown beneath "Mark complete" in place of the unmet messages alone, so nothing comes and goes as answers
+    change and the page never shortens under a participant scrolled to its foot. A message several clauses
+    share is listed once, and is met only when all of them pass.
+    """
+    met = {}
+    for clause in clauses_of(section):
+        message = text_for(clause["message"], role)
+        passes = CLAUSES[clause["type"]](clause, answers.get(clause["block"]))
+        met[message] = met.get(message, True) and passes
+    return list(met.items())
+
+
 def clauses_of(section):
     return section.get("gate", {}).get("clauses", [])
 

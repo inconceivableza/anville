@@ -83,13 +83,13 @@ A participant who has saved an answer stays on the version they started, even af
 
 The hub at `/` is derived by the engine from what a participant has answered and completed: each section's status, its lock, the next step and the counts. None of it is authored, so an author cannot write a status chip or forget a lock.
 
-A section may carry an `estimate`, worded as it is shown ("About 15 minutes"): it appears beside the section's title on the hub, even while locked, and under its heading on its page, until the participant answers something there. Where a section has several activities, the block that starts each one may carry its own `estimate`, shown just above it whatever has been answered. *Whatever You Do* says "? min" for a section not yet mostly built, and gives Section 1 none, since it cannot be finished without the Strengths assessment's longer sort.
+A section may carry an `estimate`, worded as it is shown ("About 15 minutes"): it appears with the section's title on the hub, even while locked, and under its heading on its page, until the participant answers something there. Where a section has several activities, the block that starts each one may carry its own `estimate`, shown just above it whatever has been answered. *Whatever You Do* says "? min" for a section not yet mostly built, and gives Section 1 none, since it cannot be finished without the Strengths assessment's longer sort.
 
 A section has its own page at `/sections/<id>/`. It opens once every section in its `requires` list is complete. A locked section is decided on the request, never in the markup: its page redirects to the hub, and its blocks refuse an answer. Progress counts only the blocks a participant does something with.
 
 An agreement scale marked `"fixed_once_complete": true` is fixed once it has been answered and its section completed: from then on it cannot be changed, even if the section is reopened. One left blank at completion can still be answered, and is fixed the next time the section is completed. *Whatever You Do* marks its start and end ratings this way, as the original prototype does not let either be revisited. The server refuses a change, and the page shows the rating as chosen but disabled.
 
-A section's `gate` is an optional list of clauses, all of which must pass before the participant may mark it complete. Completing is their own act, and the server re-checks the gate when the button is pressed, so re-enabling it in a browser achieves nothing. Every failing clause shows its own authored message. The clause types are:
+A section's `gate` is an optional list of clauses, all of which must pass before the participant may mark it complete. Completing is their own act, and the server re-checks the gate when the button is pressed, so re-enabling it in a browser achieves nothing. Every clause's authored message is listed beneath the button, ticked once met, so the list keeps its place and height as answers change. The clause types are:
 
 | Clause | Reads | Requires |
 |---|---|---|

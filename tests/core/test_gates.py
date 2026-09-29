@@ -6,7 +6,7 @@ before a section may be completed, and each failing clause contributes its own a
 
 import pytest
 
-from engine.document import gate_passes, unmet
+from engine.document import checklist, gate_passes, unmet
 
 
 def section_gated_by(*clauses):
@@ -228,3 +228,28 @@ def test_a_clause_message_may_be_worded_per_role():
     section = section_gated_by({"type": "has_answer", "block": "statement", "message": {"participant": "Write yours."}})
 
     assert unmet(section, {}) == ["Write yours."]
+
+
+# The checklist beneath "Mark complete": every message, met or not, so nothing comes and goes as answers change
+
+
+def test_the_checklist_lists_every_message_in_the_order_authored_with_whether_it_is_met():
+    section = section_gated_by(
+        clause("has_answer", block="letter", message="Write your letter."),
+        clause("has_answer", block="rating", message="Answer the rating."),
+    )
+
+    assert checklist(section, {"rating": 5}) == [("Write your letter.", False), ("Answer the rating.", True)]
+
+
+def test_a_message_several_clauses_share_is_listed_once_and_met_only_when_all_of_them_pass():
+    section = section_gated_by(
+        *[clause("has_answer", block=f"after-{n}", message="Answer all four to continue.") for n in range(1, 5)]
+    )
+
+    assert checklist(section, {"after-1": 5, "after-2": 5, "after-3": 5}) == [("Answer all four to continue.", False)]
+    assert checklist(section, {f"after-{n}": 5 for n in range(1, 5)}) == [("Answer all four to continue.", True)]
+
+
+def test_a_section_with_no_gate_has_nothing_to_list():
+    assert checklist({"id": "s", "title": "A section", "blocks": []}, {}) == []

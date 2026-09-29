@@ -11,7 +11,7 @@ import pytest
 
 from engine.models import Response
 from tests.documents import complete_sort, pathway_document, scripture_reading, sort_pathway
-from tests.journeys.pages import loads_the_built_stylesheet
+from tests.journeys.pages import gate_checklist, loads_the_built_stylesheet
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_results import in_order
 
@@ -131,8 +131,23 @@ def test_a_section_opens_once_the_section_it_requires_is_complete(open_calling):
 def test_a_section_whose_gate_does_not_pass_says_what_is_missing_and_offers_no_way_on(open_calling):
     page = open_calling().get(CALLING).content.decode()
 
-    assert "Write a statement of at least ten characters." in page
+    assert gate_checklist(page) == {"Write a statement of at least ten characters.": False}
     assert "<button type=\"submit\" class=\"btn btn-primary\" disabled>Mark complete</button>" in page
+
+
+@pytest.mark.django_db
+def test_what_the_gate_says_comes_after_the_button_so_the_button_stays_put_as_it_changes(open_calling):
+    """✨ The messages come and go with each autosave; above the button, they pushed it up and down."""
+    client = open_calling()
+
+    refused = client.post(COMPLETE_CALLING).content.decode()
+
+    assert in_order(
+        refused,
+        "Mark complete</button>",
+        "Write a statement of at least ten characters.",
+        "This section was not marked complete",
+    )
 
 
 @pytest.mark.django_db
@@ -153,7 +168,8 @@ def test_a_participant_completes_a_section_once_its_gate_passes(open_calling):
     client = open_calling()
     client.post("/answers/statement/", {"value": LONG_ENOUGH, "version": _version_id()})
 
-    assert "Write a statement of at least ten characters." not in client.get(CALLING).content.decode()
+    shown = gate_checklist(client.get(CALLING).content.decode())
+    assert shown == {"Write a statement of at least ten characters.": True}
     response = client.post(COMPLETE_CALLING)
 
     assert (response.status_code, response.url) == (303, "/")
@@ -210,7 +226,18 @@ def test_writing_enough_opens_the_way_on_without_the_participant_reloading(open_
 
     assert 'hx-swap-oob="true"' in sent_back
     assert '<button type="submit" class="btn btn-primary">Mark complete</button>' in sent_back
-    assert "Write a statement of at least ten characters." not in sent_back
+    assert gate_checklist(sent_back) == {"Write a statement of at least ten characters.": True}
+
+
+@pytest.mark.django_db
+def test_a_met_requirement_stays_listed_so_the_page_keeps_its_height_and_says_it_is_done(open_calling):
+    """✨ A message that vanished shortened the page, and a participant scrolled to the bottom saw it all jump.
+    The tick is decoration, so a screen reader is told in words."""
+    sent_back = autosave(open_calling(), "statement", LONG_ENOUGH)
+
+    met = re.search(r'<li class="gate-item is-met">(.*?)</li>', sent_back, re.S).group(1)
+    assert '<span class="gate-mark" aria-hidden="true">✓</span>' in met
+    assert '<span class="visually-hidden">Done:</span>' in met
 
 
 @pytest.mark.django_db
@@ -219,7 +246,7 @@ def test_writing_too_little_sends_back_the_gate_message_and_no_way_on(open_calli
 
     sent_back = autosave(client, "statement", "too short")
 
-    assert "Write a statement of at least ten characters." in sent_back
+    assert gate_checklist(sent_back) == {"Write a statement of at least ten characters.": False}
     assert '<button type="submit" class="btn btn-primary" disabled>Mark complete</button>' in sent_back
 
 
