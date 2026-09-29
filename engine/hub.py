@@ -8,7 +8,7 @@ serves the hub page, the guard on a section page and the re-check when a section
 
 from typing import NamedTuple
 
-from engine.document.blocks import BLOCK_TYPES, pages_of
+from engine.document.blocks import BLOCK_TYPES, page_of, pages_of
 from engine.document.gates import gate_passes, has_content
 from engine.document.text import text_for
 
@@ -91,16 +91,19 @@ def open_blocks(section, answers, sections, up_to_page=1):
     return reached, True
 
 
-def page_reached(section, moved_past):
+def page_reached(section, moved_past, answers, sections):
     """✨ The page of a section a participant has reached, from the pages they have moved past (`moved_past`).
 
-    Each page is reached only through every page ahead of it, and the last is as far as there is to go.
+    Each page is reached only through every page ahead of it, and the last is as far as there is to go. A block
+    holding the rest shut holds the pages after its own too, even once gone past: a participant who went on past a
+    held link, then made its section's gate fail again, is back on the link's page rather than on one with nothing.
     """
     last = len(pages_of(section))
     page = 1
     while page in moved_past and page < last:
         page += 1
-    return page
+    blocks, all_open = open_blocks(section, answers, sections, up_to_page=page)
+    return page if all_open else page_of(section, blocks[-1]["id"])
 
 
 def _holds_what_follows(block, answers, sections_by_id):
@@ -138,7 +141,9 @@ def is_locked(section, completed):
 def hub_for(sections, answers, completed, role="participant", moved_past=None):
     """✨ A participant's hub over one track's sections. `moved_past` holds, by section, the pages moved past."""
     moved_past = moved_past or {}
-    states = [_state(section, answers, completed, role, moved_past.get(section["id"], ())) for section in sections]
+    states = [
+        _state(section, answers, completed, role, moved_past.get(section["id"], ()), sections) for section in sections
+    ]
     next_step = next((state for state in states if state.status in (NOT_STARTED, IN_PROGRESS)), None)
     states = [state._replace(is_next=state is next_step) for state in states]
     interactive = [block for section in sections for block in _interactive_blocks(section)]
@@ -150,7 +155,7 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None):
     )
 
 
-def _state(section, answers, completed, role, moved_past):
+def _state(section, answers, completed, role, moved_past, sections):
     status = _status(section, answers, completed)
     return SectionState(
         id=section["id"],
@@ -158,7 +163,7 @@ def _state(section, answers, completed, role, moved_past):
         status=status,
         label=LABELS[status],
         estimate=_estimate(section, status, role),
-        page=page_reached(section, moved_past),
+        page=page_reached(section, moved_past, answers, sections),
     )
 
 

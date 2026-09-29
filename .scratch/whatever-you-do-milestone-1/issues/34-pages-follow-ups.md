@@ -4,7 +4,7 @@
 
 **Blocked by:** none (33 is resolved)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** not yet placed
 
@@ -12,10 +12,10 @@
 
 **Carried from 33**
 
-- [ ] A held link on an earlier page can leave a blank page. Section X is a link holding for section Y, a page break, then an activity; the participant passes Y's gate, continues past X's page 1, then changes Y so its gate fails. The hub still leads to X's page 2, which `open_blocks` leaves with only the title and "← Back": no blocks, no way on, and no reason. Send the participant to the page of the block holding them instead, with a test. No shipped section has a held link before a page break
-- [ ] Before there is a result, `results()` redirects to the section's first page, not to the page the sort is on; fix it when a pathway puts a sort past a first page, with a test. (Once there is a result, its "← Back" leads to the sort's own page, which is right: a participant with a result has reached it)
-- [ ] Only the hub's way to the page reached is tested; a section link (`section_link.html`) and completion's next step (`complete_section`) lead there too, untested. Scenario: complete section A while section B is reopened at page 2
-- [ ] The last page's checklist lists messages left unmet on earlier pages after its own, not in the order authored (cosmetic; `test_going_back_to_select_asks_for_a_reason_again` records the current order)
+- [x] A held link on an earlier page can leave a blank page. Section X is a link holding for section Y, a page break, then an activity; the participant passes Y's gate, continues past X's page 1, then changes Y so its gate fails. The hub still leads to X's page 2, which `open_blocks` leaves with only the title and "← Back": no blocks, no way on, and no reason. Send the participant to the page of the block holding them instead, with a test. No shipped section has a held link before a page break
+- [x] Before there is a result, `results()` redirects to the section's first page, not to the page the sort is on; fix it when a pathway puts a sort past a first page, with a test. (Once there is a result, its "← Back" leads to the sort's own page, which is right: a participant with a result has reached it)
+- [x] Only the hub's way to the page reached is tested; a section link (`section_link.html`) and completion's next step (`complete_section`) lead there too, untested. Scenario: complete section A while section B is reopened at page 2
+- [x] The last page's checklist lists messages left unmet on earlier pages after its own, not in the order authored (cosmetic; `test_going_back_to_select_asks_for_a_reason_again` records the current order)
 - [ ] The lock and page-reached guard is repeated in `section`, `move_past_page`, `complete_section` and `_is_open` (`engine/views.py`); `moved_past.get(…, ())` is spelled out four times there and once in `hub_for`. Gather it in one place
 - [ ] `_section_page` and `_saved` take eight positional arguments each, and `_participant` returns a five-tuple unpacked as `_, _, _`; a small participant-state object would carry them
 - [ ] `clauses_of` and `checklist` in `engine/document/gates.py` each work out a clause's page (`page_of(section, clause["block"]) or last`); give that rule one home. The view also picks the last page for `unmet` while `checklist` picks it inside the gates
@@ -25,3 +25,7 @@
 - Judgement calls from the review, to weigh rather than do: `pages_moved_past` keys are `"<section>/<page>"` strings split apart again with `rpartition` (a nested `{section: [pages]}` would avoid the encoding, but needs a migration of stored rows); `page_break` is registered as a block type though it is never shown, takes no estimate and no clause may name it
 - Answers and coach checklist steps on a page not reached are refused (403), as behind a lock or an unconfirmed reading, not led back to the page reached as a typed address and completion are. Decided with the developer after the review: the README says "refused"; ticket 33's second-step comment said otherwise
 - A refused "Continue →" stays on the `…/continue/` address, as a refused completion does, so refreshing offers to resend the form; the manual checks say so
+
+## Comments
+
+- First step: `page_reached` now also reads the answers and the track's sections, and stops at the page of a block holding the rest shut, so the hub and every view guard lead a participant held again by a link back to the link's page. Before there is a result, the results address leads to the page the sort is on. The last page's checklist lists its messages and those left unmet on earlier pages in the order authored. A section link and completion's next step are tested leading to the page reached; the scenario is onboarding left part-way at page 2 beside an open calling section, since a reopened section has been completed and so has reached its last page. `test_going_back_to_select_asks_for_a_reason_again` compares a dict, which ignores order, so only the core checklist test records it.

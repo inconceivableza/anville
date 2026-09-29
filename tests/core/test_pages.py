@@ -8,7 +8,7 @@ tests/journeys/test_pages.py.
 from engine.document import Problem, checklist, unmet, validate
 from engine.document.blocks import page_of, pages_of
 from engine.hub import hub_for, open_blocks, page_reached
-from tests.core.test_hub import long_text, prose, reading, section
+from tests.core.test_hub import STRENGTHS, link, long_text, prose, reading, section
 from tests.documents import pathway_document
 
 
@@ -44,21 +44,26 @@ def test_a_block_is_on_the_page_its_break_puts_it_on_counting_from_one():
 # The page reached
 
 
+def reached(moved_past):
+    """✨ The page of THREE_PAGES reached, with nothing on it holding the rest shut."""
+    return page_reached(THREE_PAGES, moved_past, {}, [THREE_PAGES])
+
+
 def test_a_participant_starts_on_the_first_page():
-    assert page_reached(THREE_PAGES, set()) == 1
+    assert reached(set()) == 1
 
 
 def test_going_on_from_a_page_reaches_the_next():
-    assert page_reached(THREE_PAGES, {1}) == 2
-    assert page_reached(THREE_PAGES, {1, 2}) == 3
+    assert reached({1}) == 2
+    assert reached({1, 2}) == 3
 
 
 def test_the_page_reached_is_never_beyond_the_last():
-    assert page_reached(THREE_PAGES, {1, 2, 3}) == 3
+    assert reached({1, 2, 3}) == 3
 
 
 def test_a_page_is_reached_only_through_every_page_ahead_of_it():
-    assert page_reached(THREE_PAGES, {2}) == 1
+    assert reached({2}) == 1
 
 
 def test_only_the_pages_reached_are_open():
@@ -91,6 +96,19 @@ def test_the_hub_leads_to_the_page_the_participant_has_reached():
 
 def test_the_hub_leads_to_the_first_page_of_a_section_nobody_has_moved_past_any_of():
     [state] = hub_for([THREE_PAGES], {}, completed=[]).sections
+
+    assert state.page == 1
+
+
+def test_the_hub_leads_back_to_the_page_of_a_link_holding_the_participant_again():
+    """✨ Gone on past a held link while its section's gate passed, then that gate failed again: the pages after
+    the link are shut once more, so the hub leads to the link's own page, not to a page with nothing on it."""
+    gifts = section(
+        "gifts",
+        blocks=[link("to-strengths", "strengths", holds_what_follows=True), page_break("to-2"), long_text("a")],
+    )
+
+    [state, _] = hub_for([gifts, STRENGTHS], {}, completed=[], moved_past={"gifts": {1}}).sections
 
     assert state.page == 1
 
@@ -142,14 +160,14 @@ def test_a_pages_checklist_lists_its_own_clauses_met_or_not():
     assert checklist(PAGED_GATE, {"a": "Written"}, page=1) == [("Answer a.", True), ("Answer b.", False)]
 
 
-def test_the_last_pages_checklist_also_lists_anything_left_unmet_on_an_earlier_page():
+def test_the_last_pages_checklist_also_lists_anything_left_unmet_on_an_earlier_page_in_the_order_authored():
     """✨ Completing checks the whole gate, so a rating cleared after going back is said where the button is."""
     answers = {"b": "Written", "d": "Written"}
 
     assert checklist(PAGED_GATE, answers, page=3) == [
+        ("Answer a.", False),
         ("Answer d.", True),
         ("Do the thing in another section.", False),
-        ("Answer a.", False),
     ]
 
 

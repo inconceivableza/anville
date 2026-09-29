@@ -89,7 +89,7 @@ def section(request, section_id, page=1):
     if is_locked(section, completed):
         return redirect("hub")
     _page_or_404(section, page)
-    reached = page_reached(section, moved_past.get(section_id, ()))
+    reached = page_reached(section, moved_past.get(section_id, ()), answers, track_sections(version.document))
     if page > reached:
         return redirect(page_url(section_id, reached))
     shown = _section_page(
@@ -111,7 +111,7 @@ def move_past_page(request, section_id, page):
         return redirect("hub")
     if _page_or_404(section, page) == len(pages_of(section)):
         raise Http404("The last page of a section is moved past by completing it.")
-    reached = page_reached(section, moved_past.get(section_id, ()))
+    reached = page_reached(section, moved_past.get(section_id, ()), answers, track_sections(version.document))
     if page > reached:
         return _see_other(page_url(section_id, reached))
     shown = _section_page(version, section, answers, completed, _fixed(participant_response), moved_past, page)
@@ -135,7 +135,7 @@ def complete_section(request, section_id):
     if is_locked(section, completed):
         return redirect("hub")
     last = len(pages_of(section))
-    reached = page_reached(section, moved_past.get(section_id, ()))
+    reached = page_reached(section, moved_past.get(section_id, ()), answers, track_sections(version.document))
     if reached < last:
         return _see_other(page_url(section_id, reached))
     if unmet(section, answers):
@@ -326,8 +326,8 @@ def _saved(request, version, section, answers, completed, fixed, moved_past, blo
 def results(request, block_id):
     """✨ The participant's own stored result for a scored block, never recomputed and never anyone else's.
 
-    Before there is a result, the participant is sent to the block's section, where the sort is. After, the page
-    leads back there too, since that is where the section is completed.
+    Before there is a result, the participant is sent to the page of the block's section the sort is on. After, the
+    page leads back there too, since that is where the section is completed.
     """
     participant_response, version, answers, _, _ = _participant(request.user)
     try:
@@ -339,7 +339,7 @@ def results(request, block_id):
     section = section_of(version.document, block_id)
     result = Result.objects.filter(response=participant_response, block_id=block_id).first()
     if result is None:
-        return redirect("section", section["id"])
+        return redirect(page_url(section["id"], page_of(section, block_id)))
     page = results_page(version.document, result.scores, answers[block_id], request.user.get_username())
     page["section"] = {
         "id": section["id"],
@@ -388,8 +388,9 @@ def _is_open(section, block, answers, completed, moved_past, version):
     unconfirmed reading or held link above it holds it shut."""
     if is_locked(section, completed):
         return False
-    reached = page_reached(section, moved_past.get(section["id"], ()))
-    blocks, _ = open_blocks(section, answers, track_sections(version.document), up_to_page=reached)
+    sections = track_sections(version.document)
+    reached = page_reached(section, moved_past.get(section["id"], ()), answers, sections)
+    blocks, _ = open_blocks(section, answers, sections, up_to_page=reached)
     return block in blocks
 
 

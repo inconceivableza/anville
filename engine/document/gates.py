@@ -38,11 +38,7 @@ def unmet(section, answers, role="participant", page=None):
 
 
 def _unmet(clauses, answers, role):
-    messages = (
-        text_for(clause["message"], role)
-        for clause in clauses
-        if not CLAUSES[clause["type"]](clause, answers.get(clause["block"]))
-    )
+    messages = (text_for(clause["message"], role) for clause in clauses if not _passes(clause, answers))
     return list(dict.fromkeys(messages))
 
 
@@ -56,15 +52,19 @@ def checklist(section, answers, role="participant", page=None):
     With a `page`, that page's clauses. The last page's also says anything left unmet on an earlier one, since
     completing checks the whole gate: a rating cleared after going back would otherwise refuse without a reason.
     """
-    met = {}
-    for clause in clauses_of(section, page):
-        message = text_for(clause["message"], role)
-        passes = CLAUSES[clause["type"]](clause, answers.get(clause["block"]))
-        met[message] = met.get(message, True) and passes
+    clauses = clauses_of(section, page)
     if page is not None and page == len(pages_of(section)):
-        earlier = [clause for clause in clauses_of(section) if (page_of(section, clause["block"]) or page) < page]
-        met.update(dict.fromkeys(_unmet(earlier, answers, role), False))
+        # ✨ The whole gate's clauses on this page or left unmet on an earlier one, still in the order authored.
+        clauses = [clause for clause in clauses_of(section) if clause in clauses or not _passes(clause, answers)]
+    met = {}
+    for clause in clauses:
+        message = text_for(clause["message"], role)
+        met[message] = met.get(message, True) and _passes(clause, answers)
     return list(met.items())
+
+
+def _passes(clause, answers):
+    return CLAUSES[clause["type"]](clause, answers.get(clause["block"]))
 
 
 def clauses_of(section, page=None):

@@ -12,7 +12,7 @@ from html import unescape
 import pytest
 
 from engine.models import Response
-from tests.documents import pathway_document, scripture_reading
+from tests.documents import pathway_document, scripture_reading, sort_pathway
 from tests.journeys.pages import gate_checklist, version_on
 from tests.journeys.test_coach_checklist import step, the_coach_checklist
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
@@ -280,6 +280,31 @@ def test_without_javascript_a_coach_checklist_step_returns_the_page_it_is_on(sig
 
 
 @pytest.mark.django_db
+def test_a_link_holding_the_participant_again_leads_them_back_to_its_own_page(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    """✨ Calling opens with a link held until onboarding's gate passes. Gone on past it, then onboarding's answer
+    taken away: the page after the link is shut again, so its address leads to the link's page rather than to a page
+    with nothing on it and no way on."""
+    document = paged_onboarding()
+    calling = document["content"]["sections"][1]
+    calling["blocks"] = [
+        {"id": "to-onboarding", "type": "section_link", "section": "onboarding", "holds_what_follows": True},
+        {"id": "to-statement", "type": "page_break"},
+        *calling["blocks"],
+    ]
+    load_pathway(document)
+    through_to(signed_in_client, 3)
+    signed_in_client.post("/sections/onboarding/complete/")
+    assert signed_in_client.post("/sections/calling/pages/1/continue/").url == "/sections/calling/pages/2/"
+
+    save(signed_in_client, "why", "")
+
+    response = signed_in_client.get("/sections/calling/pages/2/")
+    assert (response.status_code, response.get("Location")) == (302, "/sections/calling/")
+
+
+@pytest.mark.django_db
 def test_a_locked_sections_pages_stay_locked(participant):
     assert participant.get("/sections/calling/pages/1/").url == "/"
 
@@ -330,6 +355,60 @@ def test_the_hub_shows_a_paged_section_once_and_leads_to_the_page_reached(partic
 @pytest.mark.django_db
 def test_the_hub_leads_to_the_first_page_until_the_participant_goes_on(participant):
     assert f'href="{FIRST}"' in shown(participant, "/")
+
+
+# Every other way to a section leads to the page reached, as the hub does
+
+
+def calling_beside_part_way_onboarding():
+    """✨ The paged onboarding, with calling open beside it (it requires nothing) and linking back to onboarding, so
+    onboarding can be left part-way while calling is done."""
+    document = paged_onboarding()
+    calling = document["content"]["sections"][1]
+    calling["requires"] = []
+    calling["blocks"].insert(0, {"id": "to-onboarding", "type": "section_link", "section": "onboarding"})
+    return document
+
+
+@pytest.mark.django_db
+def test_a_section_link_leads_to_the_page_reached_of_the_section_it_names(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    load_pathway(calling_beside_part_way_onboarding())
+    through_to(signed_in_client, 2)
+
+    assert f'<a href="{SECOND}">Before we begin</a>' in shown(signed_in_client, "/sections/calling/")
+
+
+@pytest.mark.django_db
+def test_completing_a_section_leads_on_to_the_page_reached_of_the_next(signed_in_client, load_pathway):  # noqa: F811
+    load_pathway(calling_beside_part_way_onboarding())
+    through_to(signed_in_client, 2)
+    save(signed_in_client, "statement", "A statement long enough.")
+
+    response = signed_in_client.post("/sections/calling/complete/")
+
+    assert (response.status_code, response.url) == (303, SECOND)
+
+
+@pytest.mark.django_db
+def test_before_a_sort_is_in_the_results_page_leads_to_the_page_the_sort_is_on(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    document = sort_pathway()
+    strengths = document["content"]["sections"][-1]
+    strengths["blocks"] = [
+        {"id": "before-the-sort", "type": "rich_text", "body": "Sort these as they fit you."},
+        {"id": "to-the-sort", "type": "page_break"},
+        *strengths["blocks"],
+    ]
+    load_pathway(document)
+    signed_in_client.post("/sections/onboarding/complete/")
+    signed_in_client.post("/sections/strengths/pages/1/continue/")
+
+    response = signed_in_client.get("/results/strengths-sort/")
+
+    assert (response.status_code, response.url) == (302, "/sections/strengths/pages/2/")
 
 
 # Progress and estimates are the section's, whatever its pages
