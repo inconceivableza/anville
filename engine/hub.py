@@ -91,14 +91,14 @@ def open_blocks(section, answers, sections, up_to_page=1):
     return reached, True
 
 
-def page_reached(section, gone_on):
-    """✨ The page of a section a participant has reached, from the pages they have gone on from (`gone_on`).
+def page_reached(section, moved_past):
+    """✨ The page of a section a participant has reached, from the pages they have moved past (`moved_past`).
 
     Each page is reached only through every page ahead of it, and the last is as far as there is to go.
     """
     last = len(pages_of(section))
     page = 1
-    while page in gone_on and page < last:
+    while page in moved_past and page < last:
         page += 1
     return page
 
@@ -135,10 +135,10 @@ def is_locked(section, completed):
     return not set(section.get("requires", [])) <= set(completed)
 
 
-def hub_for(sections, answers, completed, role="participant", gone_on=None):
-    """✨ A participant's hub over one track's sections. `gone_on` holds, by section, the pages gone on from."""
-    gone_on = gone_on or {}
-    states = [_state(section, answers, completed, role, gone_on.get(section["id"], ())) for section in sections]
+def hub_for(sections, answers, completed, role="participant", moved_past=None):
+    """✨ A participant's hub over one track's sections. `moved_past` holds, by section, the pages moved past."""
+    moved_past = moved_past or {}
+    states = [_state(section, answers, completed, role, moved_past.get(section["id"], ())) for section in sections]
     next_step = next((state for state in states if state.status in (NOT_STARTED, IN_PROGRESS)), None)
     states = [state._replace(is_next=state is next_step) for state in states]
     interactive = [block for section in sections for block in _interactive_blocks(section)]
@@ -150,7 +150,7 @@ def hub_for(sections, answers, completed, role="participant", gone_on=None):
     )
 
 
-def _state(section, answers, completed, role, gone_on):
+def _state(section, answers, completed, role, moved_past):
     status = _status(section, answers, completed)
     return SectionState(
         id=section["id"],
@@ -158,7 +158,7 @@ def _state(section, answers, completed, role, gone_on):
         status=status,
         label=LABELS[status],
         estimate=_estimate(section, status, role),
-        page=page_reached(section, gone_on),
+        page=page_reached(section, moved_past),
     )
 
 

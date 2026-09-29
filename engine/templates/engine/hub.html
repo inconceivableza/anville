@@ -3,6 +3,7 @@
   ✨ The hub. Every part of it is derived by the engine from what the participant has answered and completed:
   an author writes sections and their gate messages, never a status chip, a lock or this banner.
 {% endcomment %}
+{% load section_pages %}
 {% block head_title %}{% if hub %}{{ title }}{% else %}Anville{% endif %}{% endblock head_title %}
 
 {% block content %}
@@ -13,7 +14,7 @@
       <div class="next-step">
         <p class="next-step-label">Your next step</p>
         <p class="next-step-title">{{ hub.next_step.title }}</p>
-        <a class="btn btn-primary" href="{% url 'section' hub.next_step.id %}">
+        <a class="btn btn-primary" href="{% page_url hub.next_step.id hub.next_step.page %}">
           {% if hub.next_step.status == 'in-progress' %}Carry on{% else %}Begin{% endif %}
         </a>
       </div>
@@ -35,7 +36,7 @@
           {% if section.is_locked %}
             <span class="hub-section-title">{{ section.title }}</span>
           {% else %}
-            <a class="hub-section-title" href="{% url 'section' section.id %}">{{ section.title }}</a>
+            <a class="hub-section-title" href="{% page_url section.id section.page %}">{{ section.title }}</a>
           {% endif %}
           {% if section.estimate %}<span class="time-estimate">{{ section.estimate }}</span>{% endif %}
           {% if section.is_locked %}

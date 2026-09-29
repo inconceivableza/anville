@@ -4,10 +4,11 @@
   an SVG rect whose width is its percent of a 100-wide view box, and whose colour is a stylesheet class
   (a construct's tone or a rank), so nothing here needs an inline style.
 {% endcomment %}
+{% load section_pages %}
 {% block head_title %}{{ title }}{% endblock head_title %}
 
 {% block content %}
-  <p class="back-to-hub"><a href="{% url 'section' section.id %}">← Back to {{ section.title }}</a></p>
+  <p class="back-to-hub"><a href="{% page_url section.id section.page %}">← Back to {{ section.title }}</a></p>
   <h1>{{ title }}</h1>
 
   {% for framework in frameworks %}

@@ -21,7 +21,7 @@ from engine.document import (
     text_for,
     unmet,
 )
-from engine.document.blocks import CONTACTS, blocks_of, section_of
+from engine.document.blocks import CONTACTS, blocks_of, page_of, pages_of, section_of
 from engine.document.coach import (
     candidate_name_from_form,
     checklist_answers,
@@ -30,16 +30,25 @@ from engine.document.coach import (
 )
 from engine.document.contacts import MAX_CONTACTS, contacts_from_form, rows_to_show
 from engine.document.scoring import score
-from engine.hub import block_ids_fixed_on_completion, hub_for, is_locked, open_blocks, section_by_id, track_sections
+from engine.hub import (
+    block_ids_fixed_on_completion,
+    hub_for,
+    is_locked,
+    open_blocks,
+    page_reached,
+    section_by_id,
+    track_sections,
+)
 from engine.models import Contact, PathwayVersion, Publication, Response, Result
 from engine.results import results_page
+from engine.templatetags.section_pages import page_url
 
 
 @login_required
 @consent_required
 def hub(request):
     """✨ Where the participant always starts: their track's sections, their status, and the next step."""
-    _, version, answers, completed = _participant(request.user)
+    _, version, answers, completed, moved_past = _participant(request.user)
     if version is None:
         return render(request, "engine/hub.html", {})
     sections = track_sections(version.document)
@@ -48,7 +57,10 @@ def hub(request):
     return render(
         request,
         "engine/hub.html",
-        {"title": text_for(version.document["title"], "participant"), "hub": hub_for(sections, answers, completed)},
+        {
+            "title": text_for(version.document["title"], "participant"),
+            "hub": hub_for(sections, answers, completed, moved_past=moved_past),
+        },
     )
 
 
@@ -57,7 +69,7 @@ def hub(request):
 def start(request):
     """✨ Where agreeing to consent leads. A participant with nothing saved goes straight to their first step,
     as the prototype goes from its account screen into onboarding; anyone who has begun goes to the hub."""
-    participant_response, version, answers, completed = _participant(request.user)
+    participant_response, version, answers, completed, _ = _participant(request.user)
     if participant_response is not None or version is None:
         return redirect("hub")
     sections = track_sections(version.document)
@@ -69,38 +81,74 @@ def start(request):
 
 @login_required
 @consent_required
-def section(request, section_id):
-    """✨ One section's blocks. A locked section is refused here, whatever the participant typed in the bar."""
-    participant_response, version, answers, completed = _participant(request.user)
+def section(request, section_id, page=1):
+    """✨ One page of a section's blocks. A locked section, or a page not yet reached, is refused here, whatever the
+    participant typed in the bar: a page ahead of the one reached leads back to that one."""
+    participant_response, version, answers, completed, moved_past = _participant(request.user)
     section = _section_or_404(version, section_id)
     if is_locked(section, completed):
         return redirect("hub")
-    page = _section_page(
-        version, section, answers, completed, _fixed(participant_response), asked_rows=_asked_rows(request.GET)
+    _page_or_404(section, page)
+    reached = page_reached(section, moved_past.get(section_id, ()))
+    if page > reached:
+        return redirect(page_url(section_id, reached))
+    shown = _section_page(
+        version, section, answers, completed, _fixed(participant_response), moved_past, page, _asked_rows(request.GET)
     )
-    return render(request, "engine/section.html", page)
+    return render(request, "engine/section.html", shown)
+
+
+@login_required
+@consent_required
+@require_POST
+def move_past_page(request, section_id, page):
+    """✨ "Continue →" from one page of a section to the next, once that page's clauses pass, re-checked here rather
+    than trusted to the page. The last page has no way on but completing the section."""
+    participant_response, version, answers, completed, moved_past = _participant(request.user)
+    section = _section_or_404(version, section_id)
+    if is_locked(section, completed):
+        return redirect("hub")
+    if _page_or_404(section, page) == len(pages_of(section)):
+        raise Http404("The last page of a section is moved past by completing it.")
+    reached = page_reached(section, moved_past.get(section_id, ()))
+    if page > reached:
+        return _see_other(page_url(section_id, reached))
+    if unmet(section, answers, page=page):
+        shown = _section_page(version, section, answers, completed, _fixed(participant_response), moved_past, page)
+        return render(request, "engine/section.html", {**shown, "refused": True}, status=400)
+
+    if participant_response is None:
+        participant_response, _ = Response.objects.get_or_create(participant=request.user, version=version)
+    participant_response.move_past_page(section_id, page)
+    return _see_other(page_url(section_id, page + 1))
 
 
 @login_required
 @consent_required
 @require_POST
 def complete_section(request, section_id):
-    """✨ The participant's own act of finishing a section, re-checked here rather than trusted to the page."""
-    participant_response, version, answers, completed = _participant(request.user)
+    """✨ The participant's own act of finishing a section, re-checked here rather than trusted to the page. It is
+    done from the section's last page, so a participant who has not reached it is sent to the page they have."""
+    participant_response, version, answers, completed, moved_past = _participant(request.user)
     section = _section_or_404(version, section_id)
     if is_locked(section, completed):
         return redirect("hub")
+    last = len(pages_of(section))
+    reached = page_reached(section, moved_past.get(section_id, ()))
+    if reached < last:
+        return _see_other(page_url(section_id, reached))
     if unmet(section, answers):
-        page = _section_page(version, section, answers, completed, _fixed(participant_response))
-        return render(request, "engine/section.html", {**page, "refused": True}, status=400)
+        shown = _section_page(version, section, answers, completed, _fixed(participant_response), moved_past, last)
+        return render(request, "engine/section.html", {**shown, "refused": True}, status=400)
 
     if participant_response is None:
         participant_response, _ = Response.objects.get_or_create(participant=request.user, version=version)
     participant_response.complete_section(section_id, fixed_block_ids=block_ids_fixed_on_completion(section, answers))
     # ✨ On to whatever the hub would now point at, as the prototype moves from screen to screen; the hub once
     # nothing is left.
-    next_step = hub_for(track_sections(version.document), answers, completed | {section_id}).next_step
-    return _see_other("section", next_step.id) if next_step else _see_other("hub")
+    sections = track_sections(version.document)
+    next_step = hub_for(sections, answers, completed | {section_id}, moved_past=moved_past).next_step
+    return _see_other(page_url(next_step.id, next_step.page)) if next_step else _see_other("hub")
 
 
 @login_required
@@ -108,7 +156,7 @@ def complete_section(request, section_id):
 @require_POST
 def reopen_section(request, section_id):
     """✨ The participant taking back their own completion. Their answers stay exactly as they left them."""
-    participant_response, version, _, _ = _participant(request.user)
+    participant_response, version, _, _, _ = _participant(request.user)
     _section_or_404(version, section_id)
     if participant_response is not None:
         participant_response.reopen_section(section_id)
@@ -138,8 +186,8 @@ def save_answer(request, block_id):
     section = section_of(version.document, block_id)
     answers = participant_response.answers_with_contacts() if participant_response else {}
     completed = set(participant_response.completed_sections) if participant_response else set()
-    reached, _ = open_blocks(section, answers, track_sections(version.document))
-    if is_locked(section, completed) or block not in reached:
+    moved_past = participant_response.moved_past_by_section() if participant_response else {}
+    if not _is_open(section, block, answers, completed, moved_past, version):
         return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
     fixed = _fixed(participant_response)
     if block_id in fixed:
@@ -160,7 +208,7 @@ def save_answer(request, block_id):
     if block_type.captures is CONTACTS:
         participant_response.replace_contacts(block_id, value, Contact.Role.CONTACT)
         answers = {**answers, block_id: value}
-        return _saved(request, version, section, answers, completed, fixed, block_id)
+        return _saved(request, version, section, answers, completed, fixed, moved_past, block_id)
     if block_type.scored:
         try:
             participant_response.submit_sort(block_id, value, score(version.document, value))
@@ -172,7 +220,7 @@ def save_answer(request, block_id):
         return _refuse_fixed(request)  # ✨ a completion fixed it after the check above, and the UPDATE saw that
     # ✨ The row was updated in place, so this object's answers are a step behind what was just stored.
     answers = {**answers, block_id: value}
-    return _saved(request, version, section, answers, completed, fixed, block_id)
+    return _saved(request, version, section, answers, completed, fixed, moved_past, block_id)
 
 
 @sensitive_post_parameters()
@@ -187,23 +235,25 @@ def coach_checklist(request, block_id):
     answers are opinions about another person, including their faith (special category data under GDPR), and no
     later step reads them; `sensitive_post_parameters` keeps them out of error reports too.
     """
-    participant_response, version, answers, completed = _participant(request.user)
+    participant_response, version, answers, completed, moved_past = _participant(request.user)
     block = _block_of_type(version, block_id, "coach_checklist")
     section = section_of(version.document, block_id)
-    reached, _ = open_blocks(section, answers, track_sections(version.document))
-    if is_locked(section, completed) or block not in reached:
+    if not _is_open(section, block, answers, completed, moved_past, version):
         return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
     if request.POST.get("step") not in CHECKLIST_STEPS:
         return HttpResponseBadRequest("The coach checklist has no such step.")
 
     state = _checklist_step(block, request.POST["step"], request.POST)
     status = 400 if state.get("refusal") else 200
-    page = _section_page(version, section, answers, completed, _fixed(participant_response))
+    page = _section_page(
+        version, section, answers, completed, _fixed(participant_response), moved_past, page_of(section, block_id)
+    )
     shown = next(shown for shown in page["section"]["blocks"] if shown["id"] == block_id)
     shown["checklist"] = _checklist_screen(shown["text"], **state)
     if request.headers.get("HX-Request") == "true":
         return render(request, shown["template"], {"block": shown, "pathway": page["pathway"]}, status=status)
     # ✨ Never a redirect without JavaScript: the answers would have to go in the address, where they are logged.
+    # The page returned is the one the checklist is on.
     return render(request, "engine/section.html", page, status=status)
 
 
@@ -255,17 +305,19 @@ def _checklist_screen(text, screen="intro", name="", answers=None, outcome=None,
     }
 
 
-def _saved(request, version, section, answers, completed, fixed, block_id):
-    """✨ What a stored answer sends back: with htmx, the status and the gate; without, the section again.
+def _saved(request, version, section, answers, completed, fixed, moved_past, block_id):
+    """✨ What a stored answer sends back: with htmx, the status and its page's gate; without, its page again.
 
     A contact list's "add another" without JavaScript saves the list and asks for one more row than it showed,
-    which the section then shows.
+    which the page then shows.
     """
+    page = page_of(section, block_id)
     if request.headers.get("HX-Request") == "true":
-        return render(request, "engine/save_result.html", _section_page(version, section, answers, completed, fixed))
+        shown = _section_page(version, section, answers, completed, fixed, moved_past, page)
+        return render(request, "engine/save_result.html", shown)
     rows = _asked_rows(request.POST)
     query = f"?rows={rows}" if rows else ""
-    return _see_other(f"{reverse('section', args=[section['id']])}{query}#block-{block_id}")
+    return _see_other(f"{page_url(section['id'], page)}{query}#block-{block_id}")
 
 
 @login_required
@@ -276,7 +328,7 @@ def results(request, block_id):
     Before there is a result, the participant is sent to the block's section, where the sort is. After, the page
     leads back there too, since that is where the section is completed.
     """
-    participant_response, version, answers, _ = _participant(request.user)
+    participant_response, version, answers, _, _ = _participant(request.user)
     try:
         block = answerable_block(version.document, block_id) if version else None
     except UnknownBlock:
@@ -288,7 +340,11 @@ def results(request, block_id):
     if result is None:
         return redirect("section", section["id"])
     page = results_page(version.document, result.scores, answers[block_id], request.user.get_username())
-    page["section"] = {"id": section["id"], "title": text_for(section["title"], "participant")}
+    page["section"] = {
+        "id": section["id"],
+        "title": text_for(section["title"], "participant"),
+        "page": page_of(section, block_id),
+    }
     return render(request, "engine/results.html", page)
 
 
@@ -308,20 +364,38 @@ def _to_results(request, block_id):
 
 
 def _participant(user):
-    """✨ Everything stored for this participant: their response, the version it answers, and its state.
+    """✨ Everything stored for this participant: their response, the version it answers, and its state (answers,
+    sections completed, and pages moved past by section).
 
     A participant without a response yet reads the published version, so what they see is what their
     first answer will be recorded against.
     """
     participant_response = Response.in_progress(user)
     if participant_response is None:
-        return None, Publication.current_version(), {}, set()
+        return None, Publication.current_version(), {}, set(), {}
     return (
         participant_response,
         participant_response.version,
         participant_response.answers_with_contacts(),
         set(participant_response.completed_sections),
+        participant_response.moved_past_by_section(),
     )
+
+
+def _is_open(section, block, answers, completed, moved_past, version):
+    """✨ Whether a participant has reached a block: its section is not locked, its page has been reached, and no
+    unconfirmed reading or held link above it holds it shut."""
+    if is_locked(section, completed):
+        return False
+    reached = page_reached(section, moved_past.get(section["id"], ()))
+    blocks, _ = open_blocks(section, answers, track_sections(version.document), up_to_page=reached)
+    return block in blocks
+
+
+def _page_or_404(section, page):
+    if not 1 <= page <= len(pages_of(section)):
+        raise Http404("This section has no page by that number.")
+    return page
 
 
 def _refuse_fixed(request):
@@ -355,15 +429,21 @@ def _asked_rows(query):
     return min(int(asked), MAX_CONTACTS) if asked.isdigit() else 0
 
 
-def _section_page(version, section, answers, completed, fixed, asked_rows=0):
-    blocks, activity_open = open_blocks(section, answers, track_sections(version.document))
+def _section_page(version, section, answers, completed, fixed, moved_past, page=1, asked_rows=0):
+    """✨ One page of a section as its template needs it. Every page but the last ends in "Continue →", held by that
+    page's own clauses; the last ends in the section's completion, held by the whole gate."""
+    opened, activity_open = open_blocks(section, answers, track_sections(version.document), up_to_page=page)
+    on_page = {block["id"] for block in pages_of(section)[page - 1]}
+    blocks = [block for block in opened if block["id"] in on_page]
+    is_last = page == len(pages_of(section))
     # ✨ A sort leads only to its results, as in the prototype, so completing is not offered beside it until it
     # is in. The linter makes its section's gate require it, so the server refuses completion before then too.
     sort_pending = any(BLOCK_TYPES[block["type"]].scored and block["id"] not in answers for block in blocks)
     # ✨ A link shows the section it leads to exactly as the hub would: its title, its status and whether it is open.
-    hub = hub_for(track_sections(version.document), answers, completed)
+    hub = hub_for(track_sections(version.document), answers, completed, moved_past=moved_past)
     states = {state.id: state for state in hub.sections}
     return {
+        "page": {"number": page, "is_last": is_last},
         "pathway": {
             "version_id": version.pk,
             "scale_points": SCALE_POINTS,
@@ -380,10 +460,11 @@ def _section_page(version, section, answers, completed, fixed, asked_rows=0):
             ],
         },
         "is_complete": section["id"] in completed,
-        "holds_fixed_answers": any(block["id"] in fixed for block in blocks),
+        # ✨ Over the whole section, since the ratings it fixed may be on an earlier page than its completion.
+        "holds_fixed_answers": any(block["id"] in fixed for block in section["blocks"]),
         "offers_completion": activity_open and not sort_pending,
-        "unmet": unmet(section, answers),
-        "checklist": checklist(section, answers),
+        "unmet": unmet(section, answers) if is_last else unmet(section, answers, page=page),
+        "checklist": checklist(section, answers, page=page),
     }
 
 

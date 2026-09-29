@@ -256,6 +256,11 @@ p.time-estimate {
   margin-top: 32px;
 }
 
+/* ✨ Back to the page before, beneath the way on so the primary button stays where it is on every page */
+.page-back {
+  margin-top: 16px;
+}
+
 .completion-done {
   font-size: 14px;
   font-weight: 600;

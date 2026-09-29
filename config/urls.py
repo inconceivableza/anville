@@ -18,7 +18,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path, re_path
 from access.views import consent, password_reset_unavailable
-from engine.views import coach_checklist, complete_section, hub, reopen_section, results, save_answer, section, start
+from engine.views import (
+    coach_checklist,
+    complete_section,
+    hub,
+    move_past_page,
+    reopen_section,
+    results,
+    save_answer,
+    section,
+    start,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -31,6 +41,8 @@ urlpatterns = [
     path("coach/<slug:block_id>/", coach_checklist, name="coach_checklist"),
     path("results/<slug:block_id>/", results, name="results"),
     path("sections/<slug:section_id>/", section, name="section"),
+    path("sections/<slug:section_id>/pages/<int:page>/", section, name="section_page"),
+    path("sections/<slug:section_id>/pages/<int:page>/continue/", move_past_page, name="move_past_page"),
     path("sections/<slug:section_id>/complete/", complete_section, name="complete_section"),
     path("sections/<slug:section_id>/reopen/", reopen_section, name="reopen_section"),
     path("", hub, name="hub"),

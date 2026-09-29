@@ -2,7 +2,8 @@
   ✨ The gate and the way on. Rendered with the section, and again out of band after an autosave, so the
   messages and the button follow what the participant has just written rather than waiting for a reload.
   What it shows depends only on the answers, so a save is enough to bring it up to date. Nothing is offered
-  while the section's activity is shut behind a scripture reading, or while its sort is not yet in.
+  while the section's activity is shut behind a scripture reading, or while its sort is not yet in. On a page
+  before a section's last, the way on is "Continue →" to the next page, and the gate is that page's own clauses.
 
   The wrapper is always here, even with nothing in it, so the autosave always has something to swap into.
   It is the gate's own state that is refreshed, never the blocks: only a scripture reading opens more of a
@@ -10,7 +11,17 @@
 {% endcomment %}
 <div id="completion"{% if offers_completion %} class="completion"{% endif %}{% if out_of_band %} hx-swap-oob="true"{% endif %}>
   {% if offers_completion %}
-    {% if is_complete %}
+    {% if not page.is_last %}
+      {# ✨ Every page but the last goes on to the next, held by that page's own requirements, listed as below. #}
+      <form method="post" action="{% url 'move_past_page' section.id page.number %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary btn-full"{% if unmet %} disabled{% endif %}>Continue →</button>
+      </form>
+      {% include "engine/gate_checklist.html" %}
+      {% if refused %}
+        <p class="gate-refused">This page is not finished yet.</p>
+      {% endif %}
+    {% elif is_complete %}
       {% if holds_fixed_answers %}
         <p class="completion-done">You marked this section complete. Ratings fixed when you completed this section can no longer be changed.</p>
       {% else %}
@@ -21,25 +32,11 @@
         <button type="submit" class="btn btn-secondary btn-sm">Mark as not complete</button>
       </form>
     {% else %}
-      {% comment %}
-        ✨ Every requirement stays listed beneath the button, ticked once met, so nothing comes and goes with
-        each autosave: above the button a message moved it, and one that vanished shortened the page under a
-        participant scrolled to its foot. The tick is decoration; a screen reader is told "Done" in words.
-      {% endcomment %}
       <form method="post" action="{% url 'complete_section' section.id %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-primary btn-full"{% if unmet %} disabled{% endif %}>{{ section.complete_label }}</button>
       </form>
-      {% if checklist %}
-        <ul class="gate-messages">
-          {% for message, met in checklist %}
-            <li class="gate-item{% if met %} is-met{% endif %}">
-              {% if met %}<span class="gate-mark" aria-hidden="true">✓</span> <span class="visually-hidden">Done:</span>{% else %}<span class="gate-mark" aria-hidden="true">•</span>{% endif %}
-              <span class="gate-message">{{ message }}</span>
-            </li>
-          {% endfor %}
-        </ul>
-      {% endif %}
+      {% include "engine/gate_checklist.html" %}
       {% if refused %}
         <p class="gate-refused">This section was not marked complete: it is not finished yet.</p>
       {% endif %}

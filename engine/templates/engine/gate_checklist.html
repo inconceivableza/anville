@@ -1,0 +1,15 @@
+{% comment %}
+  ✨ Every requirement stays listed beneath the button, ticked once met, so nothing comes and goes with
+  each autosave: above the button a message moved it, and one that vanished shortened the page under a
+  participant scrolled to its foot. The tick is decoration; a screen reader is told "Done" in words.
+{% endcomment %}
+{% if checklist %}
+  <ul class="gate-messages">
+    {% for message, met in checklist %}
+      <li class="gate-item{% if met %} is-met{% endif %}">
+        {% if met %}<span class="gate-mark" aria-hidden="true">✓</span> <span class="visually-hidden">Done:</span>{% else %}<span class="gate-mark" aria-hidden="true">•</span>{% endif %}
+        <span class="gate-message">{{ message }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}

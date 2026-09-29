@@ -3,18 +3,19 @@
   but not linked, as on the hub. A section outside the participant's track has no state, so nothing is shown.
   With an authored button label the button is the way there, as in the prototype, and the title is plain.
 {% endcomment %}
+{% load section_pages %}
 {% if block.link %}
   <div id="block-{{ block.id }}" class="section-link">
     <p class="section-link-title">
       {% if block.link.is_locked or block.text.button_label %}
         {{ block.link.title }}
       {% else %}
-        <a href="{% url 'section' block.link.id %}">{{ block.link.title }}</a>
+        <a href="{% page_url block.link.id block.link.page %}">{{ block.link.title }}</a>
       {% endif %}
     </p>
     {{ block.text.body|linebreaks }}
     {% if block.text.button_label and not block.link.is_locked %}
-      <p><a class="btn btn-primary" href="{% url 'section' block.link.id %}">{{ block.text.button_label }}</a></p>
+      <p><a class="btn btn-primary" href="{% page_url block.link.id block.link.page %}">{{ block.text.button_label }}</a></p>
     {% endif %}
     <span class="status-chip status-{{ block.link.status }}">{{ block.link.label }}</span>
   </div>

@@ -1,4 +1,5 @@
 {% extends "engine/base.html" %}
+{% load section_pages %}
 {% comment %}
   ✨ One section. Only the blocks the server decided to send are here: an activity behind a scripture reading
   the participant has not confirmed is absent from the page, not hidden in it, and will not take an answer.
@@ -21,4 +22,10 @@
   {% endfor %}
 
   {% include "engine/completion.html" %}
+
+  {# ✨ As the prototype's screens go back with "← Back"; a page already gone through stays open to return to. #}
+  {% if page.number > 1 %}
+    {% page_url section.id page.number|add:"-1" as previous %}
+    <p class="page-back"><a class="btn btn-secondary" href="{{ previous }}">← Back</a></p>
+  {% endif %}
 {% endblock content %}

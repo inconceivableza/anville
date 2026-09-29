@@ -68,7 +68,7 @@ def test_only_the_pages_reached_are_open():
     assert all_of_it is True
 
 
-def test_a_participant_who_has_gone_on_from_nothing_has_only_the_first_page_open():
+def test_a_participant_who_has_moved_past_nothing_has_only_the_first_page_open():
     blocks, _ = open_blocks(THREE_PAGES, {}, [THREE_PAGES])
 
     assert ids(blocks) == ["a", "b"]
@@ -84,12 +84,12 @@ def test_an_unconfirmed_reading_still_holds_back_the_pages_after_it():
 
 
 def test_the_hub_leads_to_the_page_the_participant_has_reached():
-    [state] = hub_for([THREE_PAGES], {}, completed=[], gone_on={"onboarding": {1}}).sections
+    [state] = hub_for([THREE_PAGES], {}, completed=[], moved_past={"onboarding": {1}}).sections
 
     assert state.page == 2
 
 
-def test_the_hub_leads_to_the_first_page_of_a_section_nobody_has_gone_on_in():
+def test_the_hub_leads_to_the_first_page_of_a_section_nobody_has_moved_past_any_of():
     [state] = hub_for([THREE_PAGES], {}, completed=[]).sections
 
     assert state.page == 1

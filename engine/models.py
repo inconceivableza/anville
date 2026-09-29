@@ -46,6 +46,10 @@ class Response(models.Model):
     # ✨ When each answer an author marked `fixed_once_complete` became fixed. Recorded, like completion, so that
     # reopening the section afterwards does not quietly make it changeable again.
     fixed_answers = models.JSONField(default=dict)
+    # ✨ When the participant moved past each page of a section with "Continue →", keyed "<section>/<page>". Recorded
+    # rather than worked out from the answers, since a page that needs nothing (the coach step) would otherwise hold
+    # nobody back.
+    pages_moved_past = models.JSONField(default=dict)
     is_test_data = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -105,6 +109,27 @@ class Response(models.Model):
             ),
             updated_at=now,
         )
+
+    def move_past_page(self, section_id, page):
+        """✨ Record that the participant moved past one page of a section, in one UPDATE that merges it in.
+
+        The caller has already re-checked that page's clauses. Pages already moved past are kept, so a tab left
+        open on an earlier page never takes back the pages gone through since.
+        """
+        now = timezone.now()
+        moved_past = Value({f"{section_id}/{page}": now.isoformat()}, output_field=models.JSONField())
+        Response.objects.filter(pk=self.pk).update(
+            pages_moved_past=_MergeJson(F("pages_moved_past"), moved_past),
+            updated_at=now,
+        )
+
+    def moved_past_by_section(self):
+        """✨ The pages moved past, as {section identifier: set of page numbers}, as the hub reads them."""
+        moved_past = {}
+        for key in self.pages_moved_past:
+            section_id, _, page = key.rpartition("/")
+            moved_past.setdefault(section_id, set()).add(int(page))
+        return moved_past
 
     def reopen_section(self, section_id):
         """✨ Take back the participant's own act of completing a section, leaving every answer as it is.
