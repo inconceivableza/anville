@@ -148,6 +148,8 @@ A live link opens the privacy notice (the document's `observers.privacy_notice`,
 
 The page also shows the pathway's contact list, so a participant who skipped it in onboarding can add people there. Each row of a contact list sends back its contact's id, so a save edits that person in place and their link keeps working; an id that is not one of this list's own is taken as a new person, and someone taken off the list is deleted with their link.
 
+An observer's answers are kept as an `ObserverResponse` (an observer assessment and written answers), attached to the participant's response and never to a contact or invitation. Only submitted ones reach the observer average. Until the questionnaire exists, `python manage.py seed_observers --observers 3` creates a fake participant, `seed-participant-<n>@example.com` with the password `information.` (`--password` sets another) and consent already given, with a self-assessment and self-result of their own and that many submitted test observers, their values the same on every run. Everything it creates is marked as test data on the server; it needs a published pathway with an assessment block.
+
 ## Tests
 
 ```sh

@@ -35,3 +35,9 @@
 **Carried from 14a**
 
 - The observers' aggregate gives constructs in declaration order, while the participant's own result is ranked, so pair the two by construct id, never by position. Each construct's per-observer percents come sorted ascending, never in the order observers answered; keep them that way on screen
+
+**Carried from 14b**
+
+- [ ] No single observer's values reach the participant, even when the comparison is shown. 14b's guard test covers written answers only, since no page read observer responses before this ticket
+- The seeding command's participant has consent, a self-assessment and a self-result, but no onboarding and no completed sections. The results page opens without them; make sure the comparison does too, or the demo cannot reach it
+- `ObserverResponse.assessments_for(response)` gives the submitted observer assessments and whether every one is test data (False with none), ready for `aggregate()`

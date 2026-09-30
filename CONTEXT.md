@@ -97,8 +97,16 @@ A named quality an instrument measures. Items load onto constructs; items never 
 _Avoid_: dimension, axis, trait, category, pillar.
 
 **Bucket**:
-One of five named, ordered piles a participant sorts items into before fine-tuning, from weakest to strongest.
+One of five named, ordered piles items are placed into before fine-tuning, from weakest to strongest.
 _Avoid_: pile, band, tier.
+
+**Assessment**:
+One person's answer to the instrument, made by *placing* each item in a bucket and then *fine-tuning* its value. A participant's own is their **self-assessment**; an observer's about them is an **observer assessment**.
+_Avoid_: sort, sorting (for the answer or the step), ratings, test.
+
+**Placement**:
+One item's bucket and fine-tuned value within an assessment.
+_Avoid_: rating, card.
 
 **Compositional score**:
 A score expressed as a share of a grand total, so only relative shape survives and absolute strength is discarded. The prototype's profile is compositional; the plans call the same property *ipsative*.
@@ -141,8 +149,16 @@ One block's captured value within a response, keyed by that block's permanent id
 _Avoid_: field value, datum.
 
 **Result**:
-The scores and presentation computed from a response against the pathway version it was answered on, persisted once rather than recomputed.
-_Avoid_: report, profile, outcome.
+The scores and presentation computed from an assessment against the pathway version it was answered on. A **self-result** comes from a self-assessment and is persisted once rather than recomputed. An **observer result** comes from one observer assessment and is worked out when needed, never stored or shown on its own.
+_Avoid_: report, profile, profiling, outcome.
+
+**Observer average**:
+The observer results for one participant averaged, with every number hidden below the minimum number of observers.
+_Avoid_: aggregate, observers' result, others' profile.
+
+**Comparison**:
+A participant's self-result beside their observer average.
+_Avoid_: gap analysis, 360.
 
 **Enrolment code**:
 A shared code that admits a person to sign up to a deployment. It grants access only and never stands in for consent.

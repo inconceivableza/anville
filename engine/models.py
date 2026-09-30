@@ -1,5 +1,6 @@
 import hashlib
 import secrets
+from typing import NamedTuple
 
 from django.conf import settings
 from django.db import models, transaction
@@ -289,6 +290,52 @@ class Result(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["response", "block_id"], name="one_result_per_sort_per_response"),
         ]
+
+
+class ObserverAssessments(NamedTuple):
+    """✨ The observer assessments of one participant, as the observer average reads them, and whether every one is test
+    data (the comparison then says it is illustrative)."""
+
+    assessments: list
+    all_test_data: bool
+
+
+class ObserverResponse(models.Model):
+    """✨ One observer's answers about a participant: an observer assessment and written answers (ADR 0005).
+
+    Kept apart from who the observer is: nothing here points at a contact or an invitation, so identity and answers
+    can each go without the other. Whether it is test or seed data is decided here on the server, never by a client.
+    """
+
+    response = models.ForeignKey(Response, on_delete=models.CASCADE, related_name="observer_responses")
+    assessment = models.JSONField(null=True, blank=True)
+    written_answers = models.JSONField(default=dict)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    is_test_data = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            # ✨ A submitted response without an assessment would count towards the minimum and have nothing to score.
+            models.CheckConstraint(
+                condition=models.Q(submitted_at__isnull=True) | models.Q(assessment__isnull=False),
+                name="a_submitted_observer_response_holds_an_assessment",
+            ),
+        ]
+
+    @classmethod
+    def assessments_for(cls, response):
+        """✨ The submitted observer assessments of one participant's response, and whether every one is test data.
+
+        Drafts never count, and nothing else of an observer travels with their assessment: not their written answers,
+        and not which record it came from. With no observers there is nothing to call illustrative, so that is False.
+        """
+        submitted = cls.objects.filter(response=response, submitted_at__isnull=False).order_by("pk")
+        rows = list(submitted.values_list("assessment", "is_test_data"))
+        return ObserverAssessments(
+            assessments=[assessment for assessment, _ in rows],
+            all_test_data=bool(rows) and all(is_test_data for _, is_test_data in rows),
+        )
 
 
 class _MergeJson(Func):

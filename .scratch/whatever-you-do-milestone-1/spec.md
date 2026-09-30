@@ -255,7 +255,7 @@ So the 9 Oct showcase shows slice 2, without the studio, plus the observer flow,
 ### Responses, answers and results
 
 - There is one response per participant per pathway version, with answers stored as JSON keyed by block identifier. Autosave writes one block's answer at a time and never re-serialises the whole response.
-- Observer responses are separate records from the participant's and are owned separately. An observer never touches a participant's state (the prototype overwrote it).
+- Observer responses are separate records from the participant's, never written by the participant, and deleted with the participant's response. An observer never touches a participant's state (the prototype overwrote it).
 - A **result** is computed when the sort is submitted and stored against that pathway version. Later versions never recompute it.
 - There is no retake in this milestone. When retake is added it creates a new attempt and keeps the old ones, and comparisons always use the latest attempt. Until then the database refuses a second sort through the unique constraint `one_result_per_sort_per_response` (ticket 06), which retake has to replace with its attempt model.
 - Test and seed records are marked as such on the server. A client-side flag never distinguishes them.
@@ -275,6 +275,7 @@ So the 9 Oct showcase shows slice 2, without the studio, plus the observer flow,
 
 - The scoring method is the prototype's, frozen and named as a compositional score: each construct's raw value is the sum of its six item values, and its percentage is its raw value divided by the grand total, rounded independently. Ties fall back to declaration order. Percentages are not asserted to sum to 100.
 - Sliders left untouched keep their bucket seed, so a sort alone produces a complete profile.
+- The words for the answers follow `CONTEXT.md` (assessment, placement, self-result, observer result, observer average; ticket 35). The block type `sort_assessment` and the block id `strengths-sort` keep their names, since loaded pathway versions are immutable and answers are stored against the block id.
 - The rank-based colouring of PEP bars shares a colour between tied scores. The APEST bars use fixed per-construct colours.
 - The prototype's unbalanced APEST×PEP item matrix and its compositional nature are ported as they are and recorded as content debt for the content owner. Neither is fixed silently.
 - The comparison thresholds are data in the document: a gap of five percentage points or more is significant, and observer agreement is banded by range (up to 6 is strong agreement, up to 14 is some variation, above that is divided views). The comparison lists the five largest gaps across both frameworks.
@@ -290,6 +291,7 @@ So the 9 Oct showcase shows slice 2, without the studio, plus the observer flow,
 - Aggregation scores each observer's sort on its own before averaging, keeps the per-observer values for the distribution strip, and hides every number below the minimum number of observers. That minimum is three and is set in the pathway document. Below it the participant sees an explanation and nothing else.
 - A document may raise the minimum but never set it below three: fewer would come too close to exposing one observer's answers (developer's call, ticket 14a). The mean is each observer's unrounded share averaged and rounded once, not the prototype's average of already-rounded percents, so it can differ by one from the mean of the strip's rounded values. The per-observer values are given in ascending order, never in the order observers answered, so a participant who knows who answered when cannot pair a value with a person.
 - Withdrawing deletes the observer's answers.
+- An observer's answers belong to the participant's response and are deleted with it: they are personal data about the participant, so erasing the participant's answers erases what others said about them too (ticket 14b).
 - The participant sees only how many observers have answered, never which invited person has (ADR 0005).
 - Section 1's "comparison viewed" requirement is satisfied by visiting the comparison in either state, including the below-minimum explanation. Otherwise a participant would be locked out of every later section until three observers had answered, which could take weeks. (The prototype has the same trap: its empty state never sets the flag.)
 - The fallback for the demo, if observer invitations are cut, is the same mechanism as seeding: observers created directly as server-marked test data, passing through the real aggregation and suppression, with an on-screen label whenever every contributing observer is test data. There is no separate fixture.
