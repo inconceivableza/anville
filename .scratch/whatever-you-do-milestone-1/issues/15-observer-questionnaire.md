@@ -31,6 +31,11 @@
 - [ ] The sort widget's own wording is written into `frontend/src/sort.js`: "Sort your strengths", "Choose the bucket that fits best", "All 36 sorted!", "How strong is each one?", the fine-tune intro, and the slider anchors "Not me" and "Real strength". Observer wording needs it in the third person, so move it into the pathway document, role-keyed like other text, and hand it to the widget through the block type's `widget` entry, which already takes the role (`_sort_widget(document, role)` in `engine/document/blocks.py`)
 - The widget's contract: the page gives it `{"items": [{"id", "text"}], "buckets": [{"id", "label", "seed"}]}` (buckets weakest first) in a `json_script` beside a form it fills in. The form posts the whole sort once as `value`, and the server's `HX-Redirect` decides where the browser goes next, so an observer's flow can send them somewhere other than the results
 
+**Carried from 13b**
+
+- [ ] Reissuing or revoking a link deletes its invitation record (a new one is created on reissue). Decide whether submitted answers go with it before binding them to the invitation; a cascading key would let a reissue silently delete what an observer submitted
+- The observer's pages know them by the `observer` cookie their claim set, which holds one claim: someone observing for two participants keeps the first through its own link only. A plain visit to an own link sets no cookie, so another site cannot plant a claim
+
 ## Comments
 
 - Split of 13 (2026-09-29): the overall count of answers moved here from 13, since there are no answers to count before this ticket and 14.

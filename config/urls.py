@@ -26,12 +26,14 @@ from engine.views import (
     issue_invitation,
     move_past_page,
     observe,
+    observer,
     reopen_section,
     results,
     revoke_invitation,
     save_answer,
     section,
     start,
+    start_observing,
 )
 
 urlpatterns = [
@@ -47,7 +49,9 @@ urlpatterns = [
     path("invitations/", invitations, name="invitations"),
     path("invitations/<int:contact_id>/issue/", issue_invitation, name="issue_invitation"),
     path("invitations/<int:contact_id>/revoke/", revoke_invitation, name="revoke_invitation"),
+    path("observe/", observer, name="observer"),
     path("observe/<str:token>/", observe, name="observe"),
+    path("observe/<str:token>/start/", start_observing, name="start_observing"),
     path("sections/<slug:section_id>/", section, name="section"),
     path("sections/<slug:section_id>/pages/<int:page>/", section, name="section_page"),
     path("sections/<slug:section_id>/pages/<int:page>/continue/", move_past_page, name="move_past_page"),

@@ -1,0 +1,11 @@
+{% extends "engine/base.html" %}
+{% comment %}
+  ✨ A live observer link someone has already started from. Whoever holds it now has a link of their own, so this says
+  so and names nobody: if it was not the person it was sent to, they notice here and can ask for a new one.
+{% endcomment %}
+{% block head_title %}This link has already been used{% endblock head_title %}
+
+{% block content %}
+  <h1>This link has already been used</h1>
+  <p>Someone has already started answering with it. If that was not you, ask the person who sent it for a new link.</p>
+{% endblock content %}

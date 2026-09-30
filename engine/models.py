@@ -210,29 +210,62 @@ class Invitation(models.Model):
 
     The link's token is 32 random bytes, and only its hash is kept, so the link itself exists only in the page that
     issued it. Revoking deletes the record, so a revoked link is refused exactly as one that never existed.
-    Reissuing replaces the hash, which stops the previous link. Taking the contact off the list deletes it too.
+    Reissuing replaces the record, which stops the previous link and whatever was claimed through it. Taking the
+    contact off the list deletes it too.
+
+    The participant holds a copy of the link, so the observer claims it on first use: claiming exchanges it for a
+    secret of 32 random bytes of its own, again kept only as a hash, and the participant's copy is used up. The claimed
+    secret lasts as long as the link would have.
     """
 
     contact = models.OneToOneField(Contact, on_delete=models.CASCADE, related_name="invitation")
     token_hash = models.CharField(max_length=64, unique=True)
+    secret_hash = models.CharField(max_length=64, unique=True, null=True, blank=True)
     issued_at = models.DateTimeField()
     expires_at = models.DateTimeField()
+    claimed_at = models.DateTimeField(null=True, blank=True)
 
     @classmethod
     def issue(cls, contact, lifetime):
-        """✨ Give the contact a new link, lasting `lifetime`, in place of any they had. Returns the token, once."""
+        """✨ Give the contact a new link, lasting `lifetime`, in place of any they had. Returns the token, once.
+
+        A new record, not the old one with a new hash, so nothing bound to the old one (a claim, and later the answers
+        written through it) is reachable through the new link.
+        """
         token = secrets.token_urlsafe(32)
         now = timezone.now()
-        cls.objects.update_or_create(
-            contact=contact,
-            defaults={"token_hash": _hash_of(token), "issued_at": now, "expires_at": now + lifetime},
-        )
+        with transaction.atomic():
+            cls.objects.filter(contact=contact).delete()
+            cls.objects.create(contact=contact, token_hash=_hash_of(token), issued_at=now, expires_at=now + lifetime)
         return token
 
     @classmethod
     def live(cls, token):
-        """✨ The invitation a token belongs to, or None if it is wrong, expired or revoked. None says which."""
+        """✨ The invitation a token belongs to, claimed or not, or None if it is wrong, expired or revoked. None
+        says which."""
         return cls.objects.filter(token_hash=_hash_of(token), expires_at__gt=timezone.now()).first()
+
+    @classmethod
+    def claim(cls, token):
+        """✨ Exchange an unclaimed, live token for the observer's own secret, returned once; None if the token is
+        dead or already claimed. One UPDATE, so of two claims at once exactly one wins."""
+        secret = secrets.token_urlsafe(32)
+        now = timezone.now()
+        claimed = cls.objects.filter(token_hash=_hash_of(token), expires_at__gt=now, claimed_at__isnull=True).update(
+            secret_hash=_hash_of(secret), claimed_at=now
+        )
+        return secret if claimed else None
+
+    @classmethod
+    def claimed_by(cls, secret):
+        """✨ The live invitation an observer's secret claimed, with its contact, or None, saying nothing of why."""
+        if not secret:
+            return None
+        return (
+            cls.objects.select_related("contact__response__participant", "contact__response__version")
+            .filter(secret_hash=_hash_of(secret), expires_at__gt=timezone.now())
+            .first()
+        )
 
 
 def _hash_of(token):

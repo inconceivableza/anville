@@ -124,13 +124,13 @@
             "id": "gifts-activity",
             "type": "rich_text",
             "label": "Your activity",
-            "body": "This section uses the Strengths Assessment – a tool where you sort and rate your strengths across 36 areas. You can also invite people you trust to do the same for you. [Not built yet: inviting people you trust comes in a later version.]"
+            "body": "This section uses the Strengths Assessment – a tool where you sort and rate your strengths across 36 areas. You can also invite people you trust to do the same for you."
           },
           {
             "id": "strengths-link",
             "type": "section_link",
             "section": "strengths",
-            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 5 trusted people to assess you too. [Not built yet: inviting people you trust comes in a later version.]",
+            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 5 trusted people to assess you too.",
             "button_label": "Open Strengths Assessment →",
             "holds_what_follows": true
           },
@@ -405,6 +405,9 @@
       }
     ],
     "scoring": { "method": "compositional_share" }
+  },
+  "observers": {
+    "privacy_notice": "[Draft: this notice must be written properly before anyone real takes part.]\n\n{name} has asked you to help them see their strengths as others see them. You'll sort some strengths into buckets, adjust the intensity of each, and answer a few open questions about {name}. Takes about 10–15 minutes.\n\nWhat we keep: your answers, and how you know {name}. You don't give your name: we know who this link was sent to because {name} added you to their list, and that is kept apart from your answers.\n\nWhat {name} sees of your answers: only what everyone's add up to, and nothing until enough people have answered. Your name is never shown to {name} with your answers, and {name} never sees your written answers.\n\nIf you change your mind, you can withdraw while this link works, and your answers will be deleted."
   },
   "presentation": {
     "results_title": "{name}, here’s your profile",

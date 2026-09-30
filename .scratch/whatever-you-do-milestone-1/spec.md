@@ -414,6 +414,10 @@ Both UK and EU data protection law apply. The workbook's free text may contain s
   - Going ahead asks for the coach's name and email with the original prototype's tick, reworded: "I've spoken to this person and they're happy to receive a link from me about coaching me through this course." Saving shows "Sam is your coach" on the coach page, with "Choose someone else" and "Remove"; choosing someone else says Sam stays until another is saved, with "Keep Sam".
   - Saving stays on the coach page, in place of the original prototype's pair "I'll sort this later →" / "Save and continue →". The coach page's way on reads "I'll sort this later →" until a coach is kept, then "Continue with Sam →".
   - "Who knows you best?" asks for two people in *Whatever You Do* for now, not five, and leaves out "you can preview the exact email below".
+- **To show the content owner, from ticket 13b** (the developer's calls, to confirm, ideally at the 2 Oct demo):
+  - The observer's welcome keeps the prototype's "You've been invited" and its "What you'll do" sentence, drops "Your responses are completely anonymous" and the first-name box, and adds a privacy notice marked as a draft: what is kept, what the participant sees of the answers, and withdrawal. Its button reads "I'm answering for {name} →", in place of "Start →".
+  - The participant is named by their username (the part of their email before the @) until accounts hold a name.
+  - Starting shows the observer a link of their own to bookmark; the link they were sent then reads "This link has already been used".
 
 ### Defaults assumed but not explicitly agreed
 

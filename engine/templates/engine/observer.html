@@ -1,0 +1,23 @@
+{% extends "engine/base.html" %}
+{% comment %}
+  ✨ The observer's own page, once they have claimed their link. As they claim it, their own link is shown this once
+  to bookmark, since the one they were sent is now used up. The questions are ticket 15's.
+{% endcomment %}
+{% block head_title %}Answering for {{ name }}{% endblock head_title %}
+
+{% block content %}
+  <div class="section-header">
+    <h2>Answering for {{ name }}</h2>
+  </div>
+  {% if own_link %}
+    <div class="name-section invitation-link">
+      <label for="own-link">Bookmark this link, it's yours:</label>
+      <div class="invitation-link-row">
+        <input type="text" id="own-link" value="{{ own_link }}" readonly>
+        <button type="button" class="btn btn-primary invitation-copy" data-copy="own-link">Copy</button>
+      </div>
+      <p>This link is shown only this once. The one you were sent no longer works. Use this one to come back, from this device or another.</p>
+    </div>
+  {% endif %}
+  <p>[Not built yet: the questions come in a later version.]</p>
+{% endblock content %}

@@ -1,7 +1,21 @@
 {% extends "engine/base.html" %}
-{# ✨ Where a working observer link lands. The privacy notice and starting the questions are ticket 13b's. #}
+{% comment %}
+  ✨ Where a working, unclaimed observer link lands, from the original prototype's welcome screen: the privacy notice
+  before anything else, then the way to start, which claims the link. The prototype's name box is gone (observers type
+  no name, ADR 0005), and its "completely anonymous" with it; how the observer knows the participant is asked with
+  the questions (ticket 15).
+{% endcomment %}
 {% block head_title %}You've been invited{% endblock head_title %}
 
 {% block content %}
-  <h1>You've been invited</h1>
+  <div class="section-header">
+    <h2>You've been invited</h2>
+  </div>
+  <div class="hint-box">
+    {{ notice|linebreaks }}
+  </div>
+  <form method="post" action="{% url 'start_observing' token %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-full">I'm answering for {{ name }} →</button>
+  </form>
 {% endblock content %}

@@ -54,6 +54,10 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 365
+        },
+        "privacy_notice": {
+          "description": "What an observer is told before any question: who asked, what is stored, what the participant will and will not see, and how to withdraw. Paragraphs are separated by a blank line. {name} is replaced with the participant's name. The engine's own draft when left out.",
+          "$ref": "#/$defs/text"
         }
       }
     },

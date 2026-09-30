@@ -52,7 +52,7 @@ from engine.hub import (
     section_by_id,
     track_sections,
 )
-from engine.document.observers import link_lifetime
+from engine.document.observers import link_lifetime, privacy_notice
 from engine.models import Contact, Invitation, PathwayVersion, Publication, Response, Result
 from engine.results import results_page
 
@@ -484,11 +484,90 @@ def revoke_invitation(request, contact_id):
 
 
 def observe(request, token):
-    """✨ Where an observer's link leads. A wrong, expired or revoked link gets one refusal, the same for all three,
-    naming nobody. What the observer sees before answering is ticket 13b's."""
-    if Invitation.live(token) is None:
-        return render(request, "engine/link_refused.html", status=404)
-    return render(request, "engine/observer_landing.html")
+    """✨ Where an observer's link leads: before it is claimed, the privacy notice and the way to start; after, word
+    that it has been used. Opening it claims nothing. The observer's own link, claimed from it, leads to their page.
+    A wrong, expired or revoked link gets one refusal, the same for all three, naming nobody.
+
+    Observers have no account: nothing here reads or writes the signed-in user, if there is one.
+    """
+    invitation = Invitation.live(token)
+    if invitation is None:
+        return _observers_page(request, Invitation.claimed_by(token))  # ✨ an observer's own link, or the refusal
+    if invitation.claimed_at is not None:
+        return render(request, "engine/link_used.html", status=410)
+    document, name = _asked_by(invitation)
+    shown = render(
+        request,
+        "engine/observer_landing.html",
+        {"notice": privacy_notice(document, name), "name": name, "token": token},
+    )
+    shown["Cache-Control"] = "no-store"
+    return shown
+
+
+@require_POST
+def start_observing(request, token):
+    """✨ The observer's "I'm answering for Sam": the claim. Their own link is shown this once, straight back rather
+    than by redirect so it never sits in the history, and kept in a cookie so they need not follow it; the
+    participant's copy is used up. A second claim is told the link has been used, so whoever claimed first is
+    noticed, not hidden.
+
+    Only the claim sets the cookie, never a plain visit: this is a POST that carries a CSRF token, so no other site
+    can put someone else's claim in an observer's browser by sending it to a link.
+    """
+    secret = Invitation.claim(token)
+    if secret is None:
+        if Invitation.live(token) is not None:
+            return render(request, "engine/link_used.html", status=410)
+        return _refuse_link(request)
+    invitation = Invitation.claimed_by(secret)
+    own_link = request.build_absolute_uri(reverse("observe", args=[secret]))
+    shown = _observers_page(request, invitation, own_link=own_link)
+    if invitation is not None:
+        shown.set_cookie(
+            OBSERVER_COOKIE,
+            secret,
+            expires=invitation.expires_at,
+            path=reverse("observer"),
+            secure=request.is_secure(),
+            httponly=True,
+            samesite="Lax",
+        )
+    return shown
+
+
+def observer(request):
+    """✨ The observer's own page, reached by the cookie their claim left. The questions are ticket 15's."""
+    return _observers_page(request, Invitation.claimed_by(request.COOKIES.get(OBSERVER_COOKIE)))
+
+
+# ✨ Where an observer's own secret is kept, so the observer's pages know them without a link or an account. It
+# holds one claim: claiming a second link, for someone else, replaces the first, whose own link still works.
+OBSERVER_COOKIE = "observer"
+
+
+def _observers_page(request, invitation, own_link=None):
+    """✨ The observer's page for a claimed invitation, or the refusal if there is none. `own_link` is their link,
+    shown only as they claim it. Never cached, since it is reached by a secret."""
+    if invitation is None:
+        return _refuse_link(request)
+    _, name = _asked_by(invitation)
+    shown = render(request, "engine/observer.html", {"name": name, "own_link": own_link})
+    shown["Cache-Control"] = "no-store"
+    return shown
+
+
+def _refuse_link(request):
+    """✨ The one refusal for a wrong, expired or revoked link, or an observer's own link or cookie that no longer
+    works: the same for all, naming nobody."""
+    return render(request, "engine/link_refused.html", status=404)
+
+
+def _asked_by(invitation):
+    """✨ The pathway document an invitation belongs to, and the name of the participant who asked. Accounts hold no
+    name yet, so it is their username, as on the results page."""
+    participant_response = invitation.contact.response
+    return participant_response.version.document, participant_response.participant.get_username()
 
 
 def _invitations_page(request, issued=None, refused=None, status=200):

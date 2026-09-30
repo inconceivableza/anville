@@ -20,6 +20,11 @@ This can start as soon as ticket 05 lands, so hosting surprises surface early.
 - [ ] A smoke test passes on the deployed instance: sign up with the enrolment code, log in, complete a section, resume
 - [ ] Open, and not decided by this ticket: who the controller is, retention and the data protection impact assessment (see spec Further Notes). Confirm the arrangement works for everyone involved before any real participant is added
 
+**Carried from 13b**
+
+- [ ] Behind the TLS proxy, set `SECURE_PROXY_SSL_HEADER` so the observer cookie is marked Secure
+- [ ] Observers' links carry their token or secret in the path: keep them out of the web server's access logs
+
 **Carried from 03**
 
 - [ ] Password reset stays hidden and refused on staging, since no email delivery exists; the runbook says how the operator resets a password (`manage.py changepassword`). Re-enabling reset is ticket 28a
