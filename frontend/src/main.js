@@ -114,4 +114,19 @@ document.addEventListener("click", (event) => {
   addContactRow(button);
 });
 
+// ✨ Copy an issued observer link, as the prototype's Copy button does. Without JavaScript the field is still there
+// to select and copy by hand.
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-copy]");
+  if (!button) return;
+  const field = document.getElementById(button.dataset.copy);
+  field.select();
+  try {
+    await navigator.clipboard.writeText(field.value);
+    button.textContent = "Copied";
+  } catch {
+    button.textContent = "Select and copy it";
+  }
+});
+
 mountSorts();

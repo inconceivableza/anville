@@ -1,0 +1,11 @@
+{% extends "engine/base.html" %}
+{% comment %}
+  ✨ The one refusal for a wrong, expired or revoked link. It must be the same for all three and name nobody, so
+  that it gives away nothing about whose link it was, or whether there ever was one.
+{% endcomment %}
+{% block head_title %}This link does not work{% endblock head_title %}
+
+{% block content %}
+  <h1>This link does not work</h1>
+  <p>It may have expired or been withdrawn. If you were asked to take part, ask the person who sent it for a new link.</p>
+{% endblock content %}

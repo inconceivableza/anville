@@ -1,3 +1,6 @@
+import hashlib
+import secrets
+
 from django.conf import settings
 from django.db import models, transaction
 from django.db.models import F, Func, Value
@@ -185,6 +188,41 @@ class Contact(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["response", "block_id", "position"], name="one_contact_per_row"),
         ]
+
+
+class Invitation(models.Model):
+    """✨ The one live link a contact has to act as an observer (ADR 0005).
+
+    The link's token is 32 random bytes, and only its hash is kept, so the link itself exists only in the page that
+    issued it. Revoking deletes the record, so a revoked link is refused exactly as one that never existed.
+    Reissuing replaces the hash, which stops the previous link. Taking the contact off the list deletes it too.
+    """
+
+    contact = models.OneToOneField(Contact, on_delete=models.CASCADE, related_name="invitation")
+    token_hash = models.CharField(max_length=64, unique=True)
+    issued_at = models.DateTimeField()
+    expires_at = models.DateTimeField()
+
+    @classmethod
+    def issue(cls, contact, lifetime):
+        """✨ Give the contact a new link, lasting `lifetime`, in place of any they had. Returns the token, once."""
+        token = secrets.token_urlsafe(32)
+        now = timezone.now()
+        cls.objects.update_or_create(
+            contact=contact,
+            defaults={"token_hash": _hash_of(token), "issued_at": now, "expires_at": now + lifetime},
+        )
+        return token
+
+    @classmethod
+    def live(cls, token):
+        """✨ The invitation a token belongs to, or None if it is wrong, expired or revoked. None says which."""
+        return cls.objects.filter(token_hash=_hash_of(token), expires_at__gt=timezone.now()).first()
+
+
+def _hash_of(token):
+    # ✨ A plain SHA-256 is enough: 32 random bytes cannot be guessed, so a slow password hash would add nothing.
+    return hashlib.sha256(token.encode()).hexdigest()
 
 
 class Result(models.Model):

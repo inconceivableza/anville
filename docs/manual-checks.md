@@ -139,3 +139,11 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 ## Results
 
 - PEP bars that tie share a colour.
+
+## Inviting observers (the hub's "Invite others to assess you →")
+
+- Issuing a link shows it under that person's name, in a read-only field with Copy. Copy puts the whole link on the clipboard and reads "Copied"; pasting it in a private window opens "You've been invited".
+- Without JavaScript, there is no Copy button, and the link in the field can be selected and copied by hand.
+- Reloading the page after issuing no longer shows the link (only its hash is kept), and the person shows "Link works until …" with "Reissue link" and "Revoke link".
+- Going Back in the browser after issuing does not bring the link back from the cache.
+- Phone width: the link field and Copy stay on one line without the page scrolling sideways.

@@ -1,0 +1,56 @@
+{% extends "engine/base.html" %}
+{% comment %}
+  ✨ Inviting observers, from the original prototype's invite screen. Each person gets a link of their own, which
+  the participant copies and sends themselves (no email is sent). Only the link's hash is kept, so a link is shown
+  once, in the page that comes back after issuing it.
+{% endcomment %}
+{% block head_title %}Invite others to assess you{% endblock head_title %}
+
+{% block content %}
+  <div class="section-header">
+    <h2>Invite others to assess you</h2>
+    <p>The most valuable insights come from comparing your self-perception with how others see you. Invite people who know you well.</p>
+  </div>
+  <div class="hint-box">
+    <strong>Who to invite:</strong> A mix of family, friends, colleagues, and church family gives the richest picture. Choose people who know you well enough to be honest.
+  </div>
+
+  {% if people %}
+    <ul class="invitations">
+      {% for person in people %}
+        <li class="invitation">
+          <span class="invitation-name">{{ person.contact.name }}</span>
+          {% if issued.contact == person.contact.pk %}
+            <div class="name-section invitation-link">
+              <label for="invite-link-{{ person.contact.pk }}">Share this link with {{ person.contact.name }}:</label>
+              <div class="invitation-link-row">
+                <input type="text" id="invite-link-{{ person.contact.pk }}" value="{{ issued.link }}" readonly>
+                <button type="button" class="btn btn-primary invitation-copy" data-copy="invite-link-{{ person.contact.pk }}">Copy</button>
+              </div>
+              <p>This link is shown only this once. If you lose it, reissue it.</p>
+            </div>
+          {% endif %}
+          {% if person.invitation %}
+            <span class="invitation-status">Link works until {{ person.invitation.expires_at|date:"j F Y" }}</span>
+          {% endif %}
+          <form method="post" action="{% url 'issue_invitation' person.contact.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-secondary">{% if person.invitation %}Reissue link{% else %}Issue link{% endif %}</button>
+          </form>
+          {% if person.invitation %}
+            <form method="post" action="{% url 'revoke_invitation' person.contact.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-secondary">Revoke link</button>
+            </form>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>You have not added anyone yet.</p>
+  {% endif %}
+
+  <div class="nav-buttons">
+    <a class="btn btn-secondary" href="{% url 'hub' %}">← Back to workbook</a>
+  </div>
+{% endblock content %}

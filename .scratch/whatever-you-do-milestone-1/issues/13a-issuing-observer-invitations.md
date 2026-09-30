@@ -4,14 +4,14 @@
 
 **Blocked by:** 10a (Onboarding completion)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 1 (ends 2 Oct)
 
 **Spec:** Observers (ADR 0005); Testing Decisions
 
 - [ ] Editing the contact list keeps every contact's link working, the edited contact's included; taking a contact off the list revokes theirs
-- [ ] A participant can issue, copy, revoke and reissue each contact's link; reissuing kills the previous one
+- [x] A participant can issue, copy, revoke and reissue each contact's link; reissuing kills the previous one
 - [ ] A participant who skipped the contact list in onboarding can add contacts here
-- [ ] A token is 32 random bytes and only its hash is stored; the link expires after the lifetime set in the pathway document (30 days by default; a non-default value works too)
-- [ ] Wrong, expired and revoked links are refused without revealing anything about the participant
+- [x] A token is 32 random bytes and only its hash is stored; the link expires after the lifetime set in the pathway document (30 days by default; a non-default value works too)
+- [x] Wrong, expired and revoked links are refused without revealing anything about the participant

@@ -45,6 +45,9 @@
         </li>
       {% endfor %}
     </ol>
+
+    {# ✨ The prototype reaches its invite screen from a "Trusted Contacts · Manage →" card; the counts on it are ticket 14's. #}
+    <p class="hub-consent"><a href="{% url 'invitations' %}">Invite others to assess you →</a></p>
   {% else %}
     <h1>Nothing to begin yet</h1>
     <p>No pathway has been published here yet. When one is, it will appear on this page.</p>

@@ -1133,6 +1133,59 @@ p.time-estimate {
   color: var(--gold);
 }
 
+/* ✨ Inviting observers: one row per person, with their link shown once after issuing it. */
+
+.invitations {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+}
+
+.invitation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.invitation-name {
+  font-weight: 600;
+  flex: 1 1 auto;
+}
+
+.invitation-status {
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.invitation-link {
+  flex: 1 0 100%;
+  order: 1;
+  margin: 8px 0 0;
+}
+
+.invitation-link-row {
+  display: flex;
+  gap: 8px;
+}
+
+.invitation-link-row input {
+  flex: 1;
+  min-width: 0;
+  background: var(--cream);
+}
+
+/* ✨ Copy needs JavaScript, so it appears only once that has loaded; without it, the link is selected by hand. */
+.invitation-copy {
+  display: none;
+}
+
+html[data-javascript="loaded"] .invitation-copy {
+  display: inline-flex;
+}
+
 /* Autosave */
 
 .save-row {

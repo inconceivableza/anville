@@ -6,6 +6,7 @@ from django.db import IntegrityError
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_POST
 
@@ -44,7 +45,8 @@ from engine.hub import (
     section_by_id,
     track_sections,
 )
-from engine.models import Contact, PathwayVersion, Publication, Response, Result
+from engine.document.observers import link_lifetime
+from engine.models import Contact, Invitation, PathwayVersion, Publication, Response, Result
 from engine.results import results_page
 
 
@@ -423,6 +425,82 @@ def results(request, block_id):
         "page": page_of(section, block_id),
     }
     return render(request, "engine/results.html", shown)
+
+
+@login_required
+@consent_required
+def invitations(request):
+    """✨ The people on the participant's contact list, each with a link to act as an observer (ADR 0005)."""
+    return _invitations_page(request)
+
+
+@login_required
+@consent_required
+@require_POST
+def issue_invitation(request, contact_id):
+    """✨ Issue, or reissue, one contact's link, and show it this once: only its hash is kept.
+
+    The page comes straight back rather than by redirect, so the link never sits in an address or the history.
+    """
+    contact = _own_contact_or_404(request.user, contact_id)
+    token = Invitation.issue(contact, link_lifetime(contact.response.version.document))
+    issued = {"contact": contact.pk, "link": request.build_absolute_uri(reverse("observe", args=[token]))}
+    shown = _invitations_page(request, issued=issued)
+    shown["Cache-Control"] = "no-store"
+    return shown
+
+
+@login_required
+@consent_required
+@require_POST
+def revoke_invitation(request, contact_id):
+    """✨ Stop one contact's link. Revoking one that is already gone does nothing."""
+    contact = _own_contact_or_404(request.user, contact_id)
+    Invitation.objects.filter(contact=contact).delete()
+    return _see_other("invitations")
+
+
+def observe(request, token):
+    """✨ Where an observer's link leads. A wrong, expired or revoked link gets one refusal, the same for all three,
+    naming nobody. What the observer sees before answering is ticket 13b's."""
+    if Invitation.live(token) is None:
+        return render(request, "engine/link_refused.html", status=404)
+    return render(request, "engine/observer_landing.html")
+
+
+def _invitations_page(request, issued=None):
+    state = _participant(request.user)
+    contacts = Contact.objects.none()
+    if state.response is not None:
+        contacts = (
+            state.response.contacts.filter(role=Contact.Role.CONTACT)
+            .select_related("invitation")
+            .order_by("block_id", "position")
+        )
+    people = [{"contact": contact, "invitation": _live_invitation(contact)} for contact in contacts]
+    return render(request, "engine/invitations.html", {"people": people, "issued": issued})
+
+
+def _live_invitation(contact):
+    """✨ The contact's invitation while its link still works, or None."""
+    try:
+        invitation = contact.invitation
+    except Invitation.DoesNotExist:
+        return None
+    return invitation if invitation.expires_at > timezone.now() else None
+
+
+def _own_contact_or_404(user, contact_id):
+    """✨ One of this participant's own contacts (not their coach, whose link is ticket 13c's), or a 404 that says
+    nothing about whether anyone else has a contact by that number."""
+    contact = (
+        Contact.objects.select_related("response__version")
+        .filter(pk=contact_id, response__participant=user, role=Contact.Role.CONTACT)
+        .first()
+    )
+    if contact is None:
+        raise Http404("You have no contact by that number.")
+    return contact
 
 
 def page_url(section_id, page=1):

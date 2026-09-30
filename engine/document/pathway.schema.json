@@ -44,6 +44,19 @@
         }
       }
     },
+    "observers": {
+      "description": "How observers are invited (ADR 0005).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "link_lifetime_days": {
+          "description": "How many days an observer's link works after it is issued. 30 when left out.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365
+        }
+      }
+    },
     "presentation": {
       "type": "object",
       "additionalProperties": false,
