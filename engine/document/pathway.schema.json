@@ -55,6 +55,11 @@
           "minimum": 1,
           "maximum": 365
         },
+        "minimum_observers": {
+          "description": "How many observers must have answered before the participant sees any number from their answers. 3 when left out, and never fewer, so no one observer's answers can be picked out.",
+          "type": "integer",
+          "minimum": 3
+        },
         "privacy_notice": {
           "description": "What an observer is told before any question: who asked, what is stored, what the participant will and will not see, and how to withdraw. Paragraphs are separated by a blank line. {name} is replaced with the participant's name. The engine's own draft when left out.",
           "$ref": "#/$defs/text"

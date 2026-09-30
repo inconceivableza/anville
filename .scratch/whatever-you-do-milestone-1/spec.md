@@ -287,7 +287,8 @@ So the 9 Oct showcase shows slice 2, without the studio, plus the observer flow,
 - The observer sees a privacy notice before any question, stating who asked, what is stored, what the participant will and will not see, and how to withdraw. The copy states that their name is never shown to the participant and never that they are "completely anonymous", and promises nothing about whether the participant can tell that a given person has started or answered (they can, see above).
 - The observer sorts the same 36 items. Thirty-two are shared with the participant verbatim. Four say "you" or "yours" in the participant's wording and get observer wording: outlast them, different from theirs, matters to them, they could explain it. The observer screens are in the third person about the participant. The Christian framing is kept.
 - The seven written questions are stored and never shown to the participant.
-- Aggregation normalises per observer before averaging, keeps the per-observer values for the distribution strip, and hides every number below the minimum number of observers. That minimum is three and is set in the pathway document. Below it the participant sees an explanation and nothing else.
+- Aggregation scores each observer's sort on its own before averaging, keeps the per-observer values for the distribution strip, and hides every number below the minimum number of observers. That minimum is three and is set in the pathway document. Below it the participant sees an explanation and nothing else.
+- A document may raise the minimum but never set it below three: fewer would come too close to exposing one observer's answers (developer's call, ticket 14a). The mean is each observer's unrounded share averaged and rounded once, not the prototype's average of already-rounded percents, so it can differ by one from the mean of the strip's rounded values. The per-observer values are given in ascending order, never in the order observers answered, so a participant who knows who answered when cannot pair a value with a person.
 - Withdrawing deletes the observer's answers.
 - The participant sees only how many observers have answered, never which invited person has (ADR 0005).
 - Section 1's "comparison viewed" requirement is satisfied by visiting the comparison in either state, including the below-minimum explanation. Otherwise a participant would be locked out of every later section until three observers had answered, which could take weeks. (The prototype has the same trap: its empty state never sets the flag.)
@@ -353,7 +354,7 @@ So the 9 Oct showcase shows slice 2, without the studio, plus the observer flow,
   - publishing from the studio creates an immutable version and never modifies an existing one, and a preview creates no response;
   - an empty pathway renders the empty state.
 - Pure-core tests use golden fixtures that reproduce the prototype's scoring output for fixed inputs. The prototype's stored bucket integers are inverted against the new ordering, so the mapping (prototype bucket 1 is the strongest bucket) is encoded once in the fixtures and not left to be applied by hand. Fixtures include an all-strongest and an all-weakest sort, which produce the same profile because the score is compositional. Rounding drift is respected, and no test asserts the percentages sum to 100.
-- Pure-core tests also cover gate clause evaluation for every clause type, document validation errors carrying document paths, per-observer normalisation before averaging, the five-point gap rule, the agreement bands, tie-breaking by declaration order, and the linter's second-person warning.
+- Pure-core tests also cover gate clause evaluation for every clause type, document validation errors carrying document paths, scoring each observer on their own before averaging, the five-point gap rule, the agreement bands, tie-breaking by declaration order, and the linter's second-person warning.
 - Browser tests for the Vite widgets are out of scope for this milestone. The widgets are checked by hand, and the server-side validator for each block's answer is covered by the two seams above.
 - There is no existing test code in the repository. This spec sets the prior art: the golden-fixture approach for scoring, and journey tests for everything with a URL.
 
@@ -398,6 +399,11 @@ Both UK and EU data protection law apply. The workbook's free text may contain s
 ### Open content and product items
 
 - **Unbalanced item matrix.** Shepherd and deacon items can never earn Ponder points, and Teacher items can never earn Rally points. The scoring is also compositional, so "strong across the board" cannot be expressed. Both are ported as they are and raised with the content owner as content debt. Fixing either changes every participant's results and would need a new scoring method or a new version.
+- **Kept only because the prototype did it** (raised in ticket 14a, to review with the content owner, and likely to change soon; the first three are frozen in `compositional_share`, so changing any is a new named method, never an edit):
+  - Each percent is rounded half up, like JavaScript's `Math.round`, and each construct on its own, so a framework's percents need not add up to 100.
+  - The score is a share of the grand total (see the item matrix above).
+  - Ties fall back to declaration order (ticket 30 may settle this).
+  - The comparison's thresholds (a five-point gap; agreement bands at 6 and 14) and the bucket slider seeds (10, 25, 45, 65, 85) are the prototype's numbers. They are data in the document, so they change without code.
 - **Retake**, **letter scheduling and delivery**, **the growth-plan board** and **structural studio editing** are all deferred and are recorded above as out of scope.
 - **Observer withdrawal after expiry.** An observer withdraws through their link while it is valid. How they withdraw once it has expired (for example, by contacting the deployment's operator) is not decided.
 - **To show the content owner, from ticket 09** (the developer's calls, to confirm, ideally at the 2 Oct demo):

@@ -31,3 +31,7 @@
 
 - The code review of ticket 09 found the same data clump again, and `_section_page()` now also works out `track_sections(version.document)` twice (once for `open_blocks`, once for the section link's hub states); gathering the participant's facts into one value is the place to fix both
 - Section 1's gate is shown as a checklist beneath "Mark complete", every clause's message listed and ticked once met, so the "comparison visited" clause appears there like any other, unticked until the comparison is visited. Section 1's reflection is held behind the Strengths assessment link until the sort is in (`holds_what_follows`), so while it is held the page shows no checklist at all
+
+**Carried from 14a**
+
+- The observers' aggregate gives constructs in declaration order, while the participant's own result is ranked, so pair the two by construct id, never by position. Each construct's per-observer percents come sorted ascending, never in the order observers answered; keep them that way on screen

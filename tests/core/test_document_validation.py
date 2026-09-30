@@ -311,3 +311,10 @@ def test_a_time_estimate_is_authored_text_not_a_number_of_minutes():
         "/content/sections/1/blocks/0/estimate",
         "/content/sections/1/estimate",
     ]
+
+
+def test_a_document_may_not_lower_the_minimum_number_of_observers_below_three():
+    document = pathway_document()
+    document["observers"] = {"minimum_observers": 2}
+
+    assert [problem.path for problem in validate(document)] == ["/observers/minimum_observers"]
