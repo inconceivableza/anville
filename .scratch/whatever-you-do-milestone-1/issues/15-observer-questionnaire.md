@@ -1,8 +1,8 @@
 # 15: Observer questionnaire
 
-**What to build:** The observer's questionnaire, working end to end. Following their invitation link, an observer sorts and fine-tunes the same 36 statements about the participant (in the third person), answers seven written questions, and finishes with a thank-you. Their answers are stored in the observer response record from ticket 14. The prototype's version is unreachable in normal use; this is designed fresh.
+**What to build:** The observer's questionnaire, working end to end. Following their invitation link, an observer sorts and fine-tunes the same 36 statements about the participant (in the third person), answers seven written questions, and finishes with a thank-you. Their answers are stored in the observer response record from ticket 14b. The prototype's version is unreachable in normal use; this is designed fresh.
 
-**Blocked by:** 07 (Sort and fine-tune widget), 13b (The observer's landing page and claiming the link), 14 (Observer responses, aggregation and suppression)
+**Blocked by:** 07 (Sort and fine-tune widget), 13b (The observer's landing page and claiming the link), 14b (Observer responses and seeding)
 
 **Status:** ready-for-agent
 
@@ -10,7 +10,7 @@
 
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
 
-**Cut order:** fourth, together with ticket 13b. If time runs short, the comparison is fed by seeded test observers (ticket 14) and labelled as illustrative (ticket 16).
+**Cut order:** fourth, together with ticket 13b. If time runs short, the comparison is fed by seeded test observers (ticket 14b) and labelled as illustrative (ticket 16).
 
 - [ ] The sort and slider screens address the participant's first name in the third person and reuse the sort widget with observer wording
 - [ ] Thirty-two items are shared with the participant verbatim; the four that say "you" or "yours" carry observer wording: outlast them, different from theirs, matters to them, they could explain it
@@ -19,11 +19,10 @@
 - [ ] Seven written questions (what energises them, three best qualities, a new skill, an existing skill, a character area, the biggest change seen, what they struggle with) are stored and never shown to the participant
 - [ ] The observer chooses a relationship, stored but never used to slice or filter results
 - [ ] One submission per token, then locked
-- [ ] Submitted answers are never shown back through any link. The participant copies every link, so a read-back would show them one observer's answers and get round ticket 14's minimum of three
+- [ ] Submitted answers are never shown back through any link. The participant copies every link, so a read-back would show them one observer's answers and get round ticket 14a's minimum of three
 - [ ] The questionnaire, and withdrawal, work only through the observer's claimed secret (ticket 13b), never the participant's copy
 - [ ] An observer can withdraw through their claimed link while it is valid, which deletes their answers; how an observer withdraws after the link expires is open (see spec Further Notes)
 - [ ] A thank-you screen closes the flow; an observer following their claimed link before submitting reaches the questions, and after submitting sees only the thank-you and withdrawal
-- [ ] The participant sees an overall count of answers, never which invited person has answered (ADR 0005)
 - [ ] Journey tests cover the full observer path, the lock after submission, withdrawal, that no answer is shown after submission, and that the participant's copy of the link can neither answer nor withdraw once claimed
 
 **Carried from 07**
@@ -38,4 +37,5 @@
 
 ## Comments
 
-- Split of 13 (2026-09-29): the overall count of answers moved here from 13, since there are no answers to count before this ticket and 14.
+- Split of 13 (2026-09-29): the overall count of answers moved here from 13, since there are no answers to count before this ticket and 14b.
+- Split of 14 (2026-09-30): the overall count of answers moved on to 16, which owns the participant's comparison page, so it survives if this ticket is cut.

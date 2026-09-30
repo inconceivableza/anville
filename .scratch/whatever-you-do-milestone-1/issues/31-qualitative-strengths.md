@@ -2,7 +2,7 @@
 
 **What to build:** The written half of the strengths work. The participant and their observers answer the same six written questions, phrased for each side, and the participant sees their own answers beside the observers', shuffled so no observer's answers can be linked across questions. Three best qualities, given as three single words, get their own comparison: words both sides chose, words only observers chose, and words only the participant chose.
 
-**Blocked by:** 09 (Section 1 and the Strengths assessment section), 14 (Observer responses, aggregation and suppression), 15 (Observer questionnaire), 16 (Comparison screen)
+**Blocked by:** 09 (Section 1 and the Strengths assessment section), 14b (Observer responses and seeding), 15 (Observer questionnaire), 16 (Comparison screen)
 
 **See also:** `Prototypes for reference/qualitative-strengths-prototype.html`, the content owner's prototype. Its insight boxes ("You said impatience. Three of them said some version of confidence") are hand-written sample text; only the word comparison can be computed.
 
