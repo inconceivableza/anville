@@ -147,3 +147,5 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Reloading the page after issuing no longer shows the link (only its hash is kept), and the person shows "Link works until …" with "Reissue link" and "Revoke link".
 - Going Back in the browser after issuing does not bring the link back from the cache.
 - Phone width: the link field and Copy stay on one line without the page scrolling sideways.
+- The contact list under "Add or change people": adding someone and pressing "Save list" comes back to the page, scrolled to the list rather than the top, with them listed above, ready to issue a link. A refused save (an email like `priya@`) comes back at the list too, as typed, with the field marked and why beside "Save list". With JavaScript, "+ Add another person" adds a row in place; without it, it saves and comes back with one more row.
+- Autosave keeps people's links: in onboarding, add Jo and Priya in new rows without reloading (each field autosaves), issue Jo's link on the invitations page in another tab, then back in onboarding (still not reloaded) change Jo's email. Jo's link still opens "You've been invited".

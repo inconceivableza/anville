@@ -1,9 +1,17 @@
 {% comment %}
   ✨ Where autosave reports back. The version is the one this page was rendered from, so a participant's first
   answer is recorded against what they read. The button is for browsers without JavaScript and is hidden once it has loaded.
+
+  A form that is not autosaved passes `save_label`: its button then always shows, with that label, and a refused
+  save (`refusal`) is shown beside it when the page comes back.
 {% endcomment %}
 <input type="hidden" name="version" value="{{ pathway.version_id }}">
 <div class="save-row">
-  <output class="save-status" aria-live="polite"></output>
-  <button type="submit" class="btn btn-secondary btn-sm save-fallback">Save</button>
+  {% if save_label %}
+    {% if refusal %}<p class="save-status" role="alert"><span class="save-refused">Not saved. {{ refusal }}</span></p>{% endif %}
+    <button type="submit" class="btn btn-primary btn-sm">{{ save_label }}</button>
+  {% else %}
+    <output class="save-status" aria-live="polite"></output>
+    <button type="submit" class="btn btn-secondary btn-sm save-fallback">Save</button>
+  {% endif %}
 </div>

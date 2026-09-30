@@ -33,7 +33,14 @@ from engine.document.coach import (
     coach_details_as_typed,
     coach_from_form,
 )
-from engine.document.contacts import MAX_CONTACTS, contacts_from_form, rows_to_show
+from engine.document.contacts import (
+    MAX_CONTACTS,
+    contact_id_per_row,
+    contacts_from_form,
+    rows_as_typed,
+    rows_posted,
+    rows_to_show,
+)
 from engine.document.gates import has_content
 from engine.document.scoring import score
 from engine.hub import (
@@ -217,19 +224,31 @@ def save_answer(request, block_id):
     block_type = BLOCK_TYPES[block["type"]]
     try:
         if block_type.captures is CONTACTS:
-            value = contacts_from_form(request.POST.getlist("name"), request.POST.getlist("email"))
+            names, emails = request.POST.getlist("name"), request.POST.getlist("email")
+            value = contacts_from_form(names, emails, request.POST.getlist("contact"))
         else:
             value = answer_from_form(state.version.document, block, request.POST.get("value"))
     except AnswerRefused as refused:
         context = {"refusal": str(refused), "invalid_row": refused.row, "invalid_field": refused.field}
+        if block_type.captures is CONTACTS and request.POST.get("next") == "invitations":
+            # ✨ That list is not autosaved, so there is no status line to put this in: the page comes back instead,
+            # with the list as typed.
+            typed = {"rows": rows_as_typed(names, emails, request.POST.getlist("contact")), **context}
+            return _invitations_page(request, refused={block_id: typed}, status=400)
         return render(request, "engine/save_status.html", context, status=400)
 
     participant_response = state.stored_response(request.user)
     # ✨ The row is updated in place, so the answers read before are a step behind what is about to be stored.
     saved = state._replace(answers={**state.answers, block_id: value})
     if block_type.captures is CONTACTS:
-        participant_response.replace_contacts(block_id, value, Contact.Role.CONTACT)
-        return _saved(request, saved, section, block_id)
+        saved_contacts = participant_response.replace_contacts(block_id, value, Contact.Role.CONTACT)
+        if request.POST.get("next") == "invitations":
+            return _see_other(f"{reverse('invitations')}{_rows_query(request.POST)}")
+        # ✨ main.js puts these back into the rows, so the next autosave from the same page edits the people this one
+        # kept rather than adding them again.
+        saved_ids = [contact.pk for contact in saved_contacts]
+        contact_ids = contact_id_per_row(value, saved_ids, rows_posted(names, emails))
+        return _saved(request, saved, section, block_id, contact_ids)
     if block_type.scored:
         try:
             participant_response.submit_sort(block_id, value, score(state.version.document, value))
@@ -384,7 +403,7 @@ def _coach_kept(answers, block_id):
     return kept[0] if kept else None
 
 
-def _saved(request, state, section, block_id):
+def _saved(request, state, section, block_id, contact_ids=None):
     """✨ What a stored answer sends back: with htmx, the status and its page's gate; without, its page again.
 
     A contact list's "add another" without JavaScript saves the list and asks for one more row than it showed,
@@ -393,10 +412,14 @@ def _saved(request, state, section, block_id):
     page = page_of(section, block_id)
     if request.headers.get("HX-Request") == "true":
         shown = _section_page(state, section, page)
-        return render(request, "engine/save_result.html", shown)
-    rows = _asked_rows(request.POST)
-    query = f"?rows={rows}" if rows else ""
-    return _see_other(f"{page_url(section['id'], page)}{query}#block-{block_id}")
+        return render(request, "engine/save_result.html", {**shown, "contact_ids": contact_ids})
+    return _see_other(f"{page_url(section['id'], page)}{_rows_query(request.POST)}#block-{block_id}")
+
+
+def _rows_query(posted):
+    """✨ The address's query for the rows "add another" asked for without JavaScript, or nothing."""
+    rows = _asked_rows(posted)
+    return f"?rows={rows}" if rows else ""
 
 
 @login_required
@@ -468,7 +491,9 @@ def observe(request, token):
     return render(request, "engine/observer_landing.html")
 
 
-def _invitations_page(request, issued=None):
+def _invitations_page(request, issued=None, refused=None, status=200):
+    """✨ The invitations page. `issued` is a link just issued, shown this once; `refused` is a contact list whose
+    save was refused, keyed by block, with its rows as typed and why, shown in place of what is stored."""
     state = _participant(request.user)
     contacts = Contact.objects.none()
     if state.response is not None:
@@ -478,7 +503,30 @@ def _invitations_page(request, issued=None):
             .order_by("block_id", "position")
         )
     people = [{"contact": contact, "invitation": _live_invitation(contact)} for contact in contacts]
-    return render(request, "engine/invitations.html", {"people": people, "issued": issued})
+    contact_lists = _contact_lists_to_edit(state, request.GET, refused or {})
+    shown = {"people": people, "issued": issued, "contact_lists": contact_lists}
+    if state.version is not None:
+        shown["pathway"] = {"version_id": state.version.pk, "max_contacts": MAX_CONTACTS}
+    return render(request, "engine/invitations.html", shown, status=status)
+
+
+def _contact_lists_to_edit(state, query, refused):
+    """✨ The pathway's contact lists the participant can change here, as their template needs them: those they have
+    reached, so one skipped in onboarding can be filled in now, and not fixed by a completion. A list whose save was
+    refused shows as typed, with why."""
+    if state.version is None:
+        return []
+    document = state.version.document
+    return [
+        {
+            **_block_for_participant(document, block, state.answers, state.fixed, {}, _asked_rows(query)),
+            **refused.get(block["id"], {}),
+        }
+        for block in blocks_of(document)
+        if block["type"] == "contact_list"
+        and block["id"] not in state.fixed
+        and _is_open(state, section_of(document, block["id"]), block)
+    ]
 
 
 def _live_invitation(contact):

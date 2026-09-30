@@ -1,4 +1,5 @@
 {% comment %}
-  ✨ Where a refusal is about one entry of a list, it says which, and main.js marks that field in the page.
+  ✨ Where a refusal is about one entry of a list, it says which, and main.js marks that field in the page. A
+  contact list's save sends each row's contact id as it now is, which main.js puts back into the rows.
 {% endcomment %}
-{% if refusal %}<span class="save-refused"{% if invalid_row %} data-invalid-row="{{ invalid_row }}" data-invalid-field="{{ invalid_field }}"{% endif %}>Not saved. {{ refusal }}</span>{% else %}Saved{% endif %}
+{% if refusal %}<span class="save-refused"{% if invalid_row %} data-invalid-row="{{ invalid_row }}" data-invalid-field="{{ invalid_field }}"{% endif %}>Not saved. {{ refusal }}</span>{% else %}Saved{% if contact_ids is not None %}<span hidden data-contact-ids="{{ contact_ids|join:',' }}"></span>{% endif %}{% endif %}

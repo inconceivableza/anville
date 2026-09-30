@@ -50,6 +50,18 @@
     <p>You have not added anyone yet.</p>
   {% endif %}
 
+  {% comment %}
+    ✨ The pathway's contact list, so someone who skipped it in onboarding can add people here, and anyone can
+    change it. Changing a person's name or email keeps their link working; taking them off the list stops it.
+  {% endcomment %}
+  {% if contact_lists %}
+    <h3>Add or change people</h3>
+    <p>Changing someone's name or email keeps their link working. Taking them off the list stops it.</p>
+    {% for block in contact_lists %}
+      {% include "engine/blocks/contact_list.html" with on_invitations_page=True %}
+    {% endfor %}
+  {% endif %}
+
   <div class="nav-buttons">
     <a class="btn btn-secondary" href="{% url 'hub' %}">← Back to workbook</a>
   </div>

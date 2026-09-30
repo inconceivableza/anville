@@ -127,7 +127,8 @@ CHOICE = AnswerKind("choice", _choice_schema, "Choose one of the options.", _tex
 
 # ✨ People other than the participant. A list is not sent as one form value: `contacts_from_form` reads its
 # rows and holds them to their rules, and they are kept as contacts rather than answers. The schema is what the
-# gate then reads.
+# gate then reads. Each person also carries their contact id (an integer as stored, as sent back by the form a
+# string, "" before they are saved), and as a form sends them, their row on it.
 CONTACTS = AnswerKind(
     "contacts",
     {
@@ -136,7 +137,12 @@ CONTACTS = AnswerKind(
             "type": "object",
             "additionalProperties": False,
             "required": ["name", "email"],
-            "properties": {"name": {"type": "string"}, "email": {"type": "string"}},
+            "properties": {
+                "name": {"type": "string"},
+                "email": {"type": "string"},
+                "id": {"type": ["integer", "string"]},
+                "row": {"type": "integer"},
+            },
         },
     },
     "Check the names and email addresses.",

@@ -147,24 +147,39 @@ class Response(models.Model):
 
 
     def replace_contacts(self, block_id, contacts, role):
-        """✨ Keep exactly these people for one block, in order, in place of whoever it held before.
+        """✨ Keep exactly these people for one block, in order, in place of whoever it held before, and return them
+        as kept, in that order.
 
-        Done together or not at all, so a list is never kept half-replaced. Someone taken off the list is
-        deleted, not merely hidden: they are another person's details, kept only while the participant wants them.
+        A person carrying the `id` of one this block already holds is that contact, edited in place, so their
+        observer's link keeps working; any other id (someone else's, or one since deleted) is taken as a new
+        person. Done together or not at all, so a list is never kept half-replaced. Someone taken off the list is
+        deleted, not merely hidden: they are another person's details, kept only while the participant wants them,
+        and their link goes with them.
         """
         with transaction.atomic():
-            self.contacts.filter(block_id=block_id).delete()
-            Contact.objects.bulk_create(
-                Contact(response=self, block_id=block_id, role=role, position=position, **contact)
-                for position, contact in enumerate(contacts)
-            )
+            held = {str(contact.pk): contact for contact in self.contacts.filter(block_id=block_id)}
+            # ✨ Out of the way of the positions about to be taken, which one_contact_per_row keeps one to a row.
+            # Postgres checks that row by row as it updates, so the rows move past every position now held too.
+            out_of_the_way = max([len(contacts), *(contact.position + 1 for contact in held.values())])
+            kept = [held.pop(str(person.get("id") or ""), None) for person in contacts]
+            Contact.objects.filter(pk__in=[contact.pk for contact in held.values()]).delete()
+            self.contacts.filter(block_id=block_id).update(position=F("position") + out_of_the_way)
+            for position, (person, contact) in enumerate(zip(contacts, kept)):
+                if contact is None:
+                    contact = Contact(response=self, block_id=block_id, role=role)
+                contact.position, contact.name, contact.email = position, person["name"], person["email"]
+                contact.save()
+                kept[position] = contact
         Response.objects.filter(pk=self.pk).update(updated_at=timezone.now())
+        return kept
 
     def answers_with_contacts(self):
-        """✨ The stored answers, with each block's contacts read in as its answer, as the gate and progress read it."""
+        """✨ The stored answers, with each block's contacts read in as its answer, as the gate and progress read it.
+        Each contact carries its id, which a contact list's rows send back so a save can tell them apart."""
         kept = {}
         for contact in self.contacts.order_by("block_id", "position"):
-            kept.setdefault(contact.block_id, []).append({"name": contact.name, "email": contact.email})
+            person = {"name": contact.name, "email": contact.email, "id": contact.pk}
+            kept.setdefault(contact.block_id, []).append(person)
         return {**self.answers, **kept}
 
 

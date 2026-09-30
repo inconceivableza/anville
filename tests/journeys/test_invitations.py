@@ -14,7 +14,20 @@ import pytest
 import time_machine
 from django.test import Client
 
-from tests.journeys.test_contact_list import JO, PRIYA, participant, save_contacts, with_a_contact_list  # noqa: F401
+from engine.models import Contact, Response
+from tests.journeys.test_answers import shown
+from tests.journeys.test_contact_list import (  # noqa: F401  (participant is a fixture, used by name)
+    BLANK,
+    CHRIS,
+    JO,
+    ONBOARDING,
+    PRIYA,
+    participant,
+    rows_shown,
+    save_contacts,
+    stored,
+    with_a_contact_list,
+)
 from tests.journeys.test_hub import a_fresh_participant, signed_in_client  # noqa: F401  (fixtures, used by name)
 
 ISSUED_AT = datetime(2026, 10, 1, 9, 0, tzinfo=timezone.utc)
@@ -44,6 +57,31 @@ def issue_link(client, name):
 
 def token_of(link):
     return link.split("/")[2]
+
+
+def contact_list_form(page):
+    found = re.search(r'<form id="block-contacts".*?</form>', page, re.S)
+    assert found, "no contact list on this page"
+    return found.group(0)
+
+
+def contact_ids_shown(page):
+    """✨ The contact id each row of the list sends back with its name and email, "" for a row not yet saved."""
+    inputs = re.findall(r'<input[^>]*\bname="contact"[^>]*>', contact_list_form(page))
+    assert inputs, "the contact list's rows send back no contact ids"
+    return [re.search(r'value="([^"]*)"', tag).group(1) if 'value="' in tag else "" for tag in inputs]
+
+
+def save_on_the_invitations_page(client, *rows):
+    """✨ Save the list from the invitations page as the browser does: the form's own fields, one name and one email
+    per row, and each row's contact id as the page shows it ("" past the rows it showed)."""
+    page = client.get("/invitations/").content.decode()
+    form = contact_list_form(page)
+    action = re.search(r'\baction="([^"]+)"', form).group(1)
+    hidden = dict(re.findall(r'<input[^>]*type="hidden"[^>]*name="([^"]+)"[^>]*value="([^"]*)"', form))
+    ids = [*contact_ids_shown(page), *[""] * len(rows)][: len(rows)]
+    posted = {"name": [name for name, _ in rows], "email": [email for _, email in rows], "contact": ids}
+    return client.post(action, {**hidden, **posted})
 
 
 # Refusals
@@ -140,3 +178,86 @@ def test_a_link_lasts_as_long_as_the_pathway_document_says_30_days_unless_it_say
         assert observer.get(link).status_code == 200
     with time_machine.travel(ISSUED_AT + timedelta(days=lasts_days, minutes=1), tick=False):
         assert observer.get(link).status_code == 404
+
+
+# Editing the list
+
+
+@pytest.mark.django_db
+def test_editing_the_list_keeps_every_link_working_and_taking_someone_off_revokes_theirs(participant, observer):
+    save_contacts(participant, JO, PRIYA, CHRIS)
+    jo, priya, chris = (issue_link(participant, name) for name in ("Jo", "Priya", "Chris"))
+    ids = contact_ids_shown(shown(participant, ONBOARDING))
+
+    save_contacts(participant, ("Joanne", "joanne@example.com"), CHRIS, contact=[ids[0], ids[2]])
+
+    assert stored() == [("Joanne", "joanne@example.com"), CHRIS]
+    assert observer.get(jo).status_code == 200
+    assert observer.get(chris).status_code == 200
+    assert observer.get(priya).status_code == 404
+
+
+@pytest.mark.django_db
+def test_a_contact_id_that_is_not_the_participants_own_is_saved_as_someone_new(participant, observer):
+    save_contacts(participant, JO)
+    jo = issue_link(participant, "Jo")
+    jos_id = contact_ids_shown(shown(participant, ONBOARDING))[0]
+
+    someone_else = a_fresh_participant(participant, "someone@example.com")
+    save_contacts(someone_else, PRIYA, contact=[jos_id])
+
+    assert Contact.objects.get(pk=jos_id).name == "Jo"
+    assert sorted(stored()) == sorted([JO, PRIYA])
+    assert observer.get(jo).status_code == 200
+
+
+@pytest.mark.django_db
+def test_a_participant_who_skipped_the_list_can_add_people_on_the_invitations_page_and_invite_them(
+    participant, observer
+):
+    """✨ The page's list saves and comes back to the invitations page, so the person added can be invited."""
+    assert participant.post(f"/sections/{ONBOARDING}/complete/").status_code == 303
+    assert rows_shown(participant.get("/invitations/").content.decode()) == [BLANK, BLANK]
+
+    saved = save_on_the_invitations_page(participant, JO)
+
+    assert saved.status_code == 303
+    assert saved.url == "/invitations/"
+    assert observer.get(issue_link(participant, "Jo")).status_code == 200
+
+
+@pytest.mark.django_db
+def test_a_list_refused_on_the_invitations_page_comes_back_there_as_typed_saying_why(participant):
+    """✨ The page's list is not autosaved, so a refusal comes back as the page itself, with what was typed kept and
+    the field at fault marked, rather than as a status line with nowhere to show it."""
+    save_contacts(participant, JO)
+
+    refused = save_on_the_invitations_page(participant, JO, ("Priya", "priya@"))
+
+    page = refused.content.decode()
+    assert refused.status_code == 400
+    assert "Invite others to assess you" in page
+    assert "Check the email address in row 2." in page
+    assert rows_shown(page) == [JO, ("Priya", "priya@")]
+    assert re.search(r'<input[^>]*name="email"[^>]*value="priya@"[^>]*aria-invalid="true"', page)
+    assert stored() == [JO]
+
+
+# Who is listed
+
+
+@pytest.mark.django_db
+def test_the_coach_is_not_listed_on_the_invitations_page(participant):
+    """✨ The coach's link is ticket 13c's.
+
+    The coach is stored with the call the coach checklist makes to keep one (`engine/views.py`, `coach_checklist`)
+    rather than by walking the checklist over HTTP, which would tie this test to ticket 12's screens. The cost: if
+    the checklist ever stores its coach another way, this test will not notice.
+    """
+    save_contacts(participant, JO)
+    Response.objects.get().replace_contacts("coach", [{"name": "Sam", "email": "sam@example.com"}], Contact.Role.COACH)
+
+    page = participant.get("/invitations/").content.decode()
+
+    assert ">Jo<" in page
+    assert "Sam" not in page

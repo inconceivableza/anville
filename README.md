@@ -144,6 +144,8 @@ The golden fixtures in `tests/core/golden/` are the prototype's own scoring outp
 
 `/invitations/`, linked from the hub, lists the people on the participant's contact list, each with a link of their own to act as an observer (ADR 0005). The participant issues a link, copies it and sends it themselves; nothing is emailed. A link carries a token of 32 random bytes, of which only a SHA-256 hash is kept as an `Invitation`, so the link is shown only in the page that comes back after issuing it; a lost link is reissued. Each contact has at most one live link: reissuing stops the previous one, and revoking deletes it. A link works for the document's `observers.link_lifetime_days` (30 when left out), and a wrong, expired or revoked link at `/observe/<token>/` gets one refusal, the same for all three, naming nobody. The coach's link is ticket 13c's.
 
+✨ The page also shows the pathway's contact list, so a participant who skipped it in onboarding can add people there. Each row of a contact list sends back its contact's id, so a save edits that person in place and their link keeps working; an id that is not one of this list's own is taken as a new person, and someone taken off the list is deleted with their link.
+
 ## Tests
 
 ```sh

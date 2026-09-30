@@ -91,15 +91,22 @@ function addContactRow(button) {
   rows.append(row);
   button.value = number + 1;
   button.disabled = number >= MAX_CONTACT_ROWS;
-  row.querySelector("input").focus();
+  row.querySelector('input:not([type="hidden"])').focus(); // ✨ past the row's contact id
 }
 
-// ✨ A refusal about one row of a list names the field at fault; mark it (red, and aria-invalid for a screen
+// ✨ A saved list sends back each row's contact id as it now is; put them back into the rows, so the next save
+// edits the people this one kept rather than adding them again (which would stop their observers' links).
+// A refusal about one row of a list names the field at fault; mark it (red, and aria-invalid for a screen
 // reader) until a save goes through. Rows are counted from 1, as the refusal words them.
 document.addEventListener("htmx:afterSwap", (event) => {
   const status = event.detail.target;
   const rows = status.classList?.contains("save-status") && status.closest("form")?.querySelector(".contact-rows");
   if (!rows) return;
+  const saved = status.querySelector("[data-contact-ids]");
+  saved?.dataset.contactIds.split(",").forEach((id, row) => {
+    const field = rows.children[row]?.querySelector('input[name="contact"]');
+    if (field) field.value = id;
+  });
   rows.querySelectorAll("[aria-invalid]").forEach((input) => input.removeAttribute("aria-invalid"));
   const marked = status.querySelector("[data-invalid-row]");
   if (!marked) return;
