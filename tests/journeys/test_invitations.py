@@ -50,7 +50,7 @@ def invitation_action(client, name, action):
 
 def issue_link(client, name):
     """✨ Issue (or reissue) the named person's link as the participant does, and return its path as shown to copy."""
-    issued = client.post(invitation_action(client, name, "issue"))
+    issued = client.post(invitation_action(client, name, "issue"), follow=True)
     assert issued.status_code == 200
     return re.search(r"http://testserver(/observe/[A-Za-z0-9_-]+/)", issued.content.decode()).group(1)
 

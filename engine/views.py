@@ -1,3 +1,4 @@
+import json
 from typing import NamedTuple
 
 from django.contrib.auth.decorators import login_required
@@ -453,34 +454,63 @@ def results(request, block_id):
 @login_required
 @consent_required
 def invitations(request):
-    """✨ The people on the participant's contact list, each with a link to act as an observer (ADR 0005)."""
-    return _invitations_page(request)
-
-
-@login_required
-@consent_required
-@require_POST
-def issue_invitation(request, contact_id):
-    """✨ Issue, or reissue, one contact's link, and show it this once: only its hash is kept.
-
-    The page comes straight back rather than by redirect, so the link never sits in an address or the history.
-    """
-    contact = _own_contact_or_404(request.user, contact_id)
-    token = Invitation.issue(contact, link_lifetime(contact.response.version.document))
-    issued = {"contact": contact.pk, "link": request.build_absolute_uri(reverse("observe", args=[token]))}
+    """✨ The people on the participant's contact list, each with a link to act as an observer (ADR 0005). A link just
+    issued is shown this once, from the cookie issuing left, which goes as it is read; a reload shows none."""
+    issued = _issued_link(request)
     shown = _invitations_page(request, issued=issued)
     shown["Cache-Control"] = "no-store"
+    if issued is not None:
+        shown.delete_cookie(ISSUED_COOKIE, path=reverse("invitations"))
     return shown
 
 
 @login_required
 @consent_required
 @require_POST
+def issue_invitation(request, contact_id):
+    """✨ Issue, or reissue, one contact's link, then go back to the invitations page at that person, which shows it
+    this once: only its hash is kept.
+
+    A redirect, so a reload of the page that follows never issues again. The link travels to that page in a short-lived
+    signed cookie of the participant's own, not in the address (where the history would keep it) or the session (where
+    the database would).
+    """
+    contact = _own_contact_or_404(request.user, contact_id)
+    token = Invitation.issue(contact, link_lifetime(contact.response.version.document))
+    link = request.build_absolute_uri(reverse("observe", args=[token]))
+    back = _see_other(f"{reverse('invitations')}#person-{contact.pk}")
+    back.set_signed_cookie(
+        ISSUED_COOKIE,
+        json.dumps({"contact": contact.pk, "link": link}),
+        salt=ISSUED_COOKIE,
+        max_age=ISSUED_COOKIE_SECONDS,
+        path=reverse("invitations"),
+        secure=request.is_secure(),
+        httponly=True,
+        samesite="Lax",
+    )
+    return back
+
+
+# ✨ Where a link just issued waits for the page that shows it, and for how long at most.
+ISSUED_COOKIE = "issued_link"
+ISSUED_COOKIE_SECONDS = 60
+
+
+def _issued_link(request):
+    """✨ The link just issued, as {"contact", "link"}, or None: none was, or its cookie is stale or not ours."""
+    signed = request.get_signed_cookie(ISSUED_COOKIE, default=None, salt=ISSUED_COOKIE, max_age=ISSUED_COOKIE_SECONDS)
+    return json.loads(signed) if signed else None
+
+
+@login_required
+@consent_required
+@require_POST
 def revoke_invitation(request, contact_id):
-    """✨ Stop one contact's link. Revoking one that is already gone does nothing."""
+    """✨ Stop one contact's link. Revoking one that is already gone does nothing. The page comes back at that person."""
     contact = _own_contact_or_404(request.user, contact_id)
     Invitation.objects.filter(contact=contact).delete()
-    return _see_other("invitations")
+    return _see_other(f"{reverse('invitations')}#person-{contact.pk}")
 
 
 def observe(request, token):

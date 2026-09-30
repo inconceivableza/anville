@@ -2,7 +2,7 @@
 {% comment %}
   ✨ Inviting observers, from the original prototype's invite screen. Each person gets a link of their own, which
   the participant copies and sends themselves (no email is sent). Only the link's hash is kept, so a link is shown
-  once, in the page that comes back after issuing it.
+  once, in the page issuing leads back to, at that person.
 {% endcomment %}
 {% block head_title %}Invite others to assess you{% endblock head_title %}
 
@@ -18,13 +18,14 @@
   {% if people %}
     <ul class="invitations">
       {% for person in people %}
-        <li class="invitation">
+        <li class="invitation" id="person-{{ person.contact.pk }}">
           <span class="invitation-name">{{ person.contact.name }}</span>
           {% if issued.contact == person.contact.pk %}
             <div class="name-section invitation-link">
               <label for="invite-link-{{ person.contact.pk }}">Share this link with {{ person.contact.name }}:</label>
               <div class="invitation-link-row">
-                <input type="text" id="invite-link-{{ person.contact.pk }}" value="{{ issued.link }}" readonly>
+                {# ✨ Focused, so after a swap a keyboard or screen reader user lands on the link rather than nowhere. #}
+                <input type="text" id="invite-link-{{ person.contact.pk }}" value="{{ issued.link }}" readonly autofocus>
                 <button type="button" class="btn btn-primary invitation-copy" data-copy="invite-link-{{ person.contact.pk }}">Copy</button>
               </div>
               <p>This link is shown only this once. If you lose it, reissue it.</p>
@@ -33,12 +34,20 @@
           {% if person.invitation %}
             <span class="invitation-status">Link works until {{ person.invitation.expires_at|date:"j F Y" }}</span>
           {% endif %}
-          <form method="post" action="{% url 'issue_invitation' person.contact.pk %}">
+          {% comment %}
+            ✨ With JavaScript, issuing and revoking swap in this person's row alone, taken from the page the redirect
+            leads to, so the page stays where it was. Without, that page loads, opened at this person.
+          {% endcomment %}
+          <form method="post" action="{% url 'issue_invitation' person.contact.pk %}"
+                hx-post="{% url 'issue_invitation' person.contact.pk %}" hx-target="#person-{{ person.contact.pk }}"
+                hx-select="#person-{{ person.contact.pk }}" hx-swap="outerHTML">
             {% csrf_token %}
             <button type="submit" class="btn btn-secondary">{% if person.invitation %}Reissue link{% else %}Issue link{% endif %}</button>
           </form>
           {% if person.invitation %}
-            <form method="post" action="{% url 'revoke_invitation' person.contact.pk %}">
+            <form method="post" action="{% url 'revoke_invitation' person.contact.pk %}"
+                  hx-post="{% url 'revoke_invitation' person.contact.pk %}" hx-target="#person-{{ person.contact.pk }}"
+                  hx-select="#person-{{ person.contact.pk }}" hx-swap="outerHTML">
               {% csrf_token %}
               <button type="submit" class="btn btn-secondary">Revoke link</button>
             </form>
