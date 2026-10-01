@@ -1,7 +1,8 @@
 {% extends "engine/base.html" %}
 {% comment %}
   ✨ The observer's own page, once they have claimed their link. As they claim it, their own link is shown this once
-  to bookmark, since the one they were sent is now used up. Then the observer assessment (ticket 15a).
+  to bookmark, since the one they were sent is now used up. Then the observer assessment until it is sent, and thanks
+  after.
 {% endcomment %}
 {% block head_title %}Answering for {{ name }}{% endblock head_title %}
 
@@ -19,9 +20,31 @@
       <p>This link is shown only this once. The one you were sent no longer works. Use this one to come back, from this device or another.</p>
     </div>
   {% endif %}
-  {% if sort %}
-    {# ✨ What the sort widget shows, in the observer's wording. Its form, which sends the assessment, comes next. #}
-    {% with script_id="sort-"|add:sort.id %}{{ sort.widget|json_script:script_id }}{% endwith %}
+  {% if sent %}
+    {# ✨ The prototype's thanks, without its "submitted anonymously" (ADR 0005). Nothing that was sent is shown. #}
+    <div class="question-card">
+      <h3>Thank you</h3>
+      <p>Your assessment has been sent. It will help {{ name }} understand how God has designed them – that's a real gift.</p>
+    </div>
+  {% elif assessment %}
+    {% comment %}
+      ✨ The same sort widget as the participant's (frontend/src/sort.js), in the observer's wording, sent once. The
+      server answers by sending the browser back to this page, which then says thank you.
+    {% endcomment %}
+    {% with script_id="sort-"|add:assessment.id %}
+      {{ assessment.widget|json_script:script_id }}
+      <form id="assessment" class="sort" method="post" action="{{ assessment.action }}"
+            hx-post="{{ assessment.action }}" hx-target="find .save-status"
+            hx-disabled-elt="find .sort-submit" data-sort="{{ script_id }}">
+        {% csrf_token %}
+        <input type="hidden" name="value">
+        <p class="visually-hidden" aria-live="polite" data-sort-announcer></p>
+        <progress class="sort-progress" max="100" value="0" aria-hidden="true"></progress>
+        <div class="sort-stage"></div>
+        <output class="save-status" aria-live="polite"></output>
+        <noscript><p>The sort needs JavaScript. Turn it on in your browser, then reload this page.</p></noscript>
+      </form>
+    {% endwith %}
   {% endif %}
-  <p>[Not built yet: the questions come in a later version.]</p>
+  <p>[Not built yet: the written questions come in a later version.]</p>
 {% endblock content %}

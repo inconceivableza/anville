@@ -205,7 +205,7 @@ class BlockType(NamedTuple):
     captures: AnswerKind | None = None
     opens_what_follows: bool = False
     scored: bool = False
-    widget: Callable[..., dict] | None = None
+    widget: Callable[[dict, str, str], dict] | None = None
 
     @property
     def is_interactive(self):

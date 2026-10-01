@@ -32,6 +32,7 @@ from engine.views import (
     revoke_invitation,
     save_answer,
     section,
+    send_assessment,
     start,
     start_observing,
 )
@@ -50,8 +51,11 @@ urlpatterns = [
     path("invitations/<int:contact_id>/issue/", issue_invitation, name="issue_invitation"),
     path("invitations/<int:contact_id>/revoke/", revoke_invitation, name="revoke_invitation"),
     path("observe/", observer, name="observer"),
+    # ✨ Ahead of the link's own route, which would otherwise take "assessment" for a token.
+    path("observe/assessment/", send_assessment, name="send_assessment"),
     path("observe/<str:token>/", observe, name="observe"),
     path("observe/<str:token>/start/", start_observing, name="start_observing"),
+    path("observe/<str:token>/assessment/", send_assessment, name="send_assessment_by_link"),
     path("sections/<slug:section_id>/", section, name="section"),
     path("sections/<slug:section_id>/pages/<int:page>/", section, name="section_page"),
     path("sections/<slug:section_id>/pages/<int:page>/continue/", move_past_page, name="move_past_page"),

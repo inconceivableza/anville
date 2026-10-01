@@ -304,13 +304,18 @@ class ObserverResponse(models.Model):
     """✨ One observer's answers about a participant: an observer assessment and written answers (ADR 0005).
 
     Kept apart from who the observer is: nothing here points at a contact or an invitation, so identity and answers
-    can each go without the other. Whether it is test or seed data is decided here on the server, never by a client.
+    can each go without the other, and answers outlive the link (ADR 0007). What ties them to the observer is
+    `sent_by`, a hash of the secret they claimed, made so it never equals the invitation's own hash of it (ADR 0009).
+    Only someone holding the secret can find them again. Whether it is test or seed data is decided here on the server,
+    never by a client.
     """
 
     response = models.ForeignKey(Response, on_delete=models.CASCADE, related_name="observer_responses")
     assessment = models.JSONField(null=True, blank=True)
     written_answers = models.JSONField(default=dict)
     submitted_at = models.DateTimeField(null=True, blank=True)
+    # ✨ Empty for seeded observers, who claimed nothing. Unique, so each claim sends one observer response.
+    sent_by = models.CharField(max_length=64, unique=True, null=True, blank=True)
     is_test_data = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -322,6 +327,20 @@ class ObserverResponse(models.Model):
                 name="a_submitted_observer_response_holds_an_assessment",
             ),
         ]
+
+    @classmethod
+    def send(cls, response, secret, assessment):
+        """✨ Store the observer assessment sent with a claimed secret, about the participant whose response it is. It
+        counts at once. A second from the same secret raises IntegrityError from the database and changes nothing."""
+        with transaction.atomic():
+            return cls.objects.create(
+                response=response, assessment=assessment, submitted_at=timezone.now(), sent_by=_sent_by(secret)
+            )
+
+    @classmethod
+    def sent_with(cls, secret):
+        """✨ Whether an observer assessment has been sent with this secret."""
+        return cls.objects.filter(sent_by=_sent_by(secret)).exists()
 
     @classmethod
     def assessments_for(cls, response):
@@ -336,6 +355,11 @@ class ObserverResponse(models.Model):
             assessments=[assessment for assessment, _ in rows],
             all_test_data=bool(rows) and all(is_test_data for _, is_test_data in rows),
         )
+
+
+def _sent_by(secret):
+    # ✨ Prefixed, so it never equals `Invitation.secret_hash`: the database alone cannot join answers to a contact.
+    return _hash_of(f"observer-response:{secret}")
 
 
 class _MergeJson(Func):

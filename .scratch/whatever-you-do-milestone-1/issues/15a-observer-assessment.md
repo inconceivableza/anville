@@ -4,7 +4,7 @@
 
 **Blocked by:** 07 (Sort and fine-tune widget), 13b (The observer's landing page and claiming the link), 14b (Observer responses and seeding)
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 1 (ends 2 Oct)
 
@@ -12,11 +12,11 @@
 
 **Cut order:** fourth, together with 13b and 15b. If time runs short, the comparison is fed by seeded test observers (ticket 14b) and labelled as illustrative (ticket 16).
 
-- [ ] Placing and fine-tuning address the participant's first name in the third person through ticket 07's widget with observer wording; the Christian framing is kept, and observers see no participant-facing first-person copy
+- [x] Placing and fine-tuning address the participant's first name in the third person through ticket 07's widget with observer wording; the Christian framing is kept, and observers see no participant-facing first-person copy
 - [x] Thirty-two items are shared with the participant verbatim; the four that say "you" or "yours" carry observer wording: outlast them, different from theirs, matters to them, they could explain it
-- [ ] An observer following their claimed link before sending reaches the assessment; it works only through the claimed secret (ticket 13b), never the participant's copy
-- [ ] The observer assessment is sent once, counts on its own, and is then locked; it is never shown back through any link
-- [ ] Whatever binds the observer response to the observer leaves a sent assessment in place when the link is revoked or reissued or the contact removed (ADR 0007), and keeps it traceable to the observer, held apart from the participant, so a later way to withdraw stays possible (spec, Open content and product items)
+- [x] An observer following their claimed link before sending reaches the assessment; it works only through the claimed secret (ticket 13b), never the participant's copy
+- [x] The observer assessment is sent once, counts on its own, and is then locked; it is never shown back through any link
+- [x] Whatever binds the observer response to the observer leaves a sent assessment in place when the link is revoked or reissued or the contact removed (ADR 0007), and keeps it traceable to the observer, held apart from the participant, so a later way to withdraw stays possible (spec, Open content and product items)
 
 **Carried from 07**
 
@@ -28,6 +28,8 @@
 - Reissuing or revoking a link deletes its invitation record (a new one is created on reissue), and removing a contact deletes it too. `ObserverResponse` has no link to an invitation yet (ticket 14b)
 - The observer's pages know them by the `observer` cookie their claim set, which holds one claim: someone observing for two participants keeps the first through its own link only. A plain visit to an own link sets no cookie, so another site cannot plant a claim
 
-## Comments
+## Answer
 
-- Placing and fine-tuning in observer wording: the observer's page is given the widget's data in observer wording, but not yet the form that runs it
+- The binding to the observer: ADR 0009
+- Withdrawing by that binding, and the thank-you built here: carried to 15b
+- The written part belonging to the same observer response: carried to 31a

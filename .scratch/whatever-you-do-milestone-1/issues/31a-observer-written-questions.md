@@ -18,6 +18,10 @@
 - [ ] Until the written part is sent, following the claimed link leads back to it rather than only the thank-you and withdrawal (changing 15b's view after sending)
 - [ ] Both pathway documents' observer privacy notices say what the participant will see of the written answers: shown without names, shuffled per question, once at least three observers have sent the written part (ADR 0008). They no longer say "{name} never sees your written answers"
 
+**Carried from 15a**
+
+- Sending the observer assessment creates the observer's one observer response, bound to their claimed secret and unique to it (ADR 0009). The written part is stored in that same response, never a second one
+
 **Carried from 31**
 
 - Nothing an observer types is saved before they send it (spec, Open content and product items, "Observer autosave")

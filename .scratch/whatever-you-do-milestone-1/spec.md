@@ -433,6 +433,9 @@ Both UK and EU data protection law apply. The workbook's free text may contain s
   - The observer's welcome keeps the prototype's "You've been invited" and its "What you'll do" sentence, drops "Your responses are completely anonymous" and the first-name box, and adds a privacy notice marked as a draft: what is kept, what the participant sees of the answers, and withdrawal. Its button reads "I'm answering for {name} →", in place of "Start →".
   - The participant is named by their username (the part of their email before the @) until accounts hold a name.
   - Starting shows the observer a link of their own to bookmark; the link they were sent then reads "This link has already been used".
+- **To show the content owner, from ticket 15a** (the developer's calls, to confirm, ideally at the 2 Oct demo):
+  - The observer's sort widget names the participant by that same username: "Sort {name}'s strengths", "Choose the bucket that fits {name} best", "How strong is each one in {name}?", buckets "Definitely not {name}" and "Not really {name}", and sliders from "Not {name}" to "Real strength". It ends in "Send my assessment →".
+  - After sending, the observer reads the prototype's thanks without "submitted anonymously": "Your assessment has been sent. It will help {name} understand how God has designed them – that's a real gift."
 
 ### Defaults assumed but not explicitly agreed
 

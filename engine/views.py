@@ -54,7 +54,7 @@ from engine.hub import (
     track_sections,
 )
 from engine.document.observers import link_lifetime, privacy_notice
-from engine.models import Contact, Invitation, PathwayVersion, Publication, Response, Result
+from engine.models import Contact, Invitation, ObserverResponse, PathwayVersion, Publication, Response, Result
 from engine.results import results_page
 
 
@@ -522,7 +522,7 @@ def observe(request, token):
     """
     invitation = Invitation.live(token)
     if invitation is None:
-        return _observers_page(request, Invitation.claimed_by(token))  # ✨ an observer's own link, or the refusal
+        return _observers_page(request, token, came_by_link=True)  # ✨ an observer's own link, or the refusal
     if invitation.claimed_at is not None:
         return render(request, "engine/link_used.html", status=410)
     document, name = _asked_by(invitation)
@@ -552,7 +552,7 @@ def start_observing(request, token):
         return _refuse_link(request)
     invitation = Invitation.claimed_by(secret)
     own_link = request.build_absolute_uri(reverse("observe", args=[secret]))
-    shown = _observers_page(request, invitation, own_link=own_link)
+    shown = _observers_page(request, secret, own_link=own_link)
     if invitation is not None:
         shown.set_cookie(
             OBSERVER_COOKIE,
@@ -567,8 +567,41 @@ def start_observing(request, token):
 
 
 def observer(request):
-    """✨ The observer's own page, reached by the cookie their claim left. The questions are ticket 15's."""
-    return _observers_page(request, Invitation.claimed_by(request.COOKIES.get(OBSERVER_COOKIE)))
+    """✨ The observer's own page, reached by the cookie their claim left."""
+    return _observers_page(request, request.COOKIES.get(OBSERVER_COOKIE))
+
+
+@require_POST
+def send_assessment(request, token=None):
+    """✨ The observer sending their observer assessment, once, with the secret they claimed: from their own link
+    (`token`), or else from the cookie. It counts at once, and nothing of it is ever shown back. The participant's copy
+    of the link is not a secret, so it is refused here as any wrong link is. Then back to the page it was sent from,
+    which now says thank you.
+
+    A second send from the same secret is refused, and the first stands. A reissued link is a new claim, so its observer
+    may send one too, and both count (ADR 0007).
+    """
+    if token is None:
+        secret, back = request.COOKIES.get(OBSERVER_COOKIE), reverse("observer")
+    else:
+        secret, back = token, reverse("observe", args=[token])
+    invitation = Invitation.claimed_by(secret)
+    if invitation is None:
+        return _refuse_link(request)
+    document, _ = _asked_by(invitation)
+    scored = _scored_block(document)
+    if scored is None:
+        raise Http404("This pathway has no assessment for observers.")
+    try:
+        assessment = answer_from_form(document, scored, request.POST.get("value"))
+    except AnswerRefused as refused:
+        return render(request, "engine/save_status.html", {"refusal": str(refused)}, status=400)
+    try:
+        ObserverResponse.send(invitation.contact.response, secret, assessment)
+    except IntegrityError:
+        refusal = "Your assessment has already been sent."
+        return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
+    return _go_to(request, back)
 
 
 # ✨ Where an observer's own secret is kept, so the observer's pages know them without a link or an account. It
@@ -576,22 +609,33 @@ def observer(request):
 OBSERVER_COOKIE = "observer"
 
 
-def _observers_page(request, invitation, own_link=None):
-    """✨ The observer's page for a claimed invitation, or the refusal if there is none. `own_link` is their link,
-    shown only as they claim it. Never cached, since it is reached by a secret."""
+def _observers_page(request, secret, own_link=None, came_by_link=False):
+    """✨ The observer's page for the invitation a secret claimed, or the refusal if there is none: the observer
+    assessment until it is sent, then thanks. `own_link` is their link, shown only as they claim it. An observer who
+    `came_by_link` rather than by the cookie sends the assessment through that link. Never cached, since it is reached
+    by a secret."""
+    invitation = Invitation.claimed_by(secret)
     if invitation is None:
         return _refuse_link(request)
     document, name = _asked_by(invitation)
-    sort = _sort_block(document)
-    widget = BLOCK_TYPES[sort["type"]].widget(document, "observer", name) if sort else None
-    context = {"name": name, "own_link": own_link, "sort": {"id": sort["id"], "widget": widget} if sort else None}
+    scored = _scored_block(document)
+    sent = ObserverResponse.sent_with(secret)
+    assessment = None
+    if scored and not sent:
+        assessment = {
+            "id": scored["id"],
+            "widget": BLOCK_TYPES[scored["type"]].widget(document, "observer", name),
+            "action": reverse("send_assessment_by_link", args=[secret]) if came_by_link else reverse("send_assessment"),
+        }
+    context = {"name": name, "own_link": own_link, "assessment": assessment, "sent": sent}
     shown = render(request, "engine/observer.html", context)
     shown["Cache-Control"] = "no-store"
     return shown
 
 
-def _sort_block(document):
-    """✨ The document's sort, which observers answer about the participant, or None for a document without one."""
+def _scored_block(document):
+    """✨ The document's scored block, whose assessment observers make about the participant so it can be set beside
+    the participant's own, or None for a document without one."""
     return next((block for block in blocks_of(document) if BLOCK_TYPES[block["type"]].scored), None)
 
 
@@ -684,8 +728,12 @@ def _see_other(where, *args):
 
 
 def _to_results(request, block_id):
-    """✨ A scored answer's next page is its result. htmx is told to go there rather than swap anything in."""
-    where = reverse("results", args=[block_id])
+    """✨ A scored answer's next page is its result."""
+    return _go_to(request, reverse("results", args=[block_id]))
+
+
+def _go_to(request, where):
+    """✨ After an assessment is sent, the page it leads to. htmx is told to go there rather than swap anything in."""
     if request.headers.get("HX-Request") == "true":
         return HttpResponse(headers={"HX-Redirect": where})
     return _see_other(where)
@@ -849,7 +897,7 @@ def _block_for_participant(document, block, answers, fixed, states, asked_rows=0
         "text": text,
         "answer": answers.get(block["id"]),
         "is_fixed": block["id"] in fixed,
-        "widget": widget(document, "participant") if widget else None,
+        "widget": widget(document, "participant", "") if widget else None,  # ✨ the participant's wording names no one
         "link": states.get(block["section"]) if block["type"] == "section_link" else None,
     }
 

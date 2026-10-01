@@ -153,3 +153,11 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - The observer's landing (a link opened in a private window): the notice's paragraphs, then "I'm answering for …" naming the participant, with nothing asked before it. Pressing it shows "Bookmark this link, it's yours" with Copy, as on the invitations page; reloading, or Back then Forward, does not bring the link back.
 - After starting, the link as sent says "This link has already been used", in that window and in another; the bookmarked link, and `/observe/` in the same window, still reach "Answering for …". In a different browser, the bookmarked link reaches it too, but `/observe/` there says "This link does not work" (only starting sets the cookie). Reissuing from the invitations page stops them all.
 - Signed in as the participant in the same browser, opening and starting their own link changes nothing on their hub or sections.
+
+## The observer's assessment (after starting from a link, in a private window)
+
+- The sort widget runs as the participant's does, about them: "Sort …'s strengths", "Choose the bucket that fits … best", buckets "Definitely not …" and "Not really …", the four reworded items ("outlast them", "different from theirs", "matters to them", "they could explain it"), "How strong is each one in …?", sliders from "Not …" to "Real strength", and "Send my assessment →", in the observer's own voice. Nothing speaks as the participant: no "Not me", "outlast you" or "your strengths".
+- Sending shows "Thank you" in place of the widget, without a reload, and nothing of the assessment sent. Reloading, the bookmarked link, and `/observe/` all show the thanks, never the widget.
+- From the bookmarked link in a different browser (no cookie), the assessment can be sent too, and the page it lands on is that link's.
+- With the widget open in two tabs, sending from the second says "Your assessment has already been sent." beneath its button, not a connection error.
+- The participant's own sort widget still reads in the first person, with "See my results →".
