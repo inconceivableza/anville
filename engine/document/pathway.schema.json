@@ -112,7 +112,22 @@
           "description": "The results page's title. {name} is replaced with the participant's name.",
           "$ref": "#/$defs/text"
         },
-        "disclaimer": { "$ref": "#/$defs/text" }
+        "disclaimer": { "$ref": "#/$defs/text" },
+        "sort_wording": {
+          "description": "The sort widget's own wording, around the items and buckets. Each is the engine's own when left out. {name} is replaced with the participant's name, for observers; {count} with the number of items.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sort_heading": { "$ref": "#/$defs/text" },
+            "sort_instruction": { "$ref": "#/$defs/text" },
+            "all_sorted": { "$ref": "#/$defs/text" },
+            "fine_tune_heading": { "$ref": "#/$defs/text" },
+            "fine_tune_intro": { "$ref": "#/$defs/text" },
+            "slider_min": { "$ref": "#/$defs/text" },
+            "slider_max": { "$ref": "#/$defs/text" },
+            "submit_label": { "$ref": "#/$defs/text" }
+          }
+        }
       }
     }
   },

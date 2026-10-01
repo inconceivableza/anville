@@ -4,8 +4,8 @@
 // trusts it, and checks and scores it on submit. Nothing is kept before then, so a reload starts the sort
 // again, as in the prototype. Card order is shuffled per visit and not recorded (see the spec's open items).
 //
-// The widget's own wording ("Sort your strengths", "Not me", …) is written here for now. The observer's sort
-// (ticket 15) needs it in the third person, which is when it should move into the pathway document.
+// The widget's own wording ("Sort your strengths", "Not me", …) comes with the items, in the reader's wording: an
+// observer's is about the participant, in the third person.
 
 const FLY_MS = 320;
 const BUCKET_TONES = 5; // ✨ The stylesheet colours bucket-1 (weakest) to bucket-5 (strongest).
@@ -17,7 +17,7 @@ export function mountSorts() {
 }
 
 function mountSort(form) {
-  const { items, buckets } = JSON.parse(document.getElementById(form.dataset.sort).textContent);
+  const { items, buckets, wording } = JSON.parse(document.getElementById(form.dataset.sort).textContent);
   const stage = form.querySelector(".sort-stage");
   const announcer = form.querySelector("[data-sort-announcer]");
   const progress = form.querySelector(".sort-progress");
@@ -60,7 +60,7 @@ function mountSort(form) {
     const done = items.length - deck.length;
     announcer.textContent = `Card ${done + 1} of ${items.length}: ${deck[0].text}`;
     return [
-      stepHeader(1, "Sort", "Sort your strengths"),
+      stepHeader(1, "Sort", wording.sort_heading),
       el(
         "div",
         { class: "card-area" },
@@ -68,7 +68,7 @@ function mountSort(form) {
           "p",
           { class: "sort-topline" },
           el("span", { class: "card-counter" }, el("strong", {}, done + 1), `/${items.length}`),
-          el("span", { class: "sort-instruction" }, "Choose the bucket that fits best"),
+          el("span", { class: "sort-instruction" }, wording.sort_instruction),
         ),
         el("p", { class: "sort-card" }, deck[0].text),
         el(
@@ -125,12 +125,12 @@ function mountSort(form) {
   function allSorted() {
     announcer.textContent = `All ${items.length} sorted.`;
     return [
-      stepHeader(1, "Sort", "Sort your strengths"),
+      stepHeader(1, "Sort", wording.sort_heading),
       el(
         "div",
         { class: "sort-done" },
         el("p", { class: "sort-done-mark", "aria-hidden": "true" }, "✅"),
-        el("h3", {}, `All ${items.length} sorted!`),
+        el("h3", {}, wording.all_sorted.replaceAll("{count}", items.length)),
         el(
           "ul",
           { class: "sort-done-counts" },
@@ -159,7 +159,7 @@ function mountSort(form) {
   function fineTuning() {
     announcer.textContent = "";
     return [
-      stepHeader(2, "Fine-tune", "How strong is each one?", "Grouped by how you sorted them. Adjust the sliders to fine-tune."),
+      stepHeader(2, "Fine-tune", wording.fine_tune_heading, wording.fine_tune_intro),
       ...strongestFirst()
         .filter(([bucket]) => inBucket(bucket).length > 0)
         .map(([bucket, index]) =>
@@ -170,7 +170,7 @@ function mountSort(form) {
             el("div", { class: "score-section" }, ...inBucket(bucket).map((item) => slider(item, bucket))),
           ),
         ),
-      el("button", { type: "submit", class: "btn btn-primary btn-full sort-submit" }, "See my results →"),
+      el("button", { type: "submit", class: "btn btn-primary btn-full sort-submit" }, wording.submit_label),
     ];
   }
 
@@ -183,7 +183,7 @@ function mountSort(form) {
       el(
         "div",
         { class: "score-scale" },
-        el("span", { "aria-hidden": "true" }, "Not me"),
+        el("span", { "aria-hidden": "true" }, wording.slider_min),
         el("input", {
           type: "range",
           id,
@@ -195,7 +195,7 @@ function mountSort(form) {
           "data-item": item.id,
           "data-bucket": bucket.id,
         }),
-        el("span", { "aria-hidden": "true" }, "Real strength"),
+        el("span", { "aria-hidden": "true" }, wording.slider_max),
       ),
     );
   }

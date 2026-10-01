@@ -150,15 +150,40 @@ CONTACTS = AnswerKind(
 )
 
 
-def _sort_widget(document, role):
-    """✨ What the sort widget shows: every item in the reader's wording, and the buckets weakest first."""
+# ✨ The sort widget's own wording where a document has none: the prototype's, and for an observer the same about the
+# participant, in the third person. `{count}` is left for the widget to fill in.
+SORT_WORDING = {
+    "sort_heading": {"participant": "Sort your strengths", "observer": "Sort {name}'s strengths"},
+    "sort_instruction": {
+        "participant": "Choose the bucket that fits best",
+        "observer": "Choose the bucket that fits {name} best",
+    },
+    "all_sorted": "All {count} sorted!",
+    "fine_tune_heading": {"participant": "How strong is each one?", "observer": "How strong is each one in {name}?"},
+    "fine_tune_intro": "Grouped by how you sorted them. Adjust the sliders to fine-tune.",
+    "slider_min": {"participant": "Not me", "observer": "Not {name}"},
+    "slider_max": "Real strength",
+    "submit_label": {"participant": "See my results →", "observer": "Send my assessment →"},
+}
+
+
+def _sort_widget(document, role, name=""):
+    """✨ What the sort widget shows: every item in the reader's wording, the buckets weakest first, and the widget's
+    own wording, each field the document's or else the engine's. `{name}` becomes the participant's name, as plain
+    text, never through `format()`."""
     instrument = document["instrument"]
+    authored = document.get("presentation", {}).get("sort_wording", {})
+
+    def shown(text):
+        return text_for(text, role).replace("{name}", name)
+
     return {
-        "items": [{"id": item["id"], "text": text_for(item["text"], role)} for item in instrument["items"]],
+        "items": [{"id": item["id"], "text": shown(item["text"])} for item in instrument["items"]],
         "buckets": [
-            {"id": bucket["id"], "label": text_for(bucket["label"], role), "seed": bucket["seed"]}
+            {"id": bucket["id"], "label": shown(bucket["label"]), "seed": bucket["seed"]}
             for bucket in instrument["buckets"]
         ],
+        "wording": {field: shown(authored.get(field, default)) for field, default in SORT_WORDING.items()},
     }
 
 
@@ -170,7 +195,8 @@ class BlockType(NamedTuple):
     only: such a block takes no answer and counts towards nothing. `opens_what_follows` marks a block that
     holds the rest of its section shut until it has been answered. `scored` marks a block whose answer is
     scored into a result once, when it is submitted. `widget` gives a bespoke block's JavaScript what it
-    shows, from the document and in one role's wording; a block rendered by its template alone has none.
+    shows, from the document, in one role's wording and naming the participant; a block rendered by its template alone
+    has none.
     """
 
     name: str
@@ -179,7 +205,7 @@ class BlockType(NamedTuple):
     captures: AnswerKind | None = None
     opens_what_follows: bool = False
     scored: bool = False
-    widget: Callable[[dict, str], dict] | None = None
+    widget: Callable[..., dict] | None = None
 
     @property
     def is_interactive(self):

@@ -581,10 +581,18 @@ def _observers_page(request, invitation, own_link=None):
     shown only as they claim it. Never cached, since it is reached by a secret."""
     if invitation is None:
         return _refuse_link(request)
-    _, name = _asked_by(invitation)
-    shown = render(request, "engine/observer.html", {"name": name, "own_link": own_link})
+    document, name = _asked_by(invitation)
+    sort = _sort_block(document)
+    widget = BLOCK_TYPES[sort["type"]].widget(document, "observer", name) if sort else None
+    context = {"name": name, "own_link": own_link, "sort": {"id": sort["id"], "widget": widget} if sort else None}
+    shown = render(request, "engine/observer.html", context)
     shown["Cache-Control"] = "no-store"
     return shown
+
+
+def _sort_block(document):
+    """✨ The document's sort, which observers answer about the participant, or None for a document without one."""
+    return next((block for block in blocks_of(document) if BLOCK_TYPES[block["type"]].scored), None)
 
 
 def _refuse_link(request):

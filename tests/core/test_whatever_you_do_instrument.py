@@ -6,6 +6,7 @@ The item bank is read out of the prototype file itself, so an item mistyped in t
 import re
 from collections import Counter
 
+from engine.document import text_for
 from tests.prototype import APEST, PEP, PROTOTYPE, js_string, whatever_you_do
 
 
@@ -19,12 +20,15 @@ def prototype_items():
 
 
 def test_the_36_items_are_the_prototypes_word_for_word_with_the_same_loadings():
+    """✨ In the participant's wording: four items also carry the observer's (ticket 15a)."""
+    items = whatever_you_do()["instrument"]["items"]
     assert len(prototype_items()) == 36
-    assert whatever_you_do()["instrument"]["items"] == prototype_items()
+    assert [{**item, "text": text_for(item["text"], "participant")} for item in items] == prototype_items()
 
 
 def test_the_buckets_run_from_weakest_to_strongest_with_the_prototypes_labels_and_seeds():
-    assert whatever_you_do()["instrument"]["buckets"] == [
+    buckets = whatever_you_do()["instrument"]["buckets"]
+    assert [{**bucket, "label": text_for(bucket["label"], "participant")} for bucket in buckets] == [
         {"id": "definitely-not-me", "label": "Definitely not me", "seed": 10},
         {"id": "not-really-me", "label": "Not really me", "seed": 25},
         {"id": "average-not-sure", "label": "Average / not sure", "seed": 45},

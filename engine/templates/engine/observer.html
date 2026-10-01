@@ -1,7 +1,7 @@
 {% extends "engine/base.html" %}
 {% comment %}
   ✨ The observer's own page, once they have claimed their link. As they claim it, their own link is shown this once
-  to bookmark, since the one they were sent is now used up. The questions are ticket 15's.
+  to bookmark, since the one they were sent is now used up. Then the observer assessment (ticket 15a).
 {% endcomment %}
 {% block head_title %}Answering for {{ name }}{% endblock head_title %}
 
@@ -18,6 +18,10 @@
       </div>
       <p>This link is shown only this once. The one you were sent no longer works. Use this one to come back, from this device or another.</p>
     </div>
+  {% endif %}
+  {% if sort %}
+    {# ✨ What the sort widget shows, in the observer's wording. Its form, which sends the assessment, comes next. #}
+    {% with script_id="sort-"|add:sort.id %}{{ sort.widget|json_script:script_id }}{% endwith %}
   {% endif %}
   <p>[Not built yet: the questions come in a later version.]</p>
 {% endblock content %}

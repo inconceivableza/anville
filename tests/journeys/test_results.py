@@ -181,7 +181,8 @@ def widget_data(page, block_id=SORT):
 def test_the_sort_widget_is_given_every_item_in_the_participants_wording_and_the_buckets_weakest_first(signed_in):
     page = signed_in.get(f"/sections/{STRENGTHS}/").content.decode()
 
-    assert widget_data(page) == {
+    shown = widget_data(page)
+    assert {key: shown[key] for key in ("items", "buckets")} == {
         "items": [
             {"id": "a5", "text": "Building something that will outlast you"},
             {"id": "p1", "text": "Going against the grain"},
@@ -191,6 +192,23 @@ def test_the_sort_widget_is_given_every_item_in_the_participants_wording_and_the
             {"id": "strength", "label": "Real strength", "seed": 85},
         ],
     }
+
+
+@pytest.mark.django_db
+def test_the_sort_widgets_own_wording_comes_from_the_document_and_the_engines_where_it_has_none(
+    signed_in, load_pathway
+):
+    document = sort_pathway()
+    document["presentation"]["sort_wording"] = {"sort_heading": "Sort these strengths"}
+    load_pathway(document)
+    # ✨ Someone new, since a participant stays on the version they started.
+    a_fresh_participant(signed_in, "someone-new@example.com")
+    signed_in.post("/sections/onboarding/complete/")
+
+    wording = widget_data(signed_in.get(f"/sections/{STRENGTHS}/").content.decode())["wording"]
+
+    assert wording["sort_heading"] == "Sort these strengths"
+    assert wording["fine_tune_heading"] == "How strong is each one?"
 
 
 @pytest.mark.django_db
