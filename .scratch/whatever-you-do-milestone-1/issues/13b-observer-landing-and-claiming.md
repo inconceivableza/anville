@@ -21,6 +21,7 @@
 
 ## Answer
 
-- What reissuing does to submitted answers, and the cookie's one claim: carried to 15
+- What reissuing does to submitted answers: settled in ADR 0007, built in 15a
+- The cookie's one claim: carried to 15a
 - `SECURE_PROXY_SSL_HEADER`, and keeping links out of access logs: carried to 26
 - The welcome's wording and the name used: in the spec, "To show the content owner, from ticket 13b"

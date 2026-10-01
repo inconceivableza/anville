@@ -1,12 +1,14 @@
 ---
-status: accepted
+status: accepted, partly superseded by ADR-0007 and ADR-0008
 ---
 
 # Observers are identified by their invitation, not by what they type
 
 An observer's identity is the contact record the participant created and the token, unique to that observer, that binds them to it, held separately from their answers. Each token accepts one submission. Observers type no name. Relationship is asked but never used to slice or filter results. A privacy notice is shown before the first question, aggregates stay hidden until a minimum number of observers has answered (set in the pathway document, starting at three), and written answers are stored but never shown to the participant.
 
-> ✨ Drafted with AI assistance; the decision was reviewed and agreed by the team.
+Partly superseded: written answers are now shown to the participant without names, and each token takes the observer assessment once and the written part once (ADR 0008). Sent answers outlive the link (ADR 0007). The rest stands.
+
+> ✨ Drafted with AI assistance.
 
 ## Considered options
 

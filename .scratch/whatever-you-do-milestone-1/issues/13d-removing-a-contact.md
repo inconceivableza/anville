@@ -13,7 +13,7 @@
 - [ ] Each person on the invitations page can be removed with one button, with or without JavaScript
 - [ ] Each row of the contact list, in onboarding and on the invitations page, can be removed without emptying its fields by hand
 - [ ] Before someone whose link is live is removed, the participant is told that link will stop working
-- [ ] A removed person is deleted with their link, as taking them off the list already does
+- [ ] A removed person is deleted with their link, as taking them off the list already does, but answers they have sent stay (ADR 0007)
 
 **Carried from 13a**
 

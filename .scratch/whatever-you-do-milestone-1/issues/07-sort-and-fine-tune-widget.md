@@ -50,4 +50,4 @@ Decisions made along the way, with the developer:
 Handed over:
 
 - 09: the rest of `docs/manual-checks.md` for the sort (including untouched sliders, which leaves criteria 3 and 7 above open until then), the PEP 0% bar, whether the sort needs the prototype's progress bar, and the gate its Strengths assessment section needs
-- 15: the widget's hard-coded wording, needed in the third person for observers, and the widget's contract
+- 15a: the widget's hard-coded wording, needed in the third person for observers, and the widget's contract
