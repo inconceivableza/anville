@@ -1,0 +1,7 @@
+{% comment %}✨ PROTOTYPE, throwaway (branch prototype/result-bars): the variant switcher, shown only while DEBUG is on.{% endcomment %}
+<nav class="proto-switcher" data-prototype-switcher aria-label="Prototype variants">
+  <a href="{{ switcher.previous }}" data-prototype-previous aria-label="Previous variant">←</a>
+  <span>{{ switcher.key }} ({{ switcher.name }})</span>
+  <a href="{{ switcher.next }}" data-prototype-next aria-label="Next variant">→</a>
+  <a class="proto-switcher-off" href="{{ switcher.off }}">off</a>
+</nav>

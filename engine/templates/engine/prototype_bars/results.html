@@ -1,0 +1,111 @@
+{% comment %}✨ PROTOTYPE, throwaway (branch prototype/result-bars): one framework of the results page, per variant.{% endcomment %}
+{% if variant == "A" %}
+  {% for bar in framework.bars %}
+    <div class="result-bar-row">
+      <div class="result-bar-label">
+        <span class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</span>
+        <span class="result-bar-score {{ bar.colour }}">{{ bar.percent }}%</span>
+      </div>
+      <svg class="result-bar-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <rect class="bar-fill {{ bar.colour }}" width="{{ bar.percent }}" height="10" />
+      </svg>
+    </div>
+  {% endfor %}
+
+{% elif variant == "B" %}
+  <p class="proto-note">The middle line is an even share ({{ framework.even }}%): what every construct would get if all were equal. Bars run right for more than that, left for less.</p>
+  {% for bar in framework.bars %}
+    <div class="result-bar-row">
+      <div class="result-bar-label">
+        <span class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</span>
+        <span class="result-bar-score {{ bar.colour }}">{{ bar.percent }}%</span>
+      </div>
+      <svg class="result-bar-track proto-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <rect class="bar-fill {{ bar.colour }}" x="{{ bar.b.x }}" width="{{ bar.b.width }}" height="10" />
+        <line class="proto-even" x1="50" y1="0" x2="50" y2="10" />
+      </svg>
+    </div>
+  {% endfor %}
+  <p class="proto-axis"><span>−{{ framework.reach }}</span><span>even</span><span>+{{ framework.reach }}</span></p>
+
+{% elif variant == "C" %}
+  <p class="proto-note">One shared axis from 0 to {{ framework.top }}%; the dashed tick is an even share ({{ framework.even }}%).</p>
+  {% for bar in framework.bars %}
+    <div class="proto-dot-row">
+      <span class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</span>
+      <svg class="proto-dots" viewBox="-3 0 106 6" aria-hidden="true" focusable="false">
+        <line class="proto-axis-line" x1="0" y1="3" x2="100" y2="3" />
+        <line class="proto-even" x1="{{ framework.even_at }}" y1="0.5" x2="{{ framework.even_at }}" y2="5.5" />
+        <line class="proto-stem {{ bar.colour }}" stroke="currentColor" x1="0" y1="3" x2="{{ bar.c }}" y2="3" />
+        <circle class="{{ bar.colour }}" cx="{{ bar.c }}" cy="3" r="2" />
+      </svg>
+      <span class="result-bar-score {{ bar.colour }}">{{ bar.percent }}%</span>
+    </div>
+  {% endfor %}
+
+{% elif variant == "D" %}
+  <div class="proto-donut-wrap">
+    <svg class="proto-donut" viewBox="0 0 42 42" role="img" aria-label="Share of each construct">
+      {% for part in framework.you_parts %}
+        <circle class="{{ part.tone }}" stroke="currentColor" cx="21" cy="21" r="15.91549" fill="none" stroke-width="7"
+                stroke-dasharray="{{ part.share }} {{ part.rest }}" stroke-dashoffset="{{ part.offset }}" />
+      {% endfor %}
+    </svg>
+    <ul class="proto-legend">
+      {% for part in framework.you_parts %}
+        <li><span class="proto-swatch {{ part.tone }}"></span>{{ part.label }} <strong>{{ part.percent }}%</strong></li>
+      {% endfor %}
+    </ul>
+  </div>
+
+{% elif variant == "E" %}
+  <svg class="proto-strip" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    {% for part in framework.you_parts %}
+      <rect class="{{ part.tone }}" x="{{ part.start }}" width="{{ part.share }}" height="10" />
+    {% endfor %}
+  </svg>
+  <ul class="proto-legend proto-legend-row">
+    {% for part in framework.you_parts %}
+      <li><span class="proto-swatch {{ part.tone }}"></span>{{ part.label }} <strong>{{ part.percent }}%</strong></li>
+    {% endfor %}
+  </ul>
+
+{% elif variant == "F" %}
+  <p class="proto-note">Each construct's dot runs from the dashed tick, an even share. The words are bands of how far from even it sits; the ratio is in small type.</p>
+  {% for bar in framework.bars %}
+    <div class="proto-dot-row proto-dot-row-words">
+      <span class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</span>
+      <svg class="proto-dots" viewBox="-3 0 106 6" aria-hidden="true" focusable="false">
+        <line class="proto-axis-line" x1="0" y1="3" x2="100" y2="3" />
+        <line class="proto-even" x1="{{ framework.even_at }}" y1="0.5" x2="{{ framework.even_at }}" y2="5.5" />
+        <line class="proto-stem {{ bar.colour }}" stroke="currentColor" x1="{{ framework.even_at }}" y1="3" x2="{{ bar.c }}" y2="3" />
+        <circle class="{{ bar.colour }}" cx="{{ bar.c }}" cy="3" r="2" />
+      </svg>
+      <span class="proto-band {{ bar.colour }}">{{ bar.band }} <small>{{ bar.ratio }}</small></span>
+    </div>
+  {% endfor %}
+
+{% elif variant == "G" %}
+  <p class="proto-note">Each number is the construct's share as a multiple of an even share: 1× is even, 1.3× is 30% more than even. Points above or below even in small type.</p>
+  {% for bar in framework.bars %}
+    <div class="result-bar-row">
+      <div class="result-bar-label">
+        <span class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</span>
+        <span class="result-bar-score {{ bar.colour }}">{{ bar.ratio }} <small>{{ bar.points }} pts</small></span>
+      </div>
+      <svg class="result-bar-track proto-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <rect class="bar-fill {{ bar.colour }}" x="{{ bar.b.x }}" width="{{ bar.b.width }}" height="10" />
+        <line class="proto-even" x1="50" y1="0" x2="50" y2="10" />
+      </svg>
+    </div>
+  {% endfor %}
+  <p class="proto-axis"><span>{{ framework.ratio_low }}</span><span>1× (even)</span><span>{{ framework.ratio_high }}</span></p>
+
+{% elif variant == "H" %}
+  <p class="proto-note">Only the order: ties share a place. No amounts.</p>
+  <ol class="proto-ranks">
+    {% for bar in framework.bars %}
+      <li><span class="proto-rank {{ bar.colour }}">{{ bar.ordinal }}</span> <span class="result-bar-name">{{ bar.label }}</span>{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</li>
+    {% endfor %}
+  </ol>
+{% endif %}

@@ -16,6 +16,7 @@
       <h2>{{ framework.heading }}</h2>
       {% if framework.subtitle %}<p class="results-desc">{{ framework.subtitle }}</p>{% endif %}
 
+      {% if variant %}{% include "engine/prototype_bars/results.html" %}{% else %}
       {% for bar in framework.bars %}
         <div class="result-bar-row">
           <div class="result-bar-label">
@@ -28,6 +29,7 @@
           {% if bar.description %}<p class="result-bar-subdesc">{{ bar.description }}</p>{% endif %}
         </div>
       {% endfor %}
+      {% endif %}
 
       <details class="item-scores">
         <summary>Show item scores</summary>
@@ -45,5 +47,6 @@
 
   {% if disclaimer %}<p class="results-disclaimer">{{ disclaimer }}</p>{% endif %}
 
-  <p class="results-next"><a class="btn btn-primary" href="{% url 'comparison' block_id %}">Compare with how others see you →</a></p>
+  <p class="results-next"><a class="btn btn-primary" href="{% url 'comparison' block_id %}{% if variant %}?variant={{ variant }}{% endif %}">Compare with how others see you →</a></p>
+  {% if switcher %}{% include "engine/prototype_bars/switcher.html" %}{% endif %}
 {% endblock content %}

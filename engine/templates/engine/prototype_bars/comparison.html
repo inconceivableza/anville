@@ -1,0 +1,170 @@
+{% comment %}✨ PROTOTYPE, throwaway (branch prototype/result-bars): one framework of the comparison, per variant.{% endcomment %}
+{% if variant == "A" %}
+  {% for bar in framework.bars %}
+    <div class="comparison-pair">
+      <p class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</p>
+      <div class="comparison-bar-row">
+        <span class="comparison-who {{ bar.colour }}">You</span>
+        <svg class="result-bar-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <rect class="bar-fill {{ bar.colour }}" width="{{ bar.percent }}" height="10" />
+        </svg>
+        <span class="result-bar-score {{ bar.colour }}">{{ bar.percent }}%</span>
+      </div>
+      <div class="comparison-bar-row">
+        <span class="comparison-who comparison-others">Others</span>
+        <svg class="result-bar-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <rect class="bar-fill comparison-others" width="{{ bar.others }}" height="10" />
+        </svg>
+        <span class="result-bar-score comparison-others">{{ bar.others }}%</span>
+      </div>
+    </div>
+  {% endfor %}
+
+{% elif variant == "B" %}
+  <p class="proto-note">The middle line is an even share ({{ framework.even }}%). Bars run right for more than that, left for less.</p>
+  {% for bar in framework.bars %}
+    <div class="comparison-pair">
+      <p class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</p>
+      <div class="comparison-bar-row">
+        <span class="comparison-who {{ bar.colour }}">You</span>
+        <svg class="result-bar-track proto-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <rect class="bar-fill {{ bar.colour }}" x="{{ bar.b.x }}" width="{{ bar.b.width }}" height="10" />
+          <line class="proto-even" x1="50" y1="0" x2="50" y2="10" />
+        </svg>
+        <span class="result-bar-score {{ bar.colour }}">{{ bar.percent }}%</span>
+      </div>
+      <div class="comparison-bar-row">
+        <span class="comparison-who comparison-others">Others</span>
+        <svg class="result-bar-track proto-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <rect class="bar-fill comparison-others" x="{{ bar.ob.x }}" width="{{ bar.ob.width }}" height="10" />
+          <line class="proto-even" x1="50" y1="0" x2="50" y2="10" />
+        </svg>
+        <span class="result-bar-score comparison-others">{{ bar.others }}%</span>
+      </div>
+    </div>
+  {% endfor %}
+  <p class="proto-axis proto-axis-indented"><span>−{{ framework.reach }}</span><span>even</span><span>+{{ framework.reach }}</span></p>
+
+{% elif variant == "C" %}
+  <p class="proto-note">One shared axis from 0 to {{ framework.top }}%; the dashed tick is an even share ({{ framework.even }}%). The line between the dots is the gap.</p>
+  {% for bar in framework.bars %}
+    <div class="proto-dot-row">
+      <span class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</span>
+      <svg class="proto-dots" viewBox="-3 0 106 6" aria-hidden="true" focusable="false">
+        <line class="proto-axis-line" x1="0" y1="3" x2="100" y2="3" />
+        <line class="proto-even" x1="{{ framework.even_at }}" y1="0.5" x2="{{ framework.even_at }}" y2="5.5" />
+        <rect class="proto-gap" x="{{ bar.c_from }}" y="2.2" width="{{ bar.c_span }}" height="1.6" />
+        <circle class="comparison-others" cx="{{ bar.oc }}" cy="3" r="1.8" />
+        <circle class="{{ bar.colour }}" cx="{{ bar.c }}" cy="3" r="1.8" />
+      </svg>
+      <span class="proto-pair-score"><span class="{{ bar.colour }}">{{ bar.percent }}%</span> · <span class="comparison-others">{{ bar.others }}%</span></span>
+    </div>
+  {% endfor %}
+
+{% elif variant == "D" %}
+  <div class="proto-donut-pair">
+    <figure>
+      <svg class="proto-donut" viewBox="0 0 42 42" role="img" aria-label="Your share of each construct">
+        {% for part in framework.you_parts %}
+          <circle class="{{ part.tone }}" stroke="currentColor" cx="21" cy="21" r="15.91549" fill="none" stroke-width="7"
+                  stroke-dasharray="{{ part.share }} {{ part.rest }}" stroke-dashoffset="{{ part.offset }}" />
+        {% endfor %}
+      </svg>
+      <figcaption>You</figcaption>
+    </figure>
+    <figure>
+      <svg class="proto-donut" viewBox="0 0 42 42" role="img" aria-label="Others' average share of each construct">
+        {% for part in framework.others_parts %}
+          <circle class="{{ part.tone }}" stroke="currentColor" cx="21" cy="21" r="15.91549" fill="none" stroke-width="7"
+                  stroke-dasharray="{{ part.share }} {{ part.rest }}" stroke-dashoffset="{{ part.offset }}" />
+        {% endfor %}
+      </svg>
+      <figcaption>Others</figcaption>
+    </figure>
+  </div>
+  <ul class="proto-legend">
+    {% for bar in framework.bars %}
+      <li><span class="proto-swatch {{ bar.tone }}"></span>{{ bar.label }} <strong>{{ bar.percent }}%</strong> · {{ bar.others }}%</li>
+    {% endfor %}
+  </ul>
+
+{% elif variant == "E" %}
+  <div class="proto-strip-row">
+    <span class="comparison-who comparison-you">You</span>
+    <svg class="proto-strip" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      {% for part in framework.you_parts %}<rect class="{{ part.tone }}" x="{{ part.start }}" width="{{ part.share }}" height="10" />{% endfor %}
+    </svg>
+  </div>
+  <div class="proto-strip-row">
+    <span class="comparison-who comparison-others">Others</span>
+    <svg class="proto-strip" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      {% for part in framework.others_parts %}<rect class="{{ part.tone }}" x="{{ part.start }}" width="{{ part.share }}" height="10" />{% endfor %}
+    </svg>
+  </div>
+  <ul class="proto-legend proto-legend-row">
+    {% for bar in framework.bars %}
+      <li><span class="proto-swatch {{ bar.tone }}"></span>{{ bar.label }} <strong>{{ bar.percent }}%</strong> · {{ bar.others }}%</li>
+    {% endfor %}
+  </ul>
+
+{% elif variant == "F" %}
+  <p class="proto-note">You and Others on one axis, the dashed tick an even share. Words say each band, and whether others see it differently (a gap of five points or more).</p>
+  {% for bar in framework.bars %}
+    <div class="proto-dot-row proto-dot-row-words">
+      <span class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</span>
+      <svg class="proto-dots" viewBox="-3 0 106 6" aria-hidden="true" focusable="false">
+        <line class="proto-axis-line" x1="0" y1="3" x2="100" y2="3" />
+        <line class="proto-even" x1="{{ framework.even_at }}" y1="0.5" x2="{{ framework.even_at }}" y2="5.5" />
+        <rect class="proto-gap" x="{{ bar.c_from }}" y="2.2" width="{{ bar.c_span }}" height="1.6" />
+        <circle class="comparison-others" cx="{{ bar.oc }}" cy="3" r="1.8" />
+        <circle class="{{ bar.colour }}" cx="{{ bar.c }}" cy="3" r="1.8" />
+      </svg>
+      <span class="proto-band-pair">
+        <span class="{{ bar.colour }}">You: {{ bar.band }}</span>
+        <span class="comparison-others">Others: {{ bar.others_words.band }}</span>
+        <small>{{ bar.gap_words }}</small>
+      </span>
+    </div>
+  {% endfor %}
+
+{% elif variant == "G" %}
+  <p class="proto-note">Each number is a multiple of an even share: 1× is even. Points above or below even in small type.</p>
+  {% for bar in framework.bars %}
+    <div class="comparison-pair">
+      <p class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</p>
+      <div class="comparison-bar-row">
+        <span class="comparison-who {{ bar.colour }}">You</span>
+        <svg class="result-bar-track proto-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <rect class="bar-fill {{ bar.colour }}" x="{{ bar.b.x }}" width="{{ bar.b.width }}" height="10" />
+          <line class="proto-even" x1="50" y1="0" x2="50" y2="10" />
+        </svg>
+        <span class="result-bar-score proto-ratio {{ bar.colour }}">{{ bar.ratio }} <small>{{ bar.points }}</small></span>
+      </div>
+      <div class="comparison-bar-row">
+        <span class="comparison-who comparison-others">Others</span>
+        <svg class="result-bar-track proto-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <rect class="bar-fill comparison-others" x="{{ bar.ob.x }}" width="{{ bar.ob.width }}" height="10" />
+          <line class="proto-even" x1="50" y1="0" x2="50" y2="10" />
+        </svg>
+        <span class="result-bar-score proto-ratio comparison-others">{{ bar.others_words.ratio }} <small>{{ bar.others_words.points }}</small></span>
+      </div>
+    </div>
+  {% endfor %}
+  <p class="proto-axis proto-axis-indented"><span>{{ framework.ratio_low }}</span><span>1× (even)</span><span>{{ framework.ratio_high }}</span></p>
+
+{% elif variant == "H" %}
+  <p class="proto-note">Only the order, yours and the observers' average: ties share a place. The arrow is how far others move it up or down.</p>
+  <table class="proto-rank-table">
+    <thead><tr><th scope="col">Construct</th><th scope="col">You</th><th scope="col">Others</th><th scope="col">Move</th></tr></thead>
+    <tbody>
+      {% for bar in framework.bars %}
+        <tr>
+          <th scope="row">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</th>
+          <td class="{{ bar.colour }}">{{ bar.ordinal }}</td>
+          <td class="comparison-others">{{ bar.others_words.ordinal }}</td>
+          <td>{{ bar.move }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}

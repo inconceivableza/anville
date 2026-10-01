@@ -137,3 +137,11 @@ document.addEventListener("click", async (event) => {
 });
 
 mountSorts();
+
+// ✨ PROTOTYPE, throwaway (branch prototype/result-bars): ← and → cycle the variants, except while typing.
+document.addEventListener("keydown", (event) => {
+  const switcher = document.querySelector("[data-prototype-switcher]");
+  if (!switcher || event.target.closest("input, textarea, [contenteditable]")) return;
+  const link = { ArrowLeft: "[data-prototype-previous]", ArrowRight: "[data-prototype-next]" }[event.key];
+  if (link) window.location.replace(switcher.querySelector(link).href);
+});

@@ -7,7 +7,7 @@
 {% block head_title %}How others experience you{% endblock head_title %}
 
 {% block content %}
-  <p class="back-to-hub"><a href="{% url 'results' block_id %}">← Back to results</a></p>
+  <p class="back-to-hub"><a href="{% url 'results' block_id %}{% if variant %}?variant={{ variant }}{% endif %}">← Back to results</a></p>
   <h1>How others experience you</h1>
 
   {% if illustrative %}
@@ -31,6 +31,7 @@
         <h2>{{ framework.heading }}</h2>
         {% if framework.subtitle %}<p class="results-desc">{{ framework.subtitle }}</p>{% endif %}
 
+        {% if variant %}{% include "engine/prototype_bars/comparison.html" %}{% else %}
         {% for bar in framework.bars %}
           <div class="comparison-pair">
             <p class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</p>
@@ -50,7 +51,9 @@
             </div>
           </div>
         {% endfor %}
+        {% endif %}
       </section>
     {% endfor %}
   {% endif %}
+  {% if switcher %}{% include "engine/prototype_bars/switcher.html" %}{% endif %}
 {% endblock content %}

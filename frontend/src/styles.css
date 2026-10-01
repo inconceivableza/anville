@@ -1798,3 +1798,234 @@ html[data-javascript="loaded"] .save-fallback {
     margin-left: 0;
   }
 }
+
+/* ✨ PROTOTYPE, throwaway (branch prototype/result-bars): the five ways of drawing compositional scores. */
+
+.proto-note {
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-bottom: 12px;
+}
+
+.proto-track {
+  overflow: visible;
+}
+
+.proto-even {
+  stroke: var(--ink);
+  stroke-width: 0.6;
+  stroke-dasharray: 1 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.proto-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+.proto-axis-indented {
+  margin: 0 44px 0 56px;
+}
+
+.proto-dot-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 30%) 1fr auto;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.proto-dots {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.proto-axis-line {
+  stroke: var(--border);
+  stroke-width: 0.6;
+}
+
+.proto-stem {
+  stroke-width: 0.8;
+}
+
+.proto-gap {
+  fill: var(--border);
+}
+
+.proto-pair-score {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.proto-donut-wrap,
+.proto-donut-pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.proto-donut-pair figure {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.proto-donut {
+  width: 180px;
+  height: 180px;
+}
+
+.proto-donut circle {
+  fill: none;
+}
+
+.proto-legend {
+  list-style: none;
+  font-size: 13px;
+}
+
+.proto-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.proto-legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 8px;
+}
+
+.proto-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: currentColor;
+}
+
+.proto-strip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.proto-strip {
+  display: block;
+  width: 100%;
+  height: 28px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.proto-strip rect {
+  stroke: var(--white);
+  stroke-width: 0.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.proto-dot-row-words {
+  grid-template-columns: minmax(90px, 25%) 1fr minmax(120px, auto);
+}
+
+.proto-band {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.proto-band small,
+.proto-band-pair small,
+.result-bar-score small {
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.proto-band-pair {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.proto-ratio {
+  min-width: 64px;
+  white-space: nowrap;
+}
+
+.proto-ranks {
+  list-style: none;
+}
+
+.proto-ranks li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
+
+.proto-rank {
+  font-size: 18px;
+  font-weight: 700;
+  min-width: 40px;
+}
+
+.proto-rank-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.proto-rank-table th,
+.proto-rank-table td {
+  text-align: left;
+  padding: 6px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.proto-rank-table td {
+  font-weight: 700;
+}
+
+.proto-switcher {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--white);
+  font-size: 14px;
+  box-shadow: 0 4px 16px var(--gold-glow);
+  z-index: 10;
+}
+
+.proto-switcher a {
+  color: var(--white);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.proto-switcher .proto-switcher-off {
+  font-weight: 400;
+  font-size: 12px;
+  opacity: 0.7;
+}

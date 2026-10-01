@@ -438,7 +438,23 @@ def results(request, block_id):
     shown = results_page(state.version.document, result.scores, state.answers[block_id], request.user.get_username())
     shown["section"] = section
     shown["block_id"] = block_id
+    _prototype_bars(request, state.version.document, shown)
     return render(request, "engine/results.html", shown)
+
+
+def _prototype_bars(request, document, shown):
+    """✨ PROTOTYPE, throwaway (branch prototype/result-bars): the `?variant=` drawings, while DEBUG is on."""
+    from django.conf import settings
+
+    from engine import prototype_bars
+
+    variant = prototype_bars.variant_from(request, settings.DEBUG)
+    if variant is None:
+        return
+    shown["variant"] = variant
+    shown["switcher"] = prototype_bars.switcher(variant, request.path)
+    if shown.get("frameworks"):
+        prototype_bars.draw(document, shown["frameworks"])
 
 
 @login_required
@@ -457,6 +473,7 @@ def comparison(request, block_id):
     # ✨ Below the minimum there is no comparison on the page to call illustrative.
     shown["illustrative"] = assessments.all_test_data and shown["frameworks"] is not None
     shown["block_id"] = block_id
+    _prototype_bars(request, document, shown)
     return render(request, "engine/comparison.html", shown)
 
 
