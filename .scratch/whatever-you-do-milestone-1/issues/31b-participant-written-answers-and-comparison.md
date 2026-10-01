@@ -2,7 +2,7 @@
 
 **What to build:** The participant answers the same six written questions as their observers, in their own wording, and sees their answer beside the observers' for each question, without names and shuffled per question. Three best qualities get their own comparison: words both sides chose, words only observers chose, and words only the participant chose.
 
-**Blocked by:** 09 (Section 1 and the Strengths assessment section), 16 (Comparison screen), 31a (The observer's written questions)
+**Blocked by:** 09 (Section 1 and the Strengths assessment section), 16a (The comparison, side by side), 31a (The observer's written questions)
 
 **See also:** `Prototypes for reference/qualitative-strengths-prototype.html`, the content owner's prototype: its participant questions (`P_QS`) and its "Notes for implementation". Its insight boxes ("You said impatience. Three of them said some version of confidence") are hand-written sample text; only the word comparison can be computed.
 
@@ -14,7 +14,7 @@
 
 **Decide before building**
 
-- [ ] Whether observers' answers are released in batches, covering the comparison's numbers (16) too (spec, Open content and product items)
+- [ ] Whether observers' answers are released in batches, covering the comparison's numbers (16a, 16b) too (spec, Open content and product items)
 - [ ] Whether observers' written answers are ever saved before sending, leaning never (spec, Open content and product items, "Observer autosave")
 - [ ] The prototype's open points: whether observers see the participant's answers afterwards, whether "what do they struggle with" needs a softer frame, whether the participant sees how many observers skipped each question, and the synonym list for the word comparison
 

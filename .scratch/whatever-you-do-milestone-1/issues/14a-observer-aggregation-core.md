@@ -1,6 +1,6 @@
 # 14a: Observer aggregation core
 
-**What to build:** Given several observers' sorts of one participant, work out what others see in them: each observer's profile on its own, then the average across observers, and nothing at all below the minimum number of observers. This is the pure core the comparison (16) reads, with no storage or screens.
+**What to build:** Given several observers' sorts of one participant, work out what others see in them: each observer's profile on its own, then the average across observers, and nothing at all below the minimum number of observers. This is the pure core the comparison (16a, 16b) reads, with no storage or screens.
 
 **Blocked by:** 06 (Scoring core and results page)
 

@@ -557,7 +557,7 @@ def test_section_1_cannot_be_completed_without_the_reflection(participant):
 
 @pytest.mark.django_db
 def test_section_1_is_completed_once_the_sort_is_in_and_the_reflection_written(participant):
-    """✨ The prototype also asked for the comparison with observers to have been viewed; that joins in ticket 16."""
+    """✨ The prototype also asked for the comparison with observers to have been viewed; that joins in ticket 16c."""
     client = through_to_section_1s_activity(participant)
     submit_the_sort(client)
     answer(client, "gifts-summary", A_REFLECTION)

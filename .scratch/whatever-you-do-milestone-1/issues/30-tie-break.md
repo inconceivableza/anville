@@ -19,5 +19,5 @@
 - [ ] Re-weighting is a second named scoring method alongside `compositional_share` (ADR 0003), so the frozen method and its golden fixtures stay as they are. The sort's stored result is kept, and the tie-break answers and the re-weighted result are stored beside it
 - [ ] When the choices go in a circle, the result says the constructs are genuinely balanced rather than forcing a winner
 - [ ] The results page shows the re-weighted result, with how it changed
-- [ ] Decide here, with the content owner: whether someone flat on both frameworks is offered the tie-break or simply told they are a generalist; whether it runs straight after the sort or is offered from the results; whether observers get it and which result the comparison (ticket 16) uses
+- [ ] Decide here, with the content owner: whether someone flat on both frameworks is offered the tie-break or simply told they are a generalist; whether it runs straight after the sort or is offered from the results; whether observers get it and which result the comparison (ticket 16a) uses
 - [ ] Pure-core tests cover tie detection, pair planning and trimming within the budget, interleaving, re-weighting, skips and circular choices; journey tests cover a tied sort being offered the tie-break, a clear sort not being offered it, and the stored result

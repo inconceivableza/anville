@@ -17,7 +17,7 @@
 - [x] Section 1's gate has a clause and message for each unmet requirement: the sort not answered (a block-has-an-answer clause referring to the sort block in the other section), and the reflection empty
 - [x] Completing either section is an explicit action, refused by the server if its gate fails
 - [x] Known consequence, accepted: a participant can reach the sort from the hub before reading Section 1's scripture
-- [x] The prototype's "comparison viewed" requirement is not present yet; it joins in ticket 16
+- [x] The prototype's "comparison viewed" requirement is not present yet; it joins in ticket 16c
 - [x] Retake is not offered in this milestone
 - [x] Content is migrated verbatim from the prototype reference
 - [x] Each section can carry an authored time estimate ("About 15 minutes"), shown on its hub entry and at the top of the section; add one to every section with content, and one per activity where a section has several
@@ -81,7 +81,7 @@ Decisions, with the developer, are in Comments, each marked as the developer's c
 Handed over:
 
 - 13b (was 13): remove the "[Not built yet: …]" notes from Section 1's invitation sentences
-- 16: the data clump the review found again, and how the "comparison visited" clause will show in the checklist
+- 16c: the data clump the review found again, and how the "comparison visited" clause will show in the checklist
 - 17, 18, 22: replace "? min" with timed figures for Sections 2, 3, 4 and 5 and Section 5's two activities
 - Spec, open content and product items: what to show the content owner (the step 5 departures, the way back from results, the message wording, the checklist, the estimates, the progress bar)
 - Spec, later items: engine tidying from the code review (`section_link` defined in one place, sections holding on each other, `CONTEXT.md` terms)

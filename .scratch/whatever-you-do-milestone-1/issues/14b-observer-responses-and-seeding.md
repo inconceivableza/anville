@@ -1,6 +1,6 @@
 # 14b: Observer responses and seeding
 
-**What to build:** Observers' answers are stored as their own records, and a seeding command creates test observers directly, so the comparison (16) can be built and shown before, or without, the observer's own flow (15a, 15b).
+**What to build:** Observers' answers are stored as their own records, and a seeding command creates test observers directly, so the comparison (16a) can be built and shown before, or without, the observer's own flow (15a, 15b).
 
 **Blocked by:** 06 (Scoring core and results page)
 

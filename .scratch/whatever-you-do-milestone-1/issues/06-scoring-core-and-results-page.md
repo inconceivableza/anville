@@ -43,7 +43,7 @@ Notes for a particular ticket are carried into it, under "Carried from 06":
 - 07: the contract the widget sends, landing on the results page after a sort, and the PEP bar minimum
 - 09: Section 1's gate cannot yet name a block in another section; decide how before building it
 - 11: the results page reads the newest response, which matters if publishing ever moves a participant to a later version
-- 16: the prototype's second colour set
+- 16a: the prototype's second colour set
 - 23: the "Want to go deeper?" links and the bold "Important:", once rich text can carry them
 
 Retake is out of scope for this milestone, so its note (the unique constraint it must replace) is in the spec, beside the retake decision under "Responses, answers and results".

@@ -10,7 +10,7 @@
 
 **Spec:** Observers (ADR 0005); Responses, answers and results; Agreed cut order, if time runs short; Testing Decisions
 
-**Cut order:** fourth, together with 13b and 15b. If time runs short, the comparison is fed by seeded test observers (ticket 14b) and labelled as illustrative (ticket 16).
+**Cut order:** fourth, together with 13b and 15b. If time runs short, the comparison is fed by seeded test observers (ticket 14b) and labelled as illustrative (ticket 16a).
 
 - [x] Placing and fine-tuning address the participant's first name in the third person through ticket 07's widget with observer wording; the Christian framing is kept, and observers see no participant-facing first-person copy
 - [x] Thirty-two items are shared with the participant verbatim; the four that say "you" or "yours" carry observer wording: outlast them, different from theirs, matters to them, they could explain it
