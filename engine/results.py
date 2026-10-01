@@ -1,9 +1,11 @@
-"""✨ The results page as the engine derives it: a stored result, dressed in its pathway version's wording.
+"""✨ The results page and the comparison as the engine derives them: a stored result, dressed in its pathway
+version's wording, and on the comparison set beside the observer average.
 
 Nothing here touches the database or a request. The numbers come from the stored result and are never
 recomputed; the words and tones come from the same pathway version the result was scored against.
 """
 
+from engine.document.observers import minimum_observers
 from engine.document.text import text_for
 
 # ✨ The stylesheet defines --rank-1 to --rank-6; every rank below the sixth takes the sixth colour.
@@ -43,6 +45,34 @@ def results_page(document, scores, sort, name, role="participant"):
         ],
         "disclaimer": _text(presentation, "disclaimer", role),
     }
+
+
+def comparison_page(document, scores, sort, observer_average):
+    """✨ Everything the comparison shows: the participant's self-result beside the observer average (ADR 0005).
+
+    The participant's bars are the results page's, in its wording and colours. Below the minimum the observer average
+    holds a count and no numbers, and so does what comes out: not even the self-result's. Only each construct's mean
+    is read from the observer average, never a single observer's percent. The self-result is ranked and the observer
+    average keeps the declared order, so the two are paired by construct id.
+    """
+    shown = {"observers": observer_average["observers"], "minimum": minimum_observers(document), "frameworks": None}
+    if observer_average["frameworks"] is None:
+        return shown
+    means = {
+        framework["framework"]: {construct["construct"]: construct["percent"] for construct in framework["constructs"]}
+        for framework in observer_average["frameworks"]
+    }
+    page = results_page(document, scores, sort, name="")
+    presented = document.get("presentation", {}).get("frameworks", [])
+    by_rank = {entry["framework"] for entry in presented if entry.get("bars") == "rank"}
+    for framework, scored in zip(page["frameworks"], scores["frameworks"]):
+        for bar, construct in zip(framework["bars"], scored["constructs"]):
+            bar["others"] = means[scored["framework"]][construct["construct"]]
+            # ✨ As the prototype's comparison drew them: "You" in rank colours where the results page uses them, and
+            # otherwise all in one colour, never a construct's tone, which is the distribution strip's.
+            if scored["framework"] not in by_rank:
+                bar["colour"] = "comparison-you"
+    return {**shown, "frameworks": page["frameworks"]}
 
 
 def _framework(framework, presentation, ranked_constructs, construct_presentation, items, sort, role):

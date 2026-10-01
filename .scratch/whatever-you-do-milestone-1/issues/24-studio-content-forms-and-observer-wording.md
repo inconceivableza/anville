@@ -19,3 +19,7 @@
 - [ ] Each gate is shown as its clauses with a message per clause
 - [ ] Saved forms preview correctly (ticket 12) and publish through the normal loop (ticket 11)
 - [ ] Structural editing (adding, removing, reordering sections and blocks) is out of scope for this milestone
+
+**Carried from 16a**
+
+- [ ] The comparison's wording (its heading, the below-minimum explanation, the legend and the illustrative banner) is written in its template, ported from the prototype, because the document had nowhere to hold it; give it a place in the document so authors can edit it

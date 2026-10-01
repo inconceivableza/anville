@@ -4,17 +4,17 @@
 
 **Blocked by:** 14a (Observer aggregation core), 14b (Observer responses and seeding)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 1 (ends 2 Oct)
 
 **Spec:** Observers (ADR 0005); Agreed cut order, if time runs short; Testing Decisions
 
-- [ ] The comparison shows APEST(d) and PEP for the participant and observers side by side, only when the minimum is met, reached from the participant's results page; a participant with a result but no onboarding or completed sections (as the seeding command makes) reaches it too
-- [ ] Below the minimum, an explanation and no numbers, in the page or in any other response
-- [ ] In both states the participant sees an overall count of answers, never which invited person has answered (ADR 0005)
-- [ ] No single observer's values reach the participant, in either state; only the observers' means are shown
-- [ ] When every contributing observer is marked as test data, a banner says the comparison is illustrative; the prototype's random, unlabelled fabrication is not reproduced and there is no separate fixture
+- [x] The comparison shows APEST(d) and PEP for the participant and observers side by side, only when the minimum is met, reached from the participant's results page; a participant with a result but no onboarding or completed sections (as the seeding command makes) reaches it too
+- [x] Below the minimum, an explanation and no numbers, in the page or in any other response
+- [x] In both states the participant sees an overall count of answers, never which invited person has answered (ADR 0005)
+- [x] No single observer's values reach the participant, in either state; only the observers' means are shown
+- [x] When every contributing observer is marked as test data, a banner says the comparison is illustrative; the prototype's random, unlabelled fabrication is not reproduced and there is no separate fixture
 
 **Carried from 06**
 

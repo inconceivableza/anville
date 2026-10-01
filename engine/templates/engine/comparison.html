@@ -1,0 +1,56 @@
+{% extends "engine/base.html" %}
+{% comment %}
+  ✨ The participant's stored result beside their observers' means, as the prototype's comparison screen showed it,
+  in the results page's wording and colours. Below the minimum there is a count and no numbers at all. Neither state
+  names who has answered.
+{% endcomment %}
+{% block head_title %}How others experience you{% endblock head_title %}
+
+{% block content %}
+  <p class="back-to-hub"><a href="{% url 'results' block_id %}">← Back to results</a></p>
+  <h1>How others experience you</h1>
+
+  {% if illustrative %}
+    <p class="comparison-illustrative" role="note">This comparison is illustrative: every answer in it is test data, not from someone who knows you.</p>
+  {% endif %}
+
+  {% if frameworks is None %}
+    <p class="results-desc">Comparing your self-assessment with the averaged responses of people who know you.</p>
+    <section class="results-section comparison-waiting">
+      <h2>Not enough answers yet</h2>
+      <p>You need at least <strong>{{ minimum }} people</strong> to complete the strengths survey about you before we can show a meaningful comparison.</p>
+      <p><strong>{{ observers }} of {{ minimum }}</strong> have answered so far.</p>
+      <p><a class="btn btn-primary" href="{% url 'invitations' %}">Invite people who know you →</a></p>
+    </section>
+  {% else %}
+    <p class="results-desc">Comparing your self-assessment with the averaged responses of {{ observers }} people who know you.</p>
+    <p class="comparison-legend"><span class="comparison-key-you">You</span> <span class="comparison-key-others">Others (average)</span></p>
+
+    {% for framework in frameworks %}
+      <section class="results-section">
+        <h2>{{ framework.heading }}</h2>
+        {% if framework.subtitle %}<p class="results-desc">{{ framework.subtitle }}</p>{% endif %}
+
+        {% for bar in framework.bars %}
+          <div class="comparison-pair">
+            <p class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</p>
+            <div class="comparison-bar-row">
+              <span class="comparison-who {{ bar.colour }}">You</span>
+              <svg class="result-bar-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                <rect class="bar-fill {{ bar.colour }}" width="{{ bar.percent }}" height="10" />
+              </svg>
+              <span class="result-bar-score {{ bar.colour }}">{{ bar.percent }}%</span>
+            </div>
+            <div class="comparison-bar-row">
+              <span class="comparison-who comparison-others">Others</span>
+              <svg class="result-bar-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                <rect class="bar-fill comparison-others" width="{{ bar.others }}" height="10" />
+              </svg>
+              <span class="result-bar-score comparison-others">{{ bar.others }}%</span>
+            </div>
+          </div>
+        {% endfor %}
+      </section>
+    {% endfor %}
+  {% endif %}
+{% endblock content %}

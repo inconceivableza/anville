@@ -44,4 +44,6 @@
   {% endfor %}
 
   {% if disclaimer %}<p class="results-disclaimer">{{ disclaimer }}</p>{% endif %}
+
+  <p class="results-next"><a class="btn btn-primary" href="{% url 'comparison' block_id %}">Compare with how others see you →</a></p>
 {% endblock content %}

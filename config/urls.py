@@ -20,6 +20,7 @@ from django.urls import include, path, re_path
 from access.views import consent, password_reset_unavailable
 from engine.views import (
     coach_checklist,
+    comparison,
     complete_section,
     hub,
     invitations,
@@ -47,6 +48,7 @@ urlpatterns = [
     path("answers/<slug:block_id>/", save_answer, name="save_answer"),
     path("coach/<slug:block_id>/", coach_checklist, name="coach_checklist"),
     path("results/<slug:block_id>/", results, name="results"),
+    path("results/<slug:block_id>/comparison/", comparison, name="comparison"),
     path("invitations/", invitations, name="invitations"),
     path("invitations/<int:contact_id>/issue/", issue_invitation, name="issue_invitation"),
     path("invitations/<int:contact_id>/revoke/", revoke_invitation, name="revoke_invitation"),

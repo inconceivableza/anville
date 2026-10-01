@@ -140,6 +140,13 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 - PEP bars that tie share a colour.
 
+## The comparison (the results page's "Compare with how others see you →")
+
+- Seed with `python manage.py seed_observers` and sign in as the participant it prints: each construct shows a "You" bar above an "Others" bar in blue, as in the prototype: APEST(d)'s "You" bars all green, PEP's in the results page's rank colours, and each "You" and "Others" label in its bar's colour, with the banner saying the comparison is illustrative. Bars are drawn at their own percent, not stretched to the largest value as in the prototype; check that they still read well.
+- With one or two observers (`seed_observers --observers 2`): "Not enough answers yet", "2 of 3 have answered so far", no percent anywhere and no banner. "Invite people who know you →" leads to the invitations page.
+- "← Back to results" returns to the results page.
+- Phone width: the "You" and "Others" labels, bars and percents stay on one line without the page scrolling sideways.
+
 ## Inviting observers (the hub's "Invite others to assess you →")
 
 - Issuing a link shows it under that person's name, in a read-only field with Copy. Copy puts the whole link on the clipboard and reads "Copied"; pasting it in a private window opens "You've been invited".

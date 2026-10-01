@@ -42,6 +42,7 @@ from engine.document.contacts import (
     rows_posted,
     rows_to_show,
 )
+from engine.document.aggregation import aggregate
 from engine.document.gates import has_content
 from engine.document.scoring import score
 from engine.hub import (
@@ -55,7 +56,7 @@ from engine.hub import (
 )
 from engine.document.observers import link_lifetime, privacy_notice
 from engine.models import Contact, Invitation, ObserverResponse, PathwayVersion, Publication, Response, Result
-from engine.results import results_page
+from engine.results import comparison_page, results_page
 
 
 class ParticipantState(NamedTuple):
@@ -431,7 +432,38 @@ def results(request, block_id):
     Before there is a result, the participant is sent to the page of the block's section the sort is on. After, the
     page leads back there too, since that is where the section is completed.
     """
-    state = _participant(request.user)
+    state, result, section = _own_result(request.user, block_id)
+    if result is None:
+        return redirect(page_url(section["id"], section["page"]))
+    shown = results_page(state.version.document, result.scores, state.answers[block_id], request.user.get_username())
+    shown["section"] = section
+    shown["block_id"] = block_id
+    return render(request, "engine/results.html", shown)
+
+
+@login_required
+@consent_required
+def comparison(request, block_id):
+    """✨ The participant's self-result beside the observer average (ADR 0005), reached from the results page and, like
+    it, open to anyone with a result, whatever sections they have done. Below the minimum it shows how many have
+    answered and no numbers; it never shows which person has answered, nor any single observer's percent."""
+    state, result, section = _own_result(request.user, block_id)
+    if result is None:
+        return redirect(page_url(section["id"], section["page"]))
+    document = state.version.document
+    assessments = ObserverResponse.assessments_for(state.response)
+    observer_average = aggregate(document, assessments.assessments)
+    shown = comparison_page(document, result.scores, state.answers[block_id], observer_average)
+    # ✨ Below the minimum there is no comparison on the page to call illustrative.
+    shown["illustrative"] = assessments.all_test_data and shown["frameworks"] is not None
+    shown["block_id"] = block_id
+    return render(request, "engine/comparison.html", shown)
+
+
+def _own_result(user, block_id):
+    """✨ The participant's state, their stored result for a scored block (None before they have one), and the section
+    the sort is on with its page. A block that is not scored is a 404."""
+    state = _participant(user)
     try:
         block = answerable_block(state.version.document, block_id) if state.version else None
     except UnknownBlock:
@@ -440,15 +472,12 @@ def results(request, block_id):
         raise Http404("This pathway version has no scored block by that identifier.")
     section = section_of(state.version.document, block_id)
     result = Result.objects.filter(response=state.response, block_id=block_id).first()
-    if result is None:
-        return redirect(page_url(section["id"], page_of(section, block_id)))
-    shown = results_page(state.version.document, result.scores, state.answers[block_id], request.user.get_username())
-    shown["section"] = {
+    shown_section = {
         "id": section["id"],
         "title": text_for(section["title"], "participant"),
         "page": page_of(section, block_id),
     }
-    return render(request, "engine/results.html", shown)
+    return state, result, shown_section
 
 
 @login_required
