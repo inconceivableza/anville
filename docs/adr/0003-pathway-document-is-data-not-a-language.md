@@ -6,7 +6,7 @@ status: accepted
 
 Recaps, scoring and gates all need logic that depends on a participant's answers. The pathway document does not express that logic: it selects a behaviour by name (a recap view, a scoring method, a gate clause) and supplies its parameters, and the behaviour itself is implemented in code. Authors combine and configure behaviours; new behaviours ship as code.
 
-> ✨ Drafted with AI assistance; the decision was reviewed and agreed by the team.
+> ✨ Drafted with AI assistance.
 
 ## Considered options
 

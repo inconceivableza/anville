@@ -6,7 +6,7 @@ status: accepted
 
 Anville is meant to be usable by many churches and organisations, and may be open source. We will not build multi-tenancy: each organisation runs its own deployment with its own database and configuration, and the data model has no organisation concept. The prior plan made organisation a real tenancy boundary from the start; that is rejected here.
 
-> ✨ Drafted with AI assistance; the decision was reviewed and agreed by the team.
+> ✨ Drafted with AI assistance.
 
 ## Considered options
 

@@ -6,7 +6,7 @@ status: accepted
 
 Anville uses Django with `django-allauth` for authentication, which means the Django ORM is already present and managing the auth, allauth, session and admin tables — it cannot be removed. Adopting SQLAlchemy would therefore mean running *two* ORMs and two migration systems against one Postgres database, rather than choosing between them. We use the Django ORM alone.
 
-> ✨ Drafted with AI assistance; the decision and its reasoning were reviewed and agreed by the team.
+> ✨ Drafted with AI assistance.
 
 ## Considered options
 

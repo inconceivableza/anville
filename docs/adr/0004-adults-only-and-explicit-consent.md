@@ -6,7 +6,7 @@ status: accepted
 
 The workbook collects reflective free text, including accounts of hardship and loss, and it is religious in framing, so any of it may be special category data. Participation is expected to be arranged through churches, which weakens the argument that consent is freely given. We therefore admit adults only, confirmed by an 18+ checkbox with no date of birth stored, and we require an explicit consent step at first login, before any answer is stored.
 
-> ✨ Drafted with AI assistance; the decision was reviewed and agreed by the team.
+> ✨ Drafted with AI assistance.
 
 ## Considered options
 

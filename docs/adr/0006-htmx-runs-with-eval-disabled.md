@@ -6,7 +6,7 @@ status: accepted
 
 htmx can run JavaScript written inside `hx-*` attributes: `hx-on` handlers, event filters such as `hx-trigger="click[ctrlKey]"`, and `js:` values in `hx-vals` and `hx-vars`. It does so through `eval` and `Function`, behind `htmx.config.allowEval`, which defaults to on. We turn it off. Anville holds reflective free text that may be special category data, so even if an injection ever slipped past output escaping, an injected `hx-*` attribute must not be able to run code.
 
-> ✨ Drafted with AI assistance; the decision was reviewed and agreed by the team.
+> ✨ Drafted with AI assistance.
 
 ## Considered options
 
