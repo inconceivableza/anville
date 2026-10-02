@@ -252,10 +252,10 @@ Initial delivery is through **Mailjet**, over SMTP, with Django's own SMTP backe
 
 - **Configuration is one URL.** `EMAIL_URL=smtp+tls://<api key>:<secret key>@in-v3.mailjet.com:587`, a per-environment secret, plus `DEFAULT_FROM_EMAIL` in the environment's values. Changing provider later is a change of that secret, not of the image. Port 587 is the one to use: Hetzner blocks outbound 25 and 465 on new accounts.
 - **No new dependency.** django-environ already parses the URL. A provider package such as django-anymail is only worth adding if delivery webhooks (bounces, complaints) are wanted.
-- **Unset means no delivery.** Without `EMAIL_URL` the console backend is used and nothing leaves the host, which is the state of staging today. Password reset stays refused until ticket 28a turns it on; a deploy must not enable it merely because the secret is present.
+- **Unset means no delivery.** Without `EMAIL_URL` the console backend is used and nothing leaves the host. Password reset stays refused until ticket 28a turns it on; a deploy must not enable it merely because the secret is present.
 - **One Mailjet API key per environment**, so a staging key can be revoked without touching production and each environment's sending is visible apart. Mailjet's sub-accounts are the likely way to do this; that should be confirmed against the plan in use.
 - **A validated sending domain per production environment**, with SPF, DKIM and DMARC, on a subdomain used for nothing else: for *Whatever You Do*, a subdomain of `whateveryoudo.org`. Mailjet's validation records go in whichever DNS host that domain ends up with. The sizing doc's point stands: deliverability of observer invitations to consumer mailboxes is the risk, not cost.
-- **Staging sends to fake addresses.** It holds reserved example domains only, and mail to those bounces and counts against the sender's reputation. Either staging keeps `EMAIL_URL` unset, or it uses its own key and sending subdomain and is only ever pointed at real test mailboxes.
+- **Staging sends from a temporary domain** (ticket 26): an address at `anville.vabl.dev`, validated in Mailjet with records in Cloudflare, on its own API key. Staging's accounts use reserved example domains, and mail to those bounces and counts against the sender's reputation, so anything that is to be emailed on staging (a coach's or observer's link) goes to a real test mailbox the operator controls.
 - **It is another processor**, receiving participants' and observers' addresses and the text of each message. It joins Ubicloud on the open legal list before production use.
 
 The sizing doc priced Scaleway TEM for this line; Mailjet replaces it for now and that figure has not been re-estimated.
@@ -288,18 +288,9 @@ k3s is more machinery than one Django service strictly needs. It is kept because
 
 ## 14. Order of work
 
-For ticket 26 (staging by 8 October):
+The steps for the first environment, `whatever-you-do-staging`, are in ticket 26 (`.scratch/whatever-you-do-milestone-1/issues/26-staging-deployment.md`), and are not repeated here.
 
-1. Application changes in section 3, and the `Dockerfile`. Verify with the compose `app` profile.
-2. `build.yml`, pushing an image.
-3. Human steps: a Hetzner project and an API token, a Storage Box, and (once the host has its addresses) DNS-only records for `anville.vabl.dev` in Cloudflare. After the first image push, make the package public.
-4. `cloud-init.yaml.template` and `hcloud-create.sh`; create `staging-1`.
-5. The two charts and `deploy/environments/whatever-you-do-staging/`.
-6. `deploy.yml`; first deploy; load the pathway; run ticket 26's smoke test.
-7. The backup CronJob, and one rehearsed restore.
-8. The runbook ticket 26 asks for, which is mostly a pointer to this document's steps as actually performed.
-
-Later, each when needed: Mailjet, with ticket 28a; `production-1` and the production environment; the choice between levels B and C; automatic staging deploys; a second environment on `staging-1`.
+Later, each when needed: `production-1` and the production environment; the choice between levels B and C; a lasting email set-up for production; automatic staging deploys; a second environment on `staging-1`.
 
 ## 15. Open questions
 
