@@ -59,7 +59,7 @@ deploy/
 One multi-stage `Dockerfile`:
 
 1. `node:22-alpine`: `npm ci && npm run build` in `frontend/`, producing `frontend/dist` and its manifest.
-2. `python:3.13-slim`: install `requirements.txt`, copy the code, `pathways/` and `frontend/dist`, run `collectstatic`, switch to a non-root user, and start gunicorn on 8000.
+2. `python:3.13-slim-trixie`: install `requirements.txt`, copy the code, `pathways/` and `frontend/dist`, run `collectstatic`, switch to a non-root user, and start gunicorn on 8000. It also carries Debian's PostgreSQL 17 client and OpenSSH client, so the nightly backup (section 7) runs in this same image, and the operator has `psql` and `pg_restore` in the pod.
 
 The image is public, as the project is open source. So it must contain nothing that the repository does not already publish: no `.env`, no secrets at build time, and only the pathway documents that are in `pathways/`.
 
@@ -93,13 +93,13 @@ One known limit to record, not fix now: Django's default cache is per process, s
 - **Deployment** `anville`: one replica, `Recreate` strategy, resource requests and limits, liveness and readiness on `/healthz`.
 - **Migrations** run as an init container (`manage.py migrate`) in that same pod. With one replica and `Recreate` there is exactly one migrator, it works the same for an in-cluster or a managed database, and a failed migration fails `helm --wait` and so the deploy. A pre-upgrade hook Job would not work on first install, because the in-cluster database does not exist yet when hooks run. Move to a Job if replicas ever exceed one.
 - **Service** and **Ingress** (Traefik, TLS from cert-manager) for the environment's hostname.
-- **PostgreSQL**, when `postgres.enabled`: a StatefulSet on the official `postgres:17` image, the same one `compose.yaml` uses, with a local-path volume and a cluster-internal Service. Never exposed outside the cluster.
+- **PostgreSQL**, when `postgres.enabled`: a StatefulSet on the official `postgres:17` image, the same one `compose.yaml` uses, with a local-path volume and a cluster-internal Service. Never exposed outside the cluster, and a NetworkPolicy admits only this environment's own pods, since environments of one tier share a host.
 - **Backup CronJob**, when `backup.enabled`: see section 7.
-- **Secret references** only. The chart never contains a secret value.
+- **Secret references** only. The chart never contains a secret value. The deploy workflow applies one Secret per environment and passes a hash of it, so that changing a secret restarts the pods.
 
-Base `values.yaml` ships safe defaults: ingress disabled and the `letsencrypt-staging` issuer, so an environment without its overlay claims no real hostname and no real certificate.
+Base `values.yaml` ships safe defaults: no hostname, which means no ingress, and the `letsencrypt-staging` issuer, so an environment without its overlay claims no real hostname and no real certificate. `values.schema.json` refuses an unknown tier or issuer, and the chart refuses to render without an image digest.
 
-`deploy/chart/anville-bootstrap` holds cert-manager and the two `ClusterIssuer`s (`letsencrypt-staging` and `letsencrypt-prod`, both HTTP-01 through Traefik), installed once per host in its own namespace. "Staging" in an issuer's name is Let's Encrypt's test service and has nothing to do with an environment's tier: every real environment, staging tier included, uses `letsencrypt-prod`.
+`deploy/chart/anville-bootstrap` holds the two `ClusterIssuer`s (`letsencrypt-staging` and `letsencrypt-prod`, both HTTP-01 through Traefik), installed once per host. cert-manager itself is not vendored into it: the deploy workflow installs cert-manager's own chart at a pinned version first, because the issuers cannot be created until its definitions and webhook exist. "Staging" in an issuer's name is Let's Encrypt's test service and has nothing to do with an environment's tier: every real environment, staging tier included, uses `letsencrypt-prod`.
 
 ## 6. Environments
 
@@ -136,9 +136,9 @@ Its GitHub Environment holds:
 | Secret | `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`, `KUBECONFIG` | Access to that host |
 | Secret | `DJANGO_SECRET_KEY` | Never shared between environments |
 | Secret | `ANVILLE_ENROLMENT_CODE` | Per environment |
-| Secret | `POSTGRES_PASSWORD` | In-cluster database; the chart composes `DATABASE_URL` from it |
+| Secret | `POSTGRES_PASSWORD` | In-cluster database; the chart composes `DATABASE_URL` from it, so it must be safe inside a URL: letters, digits, `-` and `_` only. It is read when the database is first created, and changing it later does not change the database's password |
 | Secret | `DATABASE_URL` | Managed database only, in place of the above |
-| Secret | `BACKUP_SSH_KEY`, `BACKUP_TARGET` | Storage Box sub-account for this environment |
+| Secret | `BACKUP_SSH_KEY`, `BACKUP_TARGET`, `BACKUP_KNOWN_HOSTS` | Storage Box sub-account for this environment: its private key, its address as `sftp://user@host:23/directory/`, and the Storage Box's host key as `ssh-keyscan` prints it |
 | Secret | `EMAIL_URL` | Mailjet SMTP credentials; absent while the environment's email is fake (section 11) |
 
 Production environments get GitHub's required-reviewer rule. Staging environments do not.
@@ -171,7 +171,7 @@ Three levels, chosen per environment from its values. The chart and the deploy w
 | **B** | In-cluster PostgreSQL | A, plus WAL archiving with pgBackRest for point-in-time recovery | Production, self-managed |
 | **C** | Ubicloud managed PostgreSQL | Ubicloud's own point-in-time recovery, plus the same nightly `pg_dump` as an independent copy | Production, managed |
 
-**The nightly dump** is the common piece. The CronJob runs `pg_dump --format=custom` against whatever `DATABASE_URL` the environment has, and sends it over SSH to a Storage Box sub-account that can see only that environment's directory. Because it only needs a connection string, it runs unchanged against an in-cluster or a Ubicloud database. This is the copy that depends on neither the host nor Ubicloud's account continuing to exist.
+**The nightly dump** is the common piece. The CronJob runs `pg_dump --format=custom` against whatever `DATABASE_URL` the environment has, checks that the dump can be read back, and sends it over SFTP to a Storage Box sub-account that can see only that environment's directory. It refuses a target whose host key is not the one it was given, and keeps the newest 30 dumps. Because it only needs a connection string, it runs unchanged against an in-cluster or a Ubicloud database. This is the copy that depends on neither the host nor Ubicloud's account continuing to exist.
 
 **Level A** satisfies ticket 26 ("the database has backups and a restore has been tried once"). Hetzner's server backups (20% of the server price) are a convenience for rebuilding the host; they are crash-consistent disk images, not a database backup, and are not counted as one.
 

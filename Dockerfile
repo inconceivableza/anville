@@ -11,10 +11,18 @@ COPY frontend/ ./
 RUN npm run build
 
 
-FROM python:3.13-slim AS app
+# ✨ Debian 13 is named, because its PostgreSQL client is version 17, the server's own.
+FROM python:3.13-slim-trixie AS app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 RUN useradd --system --uid 10001 --no-create-home anville
+
+# ✨ pg_dump and sftp, for the nightly backup, which runs in this same image (docs/server-approach.md, section 7).
+# They also give the operator psql and pg_restore in the pod. Debian's security updates set the versions.
+# hadolint ignore=DL3008
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends postgresql-client openssh-client \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 COPY requirements.txt ./

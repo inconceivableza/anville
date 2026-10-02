@@ -64,8 +64,21 @@ jobs:
       - name: Run the tests
         run: pytest
 
+  # The charts and scripts a deploy uses, as far as they can be checked without a cluster.
+  deploy-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: azure/setup-helm@v5
+        with:
+          version: v4.3.0
+
+      - name: Check the charts and scripts
+        run: deploy/check.sh
+
   image:
-    needs: test
+    needs: [test, deploy-files]
     runs-on: ubuntu-latest
     permissions:
       contents: read

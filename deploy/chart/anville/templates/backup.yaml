@@ -1,0 +1,87 @@
+{{- if .Values.backup.enabled }}
+{{- /*
+✨ The nightly dump (docs/server-approach.md, section 7).
+
+It needs only a connection string, so it is the same for an in-cluster and a managed database. It runs in
+the application's own image, which carries pg_dump and sftp for this.
+*/ -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-backup
+  labels:
+    {{- include "anville.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+data:
+  backup.sh: |
+    {{- .Files.Get "files/backup.sh" | nindent 4 }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-backup
+  labels:
+    {{- include "anville.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            {{- include "anville.labels" . | nindent 12 }}
+            app.kubernetes.io/component: backup
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: backup
+              image: {{ include "anville.image" . }}
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["sh", "/scripts/backup.sh"]
+              env:
+                {{- include "anville.databaseEnv" . | trim | nindent 16 }}
+                - name: BACKUP_NAME
+                  value: {{ .Release.Namespace | quote }}
+                - name: BACKUP_KEEP
+                  value: {{ .Values.backup.keep | quote }}
+                - name: BACKUP_TARGET
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.secretName }}
+                      key: BACKUP_TARGET
+                - name: BACKUP_SSH_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.secretName }}
+                      key: BACKUP_SSH_KEY
+                - name: BACKUP_KNOWN_HOSTS
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ .Values.secretName }}
+                      key: BACKUP_KNOWN_HOSTS
+              securityContext:
+                {{- include "anville.containerSecurity" . | nindent 16 }}
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                - name: work
+                  mountPath: /work
+          volumes:
+            - name: scripts
+              configMap:
+                name: {{ .Release.Name }}-backup
+            - name: work
+              emptyDir: {}
+{{- end }}
