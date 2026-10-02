@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** not yet placed
+**Sprint:** 3 or later
 
 **Spec:** Observers (ADR 0005); Testing Decisions
 

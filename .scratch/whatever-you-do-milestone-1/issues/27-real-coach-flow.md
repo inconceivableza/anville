@@ -1,20 +1,22 @@
-# 27: Real coach flow
+# 27: The coach sees the strengths feedback
 
-**What to build:** A simple, real coach experience if time allows. Once the coach has accepted through their link (ticket 13c), the participant chooses which sections to share, and the same tokenised, read-only link shows exactly those sections. There is no coach account and no coach answers beyond accepting or declining.
+**What to build:** Once the participant has seen their own strengths feedback, they can tick "I'm happy for my coach to see this", and the coach who accepted through their link (ticket 13c) then sees, through that same link, the participant's results and the comparison, read-only. There is no coach account, no choosing between sections, and no coach answers beyond accepting or declining.
 
-**Blocked by:** 13c (The coach's link), 25 (Coach preview and briefs)
+**Blocked by:** 13c (The coach's link)
 
 **Status:** ready-for-agent
 
-**Sprint:** 3 or later
+**Sprint:** 2a (ends 8 Oct, before FaithTech)
 
-**Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
+**Spec:** Implementation Decisions › Coach; Observers (ADR 0005); Testing Decisions
 
-**Cut order:** first. If time runs short, the coach stays a stored contact plus the printable and copyable preview from ticket 25.
+- [ ] The consent is offered on the results page or the comparison, only once the participant has seen it, and is refused until the coach has accepted
+- [ ] With consent given, the coach's link shows the participant's results and the comparison as the participant sees them, read-only; nothing else of the participant's is visible
+- [ ] The participant can withdraw consent at any time, and the coach's link stops showing them at once
+- [ ] Revoking or reissuing the coach's link, or choosing another coach, ends access through the old link and clears the consent
+- [ ] The coach sees the comparison only as far as it is shown to the participant: nothing below the observer minimum
 
-- [ ] Nothing is shared until the coach has accepted (ticket 13c)
-- [ ] A participant can mark individual sections as shared with their coach and can unshare them
-- [ ] The coach's link from ticket 13c, valid without an account, shows only the shared sections read-only; unshared sections are never visible
-- [ ] Revoking or reissuing the coach's link (ticket 13c) also ends access to the shared sections through the old link
-- [ ] The coach cannot write anything in the shared sections
-- [ ] Journey tests cover sharing, unsharing, sharing before acceptance being refused, revocation, and refusal of wrong or revoked tokens
+**Context**
+
+- The 2 Oct demo cut this ticket down from sharing chosen sections to one consent for the strengths feedback, the only feedback the pathway has while Sections 2–4 are hidden. Sharing other sections waits for the online journey (17–21)
+- The coach preview and briefs (25) are separate, and drop to 2b first if time runs short

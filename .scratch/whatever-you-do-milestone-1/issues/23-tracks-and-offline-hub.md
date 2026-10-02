@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** 3 or later
+**Sprint:** 3 or later; the workbook step (ticket 40) now gives every participant the offline material, so revisit whether a separate offline track is still wanted
 
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
 

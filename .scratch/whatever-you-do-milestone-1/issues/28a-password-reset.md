@@ -2,11 +2,11 @@
 
 **What to build:** A participant who has forgotten their password resets it by email. The spec leaves this out of this milestone. Until then, sign-in offers no password reset (ticket 03 hid the link and refuses the reset pages, because they crashed without a mail server) and the operator resets a password with `manage.py changepassword`. Google sign-in, split from the same ticket 28, is 28b.
 
-**Blocked by:** a decision outside this plan: an email provider, with a processor agreement
+**Blocked by:** 26 (Staging deployment), for email delivery on staging; for real participants, a decision outside this plan: an email provider, with a processor agreement
 
 **Status:** needs-triage
 
-**Sprint:** not yet placed
+**Sprint:** 2b (12–16 Oct), on staging's temporary email (2 Oct demo)
 
 **Parent:** whatever-you-do-milestone-1 spec (Out of Scope: "Account-level features beyond sign-up and login: password reset, Google sign-in and a production identity provider"). After milestone 1; not in the cut order
 

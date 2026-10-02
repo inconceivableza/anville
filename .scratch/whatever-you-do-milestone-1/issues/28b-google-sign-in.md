@@ -6,7 +6,7 @@
 
 **Status:** needs-triage
 
-**Sprint:** 3 or later; may move to sprint 2 alongside 26 (planning, 25 Sept)
+**Sprint:** 3 or later
 
 **Parent:** whatever-you-do-milestone-1 spec (Out of Scope: "Account-level features beyond sign-up and login: password reset, Google sign-in and a production identity provider"). After milestone 1; not in the cut order
 

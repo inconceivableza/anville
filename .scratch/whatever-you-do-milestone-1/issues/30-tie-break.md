@@ -8,7 +8,7 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** 1 (ends 2 Oct)
+**Sprint:** 2b (12–16 Oct); carried from sprint 1
 
 **Parent:** whatever-you-do-milestone-1 spec (The instrument and scoring)
 

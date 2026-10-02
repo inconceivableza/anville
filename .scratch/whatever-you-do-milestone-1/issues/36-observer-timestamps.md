@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** not yet placed; before any real participant data
+**Sprint:** 2b (12–16 Oct); before any real participant data
 
 **Spec:** Observers (ADR 0005); Testing Decisions
 

@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** not yet placed
+**Sprint:** 3 or later
 
 **Spec:** The instrument and scoring; Responses, answers and results; Observers (ADR 0005)
 

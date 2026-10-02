@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** 3 or later
+**Sprint:** 3 or later; parked while the static workbook stands in for Sections 2–4 (ticket 40)
 
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
 

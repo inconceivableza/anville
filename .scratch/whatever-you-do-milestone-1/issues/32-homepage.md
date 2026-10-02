@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** 2 if time allows (ends 8 Oct, for the 9 Oct tech showcase); desirable, not settled. Google sign-in (28b) takes precedence
+**Sprint:** 2a (ends 8 Oct, before FaithTech)
 
 **Parent:** whatever-you-do-milestone-1 spec (Out of Scope: "Any change to the marketing brochure…", which this reverses for the homepage alone)
 

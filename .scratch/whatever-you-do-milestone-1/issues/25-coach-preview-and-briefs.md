@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** 1 (ends 2 Oct)
+**Sprint:** 2a (ends 8 Oct, before FaithTech); carried from sprint 1. The first 2a ticket to drop to 2b if time runs short
 
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
 

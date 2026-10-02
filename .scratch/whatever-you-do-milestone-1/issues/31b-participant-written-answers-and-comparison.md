@@ -8,7 +8,7 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** 2 (ends 8 Oct, for the 9 Oct tech showcase)
+**Sprint:** 3 or later, with 31a (2 Oct demo). The content owner suggested the written commentary may live in the PDF workbook instead; confirm with them that 31b is still wanted in the app
 
 **Spec:** Observers (ADR 0005); Open content and product items; Testing Decisions
 

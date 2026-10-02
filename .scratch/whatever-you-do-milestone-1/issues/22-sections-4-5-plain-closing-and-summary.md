@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** 3 or later
+**Sprint:** 2b (12–16 Oct), cut to the closing ratings and summary. Section 4 is hidden for now, with the static workbook standing in for it (ticket 40), so the first and fifth criteria wait for the online journey; the summary covers what the participant has done in the app
 
 **Parent:** whatever-you-do-milestone-1 spec (Demo 3, 9 Oct)
 

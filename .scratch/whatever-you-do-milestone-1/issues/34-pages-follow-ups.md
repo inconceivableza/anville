@@ -6,7 +6,7 @@
 
 **Status:** resolved
 
-**Sprint:** not yet placed
+**Sprint:** 1 (ends 2 Oct)
 
 **Parent:** ticket 33 (its code reviews, 2026-09-29)
 

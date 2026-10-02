@@ -8,7 +8,7 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** 2 (ends 8 Oct, for the 9 Oct tech showcase)
+**Sprint:** 3 or later. The 2 Oct demo asked for a higher minimum than three for written answers, released in their own batch, and how to protect them is not settled (spec, Open content and product items, "From the 2 Oct demo"); settle that, and revisit ADR 0008, before building
 
 **Spec:** Observers (ADR 0005); Open content and product items; Legalities are parked, not forgotten; Testing Decisions
 

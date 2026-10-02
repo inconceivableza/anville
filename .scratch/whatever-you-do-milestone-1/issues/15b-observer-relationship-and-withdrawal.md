@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** 1 (ends 2 Oct)
+**Sprint:** 2b (12–16 Oct); carried from sprint 1
 
 **Spec:** Observers (ADR 0005); Agreed cut order, if time runs short; Open content and product items; Testing Decisions
 

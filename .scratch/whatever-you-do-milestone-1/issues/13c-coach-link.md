@@ -1,12 +1,12 @@
 # 13c: The coach's link
 
-**What to build:** The coach the participant chose in onboarding gets a link of the observer kind, asking them to accept or decline the six commitments from the coach-selection mock-up (its coach half; `Prototypes for reference/coach-selection-prototype.html`). Letting the coach see shared sections is ticket 27.
+**What to build:** The coach the participant chose in onboarding gets a link of the observer kind, asking them to accept or decline the six commitments from the coach-selection mock-up (its coach half; `Prototypes for reference/coach-selection-prototype.html`). Letting the coach see the strengths feedback is ticket 27.
 
 **Blocked by:** 13a (Issuing observer invitations)
 
 **Status:** ready-for-agent
 
-**Sprint:** 1 (ends 2 Oct)
+**Sprint:** 2a (ends 8 Oct, before FaithTech); carried from sprint 1
 
 **Spec:** Implementation Decisions › Coach; Observers (ADR 0005); Testing Decisions
 
