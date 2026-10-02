@@ -8,7 +8,9 @@
 #   <image digest>     sha256:…, from resolve-image-digest.sh
 #   --skip-bootstrap   Leave cert-manager and the issuers as they are, on a host that already has them
 #   --no-wait          Return once everything is applied, without waiting for the pods. For rehearsing
-#                      against an API server that has no node to run them
+#                      against an API server that has no node to run them. Use it with --skip-bootstrap
+#                      there: cert-manager checks itself with a job as it installs, and the issuers
+#                      cannot be created until its webhook is running, so both need a node
 #
 # From the environment, as deploy/environments/<environment>/secrets.example.yaml describes:
 #   DJANGO_SECRET_KEY, ANVILLE_ENROLMENT_CODE
@@ -31,11 +33,11 @@ die() {
 }
 
 BOOTSTRAP=true
-WAIT=(--wait --timeout 10m)
+WAIT=true
 while [ $# -gt 0 ]; do
   case "$1" in
     --skip-bootstrap) BOOTSTRAP=false ;;
-    --no-wait) WAIT=() ;;
+    --no-wait) WAIT=false ;;
     -*) die "unknown option $1" ;;
     *) break ;;
   esac
@@ -49,6 +51,11 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 CHART=$HERE/chart/anville
 VALUES=$HERE/environments/$ENVIRONMENT/values.yaml
 SECRET=anville
+
+# How long each helm call waits for what it installed to be ready, unless told not to wait at all.
+waiting() {
+  if $WAIT; then WAITING=(--wait --timeout "$1"); else WAITING=(); fi
+}
 
 [[ "$ENVIRONMENT" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]] || die "'$ENVIRONMENT' is not an environment's name"
 [ -f "$VALUES" ] || die "there is no environment $ENVIRONMENT in deploy/environments/"
@@ -104,24 +111,27 @@ CHECKSUM=$(cd "$SECRETS" && for name in *; do echo "$name"; cat "$name"; echo; d
 
 if $BOOTSTRAP; then
   echo "== cert-manager $CERT_MANAGER_VERSION and the issuers"
+  waiting 5m
   helm upgrade --install cert-manager "$CERT_MANAGER_CHART" \
     --version "$CERT_MANAGER_VERSION" \
     --namespace cert-manager --create-namespace \
     --set crds.enabled=true \
-    --wait --timeout 5m
+    ${WAITING[@]+"${WAITING[@]}"}
+  waiting 2m
   helm upgrade --install anville-bootstrap "$HERE/chart/anville-bootstrap" \
     --namespace cert-manager \
     --set acmeEmail="${ACME_EMAIL:-}" \
-    --wait --timeout 2m
+    ${WAITING[@]+"${WAITING[@]}"}
 fi
 
 echo "== $ENVIRONMENT at $DIGEST"
+waiting 10m
 if ! helm upgrade --install anville "$CHART" \
   --namespace "$ENVIRONMENT" \
   --values "$VALUES" \
   --set image.digest="$DIGEST" \
   --set secretChecksum="$CHECKSUM" \
-  "${WAIT[@]}"; then
+  ${WAITING[@]+"${WAITING[@]}"}; then
   # Enough to see why, without printing anything a pod was given.
   kubectl -n "$ENVIRONMENT" get pods -o wide || true
   kubectl -n "$ENVIRONMENT" logs deployment/anville --container migrate --tail 40 || true

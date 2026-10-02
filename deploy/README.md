@@ -155,10 +155,10 @@ Without a host, a registry push or Docker, as far as each piece allows:
 
 - `hcloud-create.sh`: run end to end against a local stand-in for the Hetzner API; the rendered cloud-init passes cloud-init's own schema check.
 - The charts: installed into a real Kubernetes API server with no node, so every object was accepted and no pod ran.
-- `deploy.sh`: run against that same API server, including each refusal (missing secrets, wrong tier, a password unfit for a URL).
+- `deploy.sh`: run against that same API server, including each refusal (missing secrets, wrong tier, a password unfit for a URL). Its cert-manager step pulled the pinned chart from quay.io and installed it there: the six definitions and three deployments were accepted. It could go no further without a node, since cert-manager's own start-up check is a job, and the issuers were refused, as they should be, while its webhook was not running.
 - `tunnel.sh`: run through a local SSH server to that API server, including a wrong host key and a wrong key.
 - `resolve-image-digest.sh`: run against another public image on GitHub Container Registry.
 - `assert-version.sh`: run against gunicorn serving this repository.
 - The backup script: run against a local SFTP server, with `pg_dump` stubbed.
 
-Not yet proven anywhere: the `Dockerfile` as a Docker build, the cloud-init on a real first boot, the deploy key's restriction in `authorized_keys`, cert-manager issuing a certificate, a pod starting, a real dump, and the restore above.
+Not yet proven anywhere: the `Dockerfile` as a Docker build, the cloud-init on a real first boot, the deploy key's restriction in `authorized_keys`, cert-manager starting and issuing a certificate, a pod starting, a real dump, and the restore above.
