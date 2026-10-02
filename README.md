@@ -241,7 +241,7 @@ gunicorn keeps no access log, for the same reason as the redaction. WhiteNoise s
 
 ### The image
 
-The `Dockerfile` builds the one image every deployment runs: the frontend built by Vite, the static files gathered, and gunicorn started as a user with no privileges. `.dockerignore` admits only what the image needs, because the image is public. To run it against the compose database:
+The `Dockerfile` builds the one image every deployment runs: the frontend built by Vite, the static files gathered, and gunicorn started as a user with no privileges. `Dockerfile.dockerignore` admits only what the image needs, because the image is public. To run it against the compose database:
 
 ```sh
 docker compose --profile app up --build

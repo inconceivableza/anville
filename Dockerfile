@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 
 # ✨ The one image every environment runs (docs/server-approach.md, section 3). It is public, so nothing may go
-# into it that the repository does not already publish: .dockerignore admits only what is copied below.
+# into it that the repository does not already publish: Dockerfile.dockerignore admits only what is copied
+# below. That file is named for this Dockerfile, so it does not touch the devcontainer's build of the same directory.
 
 FROM node:22-alpine AS frontend
 WORKDIR /build/frontend
