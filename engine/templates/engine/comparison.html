@@ -1,8 +1,9 @@
 {% extends "engine/base.html" %}
 {% comment %}
   ✨ The participant's stored result beside their observers' means, as the prototype's comparison screen showed it,
-  in the results page's wording and colours. Below the minimum there is a count and no numbers at all. Neither state
-  names who has answered.
+  in the results page's wording and colours, with how far the observers agree on each, then the largest gaps and the
+  questions to reflect on. Below the minimum there is a count and no numbers at all. Neither state names who has
+  answered.
 {% endcomment %}
 {% block head_title %}How others experience you{% endblock head_title %}
 
@@ -48,9 +49,36 @@
               </svg>
               <span class="result-bar-score comparison-others">{{ bar.others }}%</span>
             </div>
+            <p class="comparison-agreement">{{ bar.agreement }}</p>
           </div>
         {% endfor %}
       </section>
     {% endfor %}
+
+    {% if gaps %}
+      <section class="results-section">
+        {% if gaps_heading %}<h2>{{ gaps_heading }}</h2>{% endif %}
+        {% if gaps_intro %}<p class="results-desc">{{ gaps_intro }}</p>{% endif %}
+        {% for gap in gaps %}
+          <div class="gap-card">
+            <div class="gap-card-header">
+              <span class="gap-card-construct">{{ gap.label }} <span class="gap-card-framework">({{ gap.framework }})</span></span>
+              {% if gap.badge %}<span class="gap-card-badge {{ gap.badge_class }}">{{ gap.badge }} (+{{ gap.gap }})</span>{% endif %}
+            </div>
+            <p class="gap-card-desc">{{ gap.description }}</p>
+          </div>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    {% if prompts %}
+      <section class="results-section">
+        {% if prompts_heading %}<h2>{{ prompts_heading }}</h2>{% endif %}
+        {% if prompts_intro %}<p class="results-desc">{{ prompts_intro }}</p>{% endif %}
+        {% for prompt in prompts %}
+          <div class="reflection-prompt"><p><strong>{{ prompt.title }}:</strong> {{ prompt.text }}</p></div>
+        {% endfor %}
+      </section>
+    {% endif %}
   {% endif %}
 {% endblock content %}

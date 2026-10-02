@@ -163,6 +163,52 @@ def test_a_seeded_participant_reaches_the_comparison_from_their_results_page(cli
 
 
 @pytest.mark.django_db
+def test_below_the_minimum_no_gap_and_no_agreement_band_appear(signed_in, participant):
+    with_observers(signed_in, participant, THREE_OBSERVERS[:2])
+
+    shown = comparison(signed_in).content.decode()
+
+    for revealing in ("rate higher", "Strong agreement", "Some variation", "Divided views"):
+        assert revealing not in shown
+
+
+@pytest.mark.django_db
+def test_the_gaps_list_who_rates_each_construct_higher_largest_first(signed_in, participant):
+    """✨ The participant's 90/10 against the observers' 70/30 is a gap of 20 on every construct, so they are listed in
+    the order declared: Apostle and Prophet, then Ponder and Deliver."""
+    with_observers(signed_in, participant, THREE_OBSERVERS)
+
+    shown = comparison(signed_in).content.decode()
+
+    assert in_order(
+        shown,
+        "Apostle",
+        "You rate higher",
+        "Prophet",
+        "Others rate higher",
+        "Ponder",
+        "Others rate higher",
+        "Deliver",
+        "You rate higher",
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "apostle_shares, band",
+    [((72, 70, 68), "Strong agreement"), ((80, 70, 60), "Divided views")],
+    ids=["a range of 4", "a range of 20"],
+)
+def test_each_construct_shows_how_far_the_observers_agree(signed_in, participant, apostle_shares, band):
+    """✨ Each observer's Prophet and Ponder are 100 less their Apostle and Deliver, so all four share one range."""
+    with_observers(signed_in, participant, [observer_sort(share) for share in apostle_shares])
+
+    shown = comparison(signed_in).content.decode()
+
+    assert shown.count(band) == 4
+
+
+@pytest.mark.django_db
 def test_before_a_result_the_comparison_leads_to_the_sort(signed_in):
     page = comparison(signed_in)
 

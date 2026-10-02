@@ -148,6 +148,10 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Section 1, with the sort in and the reflection written, before any visit: the checklist lists "View the 'Compare with how others see you' results to continue." unticked, between the assessment and the reflections, and "Mark complete" stays disabled. Find the way there from Section 1 alone (the Strengths card, then its results link, then "Compare with how others see you →"). With no observers, that page is "Not enough answers yet"; back in Section 1 the item is ticked and the section completes.
 - "Compare with how others see you →" is now a button in a form: it looks and sits as it did, works without JavaScript and by keyboard, and VoiceOver reads it as a button. Opening the comparison by typing its address shows it but leaves Section 1's item unticked.
 - Phone width: the "You" and "Others" labels, bars and percents stay on one line without the page scrolling sideways.
+- Under each construct's bars, a small grey line reads "Strong agreement", "Some variation" or "Divided views".
+- Below both frameworks, "🔍 Biggest Gaps" lists five cards, largest first, each naming its framework. A gap of five or more has a green "Others rate higher (+n)" or red "You rate higher (+n)" badge and its matching description; a smaller one reads "A modest gap…", and a gap of nothing has no badge. No percent appears on the page beyond the bars' own.
+- "💬 Questions to sit with" follows with four gold-edged prompts, and its introduction says "coach".
+- Phone width: a gap card's badge wraps under the construct's name instead of running off the card.
 
 ## Inviting observers (the hub's "Invite others to assess you →")
 

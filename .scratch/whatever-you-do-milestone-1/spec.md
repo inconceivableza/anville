@@ -278,7 +278,7 @@ So the 9 Oct showcase shows slice 2, without the studio, plus the observer flow,
 - The words for the answers follow `CONTEXT.md` (assessment, placement, self-result, observer result, observer average; ticket 35). The block type `sort_assessment` and the block id `strengths-sort` keep their names, since loaded pathway versions are immutable and answers are stored against the block id.
 - The rank-based colouring of PEP bars shares a colour between tied scores. The APEST bars use fixed per-construct colours.
 - The prototype's unbalanced APEST×PEP item matrix and its compositional nature are ported as they are and recorded as content debt for the content owner. Neither is fixed silently.
-- The comparison thresholds are data in the document: a gap of five percentage points or more is significant, and observer agreement is banded by range (up to 6 is strong agreement, up to 14 is some variation, above that is divided views). The comparison lists the five largest gaps across both frameworks.
+- The comparison thresholds are data in the document: a gap of five percentage points or more is significant, and observer agreement is banded by range (up to 6 is strong agreement, up to 14 is some variation, above that is divided views). The comparison lists the five largest gaps across both frameworks, ties in the order the constructs were declared. A gap of nothing has no direction and reads as a modest gap, where the prototype said "You rate higher (+0)" (developer's call, ticket 16b). The agreement bands are read narrowest first whatever order they are written in, and a range above them all takes a label of its own, so no document can leave a range without a band.
 
 ### Observers (ADR 0005)
 

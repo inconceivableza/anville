@@ -23,6 +23,14 @@ def shares(document, answer):
     return METHODS[method]["shares"](document, answer)
 
 
+def percents_by_construct(result):
+    """✨ A result's rounded percents as `{framework: {construct: percent}}`, so they are found by id, not position."""
+    return {
+        framework["framework"]: {construct["construct"]: construct["percent"] for construct in framework["constructs"]}
+        for framework in result["frameworks"]
+    }
+
+
 def _compositional_share(document, answer):
     """✨ The prototype's computeAll(), frozen.
 
