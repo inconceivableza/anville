@@ -18,7 +18,9 @@ __pycache__/
 *$py.class
 *.egg-info/
 .venv/
+.venv*/
 venv/
+venv*/
 env/
 ENV/
 .pytest_cache/
@@ -42,3 +44,4 @@ build/
 # Editor and tooling state
 .idea/
 .vscode/*.log
+.claude/
