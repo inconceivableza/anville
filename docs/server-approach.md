@@ -1,6 +1,6 @@
 # Server deployment approach for Anville
 
-> ✨ Drafted with AI assistance. Status: a proposal, not a decision and not a runbook. Nothing described here exists in the repository yet.
+> ✨ Drafted with AI assistance. Status: the approach ticket 26 follows, not a runbook. What it describes for the first staging environment is now built under `deploy/` and `.github/workflows/`, and has not yet met a real host: [deploy/README.md](../deploy/README.md) says how to do each thing and what has been tested. Production, Ubicloud and point-in-time recovery remain proposals.
 > It adapts [livepace-server-approach.md](livepace-server-approach.md) to Anville, and reads best beside it: the section order is the same.
 > Sizing and prices are in [infrastructure-sizing.md](infrastructure-sizing.md); ticket 26 is the first use of this.
 
