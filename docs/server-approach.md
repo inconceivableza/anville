@@ -27,7 +27,12 @@ deploy/
   infra/
     cloud-init.yaml.template
     hcloud-create.sh                  # firewall + server, from the template
-  resolve-image-digest.sh
+  resolve-image-digest.sh             # the four steps of a deploy, each a script
+  tunnel.sh
+  deploy.sh
+  assert-version.sh
+  check.sh                            # shellcheck and helm over all of deploy/
+  README.md                           # how to do each thing
 .github/workflows/build.yml
 .github/workflows/deploy.yml
 ```
@@ -190,13 +195,15 @@ Three levels, chosen per environment from its values. The chart and the deploy w
 
 ## 8. Deploy workflow (`deploy.yml`)
 
-`workflow_dispatch` with two inputs: `environment` (a string, checked against `deploy/environments/`) and `tag` (default `latest`). The job runs in that GitHub Environment, with `concurrency` keyed on `DEPLOY_HOST` so two deploys to one host never overlap.
+`workflow_dispatch` with two inputs: `environment` (a string, checked against `deploy/environments/`) and `tag` (default `latest`). The job runs in that GitHub Environment. Deploys run one at a time, whatever the host, so two never touch one host together; a queue per host would need the host's name before the GitHub Environment is in reach.
+
+Each step below is a script under `deploy/`, which the workflow calls in order. That is what lets them be run and tested without GitHub, and lets an operator run one by hand.
 
 1. **Resolve the digest** for the tag from the registry, and the commit it was built from. A missing image stops the run before the host is touched.
 2. **Open the SSH tunnel** to the k3s API on `127.0.0.1:6443`, with the host key pinned.
-3. **Check the host.** The environment's `tier` must match the tier label on the k3s node; a production environment aimed at a staging host fails here.
+3. **Check the secrets and the host.** Every secret the environment needs, by what its values say it is, must be present before anything is applied. The environment's `tier` must match the tier label on the k3s node; a production environment aimed at a staging host fails here.
 4. **Create the namespace and apply the secrets** with `kubectl create secret --dry-run=client -o yaml | kubectl apply -f -`.
-5. **`helm upgrade --install anville-bootstrap`**, then **`helm upgrade --install anville -n <environment>`** with the chart's values, the environment's values and `--set image.digest=…`, with `--wait`. The same digest means no rollout.
+5. **`helm upgrade --install`** three times: cert-manager's own chart at a pinned version, `anville-bootstrap`, then `anville -n <environment>` with the chart's values, the environment's values and `--set image.digest=…`, with `--wait`. The same digest and the same secrets mean no rollout. A deploy that fails is left as it is, not rolled back, with the pods, the migration's log and the latest events printed.
 6. **Assert the version.** `GET https://<hostname>/healthz` must return the commit resolved in step 1. This catches a wrong DNS record, a failed certificate and a pod that never became ready, from the outside.
 7. **Tear the tunnel down**, always.
 
