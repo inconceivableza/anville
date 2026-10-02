@@ -123,6 +123,33 @@ def test_an_email_url_names_the_provider_and_its_credentials():
     }
 
 
+def test_a_disclaimer_wraps_whichever_email_backend_was_chosen():
+    fake = settings_with({"ANVILLE_EMAIL_DISCLAIMER": "From a test system."}, "EMAIL_BACKEND", "ANVILLE_DISCLAIMED_EMAIL_BACKEND")
+    real = settings_with(
+        {"ANVILLE_EMAIL_DISCLAIMER": "From a test system.", "EMAIL_URL": "smtp+tls://key:secret@smtp.example.org:587"},
+        "EMAIL_BACKEND",
+        "ANVILLE_DISCLAIMED_EMAIL_BACKEND",
+    )
+
+    assert fake == {
+        "EMAIL_BACKEND": "config.email.DisclaimerBackend",
+        "ANVILLE_DISCLAIMED_EMAIL_BACKEND": "django.core.mail.backends.console.EmailBackend",
+    }
+    assert real == {
+        "EMAIL_BACKEND": "config.email.DisclaimerBackend",
+        "ANVILLE_DISCLAIMED_EMAIL_BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+    }
+
+
+def test_with_no_disclaimer_the_email_backend_is_not_wrapped():
+    settings = settings_with({"ANVILLE_EMAIL_DISCLAIMER": ""}, "EMAIL_BACKEND", "ANVILLE_DISCLAIMED_EMAIL_BACKEND")
+
+    assert settings == {
+        "EMAIL_BACKEND": "django.core.mail.backends.console.EmailBackend",
+        "ANVILLE_DISCLAIMED_EMAIL_BACKEND": None,
+    }
+
+
 def test_database_connections_are_closed_after_each_request_unless_an_age_is_given():
     assert settings_with({}, "DATABASES")["DATABASES"]["default"]["CONN_MAX_AGE"] == 0
     kept = settings_with({"DATABASE_CONN_MAX_AGE": "60"}, "DATABASES")["DATABASES"]["default"]

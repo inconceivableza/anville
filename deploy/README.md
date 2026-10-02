@@ -85,7 +85,7 @@ k exec -it deployment/anville -- python manage.py changepassword <username>
 k exec -it deployment/anville -- python manage.py dbshell
 ```
 
-**Fake email.** An environment with no `EMAIL_URL` secret delivers nothing: each message is written to the pod's log. To see one, run `k exec deployment/anville -- python manage.py sendtestemail someone@example.com` and read the log. The log then holds whatever links the messages carried, which is acceptable only where the data is fake. A production environment cannot be deployed without `EMAIL_URL`.
+**Fake email.** An environment with no `EMAIL_URL` secret delivers nothing: each message is written to the pod's log. On a staging environment it is written with the test-system disclaimer it would carry if it were sent: `[TEST]` before the subject, and the disclaimer at the top of the body. To see one, run `k exec deployment/anville -- python manage.py sendtestemail someone@example.com` and read the log. The log then holds whatever links the messages carried, which is acceptable only where the data is fake. A production environment cannot be deployed without `EMAIL_URL`.
 
 **Resetting a password.** Password reset is refused until ticket 28a. Until then the operator runs `changepassword`, as above. allauth derives the username from the start of the email address; the admin shows it.
 

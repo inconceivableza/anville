@@ -30,7 +30,10 @@
     "resources": { "type": "object" },
     "email": {
       "type": "object",
-      "properties": { "from": { "type": "string" } }
+      "properties": {
+        "from": { "type": "string" },
+        "disclaimer": { "type": "string" }
+      }
     },
     "postgres": {
       "type": "object",

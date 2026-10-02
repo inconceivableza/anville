@@ -67,6 +67,10 @@ from the variable before it, so the password must be safe inside a URL: letters,
 - name: DEFAULT_FROM_EMAIL
   value: {{ . | quote }}
 {{- end }}
+{{- if eq .Values.tier "staging" }}
+- name: ANVILLE_EMAIL_DISCLAIMER
+  value: {{ required "email.disclaimer cannot be empty on a staging environment: its email must say it is from a test system" .Values.email.disclaimer | quote }}
+{{- end }}
 - name: DJANGO_SECRET_KEY
   valueFrom:
     secretKeyRef:

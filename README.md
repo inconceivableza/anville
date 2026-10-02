@@ -223,6 +223,7 @@ Everything a deployed copy needs is read from the environment, so one build serv
 | `DATABASE_CONN_MAX_AGE` | A database connection per request | Seconds to keep a connection for reuse |
 | `EMAIL_URL` | Email is fake: each message is printed in the server's output and nothing is delivered | The provider, as `smtp+tls://key:secret@host:587` |
 | `DEFAULT_FROM_EMAIL` | `webmaster@localhost` | The address messages come from |
+| `ANVILLE_EMAIL_DISCLAIMER` | Messages go as written | For a test system that can reach real mailboxes: every message has `[TEST]` put before its subject and this text at the top of its body, plain and HTML alike. The chart sets it on every staging environment |
 | `ANVILLE_COMMIT` | `unknown` | The commit the code was built from. The image sets it |
 
 `/healthz` answers `{"status": "ok", "commit": "…"}` when the database can be reached, and 503 when it cannot. It still wants a `Host` header that `DJANGO_ALLOWED_HOSTS` lists.

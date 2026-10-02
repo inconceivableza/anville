@@ -194,6 +194,13 @@ vars().update(env.email_url_config(env("EMAIL_URL", default="") or "consolemail:
 
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
 
+# ✨ Set on a test system that can reach real mailboxes: every message then says, in its subject and at the top
+# of its body, that it is not from the real service. It wraps whichever backend the lines above chose.
+ANVILLE_EMAIL_DISCLAIMER = env("ANVILLE_EMAIL_DISCLAIMER", default="")
+if ANVILLE_EMAIL_DISCLAIMER:
+    ANVILLE_DISCLAIMED_EMAIL_BACKEND = EMAIL_BACKEND  # noqa: F821  (set by vars().update above)
+    EMAIL_BACKEND = "config.email.DisclaimerBackend"
+
 
 # Logging
 # https://docs.djangoproject.com/en/5.2/topics/logging/

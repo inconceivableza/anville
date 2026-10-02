@@ -48,6 +48,11 @@ email:
   # The address messages come from (DEFAULT_FROM_EMAIL). The provider is the EMAIL_URL secret; without it
   # email is fake, and each message is written to the pod's log.
   from: ""
+  # What every message from a staging environment says, in its subject as [TEST] and at the top of its body.
+  # A staging environment may reword it and may not empty it; a production environment never carries it.
+  disclaimer: >-
+    This message comes from a test system for Anville. It is not intended for production use.
+    If you were not expecting it, please ignore it.
 
 postgres:
   # true: PostgreSQL runs in this namespace, and the Secret holds POSTGRES_PASSWORD.

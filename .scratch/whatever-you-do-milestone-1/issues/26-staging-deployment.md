@@ -45,15 +45,17 @@ In order. Section numbers are those of docs/server-approach.md, where the detail
 8. *Human.* **DNS** (section 10). An A record for `anville.vabl.dev` in Cloudflare, DNS-only, pointing at the host, and no AAAA record: the host serves over IPv4 only for now. It must resolve before the first deploy.
 9. **The charts** (section 5). `anville-bootstrap` and `anville`, with in-cluster PostgreSQL and the backup CronJob; `helm lint` and `helm template` run in the build workflow.
 10. **The environment** (section 6). `deploy/environments/whatever-you-do-staging/` with its `values.yaml` and `secrets.example.yaml`: staging tier, backup level A, the `letsencrypt-prod` issuer from the first deploy, since `.dev` is HTTPS-only in browsers (section 10).
-11. *Human.* **GitHub Environment** `whatever-you-do-staging` with the variable and secrets in section 6's table. Generate a fresh secret key, enrolment code and database password; none is reused from a development `.env`.
+11. *Human.* **GitHub Environment** `whatever-you-do-staging` with the variable and secrets in section 6's table, as `deploy/environments/whatever-you-do-staging/secrets.example.yaml` lists them. Generate a fresh secret key, enrolment code and database password; none is reused from a development `.env`.
 12. **Deploy workflow** (section 8). `deploy.yml`, ending with the `/healthz` version assertion.
 13. *Human.* **First deploy.** Run the workflow, then through the tunnel: create the operator's superuser, load `pathways/whatever-you-do.json`, and optionally `seed_observers`. The deploy itself never loads a pathway (section 8).
-14. *Human.* **Fake email** (section 11). With no `EMAIL_URL` set, run `manage.py sendtestemail` and find the message in the pod's log. Nothing is delivered.
+14. *Human.* **Fake email** (section 11). With no `EMAIL_URL` set, run `manage.py sendtestemail` and find the message in the pod's log, marked `[TEST]` and opening with the disclaimer. Nothing is delivered.
 15. *Human.* **Backup and restore** (section 7). Confirm a nightly dump has reached the Storage Box, then restore it into a scratch namespace on `staging-1` and check the restored data.
 16. *Human.* **Smoke test** on `https://anville.vabl.dev`: sign up with the enrolment code, log in, complete a section, resume. Also confirm the observer cookie is marked Secure, and that neither Traefik nor gunicorn is logging request paths.
 17. **Runbook.** A short record of steps 4 to 16 as actually performed, with the commands used and anything that differed from docs/server-approach.md, plus how the operator resets a password and reads fake email. Correct that document where it turned out wrong.
 
 Steps 1 to 3, 6, 9, 10 and 12 have no dependency on the human steps and can be done first, or alongside them.
+
+**Progress.** Steps 1, 2, 3, 6, 9, 10, 12 and 18 are built, on the branch `26-staging-deployment`. None has met a real host, registry or Docker build yet: [deploy/README.md](../../../deploy/README.md) lists what each was tested against and what only the human steps can prove, and says how to do each of them. Every remaining step is a human one, then the runbook (17).
 
 **Part 2: actual email, with a disclaimer**
 
