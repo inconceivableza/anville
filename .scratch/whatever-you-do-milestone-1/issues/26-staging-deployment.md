@@ -42,7 +42,7 @@ In order. Section numbers are those of docs/server-approach.md, where the detail
 5. *Human.* **Hetzner** (section 9). A project in an EU region, an API token for `hcloud`, an SSH key for the interactive account and one for deploys, and a Storage Box with a sub-account for this environment (section 7).
 6. **Host provisioning** (section 9). `cloud-init.yaml.template` and `hcloud-create.sh`, with the tier as a parameter.
 7. *Human.* **Create `staging-1`** with the script, and confirm k3s is up and 6443 is not reachable from outside.
-8. *Human.* **DNS** (section 10). A and AAAA records for `anville.vabl.dev` in Cloudflare, DNS-only, pointing at the host. They must resolve before the first deploy.
+8. *Human.* **DNS** (section 10). An A record for `anville.vabl.dev` in Cloudflare, DNS-only, pointing at the host, and no AAAA record: the host serves over IPv4 only for now. It must resolve before the first deploy.
 9. **The charts** (section 5). `anville-bootstrap` and `anville`, with in-cluster PostgreSQL and the backup CronJob; `helm lint` and `helm template` run in the build workflow.
 10. **The environment** (section 6). `deploy/environments/whatever-you-do-staging/` with its `values.yaml` and `secrets.example.yaml`: staging tier, backup level A, the `letsencrypt-prod` issuer from the first deploy, since `.dev` is HTTPS-only in browsers (section 10).
 11. *Human.* **GitHub Environment** `whatever-you-do-staging` with the variable and secrets in section 6's table. Generate a fresh secret key, enrolment code and database password; none is reused from a development `.env`.

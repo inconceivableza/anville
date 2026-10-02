@@ -208,18 +208,20 @@ Promotion stays explicit: production is a deliberate run of the same workflow wi
 
 Created once by `deploy/infra/hcloud-create.sh`, which uses the `hcloud` CLI to:
 
-1. create a Hetzner Cloud Firewall admitting 22, 80 and 443 over TCP, and ICMP;
-2. create the server in an EU location (FSN1, NBG1 or HEL1) from the Ubuntu LTS image, passing the rendered cloud-init as user data and attaching the firewall;
-3. enable Hetzner backups.
+1. create a Hetzner Cloud Firewall admitting 22, 80 and 443 over TCP, and ICMP, unless the project already has it;
+2. add the operator's public key to the project, so that Hetzner sets no root password and emails none;
+3. create the server in an EU location (FSN1, NBG1 or HEL1) from the Ubuntu LTS image, passing the rendered cloud-init as user data, attaching the firewall and enabling Hetzner backups.
+
+It ends by printing what to do next: how to wait for the first boot, and where each of the host's GitHub Environment values comes from. `hcloud-create.sh --render` prints the cloud-init and creates nothing.
 
 The host's tier is a parameter of the template, which sets it as a k3s node label for the deploy workflow to check.
 
 `cloud-init.yaml.template` is LivePace's with the provider-specific parts changed:
 
-- two accounts: `deploy` (key-only, no sudo, may read the kubeconfig) for the workflow, and a named interactive sudoer. Root login over SSH is disabled; Hetzner images otherwise leave root as the login;
-- base packages, 2 GiB swap, `vm.swappiness=10`, SSH without passwords, unattended upgrades;
+- two accounts: `deploy` for the workflow, and a named interactive sudoer. The deploy key is restricted in `authorized_keys` to one thing, forwarding a port to the k3s API on the host: it has no shell, no sudo and cannot read the kubeconfig, a copy of which the workflow holds as a secret. Root login over SSH is disabled; Hetzner images otherwise leave root as the login;
+- base packages, 2 GiB swap, `vm.swappiness=10`, SSH without passwords, and unattended upgrades, which restart the host at 03:30 UTC when an update needs it;
 - UFW admitting 22, 80 and 443, with the k3s pod and service networks allowed. **6443 is not opened**;
-- k3s in server mode with its bundled Traefik, then Helm and kubectl. The template stays architecture-aware so an ARM host remains possible.
+- k3s in server mode with its bundled Traefik and kubectl, with secrets encrypted at rest. Helm is not installed on the host: it runs in the deploy workflow, through the tunnel. Nothing in the template depends on the architecture, so an ARM host remains possible.
 
 The outside-in check that LivePace does with a probe script is done here by step 6 of the deploy.
 
@@ -239,11 +241,13 @@ PostgreSQL has no public endpoint at levels A and B.
 | `whatever-you-do-production` | `whateveryoudo.org` (envisaged) | Not yet determined |
 | Further staging environments | Suggested: `<deployment>.anville.vabl.dev` | Cloudflare |
 
-Each environment has one A and one AAAA record pointing at its host. With HTTP-01 the records must exist, and resolve to the host, before the first deploy, or the certificate cannot be issued.
+Each environment has one A record pointing at its host. With HTTP-01 the record must exist, and resolve to the host, before the first deploy, or the certificate cannot be issued.
+
+- **No AAAA record for now.** k3s is installed with an IPv4-only pod network, and its load balancer then publishes 80 and 443 on the host's IPv4 address only. An AAAA record would send IPv6 visitors, and Let's Encrypt's validation, which prefers IPv6, to an address where nothing answers. Serving over IPv6 means installing k3s dual-stack, a change to the cloud-init template to make when it is wanted. This is reasoned from how k3s works and has not been tried on a host.
 
 - **Cloudflare records are DNS-only, not proxied.** Proxying would end TLS at Cloudflare, break the plain HTTP-01 path unless configured around, and put a further processor in front of participants' answers. Traefik on the host is the only TLS endpoint.
 - **`.dev` is HTTPS-only in browsers.** The whole top-level domain is HSTS-preloaded, so a browser will not load `anville.vabl.dev` over plain HTTP and will not let anyone click past a certificate warning. The first deploy must therefore go straight to `letsencrypt-prod`; trying it out with Let's Encrypt's test issuer produces a site no browser will open. Use `curl -k` against `/healthz` if the test issuer is wanted for a dry run.
-- **Production does not depend on the DNS decision.** HTTP-01 needs only that `whateveryoudo.org` resolves to the host. The apex needs A and AAAA records there; if `www.whateveryoudo.org` is wanted, it is a second hostname on the same Ingress and certificate, redirected to the apex, and both go in `DJANGO_ALLOWED_HOSTS`.
+- **Production does not depend on the DNS decision.** HTTP-01 needs only that `whateveryoudo.org` resolves to the host. The apex needs an A record there; if `www.whateveryoudo.org` is wanted, it is a second hostname on the same Ingress and certificate, redirected to the apex, and both go in `DJANGO_ALLOWED_HOSTS`.
 - **Cloudflare DNS-01 is the alternative for staging only**, as LivePace does it: a certificate before the records point anywhere, and one wildcard for `*.anville.vabl.dev` covering every later staging environment. It costs a Cloudflare API token on the staging host that can edit the `vabl.dev` zone, which holds more than Anville. It is left out until the number of staging environments makes the wildcard worth that.
 
 A staging environment is private in the sense ticket 26 means: an unadvertised hostname, sign-up refused without the enrolment code, and fake data only. If that is not enough, Traefik can put basic authentication in front of a staging environment from its values; note that observers following a link would meet it too.
