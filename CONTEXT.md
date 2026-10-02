@@ -149,7 +149,7 @@ One block's captured value within a response, keyed by that block's permanent id
 _Avoid_: field value, datum.
 
 **Result**:
-The scores and presentation computed from an assessment against the pathway version it was answered on. A **self-result** comes from a self-assessment and is persisted once rather than recomputed. An **observer result** comes from one observer assessment and is worked out when needed, never stored or shown on its own.
+The scores and presentation computed from an assessment against the pathway version it was answered on. A **self-result** comes from a self-assessment and is persisted once rather than recomputed. An **observer result** comes from one observer assessment and is worked out when needed, never stored or shown on its own. The comparison's distribution strip shows each observer's percent for one construct at a time, each construct's in ascending order on its own, so no observer result can be put back together from it.
 _Avoid_: report, profile, profiling, outcome.
 
 **Observer average**:

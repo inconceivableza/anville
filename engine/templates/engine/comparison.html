@@ -50,6 +50,22 @@
               <span class="result-bar-score comparison-others">{{ bar.others }}%</span>
             </div>
             <p class="comparison-agreement">{{ bar.agreement }}</p>
+            <details class="distribution">
+              <summary>See how the {{ observers }} people who answered see this</summary>
+              <svg class="distribution-drawing" viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                <rect class="distribution-band {{ bar.strip.colour }}" x="{{ bar.strip.band_start }}" y="3" width="{{ bar.strip.band_width }}" height="6" />
+                {% for dot in bar.strip.dots %}
+                  <rect class="{{ bar.strip.colour }}" x="{{ dot }}" y="3" width="{{ bar.strip.dot_width }}" height="6" />
+                {% endfor %}
+                <rect class="distribution-yours" x="{{ bar.strip.yours }}" y="0" width="{{ bar.strip.yours_width }}" height="12" />
+              </svg>
+              <p class="distribution-key" aria-hidden="true"><span class="distribution-yours-key"></span> You ({{ bar.percent }}%)</p>
+              {% comment %}✨ The values, lowest first, as text for everyone and for screen readers; the drawing is hidden from them.{% endcomment %}
+              <p class="distribution-caption">Each person's percent, lowest first:</p>
+              <ol class="distribution-values">
+                {% for value in bar.strip.values %}<li>{{ value }}%</li>{% endfor %}
+              </ol>
+            </details>
           </div>
         {% endfor %}
       </section>

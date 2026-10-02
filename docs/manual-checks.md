@@ -152,6 +152,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Below both frameworks, "🔍 Biggest Gaps" lists five cards, largest first, each naming its framework. A gap of five or more has a green "Others rate higher (+n)" or red "You rate higher (+n)" badge and its matching description; a smaller one reads "A modest gap…", and a gap of nothing has no badge. No percent appears on the page beyond the bars' own.
 - "💬 Questions to sit with" follows with four gold-edged prompts, and its introduction says "coach".
 - Phone width: a gap card's badge wraps under the construct's name instead of running off the card.
+- Under each construct, "See how the 3 people who answered see this" opens, by mouse and by keyboard, onto a strip: a pale band from the lowest percent to the highest, a dot for each in the construct's colour (APEST(d) in its tones, PEP in its rank colours), and a dark line centred on your own percent, which the key below names "You (n%)". A dot and the line at the same value sit on top of each other. Below it, "Each person's percent, lowest first:" lists the percents, unnumbered. VoiceOver reads that list and skips the drawing. With two observers there is no strip at all.
 
 ## Inviting observers (the hub's "Invite others to assess you →")
 

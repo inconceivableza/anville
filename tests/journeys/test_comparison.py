@@ -1,8 +1,8 @@
 """✨ The comparison: the participant's own result beside the mean of what their observers see (ADR 0005).
 
 Below the minimum number of observers the participant sees how many have answered and no numbers. From the minimum
-up they see each construct's percent beside the observers' mean, never a single observer's percent, and never which
-person has answered.
+up they see each construct's percent beside the observers' mean, single observers' percents only in the distribution
+strip and in ascending order, and never which person has answered.
 """
 
 import re
@@ -71,11 +71,25 @@ def test_below_the_minimum_the_comparison_shows_how_many_have_answered_and_no_nu
     assert "%" not in shown
 
 
+# ✨ The list of one construct's observers' percents in its distribution strip.
+STRIP_VALUES = re.compile(r'<ol class="distribution-values[^"]*"[^>]*>(.*?)</ol>', re.S)
+
+
+def strips(page):
+    """✨ Each construct's distribution strip: the list of its observers' percents, in the order the page gives them."""
+    return [re.findall(r"(\d+)%", strip) for strip in STRIP_VALUES.findall(page)]
+
+
+def outside_the_strips(page):
+    """✨ The page with every strip's list of observers' percents cut out, leaving what else it shows."""
+    return STRIP_VALUES.sub("", page)
+
+
 @pytest.mark.django_db
-def test_no_single_observers_percent_reaches_the_participant_only_the_means(signed_in, participant):
+def test_no_single_observers_percent_reaches_the_participant_outside_the_strip_only_the_means(signed_in, participant):
     with_observers(signed_in, participant, THREE_OBSERVERS)
 
-    shown = comparison(signed_in).content.decode()
+    shown = outside_the_strips(comparison(signed_in).content.decode())
 
     assert "70%" in shown and "30%" in shown
     for single in ("80%", "60%", "20%", "40%"):
@@ -206,6 +220,18 @@ def test_each_construct_shows_how_far_the_observers_agree(signed_in, participant
     shown = comparison(signed_in).content.decode()
 
     assert shown.count(band) == 4
+
+
+@pytest.mark.django_db
+def test_the_strip_gives_each_observers_percent_in_ascending_order_never_the_order_they_answered(
+    signed_in, participant
+):
+    """✨ Observers answer 80, then 60, then 70. Apostle's strip comes first, as the participant ranks it first."""
+    with_observers(signed_in, participant, [observer_sort(80), observer_sort(60), observer_sort(70)])
+
+    apostle = strips(comparison(signed_in).content.decode())[0]
+
+    assert apostle == ["60", "70", "80"]
 
 
 @pytest.mark.django_db
