@@ -69,7 +69,7 @@ The application needs these changes first. None exist today:
 - **Static files.** `STATIC_ROOT`, and WhiteNoise to serve it, so there is no second nginx container. Vite's hashed filenames suit WhiteNoise's far-future caching.
 - **`/healthz`.** It answers 200 with the commit SHA, read from an environment variable the chart sets, and checks the database with one trivial query. The Kubernetes probes must send the environment's `Host` header, or Django refuses the pod-IP request with `DisallowedHost`.
 - **Proxy and cookie settings from the environment.** `SECURE_PROXY_SSL_HEADER` (ticket 26), `CSRF_TRUSTED_ORIGINS`, secure session and CSRF cookies, HSTS. All default to the safe development behaviour when unset.
-- **Email from the environment.** `EMAIL_URL` and `DEFAULT_FROM_EMAIL`, read with django-environ, defaulting to the console backend. See section 11.
+- **Email from the environment.** `EMAIL_URL` and `DEFAULT_FROM_EMAIL`, read with django-environ, defaulting to the console backend, and `ANVILLE_EMAIL_DISCLAIMER`, which marks every outgoing message when set. See section 11.
 - **Database connection reuse.** `CONN_MAX_AGE` from the environment. It matters little in-cluster and a good deal with a managed database reached over TLS.
 
 `config/settings.py` already takes the secret key, debug flag, allowed hosts, database URL and enrolment code from the environment, so one image serves every environment (ADR 0002).
@@ -137,7 +137,7 @@ Its GitHub Environment holds:
 | Secret | `POSTGRES_PASSWORD` | In-cluster database; the chart composes `DATABASE_URL` from it |
 | Secret | `DATABASE_URL` | Managed database only, in place of the above |
 | Secret | `BACKUP_SSH_KEY`, `BACKUP_TARGET` | Storage Box sub-account for this environment |
-| Secret | `EMAIL_URL` | Mailjet SMTP credentials; absent until the environment sends email (section 11) |
+| Secret | `EMAIL_URL` | Mailjet SMTP credentials; absent while the environment's email is fake (section 11) |
 
 Production environments get GitHub's required-reviewer rule. Staging environments do not.
 
@@ -252,11 +252,24 @@ Initial delivery is through **Mailjet**, over SMTP, with Django's own SMTP backe
 
 - **Configuration is one URL.** `EMAIL_URL=smtp+tls://<api key>:<secret key>@in-v3.mailjet.com:587`, a per-environment secret, plus `DEFAULT_FROM_EMAIL` in the environment's values. Changing provider later is a change of that secret, not of the image. Port 587 is the one to use: Hetzner blocks outbound 25 and 465 on new accounts.
 - **No new dependency.** django-environ already parses the URL. A provider package such as django-anymail is only worth adding if delivery webhooks (bounces, complaints) are wanted.
-- **Unset means no delivery.** Without `EMAIL_URL` the console backend is used and nothing leaves the host. Password reset stays refused until ticket 28a turns it on; a deploy must not enable it merely because the secret is present.
+- **Unset means fake email.** Without `EMAIL_URL` the console backend is used: each message is written to the pod's log and nothing leaves the host. Password reset stays refused until ticket 28a turns it on; a deploy must not enable it merely because the secret is present.
 - **One Mailjet API key per environment**, so a staging key can be revoked without touching production and each environment's sending is visible apart. Mailjet's sub-accounts are the likely way to do this; that should be confirmed against the plan in use.
 - **A validated sending domain per production environment**, with SPF, DKIM and DMARC, on a subdomain used for nothing else: for *Whatever You Do*, a subdomain of `whateveryoudo.org`. Mailjet's validation records go in whichever DNS host that domain ends up with. The sizing doc's point stands: deliverability of observer invitations to consumer mailboxes is the risk, not cost.
-- **Staging sends from a temporary domain** (ticket 26): an address at `anville.vabl.dev`, validated in Mailjet with records in Cloudflare, on its own API key. Staging's accounts use reserved example domains, and mail to those bounces and counts against the sender's reputation, so anything that is to be emailed on staging (a coach's or observer's link) goes to a real test mailbox the operator controls.
+- **Staging goes in two stages** (below).
 - **It is another processor**, receiving participants' and observers' addresses and the text of each message. It joins Ubicloud on the open legal list before production use.
+
+### Email on staging
+
+**First, fake email.** A staging environment starts with no `EMAIL_URL`. Anything the application sends appears in the pod's log, where the operator reads it through the tunnel with `kubectl logs`. That puts links and their tokens in a log, which is acceptable only because staging holds fake data. If reading logs becomes tedious, a mail catcher such as Mailpit in the environment's namespace is the next step up, still delivering nothing.
+
+**Later, actual email with a disclaimer.** When staging needs to reach real mailboxes, it gets its own Mailjet API key, a sending address at `anville.vabl.dev` validated with records in Cloudflare, and a disclaimer on every message:
+
+- The disclaimer is one setting, `ANVILLE_EMAIL_DISCLAIMER`. When set, a thin email backend wrapping the configured one puts a marker in the subject (`[TEST]`) and the disclaimer text at the top of the body, text and HTML alike. It works at the backend so that it covers every message whichever code sent it, allauth's included, and no template has to remember it.
+- Suggested wording: "This message comes from a test system for Anville. It is not intended for production use. If you were not expecting it, please ignore it."
+- **The chart sets it from the tier.** Every `tier: staging` environment gets the disclaimer; the wording can be overridden in its values, but not removed. A staging environment therefore cannot send real mail without it, and a production environment never carries it.
+- Mail to staging's reserved example addresses still bounces and counts against the sender's reputation. Real sending is for the real addresses of people who know they are testing, and those addresses are then real data on staging: the one exception to "fake data only", to be kept small and agreed.
+
+**Production never runs on fake email.** The deploy workflow refuses a `tier: production` environment that has no `EMAIL_URL`, since the console backend there would write participants' and observers' links into a log and deliver nothing.
 
 The sizing doc priced Scaleway TEM for this line; Mailjet replaces it for now and that figure has not been re-estimated.
 
@@ -290,7 +303,7 @@ k3s is more machinery than one Django service strictly needs. It is kept because
 
 The steps for the first environment, `whatever-you-do-staging`, are in ticket 26 (`.scratch/whatever-you-do-milestone-1/issues/26-staging-deployment.md`), and are not repeated here.
 
-Later, each when needed: `production-1` and the production environment; the choice between levels B and C; a lasting email set-up for production; automatic staging deploys; a second environment on `staging-1`.
+Later, each when needed: `production-1` and the production environment; the choice between levels B and C; actual email on staging, with its disclaimer; a lasting email set-up for production; automatic staging deploys; a second environment on `staging-1`.
 
 ## 15. Open questions
 

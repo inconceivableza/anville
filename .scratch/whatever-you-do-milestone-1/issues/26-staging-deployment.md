@@ -17,7 +17,8 @@ This can start as soon as ticket 05 lands, so hosting surprises surface early.
 - [ ] The database has backups and a restore has been tried once
 - [ ] The instance holds fake data only, using reserved example domains; nothing real is ever loaded
 - [ ] A short runbook records how the instance was stood up, so another deployment can be created the same way (ADR 0002)
-- [ ] The instance sends email from a temporary staging domain, so coach and observer links can be emailed on staging; a lasting email set-up for the real service is separate (2 Oct demo)
+- [ ] Email on the instance starts as fake: nothing is delivered, and the operator can read what would have been sent
+- [ ] Later (part 2, below): the instance sends actual email from a temporary staging domain, so coach and observer links can be emailed on staging, and every message carries a disclaimer that it comes from a test system not intended for production use; a lasting email set-up for the real service is separate (2 Oct demo)
 - [ ] A smoke test passes on the deployed instance: sign up with the enrolment code, log in, complete a section, resume
 - [ ] Open, and not decided by this ticket: who the controller is, retention and the data protection impact assessment (see spec Further Notes). Confirm the arrangement works for everyone involved before any real participant is added
 
@@ -34,7 +35,7 @@ This can start as soon as ticket 05 lands, so hosting surprises surface early.
 
 In order. Section numbers are those of docs/server-approach.md, where the detail and the reasons are. Steps marked *human* need an account, a credential or a console; the rest can be built and reviewed in the repository.
 
-1. **Make the application deployable** (section 3). gunicorn, WhiteNoise and `STATIC_ROOT`, `/healthz` reporting the commit, proxy and cookie settings from the environment, `EMAIL_URL` and `DEFAULT_FROM_EMAIL`, `CONN_MAX_AGE`. Both items carried from 13b are settled here. Everything keeps its present behaviour when the new variables are unset, and `.env.example` and the README gain the new variables.
+1. **Make the application deployable** (section 3). gunicorn, WhiteNoise and `STATIC_ROOT`, `/healthz` reporting the commit, proxy and cookie settings from the environment, `EMAIL_URL` and `DEFAULT_FROM_EMAIL` (unset, so email is fake), `CONN_MAX_AGE`. Both items carried from 13b are settled here. Everything keeps its present behaviour when the new variables are unset, and `.env.example` and the README gain the new variables.
 2. **The image** (sections 3 and 12). The `Dockerfile`, and the optional `app` profile in `compose.yaml`. Check the image locally against the compose database before anything is pushed.
 3. **Build workflow** (section 4). `build.yml`: tests, then one amd64 image to GitHub Container Registry.
 4. *Human.* **Push a first image and make the package public** (section 4).
@@ -47,15 +48,23 @@ In order. Section numbers are those of docs/server-approach.md, where the detail
 11. *Human.* **GitHub Environment** `whatever-you-do-staging` with the variable and secrets in section 6's table. Generate a fresh secret key, enrolment code and database password; none is reused from a development `.env`.
 12. **Deploy workflow** (section 8). `deploy.yml`, ending with the `/healthz` version assertion.
 13. *Human.* **First deploy.** Run the workflow, then through the tunnel: create the operator's superuser, load `pathways/whatever-you-do.json`, and optionally `seed_observers`. The deploy itself never loads a pathway (section 8).
-14. *Human.* **Email** (section 11). A Mailjet API key for this environment, a sending address at `anville.vabl.dev` validated with records in Cloudflare, `EMAIL_URL` added to the GitHub Environment, a redeploy, and `manage.py sendtestemail` to a real mailbox. Check that password reset is still refused afterwards.
+14. *Human.* **Fake email** (section 11). With no `EMAIL_URL` set, run `manage.py sendtestemail` and find the message in the pod's log. Nothing is delivered.
 15. *Human.* **Backup and restore** (section 7). Confirm a nightly dump has reached the Storage Box, then restore it into a scratch namespace on `staging-1` and check the restored data.
 16. *Human.* **Smoke test** on `https://anville.vabl.dev`: sign up with the enrolment code, log in, complete a section, resume. Also confirm the observer cookie is marked Secure, and that neither Traefik nor gunicorn is logging request paths.
-17. **Runbook.** A short record of steps 4 to 16 as actually performed, with the commands used and anything that differed from docs/server-approach.md, plus how the operator resets a password. Correct that document where it turned out wrong.
+17. **Runbook.** A short record of steps 4 to 16 as actually performed, with the commands used and anything that differed from docs/server-approach.md, plus how the operator resets a password and reads fake email. Correct that document where it turned out wrong.
 
-Steps 1 to 3, 6, 9, 10 and 12 have no dependency on the human steps and can be done first, or alongside them. Step 14 can slip behind the rest without holding up the demo of anything that does not send email.
+Steps 1 to 3, 6, 9, 10 and 12 have no dependency on the human steps and can be done first, or alongside them.
+
+**Part 2: actual email, with a disclaimer**
+
+Not needed for 9 Oct. It is kept in this ticket because tickets 28a and 43 wait on it for email delivery on staging; split it out if that is tidier.
+
+18. **The disclaimer** (section 11). `ANVILLE_EMAIL_DISCLAIMER`, applied to the subject and body of every outgoing message by a wrapping email backend, with tests; the chart sets it for every staging-tier environment.
+19. *Human.* **Mailjet.** An API key for this environment and a sending address at `anville.vabl.dev`, validated with records in Cloudflare.
+20. *Human.* **Switch over.** Add `EMAIL_URL` to the GitHub Environment, redeploy, and run `manage.py sendtestemail` to a real mailbox. Check that the message arrives with the disclaimer, and that password reset is still refused.
 
 **Context**
 
 - Not in this ticket: a production host or environment, Ubicloud, point-in-time recovery, automatic deploys to staging, and a second environment. docs/server-approach.md covers each; none is needed for one staging environment
-- Staging's accounts use reserved example domains, which cannot receive mail. A coach's or observer's link that is to be emailed on staging goes to a real test mailbox the operator controls, and that is the only real address staging holds
+- Staging's accounts use reserved example domains, which cannot receive mail. Once part 2 is done, actual email goes only to the real addresses of people who know they are testing. Those addresses are then real data on staging, the one exception to "fake data only", to be kept small and agreed
 - Unverified assumptions in docs/server-approach.md that this ticket will test first: that a new package on GitHub Container Registry starts private, that Hetzner leaves outbound port 587 open, and that Mailjet allows one API key per environment
