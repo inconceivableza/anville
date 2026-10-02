@@ -47,6 +47,10 @@
 
   {% if disclaimer %}<p class="results-disclaimer">{{ disclaimer }}</p>{% endif %}
 
-  <p class="results-next"><a class="btn btn-primary" href="{% url 'comparison' block_id %}{% if variant %}?variant={{ variant }}{% endif %}">Compare with how others see you →</a></p>
+  {% comment %}✨ A form, not a link: pressing it is the visit Section 1 waits on, and a browser never loads a POST ahead of time.{% endcomment %}
+  <form class="results-next" method="post" action="{% url 'visit_comparison' block_id %}{% if variant %}?variant={{ variant }}{% endif %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary">Compare with how others see you →</button>
+  </form>
   {% if switcher %}{% include "engine/prototype_bars/switcher.html" %}{% endif %}
 {% endblock content %}

@@ -451,7 +451,14 @@
       "required": ["type"],
       "properties": {
         "type": {
-          "enum": ["has_answer", "min_text_length", "entry_count", "distinct_value_count", "every_entry_has"]
+          "enum": [
+            "has_answer",
+            "min_text_length",
+            "entry_count",
+            "distinct_value_count",
+            "every_entry_has",
+            "comparison_visited"
+          ]
         }
       },
       "allOf": [
@@ -459,7 +466,8 @@
         { "if": { "properties": { "type": { "const": "min_text_length" } } }, "then": { "$ref": "#/$defs/min_text_length" } },
         { "if": { "properties": { "type": { "const": "entry_count" } } }, "then": { "$ref": "#/$defs/entry_count" } },
         { "if": { "properties": { "type": { "const": "distinct_value_count" } } }, "then": { "$ref": "#/$defs/distinct_value_count" } },
-        { "if": { "properties": { "type": { "const": "every_entry_has" } } }, "then": { "$ref": "#/$defs/every_entry_has" } }
+        { "if": { "properties": { "type": { "const": "every_entry_has" } } }, "then": { "$ref": "#/$defs/every_entry_has" } },
+        { "if": { "properties": { "type": { "const": "comparison_visited" } } }, "then": { "$ref": "#/$defs/comparison_visited" } }
       ]
     },
     "clause_message": {
@@ -533,6 +541,17 @@
         "type": { "const": "every_entry_has" },
         "block": { "$ref": "#/$defs/identifier" },
         "field": { "$ref": "#/$defs/identifier" },
+        "message": { "$ref": "#/$defs/clause_message" }
+      }
+    },
+    "comparison_visited": {
+      "description": "The participant has gone from this sort's results to its comparison with their observers, whatever it shows: below the minimum of observers, its explanation counts.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "block", "message"],
+      "properties": {
+        "type": { "const": "comparison_visited" },
+        "block": { "$ref": "#/$defs/identifier" },
         "message": { "$ref": "#/$defs/clause_message" }
       }
     },

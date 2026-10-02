@@ -7,6 +7,7 @@ before a section may be completed, and each failing clause contributes its own a
 import pytest
 
 from engine.document import checklist, gate_passes, unmet
+from engine.document.gates import comparison_visit_key
 
 
 def section_gated_by(*clauses):
@@ -161,6 +162,18 @@ def test_every_entry_has_is_satisfied_by_no_entries_at_all(answers):
     section = section_gated_by(clause("every_entry_has", block="markers", field="chapter"))
 
     assert unmet(section, answers) == []
+
+
+# comparison_visited
+
+
+def test_comparison_visited_passes_only_once_the_comparison_has_been_visited_not_on_the_sort_alone():
+    section = section_gated_by(clause("comparison_visited", block="strengths-sort", message="View the comparison."))
+    sorted_only = {"strengths-sort": {"a1": {"bucket": "strength", "value": 85}}}
+    visited = {**sorted_only, comparison_visit_key("strengths-sort"): "2026-10-02T10:00:00+00:00"}
+
+    assert unmet(section, sorted_only) == ["View the comparison."]
+    assert unmet(section, visited) == []
 
 
 # Combinations, and a message for each failing clause

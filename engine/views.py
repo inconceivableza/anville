@@ -477,6 +477,24 @@ def comparison(request, block_id):
     return render(request, "engine/comparison.html", shown)
 
 
+@login_required
+@consent_required
+@require_POST
+def visit_comparison(request, block_id):
+    """✨ The results page's "Compare with how others see you →": record the visit Section 1's gate waits on, then go to
+    the comparison. Recorded whatever the comparison will show, since the explanation below the minimum counts too
+    (ticket 16c). Only this press counts, never loading the comparison's address, which a browser may do ahead of
+    time (Chrome preloads from the address bar) without the participant ever seeing it."""
+    state, result, section = _own_result(request.user, block_id)
+    if result is None:
+        return _see_other(page_url(section["id"], section["page"]))
+    state.response.visit_comparison(block_id)
+    # ✨ PROTOTYPE, throwaway (branch prototype/result-bars): keep the `?variant=` drawing on the way through.
+    variant = request.GET.get("variant", "")
+    query = f"?variant={variant}" if variant.isalnum() else ""
+    return _see_other(f"{reverse('comparison', args=[block_id])}{query}")
+
+
 def _own_result(user, block_id):
     """✨ The participant's state, their stored result for a scored block (None before they have one), and the section
     the sort is on with its page. A block that is not scored is a 404."""
@@ -800,7 +818,7 @@ def _participant(user, first_version=Publication.current_version):
         response=participant_response,
         version=participant_response.version,
         sections=track_sections(participant_response.version.document),
-        answers=participant_response.answers_with_contacts(),
+        answers=participant_response.answers_with_contacts_and_visits(),
         completed=set(participant_response.completed_sections),
         moved_past=participant_response.moved_past_by_section(),
         fixed=set(participant_response.fixed_answers),

@@ -396,6 +396,7 @@ STRENGTHS = "/sections/strengths/"
 STRENGTHS_LINK = f'href="{STRENGTHS}"'
 GIFTS_REFLECTION = "summarise: what gifts and talents has God given you?"
 COMPLETE_THE_ASSESSMENT = "Complete the Strengths Assessment to continue."
+VIEW_THE_COMPARISON = "View the 'Compare with how others see you' results to continue."
 COMPLETE_THE_REFLECTIONS = "Complete the gifts reflections to continue."
 A_REFLECTION = "Teaching, and patience with people. Not administration."
 
@@ -407,6 +408,12 @@ def a_whole_sort():
 
 def submit_the_sort(client):
     return answer(client, "strengths-sort", json.dumps(a_whole_sort()))
+
+
+def visit_the_comparison(client):
+    """✨ The results page's "Compare with how others see you →", which records the visit and leads to the comparison.
+    With no observers, as here, that is its below-minimum explanation."""
+    return client.post("/results/strengths-sort/comparison/visit/")
 
 
 def onboarded(client):
@@ -552,14 +559,48 @@ def test_section_1_cannot_be_completed_without_the_reflection(participant):
     refused = complete(client, "designed")
 
     assert refused.status_code == 400
-    assert gate_checklist(refused.content.decode()) == {COMPLETE_THE_ASSESSMENT: True, COMPLETE_THE_REFLECTIONS: False}
+    assert gate_checklist(refused.content.decode()) == {
+        COMPLETE_THE_ASSESSMENT: True,
+        VIEW_THE_COMPARISON: False,
+        COMPLETE_THE_REFLECTIONS: False,
+    }
 
 
 @pytest.mark.django_db
-def test_section_1_is_completed_once_the_sort_is_in_and_the_reflection_written(participant):
-    """✨ The prototype also asked for the comparison with observers to have been viewed; that joins in ticket 16c."""
+def test_section_1_cannot_be_completed_before_the_comparison_is_visited(participant):
     client = through_to_section_1s_activity(participant)
     submit_the_sort(client)
+    answer(client, "gifts-summary", A_REFLECTION)
+
+    refused = complete(client, "designed")
+
+    assert refused.status_code == 400
+    assert gate_checklist(refused.content.decode()) == {
+        COMPLETE_THE_ASSESSMENT: True,
+        VIEW_THE_COMPARISON: False,
+        COMPLETE_THE_REFLECTIONS: True,
+    }
+    assert "designed" not in Response.objects.get().completed_sections
+
+
+@pytest.mark.django_db
+def test_loading_the_comparison_by_its_address_alone_is_not_a_visit(participant):
+    """✨ A browser may load an address before it is opened (Chrome's address bar preloads), so only the participant's
+    own press of the button counts, as only their own press completes a section."""
+    client = through_to_section_1s_activity(participant)
+    submit_the_sort(client)
+    answer(client, "gifts-summary", A_REFLECTION)
+
+    assert client.get("/results/strengths-sort/comparison/").status_code == 200
+    assert complete(client, "designed").status_code == 400
+
+
+@pytest.mark.django_db
+def test_section_1_is_completed_once_the_sort_is_in_the_comparison_visited_and_the_reflection_written(participant):
+    """✨ Visiting the below-minimum explanation counts, or nobody could go on until three observers had answered."""
+    client = through_to_section_1s_activity(participant)
+    submit_the_sort(client)
+    visit_the_comparison(client)
     answer(client, "gifts-summary", A_REFLECTION)
 
     assert complete(client, "designed").status_code == 303
@@ -571,6 +612,7 @@ def test_completing_section_1_does_not_complete_the_strengths_assessment(partici
     """✨ Each section is completed by its own explicit act."""
     client = through_to_section_1s_activity(participant)
     submit_the_sort(client)
+    visit_the_comparison(client)
     answer(client, "gifts-summary", A_REFLECTION)
     complete(client, "designed")
 

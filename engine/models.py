@@ -7,6 +7,8 @@ from django.db import models, transaction
 from django.db.models import F, Func, Value
 from django.utils import timezone
 
+from engine.document.gates import comparison_visit_key
+
 
 class PathwayVersion(models.Model):
     """✨ An immutable snapshot of a pathway document. The database refuses any update to a stored row."""
@@ -54,6 +56,9 @@ class Response(models.Model):
     # rather than worked out from the answers, since a page that needs nothing (the coach page) would otherwise hold
     # nobody back.
     pages_moved_past = models.JSONField(default=dict)
+    # ✨ When the participant first visited each sort's comparison with their observers, keyed by the sort's block, in
+    # either state. Recorded, since a visit leaves no answer behind, and Section 1's gate waits on it (ticket 16c).
+    comparisons_visited = models.JSONField(default=dict)
     is_test_data = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -127,6 +132,16 @@ class Response(models.Model):
             updated_at=now,
         )
 
+    def visit_comparison(self, block_id):
+        """✨ Record that the participant visited a sort's comparison, in one UPDATE that merges it in. The first visit
+        keeps its time, as a fixed answer does, and a later one writes nothing."""
+        now = timezone.now()
+        visited = Value({block_id: now.isoformat()}, output_field=models.JSONField())
+        Response.objects.filter(pk=self.pk).exclude(comparisons_visited__has_key=block_id).update(
+            comparisons_visited=_MergeJson(visited, F("comparisons_visited")),
+            updated_at=now,
+        )
+
     def moved_past_by_section(self):
         """✨ The pages moved past, as {section identifier: set of page numbers}, as the hub reads them."""
         moved_past = {}
@@ -174,14 +189,16 @@ class Response(models.Model):
         Response.objects.filter(pk=self.pk).update(updated_at=timezone.now())
         return kept
 
-    def answers_with_contacts(self):
+    def answers_with_contacts_and_visits(self):
         """✨ The stored answers, with each block's contacts read in as its answer, as the gate and progress read it.
-        Each contact carries its id, which a contact list's rows send back so a save can tell them apart."""
+        Each contact carries its id, which a contact list's rows send back so a save can tell them apart. Each visit to
+        a sort's comparison is read in too, under a key no block can have, for a `comparison_visited` clause."""
         kept = {}
         for contact in self.contacts.order_by("block_id", "position"):
             person = {"name": contact.name, "email": contact.email, "id": contact.pk}
             kept.setdefault(contact.block_id, []).append(person)
-        return {**self.answers, **kept}
+        visits = {comparison_visit_key(block_id): at for block_id, at in self.comparisons_visited.items()}
+        return {**self.answers, **kept, **visits}
 
 
 class Contact(models.Model):

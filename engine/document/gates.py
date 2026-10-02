@@ -19,7 +19,14 @@ CLAUSE_ANSWER_KINDS = {
     "entry_count": ("entries", "contacts"),
     "distinct_value_count": ("entries", "contacts"),
     "every_entry_has": ("entries", "contacts"),
+    "comparison_visited": ("sort",),
 }
+
+
+def comparison_visit_key(block_id):
+    """✨ Where the answers the gate reads hold the participant's visit to a sort's comparison. An identifier
+    cannot hold a "/", so this never meets a block's own answer."""
+    return f"{block_id}/comparison"
 
 
 def gate_passes(section, answers):
@@ -60,7 +67,14 @@ def checklist(section, answers, role="participant", page=None):
 
 
 def _passes(clause, answers):
-    return CLAUSES[clause["type"]](clause, answers.get(clause["block"]))
+    return CLAUSES[clause["type"]](clause, answers.get(_reads(clause)))
+
+
+def _reads(clause):
+    """✨ What a clause reads: the named block's answer, or for `comparison_visited`, the visit to its comparison."""
+    if clause["type"] == "comparison_visited":
+        return comparison_visit_key(clause["block"])
+    return clause["block"]
 
 
 def clauses_of(section, page=None):
@@ -100,12 +114,19 @@ def _every_entry_has(clause, answer):
     return all(has_content(_value_of(entry, clause["field"])) for entry in _entries(answer))
 
 
+def _comparison_visited(clause, visit):
+    # ✨ Visited in either state: the below-minimum explanation counts, or a participant would wait on three
+    # observers before going on (spec, Observers).
+    return has_content(visit)
+
+
 CLAUSES = {
     "has_answer": _has_answer,
     "min_text_length": _min_text_length,
     "entry_count": _entry_count,
     "distinct_value_count": _distinct_value_count,
     "every_entry_has": _every_entry_has,
+    "comparison_visited": _comparison_visited,
 }
 
 
