@@ -152,10 +152,11 @@ def test_a_seeded_participant_reaches_the_comparison_from_their_results_page(cli
     seed()
     client.post("/accounts/login/", {"login": Response.objects.get().participant.email, "password": SEED_PASSWORD})
 
-    link = re.search(r'href="(/results/[\w-]+/comparison/)"', results(client).content.decode())
+    button = re.search(r'action="(/results/[\w-]+/comparison/visit/)"', results(client).content.decode())
 
-    assert link, "no link to the comparison on the results page"
-    page = client.get(link.group(1))
+    assert button, "no way to the comparison on the results page"
+    page = client.post(button.group(1), follow=True)
+    assert page.redirect_chain[-1][0].endswith("/comparison/")
     assert page.status_code == 200
     assert "%" in page.content.decode()
     assert "illustrative" in page.content.decode()

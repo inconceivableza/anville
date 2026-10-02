@@ -149,6 +149,11 @@
               "message": "Complete the Strengths Assessment to continue."
             },
             {
+              "type": "comparison_visited",
+              "block": "strengths-sort",
+              "message": "View the 'Compare with how others see you' results to continue."
+            },
+            {
               "type": "has_answer",
               "block": "gifts-summary",
               "message": "Complete the gifts reflections to continue."

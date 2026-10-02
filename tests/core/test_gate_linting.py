@@ -6,7 +6,7 @@ Both checks were carried from ticket 02, where the linter checked only that the 
 import pytest
 
 from engine.document import Problem, validate
-from tests.documents import pathway_document
+from tests.documents import pathway_document, sort_pathway
 
 CLAUSE_PATH = "/content/sections/1/gate/clauses/0"
 
@@ -29,7 +29,10 @@ def test_a_clause_about_what_an_answer_holds_may_not_name_a_block_in_another_sec
     assert validate(document) == [
         Problem(
             path=f"{CLAUSE_PATH}/block",
-            message="Block 'elsewhere' is in another section; only a 'has_answer' clause may name a block outside its own section.",
+            message=(
+                "Block 'elsewhere' is in another section; "
+                "only a 'has_answer' or 'comparison_visited' clause may name a block outside its own section."
+            ),
         )
     ]
 
@@ -158,6 +161,22 @@ def test_has_answer_may_be_asked_of_any_block_that_captures_an_answer():
     document = document_whose_gate_names({"type": "has_answer", "block": "statement", "message": "Answer this."})
 
     assert validate(document) == []
+
+
+def test_a_comparison_visited_clause_may_name_the_sort_in_another_section_but_no_block_that_is_not_scored():
+    """✨ Ticket 16c: Section 1 waits on a visit to the comparison of a sort in a section of its own."""
+    document = sort_pathway()
+    document["content"]["sections"][1]["gate"]["clauses"] = [
+        {"type": "comparison_visited", "block": "strengths-sort", "message": "View the comparison."},
+        {"type": "comparison_visited", "block": "statement", "message": "View the comparison."},
+    ]
+
+    assert validate(document) == [
+        Problem(
+            path="/content/sections/1/gate/clauses/1/block",
+            message="A 'comparison_visited' clause cannot be checked against block 'statement', which is a long_text.",
+        )
+    ]
 
 
 def test_a_gate_may_combine_clauses_of_different_types_over_different_blocks_in_its_section():

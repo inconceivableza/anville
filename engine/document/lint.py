@@ -129,8 +129,8 @@ def _empty_pages(document):
 
 # ✨ "That has been done" is a fair condition on finishing a section, wherever it was done (ticket 09, where
 # Section 1 waits on the sort in the Strengths assessment). What another section's answer holds is for that
-# section's own gate to judge.
-_CLAUSES_THAT_MAY_LOOK_ELSEWHERE = {"has_answer"}
+# section's own gate to judge. So is "its comparison has been visited" (ticket 16c), for the same sort.
+_CLAUSES_THAT_MAY_LOOK_ELSEWHERE = {"has_answer", "comparison_visited"}
 
 
 def _unreadable_clauses(document):
@@ -150,7 +150,7 @@ def _unreadable_clauses(document):
                 yield Problem(
                     path,
                     f"Block '{named}' is in another section; "
-                    "only a 'has_answer' clause may name a block outside its own section.",
+                    "only a 'has_answer' or 'comparison_visited' clause may name a block outside its own section.",
                 )
             elif not _can_read(clause["type"], block_types[named]):
                 type_name = block_types[named].name

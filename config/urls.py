@@ -36,6 +36,7 @@ from engine.views import (
     send_assessment,
     start,
     start_observing,
+    visit_comparison,
 )
 
 urlpatterns = [
@@ -49,6 +50,7 @@ urlpatterns = [
     path("coach/<slug:block_id>/", coach_checklist, name="coach_checklist"),
     path("results/<slug:block_id>/", results, name="results"),
     path("results/<slug:block_id>/comparison/", comparison, name="comparison"),
+    path("results/<slug:block_id>/comparison/visit/", visit_comparison, name="visit_comparison"),
     path("invitations/", invitations, name="invitations"),
     path("invitations/<int:contact_id>/issue/", issue_invitation, name="issue_invitation"),
     path("invitations/<int:contact_id>/revoke/", revoke_invitation, name="revoke_invitation"),

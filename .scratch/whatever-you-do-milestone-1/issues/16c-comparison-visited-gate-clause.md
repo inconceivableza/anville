@@ -4,14 +4,14 @@
 
 **Blocked by:** 16a (The comparison, side by side)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 1 (ends 2 Oct)
 
 **Spec:** Engine: sections, tracks, gates, progress; Observers (ADR 0005); Testing Decisions
 
-- [ ] Section 1's gate gains a "comparison visited" clause (a new named clause type, ADR 0003), satisfied by visiting the comparison in either state, including the below-minimum explanation. The prototype never sets its flag in the empty state, which would lock every later section until three observers had answered
-- [ ] Journey tests cover that visiting the suppressed state satisfies the clause, and that Section 1 cannot be completed before a visit
+- [x] Section 1's gate gains a "comparison visited" clause (a new named clause type, ADR 0003), satisfied by visiting the comparison in either state, including the below-minimum explanation. The prototype never sets its flag in the empty state, which would lock every later section until three observers had answered
+- [x] Journey tests cover that visiting the suppressed state satisfies the clause, and that Section 1 cannot be completed before a visit
 
 **Carried from 29 and 09**
 
