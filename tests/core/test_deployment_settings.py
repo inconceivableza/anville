@@ -94,6 +94,12 @@ def test_with_no_email_url_email_is_fake():
     assert settings["DEFAULT_FROM_EMAIL"] == "webmaster@localhost"
 
 
+def test_an_empty_email_url_counts_as_unset():
+    settings = settings_with({"EMAIL_URL": ""}, "EMAIL_BACKEND")
+
+    assert settings["EMAIL_BACKEND"] == "django.core.mail.backends.console.EmailBackend"
+
+
 def test_an_email_url_names_the_provider_and_its_credentials():
     settings = settings_with(
         {"EMAIL_URL": "smtp+tls://api-key:secret-key@in-v3.mailjet.com:587", "DEFAULT_FROM_EMAIL": "Anville <hello@example.org>"},

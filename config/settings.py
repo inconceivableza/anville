@@ -189,7 +189,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ✨ One URL names the provider, such as smtp+tls://key:secret@host:587. Unset, email is fake: each
 # message is printed where the server's output goes, and nothing is delivered.
-vars().update(env.email_url("EMAIL_URL", default="consolemail://"))
+# An empty value counts as unset, since a deployment may hand over a secret it has not been given.
+vars().update(env.email_url_config(env("EMAIL_URL", default="") or "consolemail://"))
 
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
 
