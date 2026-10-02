@@ -58,7 +58,7 @@ Install PostgreSQL 17 in the devcontainer image and run it there. `compose.yaml`
 
 ### Postgres from compose on the host
 
-Run `docker compose up -d` on the host as before, and give the `db` service a second network — the one the devcontainer itself runs on — so the two containers can talk to each other directly:
+Run `docker compose up -d` on the host as before, and give the `db` service a second network — the one the devcontainer itself runs on — so the two containers can talk to each other directly. The network name is particular to your machine, so this belongs in `compose.override.yaml`, which compose merges over `compose.yaml` automatically and which is gitignored:
 
 ```yaml
 services:
@@ -72,7 +72,7 @@ networks:
     external: true
 ```
 
-Both containers are then on the same user-defined Docker network, where Docker's embedded DNS resolves container names, and the devcontainer reaches the database by container name: compose names it after the project directory, so here `anville-db-1:5432`. Keep the `127.0.0.1:5432` publication too if you still want to reach it from the host.
+Both containers are then on the same user-defined Docker network, where Docker's embedded DNS resolves container names, and the devcontainer reaches the database by container name: compose names it after the project directory, so here `anville-db-1:5432`. List both networks: that list replaces the implicit one rather than adding to it, so leaving `default` out would cut the service off from the rest of the project. Keep the `127.0.0.1:5432` publication too if you still want to reach it from the host.
 
 This is worth preferring to a tunnel. The published `127.0.0.1:5432` is the *host's* loopback, which is not the container's, so connecting to `localhost:5432` from inside the devcontainer is simply refused. A shared network removes the problem rather than working around it. If you do tunnel instead, it has to listen *inside* the container and forward out to the host's 5432; a forward that listens on the host is the opposite direction and will fight compose for the port.
 

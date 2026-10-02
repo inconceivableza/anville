@@ -41,6 +41,10 @@ build/
 *.dump
 *.sql.gz
 
+# Local Docker Compose overrides
+compose.override.yaml
+compose.override.yml
+
 # Editor and tooling state
 .idea/
 .vscode/*.log
