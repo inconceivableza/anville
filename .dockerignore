@@ -1,0 +1,17 @@
+# ✨ The image is public. Nothing reaches the build unless it is named here, so a .env, a database dump or
+# a private pathway left in the working directory cannot end up in it.
+*
+
+!requirements.txt
+!manage.py
+!gunicorn.conf.py
+!config/
+!access/
+!engine/
+!pathways/
+!frontend/
+
+frontend/node_modules/
+frontend/dist/
+**/__pycache__/
+**/*.pyc

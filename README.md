@@ -238,6 +238,16 @@ gunicorn
 
 gunicorn keeps no access log, for the same reason as the redaction. WhiteNoise serves the static files from `staticfiles/`, and tells browsers to keep Vite's hashed files for good.
 
+### The image
+
+The `Dockerfile` builds the one image every deployment runs: the frontend built by Vite, the static files gathered, and gunicorn started as a user with no privileges. `.dockerignore` admits only what the image needs, because the image is public. To run it against the compose database:
+
+```sh
+docker compose --profile app up --build
+```
+
+That migrates the database, then serves at http://localhost:8001, beside any `runserver` on 8000. It takes the secret key and enrolment code from `.env` and runs with `DJANGO_DEBUG` off. Plain `docker compose up -d` still starts only the database.
+
 ## Tests
 
 ```sh

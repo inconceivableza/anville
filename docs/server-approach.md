@@ -282,7 +282,7 @@ Sending is in the request path until a worker exists. That is acceptable for sig
 Nothing here changes how Anville is developed:
 
 - `compose.yaml` keeps providing PostgreSQL 17 on `localhost:5432`, and Django runs with `manage.py runserver` as the README describes.
-- The `Dockerfile` adds one optional thing: an `app` service in `compose.yaml` under a Compose profile, built from the same `Dockerfile`, so `docker compose --profile app up --build` runs the real image against the compose database. That is the way to check gunicorn, WhiteNoise and the proxy settings without a cluster. Plain `docker compose up -d` still starts only the database.
+- The `Dockerfile` adds one optional thing: an `app` service in `compose.yaml` under a Compose profile, built from the same `Dockerfile`, so `docker compose --profile app up --build` runs the real image against the compose database, at http://localhost:8001. That is the way to check gunicorn, WhiteNoise and the proxy settings without a cluster. Plain `docker compose up -d` still starts only the database.
 - No developer needs k3s, Helm or kubectl locally. The chart can be checked with `helm lint` and `helm template` in the build workflow.
 
 The image is the shared artefact. Compose and Helm are two ways of running it, and compose is never used on a host.

@@ -13,3 +13,8 @@ errorlog = "-"
 
 # ✨ gunicorn's control socket would be a file in the home directory, which the image's user does not need.
 control_socket_disable = True
+
+# ✨ Each worker touches a file to show it is alive. In a container that file belongs in memory: on the
+# container's own disk the touch can stall, and gunicorn then takes a healthy worker for a hung one.
+if os.path.isdir("/dev/shm"):
+    worker_tmp_dir = "/dev/shm"
