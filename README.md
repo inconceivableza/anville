@@ -46,6 +46,62 @@ Password reset is switched off until email delivery exists (ticket 28a), so sign
 
 After changing anything in `frontend/src/`, run `npm run build` again in `frontend/`.
 
+## Running in a devcontainer
+
+The setup above assumes you are on the machine running Docker. Inside a devcontainer you usually are not: there is no Docker client, so `docker compose up -d` stays a host command, and a Postgres published on the host's loopback is not reachable from the container. The devcontainer image also has to provide Python 3.13 itself, and the frontend build still has to be run somewhere.
+
+Postgres can live on either side. Pick one.
+
+### Postgres inside the devcontainer
+
+Install PostgreSQL 17 in the devcontainer image and run it there. `compose.yaml` goes unused and `.env` needs no change, because from the container's point of view the database really is on `localhost:5432`. Everything sits in one place, at the cost of rebuilding the image when it changes, and the data lives and dies with the container.
+
+### Postgres from compose on the host
+
+Run `docker compose up -d` on the host as before, and give the `db` service a second network — the one the devcontainer itself runs on — so the two containers can talk to each other directly:
+
+```yaml
+services:
+  db:
+    networks:
+      - default
+      - devcontainer        # whatever network your devcontainer is on
+
+networks:
+  devcontainer:
+    external: true
+```
+
+Both containers are then on the same user-defined Docker network, where Docker's embedded DNS resolves container names, and the devcontainer reaches the database by container name: compose names it after the project directory, so here `anville-db-1:5432`. Keep the `127.0.0.1:5432` publication too if you still want to reach it from the host.
+
+This is worth preferring to a tunnel. The published `127.0.0.1:5432` is the *host's* loopback, which is not the container's, so connecting to `localhost:5432` from inside the devcontainer is simply refused. A shared network removes the problem rather than working around it. If you do tunnel instead, it has to listen *inside* the container and forward out to the host's 5432; a forward that listens on the host is the opposite direction and will fight compose for the port.
+
+### Settings in `.env`
+
+`.env` is a single file on both sides of the mount, so it cannot name the database twice. Leave it as the host's and override the one variable in the container's environment:
+
+```sh
+export DATABASE_URL=postgres://anville:anville@anville-db-1:5432/anville
+```
+
+`config/settings.py` reads `.env` through django-environ's `read_env()`, which does not overwrite anything already in the environment, so a real environment variable wins over the file. Setting it in the devcontainer's own configuration makes it stick across rebuilds. Nothing else in `.env` differs from the host.
+
+Take care that `DJANGO_SECRET_KEY` does not contain a `$`. Compose reads this same `.env` for its own variable substitution and will warn about, and blank out, anything that looks like `$name` — generate another key if yours trips it.
+
+### Reaching the development server from the host
+
+`runserver` binds to `127.0.0.1:8000`, the container's own loopback, which nothing outside the container can reach. Bind it to every interface instead:
+
+```sh
+python manage.py runserver 0.0.0.0:8000
+```
+
+Then forward port 8000 from the host into the container. Note this is the opposite direction to the database: here the listener belongs on the host and the traffic travels inward. Editors that attach to a devcontainer generally do this for you — look for their forwarded-ports list — and failing that any `ssh -L` style tunnel listening on the host and pointing at the container's port 8000 will serve.
+
+`DJANGO_ALLOWED_HOSTS` already lists `localhost`, so http://localhost:8000 is accepted. Reaching the site by any other name means adding that name to the list.
+
+One thing to watch if your editor forwards ports automatically: do not let it forward 5432. A listener on the host's 5432 stops compose from binding the port, and in the meantime connections to it are accepted and then hang rather than being refused, which is a slow thing to diagnose.
+
 ## Age and consent
 
 Sign-up asks for an "I am 18 or over" confirmation beside the enrolment code, and keeps neither: there is no date of birth anywhere (ADR 0004).
