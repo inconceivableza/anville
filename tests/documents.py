@@ -125,6 +125,19 @@ def sort_pathway():
         {"construct": "ponder", "description": "Thinks deeply.", "persona": "The Philosopher", "tone": "violet"},
         {"construct": "deliver", "description": "Finishes the work.", "persona": "The Doer", "tone": "brown"},
     ]
+    presentation["comparison"] = {
+        "significant_gap": 5,
+        "agreement": {
+            "bands": [{"up_to": 6, "label": "Strong agreement"}, {"up_to": 14, "label": "Some variation"}],
+            "above": "Divided views",
+        },
+        "gaps": {
+            "others_higher": {"label": "Others rate higher", "description": "Others see more here."},
+            "you_higher": {"label": "You rate higher", "description": "You see more here."},
+            "modest": "A modest gap.",
+        },
+        "prompts": [{"title": "The surprise", "text": "Which gap surprised you most?"}],
+    }
     return document
 
 

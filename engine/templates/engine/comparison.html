@@ -1,8 +1,9 @@
 {% extends "engine/base.html" %}
 {% comment %}
   ✨ The participant's stored result beside their observers' means, as the prototype's comparison screen showed it,
-  in the results page's wording and colours. Below the minimum there is a count and no numbers at all. Neither state
-  names who has answered.
+  in the results page's wording and colours, with how far the observers agree on each, then the largest gaps and the
+  questions to reflect on. Below the minimum there is a count and no numbers at all. Neither state names who has
+  answered.
 {% endcomment %}
 {% block head_title %}How others experience you{% endblock head_title %}
 
@@ -49,11 +50,54 @@
               </svg>
               <span class="result-bar-score comparison-others">{{ bar.others }}%</span>
             </div>
+            <p class="comparison-agreement">{{ bar.agreement }}</p>
+            <details class="distribution">
+              <summary>See how the {{ observers }} people who answered see this</summary>
+              <svg class="distribution-drawing" viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                <rect class="distribution-band {{ bar.strip.colour }}" x="{{ bar.strip.band_start }}" y="3" width="{{ bar.strip.band_width }}" height="6" />
+                {% for dot in bar.strip.dots %}
+                  <rect class="{{ bar.strip.colour }}" x="{{ dot }}" y="3" width="{{ bar.strip.dot_width }}" height="6" />
+                {% endfor %}
+                <rect class="distribution-yours" x="{{ bar.strip.yours }}" y="0" width="{{ bar.strip.yours_width }}" height="12" />
+              </svg>
+              <p class="distribution-key" aria-hidden="true"><span class="distribution-yours-key"></span> You ({{ bar.percent }}%)</p>
+              {% comment %}✨ The values, lowest first, as text for everyone and for screen readers; the drawing is hidden from them.{% endcomment %}
+              <p class="distribution-caption">Each person's percent, lowest first:</p>
+              <ol class="distribution-values">
+                {% for value in bar.strip.values %}<li>{{ value }}%</li>{% endfor %}
+              </ol>
+            </details>
           </div>
         {% endfor %}
         {% endif %}
       </section>
     {% endfor %}
+
+    {% if gaps %}
+      <section class="results-section">
+        {% if gaps_heading %}<h2>{{ gaps_heading }}</h2>{% endif %}
+        {% if gaps_intro %}<p class="results-desc">{{ gaps_intro }}</p>{% endif %}
+        {% for gap in gaps %}
+          <div class="gap-card">
+            <div class="gap-card-header">
+              <span class="gap-card-construct">{{ gap.label }} <span class="gap-card-framework">({{ gap.framework }})</span></span>
+              {% if gap.badge %}<span class="gap-card-badge {{ gap.badge_class }}">{{ gap.badge }} (+{{ gap.gap }})</span>{% endif %}
+            </div>
+            <p class="gap-card-desc">{{ gap.description }}</p>
+          </div>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    {% if prompts %}
+      <section class="results-section">
+        {% if prompts_heading %}<h2>{{ prompts_heading }}</h2>{% endif %}
+        {% if prompts_intro %}<p class="results-desc">{{ prompts_intro }}</p>{% endif %}
+        {% for prompt in prompts %}
+          <div class="reflection-prompt"><p><strong>{{ prompt.title }}:</strong> {{ prompt.text }}</p></div>
+        {% endfor %}
+      </section>
+    {% endif %}
   {% endif %}
   {% if switcher %}{% include "engine/prototype_bars/switcher.html" %}{% endif %}
 {% endblock content %}

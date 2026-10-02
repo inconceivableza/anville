@@ -445,6 +445,37 @@
       { "construct": "deliver", "tone": "brown", "persona": "The Doer", "description": "Rolling up sleeves and pushing the work over the finish line" }
     ],
     "disclaimer": "Important: This is a free, rapid, directional tool, designed to give you a useful starting point for reflection and conversation. It is not backed by extensive psychometric datasets or rigorous validation (yet). Please treat these results as indicative, not definitive.",
+    "comparison": {
+      "significant_gap": 5,
+      "agreement": {
+        "bands": [
+          { "up_to": 6, "label": "Strong agreement" },
+          { "up_to": 14, "label": "Some variation" }
+        ],
+        "above": "Divided views"
+      },
+      "gaps": {
+        "heading": "🔍 Biggest Gaps",
+        "intro": "Where your self-perception differs most from how others experience you. These are the most fruitful areas for reflection and conversation.",
+        "others_higher": {
+          "label": "Others rate higher",
+          "description": "Others see this as more of a strength in you than you do yourself. This could be a hidden strength – something that comes so naturally you don’t recognise it as special."
+        },
+        "you_higher": {
+          "label": "You rate higher",
+          "description": "You rate yourself higher here than others do. This could mean you value this more than it’s currently visible to others, or that your self-image in this area is stronger than your current expression of it."
+        },
+        "modest": "A modest gap – worth noting but not necessarily significant."
+      },
+      "prompts_heading": "💬 Questions to sit with",
+      "prompts_intro": "These are designed for honest reflection – ideally with a coach or trusted friend.",
+      "prompts": [
+        { "title": "Hidden strengths", "text": "Where others rate you higher than you rate yourself – what might it mean that you undervalue these? Could you lean into them more intentionally?" },
+        { "title": "Blind spots", "text": "Where you rate yourself higher than others do – is this an area where your intention doesn’t yet match your impact? Or do others simply not see this side of you?" },
+        { "title": "Confirmed strengths", "text": "Where you and others agree – these are your most reliable strengths. How are you stewarding them?" },
+        { "title": "The surprise", "text": "Which gap surprised you most? What would change if you took that feedback seriously?" }
+      ]
+    },
     "sort_wording": {
       "sort_heading": { "participant": "Sort your strengths", "observer": "Sort {name}'s strengths" },
       "sort_instruction": { "participant": "Choose the bucket that fits best", "observer": "Choose the bucket that fits {name} best" },

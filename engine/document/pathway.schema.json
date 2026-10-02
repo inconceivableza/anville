@@ -113,6 +113,68 @@
           "$ref": "#/$defs/text"
         },
         "disclaimer": { "$ref": "#/$defs/text" },
+        "comparison": {
+          "description": "What the comparison makes of the self-result beside the observer average, and its wording (ADR 0005). The thresholds are the prototype's when left out.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "significant_gap": {
+              "description": "A gap of this many percentage points or more is significant; less is a modest gap. 5 when left out.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "agreement": {
+              "description": "How far the observers agree, by the range of their percents. A range falls in the narrowest band whose up_to it doesn't pass, in whatever order the bands are written; above them all it takes the above label. The prototype's when left out.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["bands", "above"],
+              "properties": {
+                "bands": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["up_to", "label"],
+                    "properties": {
+                      "up_to": { "type": "integer", "minimum": 0 },
+                      "label": { "$ref": "#/$defs/text" }
+                    }
+                  }
+                },
+                "above": { "$ref": "#/$defs/text" }
+              }
+            },
+            "gaps": {
+              "description": "The list of the largest gaps: its heading and introduction, each direction's badge and description, and the description of a modest gap. With no gaps wording, the comparison lists no gaps.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["others_higher", "you_higher", "modest"],
+              "properties": {
+                "heading": { "$ref": "#/$defs/text" },
+                "intro": { "$ref": "#/$defs/text" },
+                "others_higher": { "$ref": "#/$defs/gap_direction" },
+                "you_higher": { "$ref": "#/$defs/gap_direction" },
+                "modest": { "$ref": "#/$defs/text" }
+              }
+            },
+            "prompts_heading": { "$ref": "#/$defs/text" },
+            "prompts_intro": { "$ref": "#/$defs/text" },
+            "prompts": {
+              "description": "The questions to reflect on, shown below the gaps.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["title", "text"],
+                "properties": {
+                  "title": { "$ref": "#/$defs/text" },
+                  "text": { "$ref": "#/$defs/text" }
+                }
+              }
+            }
+          }
+        },
         "sort_wording": {
           "description": "The sort widget's own wording, around the items and buckets. Each is the engine's own when left out. {name} is replaced with the participant's name, for observers; {count} with the number of items.",
           "type": "object",
@@ -152,6 +214,16 @@
           }
         }
       ]
+    },
+    "gap_direction": {
+      "description": "One direction of a gap on the comparison: its badge, and what a significant gap that way may mean.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "description"],
+      "properties": {
+        "label": { "$ref": "#/$defs/text" },
+        "description": { "$ref": "#/$defs/text" }
+      }
     },
     "estimate": {
       "description": "How long this takes, worded as it is shown, such as 'About 15 minutes'. On a section it shows on the hub and at the top of the section; on a block, just above the block, for a section with several activities.",

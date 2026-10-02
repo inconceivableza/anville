@@ -1,8 +1,8 @@
 """✨ The comparison: the participant's own result beside the mean of what their observers see (ADR 0005).
 
 Below the minimum number of observers the participant sees how many have answered and no numbers. From the minimum
-up they see each construct's percent beside the observers' mean, never a single observer's percent, and never which
-person has answered.
+up they see each construct's percent beside the observers' mean, single observers' percents only in the distribution
+strip and in ascending order, and never which person has answered.
 """
 
 import re
@@ -71,11 +71,25 @@ def test_below_the_minimum_the_comparison_shows_how_many_have_answered_and_no_nu
     assert "%" not in shown
 
 
+# ✨ The list of one construct's observers' percents in its distribution strip.
+STRIP_VALUES = re.compile(r'<ol class="distribution-values[^"]*"[^>]*>(.*?)</ol>', re.S)
+
+
+def strips(page):
+    """✨ Each construct's distribution strip: the list of its observers' percents, in the order the page gives them."""
+    return [re.findall(r"(\d+)%", strip) for strip in STRIP_VALUES.findall(page)]
+
+
+def outside_the_strips(page):
+    """✨ The page with every strip's list of observers' percents cut out, leaving what else it shows."""
+    return STRIP_VALUES.sub("", page)
+
+
 @pytest.mark.django_db
-def test_no_single_observers_percent_reaches_the_participant_only_the_means(signed_in, participant):
+def test_no_single_observers_percent_reaches_the_participant_outside_the_strip_only_the_means(signed_in, participant):
     with_observers(signed_in, participant, THREE_OBSERVERS)
 
-    shown = comparison(signed_in).content.decode()
+    shown = outside_the_strips(comparison(signed_in).content.decode())
 
     assert "70%" in shown and "30%" in shown
     for single in ("80%", "60%", "20%", "40%"):
@@ -160,6 +174,64 @@ def test_a_seeded_participant_reaches_the_comparison_from_their_results_page(cli
     assert page.status_code == 200
     assert "%" in page.content.decode()
     assert "illustrative" in page.content.decode()
+
+
+@pytest.mark.django_db
+def test_below_the_minimum_no_gap_and_no_agreement_band_appear(signed_in, participant):
+    with_observers(signed_in, participant, THREE_OBSERVERS[:2])
+
+    shown = comparison(signed_in).content.decode()
+
+    for revealing in ("rate higher", "Strong agreement", "Some variation", "Divided views"):
+        assert revealing not in shown
+
+
+@pytest.mark.django_db
+def test_the_gaps_list_who_rates_each_construct_higher_largest_first(signed_in, participant):
+    """✨ The participant's 90/10 against the observers' 70/30 is a gap of 20 on every construct, so they are listed in
+    the order declared: Apostle and Prophet, then Ponder and Deliver."""
+    with_observers(signed_in, participant, THREE_OBSERVERS)
+
+    shown = comparison(signed_in).content.decode()
+
+    assert in_order(
+        shown,
+        "Apostle",
+        "You rate higher",
+        "Prophet",
+        "Others rate higher",
+        "Ponder",
+        "Others rate higher",
+        "Deliver",
+        "You rate higher",
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "apostle_shares, band",
+    [((72, 70, 68), "Strong agreement"), ((80, 70, 60), "Divided views")],
+    ids=["a range of 4", "a range of 20"],
+)
+def test_each_construct_shows_how_far_the_observers_agree(signed_in, participant, apostle_shares, band):
+    """✨ Each observer's Prophet and Ponder are 100 less their Apostle and Deliver, so all four share one range."""
+    with_observers(signed_in, participant, [observer_sort(share) for share in apostle_shares])
+
+    shown = comparison(signed_in).content.decode()
+
+    assert shown.count(band) == 4
+
+
+@pytest.mark.django_db
+def test_the_strip_gives_each_observers_percent_in_ascending_order_never_the_order_they_answered(
+    signed_in, participant
+):
+    """✨ Observers answer 80, then 60, then 70. Apostle's strip comes first, as the participant ranks it first."""
+    with_observers(signed_in, participant, [observer_sort(80), observer_sort(60), observer_sort(70)])
+
+    apostle = strips(comparison(signed_in).content.decode())[0]
+
+    assert apostle == ["60", "70", "80"]
 
 
 @pytest.mark.django_db

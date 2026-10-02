@@ -7,7 +7,7 @@ the caller's job. Nothing here touches the database or a request.
 from statistics import fmean
 
 from engine.document.observers import minimum_observers
-from engine.document.scoring import round_half_up, score, shares
+from engine.document.scoring import percents_by_construct, round_half_up, score, shares
 
 
 def aggregate(document, answers):
@@ -22,7 +22,7 @@ def aggregate(document, answers):
     """
     if len(answers) < minimum_observers(document):
         return {"observers": len(answers), "frameworks": None}
-    percents = [_percents(score(document, answer)) for answer in answers]
+    percents = [percents_by_construct(score(document, answer)) for answer in answers]
     unrounded = [shares(document, answer) for answer in answers]
     return {
         "observers": len(answers),
@@ -40,12 +40,4 @@ def aggregate(document, answers):
             }
             for framework in document["measurement"]["frameworks"]
         ],
-    }
-
-
-def _percents(result):
-    """✨ A result's rounded percents as `{framework: {construct: percent}}`, so they are found by id, not position."""
-    return {
-        framework["framework"]: {construct["construct"]: construct["percent"] for construct in framework["constructs"]}
-        for framework in result["frameworks"]
     }

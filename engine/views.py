@@ -462,7 +462,8 @@ def _prototype_bars(request, document, shown):
 def comparison(request, block_id):
     """✨ The participant's self-result beside the observer average (ADR 0005), reached from the results page and, like
     it, open to anyone with a result, whatever sections they have done. Below the minimum it shows how many have
-    answered and no numbers; it never shows which person has answered, nor any single observer's percent."""
+    answered and no numbers; it never shows which person has answered, and single observers' percents only in the
+    distribution strip, in ascending order."""
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
