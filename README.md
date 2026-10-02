@@ -211,6 +211,33 @@ The observer's page runs the same sort widget in observer wording. It sends the 
 
 To show the comparison without three real observers, `python manage.py seed_observers --observers 3` creates a fake participant, `seed-participant-<n>@example.com` with the password `information.` (`--password` sets another) and consent already given, with a self-assessment and self-result of their own and that many submitted test observers, their values the same on every run. Everything it creates is marked as test data on the server; it needs a published pathway with an assessment block.
 
+## Settings for a deployed environment
+
+Everything a deployed copy needs is read from the environment, so one build serves every deployment (ADR 0002). [docs/server-approach.md](docs/server-approach.md) describes how a deployment is run. Development needs none of these: left unset, each keeps the behaviour described above.
+
+| Variable | Unset | Set |
+|---|---|---|
+| `DJANGO_HTTPS` | No forwarded header is trusted and plain HTTP is served | `true` behind a proxy that ends TLS: its `X-Forwarded-Proto` is trusted, plain HTTP is redirected to HTTPS, and the session, CSRF and observer cookies are marked Secure. Never set it without such a proxy in front, or anyone can claim to be on HTTPS |
+| `DJANGO_HSTS_SECONDS` | No `Strict-Transport-Security` header | How long browsers should refuse plain HTTP. Only read when `DJANGO_HTTPS` is on |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | None | Further origins allowed to post forms, comma-separated. Not needed when the proxy passes the `Host` header on |
+| `DATABASE_CONN_MAX_AGE` | A database connection per request | Seconds to keep a connection for reuse |
+| `EMAIL_URL` | Email is fake: each message is printed in the server's output and nothing is delivered | The provider, as `smtp+tls://key:secret@host:587` |
+| `DEFAULT_FROM_EMAIL` | `webmaster@localhost` | The address messages come from |
+| `ANVILLE_COMMIT` | `unknown` | The commit the code was built from. The image sets it |
+
+`/healthz` answers `{"status": "ok", "commit": "…"}` when the database can be reached, and 503 when it cannot. It still wants a `Host` header that `DJANGO_ALLOWED_HOSTS` lists.
+
+With `DJANGO_DEBUG` off, errors are printed to the server's output with any observer's link redacted, since whoever holds that link can answer as the observer.
+
+To serve the way a deployment does, gather the static files and start gunicorn, which reads `gunicorn.conf.py`:
+
+```sh
+python manage.py collectstatic --noinput
+gunicorn
+```
+
+gunicorn keeps no access log, for the same reason as the redaction. WhiteNoise serves the static files from `staticfiles/`, and tells browsers to keep Vite's hashed files for good.
+
 ## Tests
 
 ```sh

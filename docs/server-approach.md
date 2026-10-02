@@ -63,14 +63,16 @@ One multi-stage `Dockerfile`:
 
 The image is public, as the project is open source. So it must contain nothing that the repository does not already publish: no `.env`, no secrets at build time, and only the pathway documents that are in `pathways/`.
 
-The application needs these changes first. None exist today:
+The application needs these changes first. They are step 1 of ticket 26, and the README's "Settings for a deployed environment" lists the variables:
 
 - **A WSGI server.** `gunicorn` in `requirements.txt`. Access logging stays off, which also keeps observers' link tokens out of logs (ticket 26, carried from 13b). Traefik's access log is off by default in k3s and should stay off for the same reason.
 - **Static files.** `STATIC_ROOT`, and WhiteNoise to serve it, so there is no second nginx container. Vite's hashed filenames suit WhiteNoise's far-future caching.
-- **`/healthz`.** It answers 200 with the commit SHA, read from an environment variable the chart sets, and checks the database with one trivial query. The Kubernetes probes must send the environment's `Host` header, or Django refuses the pod-IP request with `DisallowedHost`.
-- **Proxy and cookie settings from the environment.** `SECURE_PROXY_SSL_HEADER` (ticket 26), `CSRF_TRUSTED_ORIGINS`, secure session and CSRF cookies, HSTS. All default to the safe development behaviour when unset.
+- **`/healthz`.** It answers 200 with the commit SHA, read from `ANVILLE_COMMIT`, which the image sets when it is built, and checks the database with one trivial query. The Kubernetes probes must send the environment's `Host` header, or Django refuses the pod-IP request with `DisallowedHost`.
+- **Proxy and cookie settings from the environment.** One switch, `DJANGO_HTTPS`, sets `SECURE_PROXY_SSL_HEADER` (ticket 26), the redirect to HTTPS, and secure session and CSRF cookies; `DJANGO_HSTS_SECONDS` and `DJANGO_CSRF_TRUSTED_ORIGINS` sit beside it. All default to the safe development behaviour when unset.
 - **Email from the environment.** `EMAIL_URL` and `DEFAULT_FROM_EMAIL`, read with django-environ, defaulting to the console backend, and `ANVILLE_EMAIL_DISCLAIMER`, which marks every outgoing message when set. See section 11.
-- **Database connection reuse.** `CONN_MAX_AGE` from the environment. It matters little in-cluster and a good deal with a managed database reached over TLS.
+- **Database connection reuse.** `CONN_MAX_AGE` from the environment, as `DATABASE_CONN_MAX_AGE`. It matters little in-cluster and a good deal with a managed database reached over TLS.
+
+- **Errors in the log, without observers' links.** With debug off Django logs nothing by default, so errors are sent to the server's output, with the token or secret of any observer's link redacted.
 
 `config/settings.py` already takes the secret key, debug flag, allowed hosts, database URL and enrolment code from the environment, so one image serves every environment (ADR 0002).
 

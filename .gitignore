@@ -34,6 +34,7 @@ node_modules/
 dist/
 build/
 .vite/
+/staticfiles/
 
 # Local databases and exports
 *.sqlite3

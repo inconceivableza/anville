@@ -30,6 +30,23 @@ DEBUG = env.bool("DJANGO_DEBUG", default=False)
 
 ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=[])
 
+# ✨ A deployed environment sits behind a proxy that ends TLS (docs/server-approach.md). Only then is the
+# proxy's word taken for whether a request came over HTTPS, which is what marks the observer's cookie
+# Secure. Unset, as in development, no forwarded header is trusted and nothing insists on HTTPS.
+if env.bool("DJANGO_HTTPS", default=False):
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    # ✨ The health check is asked for over plain HTTP, straight at the pod, and must answer there.
+    SECURE_REDIRECT_EXEMPT = [r"^healthz$"]
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = env.int("DJANGO_HSTS_SECONDS", default=0)
+
+CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
+
+# ✨ The commit the running code was built from, which /healthz reports. The image sets it.
+ANVILLE_COMMIT = env("ANVILLE_COMMIT", default="unknown")
+
 
 # Application definition
 
@@ -49,6 +66,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -94,7 +112,14 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {"default": env.db("DATABASE_URL")}
+DATABASES = {
+    "default": {
+        **env.db("DATABASE_URL"),
+        # ✨ Seconds to keep a connection for reuse. 0, the default, closes it after each request.
+        "CONN_MAX_AGE": env.int("DATABASE_CONN_MAX_AGE", default=0),
+        "CONN_HEALTH_CHECKS": True,
+    }
+}
 
 
 # Password validation
@@ -135,6 +160,18 @@ STATIC_URL = "static/"
 
 STATICFILES_DIRS = [BASE_DIR / "frontend" / "dist"]
 
+# ✨ Where collectstatic gathers everything for WhiteNoise to serve, so a deployed environment needs no
+# second web server. Development never needs it: with DJANGO_DEBUG on, files are found where they are.
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+}
+
+# ✨ Vite puts a hash of the content in each built file's name, so those may be cached for good.
+WHITENOISE_IMMUTABLE_FILE_TEST = r"^/static/assets/.+-[\w-]{8}\.\w+$"
+
 DJANGO_VITE = {
     "default": {
         "manifest_path": BASE_DIR / "frontend" / "dist" / "manifest.json",
@@ -145,3 +182,38 @@ DJANGO_VITE = {
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# Email
+# https://docs.djangoproject.com/en/5.2/topics/email/
+
+# ✨ One URL names the provider, such as smtp+tls://key:secret@host:587. Unset, email is fake: each
+# message is printed where the server's output goes, and nothing is delivered.
+vars().update(env.email_url("EMAIL_URL", default="consolemail://"))
+
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
+
+
+# Logging
+# https://docs.djangoproject.com/en/5.2/topics/logging/
+
+# ✨ With DJANGO_DEBUG off Django prints nothing, so a deployed environment would fail in silence. This
+# sends errors to the server's output, with the observer's secret taken out of any address named.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
+        "redact_observer_links": {"()": "config.logs.RedactObserverLinks"},
+    },
+    "handlers": {
+        "errors": {
+            "class": "logging.StreamHandler",
+            "level": "ERROR",
+            "filters": ["require_debug_false", "redact_observer_links"],
+        },
+    },
+    "root": {"handlers": ["errors"]},
+    # ✨ Anyone scanning the address sends a wrong Host header, and Django answers 400. Not worth a traceback each.
+    "loggers": {"django.security.DisallowedHost": {"handlers": [], "propagate": False}},
+}
