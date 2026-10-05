@@ -8,12 +8,13 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** 3 or later, with 31a (2 Oct demo). The content owner suggested the written commentary may live in the PDF workbook instead; confirm with them that 31b is still wanted in the app
+**Sprint:** 3 or later, with 31a
 
 **Spec:** Observers (ADR 0005); Open content and product items; Testing Decisions
 
 **Decide before building**
 
+- [ ] Whether the participant's written answers and their comparison are still wanted in the app, or live in the PDF workbook instead (ticket 40)
 - [ ] Whether observers' answers are released in batches, covering the comparison's numbers and distribution strip (16a, 16b) too; the batch size and what the participant sees while answers wait are already set (spec, Open content and product items)
 - [ ] Whether observers' written answers are ever saved before sending, leaning never (spec, Open content and product items, "Observer autosave")
 - [ ] The prototype's open points: whether observers see the participant's answers afterwards, whether "what do they struggle with" needs a softer frame, whether the participant sees how many observers skipped each question, and the synonym list for the word comparison

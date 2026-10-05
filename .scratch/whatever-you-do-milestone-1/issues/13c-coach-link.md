@@ -1,6 +1,6 @@
 # 13c: The coach's link
 
-**What to build:** The coach the participant chose in onboarding gets a link of the observer kind, asking them to accept or decline the six commitments from the coach-selection mock-up (its coach half; `Prototypes for reference/coach-selection-prototype.html`). Letting the coach see the strengths feedback is ticket 27.
+**What to build:** The coach the participant chose in onboarding gets a link of the observer kind, asking them to accept or decline the six commitments from the coach-selection mock-up (its coach half; `Prototypes for reference/coach-selection-prototype.html`). Letting the coach see the results and comparison is ticket 27.
 
 **Blocked by:** 13a (Issuing observer invitations)
 
@@ -18,4 +18,4 @@
 
 **Carried from 10a**
 
-- The participant's name is not asked anywhere; the account holds only an email. If the invitation needs it, it belongs on the account, not in a block
+- The invitation names the participant; ticket 37 adds the display name it should use

@@ -18,4 +18,4 @@
 
 **Context**
 
-- Choosing a translation through a Bible API was suggested at the 2 Oct demo for later, not here
+- Choosing a translation through a Bible API is an option for later

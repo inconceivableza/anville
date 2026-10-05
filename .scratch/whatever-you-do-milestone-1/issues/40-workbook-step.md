@@ -19,3 +19,5 @@
 **Context**
 
 - Section 1's "comparison visited" clause (16c) already lets a participant on before any observer answers
+- The workbook exists as `Prototypes for reference/Whatever You Do workbook - Oct ‘26.docx`, still to be made a PDF. It covers Sections 2–4 ("THIS BOOKLET") and sends the participant online for Sections 1 and 5
+- For the content owner: the workbook expects the written questions online (Section One lists them, and Section Three asks for "Words used about you, especially by others"), which 31a and 31b defer; it promises the letter is "sealed until then", which the app does not do (ticket 22); its contents page says "Four closing questions" where its last page and the app have five; and it says "three conversations" but contains conversations two to four

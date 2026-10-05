@@ -1,6 +1,6 @@
-# 27: The coach sees the strengths feedback
+# 27: The coach sees the results and comparison
 
-**What to build:** Once the participant has seen their own strengths feedback, they can tick "I'm happy for my coach to see this", and the coach who accepted through their link (ticket 13c) then sees, through that same link, the participant's results and the comparison, read-only. There is no coach account, no choosing between sections, and no coach answers beyond accepting or declining.
+**What to build:** Once the participant has seen their own results and comparison, they can tick "I'm happy for my coach to see this", and the coach who accepted through their link (ticket 13c) then sees, through that same link, the participant's results and the comparison, read-only. There is no coach account, no choosing between sections, and no coach answers beyond accepting or declining.
 
 **Blocked by:** 13c (The coach's link)
 
@@ -18,5 +18,5 @@
 
 **Context**
 
-- The 2 Oct demo cut this ticket down from sharing chosen sections to one consent for the strengths feedback, the only feedback the pathway has while Sections 2–4 are hidden. Sharing other sections waits for the online journey (17–21)
+- This ticket was cut down from sharing chosen sections to one consent for the results and comparison, the only feedback the pathway has while Sections 2–4 are hidden. Sharing other sections waits for the online journey (17–21)
 - The coach preview and briefs (25) are separate, and drop to 2b first if time runs short

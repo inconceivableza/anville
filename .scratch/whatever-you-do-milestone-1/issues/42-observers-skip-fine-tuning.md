@@ -17,4 +17,4 @@
 
 **Context**
 
-- The 2 Oct demo's reason: most observers will not want to fine-tune as much as the participant
+- Most observers won't want to fine-tune as closely as the participant, so they shouldn't have to scroll past every slider to send
