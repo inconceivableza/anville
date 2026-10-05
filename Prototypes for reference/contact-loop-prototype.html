@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trusted contact loop — prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,600;1,6..72,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#1a7a4c; --gold-light:#2e9e66; --gold-pale:#e8f5ee; --deep:#0f5c3c;
+  --ink:#1a2b20; --ink-muted:#5a6b60; --ink-light:#7a8b80;
+  --cream:#f4f7f5; --white:#fff; --border:#d0ddd4;
+  --blue:#4A7FB5; --blue-pale:#eaf1f8; --plum:#7B5EA7; --plum-pale:#f1ecf7;
+  --warn:#B8860B; --warn-pale:#fdf6e3;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--cream);color:var(--ink);
+  font-family:'Instrument Sans',-apple-system,sans-serif;font-size:15px;line-height:1.5;}
+.wrap{max-width:600px;margin:0 auto;padding:26px 20px 70px;}
+h1{font-family:'Newsreader',Georgia,serif;font-size:26px;font-weight:600;margin:0 0 5px;letter-spacing:-.01em;}
+h2{font-family:'Newsreader',Georgia,serif;font-size:24px;font-weight:600;margin:0 0 9px;line-height:1.26;}
+h3{font-family:'Newsreader',Georgia,serif;font-size:19px;font-weight:600;margin:0 0 8px;}
+.sub{color:var(--ink-muted);font-size:14.5px;margin:0 0 20px;line-height:1.65;}
+.panel{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:14px;}
+.hidden{display:none;}
+
+.harness{background:#1a2b20;border-radius:14px;padding:16px 18px;margin-bottom:24px;color:#fff;}
+.harness h3{color:rgba(255,255,255,.62);font-size:11px;font-weight:700;font-family:inherit;
+  text-transform:uppercase;letter-spacing:.12em;margin:0 0 10px;}
+.hrow{display:flex;gap:7px;flex-wrap:wrap;}
+.hbtn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;
+  border-radius:8px;padding:7px 12px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
+.hbtn:hover{background:rgba(255,255,255,.18);}
+.hbtn.on{background:#fff;color:#1a2b20;}
+
+.done-flag{display:flex;gap:12px;align-items:flex-start;background:var(--gold-pale);
+  border-radius:12px;padding:17px 19px;margin-bottom:18px;}
+.df-ic{width:30px;height:30px;border-radius:50%;background:var(--gold);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.df-t{font-family:'Newsreader',Georgia,serif;font-size:18px;font-weight:600;margin-bottom:2px;}
+.df-s{font-size:13.5px;color:var(--ink-muted);line-height:1.55;}
+
+/* what you gave */
+.yours{background:var(--cream);border-radius:12px;padding:18px 20px;margin-bottom:16px;}
+.yours-h{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-muted);margin-bottom:12px;}
+.words{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
+.w{background:var(--white);border-radius:999px;padding:7px 15px;
+  font-family:'Newsreader',Georgia,serif;font-size:16px;}
+.picks{display:flex;flex-direction:column;gap:6px;}
+.pick{display:flex;align-items:center;gap:9px;font-size:13.5px;}
+.pick-r{width:15px;font-size:11px;font-weight:700;color:var(--ink-light);}
+.pick-n{flex:1;font-weight:600;}
+.anon{font-size:12.5px;color:var(--ink-light);line-height:1.55;margin-top:13px;
+  padding-top:12px;border-top:1px solid var(--border);}
+
+/* waiting */
+
+/* illustrative example */
+.demo{border:2px dashed var(--border);border-radius:14px;padding:20px;position:relative;margin-top:8px;}
+.demo-tag{position:absolute;top:-10px;left:16px;background:var(--cream);
+  padding:0 9px;font-size:10.5px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink-light);}
+.band{border-radius:10px;padding:13px 15px;margin-bottom:8px;}
+.band.match{background:var(--gold-pale);}
+.band.theirs{background:var(--blue-pale);}
+.band.yours2{background:var(--plum-pale);}
+.band-h{font-size:10.5px;font-weight:700;letter-spacing:.08em;margin-bottom:3px;}
+.match .band-h{color:var(--gold);}
+.theirs .band-h{color:var(--blue);}
+.yours2 .band-h{color:var(--plum);}
+.band-n{font-size:12.5px;color:var(--ink-muted);line-height:1.5;margin-bottom:9px;}
+.chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:var(--white);border-radius:999px;padding:5px 12px;
+  font-family:'Newsreader',Georgia,serif;font-size:15px;display:inline-flex;gap:6px;align-items:center;}
+.chip b{font-family:'Instrument Sans',sans-serif;font-size:10.5px;font-weight:700;
+  color:var(--ink-light);background:var(--cream);border-radius:999px;padding:1px 6px;}
+.bars{margin-bottom:12px;}
+.brow{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.bn{width:62px;font-size:11.5px;font-weight:600;}
+.bt{flex:1;height:10px;background:var(--cream);border-radius:5px;overflow:hidden;}
+.bf{height:100%;border-radius:5px;}
+.bp{width:28px;text-align:right;font-size:11px;font-weight:700;color:var(--ink-muted);}
+.bkey{display:flex;gap:13px;font-size:10.5px;color:var(--ink-light);margin-top:7px;}
+.bkey i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
+
+.pull{font-family:'Newsreader',Georgia,serif;font-size:19px;line-height:1.55;
+  color:var(--ink);margin:18px 0;padding-left:16px;border-left:3px solid var(--gold);}
+
+.btn{background:var(--gold);color:#fff;border:none;border-radius:10px;padding:14px 26px;
+  font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;}
+.btn:hover{background:var(--gold-light);}
+.btn.ghost{background:none;border:1px solid var(--border);color:var(--ink-muted);}
+.btn.ghost:hover{background:var(--cream);}
+.btn-full{width:100%;}
+.btn-row{display:flex;gap:9px;margin-top:14px;flex-wrap:wrap;}
+.btn-row .btn{flex:1;}
+.quiet{display:block;width:100%;background:none;border:none;font-family:inherit;
+  font-size:13px;color:var(--ink-light);cursor:pointer;text-decoration:underline;
+  margin-top:13px;padding:4px;}
+
+.honest{background:var(--warn-pale);border-left:3px solid var(--warn);border-radius:9px;
+  padding:14px 16px;margin:16px 0;font-size:13.5px;line-height:1.6;}
+.honest b{display:block;margin-bottom:3px;}
+
+.cost{display:flex;gap:18px;flex-wrap:wrap;background:var(--cream);
+  border-radius:11px;padding:14px 16px;margin:14px 0;}
+.cost-i{flex:1;min-width:120px;}
+.cost-n{font-family:'Newsreader',Georgia,serif;font-size:21px;font-weight:600;color:var(--gold);}
+.cost-l{font-size:12px;color:var(--ink-muted);line-height:1.45;margin-top:1px;}
+
+/* pass it on */
+.passon{margin-top:22px;padding-top:20px;border-top:1px solid var(--border);}
+.passon-h{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-muted);margin-bottom:11px;}
+.pass{display:flex;gap:13px;align-items:flex-start;width:100%;text-align:left;
+  background:var(--white);border:1.5px solid var(--border);border-radius:11px;
+  padding:14px 16px;margin-bottom:8px;cursor:pointer;font-family:inherit;transition:border-color .12s;}
+.pass:hover{border-color:var(--ink-light);}
+.pass.on{border-color:var(--gold);background:var(--gold-pale);}
+.pass-ic{font-size:18px;flex-shrink:0;margin-top:1px;}
+.pass-t{display:block;font-size:14.5px;font-weight:600;line-height:1.35;}
+.pass-s{display:block;font-size:12.5px;color:var(--ink-muted);line-height:1.5;margin-top:3px;}
+.sharepanel{background:var(--cream);border-radius:11px;padding:15px 16px;margin-top:4px;}
+.sp-h{font-size:12.5px;font-weight:600;margin-bottom:9px;}
+.sp-row{display:flex;gap:7px;}
+.sp-row input{flex:1;padding:10px 13px;border:1px solid var(--border);border-radius:9px;
+  font-family:inherit;font-size:13px;background:var(--white);color:var(--ink-muted);}
+.sp-n{font-size:12.5px;color:var(--ink-light);line-height:1.55;margin-top:9px;}
+/* notify */
+.notif{background:var(--deep);border-radius:14px;padding:24px;color:#fff;margin-bottom:14px;}
+.notif h2{color:#fff;font-size:22px;}
+.notif p{font-size:14.5px;line-height:1.65;color:rgba(255,255,255,.85);margin:0 0 10px;}
+.notif .pull{color:#fff;border-color:var(--gold-light);font-size:17px;}
+
+.notes{background:var(--white);border:1px solid var(--border);border-radius:14px;
+  padding:22px;margin-top:32px;}
+.notes h2{font-size:18px;}
+.notes h3{margin:17px 0 7px;color:var(--gold);font-size:12px;font-weight:700;
+  font-family:'Instrument Sans',sans-serif;text-transform:uppercase;letter-spacing:.1em;}
+.notes p,.notes li{font-size:14px;color:var(--ink-muted);line-height:1.65;}
+.notes code{background:var(--cream);border-radius:4px;padding:1px 5px;
+  font-family:ui-monospace,monospace;font-size:13px;color:var(--ink);}
+.notes pre{background:var(--cream);border-radius:9px;padding:13px;overflow-x:auto;
+  font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.55;color:var(--ink);}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Trusted contact loop</h1>
+<p class="sub">Prototype — what someone sees after answering for a friend, and how that becomes their own start.</p>
+
+<div class="harness">
+  <h3>Test harness</h3>
+  <div class="hrow">
+    <button class="hbtn on" data-act="sc" data-v="full">Did both parts</button>
+    <button class="hbtn" data-act="sc" data-v="quant">Card sort only</button>
+    <button class="hbtn" data-act="sc" data-v="notify">Later: they finished</button>
+    <button class="hbtn" data-act="sc" data-v="accepted">After signing up</button>
+  </div>
+</div>
+
+<div id="stage"></div>
+
+<div class="notes">
+  <h2>Notes for implementation</h2>
+
+  <h3>Why this is the cheapest acquisition you have</h3>
+  <p>Every participant recruits five people who already know someone who valued this, have just spent twenty minutes inside the framework, and have demonstrably answered an ask from a friend. They currently get a thank-you and a closed tab. Converting even one in five makes the product self-propagating.</p>
+
+  <h3>Show their contribution before asking for anything</h3>
+  <p>The first thing they see is their own answers reflected back — the three words they chose, their top picks. It's a genuine thank-you rather than a transition slide, and it costs nothing because it's their own data.</p>
+  <p>They see their own answers and nothing else. Not the participant's results, not another contact's, and not how many people have replied — response counts are the participant's business, and showing them leaks the shape of someone else's process for no benefit.</p>
+
+  <h3>The example is clearly marked as an example</h3>
+  <p>What makes the ask persuasive is seeing what the comparison produces — but using the real participant's data would be a serious breach. So the demonstration uses an invented profile, in a dashed border labelled "illustrative — not Ed's results", written in the third person throughout so it can't be mistaken for his. It uses the same visual language as the homepage deliberately: they should recognise it if they go looking.</p>
+
+  <h3>Be honest about the catch</h3>
+  <p>The comparison requires asking five people of your own, and hiding that until after signup would be a bait and switch on someone who has just done you a favour. The page says it plainly — and turns it into the argument: <em>"you've just been on the other side of that ask, so you know it takes twenty minutes and is oddly enjoyable."</em> Nobody else can make that argument as credibly.</p>
+
+  <h3>Two touchpoints, not one</h3>
+  <p>The second fires when the person they helped finishes. It's warmer than the first ask and reaches people who weren't ready then. Cap it there — two asks is generous, three is spam, and these are people doing someone a favour.</p>
+  <p><strong>It must be fully automatic.</strong> An earlier version had the participant sending thanks, which adds a task at the exact moment they're finishing something long — so it often wouldn't fire, and the loop would depend on it. The message now says only that they finished, plus a general observation about what people take from it. Nothing is quoted and nothing is asked of the participant.</p>
+
+  <h3>The card sort is the doorway, not a separate tool</h3>
+  <p>Presenting it as a standalone assessment converts slightly better and then produces a surprise later, which is a bad trade with someone who has just done you a favour. It is framed instead as the first thing on the course: light to begin, honest that there is more, and explicit that stopping is fine. The cost panel carries both numbers — ten minutes to start, three to four hours for the whole thing.</p>
+
+  <h3>Two ways to pass it on, for two different motives</h3>
+  <p>Not everyone in this moment wants it for themselves. Some immediately think of someone else who needs it, and some think of someone they would like to walk through it. Those are different products:</p>
+  <ul>
+    <li><strong>Send it to someone</strong> — a plain referral. The recipient owns it; the sender gets nothing back, which is stated so nobody expects updates.</li>
+    <li><strong>Offer to walk someone through it</strong> — the recipient starts with this person already named as their coach. Higher value, and it reaches people who would never have been asked otherwise.</li>
+  </ul>
+  <p>The second is worth building carefully. A contact who has just seen the whole mechanic is unusually well placed to coach, and this is the only point in the product where someone volunteers for that role rather than being recruited into it. The invite flow should run them through the coaching commitments before it goes out.</p>
+
+  <h3>Timings have to match what they actually did</h3>
+  <p>The card sort is about ten minutes; the six written questions add roughly twenty. A contact who did only the sort has a ten-minute reference point, and telling them it takes twenty is both wrong and needlessly off-putting. The copy branches on which they completed, and the cost panel separates the two so the optional half reads as optional.</p>
+
+  <h3>Data shape</h3>
+  <pre>observerInvite {
+  id, participantId, contactEmail,
+  quantAt, qualAt,
+  // loop
+  offerShownAt, offerResponse: 'started'|'later'|'declined'|null,
+  completionNotifiedAt, secondResponse,
+  convertedToParticipantId    // attribution for the loop
+}</pre>
+  <p>Track <code>convertedToParticipantId</code> from the outset — it's the only way to measure the viral coefficient, and retrofitting attribution later is painful.</p>
+
+  <h3>Still to decide</h3>
+  <ul>
+    <li>Whether contacts who did only the card sort should be asked at all, or nudged to finish the written part first. Currently they get both — a nudge to finish, and the offer.</li>
+    <li>Whether the participant is told which of their contacts signed up. Probably not — it changes who people feel able to ask.</li>
+    <li>Whether the coach invite should require the coaching commitments up front, or let them start and ask later. Up front is more honest; later converts better.</li>
+    <li>Whether anyone who has acted as a contact three or more times should get a different pitch — they may be a natural coach rather than a participant.</li>
+  </ul>
+</div>
+
+</div>
+
+<script>
+const YOU = { words:['patient','clear','generous'], picks:[['Teacher',1],['Shepherd',2],['Deacon',3]] };
+let SC = 'full';
+
+function render(){
+  const el = document.getElementById('stage');
+  el.innerHTML = SC === 'notify' ? vNotify() : SC === 'accepted' ? vAccepted() : vThanks();
+  window.scrollTo(0,0);
+}
+
+function vThanks(){
+  const full = SC === 'full';
+  let h = '<div class="panel">';
+
+  h += '<div class="done-flag"><span class="df-ic">\u2713</span><div>' +
+    '<div class="df-t">Sent \u2014 thank you</div>' +
+    '<div class="df-s">' + (full
+      ? 'Ed has your card sort and your six written answers \u2014 that\u2019s the whole thing, and it took you a fair bit longer than most people manage.'
+      : 'Ed has your card sort. That\u2019s the core of it and it stands on its own.') +
+    '</div></div>';
+
+  // their own contribution, reflected back
+  h += '<div class="yours"><div class="yours-h">What you said about Ed</div>';
+  if (full){
+    h += '<div class="words">' + YOU.words.map(function(w){
+      return '<span class="w">' + w + '</span>'; }).join('') + '</div>';
+  }
+  h += '<div class="picks">' + YOU.picks.map(function(p){
+    return '<div class="pick"><span class="pick-r">' + p[1] + '</span>' +
+      '<span class="pick-n">' + p[0] + '</span></div>'; }).join('') + '</div>';
+  h += '<div class="anon">Ed sees this alongside the answers of the other people he asked, ' +
+    'with no names attached \u2014 he won\u2019t know which were yours. ' +
+    'We won\u2019t show you theirs either.</div></div>';
+
+  h += '</div>';
+
+  // what it becomes
+  h += '<div class="panel"><h2>What your answers turn into</h2>';
+  h += '<p class="sub">Ed will see his own account of himself next to the answers he was given. ' +
+    'Not yours on their own \u2014 the picture they all make together.</p>';
+
+  h += '<div class="demo"><span class="demo-tag">Illustrative \u2014 not Ed\u2019s results</span>';
+  h += '<div class="bars">';
+  h += brow('Teacher', 72, 'var(--gold)', '24%') + brow('', 88, 'var(--blue)', '29%');
+  h += '<div style="height:7px"></div>';
+  h += brow('Shepherd', 36, 'var(--gold)', '12%') + brow('', 58, 'var(--blue)', '19%');
+  h += '<div class="bkey"><span><i style="background:var(--gold)"></i>How they see themselves</span>' +
+    '<span><i style="background:var(--blue)"></i>How others see them</span></div></div>';
+
+  h += '<div class="band match"><div class="band-h">YOU BOTH SAID</div>' +
+    '<div class="band-n">Words someone and their contacts both reached for.</div>' +
+    '<div class="chips"><span class="chip">thoughtful <b>3</b></span></div></div>';
+  h += '<div class="band theirs"><div class="band-h">THEY SAW, THEY DIDN\u2019T SAY</div>' +
+    '<div class="band-n">The part people find most useful.</div>' +
+    '<div class="chips"><span class="chip">patient <b>4</b></span>' +
+    '<span class="chip">generous <b>3</b></span></div></div>';
+  h += '<div class="band yours2"><div class="band-h">THEY SAID, OTHERS DIDN\u2019T</div>' +
+    '<div class="band-n">Not wrong \u2014 maybe private, or newer than others have noticed.</div>' +
+    '<div class="chips"><span class="chip">determined</span></div></div>';
+  h += '</div>';
+
+  h += '<div class="pull">In this example, several people independently chose a word the person ' +
+    'would never have used about themselves. That is usually something someone does so naturally ' +
+    'they have stopped noticing it.</div>';
+  h += '</div>';
+
+  // the ask
+  h += '<div class="panel"><h2>You\u2019ve just done the hard part for someone else</h2>';
+  h += '<p class="sub">You\u2019ve seen what it produces. The obvious question is what yours would say. ' +
+    'The card sort is where the course starts \u2014 same 36 cards, about yourself this time.</p>';
+
+  h += '<div class="cost">' +
+    '<div class="cost-i"><div class="cost-n">10 min</div><div class="cost-l">to begin \u2014 the card sort</div></div>' +
+    '<div class="cost-i"><div class="cost-n">3\u20134 hrs</div><div class="cost-l">the whole course, over a few weeks</div></div>' +
+    '<div class="cost-i"><div class="cost-n">Free</div><div class="cost-l">no card, stop any time</div></div></div>';
+
+  const mine = full ? 'half an hour' : 'ten minutes';
+  h += '<div class="honest"><b>The catch, since you\u2019d find out anyway</b>' +
+    'The comparison only works if you ask a few people of your own \u2014 three is enough to be interesting, five is better. ' +
+    'You\u2019ve just been on the other side of that ask though, so you know exactly what you\u2019d be asking: ' +
+    'about ten minutes for the cards' + (full ? ', or ' + mine + ' if they do the written part too' : '') +
+    '. And that being asked is more flattering than it is an imposition.</div>';
+
+  if (SC === 'quant'){
+    h += '<p class="sub" style="margin-bottom:10px;">You could also go back and answer the six written questions for Ed \u2014 ' +
+      'about twenty minutes, and the half most people say made the difference.</p>';
+  }
+
+  h += '<button class="btn btn-full" data-act="start">Start with the card sort \u2192</button>';
+  h += '<div class="btn-row"><button class="btn ghost" data-act="later">Email me a link</button>' +
+    '<button class="btn ghost" data-act="about">What\u2019s the whole course?</button></div>';
+
+  // pass it on — two different motives, two different flows
+  h += '<div class="passon"><div class="passon-h">Or pass it on</div>';
+  h += '<button class="pass" data-act="share" data-v="peer">' +
+    '<span class="pass-ic">\u2709</span><span><span class="pass-t">Send it to someone who\u2019d find it useful</span>' +
+    '<span class="pass-s">Someone working out what to do next, or stuck in the wrong thing. ' +
+    'They start the same way you would.</span></span></button>';
+  h += '<button class="pass" data-act="share" data-v="coach">' +
+    '<span class="pass-ic">\u{1F9ED}</span><span><span class="pass-t">Offer to walk someone through it</span>' +
+    '<span class="pass-s">If there\u2019s somebody you\u2019d want to coach through this, you can invite them ' +
+    'and take that role yourself. You\u2019d be asked to agree to a few things first.</span></span></button>';
+  h += '<div id="shareBox"></div></div>';
+
+  h += '<button class="quiet" data-act="no">No thanks \u2014 I was just helping Ed</button>';
+  h += '</div>';
+  return h;
+}
+
+function shareBox(kind){
+  const peer = kind === 'peer';
+  let h = '<div class="sharepanel">';
+  h += '<div class="sp-h">' + (peer
+    ? 'Send them this'
+    : 'Invite them, and offer to coach') + '</div>';
+  h += '<div class="sp-row"><input type="text" readonly value="' +
+    (peer ? 'whateveryoudo.org/start/x7k2' : 'whateveryoudo.org/coached-by/x7k2') +
+    '" data-act="sel"><button class="btn" style="padding:11px 17px;font-size:14px;" data-act="copy">Copy</button></div>';
+  h += '<div class="sp-n">' + (peer
+    ? 'They get the card sort first, same as you just saw. Nothing is sent to you about how they get on \u2014 it becomes theirs.'
+    : 'They get the course with you already named as their coach. Before it starts you\u2019d be asked to commit to a few things \u2014 chiefly asking questions rather than giving advice, and making time for a few unhurried conversations.') +
+    '</div></div>';
+  return h;
+}
+
+function brow(name, w, col, pct){
+  return '<div class="brow"><span class="bn">' + name + '</span>' +
+    '<span class="bt"><span class="bf" style="width:' + w + '%;background:' + col + '"></span></span>' +
+    '<span class="bp">' + pct + '</span></div>';
+}
+
+function vNotify(){
+  let h = '<div class="notif"><h2>Ed has finished the course</h2>';
+  h += '<p>A few weeks ago you answered some questions about him. He has come to the end of it, ' +
+    'and your answers were part of what he had to work with.</p>';
+  h += '<div class="pull">The thing people most often say stayed with them is a word ' +
+    'somebody else used about them \u2014 one they would never have chosen themselves.</div>';
+  h += '<p style="margin-bottom:0;">He does not know which answers were yours. But one set of them was.</p></div>';
+
+  h += '<div class="panel"><h2>Still worth finding out your own?</h2>';
+  h += '<p class="sub">No pressure \u2014 this is the last we will say about it. ' +
+    'The card sort is ten minutes and you already know what comes out the other end.</p>';
+  h += '<button class="btn btn-full" data-act="start">Start mine \u2192</button>';
+  h += '<button class="quiet" data-act="no">Not for me</button></div>';
+  return h;
+}
+
+function vAccepted(){
+  let h = '<div class="panel"><div class="done-flag"><span class="df-ic">\u2713</span><div>' +
+    '<div class="df-t">You\u2019re in</div>' +
+    '<div class="df-s">Begin with the card sort \u2014 the same 36 you just did for Ed, ' +
+    'about ten minutes.</div></div></div>';
+  h += '<h3>Where the card sort sits</h3>';
+  h += '<p class="sub">It is the first thing on the course rather than a separate tool. ' +
+    'Most people do it in one sitting and then carry on, because the results tend to raise ' +
+    'questions the rest of the course exists to answer.</p>';
+  h += '<div class="picks" style="gap:11px;">' +
+    step(1,'Sort the cards','About ten minutes. You will recognise them.') +
+    step(2,'Answer six questions in writing','Another twenty minutes, and where most of the interesting material comes from.') +
+    step(3,'Ask a few people','Three is enough to be interesting, five is better. Ed will probably say yes.') +
+    step(4,'See the comparison','Your account of yourself, next to theirs.') +
+    step(5,'Then the rest of it','Reading your life back, putting your calling into words, building a plan. A few hours in total, over a few weeks.') +
+    '</div>';
+  h += '<div class="honest" style="margin-top:18px;"><b>You can stop at any point</b>' +
+    'Nothing expires and nobody chases you. But the assessment is designed as a way in rather than ' +
+    'the whole thing \u2014 it tells you what you have got, and the rest is about what to do with it.</div>';
+  h += '<button class="btn btn-full" data-act="start">Start the card sort \u2192</button></div>';
+  return h;
+}
+
+function step(n,t,s){
+  return '<div class="pick" style="align-items:flex-start;"><span class="pick-r">' + n + '</span>' +
+    '<span style="flex:1;"><span style="display:block;font-weight:600;">' + t + '</span>' +
+    '<span style="display:block;font-size:13px;color:var(--ink-muted);line-height:1.5;margin-top:1px;">' +
+    s + '</span></span></div>';
+}
+
+document.addEventListener('click', function(ev){
+  const t = ev.target.closest('[data-act]');
+  if (!t) return;
+  const a = t.dataset.act;
+  if (a === 'sc'){
+    document.querySelectorAll('.hbtn').forEach(function(b){
+      b.classList.toggle('on', b.dataset.v === t.dataset.v); });
+    SC = t.dataset.v; render(); return;
+  }
+  if (a === 'start'){ SC = 'accepted';
+    document.querySelectorAll('.hbtn').forEach(function(b){
+      b.classList.toggle('on', b.dataset.v === 'accepted'); });
+    render(); return; }
+  if (a === 'later'){ alert('Link emailed. In production this is a real deferral with one reminder.'); return; }
+  if (a === 'share'){
+    const box = document.getElementById('shareBox');
+    if (box) box.innerHTML = shareBox(t.dataset.v);
+    document.querySelectorAll('.pass').forEach(function(b){
+      b.classList.toggle('on', b.dataset.v === t.dataset.v); });
+    return;
+  }
+  if (a === 'copy'){ t.textContent = 'Copied'; setTimeout(function(){ t.textContent = 'Copy'; }, 1800); return; }
+  if (a === 'sel'){ if (t.select) t.select(); return; }
+  if (a === 'about'){ alert('Opens the how-it-works page.'); return; }
+  if (a === 'no'){ alert('Declined. No further asks except the one when Ed finishes.'); return; }
+});
+
+render();
+</script>
+</body>
+</html>

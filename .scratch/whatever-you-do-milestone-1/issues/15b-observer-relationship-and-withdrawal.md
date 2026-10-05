@@ -21,3 +21,7 @@
 
 - An observer's answers are found by a hash of their claimed secret, never through the contact or invitation (ADR 0009); withdrawing deletes the observer response found that way
 - After sending, the observer's page already shows a plain thank-you in place of the observer assessment (the prototype's sentence without "submitted anonymously"), from the cookie and from the own link alike; withdrawal goes beside it
+
+**Context**
+
+- The contact-loop prototype would turn this thank-you into the observer's own answers and an offer of the course. That is not planned, and its first screen conflicts with sent answers never being shown back (spec, Open content and product items, "Prototypes not yet planned"). Build the plain thank-you; keep it simple enough to replace
