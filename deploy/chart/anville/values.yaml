@@ -44,6 +44,11 @@ resources:
   limits:
     memory: 512Mi
 
+enrolment:
+  # Whether sign-up asks for the ANVILLE_ENROLMENT_CODE secret. On by default, as in the application, so an
+  # environment that forgets to say admits nobody without the code. Off, sign-up is open to anyone.
+  required: true
+
 email:
   # The address messages come from (DEFAULT_FROM_EMAIL). The provider is the EMAIL_URL secret; without it
   # email is fake, and each message is written to the pod's log.

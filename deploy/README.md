@@ -113,14 +113,14 @@ DIGEST=$(sudo k3s kubectl -n <environment> get deployment anville -o jsonpath='{
 sudo k3s kubectl create namespace restore-test
 sudo k3s kubectl -n restore-test create secret generic anville \
   --from-literal=DJANGO_SECRET_KEY="$(openssl rand -hex 32)" \
-  --from-literal=ANVILLE_ENROLMENT_CODE=restore-test \
   --from-literal=POSTGRES_PASSWORD="$(openssl rand -hex 32)"
 ```
 
 The chart is installed with Helm, which is not on the host. From your own machine, with a copy of the host's kubeconfig and a tunnel of your own (`ssh -N -L 6443:127.0.0.1:6443 <you>@<host>`):
 
 ```sh
-helm install anville deploy/chart/anville --namespace restore-test --set image.digest=$DIGEST --wait
+helm install anville deploy/chart/anville --namespace restore-test --set image.digest=$DIGEST \
+  --set enrolment.required=false --wait
 ```
 
 Then, on the host again:

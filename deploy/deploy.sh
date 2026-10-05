@@ -13,7 +13,8 @@
 #                      cannot be created until its webhook is running, so both need a node
 #
 # From the environment, as deploy/environments/<environment>/secrets.example.yaml describes:
-#   DJANGO_SECRET_KEY, ANVILLE_ENROLMENT_CODE
+#   DJANGO_SECRET_KEY
+#   ANVILLE_ENROLMENT_CODE                              when enrolment.required
 #   POSTGRES_PASSWORD                                   when postgres.enabled
 #   DATABASE_URL                                        when not
 #   BACKUP_TARGET, BACKUP_SSH_KEY, BACKUP_KNOWN_HOSTS   when backup.enabled
@@ -69,10 +70,12 @@ setting() {
 TIER=$(setting .tier)
 HOSTNAME_SERVED=$(setting .hostname)
 POSTGRES=$(setting .postgres.enabled)
+ENROLMENT=$(setting .enrolment.required)
 BACKUP=$(setting .backup.enabled)
 
 # The secrets this environment needs, by what it is. Nothing is applied until all are there.
-NEEDED=(DJANGO_SECRET_KEY ANVILLE_ENROLMENT_CODE)
+NEEDED=(DJANGO_SECRET_KEY)
+if [ "$ENROLMENT" = true ]; then NEEDED+=(ANVILLE_ENROLMENT_CODE); fi
 if [ "$POSTGRES" = true ]; then NEEDED+=(POSTGRES_PASSWORD); else NEEDED+=(DATABASE_URL); fi
 if [ "$BACKUP" = true ]; then NEEDED+=(BACKUP_TARGET BACKUP_SSH_KEY BACKUP_KNOWN_HOSTS); fi
 # Fake email on production would write participants' and observers' links to a log and deliver nothing.

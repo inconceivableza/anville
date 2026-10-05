@@ -140,7 +140,7 @@ Its GitHub Environment holds:
 | Variable | `DEPLOY_HOST` | The host's address. Environments on one host repeat it |
 | Secret | `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`, `KUBECONFIG` | Access to that host |
 | Secret | `DJANGO_SECRET_KEY` | Never shared between environments |
-| Secret | `ANVILLE_ENROLMENT_CODE` | Per environment |
+| Secret | `ANVILLE_ENROLMENT_CODE` | Per environment, and only where its values turn `enrolment.required` on. The chart turns it on unless told otherwise, as the application does; `whatever-you-do-staging` turns it off (ticket 37) |
 | Secret | `POSTGRES_PASSWORD` | In-cluster database; the chart composes `DATABASE_URL` from it, so it must be safe inside a URL: letters, digits, `-` and `_` only. It is read when the database is first created, and changing it later does not change the database's password |
 | Secret | `DATABASE_URL` | Managed database only, in place of the above |
 | Secret | `BACKUP_SSH_KEY`, `BACKUP_TARGET`, `BACKUP_KNOWN_HOSTS` | Storage Box sub-account for this environment: its private key, its address as `sftp://user@host:23/directory/`, and the Storage Box's host key as `ssh-keyscan` prints it |

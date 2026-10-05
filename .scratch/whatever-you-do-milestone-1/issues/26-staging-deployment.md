@@ -55,15 +55,16 @@ In order. Section numbers are those of docs/server-approach.md, where the detail
 10. **The environment** (section 6). `deploy/environments/whatever-you-do-staging/` with its `values.yaml` and `secrets.example.yaml`: staging tier, backup level A, the `letsencrypt-prod` issuer from the first deploy, since `.dev` is HTTPS-only in browsers (section 10).
 11. *Human.* **GitHub Environment** `whatever-you-do-staging` with the variable and secrets in section 6's table, as `deploy/environments/whatever-you-do-staging/secrets.example.yaml` lists them. Generate a fresh secret key, enrolment code and database password; none is reused from a development `.env`.
 12. **Deploy workflow** (section 8). `deploy.yml`, ending with the `/healthz` version assertion.
+12a. **The demo notice** (carried into this ticket with ticket 37). Sign-up is open on staging, so sign-up and the homepage say plainly that this is a demo, to use made-up details, and that data may be wiped. Turned on from the environment, as the email disclaimer is, so the chart can set it for every staging-tier environment and production never shows it.
 13. *Human.* **First deploy.** Run the workflow, then through the tunnel: create the operator's superuser, load `pathways/whatever-you-do.json`, and optionally `seed_observers`. The deploy itself never loads a pathway (section 8).
 14. *Human.* **Fake email** (section 11). With no `EMAIL_URL` set, run `manage.py sendtestemail` and find the message in the pod's log, marked `[TEST]` and opening with the disclaimer. Nothing is delivered.
 15. *Human.* **Backup and restore** (section 7). Confirm a nightly dump has reached the Storage Box, then restore it into a scratch namespace on `staging-1` and check the restored data.
-16. *Human.* **Smoke test** on `https://anville.vabl.dev`: sign up with the enrolment code, log in, complete a section, resume. Also confirm the observer cookie is marked Secure, and that neither Traefik nor gunicorn is logging request paths.
+16. *Human.* **Smoke test** on `https://anville.vabl.dev`: from the homepage, sign up (no enrolment code: staging turns it off), log in, complete a section, resume. Also confirm the observer cookie is marked Secure, and that neither Traefik nor gunicorn is logging request paths.
 17. **Runbook.** A short record of steps 4 to 16 as actually performed, with the commands used and anything that differed from docs/server-approach.md, plus how the operator resets a password and reads fake email. Correct that document where it turned out wrong.
 
-Steps 1 to 3, 6, 9, 10 and 12 have no dependency on the human steps and can be done first, or alongside them.
+Steps 1 to 3, 6, 9, 10, 12 and 12a have no dependency on the human steps and can be done first, or alongside them.
 
-**Progress.** Steps 1, 2, 3, 6, 9, 10, 12 and 18 are built, on the branch `26-staging-deployment`. None has met a real host, registry or Docker build yet: [deploy/README.md](../../../deploy/README.md) lists what each was tested against and what only the human steps can prove, and says how to do each of them. Every remaining step is a human one, then the runbook (17).
+**Progress.** Steps 1, 2, 3, 6, 9, 10, 12 and 18 are built, on the branch `26-staging-deployment`; 12a is not yet. The items carried from 37 and 32a are met in the repository: `whatever-you-do-staging` turns the enrolment code off, and the image builds the frontend, the homepage's video included, before gathering the static files. None has met a real host, registry or Docker build yet: [deploy/README.md](../../../deploy/README.md) lists what each was tested against and what only the human steps can prove, and says how to do each of them. Every remaining step is a human one, then the runbook (17).
 
 **Part 2: actual email, with a disclaimer**
 

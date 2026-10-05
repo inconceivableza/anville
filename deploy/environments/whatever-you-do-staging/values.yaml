@@ -4,6 +4,10 @@ tier: staging
 host: staging-1
 hostname: anville.vabl.dev
 
+# Anyone may sign up (ticket 37). The instance holds fake data only, and says so where people sign up.
+enrolment:
+  required: false
+
 # Let's Encrypt's real service from the first deploy. Browsers refuse .dev over anything but trusted HTTPS,
 # so a certificate from the test issuer would give a site that cannot be opened.
 issuer: letsencrypt-prod
