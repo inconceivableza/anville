@@ -91,6 +91,8 @@ ACCOUNT_FORMS = {"login": "access.forms.SignInForm"}
 # ✨ On unless the environment turns it off, so a deployment that forgets the setting admits nobody without the code.
 ANVILLE_ENROLMENT_REQUIRED = env.bool("ANVILLE_ENROLMENT_REQUIRED", default=True)
 ANVILLE_ENROLMENT_CODE = env("ANVILLE_ENROLMENT_CODE", default="")
+# ✨ Set on a demo deployment, whose sign-up is open: the homepage and the account pages show it (ticket 26).
+ANVILLE_DEMO_NOTICE = env("ANVILLE_DEMO_NOTICE", default="")
 
 ROOT_URLCONF = "config.urls"
 
@@ -104,6 +106,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "access.context_processors.demo_notice",
             ],
         },
     },

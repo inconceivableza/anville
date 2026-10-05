@@ -28,6 +28,10 @@
       }
     },
     "resources": { "type": "object" },
+    "demo": {
+      "type": "object",
+      "properties": { "notice": { "type": "string" } }
+    },
     "enrolment": {
       "type": "object",
       "properties": { "required": { "type": "boolean" } }

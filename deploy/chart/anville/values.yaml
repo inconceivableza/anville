@@ -44,6 +44,13 @@ resources:
   limits:
     memory: 512Mi
 
+# What a staging environment says on its homepage and account pages, since its sign-up may be open and it holds
+# fake data only. A staging environment may reword it and may not empty it; a production environment never
+# shows it.
+demo:
+  notice: >-
+    This is a demo. Please use made-up details, not your own: anything entered here may be wiped.
+
 enrolment:
   # Whether sign-up asks for the ANVILLE_ENROLMENT_CODE secret. On by default, as in the application, so an
   # environment that forgets to say admits nobody without the code. Off, sign-up is open to anyone.

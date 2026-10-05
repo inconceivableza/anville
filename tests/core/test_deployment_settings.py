@@ -150,6 +150,11 @@ def test_with_no_disclaimer_the_email_backend_is_not_wrapped():
     }
 
 
+def test_the_demo_notice_is_empty_unless_the_environment_gives_one():
+    assert settings_with({}, "ANVILLE_DEMO_NOTICE")["ANVILLE_DEMO_NOTICE"] == ""
+    assert settings_with({"ANVILLE_DEMO_NOTICE": "A demo."}, "ANVILLE_DEMO_NOTICE")["ANVILLE_DEMO_NOTICE"] == "A demo."
+
+
 def test_database_connections_are_closed_after_each_request_unless_an_age_is_given():
     assert settings_with({}, "DATABASES")["DATABASES"]["default"]["CONN_MAX_AGE"] == 0
     kept = settings_with({"DATABASE_CONN_MAX_AGE": "60"}, "DATABASES")["DATABASES"]["default"]

@@ -68,6 +68,8 @@ from the variable before it, so the password must be safe inside a URL: letters,
   value: {{ . | quote }}
 {{- end }}
 {{- if eq .Values.tier "staging" }}
+- name: ANVILLE_DEMO_NOTICE
+  value: {{ required "demo.notice cannot be empty on a staging environment: it must say it is a demo" .Values.demo.notice | quote }}
 - name: ANVILLE_EMAIL_DISCLAIMER
   value: {{ required "email.disclaimer cannot be empty on a staging environment: its email must say it is from a test system" .Values.email.disclaimer | quote }}
 {{- end }}
