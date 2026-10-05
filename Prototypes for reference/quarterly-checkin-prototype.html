@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quarterly check-in — prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,600;1,6..72,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#1a7a4c; --gold-light:#2e9e66; --gold-pale:#e8f5ee; --deep:#0f5c3c;
+  --ink:#1a2b20; --ink-muted:#5a6b60; --ink-light:#7a8b80;
+  --cream:#f4f7f5; --white:#fff; --border:#d0ddd4;
+  --warn:#B8860B; --warn-pale:#fdf6e3;
+  --plum:#7B5EA7; --blue:#4A7FB5; --moss:#5B8C5A; --rose:#C25B56; --sand:#8B7355;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--cream);color:var(--ink);
+  font-family:'Instrument Sans',-apple-system,sans-serif;font-size:15px;line-height:1.5;}
+.wrap{max-width:600px;margin:0 auto;padding:26px 20px 70px;}
+h1{font-family:'Newsreader',Georgia,serif;font-size:27px;font-weight:600;margin:0 0 5px;letter-spacing:-.01em;}
+h2{font-family:'Newsreader',Georgia,serif;font-size:23px;font-weight:600;margin:0 0 8px;line-height:1.28;}
+.sub{color:var(--ink-muted);font-size:14px;margin:0 0 22px;line-height:1.6;}
+.panel{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:24px;}
+.hidden{display:none;}
+
+.harness{background:#1a2b20;border-radius:14px;padding:16px 18px;margin-bottom:24px;color:#fff;}
+.harness h3{color:rgba(255,255,255,.62);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.12em;margin:0 0 10px;}
+.hrow{display:flex;gap:7px;flex-wrap:wrap;}
+.hbtn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;
+  border-radius:8px;padding:7px 12px;font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
+.hbtn:hover{background:rgba(255,255,255,.18);}
+.hbtn.on{background:#fff;color:#1a2b20;}
+
+.pips{display:flex;gap:4px;margin-bottom:20px;}
+.pip{flex:1;height:3px;background:var(--border);border-radius:2px;}
+.pip.done{background:var(--gold);}
+.pip.now{background:var(--gold-light);}
+
+/* impact questions */
+.imp{margin-bottom:22px;}
+.imp-q{font-family:'Newsreader',Georgia,serif;font-size:16.5px;line-height:1.45;margin-bottom:10px;}
+.imp-scale{display:flex;gap:4px;}
+.imp-b{flex:1;aspect-ratio:1;min-width:0;max-width:40px;border:1.5px solid var(--border);
+  border-radius:8px;background:var(--white);font-family:inherit;font-size:13px;
+  font-weight:600;color:var(--ink-muted);cursor:pointer;transition:all .12s;
+  display:flex;align-items:center;justify-content:center;}
+.imp-b:hover{border-color:var(--gold);color:var(--ink);}
+.imp-b.on{border-color:var(--gold);background:var(--gold);color:#fff;}
+.imp-ends{display:flex;justify-content:space-between;font-size:11.5px;
+  color:var(--ink-light);margin-top:5px;}
+/* then and now */
+.imp-cmp{background:var(--white);border:1px solid var(--border);border-radius:12px;
+  padding:18px 20px;margin-top:18px;}
+.imp-cmp-h{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-muted);margin-bottom:10px;}
+.imp-cmp-key{display:flex;gap:15px;font-size:11.5px;color:var(--ink-light);margin-bottom:14px;}
+.imp-cmp-key i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;}
+.imp-cmp-row{padding:11px 0;border-top:1px solid var(--border);}
+.imp-cmp-row:first-of-type{border-top:none;}
+.imp-cmp-q{font-size:13px;line-height:1.5;color:var(--ink-muted);margin-bottom:7px;}
+.imp-cmp-bars{display:flex;flex-direction:column;gap:3px;}
+.imp-bar{position:relative;height:11px;background:var(--cream);border-radius:3px;display:block;}
+.imp-bar span{position:absolute;left:0;top:0;bottom:0;border-radius:3px;}
+.imp-bar b{position:absolute;right:6px;top:-2px;font-size:10px;font-weight:700;color:var(--ink-muted);}
+/* letter */
+.letter-wait{display:flex;gap:13px;align-items:flex-start;background:var(--cream);
+  border:1px dashed var(--border);border-radius:11px;padding:14px 16px;margin:16px 0;}
+.lw-ic{font-size:19px;color:var(--ink-light);flex-shrink:0;margin-top:1px;}
+.letter-wait b{display:block;font-size:13.5px;margin-bottom:2px;}
+.letter-wait div{font-size:13px;color:var(--ink-muted);line-height:1.55;}
+.letter{background:#fdfcf8;border:1px solid #e8e2d4;border-radius:12px;
+  padding:26px 28px;font-family:'Newsreader',Georgia,serif;font-size:16.5px;
+  line-height:1.85;color:#33312b;box-shadow:0 2px 14px rgba(0,0,0,.05);margin-bottom:4px;}
+.letter-paper{display:flex;gap:14px;align-items:flex-start;background:#fdfcf8;
+  border:1px solid #e8e2d4;border-radius:12px;padding:20px 22px;margin:16px 0;}
+.lp-ic{font-size:26px;flex-shrink:0;}
+.letter-paper b{display:block;font-family:'Newsreader',Georgia,serif;font-size:17px;margin-bottom:5px;}
+.letter-paper div{font-size:14px;color:var(--ink-muted);line-height:1.6;}
+.letter-seal{font-size:12.5px;color:var(--ink-light);text-align:center;margin-top:11px;}
+/* activity card */
+.act-cat{display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;margin-bottom:7px;}
+.act-txt{font-family:'Newsreader',Georgia,serif;font-size:21px;line-height:1.38;margin-bottom:6px;}
+.act-when{font-size:12.5px;color:var(--ink-light);margin-bottom:20px;}
+.opts{display:flex;flex-direction:column;gap:8px;}
+.opt{display:flex;gap:12px;align-items:flex-start;background:var(--white);
+  border:1.5px solid var(--border);border-radius:11px;padding:14px 16px;
+  cursor:pointer;text-align:left;font-family:inherit;transition:border-color .12s;}
+.opt:hover{border-color:var(--ink-light);}
+.opt.on{border-color:var(--gold);background:var(--gold-pale);}
+.opt-ic{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;font-size:12px;
+  background:var(--cream);color:var(--ink-light);margin-top:1px;}
+.opt.on .opt-ic{background:var(--gold);color:#fff;}
+.opt-t{font-size:15px;font-weight:600;line-height:1.35;}
+.opt-s{font-size:12.5px;color:var(--ink-light);margin-top:2px;line-height:1.45;}
+
+textarea,input[type=text]{width:100%;padding:12px 14px;border:1px solid var(--border);
+  border-radius:10px;font-family:inherit;font-size:14.5px;color:var(--ink);
+  line-height:1.6;background:var(--white);resize:vertical;}
+textarea:focus,input:focus{outline:none;border-color:var(--gold);}
+.note-wrap{margin-top:14px;}
+.note-lab{font-size:13px;color:var(--ink-muted);margin-bottom:6px;}
+
+.btn{background:var(--gold);color:#fff;border:none;border-radius:10px;padding:13px 24px;
+  font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;}
+.btn:hover{background:var(--gold-light);}
+.btn:disabled{opacity:.35;cursor:default;}
+.btn.ghost{background:none;border:1px solid var(--border);color:var(--ink-muted);}
+.btn.ghost:hover{background:var(--cream);}
+.btn-full{width:100%;}
+.btn-row{display:flex;gap:9px;margin-top:20px;}
+.btn-row .btn{flex:1;}
+
+/* add list */
+.adds{display:flex;flex-direction:column;gap:7px;margin-bottom:12px;}
+.add-item{display:flex;gap:10px;align-items:center;background:var(--cream);
+  border-radius:9px;padding:10px 12px;font-size:14px;}
+.add-item span{flex:1;line-height:1.4;}
+.x{color:var(--ink-light);cursor:pointer;font-size:16px;line-height:1;}
+.add-row{display:flex;gap:7px;}
+.add-row input{flex:1;}
+.add-btn{background:var(--gold);color:#fff;border:none;border-radius:10px;
+  padding:0 18px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;}
+
+/* next quarter */
+.carry{display:flex;gap:11px;align-items:flex-start;border:1.5px solid var(--border);
+  border-radius:11px;padding:13px 15px;margin-bottom:8px;cursor:pointer;background:var(--white);}
+.carry.on{border-color:var(--gold);background:var(--gold-pale);}
+.cbox{width:20px;height:20px;border-radius:5px;border:2px solid var(--border);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:#fff;margin-top:1px;}
+.carry.on .cbox{background:var(--gold);border-color:var(--gold);}
+.carry-t{font-size:14.5px;line-height:1.4;}
+.carry-s{font-size:12px;color:var(--ink-light);margin-top:2px;}
+
+/* progress / close */
+.stat{display:flex;gap:26px;flex-wrap:wrap;padding:18px 0;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:18px 0;}
+.stat-n{font-family:'Newsreader',Georgia,serif;font-size:29px;font-weight:600;color:var(--gold);line-height:1;}
+.stat-l{font-size:12.5px;color:var(--ink-muted);margin-top:3px;line-height:1.45;}
+.qline{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-top:1px solid var(--border);}
+.qline:first-of-type{border-top:none;}
+.qtag{font-size:11px;font-weight:700;color:var(--ink-light);width:52px;flex-shrink:0;
+  letter-spacing:.05em;padding-top:2px;}
+.qitems{flex:1;display:flex;flex-direction:column;gap:4px;}
+.qitem{font-size:13.5px;line-height:1.45;display:flex;gap:7px;align-items:baseline;}
+.qmark{flex-shrink:0;font-size:11px;}
+.qdone{color:var(--gold);}.qpart{color:var(--warn);}.qnot{color:var(--ink-light);}
+.qchanged{color:var(--plum);}
+.insight{background:var(--gold-pale);border-left:3px solid var(--gold);border-radius:9px;
+  padding:14px 16px;margin-top:16px;font-size:14px;line-height:1.6;}
+.insight.soft{background:var(--warn-pale);border-color:var(--warn);}
+.insight b{display:block;margin-bottom:3px;}
+
+.callout{background:var(--cream);border-radius:11px;padding:15px 17px;margin:16px 0;
+  font-size:13.5px;color:var(--ink-muted);line-height:1.6;}
+.callout b{color:var(--ink);}
+
+.notes{background:var(--white);border:1px solid var(--border);border-radius:14px;
+  padding:22px;margin-top:32px;}
+.notes h2{font-size:18px;}
+.notes h3{margin:17px 0 7px;color:var(--gold);font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;}
+.notes p,.notes li{font-size:14px;color:var(--ink-muted);line-height:1.65;}
+.notes code{background:var(--cream);border-radius:4px;padding:1px 5px;
+  font-family:ui-monospace,monospace;font-size:13px;color:var(--ink);}
+.notes pre{background:var(--cream);border-radius:9px;padding:13px;overflow-x:auto;
+  font-family:ui-monospace,monospace;font-size:12.5px;line-height:1.55;color:var(--ink);}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Quarterly check-in</h1>
+<p class="sub">Prototype — the same flow for people whose plan is in the app and people who did it all on paper.</p>
+
+<div class="harness">
+  <h3>Test harness</h3>
+  <div class="hrow">
+    <button class="hbtn on" data-act="sc" data-v="online-first">Online · first</button>
+    <button class="hbtn" data-act="sc" data-v="online-good">Online · going well</button>
+    <button class="hbtn" data-act="sc" data-v="online-drift">Online · drifted</button>
+    <button class="hbtn" data-act="sc" data-v="offline-first">Offline · first</button>
+    <button class="hbtn" data-act="sc" data-v="offline-return">Offline · returning</button>
+    <button class="hbtn" data-act="sc" data-v="letter-online">📨 Letter opens</button>
+    <button class="hbtn" data-act="sc" data-v="letter-offline">📨 Letter · offline user</button>
+  </div>
+</div>
+
+<div class="panel" id="stage"></div>
+
+<div class="notes">
+  <h2>Notes for implementation</h2>
+
+  <h3>Why this is the highest-value thing to build next</h3>
+  <p>The strongest claim on the homepage is that everyone leaves with a practical plan. Nothing currently checks whether anyone does it. This closes that loop, generates the only outcome data that matters to an organisation deciding whether to fund a cohort, and converts a finished course into an ongoing relationship.</p>
+
+  <h3>Handling people who worked on paper</h3>
+  <p>Offline participants have no roadmap in the system — the app knows their assessment results and nothing about their plan. Two rules make this work:</p>
+  <ul>
+    <li><strong>Ask, don't assume.</strong> Their first check-in asks what they committed to, in their own words, two or three lines. It takes a minute and it isn't presented as re-entering data they've already written down.</li>
+    <li><strong>Accumulate.</strong> Those lines become first-class activities. By the second check-in an offline participant's flow is identical to an online one's, without ever being asked to migrate. That's the graceful on-ramp — most will end up with their plan in the app without having decided to put it there.</li>
+  </ul>
+
+  <h3>The letter is what makes people come back</h3>
+  <p>A check-in that only asks people to account for themselves is a duty. One with something waiting in it is an appointment. The letter written at the end of the course stays sealed until the fourth check-in, roughly twelve months on, and every earlier check-in shows a quiet note saying how long is left.</p>
+  <p>That note is doing real work: it converts three obligations into a countdown. It costs nothing and it's the single cheapest retention mechanic available here.</p>
+
+  <h3>The letter is read first, not last</h3>
+  <p>It opens the check-in rather than closing it, because it reframes everything that follows. Answering "did you volunteer somewhere?" hits differently ten seconds after your past self asked whether you'd talk yourself out of it by week three.</p>
+  <p>Then two questions: how much came true, and what would you say back. The reply matters more than the verdict — it's the most reflective writing anyone does in the whole product, and it costs one textarea.</p>
+
+  <h3>The letter is always digital, even for offline participants</h3>
+  <p>Everything else in the offline route happens on paper. The letter deliberately doesn't. It's the one guaranteed reason an offline participant returns to the app a year later, which makes it the only reliable channel for the impact data below. Sealing it properly and having it find them on the right date is also something paper can't do.</p>
+  <p>The flow acknowledges this rather than glossing it: <em>"You did the rest of the course on paper — the letter is the one part we kept here, so it could be sealed properly and find you again a year later."</em></p>
+
+  <h3>The four impact questions, asked a third time</h3>
+  <p>The same questions from the first and last day of the course reappear at the twelve-month check-in. This is the most valuable data the product can generate, because end-of-course scores only prove people felt something. Twelve-month scores prove whether it held — which is the question any funder or church leader is actually asking.</p>
+  <p>Two design points that matter:</p>
+  <ul>
+    <li><strong>Asked blind.</strong> Previous scores are explicitly withheld until after they answer, and the screen says why: <em>"knowing would change the answer."</em> Anchoring would quietly destroy the data.</li>
+    <li><strong>Placed after the letter.</strong> By then they've already reflected honestly on what did and didn't happen, so the ratings are grounded in a year of evidence rather than a mood.</li>
+  </ul>
+  <p>The three-point comparison is then shown on the closing screen, and it's genuinely useful to the individual as well as to you. A decline is handled without flinching: <em>"That is more common than anyone admits, and it is exactly what this check-in is for. Clarity is not a thing you get once."</em></p>
+
+  <h3>Writing the next one closes the loop</h3>
+  <p>Having just experienced the value of a year-old letter, people are unusually willing to write another. That turns an eighteen-month course into an indefinite cycle: every letter creates the reason to be there when it opens. It's also the natural point to re-ask the baseline questions in a later version.</p>
+
+  <h3>Response options are deliberately generous</h3>
+  <p>Four states: done, started, not yet, and <em>no longer the right thing</em>. That fourth one matters — the course teaches that calling clarifies over time, so a plan that hasn't changed in eighteen months may be a worse sign than one that has. Framing a dropped action as discernment rather than failure is both truer and keeps people answering honestly.</p>
+  <p>The person who did nothing must not feel judged. They're the most likely to disengage entirely and the most worth re-engaging. Asking is itself the intervention — a check-in that gets "no, and I've realised why" is a success.</p>
+
+  <h3>Unplanned actions are captured separately</h3>
+  <p>Asking "did anything happen that wasn't on the plan?" catches the thing a rigid tracker would miss. Calling emerges through action, and the most significant step someone took this quarter is frequently one they never wrote down.</p>
+
+  <h3>Drift is a different conversation, not a louder one</h3>
+  <p>After two quarters of no progress the tone changes — not more urgent, but a different question: is the plan wrong, or is the season wrong? Both are legitimate and neither is failure. A nagging check-in gets unsubscribed; one that asks a better question gets answered.</p>
+
+  <h3>Data shape</h3>
+  <pre>checkIn {
+  participantId, quarter, mode: 'online'|'offline',
+  sentAt, openedAt, completedAt,
+  responses: [{ activityId|text, status, note }],
+  unplanned: [{ text }],
+  carriedForward: [activityId],
+  added: [{ text, quarter }],
+  coachContact: 'recent'|'awhile'|'none',
+  letter: {                      // only on the check-in where it opens
+    openedAt, verdict: 'most'|'some'|'little'|'moved',
+    reply, newLetterSealedUntil
+  },
+  impact: { bible, gifts, call, plan }   // 1\u201310, same items as baseline
+}
+
+// three comparable points per participant
+impactScores { participantId, at: 'start'|'courseEnd'|'month12'|'month24', ... }
+
+letter {
+  participantId, writtenAt, sealedUntil, medium: 'digital'|'paper',
+  body,                          // null when medium is 'paper'
+  openedAt, generation           // 1 = written on the course
+}
+
+// offline: `text` entries are promoted to activities
+// on save, so the next check-in behaves as online</pre>
+
+  <h3>Still to decide</h3>
+  <ul>
+    <li>Cadence. Quarterly matches the roadmap, but the first one may be better at six weeks — that's when a plan either takes or doesn't.</li>
+    <li>Whether the coach gets a copy. Strong argument for it, but it changes what people write.</li>
+    <li>Whether an organisation admin sees completion of check-ins, and whether participants are told that.</li>
+    <li>How many unanswered check-ins before stopping. Three feels right; silence is an answer.</li>
+    <li>Whether the impact questions should repeat at 24 months, or whether twelve is the honest limit of attribution.</li>
+    <li>Whether aggregate twelve-month scores are what the organisational waitlist should be shown, rather than end-of-course ones.</li>
+    <li>Whether the letter can be opened early. A "break glass" option respects autonomy and almost nobody uses it, but it does weaken the countdown.</li>
+    <li>What happens if someone never writes a second letter — whether check-ins continue indefinitely without one, or wind down.</li>
+  </ul>
+</div>
+
+</div>
+
+<script>
+// ================= DATA =================
+const CATS = {
+  experiment:{label:'Step of faith', color:'#7B5EA7'},
+  skills:{label:'Grow gifting', color:'#4A7FB5'},
+  character:{label:'Character', color:'#5B8C5A'},
+  mentorship:{label:'Mentorship', color:'#C25B56'},
+  disciple:{label:'Disciple others', color:'#8B7355'}
+};
+
+const LETTER = `Ed,
+
+You\u2019ve just finished this thing and you\u2019re more sure of yourself than you\u2019ve been in a while. I know that feeling fades, so I\u2019m writing it down while it\u2019s still sharp.
+
+Here\u2019s what you worked out: you\u2019re at your best when you\u2019re making something complicated land for someone who actually needs it. You\u2019ve been doing it for years. You\u2019d just never noticed it was a thing.
+
+What you\u2019re afraid of is that you\u2019ll get busy, the plan will slide, and in a year you\u2019ll be exactly where you are now with a slightly better story about why.
+
+So \u2014 did you ask Sarah? Did you actually do the volunteering, or did you decide you were too busy somewhere around week three?
+
+One more thing, and you won\u2019t like it. You said the thing to work on was your impatience with people who are slower than you. Four people who know you said the real problem is that you don\u2019t back yourself. You brushed past that rather quickly at the time.
+
+Have you heard it yet?
+
+Be honest with whoever is reading this with you. They\u2019ll know if you\u2019re not.
+
+Ed, August 2026`;
+
+const IMPACT_QS = [
+  {id:'bible',  q:'I have a detailed understanding of what the Bible teaches about work and calling'},
+  {id:'gifts',  q:'I have a detailed understanding of my God-given gifts, talents and limitations'},
+  {id:'call',   q:'I have a strong sense of God\u2019s specific call and purpose for my life'},
+  {id:'plan',   q:'I have a clear, practical plan for how to pursue God\u2019s purpose for my life'}
+];
+
+// scores from the first and last day of the course, for the comparison afterwards
+const PRIOR = {
+  start:   {bible:6, gifts:5, call:4, plan:3},
+  courseEnd:{bible:9, gifts:8, call:7, plan:9}
+};
+
+const SCENARIOS = {
+  'online-first':{
+    mode:'online', name:'Ed', quarter:'Q3 2026', nth:1, missed:0, letterAt:4,
+    calling:'to make hard things clear among people starting out',
+    acts:[
+      {id:1, text:'Ask Sarah to coach me monthly', cat:'mentorship'},
+      {id:2, text:'Establish a weekly rhythm of silence', cat:'character'},
+      {id:3, text:'Volunteer somewhere that tests this calling', cat:'experiment'}
+    ],
+    next:[{id:4, text:'Take a course in a core skill', cat:'skills'},
+          {id:5, text:'Shadow someone doing this work', cat:'experiment'}],
+    history:[]
+  },
+  'online-good':{
+    mode:'online', name:'Ed', quarter:'Q4 2026', nth:2, missed:0, letterAt:4,
+    calling:'to make hard things clear among people starting out',
+    acts:[
+      {id:4, text:'Take a course in a core skill', cat:'skills'},
+      {id:5, text:'Shadow someone doing this work for a day', cat:'experiment'}
+    ],
+    next:[{id:6, text:'Run a lunchtime session for graduates', cat:'experiment'},
+          {id:7, text:'Mentor someone a few steps behind me', cat:'disciple'}],
+    history:[{q:'Q3 2026', items:[
+      {t:'Ask Sarah to coach me monthly', s:'done'},
+      {t:'Establish a weekly rhythm of silence', s:'part'},
+      {t:'Volunteer somewhere that tests this calling', s:'done'}]}]
+  },
+  'online-drift':{
+    mode:'online', name:'Ed', quarter:'Q1 2027', nth:3, missed:2, letterAt:4,
+    calling:'to make hard things clear among people starting out',
+    acts:[
+      {id:6, text:'Run a lunchtime session for graduates', cat:'experiment'},
+      {id:8, text:'Read three books in this field', cat:'skills'}
+    ],
+    next:[{id:7, text:'Mentor someone a few steps behind me', cat:'disciple'}],
+    history:[
+      {q:'Q3 2026', items:[{t:'Ask Sarah to coach me monthly', s:'done'},
+        {t:'Weekly rhythm of silence', s:'part'},{t:'Volunteer somewhere', s:'done'}]},
+      {q:'Q4 2026', items:[{t:'Take a course in a core skill', s:'not'},
+        {t:'Shadow someone for a day', s:'not'}]}]
+  },
+  'offline-first':{
+    mode:'offline', name:'Ed', quarter:'Q3 2026', nth:1, missed:0, letterAt:4,
+    calling:null, acts:[], next:[], history:[]
+  },
+  'letter-online':{
+    mode:'online', name:'Ed', quarter:'Q2 2027', nth:4, missed:0, letterAt:4, letterNow:true, impactNow:true,
+    calling:'to make hard things clear among people starting out',
+    acts:[
+      {id:7, text:'Mentor someone a few steps behind me', cat:'disciple'},
+      {id:9, text:'Run the session again, properly this time', cat:'experiment'}
+    ],
+    next:[{id:10, text:'Offer it to two other teams', cat:'experiment'}],
+    history:[
+      {q:'Q3 2026', items:[{t:'Ask Sarah to coach me monthly', s:'done'},
+        {t:'Weekly rhythm of silence', s:'part'},{t:'Volunteer somewhere', s:'done'}]},
+      {q:'Q4 2026', items:[{t:'Take a course in a core skill', s:'done'},
+        {t:'Shadow someone for a day', s:'not'}]},
+      {q:'Q1 2027', items:[{t:'Run a lunchtime session for graduates', s:'done'},
+        {t:'Read three books in this field', s:'part'}]}]
+  },
+  'letter-offline':{
+    mode:'offline', name:'Ed', quarter:'Q2 2027', nth:4, missed:0,
+    letterAt:4, letterNow:true, impactNow:true,
+    calling:null,
+    acts:[
+      {id:103, text:'Talk to the youth leader about careers evenings', cat:null},
+      {id:104, text:'Keep reading Proverbs each morning', cat:null}
+    ],
+    next:[], history:[
+      {q:'Q3 2026', items:[{t:'Talk to the youth leader', s:'part'},{t:'Read Proverbs', s:'done'}]},
+      {q:'Q4 2026', items:[{t:'Run one careers evening', s:'done'}]},
+      {q:'Q1 2027', items:[{t:'Ask about doing it termly', s:'part'}]}]
+  },
+  'offline-return':{
+    mode:'offline', name:'Ed', quarter:'Q4 2026', nth:2, missed:0, letterAt:4,
+    calling:null,
+    acts:[
+      {id:101, text:'Talk to the youth leader about helping with careers evenings', cat:null},
+      {id:102, text:'Start reading through Proverbs each morning', cat:null}
+    ],
+    next:[], history:[{q:'Q3 2026', items:[
+      {t:'Talk to the youth leader about careers evenings', s:'part'},
+      {t:'Start reading through Proverbs', s:'done'}]}]
+  }
+};
+
+const STATUS = [
+  {v:'done',    ic:'✓', t:'Done',                   s:'Finished, or well underway'},
+  {v:'part',    ic:'◐', t:'Started',                s:'Begun but not finished'},
+  {v:'not',     ic:'○', t:'Not yet',                s:'Still intend to, just haven\u2019t'},
+  {v:'changed', ic:'↻', t:'No longer the right thing', s:'Things have moved on \u2014 that\u2019s fine'}
+];
+
+// ================= STATE =================
+let S, step, R, unplanned, carried, added, coachAns, offlinePlan;
+let letterRead, letterVerdict, letterReply, newLetter, impact;
+
+function load(key){
+  S = JSON.parse(JSON.stringify(SCENARIOS[key]));
+  step = 0; R = {}; unplanned = []; carried = {}; added = []; coachAns = '';
+  offlinePlan = [];
+  letterRead = false; letterVerdict = ''; letterReply = ''; newLetter = '';
+  impact = {};
+  S.next.forEach(function(a){ carried[a.id] = true; });
+  render();
+}
+
+// build the ordered list of steps for this run
+function steps(){
+  const out = ['intro'];
+  // the letter is read before anything else — it frames the whole check-in
+  if (S.letterNow) out.push('letter-read', 'letter-respond');
+  if (S.mode === 'offline' && !S.acts.length) out.push('capture');
+  else S.acts.forEach(function(a){ out.push('act:' + a.id); });
+  out.push('unplanned');
+  out.push('next');
+  out.push('coach');
+  if (S.impactNow) out.push('impact');
+  if (S.letterNow) out.push('letter-write');
+  out.push('done');
+  return out;
+}
+
+function render(){
+  const list = steps(), cur = list[step];
+  const el = document.getElementById('stage');
+  let h = '';
+
+  // progress pips (skip on intro and done)
+  if (step > 0 && cur !== 'done'){
+    h += '<div class="pips">' + list.slice(1,-1).map(function(_,i){
+      const idx = i + 1;
+      return '<span class="pip ' + (idx < step ? 'done' : idx === step ? 'now' : '') + '"></span>';
+    }).join('') + '</div>';
+  }
+
+  if (cur === 'intro')      h += vIntro();
+  else if (cur === 'letter-read')    h += vLetterRead();
+  else if (cur === 'letter-respond') h += vLetterRespond();
+  else if (cur === 'letter-write')   h += vLetterWrite();
+  else if (cur === 'impact')         h += vImpact();
+  else if (cur === 'capture') h += vCapture();
+  else if (cur.indexOf('act:') === 0) h += vAct(+cur.slice(4));
+  else if (cur === 'unplanned') h += vUnplanned();
+  else if (cur === 'next')  h += vNext();
+  else if (cur === 'coach') h += vCoach();
+  else                      h += vDone();
+
+  el.innerHTML = h;
+}
+
+// ---------- views ----------
+function vIntro(){
+  const drift = S.missed >= 2;
+  let h = '';
+  if (drift){
+    h += '<h2>Still thinking about it?</h2>';
+    h += '<p class="sub">It\u2019s been a while, ' + S.name + ' \u2014 a couple of these have gone by without an answer, which is completely normal and not a problem.</p>';
+    h += '<div class="callout">A plan that stalls usually means one of two things: <b>the plan was wrong</b>, or <b>the season was wrong</b>. Both are worth knowing, and neither is a failure. Five minutes to work out which.</div>';
+  } else if (S.nth === 1){
+    h += '<h2>How did ' + S.quarter + ' go?</h2>';
+    h += '<p class="sub">Three months ago you finished the course and made a plan. This is the first check-in \u2014 just a few questions about what actually happened.</p>';
+    if (S.calling) h += '<div class="callout">You said your calling was <b>' + S.calling + '</b>. Worth holding that in mind as you answer.</div>';
+    h += '<div class="callout" style="background:var(--gold-pale);">Honest answers are more useful than impressive ones. <b>"I didn\u2019t do it"</b> is a perfectly good answer and tells you something.</div>';
+  } else {
+    h += '<h2>How did ' + S.quarter + ' go?</h2>';
+    h += '<p class="sub">Your ' + ordinal(S.nth) + ' check-in. Same as last time \u2014 about five minutes.</p>';
+    if (S.calling) h += '<div class="callout">Your calling, as you put it: <b>' + S.calling + '</b></div>';
+  }
+  if (S.mode === 'offline' && !S.acts.length){
+    h += '<div class="callout">You worked through the printed workbook, so we don\u2019t have your plan here. First question asks what you committed to \u2014 a line or two is plenty.</div>';
+  }
+  // the letter waiting is a reason to come back
+  if (!S.letterNow && S.letterAt && S.nth < S.letterAt){
+    const left = S.letterAt - S.nth;
+    h += '<div class="letter-wait"><span class="lw-ic">\u2709</span><div>' +
+      '<b>Your letter is still sealed</b>' +
+      'The one you wrote to yourself at the end of the course opens ' +
+      (left === 1 ? 'at your next check-in' : 'in ' + left + ' more check-ins') +
+      ' \u2014 about ' + (left * 3) + ' months from now.</div></div>';
+  }
+  h += '<button class="btn btn-full" data-act="next" style="margin-top:8px;">Start \u2192</button>';
+  return h;
+}
+
+// ---------- letter views ----------
+function vLetterRead(){
+  let h = '<h2>A letter from a year ago</h2>';
+  h += '<p class="sub">You wrote this to yourself on the last day of the course. It has been sealed since then. Read it before you answer anything else.</p>';
+  if (S.mode === 'offline'){
+    h += '<div class="callout">You did the rest of the course on paper \u2014 the letter is the one part we kept here, so it could be sealed properly and find you again a year later.</div>';
+  }
+  h += '<div class="letter">' + esc(LETTER).replace(/\n/g,'<br>') + '</div>';
+  h += '<div class="btn-row"><button class="btn ghost" data-act="back">Back</button>' +
+    '<button class="btn" data-act="letter-read">Continue \u2192</button></div>';
+  return h;
+}
+
+function vLetterRespond(){
+  const opts = [
+    {v:'most',  t:'More of it came true than I expected', s:'The person who wrote it would be pleased'},
+    {v:'some',  t:'Some of it \u2014 not all',              s:'Which is how most years go'},
+    {v:'little',t:'Honestly, not much',                 s:'Worth knowing why, without flinching'},
+    {v:'moved', t:'It came true, but not how they meant it', s:'Things went somewhere they hadn\u2019t imagined'}
+  ];
+  let h = '<h2>How much of it came true?</h2>';
+  h += '<p class="sub">Answer for the person who wrote it, not for us.</p>';
+  h += '<div class="opts">' + opts.map(function(o){
+    return '<button class="opt ' + (letterVerdict === o.v ? 'on' : '') + '" data-act="lv" data-v="' + o.v + '">' +
+      '<span class="opt-ic">' + (letterVerdict === o.v ? '\u2713' : '') + '</span><span>' +
+      '<span class="opt-t">' + o.t + '</span><span class="opt-s">' + o.s + '</span></span></button>';
+  }).join('') + '</div>';
+
+  if (letterVerdict){
+    h += '<div class="note-wrap"><div class="note-lab">What would you say back to them?' +
+      ' <span style="color:var(--ink-light)">Optional, but this is the good bit</span></div>' +
+      '<textarea rows="4" data-act="lreply" placeholder="They asked you a direct question. You could just answer it.">' +
+      esc(letterReply) + '</textarea></div>';
+    if (letterVerdict === 'little'){
+      h += '<div class="insight soft" style="margin-top:14px;"><b>A year is not very long</b>' +
+        'The letter was written in a moment of unusual clarity, which is exactly why it overestimates what a year holds. ' +
+        'The question it actually asks \u2014 have you heard it yet \u2014 is still open, and still answerable.</div>';
+    }
+  }
+  h += '<div class="btn-row"><button class="btn ghost" data-act="back">Back</button>' +
+    '<button class="btn" data-act="next"' + (letterVerdict ? '' : ' disabled') + '>Continue \u2192</button></div>';
+  return h;
+}
+
+function vLetterWrite(){
+  let h = '<h2>Write the next one</h2>';
+  h += '<p class="sub">Same again: to yourself, a year from now. The last one knew what you were afraid of. This one knows what you\u2019ve learned since.</p>';
+  h += '<div class="callout">A few prompts, if it helps. What do you know now that you didn\u2019t? What are you avoiding? ' +
+    'What will have slipped if you\u2019re not careful? What do you want them to hold you to?</div>';
+  h += '<textarea rows="9" data-act="newletter" placeholder="Dear me,">' + esc(newLetter) + '</textarea>';
+  h += '<div class="letter-seal">\u2709 Sealed until ' + sealDate(S.quarter) + '. Nobody reads it but you.</div>';
+  h += '<div class="btn-row"><button class="btn ghost" data-act="next">Skip for now</button>' +
+    '<button class="btn" data-act="next"' + (newLetter.trim().length > 20 ? '' : ' disabled') + '>Seal it \u2192</button></div>';
+  return h;
+}
+
+function vImpact(){
+  let h = '<h2>The same four questions</h2>';
+  h += '<p class="sub">You answered these on your first day of the course and your last. A year on, they\u2019re worth asking again \u2014 the interesting question isn\u2019t whether the course worked, it\u2019s whether it held.</p>';
+  h += '<div class="callout">Answer as you see it today. We\u2019ll show you what you said before once you\u2019ve finished \u2014 not now, because knowing would change the answer.</div>';
+
+  IMPACT_QS.forEach(function(q){
+    h += '<div class="imp"><div class="imp-q">' + q.q + '</div><div class="imp-scale">';
+    for (let i = 1; i <= 10; i++){
+      h += '<button class="imp-b' + (impact[q.id] === i ? ' on' : '') +
+        '" data-act="imp" data-q="' + q.id + '" data-v="' + i + '">' + i + '</button>';
+    }
+    h += '</div><div class="imp-ends"><span>Not at all</span><span>Completely</span></div></div>';
+  });
+
+  const done = IMPACT_QS.every(function(q){ return impact[q.id]; });
+  h += '<div class="btn-row"><button class="btn ghost" data-act="back">Back</button>' +
+    '<button class="btn" data-act="next"' + (done ? '' : ' disabled') + '>Continue \u2192</button></div>';
+  return h;
+}
+
+function impactCompare(){
+  if (!S.impactNow) return '';
+  let h = '<div class="imp-cmp"><div class="imp-cmp-h">Then, and now</div>';
+  h += '<div class="imp-cmp-key"><span><i style="background:var(--ink-light)"></i>First day</span>' +
+       '<span><i style="background:var(--blue)"></i>Last day</span>' +
+       '<span><i style="background:var(--gold)"></i>Today</span></div>';
+
+  let held = 0, grew = 0;
+  IMPACT_QS.forEach(function(q){
+    const a = PRIOR.start[q.id], b = PRIOR.courseEnd[q.id], n = impact[q.id] || 0;
+    if (n >= b) grew++; else if (n > a) held++;
+    h += '<div class="imp-cmp-row"><div class="imp-cmp-q">' + q.q + '</div><div class="imp-cmp-bars">' +
+      bar(a,'var(--ink-light)') + bar(b,'var(--blue)') + bar(n,'var(--gold)') + '</div></div>';
+  });
+  h += '</div>';
+
+  const above = held + grew;
+  if (grew >= 2){
+    h += '<div class="insight"><b>It didn\u2019t just hold \u2014 it grew</b>' +
+      'On ' + grew + ' of the four you scored higher today than on the day you finished. That is unusual, and it almost always means the plan got acted on rather than filed.</div>';
+  } else if (above >= 3){
+    h += '<div class="insight"><b>A year on, it has held</b>' +
+      'Still well above where you started on ' + above + ' of the four. Some settling after a course is normal \u2014 the number that matters is the one that stayed up.</div>';
+  } else {
+    h += '<div class="insight soft"><b>Some of it has faded</b>' +
+      'That is more common than anyone admits, and it is exactly what this check-in is for. ' +
+      'Clarity is not a thing you get once. Worth a conversation with whoever coached you.</div>';
+  }
+  return h;
+}
+
+function bar(v,col){
+  return '<span class="imp-bar"><span style="width:' + (v*10) + '%;background:' + col + '"></span>' +
+    '<b>' + (v || '\u2013') + '</b></span>';
+}
+
+function sealDate(q){
+  const m = q.match(/Q(\d) (\d+)/);
+  if (!m) return 'next year';
+  return 'Q' + m[1] + ' ' + (+m[2] + 1);
+}
+
+function vCapture(){
+  let h = '<h2>What did you plan to do?</h2>';
+  h += '<p class="sub">From your workbook \u2014 whatever you wrote down for these three months. Two or three lines is plenty, in your own words.</p>';
+  if (offlinePlan.length){
+    h += '<div class="adds">' + offlinePlan.map(function(t,i){
+      return '<div class="add-item"><span>' + esc(t) + '</span>' +
+        '<span class="x" data-act="rm-plan" data-i="' + i + '">\u00d7</span></div>';
+    }).join('') + '</div>';
+  }
+  h += '<div class="add-row"><input type="text" id="planIn" placeholder="e.g. Ask David to meet monthly" data-act="k-plan">' +
+    '<button class="add-btn" data-act="add-plan">Add</button></div>';
+  h += '<div class="callout" style="margin-top:14px;">We\u2019ll keep these, so next time we can just ask how they went rather than asking again.</div>';
+  h += '<div class="btn-row"><button class="btn ghost" data-act="back">Back</button>' +
+    '<button class="btn" data-act="next"' + (offlinePlan.length ? '' : ' disabled') + '>Continue \u2192</button></div>';
+  return h;
+}
+
+function vAct(id){
+  const a = S.acts.filter(function(x){ return x.id === id; })[0];
+  const cat = a.cat ? CATS[a.cat] : null;
+  const cur = R[id] || {};
+  let h = '';
+  if (cat) h += '<div class="act-cat" style="color:' + cat.color + '">' + cat.label + '</div>';
+  h += '<div class="act-txt">' + esc(a.text) + '</div>';
+  h += '<div class="act-when">Planned for ' + S.quarter + '</div>';
+  h += '<div class="opts">' + STATUS.map(function(o){
+    return '<button class="opt ' + (cur.status === o.v ? 'on' : '') + '" data-act="status" data-id="' + id + '" data-v="' + o.v + '">' +
+      '<span class="opt-ic">' + o.ic + '</span><span><span class="opt-t">' + o.t + '</span>' +
+      '<span class="opt-s">' + o.s + '</span></span></button>';
+  }).join('') + '</div>';
+
+  if (cur.status){
+    const lab = cur.status === 'done' ? 'What came of it?'
+      : cur.status === 'changed' ? 'What changed?'
+      : cur.status === 'part' ? 'How far did you get?'
+      : 'What got in the way?';
+    h += '<div class="note-wrap"><div class="note-lab">' + lab +
+      ' <span style="color:var(--ink-light)">Optional</span></div>' +
+      '<textarea rows="2" data-act="note" data-id="' + id + '">' + esc(cur.note || '') + '</textarea></div>';
+  }
+  h += '<div class="btn-row"><button class="btn ghost" data-act="back">Back</button>' +
+    '<button class="btn" data-act="next"' + (cur.status ? '' : ' disabled') + '>Continue \u2192</button></div>';
+  return h;
+}
+
+function vUnplanned(){
+  let h = '<h2>Did anything else happen?</h2>';
+  h += '<p class="sub">Anything you did that wasn\u2019t on the plan \u2014 a conversation, an opportunity, something you said yes to. These often turn out to matter more than the planned things.</p>';
+  if (unplanned.length){
+    h += '<div class="adds">' + unplanned.map(function(t,i){
+      return '<div class="add-item"><span>' + esc(t) + '</span>' +
+        '<span class="x" data-act="rm-un" data-i="' + i + '">\u00d7</span></div>';
+    }).join('') + '</div>';
+  }
+  h += '<div class="add-row"><input type="text" id="unIn" placeholder="Something that happened" data-act="k-un">' +
+    '<button class="add-btn" data-act="add-un">Add</button></div>';
+  h += '<div class="btn-row"><button class="btn ghost" data-act="back">Back</button>' +
+    '<button class="btn" data-act="next">' + (unplanned.length ? 'Continue \u2192' : 'Nothing to add \u2192') + '</button></div>';
+  return h;
+}
+
+function vNext(){
+  let h = '<h2>What about the next three months?</h2>';
+  const unfinished = S.acts.filter(function(a){
+    const r = R[a.id]; return r && (r.status === 'not' || r.status === 'part');
+  });
+  if (unfinished.length){
+    h += '<p class="sub">Carry anything unfinished forward, or let it go \u2014 letting go is a decision too.</p>';
+    h += unfinished.map(function(a){
+      const on = carried[a.id] !== false;
+      return '<div class="carry ' + (on ? 'on' : '') + '" data-act="carry" data-id="' + a.id + '">' +
+        '<span class="cbox">' + (on ? '\u2713' : '') + '</span><span>' +
+        '<span class="carry-t">' + esc(a.text) + '</span>' +
+        '<span class="carry-s">' + (R[a.id].status === 'part' ? 'Started' : 'Not started') + '</span></span></div>';
+    }).join('');
+  }
+  if (S.next.length){
+    h += '<p class="sub" style="margin-top:' + (unfinished.length ? '18px' : '0') + ';">Already planned for ' + nextQ(S.quarter) + ':</p>';
+    h += S.next.map(function(a){
+      const on = carried[a.id] !== false;
+      return '<div class="carry ' + (on ? 'on' : '') + '" data-act="carry" data-id="' + a.id + '">' +
+        '<span class="cbox">' + (on ? '\u2713' : '') + '</span><span>' +
+        '<span class="carry-t">' + esc(a.text) + '</span>' +
+        '<span class="carry-s">Still right?</span></span></div>';
+    }).join('');
+  }
+  h += '<p class="sub" style="margin-top:18px;">Anything new to add?</p>';
+  if (added.length){
+    h += '<div class="adds">' + added.map(function(t,i){
+      return '<div class="add-item"><span>' + esc(t) + '</span>' +
+        '<span class="x" data-act="rm-add" data-i="' + i + '">\u00d7</span></div>';
+    }).join('') + '</div>';
+  }
+  h += '<div class="add-row"><input type="text" id="addIn" placeholder="One thing for the next three months" data-act="k-add">' +
+    '<button class="add-btn" data-act="add-add">Add</button></div>';
+  h += '<div class="btn-row"><button class="btn ghost" data-act="back">Back</button>' +
+    '<button class="btn" data-act="next">Continue \u2192</button></div>';
+  return h;
+}
+
+function vCoach(){
+  let h = '<h2>When did you last talk it through with someone?</h2>';
+  h += '<p class="sub">Your coach, or anyone who knows what you\u2019re working towards.</p>';
+  const opts = [
+    {v:'recent', t:'In the last month or so', s:'Good \u2014 that\u2019s the rhythm'},
+    {v:'awhile', t:'A while ago', s:'Worth getting something in the diary'},
+    {v:'none',   t:'Not since the course', s:'Very common. Worth fixing'},
+    {v:'nocoach',t:'I never found a coach', s:'Still worth doing \u2014 we can help'}
+  ];
+  h += '<div class="opts">' + opts.map(function(o){
+    return '<button class="opt ' + (coachAns === o.v ? 'on' : '') + '" data-act="coach" data-v="' + o.v + '">' +
+      '<span class="opt-ic">' + (coachAns === o.v ? '\u2713' : '') + '</span><span>' +
+      '<span class="opt-t">' + o.t + '</span><span class="opt-s">' + o.s + '</span></span></button>';
+  }).join('') + '</div>';
+  h += '<div class="btn-row"><button class="btn ghost" data-act="back">Back</button>' +
+    '<button class="btn" data-act="next"' + (coachAns ? '' : ' disabled') + '>Finish \u2192</button></div>';
+  return h;
+}
+
+function vDone(){
+  // assemble this quarter into history
+  const items = S.mode === 'offline' && offlinePlan.length
+    ? offlinePlan.map(function(t){ return {t:t, s:'done'}; })
+    : S.acts.map(function(a){ return {t:a.text, s:(R[a.id]||{}).status || 'not'}; });
+  const all = S.history.concat([{q:S.quarter, items:items}]);
+
+  let totDone = 0, totAll = 0;
+  all.forEach(function(q){ q.items.forEach(function(i){
+    totAll++; if (i.s === 'done' || i.s === 'part') totDone++;
+  });});
+
+  let h = '<h2>Thank you \u2014 that\u2019s logged</h2>';
+  h += '<p class="sub">Here\u2019s everything since you finished the course.</p>';
+
+  h += '<div class="stat"><div><div class="stat-n">' + totDone + '/' + totAll + '</div>' +
+    '<div class="stat-l">actions done<br>or underway</div></div>' +
+    '<div><div class="stat-n">' + all.length + '</div><div class="stat-l">quarter' +
+    (all.length === 1 ? '' : 's') + '<br>logged</div></div>' +
+    '<div><div class="stat-n">' + unplanned.length + '</div>' +
+    '<div class="stat-l">unplanned things<br>this quarter</div></div></div>';
+
+  all.forEach(function(q){
+    h += '<div class="qline"><span class="qtag">' + q.q + '</span><span class="qitems">' +
+      q.items.map(function(i){
+        const m = {done:['\u2713','qdone'], part:['\u25d0','qpart'],
+                   not:['\u25cb','qnot'], changed:['\u21bb','qchanged']}[i.s] || ['\u25cb','qnot'];
+        return '<span class="qitem"><span class="qmark ' + m[1] + '">' + m[0] + '</span>' + esc(i.t) + '</span>';
+      }).join('') + '</span></div>';
+  });
+
+  h += insight(all, totDone, totAll);
+  h += impactCompare();
+
+  if (S.letterNow){
+    h += '<div class="letter-wait" style="margin-top:16px;"><span class="lw-ic">\u2709</span><div>' +
+      '<b>' + (newLetter.trim() ? 'Your new letter is sealed' : 'No new letter this time') + '</b>' +
+      (newLetter.trim()
+        ? 'It opens in ' + sealDate(S.quarter) + '. We won\u2019t show it to you before then, and nobody else ever sees it.'
+        : 'You can write one any time \u2014 there\u2019s a link in your next check-in email.') +
+      '</div></div>';
+  }
+  if (S.mode === 'offline'){
+    h += '<div class="callout" style="margin-top:16px;">Your plan now lives here too. Next time we\u2019ll just ask how each of these went \u2014 no need to write them out again.</div>';
+  }
+  h += '<button class="btn btn-full" style="margin-top:18px;" data-act="restart">Run another scenario</button>';
+  return h;
+}
+
+function insight(all, done, total){
+  // unplanned outweighing planned
+  if (unplanned.length && unplanned.length >= S.acts.length && S.acts.length){
+    return '<div class="insight"><b>More happened off the plan than on it</b>' +
+      'That isn\u2019t drift. Calling tends to emerge through whatever you actually said yes to \u2014 worth looking at whether those unplanned things point somewhere your written plan doesn\u2019t.</div>';
+  }
+  // category pattern
+  const byCat = {};
+  S.acts.forEach(function(a){
+    if (!a.cat) return;
+    const r = R[a.id];
+    if (!byCat[a.cat]) byCat[a.cat] = {d:0,n:0};
+    byCat[a.cat].n++;
+    if (r && (r.status === 'done' || r.status === 'part')) byCat[a.cat].d++;
+  });
+  const stalled = Object.keys(byCat).filter(function(k){ return byCat[k].d === 0; });
+  if (stalled.length === 1 && Object.keys(byCat).length > 1){
+    return '<div class="insight soft"><b>Nothing moved on ' + CATS[stalled[0]].label.toLowerCase() + '</b>' +
+      'Everything else got somewhere. One category stalling repeatedly usually means it needs breaking into something smaller, or it belongs to a later season.</div>';
+  }
+  if (total && done / total >= 0.7){
+    return '<div class="insight"><b>You\u2019re doing what you said you\u2019d do</b>' +
+      'Most plans made in a moment of clarity don\u2019t survive contact with an ordinary week. Yours is. Worth telling whoever coached you.</div>';
+  }
+  if (total && done === 0){
+    return '<div class="insight soft"><b>None of it moved this quarter</b>' +
+      'Worth asking which it was: too much at once, the wrong things, or a season where this genuinely couldn\u2019t be the priority. All three are answerable \u2014 and the third one is allowed.</div>';
+  }
+  return '';
+}
+
+// ---------- helpers ----------
+function ordinal(n){ return ['','first','second','third','fourth','fifth'][n] || (n + 'th'); }
+function nextQ(q){
+  const m = q.match(/Q(\d) (\d+)/); if (!m) return 'next quarter';
+  let qq = +m[1] + 1, yy = +m[2];
+  if (qq > 4){ qq = 1; yy++; }
+  return 'Q' + qq + ' ' + yy;
+}
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+  return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+// ---------- events ----------
+document.addEventListener('click', function(ev){
+  const t = ev.target.closest('[data-act]');
+  if (!t) return;
+  const a = t.dataset.act;
+
+  if (a === 'sc'){
+    document.querySelectorAll('.hbtn').forEach(function(b){
+      b.classList.toggle('on', b.dataset.v === t.dataset.v); });
+    load(t.dataset.v); return;
+  }
+  if (a === 'next'){ if (!t.disabled){ step++; render(); window.scrollTo(0,0);} return; }
+  if (a === 'back'){ step--; render(); window.scrollTo(0,0); return; }
+  if (a === 'status'){
+    const id = +t.dataset.id;
+    R[id] = R[id] || {};
+    R[id].status = t.dataset.v;
+    render(); return;
+  }
+  if (a === 'coach'){ coachAns = t.dataset.v; render(); return; }
+  if (a === 'letter-read'){ letterRead = true; step++; render(); window.scrollTo(0,0); return; }
+  if (a === 'lv'){ letterVerdict = t.dataset.v; render(); return; }
+  if (a === 'imp'){ impact[t.dataset.q] = +t.dataset.v; render(); return; }
+  if (a === 'carry'){
+    const id = +t.dataset.id;
+    carried[id] = carried[id] === false;
+    render(); return;
+  }
+  if (a === 'add-plan'){ pushFrom('planIn', offlinePlan); return; }
+  if (a === 'add-un'){   pushFrom('unIn', unplanned); return; }
+  if (a === 'add-add'){  pushFrom('addIn', added); return; }
+  if (a === 'rm-plan'){ offlinePlan.splice(+t.dataset.i,1); render(); return; }
+  if (a === 'rm-un'){   unplanned.splice(+t.dataset.i,1); render(); return; }
+  if (a === 'rm-add'){  added.splice(+t.dataset.i,1); render(); return; }
+  if (a === 'restart'){ step = 0; render(); window.scrollTo(0,0); return; }
+});
+
+document.addEventListener('keydown', function(ev){
+  if (ev.key !== 'Enter') return;
+  const d = ev.target.dataset || {};
+  if (d.act === 'k-plan'){ pushFrom('planIn', offlinePlan); ev.preventDefault(); }
+  if (d.act === 'k-un'){   pushFrom('unIn', unplanned); ev.preventDefault(); }
+  if (d.act === 'k-add'){  pushFrom('addIn', added); ev.preventDefault(); }
+});
+
+document.addEventListener('input', function(ev){
+  const d = ev.target.dataset || {};
+  if (d.act === 'note'){ const id = +d.id; R[id] = R[id] || {}; R[id].note = ev.target.value; }
+  if (d.act === 'lreply'){ letterReply = ev.target.value; }
+  if (d.act === 'newletter'){
+    newLetter = ev.target.value;
+    const btn = document.querySelector('[data-act="next"]:last-of-type');
+    if (btn) btn.disabled = newLetter.trim().length <= 20;
+  }
+});
+
+function pushFrom(inputId, arr){
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  const v = el.value.trim();
+  if (!v) { el.focus(); return; }
+  arr.push(v);
+  render();
+  const again = document.getElementById(inputId);
+  if (again) again.focus();
+}
+
+load('online-first');
+</script>
+</body>
+</html>

@@ -94,12 +94,21 @@
     </div>
 
   {% elif checklist.screen == "chosen" %}
-    {# ✨ Only the coach kept: nothing of the checklist that chose them. #}
-    <div class="coach-outcome coach-go">
-      <h2>{{ checklist.coach.name }} is your coach</h2>
+    {% comment %}
+      ✨ Only the coach kept: nothing of the checklist that chose them. They are called the participant's coach only
+      once they have accepted; until then, chosen. A coach who declined is still kept until someone else is chosen,
+      but the card turns from gold to the amber of the mock-up's decline, and choosing someone else leads.
+    {% endcomment %}
+    <div class="coach-outcome {% if checklist.link.answer == 'declined' %}coach-check{% else %}coach-go{% endif %}">
+      <h2>
+        {% if checklist.link.answer == "accepted" %}{{ checklist.coach.name }} is your coach
+        {% elif checklist.link.answer == "declined" %}{{ checklist.coach.name }} isn't able to be your coach
+        {% else %}You've chosen {{ checklist.coach.name }}{% endif %}
+      </h2>
       <p>{{ checklist.coach.email }}</p>
+      {% if checklist.link %}{% include "engine/blocks/coach_link.html" with link=checklist.link coach=checklist.coach %}{% endif %}
       <div class="coach-buttons">
-        <button type="submit" name="step" value="restart" class="btn btn-secondary">Choose someone else</button>
+        <button type="submit" name="step" value="restart" class="btn {% if checklist.link.answer == 'declined' %}btn-primary{% else %}btn-secondary{% endif %}">Choose someone else</button>
         <button type="submit" name="step" value="remove" class="btn btn-secondary">Remove</button>
       </div>
     </div>

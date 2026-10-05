@@ -81,14 +81,14 @@ def test_a_locked_section_stays_locked_when_its_address_is_typed_straight_in(sig
     response = signed_in_client.get(CALLING)
 
     assert response.status_code == 302
-    assert response.url == "/"
+    assert response.url == "/hub/"
 
 
 @pytest.mark.django_db
 def test_a_locked_sections_content_never_reaches_the_browser(signed_in_client, load_pathway):  # noqa: F811
     load_pathway(pathway_document())
 
-    hub = signed_in_client.get("/").content.decode()
+    hub = signed_in_client.get("/hub/").content.decode()
     locked = signed_in_client.get(CALLING, follow=True).content.decode()
 
     assert "Write your statement." not in hub
@@ -113,7 +113,7 @@ def test_a_locked_section_cannot_be_completed(signed_in_client, load_pathway):  
     response = signed_in_client.post(COMPLETE_CALLING)
 
     assert response.status_code == 302
-    assert response.url == "/"
+    assert response.url == "/hub/"
     assert not Response.objects.exists()
 
 
@@ -193,7 +193,7 @@ def test_completing_the_last_section_leads_back_to_the_hub(open_calling):
 
     response = client.post(COMPLETE_CALLING)
 
-    assert (response.status_code, response.url) == (303, "/")
+    assert (response.status_code, response.url) == (303, "/hub/")
 
 
 @pytest.mark.django_db
@@ -328,7 +328,7 @@ def completed_calling(open_calling):
 def test_a_participant_reopens_a_section_they_marked_complete(completed_calling):
     response = completed_calling.post("/sections/calling/reopen/")
 
-    assert (response.status_code, response.url) == (303, "/")
+    assert (response.status_code, response.url) == (303, "/hub/")
     assert "calling" not in Response.objects.get().completed_sections
 
 
@@ -389,7 +389,7 @@ def test_a_section_is_reopened_only_by_a_post(completed_calling):
 def test_the_hub_lists_every_section_with_its_status_and_points_at_the_next_step(signed_in_client, load_pathway):  # noqa: F811
     load_pathway(pathway_document())
 
-    page = signed_in_client.get("/").content.decode()
+    page = signed_in_client.get("/hub/").content.decode()
 
     assert "Before we begin" in page
     assert "Putting your calling into words" in page
@@ -402,7 +402,7 @@ def test_the_hub_lists_every_section_with_its_status_and_points_at_the_next_step
 def test_the_hub_follows_the_participant_as_they_go(open_calling):
     client = open_calling()
 
-    page = client.get("/").content.decode()
+    page = client.get("/hub/").content.decode()
 
     assert "Complete" in page
     assert "Locked" not in page  # ✨ the calling section opened when onboarding was completed
@@ -412,11 +412,11 @@ def test_the_hub_follows_the_participant_as_they_go(open_calling):
 def test_progress_counts_the_interactive_blocks_and_not_the_prose(signed_in_client, load_pathway):  # noqa: F811
     load_pathway(pathway_document())
 
-    assert "0 of 2 answered" in signed_in_client.get("/").content.decode()
+    assert "0 of 2 answered" in signed_in_client.get("/hub/").content.decode()
 
     signed_in_client.post("/answers/baseline-bible/", {"value": "7", "version": _version_id()})
 
-    assert "1 of 2 answered" in signed_in_client.get("/").content.decode()
+    assert "1 of 2 answered" in signed_in_client.get("/hub/").content.decode()
 
 
 # The scripture reading, which opens the activity beneath it
@@ -536,7 +536,7 @@ def test_a_link_counts_towards_no_progress(signed_in_client, load_pathway):  # n
     the sort are the three."""
     load_pathway(linking_to_the_sort())
 
-    assert "0 of 3 answered" in signed_in_client.get("/").content.decode()
+    assert "0 of 3 answered" in signed_in_client.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db

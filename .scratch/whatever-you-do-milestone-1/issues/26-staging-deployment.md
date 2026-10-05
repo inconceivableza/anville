@@ -15,17 +15,25 @@ This can start as soon as ticket 05 lands, so hosting surprises surface early.
 - [ ] A Hetzner project exists in an EU region and holds the staging host. One operator holds the project, the repository and its secrets for now; an account owned by the content owner with the developer deploying into it is deferred, and not handled by this ticket
 - [ ] The application runs there behind HTTPS at `anville.vabl.dev`, configured entirely from the environment, and deployed only by the deploy workflow
 - [ ] The database has backups and a restore has been tried once
-- [ ] The instance holds fake data only, using reserved example domains; nothing real is ever loaded
+- [ ] The instance holds fake data only, using reserved example domains; nothing real is ever loaded. Since sign-up is open (ticket 37), sign-up and the homepage say plainly that this is a demo, that visitors should use made-up details, and that data may be wiped
 - [ ] A short runbook records how the instance was stood up, so another deployment can be created the same way (ADR 0002)
 - [ ] Email on the instance starts as fake: nothing is delivered, and the operator can read what would have been sent
 - [ ] Later (part 2, below): the instance sends actual email from a temporary staging domain, so coach and observer links can be emailed on staging, and every message carries a disclaimer that it comes from a test system not intended for production use; a lasting email set-up for the real service is separate (2 Oct demo)
-- [ ] A smoke test passes on the deployed instance: sign up with the enrolment code, log in, complete a section, resume
+- [ ] A smoke test passes on the deployed instance: sign up (with the enrolment code if the deployment turns it on), log in, complete a section, resume
 - [ ] Open, and not decided by this ticket: who the controller is, retention and the data protection impact assessment (see spec Further Notes). Confirm the arrangement works for everyone involved before any real participant is added
 
 **Carried from 13b**
 
 - [ ] Behind the TLS proxy, set `SECURE_PROXY_SSL_HEADER` so the observer cookie is marked Secure
 - [ ] Observers' links carry their token or secret in the path: keep them out of the web server's access logs
+
+**Carried from 37**
+
+- [ ] The enrolment code is required unless the environment turns it off: staging's environment and the runbook turn it off, or nobody can sign up
+
+**Carried from 32a**
+
+- [ ] The deployment builds the frontend (`npm run build` in `frontend/`) before collecting static files: the homepage's forest video and its still frame reach the served files only through that build
 
 **Carried from 03**
 

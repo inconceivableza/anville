@@ -1,0 +1,99 @@
+{% comment %}
+  ✨ The comparison itself, from `comparison`: the participant's stored result beside their observers' means, as the
+  prototype's comparison screen showed it, in the results page's wording and colours, with how far the observers agree
+  on each, then the largest gaps and the questions to reflect on. Below the minimum there is a count and no numbers at
+  all. Neither state names who has answered. Shared by the participant's comparison and, once they consent, their
+  coach's link (ticket 27), so the coach sees no more than the participant. With `for_coach`, the engine's own words
+  name the participant (`name`) in place of "you", and the participant's own way to invite people goes; the pathway's
+  authored words stay in the participant's wording.
+{% endcomment %}
+{% if comparison.illustrative %}
+  <p class="comparison-illustrative" role="note">This comparison is illustrative: every answer in it is test data, not from someone who knows {% if for_coach %}{{ name }}{% else %}you{% endif %}.</p>
+{% endif %}
+
+{% if comparison.frameworks is None %}
+  <p class="results-desc">{% if for_coach %}Comparing {{ name }}'s self-assessment with the averaged responses of the people {{ name }} asked.{% else %}Comparing your self-assessment with the averaged responses of people who know you.{% endif %}</p>
+  <section class="results-section comparison-waiting">
+    <h2>Not enough answers yet</h2>
+    {% if for_coach %}
+      <p>{{ name }} needs at least <strong>{{ comparison.minimum }} people</strong> to complete the strengths survey before we can show a meaningful comparison.</p>
+    {% else %}
+      <p>You need at least <strong>{{ comparison.minimum }} people</strong> to complete the strengths survey about you before we can show a meaningful comparison.</p>
+    {% endif %}
+    <p><strong>{{ comparison.observers }} of {{ comparison.minimum }}</strong> have answered so far.</p>
+    {% if not for_coach %}<p><a class="btn btn-primary" href="{% url 'invitations' %}">Invite people who know you →</a></p>{% endif %}
+  </section>
+{% else %}
+  <p class="results-desc">{% if for_coach %}Comparing {{ name }}'s self-assessment with the averaged responses of the {{ comparison.observers }} people {{ name }} asked.{% else %}Comparing your self-assessment with the averaged responses of {{ comparison.observers }} people who know you.{% endif %}</p>
+  <p class="comparison-legend"><span class="comparison-key-you">{% if for_coach %}{{ name }}{% else %}You{% endif %}</span> <span class="comparison-key-others">Others (average)</span></p>
+
+  {% for framework in comparison.frameworks %}
+    <section class="results-section">
+      <h2>{{ framework.heading }}</h2>
+      {% if framework.subtitle %}<p class="results-desc">{{ framework.subtitle }}</p>{% endif %}
+
+      {% for bar in framework.bars %}
+        <div class="comparison-pair">
+          <p class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</p>
+          <div class="comparison-bar-row">
+            <span class="comparison-who {{ bar.colour }}">{% if for_coach %}{{ name }}{% else %}You{% endif %}</span>
+            <svg class="result-bar-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+              <rect class="bar-fill {{ bar.colour }}" width="{{ bar.percent }}" height="10" />
+            </svg>
+            <span class="result-bar-score {{ bar.colour }}">{{ bar.percent }}%</span>
+          </div>
+          <div class="comparison-bar-row">
+            <span class="comparison-who comparison-others">Others</span>
+            <svg class="result-bar-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+              <rect class="bar-fill comparison-others" width="{{ bar.others }}" height="10" />
+            </svg>
+            <span class="result-bar-score comparison-others">{{ bar.others }}%</span>
+          </div>
+          <p class="comparison-agreement">{{ bar.agreement }}</p>
+          <details class="distribution">
+            <summary>See how the {{ comparison.observers }} people who answered see this</summary>
+            <svg class="distribution-drawing" viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+              <rect class="distribution-band {{ bar.strip.colour }}" x="{{ bar.strip.band_start }}" y="3" width="{{ bar.strip.band_width }}" height="6" />
+              {% for dot in bar.strip.dots %}
+                <rect class="{{ bar.strip.colour }}" x="{{ dot }}" y="3" width="{{ bar.strip.dot_width }}" height="6" />
+              {% endfor %}
+              <rect class="distribution-yours" x="{{ bar.strip.yours }}" y="0" width="{{ bar.strip.yours_width }}" height="12" />
+            </svg>
+            <p class="distribution-key" aria-hidden="true"><span class="distribution-yours-key"></span> {% if for_coach %}{{ name }}{% else %}You{% endif %} ({{ bar.percent }}%)</p>
+            {% comment %}✨ The values, lowest first, as text for everyone and for screen readers; the drawing is hidden from them.{% endcomment %}
+            <p class="distribution-caption">Each person's percent, lowest first:</p>
+            <ol class="distribution-values">
+              {% for value in bar.strip.values %}<li>{{ value }}%</li>{% endfor %}
+            </ol>
+          </details>
+        </div>
+      {% endfor %}
+    </section>
+  {% endfor %}
+
+  {% if comparison.gaps %}
+    <section class="results-section">
+      {% if comparison.gaps_heading %}<h2>{{ comparison.gaps_heading }}</h2>{% endif %}
+      {% if comparison.gaps_intro %}<p class="results-desc">{{ comparison.gaps_intro }}</p>{% endif %}
+      {% for gap in comparison.gaps %}
+        <div class="gap-card">
+          <div class="gap-card-header">
+            <span class="gap-card-construct">{{ gap.label }} <span class="gap-card-framework">({{ gap.framework }})</span></span>
+            {% if gap.badge %}<span class="gap-card-badge {{ gap.badge_class }}">{{ gap.badge }} (+{{ gap.gap }})</span>{% endif %}
+          </div>
+          <p class="gap-card-desc">{{ gap.description }}</p>
+        </div>
+      {% endfor %}
+    </section>
+  {% endif %}
+
+  {% if comparison.prompts %}
+    <section class="results-section">
+      {% if comparison.prompts_heading %}<h2>{{ comparison.prompts_heading }}</h2>{% endif %}
+      {% if comparison.prompts_intro %}<p class="results-desc">{{ comparison.prompts_intro }}</p>{% endif %}
+      {% for prompt in comparison.prompts %}
+        <div class="reflection-prompt"><p><strong>{{ prompt.title }}:</strong> {{ prompt.text }}</p></div>
+      {% endfor %}
+    </section>
+  {% endif %}
+{% endif %}

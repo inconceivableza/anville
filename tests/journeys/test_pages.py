@@ -433,7 +433,7 @@ def test_completing_a_section_a_link_holds_again_leads_back_to_the_links_page(
 
 @pytest.mark.django_db
 def test_a_locked_sections_pages_stay_locked(participant):
-    assert participant.get("/sections/calling/pages/1/").url == "/"
+    assert participant.get("/sections/calling/pages/1/").url == "/hub/"
 
 
 # Going back
@@ -472,7 +472,7 @@ def test_going_back_keeps_the_pages_already_gone_through(participant):
 def test_the_hub_shows_a_paged_section_once_and_leads_to_the_page_reached(participant):
     through_to(participant, 2)
 
-    hub = shown(participant, "/")
+    hub = shown(participant, "/hub/")
 
     assert hub.count("Before we begin</a>") == 1
     assert f'href="{SECOND}"' in hub
@@ -481,7 +481,7 @@ def test_the_hub_shows_a_paged_section_once_and_leads_to_the_page_reached(partic
 
 @pytest.mark.django_db
 def test_the_hub_leads_to_the_first_page_until_the_participant_goes_on(participant):
-    assert f'href="{FIRST}"' in shown(participant, "/")
+    assert f'href="{FIRST}"' in shown(participant, "/hub/")
 
 
 # Every other way to a section leads to the page reached, as the hub does
@@ -544,12 +544,12 @@ def test_before_a_sort_is_in_the_results_page_leads_to_the_page_the_sort_is_on(
 @pytest.mark.django_db
 def test_progress_counts_a_sections_blocks_wherever_they_sit(participant):
     """✨ The rating and "why" on the first page, the story on the second, and the calling statement."""
-    assert "0 of 4 answered" in shown(participant, "/")
+    assert "0 of 4 answered" in shown(participant, "/hub/")
 
     through_to(participant, 2)
     save(participant, "story", "It began in a small town.")
 
-    assert "2 of 4 answered" in shown(participant, "/")
+    assert "2 of 4 answered" in shown(participant, "/hub/")
 
 
 @pytest.mark.django_db
@@ -558,5 +558,5 @@ def test_a_paged_sections_estimate_is_said_once_for_the_whole_section(signed_in_
     document["content"]["sections"][0]["estimate"] = "About 3 minutes"
     load_pathway(document)
 
-    assert shown(signed_in_client, "/").count("About 3 minutes") == 1
+    assert shown(signed_in_client, "/hub/").count("About 3 minutes") == 1
     assert "Whole section: About 3 minutes" in shown(signed_in_client)

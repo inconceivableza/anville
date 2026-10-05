@@ -118,12 +118,16 @@ _Avoid_: normalised score, percentage score.
 The person completing a pathway, who owns their responses and controls what is shared.
 _Avoid_: user, client, respondent, coachee.
 
+**Display name**:
+The name a participant gives at sign-up, kept on their account, by which their own results, their observers and their coach name them. Never unique, and never used to find anyone. An account without one is named by the part of its email before the @.
+_Avoid_: username, first name (the sign-up form's label, not the concept), nickname.
+
 **Observer**:
 An invited person who answers the pathway's instrument *about* a participant, in wording addressed to them, without an account.
 _Avoid_: trusted contact, respondent, rater, referee.
 
 **Invitation**:
-A participant's revocable, expiring grant to one named person to act as an observer, carried by a link unique to that person.
+A participant's revocable, expiring grant to one named person to act as an observer, or to their coach to accept or decline the coach's commitments, carried by a link unique to that person. Each kind of link works only for its own. Once accepted, a coach's link also shows the participant's results and comparison while the participant consents.
 _Avoid_: invite link, survey link, access code.
 
 **Coach**:
@@ -161,7 +165,7 @@ A participant's self-result beside their observer average.
 _Avoid_: gap analysis, 360.
 
 **Enrolment code**:
-A shared code that admits a person to sign up to a deployment. It grants access only and never stands in for consent.
+A shared code that admits a person to sign up to a deployment, required unless the deployment turns it off. It grants access only and never stands in for consent.
 _Avoid_: invite code, access code, password.
 
 **Consent**:

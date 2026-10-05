@@ -119,7 +119,7 @@ def test_the_seeded_participant_signs_in_with_the_seed_password_and_reaches_the_
     signed_in_page = client.post("/accounts/login/", {"login": email, "password": SEED_PASSWORD}, follow=True)
 
     assert signed_in_page.status_code == 200
-    assert signed_in_page.redirect_chain[-1][0] == "/"
+    assert signed_in_page.redirect_chain[-1][0] == "/hub/"
 
 
 @pytest.mark.django_db
@@ -158,7 +158,7 @@ def test_an_observers_written_answer_is_on_none_of_the_participants_pages(signed
     response = Response.objects.get(participant=participant)
     an_observer(response, complete_sort(), written_answers={"struggles": "Saying no to people."})
 
-    pages = [signed_in.get("/"), signed_in.get(f"/sections/{STRENGTHS}/"), results(signed_in)]
+    pages = [signed_in.get("/hub/"), signed_in.get(f"/sections/{STRENGTHS}/"), results(signed_in)]
 
     for page in pages:
         assert page.status_code == 200

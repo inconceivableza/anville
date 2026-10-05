@@ -624,7 +624,7 @@ def test_completing_section_1_does_not_complete_the_strengths_assessment(partici
 
 @pytest.mark.django_db
 def test_every_section_appears_on_the_hub_with_the_strengths_assessment_after_section_1(participant):
-    page = participant.get("/").content.decode()
+    page = participant.get("/hub/").content.decode()
 
     assert escape("Section 1: How you've been designed") in page
     assert "Strengths assessment" in page
@@ -651,7 +651,7 @@ def test_the_sections_with_no_activity_yet_still_say_what_they_are_for(participa
 
 @pytest.mark.django_db
 def test_progress_counts_what_the_participant_does_and_not_the_prose_or_the_link(participant):
-    page = participant.get("/").content.decode()
+    page = participant.get("/hub/").content.decode()
 
     # ✨ the reason, four ratings and the contact list; Section 1's reading and reflection; the sort; the calling
     # reading and statement; the letter and four more
@@ -761,7 +761,7 @@ def test_progress_follows_the_participant_to_a_second_device(participant, django
     second_device.force_login(django_user_model.objects.get(username="participant"))
 
     assert A_STATEMENT in second_device.get("/sections/calling/").content.decode()
-    assert "Complete" in second_device.get("/").content.decode()
+    assert "Complete" in second_device.get("/hub/").content.decode()
 
 
 # Editing the document: the file is the app's content

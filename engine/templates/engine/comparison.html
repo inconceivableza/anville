@@ -1,9 +1,7 @@
 {% extends "engine/base.html" %}
 {% comment %}
-  ✨ The participant's stored result beside their observers' means, as the prototype's comparison screen showed it,
-  in the results page's wording and colours, with how far the observers agree on each, then the largest gaps and the
-  questions to reflect on. Below the minimum there is a count and no numbers at all. Neither state names who has
-  answered.
+  ✨ The participant's comparison, then, once their coach has accepted, the consent for the coach to see it and the
+  results (ticket 27).
 {% endcomment %}
 {% block head_title %}How others experience you{% endblock head_title %}
 
@@ -11,90 +9,8 @@
   <p class="back-to-hub"><a href="{% url 'results' block_id %}">← Back to results</a></p>
   <h1>How others experience you</h1>
 
-  {% if illustrative %}
-    <p class="comparison-illustrative" role="note">This comparison is illustrative: every answer in it is test data, not from someone who knows you.</p>
-  {% endif %}
+  {# ✨ First, so the participant meets the choice before reading on. #}
+  {% if coach %}{% include "engine/coach_share.html" %}{% endif %}
 
-  {% if frameworks is None %}
-    <p class="results-desc">Comparing your self-assessment with the averaged responses of people who know you.</p>
-    <section class="results-section comparison-waiting">
-      <h2>Not enough answers yet</h2>
-      <p>You need at least <strong>{{ minimum }} people</strong> to complete the strengths survey about you before we can show a meaningful comparison.</p>
-      <p><strong>{{ observers }} of {{ minimum }}</strong> have answered so far.</p>
-      <p><a class="btn btn-primary" href="{% url 'invitations' %}">Invite people who know you →</a></p>
-    </section>
-  {% else %}
-    <p class="results-desc">Comparing your self-assessment with the averaged responses of {{ observers }} people who know you.</p>
-    <p class="comparison-legend"><span class="comparison-key-you">You</span> <span class="comparison-key-others">Others (average)</span></p>
-
-    {% for framework in frameworks %}
-      <section class="results-section">
-        <h2>{{ framework.heading }}</h2>
-        {% if framework.subtitle %}<p class="results-desc">{{ framework.subtitle }}</p>{% endif %}
-
-        {% for bar in framework.bars %}
-          <div class="comparison-pair">
-            <p class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</p>
-            <div class="comparison-bar-row">
-              <span class="comparison-who {{ bar.colour }}">You</span>
-              <svg class="result-bar-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-                <rect class="bar-fill {{ bar.colour }}" width="{{ bar.percent }}" height="10" />
-              </svg>
-              <span class="result-bar-score {{ bar.colour }}">{{ bar.percent }}%</span>
-            </div>
-            <div class="comparison-bar-row">
-              <span class="comparison-who comparison-others">Others</span>
-              <svg class="result-bar-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-                <rect class="bar-fill comparison-others" width="{{ bar.others }}" height="10" />
-              </svg>
-              <span class="result-bar-score comparison-others">{{ bar.others }}%</span>
-            </div>
-            <p class="comparison-agreement">{{ bar.agreement }}</p>
-            <details class="distribution">
-              <summary>See how the {{ observers }} people who answered see this</summary>
-              <svg class="distribution-drawing" viewBox="0 0 100 12" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-                <rect class="distribution-band {{ bar.strip.colour }}" x="{{ bar.strip.band_start }}" y="3" width="{{ bar.strip.band_width }}" height="6" />
-                {% for dot in bar.strip.dots %}
-                  <rect class="{{ bar.strip.colour }}" x="{{ dot }}" y="3" width="{{ bar.strip.dot_width }}" height="6" />
-                {% endfor %}
-                <rect class="distribution-yours" x="{{ bar.strip.yours }}" y="0" width="{{ bar.strip.yours_width }}" height="12" />
-              </svg>
-              <p class="distribution-key" aria-hidden="true"><span class="distribution-yours-key"></span> You ({{ bar.percent }}%)</p>
-              {% comment %}✨ The values, lowest first, as text for everyone and for screen readers; the drawing is hidden from them.{% endcomment %}
-              <p class="distribution-caption">Each person's percent, lowest first:</p>
-              <ol class="distribution-values">
-                {% for value in bar.strip.values %}<li>{{ value }}%</li>{% endfor %}
-              </ol>
-            </details>
-          </div>
-        {% endfor %}
-      </section>
-    {% endfor %}
-
-    {% if gaps %}
-      <section class="results-section">
-        {% if gaps_heading %}<h2>{{ gaps_heading }}</h2>{% endif %}
-        {% if gaps_intro %}<p class="results-desc">{{ gaps_intro }}</p>{% endif %}
-        {% for gap in gaps %}
-          <div class="gap-card">
-            <div class="gap-card-header">
-              <span class="gap-card-construct">{{ gap.label }} <span class="gap-card-framework">({{ gap.framework }})</span></span>
-              {% if gap.badge %}<span class="gap-card-badge {{ gap.badge_class }}">{{ gap.badge }} (+{{ gap.gap }})</span>{% endif %}
-            </div>
-            <p class="gap-card-desc">{{ gap.description }}</p>
-          </div>
-        {% endfor %}
-      </section>
-    {% endif %}
-
-    {% if prompts %}
-      <section class="results-section">
-        {% if prompts_heading %}<h2>{{ prompts_heading }}</h2>{% endif %}
-        {% if prompts_intro %}<p class="results-desc">{{ prompts_intro }}</p>{% endif %}
-        {% for prompt in prompts %}
-          <div class="reflection-prompt"><p><strong>{{ prompt.title }}:</strong> {{ prompt.text }}</p></div>
-        {% endfor %}
-      </section>
-    {% endif %}
-  {% endif %}
+  {% include "engine/comparison_body.html" %}
 {% endblock content %}

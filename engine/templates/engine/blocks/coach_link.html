@@ -1,0 +1,46 @@
+{% comment %}
+  ✨ The coach's link on the coach checklist's "is your coach" screen (ticket 13c): issue, copy, revoke and reissue it
+  as for observers, and the coach's answer, without detail. The buttons sit within the checklist's form, so each
+  names its own address (`formaction` without JavaScript, `hx-post` with), and the page the issuing leads back to
+  swaps in this checklist alone. Only the link's hash is kept, so a link is shown once, as it is issued.
+{% endcomment %}
+<div class="coach-link"{% if link.answer %} data-coach-answer="{{ link.answer }}"{% endif %}>
+  {% if link.answer == "accepted" %}
+    <p><strong>{{ coach.name }} has accepted.</strong> They've agreed to all {{ checklist.count }} commitments.</p>
+  {% elif link.answer == "declined" %}
+    <p>They've said they can't commit to all {{ checklist.count }}. That's a good answer, not a failure: far better now than halfway through.</p>
+    <p>You can choose someone else, or carry on without a coach.</p>
+  {% else %}
+    <p>The next step is to ask {{ coach.name }} properly. Send them a link: it explains what's involved and asks them to commit to the same {{ checklist.count }} things you've just weighed up. They can accept or decline, and you'll be told either way.</p>
+  {% endif %}
+  {% if link.issued %}
+    <div class="name-section invitation-link">
+      <label for="coach-link-{{ block.id }}">Send this to {{ coach.name }}:</label>
+      <div class="invitation-link-row">
+        {# ✨ Owned by no form (no element has that id), so Enter here submits nothing: within the checklist's form it would press its first button, reissuing the link just copied. #}
+        <input type="text" id="coach-link-{{ block.id }}" value="{{ link.issued }}" readonly autofocus form="coach-link-{{ block.id }}-in-no-form">
+        <button type="button" class="btn btn-primary invitation-copy" data-copy="coach-link-{{ block.id }}">Copy</button>
+      </div>
+      <p>This link is shown only this once. If you lose it, reissue it.</p>
+    </div>
+  {% endif %}
+  {% if link.answer == "waiting" %}
+    <p class="invitation-status">Waiting for {{ coach.name }} to answer. The link works until {{ link.invitation.expires_at|date:"j F Y" }}.</p>
+  {% endif %}
+  {% comment %}
+    ✨ Offered after an answer too: reissuing asks again, and revoking stops the link, taking the answer with it, since
+    it belongs to the link it came through.
+  {% endcomment %}
+  <div class="coach-buttons">
+    {% url 'issue_invitation' link.contact_id as issue %}
+    <button type="submit" formaction="{{ issue }}" hx-post="{{ issue }}" hx-target="#block-{{ block.id }}"
+            hx-select="#block-{{ block.id }}" hx-swap="outerHTML" class="btn btn-secondary">
+      {% if link.invitation %}Reissue link{% else %}Get a link for {{ coach.name }}{% endif %}
+    </button>
+    {% if link.invitation %}
+      {% url 'revoke_invitation' link.contact_id as revoke %}
+      <button type="submit" formaction="{{ revoke }}" hx-post="{{ revoke }}" hx-target="#block-{{ block.id }}"
+              hx-select="#block-{{ block.id }}" hx-swap="outerHTML" class="btn btn-secondary">Revoke link</button>
+    {% endif %}
+  </div>
+</div>

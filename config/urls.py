@@ -20,9 +20,12 @@ from django.urls import include, path, re_path
 from access.views import consent, password_reset_unavailable
 from config.health import healthz
 from engine.views import (
+    answer_coaching,
     coach_checklist,
+    coaching,
     comparison,
     complete_section,
+    home,
     hub,
     invitations,
     issue_invitation,
@@ -35,6 +38,7 @@ from engine.views import (
     save_answer,
     section,
     send_assessment,
+    share_with_coach,
     start,
     start_observing,
     visit_comparison,
@@ -53,6 +57,7 @@ urlpatterns = [
     path("results/<slug:block_id>/", results, name="results"),
     path("results/<slug:block_id>/comparison/", comparison, name="comparison"),
     path("results/<slug:block_id>/comparison/visit/", visit_comparison, name="visit_comparison"),
+    path("results/<slug:block_id>/comparison/coach/", share_with_coach, name="share_with_coach"),
     path("invitations/", invitations, name="invitations"),
     path("invitations/<int:contact_id>/issue/", issue_invitation, name="issue_invitation"),
     path("invitations/<int:contact_id>/revoke/", revoke_invitation, name="revoke_invitation"),
@@ -62,10 +67,14 @@ urlpatterns = [
     path("observe/<str:token>/", observe, name="observe"),
     path("observe/<str:token>/start/", start_observing, name="start_observing"),
     path("observe/<str:token>/assessment/", send_assessment, name="send_assessment_by_link"),
+    # ✨ The coach's link (ticket 13c), apart from the observers', so neither kind of link works at the other's address.
+    path("coaching/<str:token>/", coaching, name="coaching"),
+    path("coaching/<str:token>/answer/", answer_coaching, name="answer_coaching"),
     path("sections/<slug:section_id>/", section, name="section"),
     path("sections/<slug:section_id>/pages/<int:page>/", section, name="section_page"),
     path("sections/<slug:section_id>/pages/<int:page>/continue/", move_past_page, name="move_past_page"),
     path("sections/<slug:section_id>/complete/", complete_section, name="complete_section"),
     path("sections/<slug:section_id>/reopen/", reopen_section, name="reopen_section"),
-    path("", hub, name="hub"),
+    path("hub/", hub, name="hub"),
+    path("", home, name="home"),
 ]

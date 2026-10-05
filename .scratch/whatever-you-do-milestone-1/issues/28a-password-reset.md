@@ -6,7 +6,7 @@
 
 **Status:** needs-triage
 
-**Sprint:** 2b (12–16 Oct), on staging's temporary email (2 Oct demo)
+**Sprint:** 2b (12–16 Oct), on staging's temporary email
 
 **Parent:** whatever-you-do-milestone-1 spec (Out of Scope: "Account-level features beyond sign-up and login: password reset, Google sign-in and a production identity provider"). After milestone 1; not in the cut order
 

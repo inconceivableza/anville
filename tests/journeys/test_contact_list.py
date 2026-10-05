@@ -299,11 +299,11 @@ def test_the_gate_keeps_up_with_each_save(participant):
 
 @pytest.mark.django_db
 def test_a_contact_list_counts_towards_progress_once_anyone_is_on_it(participant):
-    assert "0 of 3 answered" in participant.get("/").content.decode()  # ✨ the test pathway's two, and this
+    assert "0 of 3 answered" in participant.get("/hub/").content.decode()  # ✨ the test pathway's two, and this
 
     save_contacts(participant, JO)
 
-    assert "1 of 3 answered" in participant.get("/").content.decode()
+    assert "1 of 3 answered" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db

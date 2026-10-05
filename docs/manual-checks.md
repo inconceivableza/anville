@@ -16,11 +16,27 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 | Reduced motion | DevTools, the ⋮ menu, More tools, Rendering, then "Emulate CSS media feature prefers-reduced-motion: reduce". |
 | Phone width | DevTools' device toolbar (⌘⇧M), at a width around 375px. |
 
+## The homepage (`/`, signed out and signed in)
+
+- Side by side with the prototype's homepage (`Prototypes for reference/original-prototype.html`) and its newer "How it works" (`how-it-works-homepagesection.html`), the words match. The only differences: "anonymously" is gone from step 1, the Churches, Writing, Newsletter, Team, Go further, Donate and Contact sections are gone, and so are the footer's Privacy Policy and Terms links.
+- The forest video plays muted and loops, with no sound and no controls. With the video blocked (DevTools, Network, right-click `hero.mp4`, "Block request URL", then reload), the still frame shows in its place.
+- Reduced motion, and without JavaScript: the still frame shows from the start and the forest never moves, not even for a moment.
+- In "How it works", steps 2–4 have greyed mockups, each labelled "In the workbook"; their words and times are as easy to read as step 1's.
+- The round menu button stays visible over the video and over the white and pale sections below it. It opens a panel listing About, How it works and Impact only, and each link scrolls to its section and closes the panel.
+- Without JavaScript, the menu still opens and its links still scroll.
+- Keyboard only: Tab reaches the menu button first, Enter opens it, and the focus ring shows on it and on each link.
+- DevTools, Network, reload: every request goes to this site (no Google Fonts, nothing else).
+- On a wide screen, About's text is centred in a narrower column than How it works' steps, and Impact is centred beneath them.
+- Phone width: the headline fits without sideways scrolling, step 4's four-column roadmap is still legible, the Begin buttons are easy to tap, each step's mockup sits above its words, and the impact figures stay beside their text.
+- Signed out, both "Begin →" buttons open sign-up; signed in, both open the hub. Signing in, and agreeing to consent, both land on the hub, not the homepage.
+
 ## Sign up
 
 - "I am 18 or over" sits beside its checkbox, as "Remember me" does on sign in.
 - Submitting with it unticked: the browser stops the form and points at the box. Without JavaScript the same happens, since the check is the browser's own `required`.
 - Keyboard only: Tab reaches the box and Space ticks it.
+- "First name" comes first, with "e.g. Ed" as its placeholder, and the browser offers nothing saved for it.
+- With `ANVILLE_ENROLMENT_REQUIRED=false` there is no enrolment code field; with it left out, the field sits after the email.
 
 ## Consent
 
@@ -64,12 +80,36 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 - Going ahead (all Yes, or "I'm still confident — ask Sam"): beneath the gold box come "Their name" (already holding the first name typed on the intro), "Their email", the tick "I've spoken to this person and they're happy to receive a link from me about coaching me through this course.", a full-width "Save Sam as your coach", then "Choose someone else". The two boxes look like the intro's name box; the tick sits beside its words, not above them.
 - Saving with the box unticked says "Tick the box to confirm you've spoken to them." beneath the tick, with the name and email kept as typed; a bad address (`sam`, `sam@`, `sam@example`) says "Check their email address." and the email box turns red. Nothing is saved either way.
-- Saving shows "Sam is your coach" with their email, "Choose someone else" and "Remove", without reloading the page. A reload, or coming back through the hub, shows the same.
+- Saving shows "You've chosen Sam" with their email, "Choose someone else" and "Remove", without reloading the page. A reload, or coming back through the hub, shows the same.
 - Before a coach is kept, the page's way on beneath the checklist is a secondary "I'll sort this later →", so it never reads as a second "Continue →" under the checklist's own. Saving turns it into the primary "Continue with Sam →" without a reload, with no jump; "Remove" turns it back. Pressing "I'll sort this later →" with details typed but not saved leaves no coach.
-- "Choose someone else" starts the checklist again, with "Sam stays your coach until you save someone else." and "Keep Sam" beneath its "Continue →"; the page's way on still reads "Continue with Sam →", so no two buttons say the same thing. Enter in the name box goes on to the questions, not "Keep Sam". "Keep Sam" goes back to "Sam is your coach". A reload before saving anyone new still shows the coach saved before. "Remove" goes back to the intro, and a reload shows the intro.
+- "Choose someone else" starts the checklist again, with "Sam stays your coach until you save someone else." and "Keep Sam" beneath its "Continue →"; the page's way on still reads "Continue with Sam →", so no two buttons say the same thing. Enter in the name box goes on to the questions, not "Keep Sam". "Keep Sam" goes back to "You've chosen Sam" (or "Sam is your coach" once they have accepted). A reload before saving anyone new still shows the coach saved before. "Remove" goes back to the intro, and a reload shows the intro.
 - Without JavaScript: saving and "Remove" come back to the coach page at the checklist; a refused save comes back as the whole coach page with its reason.
 - Screen reader: the refusal is announced; a refused field is announced as invalid when Tab reaches it.
 - Phone width: the details and buttons fill the card's width.
+
+## The coach's link (ticket 13c)
+
+- "You've chosen Sam" says the next step is to ask them properly, with "Get a link for Sam". Pressing it shows the link once beneath, with "Copy", "Waiting for Sam to answer. The link works until …", "Reissue link" and "Revoke link", without reloading the page; the link box has focus. "Copy" says "Copied". A reload shows no link, only the status.
+- Enter in the link box does nothing: the link stays the same and still works (with and without JavaScript).
+- Without JavaScript: "Get a link for Sam", "Reissue link" and "Revoke link" each come back to the coach page at the checklist, the link shown once after issuing.
+- In a private window, the link shows "participant has asked you to be their coach" (the participant's display name), the two authored paragraphs, "What you'd be agreeing to" and the six promises, each with its note in smaller type and a box to its left; the box or its words tick it. The line on what is kept sits above "Accept →" and "I can't commit to all of this".
+- "Accept →" with a box unticked says "Tick all six to accept…" with the boxes as they were. All six ticked: "Thank you — participant will be told" and the authored line; a reload shows the same, never the boxes again.
+- "I can't commit to all of this" (any boxes ticked): "That's a good answer" and the two authored paragraphs.
+- Back on the coach page after an accept: "Sam is your coach" in the gold card, with "Sam has accepted." After a decline, the card turns amber: "Sam isn't able to be your coach", choosing someone else or carrying on without a coach, "Choose someone else" as the primary button, and the page's way on reads "Continue without a coach →". Neither says which boxes were ticked.
+- Saving another coach, or "Remove", then opening Sam's old link: "This link does not work". So too a revoked link, and Sam's link at `/observe/…` in place of `/coaching/…`.
+- Keyboard only: Tab reaches each box, then Accept, then decline; Space ticks a box.
+- Phone width: the promises wrap beside their boxes; the buttons fill the card's width.
+
+## The coach sees the results and comparison (ticket 27)
+
+- After accepting, the coach's link shows "What happens next" in a pale box within the gold card, "Sam finishes the strengths assessment and sends it to you. You'll get the results, and how others rate the same strengths. They'll appear on this page, so keep the link." It promises no guide or email.
+- On the comparison, with Sam chosen but not yet accepted: "Once Sam accepts being your coach…" with "Your coach page →", in a card at the top, just under "How others experience you", and no box. Once Sam has accepted, in that card at the top: "Give my coach access to my results and this comparison", unticked, and beneath it, lined up under the label's words, "Sam will see your results and the comparison below, which may update if more people answer.", the same however many have answered; no Save button. The tick looks like the coach details' "I've spoken to this person…" tick: same size, normal weight, a gap between box and words, the box level with the first line. Opening the comparison by its typed address, without pressing "Compare with how others see you →" first, shows no box and no empty panel. After Sam declines, the comparison says nothing of Sam. Once Sam's accepted link expires (in the Django shell, set that `Invitation`'s `expires_at` to the past), the comparison says the link has expired, and the hub no longer offers to let them see the results.
+- Ticking saves at once: "Saved" at the card's foot, as autosaved answers show it, and the line becomes "Sam can see your results and the comparison below, which may update if more people answer. Untick to stop sharing." without a reload. Unticking saves at once too and turns the line back. With the network off (devtools, Offline), ticking says "Not saved. Check your connection, then try again." Without JavaScript, a "Save" button shows and does the same, coming back to the box. In a private window Sam's link now shows, below the gold card and in place of "What happens next", "participant's results", a line saying the participant is happy for them to see this, the results as the participant sees them (item scores included), then "How others experience participant" and the comparison, whose own sentences, legend and bars say "participant" where the participant's say "you" (the pathway's authored headings, gaps and questions still say "you"). Below the minimum: "Not enough answers yet" with the count, and no "Invite people who know you →".
+- The coach's page has no form, button or link that changes anything of the participant's.
+- Unticking and saving, then reloading Sam's link: "What happens next" again, and no results.
+- The hub, beneath "Invite others to assess you →": before a coach is chosen, a white "🧭 Your Coach · Add →" card, "You haven't added a coach yet…", that leads to the coach page at the checklist and turns green-edged on hover and keyboard focus. Once Sam is chosen, a link to the same place instead, saying where things stand: "You've chosen Sam: send Sam a link →", "Waiting for Sam to answer →", "Sam is your coach →" or "Sam isn't able to be your coach →", with "Sam can see your results and comparison." beneath while that stands. The faithful port's hub shows neither.
+- Phone width: the shared results and comparison on Sam's link fit as on the participant's own pages.
+- As an observer, in a private window: the privacy notice says the participant may also show what they see to a trusted third party (load the pathway again first).
 
 ## The gate and "Mark complete"
 

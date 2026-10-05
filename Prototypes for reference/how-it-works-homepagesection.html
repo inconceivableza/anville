@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it works — homepage section</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,600;1,6..72,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#1a7a4c; --gold-light:#2e9e66; --gold-pale:#e8f5ee; --deep:#0f5c3c;
+  --ink:#1a2b20; --ink-muted:#5a6b60; --ink-light:#7a8b80;
+  --cream:#f4f7f5; --white:#fff; --border:#d0ddd4;
+  --blue:#4A7FB5; --blue-pale:#eaf1f8; --plum:#7B5EA7; --plum-pale:#f1ecf7;
+  --rose:#C25B56; --sand:#B8860B; --moss:#5B8C5A;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--cream);color:var(--ink);
+  font-family:'Instrument Sans',-apple-system,sans-serif;font-size:15px;line-height:1.5;}
+
+.section{padding:72px 24px;}
+.inner{max-width:920px;margin:0 auto;}
+.eyebrow{font-family:'Instrument Sans',sans-serif;font-size:11px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.14em;color:var(--ink-muted);margin-bottom:14px;}
+h2{font-family:'Newsreader',Georgia,serif;font-size:34px;font-weight:600;
+  line-height:1.2;margin:0 0 14px;letter-spacing:-.01em;max-width:640px;}
+.lede{font-size:16px;color:var(--ink-muted);line-height:1.7;max-width:600px;margin:0 0 10px;}
+
+/* ---------- time commitment ---------- */
+.commit{background:var(--white);border:1px solid var(--border);border-radius:16px;
+  padding:26px 28px;margin:36px 0 52px;}
+.commit-top{display:flex;gap:34px;flex-wrap:wrap;padding-bottom:20px;
+  border-bottom:1px solid var(--border);margin-bottom:18px;}
+.commit-fig{flex:1;min-width:190px;}
+.commit-num{font-family:'Newsreader',Georgia,serif;font-size:34px;font-weight:600;
+  color:var(--gold);line-height:1.1;}
+.commit-num span{font-size:19px;font-weight:400;}
+.commit-lab{font-size:13.5px;color:var(--ink-muted);line-height:1.55;margin-top:3px;}
+.commit-break{display:flex;flex-wrap:wrap;gap:10px 28px;}
+.cbit{display:flex;gap:9px;align-items:baseline;font-size:13.5px;color:var(--ink-muted);}
+.cbit b{color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;}
+.commit-note{font-size:13.5px;color:var(--ink-muted);line-height:1.65;
+  margin:16px 0 0;padding-top:16px;border-top:1px solid var(--border);}
+.commit-note b{color:var(--ink);}
+
+/* ---------- steps ---------- */
+.step{display:grid;grid-template-columns:1fr 1fr;gap:44px;align-items:center;
+  padding:40px 0;border-top:1px solid var(--border);}
+.step:nth-child(even) .step-vis{order:-1;}
+.step-num{font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:700;
+  color:var(--gold);letter-spacing:.1em;margin-bottom:9px;}
+.step h3{font-family:'Newsreader',Georgia,serif;font-size:25px;font-weight:600;
+  line-height:1.25;margin:0 0 11px;}
+.step p{font-size:15px;color:var(--ink-muted);line-height:1.7;margin:0 0 12px;}
+.step-time{display:inline-flex;align-items:center;gap:7px;background:var(--cream);
+  border-radius:999px;padding:6px 14px;font-size:12.5px;color:var(--ink-muted);}
+.step-time b{color:var(--ink);}
+
+/* ---------- mockups ---------- */
+.shot{background:var(--white);border:1px solid var(--border);border-radius:14px;
+  padding:16px;box-shadow:0 10px 30px rgba(15,92,60,.07);}
+.shot-bar{display:flex;gap:4px;margin-bottom:12px;}
+.shot-bar i{width:7px;height:7px;border-radius:50%;background:var(--border);}
+.m-title{font-family:'Instrument Sans',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:.08em;color:var(--ink-light);margin-bottom:9px;}
+
+/* 1 — comparison bars */
+.m-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.m-name{width:58px;font-size:10.5px;font-weight:600;color:var(--ink);}
+.m-track{flex:1;height:9px;background:var(--cream);border-radius:5px;overflow:hidden;}
+.m-fill{height:100%;border-radius:5px;}
+.m-pct{width:26px;text-align:right;font-size:10px;font-weight:700;color:var(--ink-muted);}
+.m-key{display:flex;gap:12px;font-size:9.5px;color:var(--ink-light);margin-top:10px;}
+.m-key i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;}
+.m-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:11px;padding-top:11px;
+  border-top:1px solid var(--border);}
+.m-chip{background:var(--blue-pale);color:var(--blue);border-radius:999px;
+  padding:3px 9px;font-family:'Newsreader',Georgia,serif;font-size:11.5px;}
+
+/* 2 — timeline */
+.m-tl{position:relative;padding-left:17px;}
+.m-tl:before{content:'';position:absolute;left:4px;top:5px;bottom:5px;
+  width:1.5px;background:var(--border);}
+.m-ch{position:relative;margin-bottom:9px;}
+.m-node{position:absolute;left:-17px;top:4px;width:9px;height:9px;border-radius:50%;
+  background:var(--white);border:2px solid var(--gold);}
+.m-ch-lab{font-family:'Newsreader',Georgia,serif;font-size:12.5px;font-weight:600;}
+.m-dots{display:flex;gap:3px;margin-top:4px;}
+.m-dot{width:13px;height:13px;border-radius:50%;}
+
+/* 3 — calling sentence */
+.m-sent{font-family:'Newsreader',Georgia,serif;font-size:13px;line-height:2;color:var(--ink-muted);}
+.m-slot{background:var(--gold-pale);color:var(--ink);border-radius:4px;
+  padding:1px 6px;font-weight:600;}
+.m-ideas{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px;padding-top:11px;
+  border-top:1px solid var(--border);}
+.m-idea{border-radius:7px;padding:5px 9px;font-size:10.5px;line-height:1.3;}
+
+/* 4 — roadmap */
+.m-q{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;}
+.m-qc{background:var(--cream);border-radius:7px;padding:7px 5px;min-height:62px;}
+.m-ql{font-size:8.5px;font-weight:700;color:var(--ink-light);text-align:center;
+  margin-bottom:5px;letter-spacing:.04em;}
+.m-card{background:var(--white);border-radius:4px;padding:4px 5px;margin-bottom:3px;
+  font-size:8.5px;line-height:1.3;color:var(--ink);border-left:2px solid var(--gold);}
+
+/* ---------- coach thread ---------- */
+.thread{background:var(--deep);border-radius:16px;padding:30px 32px;
+  margin-top:44px;color:#fff;display:grid;grid-template-columns:1fr 1fr;
+  gap:32px;align-items:center;}
+.thread .step-num{color:rgba(255,255,255,.6);}
+.thread h3{font-family:'Newsreader',Georgia,serif;font-size:25px;font-weight:600;
+  margin:0 0 11px;line-height:1.25;}
+.thread p{font-size:15px;line-height:1.7;color:rgba(255,255,255,.82);margin:0 0 12px;}
+.thread .step-time{background:rgba(255,255,255,.12);color:rgba(255,255,255,.8);}
+.thread .step-time b{color:#fff;}
+.t-shot{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;padding:15px;}
+.t-line{display:flex;gap:9px;align-items:flex-start;padding:8px 0;
+  border-top:1px solid rgba(255,255,255,.1);font-size:11.5px;line-height:1.5;
+  color:rgba(255,255,255,.85);}
+.t-line:first-child{border-top:none;}
+.t-tick{width:15px;height:15px;border-radius:4px;background:var(--gold-light);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:9px;color:#fff;margin-top:1px;}
+
+/* ---------- close ---------- */
+.close{text-align:center;margin-top:52px;padding-top:44px;border-top:1px solid var(--border);}
+.close p{font-family:'Newsreader',Georgia,serif;font-size:21px;line-height:1.5;
+  max-width:440px;margin:0 auto 22px;}
+.btn{background:var(--gold);color:#fff;border:none;border-radius:10px;
+  padding:16px 40px;font-family:inherit;font-size:16px;font-weight:600;cursor:pointer;}
+.btn:hover{background:var(--gold-light);}
+.close-sub{font-size:13px;color:var(--ink-light);margin-top:13px;}
+
+/* ---------- notes ---------- */
+.notes{max-width:920px;margin:60px auto 0;background:var(--white);
+  border:1px solid var(--border);border-radius:14px;padding:24px;}
+.notes h2{font-size:18px;margin-bottom:6px;}
+.notes h3{margin:18px 0 8px;color:var(--gold);font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;}
+.notes p,.notes li{font-size:14px;color:var(--ink-muted);line-height:1.65;}
+.notes table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0;}
+.notes th,.notes td{padding:7px 9px;border:1px solid var(--border);text-align:left;}
+.notes th{background:var(--cream);font-weight:600;font-size:12px;}
+
+@media(max-width:780px){
+  .step,.thread{grid-template-columns:1fr;gap:24px;}
+  .step:nth-child(even) .step-vis{order:0;}
+  .step-vis{order:-1;}
+  h2{font-size:27px;}
+  .section{padding:52px 20px;}
+}
+</style>
+</head>
+<body>
+
+<section class="section">
+<div class="inner">
+
+  <div class="eyebrow">How it works</div>
+  <h2>Four steps, a few hours, and someone walking it with you</h2>
+  <p class="lede">The steps below describe the Whatever You Do course. As an organisation we're about vocational discipleship more broadly — but this is the thing you can start today.</p>
+
+  <!-- TIME COMMITMENT -->
+  <div class="commit">
+    <div class="commit-top">
+      <div class="commit-fig">
+        <div class="commit-num">3–4<span> hours</span></div>
+        <div class="commit-lab">of your own time, in sittings of twenty minutes or so</div>
+      </div>
+      <div class="commit-fig">
+        <div class="commit-num">6–8<span> weeks</span></div>
+        <div class="commit-lab">from start to finish, at an unhurried pace</div>
+      </div>
+      <div class="commit-fig">
+        <div class="commit-num">3<span> conversations</span></div>
+        <div class="commit-lab">with a coach of your choosing, about an hour each</div>
+      </div>
+    </div>
+    <div class="commit-break">
+      <div class="cbit"><b>30 min</b> Strengths assessment</div>
+      <div class="cbit"><b>20 min</b> Written questions</div>
+      <div class="cbit"><b>40 min</b> Your life timeline</div>
+      <div class="cbit"><b>50 min</b> Putting it into words</div>
+      <div class="cbit"><b>40 min</b> Building your plan</div>
+    </div>
+    <p class="commit-note"><b>The calendar time is longer than the working time, deliberately.</b>
+      You're waiting on people — for your contacts to answer, for your coach to find an hour — and the
+      thinking needs a few nights to settle. Nothing expires, and you can stop wherever you like and pick it up later.</p>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step">
+    <div class="step-copy">
+      <div class="step-num">STEP ONE</div>
+      <h3>Find out what other people see</h3>
+      <p>Sort 36 cards to map your gifts, then answer six questions in your own words. Five people who know you well answer the same questions about you, anonymously.</p>
+      <p>Most people find the gap between the two lists is the most useful thing they take away.</p>
+      <div class="step-time">🕘 <span><b>30 minutes</b>, plus a week or so for people to reply</span></div>
+    </div>
+    <div class="step-vis"><div class="shot">
+      <div class="shot-bar"><i></i><i></i><i></i></div>
+      <div class="m-title">YOU AND THEM</div>
+      <div class="m-row"><span class="m-name">Teacher</span>
+        <span class="m-track"><span class="m-fill" style="width:78%;background:var(--gold)"></span></span>
+        <span class="m-pct">24%</span></div>
+      <div class="m-row"><span class="m-name"></span>
+        <span class="m-track"><span class="m-fill" style="width:92%;background:var(--blue)"></span></span>
+        <span class="m-pct">29%</span></div>
+      <div class="m-row" style="margin-top:9px;"><span class="m-name">Shepherd</span>
+        <span class="m-track"><span class="m-fill" style="width:38%;background:var(--gold)"></span></span>
+        <span class="m-pct">12%</span></div>
+      <div class="m-row"><span class="m-name"></span>
+        <span class="m-track"><span class="m-fill" style="width:62%;background:var(--blue)"></span></span>
+        <span class="m-pct">19%</span></div>
+      <div class="m-key">
+        <span><i style="background:var(--gold)"></i>You</span>
+        <span><i style="background:var(--blue)"></i>Them</span>
+      </div>
+      <div class="m-chips">
+        <span class="m-chip">patient ×4</span>
+        <span class="m-chip">generous ×3</span>
+        <span class="m-chip">steady ×2</span>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step">
+    <div class="step-copy">
+      <div class="step-num">STEP TWO</div>
+      <h3>Read your own life back</h3>
+      <p>Lay your life out in chapters, then mark what happened in each: the doors that opened, the ones that shut, the people who shaped you, and the work that bore fruit.</p>
+      <p>Seen together rather than separately, the threads tend to show themselves.</p>
+      <div class="step-time">🕘 <span><b>40 minutes</b>, and worth doing in two sittings</span></div>
+    </div>
+    <div class="step-vis"><div class="shot">
+      <div class="shot-bar"><i></i><i></i><i></i></div>
+      <div class="m-title">YOUR TIMELINE</div>
+      <div class="m-tl">
+        <div class="m-ch"><span class="m-node"></span>
+          <div class="m-ch-lab">School</div>
+          <div class="m-dots"><span class="m-dot" style="background:var(--rose)"></span>
+            <span class="m-dot" style="background:var(--sand)"></span></div></div>
+        <div class="m-ch"><span class="m-node"></span>
+          <div class="m-ch-lab">University</div>
+          <div class="m-dots"><span class="m-dot" style="background:var(--blue)"></span>
+            <span class="m-dot" style="background:var(--plum)"></span>
+            <span class="m-dot" style="background:var(--rose)"></span></div></div>
+        <div class="m-ch"><span class="m-node"></span>
+          <div class="m-ch-lab">First job</div>
+          <div class="m-dots"><span class="m-dot" style="background:var(--moss)"></span>
+            <span class="m-dot" style="background:var(--plum)"></span>
+            <span class="m-dot" style="background:var(--blue)"></span></div></div>
+        <div class="m-ch" style="margin-bottom:0;"><span class="m-node" style="background:var(--gold)"></span>
+          <div class="m-ch-lab">Now</div>
+          <div class="m-dots"><span class="m-dot" style="background:var(--moss)"></span>
+            <span class="m-dot" style="background:var(--sand)"></span></div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step">
+    <div class="step-copy">
+      <div class="step-num">STEP THREE</div>
+      <h3>Put it into words, then open it back up</h3>
+      <p>Narrow everything down to a single sentence you'd actually stand behind. Then deliberately widen again — the same calling could be lived out in far more ways than the two or three you've already thought of.</p>
+      <div class="step-time">🕘 <span><b>50 minutes</b> across the two parts</span></div>
+    </div>
+    <div class="step-vis"><div class="shot">
+      <div class="shot-bar"><i></i><i></i><i></i></div>
+      <div class="m-title">YOUR CALLING</div>
+      <div class="m-sent">God seems to have designed me to
+        <span class="m-slot">make hard things clear</span> among
+        <span class="m-slot">people starting out</span>, so that
+        <span class="m-slot">they see their work truly</span>.</div>
+      <div class="m-ideas">
+        <span class="m-idea" style="background:var(--blue-pale);color:var(--blue)">Inside a college</span>
+        <span class="m-idea" style="background:var(--plum-pale);color:var(--plum)">Build the tool</span>
+        <span class="m-idea" style="background:var(--gold-pale);color:var(--gold)">Train others</span>
+        <span class="m-idea" style="background:var(--blue-pale);color:var(--blue)">One person a year</span>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step">
+    <div class="step-copy">
+      <div class="step-num">STEP FOUR</div>
+      <h3>Leave with something you'll actually do</h3>
+      <p>Turn all of it into specific actions — steps of faith, skills to grow, character, people to learn from — and place them across the next eighteen months.</p>
+      <p>You finish with a plan on one page, not a feeling that fades by Thursday.</p>
+      <div class="step-time">🕘 <span><b>40 minutes</b></span></div>
+    </div>
+    <div class="step-vis"><div class="shot">
+      <div class="shot-bar"><i></i><i></i><i></i></div>
+      <div class="m-title">YOUR ROADMAP</div>
+      <div class="m-q">
+        <div class="m-qc"><div class="m-ql">Q3</div>
+          <div class="m-card">Ask Sarah to coach me</div>
+          <div class="m-card" style="border-color:var(--moss)">Weekly silence</div></div>
+        <div class="m-qc"><div class="m-ql">Q4</div>
+          <div class="m-card" style="border-color:var(--plum)">Volunteer at college</div></div>
+        <div class="m-qc"><div class="m-ql">Q1</div>
+          <div class="m-card" style="border-color:var(--blue)">Speaking course</div>
+          <div class="m-card">Shadow a trainer</div></div>
+        <div class="m-qc"><div class="m-ql">Q2</div>
+          <div class="m-card" style="border-color:var(--sand)">Run first session</div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- COACH THREAD -->
+  <div class="thread">
+    <div>
+      <div class="step-num">THROUGHOUT</div>
+      <h3>Someone walking it with you</h3>
+      <p>Not a step so much as the thread running through all four. You choose a coach at the start — someone who'll ask good questions rather than tell you what to do — and we send them what they need before each conversation.</p>
+      <p>You can start without one, but almost nobody finishes well alone.</p>
+      <div class="step-time">🕘 <span><b>3 conversations</b>, roughly an hour each</span></div>
+    </div>
+    <div class="t-shot">
+      <div class="t-line"><span class="t-tick">✓</span><span>I'll ask questions rather than give answers</span></div>
+      <div class="t-line"><span class="t-tick">✓</span><span>I'll hold my own hopes for them loosely</span></div>
+      <div class="t-line"><span class="t-tick">✓</span><span>I'll make time for a few unhurried conversations</span></div>
+      <div class="t-line" style="color:rgba(255,255,255,.55);">
+        <span class="t-tick" style="background:rgba(255,255,255,.18)"></span>
+        <span>What your coach agrees to before they start</span></div>
+    </div>
+  </div>
+
+  <!-- CLOSE -->
+  <div class="close">
+    <p>Your first sitting is twenty minutes, and you'll know something about yourself you didn't this morning.</p>
+    <button class="btn">Begin →</button>
+    <div class="close-sub">Free. No card. Stop and resume whenever you like.</div>
+  </div>
+
+</div>
+</section>
+
+<!-- NOTES -->
+<div class="notes">
+  <h2>Notes for implementation</h2>
+
+  <h3>The mockups are placeholders</h3>
+  <p>Each is built from real design tokens and mirrors an actual screen, so the section works as-is — but they should be replaced with real screenshots once there's a build worth photographing. Keep them cropped tight and legible at half-width; full screenshots shrink to illegibility at this size, which is why these show a fragment of each screen rather than the whole thing.</p>
+
+  <h3>Where the time figures come from</h3>
+  <table>
+    <tr><th>Stage</th><th>Estimate</th><th>Basis</th></tr>
+    <tr><td>Strengths assessment</td><td>30 min</td><td>36 cards plus six written questions</td></tr>
+    <tr><td>Life timeline</td><td>40 min</td><td>Chapters, markers, threads. The heaviest single sitting</td></tr>
+    <tr><td>Calling and possibilities</td><td>50 min</td><td>Two screens; idea generation targets 15 ideas</td></tr>
+    <tr><td>Growth plan</td><td>40 min</td><td>Building actions, then sequencing them</td></tr>
+    <tr><td>Setup, baseline, closing</td><td>~20 min</td><td>Account, eight rating questions, coach selection</td></tr>
+  </table>
+  <p><strong>Verify these against real testers before publishing.</strong> Underestimating is worse than saying nothing — someone who budgets 30 minutes and hits a 40-minute timeline exercise abandons it. If anything, round up.</p>
+
+  <h3>Why two time figures, not one</h3>
+  <p>Working time and calendar time are different questions, and conflating them is what makes people distrust the number. "6–8 weeks" alone sounds enormous; "3–4 hours" alone sounds like a lie once they're three weeks in waiting on a contact. Showing both, and explaining that the gap is deliberate, answers the real question — <em>what are you asking of me?</em> — honestly.</p>
+
+  <h3>The steps changed</h3>
+  <p>The previous three (noticing gifts / guided reflection / walking with others) predate the four-section structure and don't map to what someone now does. These four follow the actual journey. The coach has been pulled out of the sequence entirely and shown as a continuous thread, because that's what they are — a step implies they happen once.</p>
+
+  <h3>Still to decide</h3>
+  <ul>
+    <li>Whether "almost nobody finishes well alone" is supportable. It's the strongest claim on the page and it should be true before it ships — check completion rates with and without a coach.</li>
+    <li>Whether the three "conversations" figure should stay vague, as it was made elsewhere in the coach flow. Currently this page says three and the coach contracting says "a few" — pick one.</li>
+    <li>Whether the closing line ("your first sitting is twenty minutes") should link to the specific first step rather than the generic Begin.</li>
+  </ul>
+</div>
+
+</body>
+</html>

@@ -15,3 +15,7 @@
 - [ ] Coach briefs (title, purpose, duration, questions to ask, things to watch, what to avoid) are authored in the pathway document and shown as a collapsible panel; the four prototype briefs are migrated verbatim
 - [ ] There is no fifth brief for the letter in the prototype; do not invent one, and note the content gap
 - [ ] Copy makes clear this is a preview the participant hands over, not a message the system sends
+
+**Carried from 27**
+
+- [ ] The coach's "What happens next" dropped the mock-up's "…and a short guide to that conversation — what it's for, what to ask, what to watch for", as no guide existed; bring it back once the briefs do

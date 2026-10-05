@@ -139,7 +139,7 @@ def test_the_letter_cannot_be_sent_without_the_fifth_after_rating(participant):
 
 @pytest.mark.django_db
 def test_progress_counts_the_two_new_ratings(participant):
-    assert "0 of 18 answered" in participant.get("/").content.decode()  # ✨ the faithful port's 16, and two more
+    assert "0 of 18 answered" in participant.get("/hub/").content.decode()  # ✨ the faithful port's 16, and two more
 
 
 @pytest.mark.django_db
@@ -352,15 +352,21 @@ def test_a_chosen_coach_is_kept_on_the_coach_page_and_apart_from_the_contacts(pa
     saved = choose(participant, htmx=False)
 
     assert saved.url == f"{COACH_PAGE}#block-coach"
-    assert "Sam is your coach" in participant.get(COACH_PAGE).content.decode()
+    assert "You've chosen Sam" in participant.get(COACH_PAGE).content.decode()
     move_past(participant, 2)
     assert "sam@example.com" not in participant.get(CONTACTS_PAGE).content.decode()
+
+
+# ✨ The observers' notice's one sentence about the coach (ticket 27), whom the faithful port never asks for.
+SHOWN_TO_THE_COACH = " {name} may also choose to show this to a trusted third party."
 
 
 def without_the_coach_step(document):
     """✨ Only this pathway asks for a coach the mock-up's way; the faithful port's own mentor screen is ticket 10b.
     The coach page goes with it, so the break that opened that page goes too, and the skip label of the break that
-    closed it."""
+    closed it, and the privacy notice's sentence saying the participant may show their coach what they see."""
+    observers = document["observers"]
+    observers["privacy_notice"] = observers["privacy_notice"].replace(SHOWN_TO_THE_COACH, "")
     for section in document["content"]["sections"]:
         blocks = [block for block in section["blocks"] if block["type"] != "coach_checklist"]
         section["blocks"] = [

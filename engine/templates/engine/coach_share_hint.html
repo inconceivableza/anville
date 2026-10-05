@@ -1,0 +1,8 @@
+{% comment %}
+  ✨ The line under the comparison's coach box, saying what ticking does or what it has done. One wording whatever the
+  comparison holds: below the minimum, what is below is its count, which may update too. An autosave sends it back
+  out of band, so it always describes the box as saved (`oob`).
+{% endcomment %}
+<p class="coach-hint" id="coach-share-hint"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% if coach.shared %}{{ coach.name }} can see your results and the comparison below, which may update if more people answer. Untick to stop sharing.{% else %}{{ coach.name }} will see your results and the comparison below, which may update if more people answer.{% endif %}
+</p>

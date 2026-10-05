@@ -1,0 +1,29 @@
+{% comment %}
+  ✨ The comparison's consent for the coach to see the results and comparison (ticket 27), once there is something to
+  say. The box saves as soon as it is ticked or unticked, as the app's answers do, reporting in its save status like
+  them (so a failed save, an untick above all, is never silent), and its line comes back for the new state; the Save
+  button is for browsers without JavaScript, hidden once it has loaded.
+{% endcomment %}
+<section class="results-section coach-share" id="coach-share">
+  {% if coach.offer == "tick" %}
+    <form method="post" action="{% url 'share_with_coach' block_id %}"
+          hx-post="{% url 'share_with_coach' block_id %}" hx-trigger="change" hx-sync="this:queue last"
+          hx-target="find .save-status">
+      {% csrf_token %}
+      {# ✨ The same tick as the coach details' "I've spoken to this person…". #}
+      <label class="coach-confirm">
+        <input type="checkbox" name="share"{% if coach.shared %} checked{% endif %}>
+        <span>Give my coach access to my results and this comparison</span>
+      </label>
+      {% include "engine/coach_share_hint.html" %}
+      <div class="save-row">
+        <output class="save-status" aria-live="polite"></output>
+        <button type="submit" class="btn btn-secondary btn-sm save-fallback">Save</button>
+      </div>
+    </form>
+  {% elif coach.offer == "expired" %}
+    <p class="coach-hint">{{ coach.name }}'s link has expired. Reissue it from your coach page; once {{ coach.name }} accepts again, you can share your results and the comparison below. <a href="{{ coach.coach_page }}">Your coach page →</a></p>
+  {% else %}
+    <p class="coach-hint">Once {{ coach.name }} accepts being your coach, you can share your results and the comparison below with {{ coach.name }}. <a href="{{ coach.coach_page }}">Your coach page →</a></p>
+  {% endif %}
+</section>

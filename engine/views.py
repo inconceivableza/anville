@@ -12,6 +12,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_POST
 
 from access.consent import consent_required
+from access.models import name_shown_for
 from engine.document import (
     BLOCK_TYPES,
     LONG_TEXT_MAX_LENGTH,
@@ -31,8 +32,10 @@ from engine.document.coach import (
     checklist_answers,
     checklist_answers_from_form,
     checklist_outcome,
+    coach_answer_from_form,
     coach_details_as_typed,
     coach_from_form,
+    commitments,
 )
 from engine.document.contacts import (
     MAX_CONTACTS,
@@ -86,6 +89,13 @@ class ParticipantState(NamedTuple):
         return Response.objects.get_or_create(participant=user, version=self.version)[0]
 
 
+def home(request):
+    """✨ The public homepage (ticket 32a), the same for everyone; "Begin" leads to sign-up, or to the hub once
+    signed in."""
+    begin = reverse("hub") if request.user.is_authenticated else reverse("account_signup")
+    return render(request, "engine/home.html", {"begin": begin})
+
+
 @login_required
 @consent_required
 def hub(request):
@@ -101,8 +111,20 @@ def hub(request):
         {
             "title": text_for(state.version.document["title"], "participant"),
             "hub": hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past),
+            "coach": _coach_of(state.response),
+            "coach_page": _coach_page_of(state.version.document),
         },
     )
+
+
+def _coach_page_of(document):
+    """✨ The address of the page of the document's coach checklist, at the checklist, or None for a document without
+    one, whose hub then says nothing of a coach."""
+    for block in blocks_of(document):
+        if block["type"] == "coach_checklist":
+            section = section_of(document, block["id"])
+            return f"{page_url(section['id'], page_of(section, block['id']))}#block-{block['id']}"
+    return None
 
 
 @login_required
@@ -132,7 +154,18 @@ def section(request, section_id, page=1):
     _page_or_404(section, page)
     if page > reached:
         return redirect(page_url(section_id, reached))
-    return render(request, "engine/section.html", _section_page(state, section, page, _asked_rows(request.GET)))
+    # ✨ A coach's link just issued from the coach page, shown this once, as on the invitations page. Read only on a page
+    # holding a coach checklist, whose address is the path the cookie was set for, so deleting it here reaches it; the
+    # section's later pages sit under that path too when the checklist is on its first.
+    holds_checklist = any(block["type"] == "coach_checklist" for block in pages_of(section)[page - 1])
+    issued = _issued_link(request) if holds_checklist else None
+    shown = render(
+        request, "engine/section.html", _section_page(state, section, page, _asked_rows(request.GET), issued=issued)
+    )
+    if issued is not None:
+        shown["Cache-Control"] = "no-store"
+        shown.delete_cookie(ISSUED_COOKIE, path=request.path)
+    return shown
 
 
 @login_required
@@ -289,7 +322,9 @@ def coach_checklist(request, block_id):
     screen = _checklist_step(block, to, request.POST, _coach_kept(state.answers, block_id))
     kept = state.answers
     if to == "save" and screen["screen"] == "chosen":
-        state.stored_response(request.user).replace_contacts(block_id, [screen["coach"]], Contact.Role.COACH)
+        # ✨ Always a new contact, so the previous coach's link stops, with any answer given through it.
+        [coach] = state.stored_response(request.user).replace_contacts(block_id, [screen["coach"]], Contact.Role.COACH)
+        screen["coach"] = {**screen["coach"], "id": coach.pk}
         kept = {**kept, block_id: [screen["coach"]]}
     elif to == "remove" and state.response is not None:
         state.response.replace_contacts(block_id, [], Contact.Role.COACH)
@@ -373,11 +408,13 @@ def _checklist_screen(
     confirmed=False,
     invalid=None,
     kept=None,
+    issued=None,
 ):
     """✨ One screen of the coach checklist as its template needs it: the questions with any answers given, and on
     a second thought or a stop, each answer that was not Yes with why that question matters. On going ahead, the
-    coach's details as typed, and which of them a refusal is about; once chosen, the coach kept. On the intro while
-    choosing again, `kept` is the coach who stays until another is saved."""
+    coach's details as typed, and which of them a refusal is about; once chosen, the coach kept, with their link
+    (`issued` is a link just issued, shown this once). On the intro while choosing again, `kept` is the coach who
+    stays until another is saved."""
     answers = answers or {}
     questions = [{**question, "answer": answers.get(question["id"])} for question in text["questions"]]
     flagged = set(outcome.flagged) if outcome else set()
@@ -396,13 +433,34 @@ def _checklist_screen(
         "confirmed": confirmed,
         "invalid": invalid,
         "kept": kept,
+        "link": _coach_link_state(coach["id"], issued) if screen == "chosen" and coach and "id" in coach else None,
     }
 
 
 def _coach_kept(answers, block_id):
-    """✨ The coach kept for a coach checklist, as {"name", "email"}, or None: its answer is the one coach kept."""
+    """✨ The coach kept for a coach checklist, as {"name", "email", "id"}, or None: its answer is the one coach kept."""
     kept = answers.get(block_id)
     return kept[0] if kept else None
+
+
+def _coach_link_state(contact_id, issued=None):
+    """✨ The coach's link as the coach page shows it: the contact it is for, its invitation while it works, the coach's
+    answer ("waiting" while a working link is unanswered, None with no link at all), and the link itself if it was
+    just issued. An answer outlasts the link's expiry, but not its revoking: it belongs to the link it came through."""
+    invitation = Invitation.objects.filter(contact_id=contact_id).first()
+    live = invitation if invitation is not None and invitation.expires_at > timezone.now() else None
+    answer = invitation.coach_answer if invitation is not None else None
+    return {
+        "contact_id": contact_id,
+        "invitation": live,
+        "answer": answer or ("waiting" if live else None),
+        "issued": issued["link"] if issued and issued["contact"] == contact_id else None,
+    }
+
+
+def _coach_declined(contact_id):
+    """✨ Whether the coach kept declined, through the link they still have an answer on."""
+    return Invitation.objects.filter(contact_id=contact_id, coach_answer=Invitation.CoachAnswer.DECLINED).exists()
 
 
 def _saved(request, state, section, block_id, contact_ids=None):
@@ -435,10 +493,8 @@ def results(request, block_id):
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
-    shown = results_page(state.version.document, result.scores, state.answers[block_id], request.user.get_username())
-    shown["section"] = section
-    shown["block_id"] = block_id
-    return render(request, "engine/results.html", shown)
+    shown = results_page(state.version.document, result.scores, state.answers[block_id], name_shown_for(request.user))
+    return render(request, "engine/results.html", {"results": shown, "section": section, "block_id": block_id})
 
 
 @login_required
@@ -451,14 +507,78 @@ def comparison(request, block_id):
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
-    document = state.version.document
-    assessments = ObserverResponse.assessments_for(state.response)
-    observer_average = aggregate(document, assessments.assessments)
-    shown = comparison_page(document, result.scores, state.answers[block_id], observer_average)
+    shown = _comparison_of(state.response, result.scores, state.answers[block_id])
+    context = {"comparison": shown, "block_id": block_id, "coach": _coach_sharing(state.response, block_id)}
+    return render(request, "engine/comparison.html", context)
+
+
+@login_required
+@consent_required
+@require_POST
+def share_with_coach(request, block_id):
+    """✨ The comparison's "Give my coach access to my results and this comparison", ticked or not (ticket 27). Ticking is refused until the
+    participant has visited their comparison and their coach has accepted through a link that still works; the consent
+    is then kept on that link, so it goes with it (ADR 0011). Unticking withdraws it at once, whatever else holds.
+
+    The box saves as it changes: with htmx, "Saved" and the line under it for the new state; without, the comparison
+    again, at the box."""
+    state, result, _ = _own_result(request.user, block_id)
+    if request.POST.get("share") != "on":
+        Invitation.withdraw_results_from_coach(request.user)
+    else:
+        visited = result is not None and block_id in state.response.comparisons_visited
+        if not (visited and Invitation.share_results_with_coach(state.response)):
+            refusal = "Your coach can see this only once they have accepted and you have seen your comparison."
+            return render(request, "engine/save_status.html", {"refusal": refusal}, status=403)
+    if request.headers.get("HX-Request") == "true":
+        return render(request, "engine/coach_share_saved.html", {"coach": _coach_sharing(state.response, block_id)})
+    return _see_other(f"{reverse('comparison', args=[block_id])}#coach-share")
+
+
+def _comparison_of(response, scores, sort):
+    """✨ The comparison of one participant's result with their observers, as both they and their coach see it."""
+    document = response.version.document
+    assessments = ObserverResponse.assessments_for(response)
+    shown = comparison_page(document, scores, sort, aggregate(document, assessments.assessments))
     # ✨ Below the minimum there is no comparison on the page to call illustrative.
     shown["illustrative"] = assessments.all_test_data and shown["frameworks"] is not None
-    shown["block_id"] = block_id
-    return render(request, "engine/comparison.html", shown)
+    return shown
+
+
+def _coach_sharing(response, block_id):
+    """✨ The participant's coach as the comparison's consent needs them, or None when there is nothing to say: with
+    `offer` "tick" once they accepted through a working link and the comparison was visited by its button; "expired"
+    when they accepted but the link no longer works; "awaiting" while they have not answered or have no link yet. A
+    coach who declined is offered nothing here: the coach page already says so."""
+    coach = _coach_of(response)
+    if coach is None:
+        return None
+    if coach["can_see"]:
+        offer = "tick" if block_id in response.comparisons_visited else None
+    elif coach["answer"] == Invitation.CoachAnswer.ACCEPTED:
+        offer = "expired"
+    elif coach["answer"] in ("waiting", None):
+        offer = "awaiting"
+    else:
+        offer = None
+    return {**coach, "offer": offer} if offer else None
+
+
+def _coach_of(response):
+    """✨ The coach kept, as the hub and the comparison read them, or None: their name, the coach page, their answer as
+    the coach page tells it, whether they can be shown the results (accepted through a working link) and whether they
+    are."""
+    coach = response.contacts.filter(role=Contact.Role.COACH).first() if response is not None else None
+    if coach is None:
+        return None
+    accepted = Invitation.accepted_coach_of(response)
+    return {
+        "name": coach.name,
+        "coach_page": _listed_at(coach),
+        "answer": _coach_link_state(coach.pk)["answer"],
+        "can_see": accepted is not None,
+        "shared": accepted is not None and accepted.results_shared_at is not None,
+    }
 
 
 @login_required
@@ -513,8 +633,9 @@ def invitations(request):
 @consent_required
 @require_POST
 def issue_invitation(request, contact_id):
-    """✨ Issue, or reissue, one contact's link, then go back to the invitations page at that person, which shows it
-    this once: only its hash is kept.
+    """✨ Issue, or reissue, one contact's link, then go back to where that person is listed, which shows it this once:
+    only its hash is kept. An observer is listed on the invitations page; the coach on the coach page, and their link
+    leads to the coach's own page rather than an observer's.
 
     A redirect, so a reload of the page that follows never issues again. The link travels to that page in a short-lived
     signed cookie of the participant's own, not in the address (where the history would keep it) or the session (where
@@ -522,14 +643,16 @@ def issue_invitation(request, contact_id):
     """
     contact = _own_contact_or_404(request.user, contact_id)
     token = Invitation.issue(contact, link_lifetime(contact.response.version.document))
-    link = request.build_absolute_uri(reverse("observe", args=[token]))
-    back = _see_other(f"{reverse('invitations')}#person-{contact.pk}")
+    link_to = "coaching" if contact.role == Contact.Role.COACH else "observe"
+    link = request.build_absolute_uri(reverse(link_to, args=[token]))
+    listed_at = _listed_at(contact)
+    back = _see_other(listed_at)
     back.set_signed_cookie(
         ISSUED_COOKIE,
         json.dumps({"contact": contact.pk, "link": link}),
         salt=ISSUED_COOKIE,
         max_age=ISSUED_COOKIE_SECONDS,
-        path=reverse("invitations"),
+        path=listed_at.partition("#")[0],  # ✨ that page alone reads it
         secure=request.is_secure(),
         httponly=True,
         samesite="Lax",
@@ -552,10 +675,21 @@ def _issued_link(request):
 @consent_required
 @require_POST
 def revoke_invitation(request, contact_id):
-    """✨ Stop one contact's link. Revoking one that is already gone does nothing. The page comes back at that person."""
+    """✨ Stop one contact's link, and with a coach's, the answer given through it. Revoking one that is already gone
+    does nothing. The page comes back at that person."""
     contact = _own_contact_or_404(request.user, contact_id)
     Invitation.objects.filter(contact=contact).delete()
-    return _see_other(f"{reverse('invitations')}#person-{contact.pk}")
+    return _see_other(_listed_at(contact))
+
+
+def _listed_at(contact):
+    """✨ The address of the page a contact is listed on, at their place in it: the invitations page for an observer,
+    the page of the coach checklist that chose them for a coach."""
+    if contact.role != Contact.Role.COACH:
+        return f"{reverse('invitations')}#person-{contact.pk}"
+    document = contact.response.version.document
+    section = section_of(document, contact.block_id)
+    return f"{page_url(section['id'], page_of(section, contact.block_id))}#block-{contact.block_id}"
 
 
 def observe(request, token):
@@ -614,6 +748,104 @@ def start_observing(request, token):
 def observer(request):
     """✨ The observer's own page, reached by the cookie their claim left."""
     return _observers_page(request, request.COOKIES.get(OBSERVER_COOKIE))
+
+
+def coaching(request, token):
+    """✨ Where the coach's link leads: who asked them, and the commitments to accept or decline; once answered, their
+    answer. A wrong, expired or revoked link, or an observer's, gets the observers' one refusal, naming nobody.
+
+    The coach has no account and claims nothing (spec, Coach): nothing here reads or writes the signed-in user.
+    """
+    invitation = Invitation.live(token, role=Contact.Role.COACH)
+    if invitation is None:
+        return _refuse_link(request)
+    return _coach_page(request, invitation, token)
+
+
+@sensitive_post_parameters()
+@require_POST
+def answer_coaching(request, token):
+    """✨ The coach accepting or declining, once per link. Accepting needs every commitment ticked; declining is always
+    open. Only the answer is kept, never which boxes were ticked: one affirms the coach's own faith, special category
+    data about them, and `sensitive_post_parameters` keeps the boxes out of error reports too."""
+    invitation = Invitation.live(token, role=Contact.Role.COACH)
+    if invitation is None:
+        return _refuse_link(request)
+    if invitation.coach_answer is not None:
+        return _coach_page(request, invitation, token, refusal=ANSWERED_ALREADY, status=409)
+    block = _coach_block(invitation)
+    try:
+        answer = coach_answer_from_form(block["questions"], request.POST)
+    except AnswerRefused as refused:
+        ticked = set(request.POST.getlist("commitment"))
+        return _coach_page(request, invitation, token, refusal=str(refused), ticked=ticked, status=400)
+    if not Invitation.answer_as_coach(token, answer):
+        # ✨ Answered, revoked or expired since it was read above: read again, so the page says which.
+        invitation = Invitation.live(token, role=Contact.Role.COACH)
+        if invitation is None:
+            return _refuse_link(request)
+        return _coach_page(request, invitation, token, refusal=ANSWERED_ALREADY, status=409)
+    return _see_other("coaching", token)
+
+
+ANSWERED_ALREADY = "You've already answered."
+
+
+def _coach_page(request, invitation, token, refusal=None, ticked=(), status=200):
+    """✨ The coach's page for a live coach's link: the participant's name, the authored invitation, each commitment
+    with its note as a box (`ticked` as last sent, on a refusal), or once answered, what follows the answer. Never
+    cached, since it is reached by a secret."""
+    _, name = _asked_by(invitation)
+    text = authored_text(_coach_block(invitation), "participant")
+    named = {field: text.get(field, "").replace("{name}", name) for field in COACH_TEXT_FIELDS}
+    promises = [
+        {"id": question["id"], "commitment": question["commitment"], "note": question.get("coach_note", "")}
+        for question in commitments(text["questions"])
+    ]
+    context = {
+        "name": name,
+        "text": named,
+        "commitments": promises,
+        "count": apnumber(len(promises)),
+        "ticked": ticked,
+        "answer": invitation.coach_answer,
+        "refusal": refusal,
+        "token": token,
+        "shared": _shared_with_coach(invitation, name),
+    }
+    shown = render(request, "engine/coach_link.html", context, status=status)
+    shown["Cache-Control"] = "no-store"
+    return shown
+
+
+# ✨ The authored passages of the coach's page, each naming the participant as {name}.
+COACH_TEXT_FIELDS = ("coach_invitation", "coach_accepted", "coach_declined")
+
+
+def _shared_with_coach(invitation, name):
+    """✨ The participant's results and comparison, as they see them, for a coach who accepted through this link and
+    whom they are happy to show; otherwise None. Read afresh on every visit, so a withdrawal shows at once (ticket 27).
+    Nothing else of the participant's is read: only the stored result, the sort it was scored from and the observers'
+    assessments, through the same suppression as the participant's own comparison."""
+    if invitation.coach_answer != Invitation.CoachAnswer.ACCEPTED or invitation.results_shared_at is None:
+        return None
+    participant_response = invitation.contact.response
+    document = participant_response.version.document
+    scored = _scored_block(document)
+    result = Result.objects.filter(response=participant_response, block_id=scored["id"]).first() if scored else None
+    if result is None:
+        return None
+    sort = participant_response.answers[scored["id"]]
+    return {
+        "results": results_page(document, result.scores, sort, name),
+        "comparison": _comparison_of(participant_response, result.scores, sort),
+    }
+
+
+def _coach_block(invitation):
+    """✨ The coach checklist that chose the coach a link is for, in the participant's pathway version."""
+    document = invitation.contact.response.version.document
+    return next(block for block in blocks_of(document) if block["id"] == invitation.contact.block_id)
 
 
 @require_POST
@@ -691,10 +923,9 @@ def _refuse_link(request):
 
 
 def _asked_by(invitation):
-    """✨ The pathway document an invitation belongs to, and the name of the participant who asked. Accounts hold no
-    name yet, so it is their username, as on the results page."""
+    """✨ The pathway document an invitation belongs to, and the display name of the participant who asked."""
     participant_response = invitation.contact.response
-    return participant_response.version.document, participant_response.participant.get_username()
+    return participant_response.version.document, name_shown_for(participant_response.participant)
 
 
 def _invitations_page(request, issued=None, refused=None, status=200):
@@ -745,13 +976,9 @@ def _live_invitation(contact):
 
 
 def _own_contact_or_404(user, contact_id):
-    """✨ One of this participant's own contacts (not their coach, whose link is ticket 13c's), or a 404 that says
-    nothing about whether anyone else has a contact by that number."""
-    contact = (
-        Contact.objects.select_related("response__version")
-        .filter(pk=contact_id, response__participant=user, role=Contact.Role.CONTACT)
-        .first()
-    )
+    """✨ One of this participant's own contacts, their coach included, or a 404 that says nothing about whether anyone
+    else has a contact by that number."""
+    contact = Contact.objects.select_related("response__version").filter(pk=contact_id, response__participant=user).first()
     if contact is None:
         raise Http404("You have no contact by that number.")
     return contact
@@ -848,9 +1075,10 @@ def _asked_rows(query):
     return min(int(asked), MAX_CONTACTS) if asked.isdigit() else 0
 
 
-def _section_page(state, section, page=1, asked_rows=0):
+def _section_page(state, section, page=1, asked_rows=0, issued=None):
     """✨ One page of a section as its template needs it. Every page but the last ends in "Continue →", held by that
-    page's own clauses; the last ends in the section's completion, held by the whole gate."""
+    page's own clauses; the last ends in the section's completion, held by the whole gate. `issued` is a coach's link
+    just issued, which a coach checklist on the page shows this once."""
     version, answers, fixed = state.version, state.answers, state.fixed
     opened, activity_open = open_blocks(section, answers, state.sections, up_to_page=page)
     on_page = {block["id"] for block in pages_of(section)[page - 1]}
@@ -882,7 +1110,8 @@ def _section_page(state, section, page=1, asked_rows=0):
             "estimate": states[section["id"]].estimate,
             "complete_label": text_for(section.get("complete_label", "Mark complete"), "participant"),
             "blocks": [
-                _block_for_participant(version.document, block, answers, fixed, states, asked_rows) for block in blocks
+                _block_for_participant(version.document, block, answers, fixed, states, asked_rows, issued)
+                for block in blocks
             ],
         },
         "is_complete": section["id"] in state.completed,
@@ -910,9 +1139,12 @@ def _skip_label(section, page, answers):
 
 def _continue_label(section, page, answers):
     """✨ "Continue →", or on a page holding a coach kept, "Continue with Sam →". Choosing someone else shows the
-    checklist's own "Continue →" just above, so the page's way on names the coach it goes on with, to read apart."""
+    checklist's own "Continue →" just above, so the page's way on names the coach it goes on with, to read apart. A
+    coach who declined is not gone on with, so the way on is "Continue without a coach →"."""
     for block in pages_of(section)[page - 1]:
         coach = _coach_kept(answers, block["id"]) if block["type"] == "coach_checklist" else None
+        if coach and "id" in coach and _coach_declined(coach["id"]):
+            return "Continue without a coach →"
         if coach:
             return f"Continue with {coach['name']} →"
     return "Continue →"
@@ -925,16 +1157,16 @@ def _published_version(posted):
     return PathwayVersion.objects.filter(pk=int(posted), publications__isnull=False).distinct().first()
 
 
-def _block_for_participant(document, block, answers, fixed, states, asked_rows=0):
+def _block_for_participant(document, block, answers, fixed, states, asked_rows=0, issued=None):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
-    identifier; a link to a section outside the participant's track has no state and shows nothing."""
+    identifier; a link to a section outside the participant's track has no state and shows nothing. `issued` is a
+    coach's link just issued."""
     widget = BLOCK_TYPES[block["type"]].widget
     text = authored_text(block, "participant")
+    is_checklist = block["type"] == "coach_checklist"
     return {
         "rows": _contact_rows(block, answers, asked_rows) if block["type"] == "contact_list" else None,
-        "checklist": (
-            _opening_checklist(text, _coach_kept(answers, block["id"])) if block["type"] == "coach_checklist" else None
-        ),
+        "checklist": _opening_checklist(text, _coach_kept(answers, block["id"]), issued) if is_checklist else None,
         "id": block["id"],
         "type": block["type"],
         "template": f"engine/blocks/{block['type']}.html",
@@ -947,11 +1179,11 @@ def _block_for_participant(document, block, answers, fixed, states, asked_rows=0
     }
 
 
-def _opening_checklist(text, kept):
-    """✨ A coach checklist as a page opens it: the coach kept, if one was chosen, and otherwise its intro, empty,
-    since nothing from an earlier visit to the checklist itself was kept."""
+def _opening_checklist(text, kept, issued=None):
+    """✨ A coach checklist as a page opens it: the coach kept, if one was chosen, with their link, and otherwise its
+    intro, empty, since nothing from an earlier visit to the checklist itself was kept."""
     if kept:
-        return _checklist_screen(text, screen="chosen", coach=kept)
+        return _checklist_screen(text, screen="chosen", coach=kept, issued=issued)
     return _checklist_screen(text)
 
 
