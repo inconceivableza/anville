@@ -228,7 +228,7 @@ Everything a deployed copy needs is read from the environment, so one build serv
 
 `/healthz` answers `{"status": "ok", "commit": "…"}` when the database can be reached, and 503 when it cannot. It still wants a `Host` header that `DJANGO_ALLOWED_HOSTS` lists.
 
-With `DJANGO_DEBUG` off, errors are printed to the server's output with any observer's link redacted, since whoever holds that link can answer as the observer.
+With `DJANGO_DEBUG` off, errors are printed to the server's output with any observer's or coach's link redacted, since whoever holds such a link can answer as them.
 
 To serve the way a deployment does, gather the static files and start gunicorn, which reads `gunicorn.conf.py`:
 

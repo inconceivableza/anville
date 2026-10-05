@@ -77,7 +77,7 @@ The application needs these changes first. They are step 1 of ticket 26, and the
 - **Email from the environment.** `EMAIL_URL` and `DEFAULT_FROM_EMAIL`, read with django-environ, defaulting to the console backend, and `ANVILLE_EMAIL_DISCLAIMER`, which marks every outgoing message when set. See section 11.
 - **Database connection reuse.** `CONN_MAX_AGE` from the environment, as `DATABASE_CONN_MAX_AGE`. It matters little in-cluster and a good deal with a managed database reached over TLS.
 
-- **Errors in the log, without observers' links.** With debug off Django logs nothing by default, so errors are sent to the server's output, with the token or secret of any observer's link redacted.
+- **Errors in the log, without observers' or coaches' links.** With debug off Django logs nothing by default, so errors are sent to the server's output, with the token or secret of any observer's or coach's link redacted.
 
 `config/settings.py` already takes the secret key, debug flag, allowed hosts, database URL and enrolment code from the environment, so one image serves every environment (ADR 0002).
 

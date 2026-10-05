@@ -1,27 +1,26 @@
 import logging
 import re
 
-# ✨ An observer's link, as far as the token or secret that it carries.
-OBSERVER_LINK = re.compile(r"(/observe/)[^/\s?#]+")
+# ✨ A link that admits whoever holds it, as far as the token or secret that it carries: an observer's
+# (ticket 13b) or a coach's (ticket 13c).
+LINK_WITH_SECRET = re.compile(r"(/(?:observe|coaching)/)[^/\s?#]+")
 
 
-def redact_observer_links(text):
-    return OBSERVER_LINK.sub(r"\1[redacted]", text)
+def redact_links(text):
+    return LINK_WITH_SECRET.sub(r"\1[redacted]", text)
 
 
-class RedactObserverLinks(logging.Filter):
-    """✨ Takes the token or secret out of any observer's link a log record names.
+class RedactLinks(logging.Filter):
+    """✨ Takes the token or secret out of any observer's or coach's link a log record names.
 
-    Whoever holds an observer's link can answer as that observer, so it must not be readable in a log.
-    Django names the address of a failed request in what it logs. This rewrites the message and its
-    arguments, and lets every record through.
+    Whoever holds such a link can answer as that observer, or as the coach, so it must not be readable
+    in a log. Django names the address of a failed request in what it logs. This rewrites the message
+    and its arguments, and lets every record through.
     """
 
     def filter(self, record):
         if isinstance(record.msg, str):
-            record.msg = redact_observer_links(record.msg)
+            record.msg = redact_links(record.msg)
         if isinstance(record.args, tuple):
-            record.args = tuple(
-                redact_observer_links(arg) if isinstance(arg, str) else arg for arg in record.args
-            )
+            record.args = tuple(redact_links(arg) if isinstance(arg, str) else arg for arg in record.args)
         return True

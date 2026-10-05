@@ -6,8 +6,8 @@ wsgi_app = "config.wsgi:application"
 bind = "0.0.0.0:8000"
 workers = int(os.environ.get("WEB_CONCURRENCY", "2"))
 
-# ✨ No access log, on purpose. An observer's link carries its token or secret in the address, and whoever
-# reads that in a log can answer as the observer. Errors still go to the server's output.
+# ✨ No access log, on purpose. An observer's or a coach's link carries its token or secret in the address,
+# and whoever reads that in a log can answer as them. Errors still go to the server's output.
 accesslog = None
 errorlog = "-"
 

@@ -209,19 +209,19 @@ if ANVILLE_EMAIL_DISCLAIMER:
 # https://docs.djangoproject.com/en/5.2/topics/logging/
 
 # ✨ With DJANGO_DEBUG off Django prints nothing, so a deployed environment would fail in silence. This
-# sends errors to the server's output, with the observer's secret taken out of any address named.
+# sends errors to the server's output, with the secret taken out of any observer's or coach's link named.
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "filters": {
         "require_debug_false": {"()": "django.utils.log.RequireDebugFalse"},
-        "redact_observer_links": {"()": "config.logs.RedactObserverLinks"},
+        "redact_links": {"()": "config.logs.RedactLinks"},
     },
     "handlers": {
         "errors": {
             "class": "logging.StreamHandler",
             "level": "ERROR",
-            "filters": ["require_debug_false", "redact_observer_links"],
+            "filters": ["require_debug_false", "redact_links"],
         },
     },
     "root": {"handlers": ["errors"]},

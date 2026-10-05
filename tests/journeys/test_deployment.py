@@ -10,7 +10,7 @@ import re
 import pytest
 from django.db import OperationalError
 
-from config.logs import RedactObserverLinks
+from config.logs import RedactLinks
 
 from tests.journeys.test_contact_list import (  # noqa: F401  (participant is a fixture, used by name)
     JO,
@@ -140,5 +140,14 @@ def test_an_error_is_logged_without_the_observers_secret():
         "django.request", logging.ERROR, __file__, 1, "%s: %s", ("Internal Server Error", "/observe/s3cr3t-T0ken/start/"), None
     )
 
-    assert RedactObserverLinks().filter(record) is True
+    assert RedactLinks().filter(record) is True
     assert record.getMessage() == "Internal Server Error: /observe/[redacted]/start/"
+
+
+def test_an_error_is_logged_without_the_coachs_token():
+    record = logging.LogRecord(
+        "django.request", logging.ERROR, __file__, 1, "%s: %s", ("Internal Server Error", "/coaching/c0ach-T0ken/answer/"), None
+    )
+
+    assert RedactLinks().filter(record) is True
+    assert record.getMessage() == "Internal Server Error: /coaching/[redacted]/answer/"
