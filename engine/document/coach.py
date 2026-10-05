@@ -3,7 +3,8 @@
 The questions, which of them are critical and why each matters are authored in the pathway document; turning
 the answers into an outcome is the engine's (ADR 0003). Nothing here is kept: the answers are opinions about
 another person, and are only ever read from a form and worked out again. Only the coach finally chosen, a name and
-an email address, is kept, and as a contact.
+an email address, is kept, and as a contact. The coach is then asked, through their link, to commit to the same
+questions as first-person promises; of that, only whether they accepted or declined is kept (ticket 13c).
 """
 
 from dataclasses import dataclass, field
@@ -83,6 +84,26 @@ def coach_from_form(posted):
     if not typed["confirmed"]:
         raise AnswerRefused("Tick the box to confirm you've spoken to them.", field="confirmed")
     return {"name": name, "email": typed["email"]}
+
+
+def commitments(questions):
+    """✨ The questions a coach is asked to commit to: those with a first-person promise authored, in order."""
+    return [question for question in questions if question.get("commitment")]
+
+
+def coach_answer_from_form(questions, posted):
+    """✨ "accepted" or "declined", as the coach's form sends it, or AnswerRefused. Accepting needs every commitment
+    ticked; declining is always open. Which boxes were ticked goes no further than this."""
+    answer = posted.get("answer")
+    if answer == "decline":
+        return "declined"
+    if answer != "accept":
+        raise AnswerRefused("Accept or decline to answer.")
+    ticked = set(posted.getlist("commitment"))
+    if any(question["id"] not in ticked for question in commitments(questions)):
+        count = apnumber(len(commitments(questions)))
+        raise AnswerRefused(f"Tick all {count} to accept. If you can't commit to all of them, that's a good answer too.")
+    return "accepted"
 
 
 def coach_details_as_typed(posted):

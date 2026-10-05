@@ -127,7 +127,7 @@ An invited person who answers the pathway's instrument *about* a participant, in
 _Avoid_: trusted contact, respondent, rater, referee.
 
 **Invitation**:
-A participant's revocable, expiring grant to one named person to act as an observer, carried by a link unique to that person.
+A participant's revocable, expiring grant to one named person to act as an observer, or to their coach to accept or decline the coach's commitments, carried by a link unique to that person. Each kind of link works only for its own.
 _Avoid_: invite link, survey link, access code.
 
 **Coach**:

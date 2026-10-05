@@ -73,6 +73,19 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Screen reader: the refusal is announced; a refused field is announced as invalid when Tab reaches it.
 - Phone width: the details and buttons fill the card's width.
 
+## The coach's link (ticket 13c)
+
+- "Sam is your coach" says the next step is to ask them properly, with "Get a link for Sam". Pressing it shows the link once beneath, with "Copy", "Waiting for Sam to answer. The link works until …", "Reissue link" and "Revoke link", without reloading the page; the link box has focus. "Copy" says "Copied". A reload shows no link, only the status.
+- Enter in the link box does nothing: the link stays the same and still works (with and without JavaScript).
+- Without JavaScript: "Get a link for Sam", "Reissue link" and "Revoke link" each come back to the coach page at the checklist, the link shown once after issuing.
+- In a private window, the link shows "participant has asked you to be their coach" (the participant's display name), the two authored paragraphs, "What you'd be agreeing to" and the six promises, each with its note in smaller type and a box to its left; the box or its words tick it. The line on what is kept sits above "Accept →" and "I can't commit to all of this".
+- "Accept →" with a box unticked says "Tick all six to accept…" with the boxes as they were. All six ticked: "Thank you — participant will be told" and the authored line; a reload shows the same, never the boxes again.
+- "I can't commit to all of this" (any boxes ticked): "That's a good answer" and the two authored paragraphs.
+- Back on the coach page after an accept: "Sam has accepted." After a decline: "Sam isn't able to commit to this." with choosing someone else or carrying on without a coach, and the page's way on reads "Continue without a coach →". Neither says which boxes were ticked.
+- Saving another coach, or "Remove", then opening Sam's old link: "This link does not work". So too a revoked link, and Sam's link at `/observe/…` in place of `/coaching/…`.
+- Keyboard only: Tab reaches each box, then Accept, then decline; Space ticks a box.
+- Phone width: the promises wrap beside their boxes; the buttons fill the card's width.
+
 ## The gate and "Mark complete"
 
 - The button fills the width of the page, in every section. Onboarding's reads "Continue →"; every other section's reads "Mark complete".

@@ -234,7 +234,15 @@ class Invitation(models.Model):
     The participant holds a copy of the link, so the observer claims it on first use: claiming exchanges it for a
     secret of 32 random bytes of its own, again kept only as a hash, and the participant's copy is used up. The claimed
     secret lasts as long as the link would have.
+
+    A coach's link is of the same kind, but asks them to accept or decline the coach's commitments instead (ticket 13c).
+    It is never claimed: the participant holding a copy could claim it as easily as use it. Only the answer is kept, on
+    the link, so revoking or reissuing asks again. Each kind of link works only at its own address.
     """
+
+    class CoachAnswer(models.TextChoices):
+        ACCEPTED = "accepted"
+        DECLINED = "declined"
 
     contact = models.OneToOneField(Contact, on_delete=models.CASCADE, related_name="invitation")
     token_hash = models.CharField(max_length=64, unique=True)
@@ -242,6 +250,9 @@ class Invitation(models.Model):
     issued_at = models.DateTimeField()
     expires_at = models.DateTimeField()
     claimed_at = models.DateTimeField(null=True, blank=True)
+    # ✨ A coach's answer, never which commitments were ticked: one affirms the coach's faith (spec, Coach). Nor when
+    # they answered, which nothing needs.
+    coach_answer = models.CharField(max_length=16, choices=CoachAnswer.choices, null=True, blank=True)
 
     @classmethod
     def issue(cls, contact, lifetime):
@@ -258,21 +269,37 @@ class Invitation(models.Model):
         return token
 
     @classmethod
-    def live(cls, token):
-        """✨ The invitation a token belongs to, claimed or not, or None if it is wrong, expired or revoked. None
-        says which."""
-        return cls.objects.filter(token_hash=_hash_of(token), expires_at__gt=timezone.now()).first()
+    def live(cls, token, role=Contact.Role.CONTACT):
+        """✨ The invitation a token belongs to, claimed or not, or None if it is wrong, expired, revoked or a link for
+        someone in another role (an observer's link is no coach's, and the reverse). None says which."""
+        return (
+            cls.objects.select_related("contact__response__participant", "contact__response__version")
+            .filter(token_hash=_hash_of(token), expires_at__gt=timezone.now(), contact__role=role)
+            .first()
+        )
 
     @classmethod
     def claim(cls, token):
-        """✨ Exchange an unclaimed, live token for the observer's own secret, returned once; None if the token is
-        dead or already claimed. One UPDATE, so of two claims at once exactly one wins."""
+        """✨ Exchange an unclaimed, live observer's token for the observer's own secret, returned once; None if the
+        token is dead, already claimed or a coach's. One UPDATE, so of two claims at once exactly one wins."""
         secret = secrets.token_urlsafe(32)
         now = timezone.now()
-        claimed = cls.objects.filter(token_hash=_hash_of(token), expires_at__gt=now, claimed_at__isnull=True).update(
-            secret_hash=_hash_of(secret), claimed_at=now
-        )
+        claimed = cls.objects.filter(
+            token_hash=_hash_of(token), expires_at__gt=now, claimed_at__isnull=True, contact__role=Contact.Role.CONTACT
+        ).update(secret_hash=_hash_of(secret), claimed_at=now)
         return secret if claimed else None
+
+    @classmethod
+    def answer_as_coach(cls, token, answer):
+        """✨ Keep a coach's answer, given through their live link, and nothing else; False if the link is dead or has
+        been answered already. One UPDATE, so of two answers at once exactly one is kept."""
+        answered = cls.objects.filter(
+            token_hash=_hash_of(token),
+            expires_at__gt=timezone.now(),
+            contact__role=Contact.Role.COACH,
+            coach_answer__isnull=True,
+        ).update(coach_answer=answer)
+        return answered == 1
 
     @classmethod
     def claimed_by(cls, secret):

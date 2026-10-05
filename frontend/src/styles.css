@@ -740,6 +740,50 @@ p.time-estimate {
   border-left: 4px solid var(--red-soft);
 }
 
+/* ✨ The coach's link beneath "Sam is your coach" (ticket 13c), and its answer */
+.coach-link {
+  margin-top: 14px;
+}
+
+/* ✨ The coach's own page: each commitment a box to tick, as the mock-up's coach half draws it */
+.question-card .coach-commitment {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 15px 0;
+  border-top: 1px solid var(--border);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.question-card .coach-commitment:first-of-type {
+  border-top: none;
+}
+
+.coach-commitment input {
+  width: 22px;
+  height: 22px;
+  margin: 2px 0 0;
+  flex-shrink: 0;
+  accent-color: var(--gold);
+}
+
+.coach-commitment-text {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+.coach-commitment .coach-note {
+  display: block;
+  margin: 3px 0 0;
+}
+
+.coach-commitments .btn-full + .btn-full {
+  margin-top: 8px;
+}
+
 /* ✨ The coach's details beneath going ahead, as the original prototype's mentor screen asks for them */
 .coach-details {
   margin-top: 20px;

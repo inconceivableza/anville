@@ -428,6 +428,12 @@
         "name_prompt": { "$ref": "#/$defs/text" },
         "name_placeholder": { "$ref": "#/$defs/text" },
         "name_hint": { "$ref": "#/$defs/text" },
+        "coach_invitation": {
+          "description": "What the coach's link says before the commitments, beneath 'Sam has asked you to be their coach'. {name} is the participant's name. A blank line starts a new paragraph.",
+          "$ref": "#/$defs/text"
+        },
+        "coach_accepted": { "description": "What the coach reads once they accept. {name} is the participant's name.", "$ref": "#/$defs/text" },
+        "coach_declined": { "description": "What the coach reads once they decline, said as a good outcome. {name} is the participant's name.", "$ref": "#/$defs/text" },
         "questions": {
           "description": "Asked in order as 'Do you think <name>…', then the question.",
           "type": "array",

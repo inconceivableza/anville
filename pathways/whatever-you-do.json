@@ -85,6 +85,9 @@
             "name_prompt": "Who are you thinking of asking?",
             "name_placeholder": "Their first name",
             "name_hint": "Just a first name for now. Six quick questions follow — answer them honestly rather than generously.",
+            "coach_invitation": "They're working through Whatever You Do, a course on discerning vocational calling. It asks some searching questions, and it works far better with someone alongside.\n\nBefore you say yes, read what's actually being asked. It's a real commitment, and saying no now is much better than fading out halfway.",
+            "coach_accepted": "You've agreed to all six. That's the contract, and it's worth returning to if a conversation starts drifting into advice.",
+            "coach_declined": "Saying no now is far better than agreeing and fading out halfway. {name} will simply be told you weren't able to, with no detail.\n\nIf it's only the time commitment, it's worth telling them directly — they may be able to work around it. If it's that you'd struggle to ask rather than advise, that's genuinely useful for them to know, and there's no shame in it. Most people would.",
             "questions": [
               {
                 "id": "faith",

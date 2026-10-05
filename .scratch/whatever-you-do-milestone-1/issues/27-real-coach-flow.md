@@ -16,6 +16,11 @@
 - [ ] Revoking or reissuing the coach's link, or choosing another coach, ends access through the old link and clears the consent
 - [ ] The coach sees the comparison only as far as it is shown to the participant: nothing below the observer minimum
 
+**Carried from 13c**
+
+- [ ] Once a coach can see results, restore the coach-selection mock-up's "What happens next" on the coach's accepted page, worded for what this ticket gives them (13c dropped it, since it promised results and a guide that did not exist)
+- [ ] The participant sees their coach's answer only on the coach page; point to it from the hub, beside the consent this ticket adds
+
 **Context**
 
 - This ticket was cut down from sharing chosen sections to one consent for the results and comparison, the only feedback the pathway has while Sections 2–4 are hidden. Sharing other sections waits for the online journey (17–21)

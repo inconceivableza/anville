@@ -98,6 +98,7 @@
     <div class="coach-outcome coach-go">
       <h2>{{ checklist.coach.name }} is your coach</h2>
       <p>{{ checklist.coach.email }}</p>
+      {% if checklist.link %}{% include "engine/blocks/coach_link.html" with link=checklist.link coach=checklist.coach %}{% endif %}
       <div class="coach-buttons">
         <button type="submit" name="step" value="restart" class="btn btn-secondary">Choose someone else</button>
         <button type="submit" name="step" value="remove" class="btn btn-secondary">Remove</button>
