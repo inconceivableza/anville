@@ -4,17 +4,19 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
+
+**Handed over:** the coach's invitation, to 13c
 
 **Sprint:** 2a (ends 8 Oct, before FaithTech)
 
 **Spec:** Participants, access and consent (ADR 0004); Observers (ADR 0005); Open content and product items
 
-- [ ] New accounts take the email address as their username, and an email already in use is refused; sign-in stays by email
-- [ ] Sign-up asks for a display name, stored on the account, never in a block
-- [ ] Every page that names the participant uses the display name, never the email: their own results title, the observer's welcome and assessment wording, and the coach's invitation; an account without one falls back to the part of its email before the @, taken from the email, never from the username
-- [ ] The enrolment code is asked for only when the deployment turns it on from the environment; it is on by default, so a deployment that leaves it unset admits nobody without a code, and it is turned off in every environment for now
-- [ ] Two participants may share a display name; nothing relies on it being unique
+- [x] New accounts take the email address as their username, and an email already in use is refused; sign-in stays by email
+- [x] Sign-up asks for a display name, stored on the account, never in a block
+- [ ] Every page that names the participant uses the display name, never the email: their own results title, the observer's welcome and assessment wording, and the coach's invitation; an account without one falls back to the part of its email before the @, taken from the email, never from the username (the coach's invitation carried to 13c)
+- [x] The enrolment code is asked for only when the deployment turns it on from the environment; it is on by default, so a deployment that leaves it unset admits nobody without a code, and it is turned off in every environment for now
+- [x] Two participants may share a display name; nothing relies on it being unique
 
 **Context**
 

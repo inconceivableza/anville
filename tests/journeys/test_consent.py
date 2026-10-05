@@ -9,7 +9,7 @@ from access.models import Consent
 from engine.models import Publication, Response
 from tests.documents import pathway_document
 from tests.journeys.pages import version_on
-from tests.journeys.test_access import sign_up
+from tests.journeys.test_access import require_the_code, sign_up
 
 CONSENT = "/consent/"
 
@@ -35,7 +35,7 @@ def answer(client, block_id, value):
 @pytest.fixture
 def signed_up(client, settings, load_pathway):
     """✨ A participant who has just signed up with the enrolment code and done nothing else."""
-    settings.ANVILLE_ENROLMENT_CODE = "GRACE-2026"
+    require_the_code(settings)
     load_pathway(pathway_document())
     sign_up(client)
     return client

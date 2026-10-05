@@ -21,6 +21,8 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - "I am 18 or over" sits beside its checkbox, as "Remember me" does on sign in.
 - Submitting with it unticked: the browser stops the form and points at the box. Without JavaScript the same happens, since the check is the browser's own `required`.
 - Keyboard only: Tab reaches the box and Space ticks it.
+- "First name" comes first, with "e.g. Ed" as its placeholder, and the browser offers nothing saved for it.
+- With `ANVILLE_ENROLMENT_REQUIRED=false` there is no enrolment code field; with it left out, the field sits after the email.
 
 ## Consent
 

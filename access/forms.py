@@ -3,6 +3,7 @@ from django import forms
 from django.conf import settings
 
 from access.enrolment import is_valid_enrolment_code
+from access.models import DISPLAY_NAME_MAX_LENGTH, Account
 
 
 class SignInForm(LoginForm):
@@ -17,10 +18,18 @@ class SignInForm(LoginForm):
 
 
 class EnrolmentCodeSignupForm(forms.Form):
-    # ✨ allauth puts added fields straight after the email; the age confirmation belongs just above the button.
-    # A field left off this list would land after it, so a new one must be listed here.
-    field_order = ["email", "enrolment_code", "password1", "password2", "is_adult"]
+    # ✨ allauth puts added fields straight after the email, but the name comes first, as on the prototype's account
+    # form, and the age confirmation belongs just above the button. A field left off this list would land after it,
+    # so a new one must be listed here.
+    field_order = ["display_name", "email", "enrolment_code", "password1", "password2", "is_adult"]
 
+    # ✨ The prototype's wording for the name its account form asks for first. Kept as the display name (ticket 37).
+    display_name = forms.CharField(
+        label="First name",
+        max_length=DISPLAY_NAME_MAX_LENGTH,
+        widget=forms.TextInput(attrs={"placeholder": "e.g. Ed", "autocomplete": "off"}),
+        error_messages={"required": "Add your first name."},
+    )
     enrolment_code = forms.CharField(
         label="Enrolment code",
         error_messages={"required": "Enter the enrolment code you were given."},
@@ -32,6 +41,11 @@ class EnrolmentCodeSignupForm(forms.Form):
         error_messages={"required": "You need to be 18 or over to take part."},
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not settings.ANVILLE_ENROLMENT_REQUIRED:  # ✨ turned off from the environment: not asked for at all
+            del self.fields["enrolment_code"]
+
     def clean_enrolment_code(self):
         submitted = self.cleaned_data["enrolment_code"]
         if not is_valid_enrolment_code(submitted, configured=settings.ANVILLE_ENROLMENT_CODE):
@@ -39,6 +53,6 @@ class EnrolmentCodeSignupForm(forms.Form):
         return submitted
 
     def signup(self, request, user):
-        # ✨ Required by allauth's ACCOUNT_SIGNUP_FORM_CLASS contract. Nothing to save: the enrolment
-        # code grants access only, and the age confirmation admits an adult; neither is stored.
-        pass
+        # ✨ Called by allauth once the user is saved (the ACCOUNT_SIGNUP_FORM_CLASS contract). The enrolment code
+        # grants access only, and the age confirmation admits an adult; neither is stored. The display name is.
+        Account.objects.create(participant=user, display_name=self.cleaned_data["display_name"])

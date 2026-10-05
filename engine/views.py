@@ -12,6 +12,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_POST
 
 from access.consent import consent_required
+from access.models import name_shown_for
 from engine.document import (
     BLOCK_TYPES,
     LONG_TEXT_MAX_LENGTH,
@@ -435,7 +436,7 @@ def results(request, block_id):
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
-    shown = results_page(state.version.document, result.scores, state.answers[block_id], request.user.get_username())
+    shown = results_page(state.version.document, result.scores, state.answers[block_id], name_shown_for(request.user))
     shown["section"] = section
     shown["block_id"] = block_id
     return render(request, "engine/results.html", shown)
@@ -691,10 +692,9 @@ def _refuse_link(request):
 
 
 def _asked_by(invitation):
-    """✨ The pathway document an invitation belongs to, and the name of the participant who asked. Accounts hold no
-    name yet, so it is their username, as on the results page."""
+    """✨ The pathway document an invitation belongs to, and the display name of the participant who asked."""
     participant_response = invitation.contact.response
-    return participant_response.version.document, participant_response.participant.get_username()
+    return participant_response.version.document, name_shown_for(participant_response.participant)
 
 
 def _invitations_page(request, issued=None, refused=None, status=200):

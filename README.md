@@ -23,7 +23,7 @@ cp .env.example .env
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 
-In `.env`, paste the generated key into `DJANGO_SECRET_KEY`, set `DJANGO_DEBUG=true`, and choose an `ANVILLE_ENROLMENT_CODE`. Sign-up is refused while the code is empty.
+In `.env`, paste the generated key into `DJANGO_SECRET_KEY`, set `DJANGO_DEBUG=true`, and set `ANVILLE_ENROLMENT_REQUIRED=false` so anyone can sign up. Left out, the enrolment code is required, and sign-up is refused until you choose an `ANVILLE_ENROLMENT_CODE`.
 
 ```sh
 python manage.py migrate

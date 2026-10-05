@@ -66,9 +66,12 @@ AUTHENTICATION_BACKENDS = [
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_ADAPTER = "access.adapter.AccountAdapter"
 LOGIN_REDIRECT_URL = "hub"
 ACCOUNT_SIGNUP_FORM_CLASS = "access.forms.EnrolmentCodeSignupForm"
 ACCOUNT_FORMS = {"login": "access.forms.SignInForm"}
+# ✨ On unless the environment turns it off, so a deployment that forgets the setting admits nobody without the code.
+ANVILLE_ENROLMENT_REQUIRED = env.bool("ANVILLE_ENROLMENT_REQUIRED", default=True)
 ANVILLE_ENROLMENT_CODE = env("ANVILLE_ENROLMENT_CODE", default="")
 
 ROOT_URLCONF = "config.urls"
