@@ -40,7 +40,7 @@ cd ..
 python manage.py runserver
 ```
 
-Open http://localhost:8000 and sign up with an `@example.com` address and your enrolment code, ticking "I am 18 or over", then agree on the consent page. Use fake data only. If you are already signed in, the sign-up page sends you back to the hub. There is no sign-out button yet, so sign out at http://localhost:8000/accounts/logout/ or use a private window.
+Open http://localhost:8000 for the homepage, press "Begin →" and sign up with an `@example.com` address and your enrolment code, ticking "I am 18 or over", then agree on the consent page. Use fake data only. If you are already signed in, the sign-up page sends you back to the hub. There is no sign-out button yet, so sign out at http://localhost:8000/accounts/logout/ or use a private window.
 
 Password reset is switched off until email delivery exists (ticket 28a), so sign-in offers no "Forgot your password?" link. To reset a password, run `python manage.py changepassword <username>`. allauth derives each username from the start of the email address (`participant` for participant@example.com, with a suffix if that is taken), so check the admin if unsure.
 
@@ -82,7 +82,7 @@ A participant who has saved an answer stays on the version they started, even af
 
 ## The hub, locks and gates
 
-The hub at `/` is derived by the engine from what a participant has answered and completed: each section's status, its lock, the next step and the counts. None of it is authored, so an author cannot write a status chip or forget a lock.
+The hub at `/hub/` is derived by the engine from what a participant has answered and completed: each section's status, its lock, the next step and the counts. None of it is authored, so an author cannot write a status chip or forget a lock.
 
 A section may carry an `estimate`, worded as it is shown ("About 15 minutes"): it appears with the section's title on the hub, even while locked, and under its heading on its page as "Whole section: …", until the participant answers something there. Where a section has several activities, the block that starts each one may carry its own `estimate`, shown just above it as "This part: …" whatever has been answered. The lead-ins are the engine's, so an author writes only the figure. *Whatever You Do* says "? min" for a section not yet mostly built, and gives Section 1 none, since it cannot be finished without the Strengths assessment's longer sort.
 

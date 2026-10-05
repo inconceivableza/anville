@@ -53,7 +53,7 @@ def test_signing_up_leads_to_the_hub(client, settings):
     response = sign_up(client)
 
     assert response.status_code == 302
-    assert response.url == "/"
+    assert response.url == "/hub/"
 
 
 @pytest.mark.django_db
@@ -126,6 +126,17 @@ def test_a_participant_can_log_out_and_log_back_in(client, settings):
 
     client.post("/accounts/login/", {"login": "participant@example.com", "password": PASSWORD})
     assert get_user(client).email == "participant@example.com"
+
+
+@pytest.mark.django_db
+def test_signing_in_lands_on_the_hub(client, settings):
+    require_the_code(settings)
+    sign_up(client)
+    client.post("/accounts/logout/")
+
+    response = client.post("/accounts/login/", {"login": "participant@example.com", "password": PASSWORD})
+
+    assert (response.status_code, response.url) == (302, "/hub/")
 
 
 @pytest.mark.django_db

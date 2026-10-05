@@ -404,7 +404,8 @@ Still open, to be raised when the design touches them:
 - processor agreements with the host and any email provider;
 - the choice of an email provider, which is also blocked on delivery being built;
 - the lawful basis for keeping a coach's acceptance, which implies their faith since accepting needs every commitment ticked (ADR 0010);
-- the observer privacy notice wording and the consent text, which need writing before any real use. The consent text in `access/templates/access/consent.html` is a marked draft; raise `CONSENT_TEXT_VERSION` in `access/consent.py` when it is replaced, so everyone is asked again (ticket 08).
+- the observer privacy notice wording and the consent text, which need writing before any real use. The consent text in `access/templates/access/consent.html` is a marked draft; raise `CONSENT_TEXT_VERSION` in `access/consent.py` when it is replaced, so everyone is asked again (ticket 08);
+- a privacy notice and a contact address for the public homepage, which links to neither yet; the prototype's Privacy Policy and Terms links and its Contact section were left out until they exist (ticket 32a).
 
 Both UK and EU data protection law apply. The workbook's free text may contain special category data beyond religion (the hardship-and-loss markers solicit accounts of suffering), so the whole reflective corpus should be treated as potentially special category.
 

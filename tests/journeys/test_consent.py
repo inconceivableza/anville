@@ -43,7 +43,7 @@ def signed_up(client, settings, load_pathway):
 
 @pytest.mark.django_db
 def test_enrolment_alone_never_counts_as_consent(signed_up):
-    hub = signed_up.get("/")
+    hub = signed_up.get("/hub/")
 
     assert hub.status_code == 302
     assert hub.url == CONSENT
@@ -55,7 +55,7 @@ def test_enrolment_alone_never_counts_as_consent(signed_up):
 @pytest.mark.parametrize(
     "method, address",
     [
-        ("get", "/"),
+        ("get", "/hub/"),
         ("get", "/sections/onboarding/"),
         ("get", "/results/strengths-sort/"),
         ("post", "/sections/onboarding/complete/"),
@@ -85,7 +85,7 @@ def test_agreeing_opens_the_pathway(signed_up):
     agreed = give_consent(signed_up)
 
     assert agreed.status_code == 303  # ✨ where it leads is pinned by the tests after this one
-    assert "Test Pathway" in signed_up.get("/").content.decode()
+    assert "Test Pathway" in signed_up.get("/hub/").content.decode()
     answer(signed_up, "baseline-bible", "7")
     assert Response.objects.get().answers == {"baseline-bible": 7}
 
@@ -106,7 +106,7 @@ def test_agreeing_to_a_version_of_the_text_that_is_no_longer_current_is_refused(
 
     assert refused.status_code == 400
     assert "The text has changed since you opened this page. Please read it again." in refused.content.decode()
-    assert signed_up.get("/").url == CONSENT
+    assert signed_up.get("/hub/").url == CONSENT
 
 
 @pytest.mark.django_db
@@ -119,7 +119,7 @@ def test_declining_stores_nothing_and_answering_stays_shut(signed_up):
     signed_up.post("/sections/onboarding/complete/")
     assert not Response.objects.exists()
     assert not Consent.objects.exists(), "not even the decision to decline is recorded"
-    assert signed_up.get("/").url == CONSENT
+    assert signed_up.get("/hub/").url == CONSENT
 
 
 @pytest.mark.django_db
@@ -128,7 +128,7 @@ def test_a_participant_who_declined_can_still_agree_later(signed_up):
 
     give_consent(signed_up)
 
-    assert "Test Pathway" in signed_up.get("/").content.decode()
+    assert "Test Pathway" in signed_up.get("/hub/").content.decode()
 
 
 @pytest.fixture
@@ -157,7 +157,7 @@ def test_agreeing_again_once_started_leads_to_the_hub(consented):
     answer(consented, "baseline-bible", "7")
     withdraw_consent(consented)
 
-    assert where_agreeing_leads(consented) == "/"
+    assert where_agreeing_leads(consented) == "/hub/"
 
 
 @pytest.mark.django_db
@@ -168,12 +168,12 @@ def test_agreeing_with_nothing_to_begin_leads_to_the_hub(signed_up, load_pathway
         section.pop("gate", None)
     load_pathway(document)
 
-    assert where_agreeing_leads(signed_up) == "/"
+    assert where_agreeing_leads(signed_up) == "/hub/"
 
 
 @pytest.mark.django_db
 def test_the_hub_leads_to_the_consent_page(consented):
-    assert f'href="{CONSENT}"' in consented.get("/").content.decode()
+    assert f'href="{CONSENT}"' in consented.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db
@@ -193,7 +193,7 @@ def test_withdrawing_consent_shuts_the_pathway_and_stores_no_further_answer(cons
 
     assert withdrawn.status_code == 303
     assert withdrawn.url == CONSENT
-    assert consented.get("/").url == CONSENT
+    assert consented.get("/hub/").url == CONSENT
     answer(consented, "baseline-bible", "3")
     assert Response.objects.get().answers == {"baseline-bible": 7}
 
@@ -206,7 +206,7 @@ def test_a_withdrawal_is_shown_with_its_date_and_consent_can_be_given_again(cons
     assert f"You withdrew your consent on {today()}." in page
     assert 'name="decision" value="agree"' in page
     give_consent(consented)
-    assert "Test Pathway" in consented.get("/").content.decode()
+    assert "Test Pathway" in consented.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db
@@ -226,12 +226,12 @@ def test_a_new_version_of_the_consent_text_asks_again(consented, monkeypatch):
     """✨ Stands in for a release that raises the version beside a changed text."""
     monkeypatch.setattr("access.consent.CONSENT_TEXT_VERSION", 2)
 
-    assert consented.get("/").url == CONSENT
+    assert consented.get("/hub/").url == CONSENT
     page = consented.get(CONSENT).content.decode()
     assert "The text has changed since you agreed to version 1. Please read it again." in page
     assert version_on(page) == "2"
     give_consent(consented)
-    assert "Test Pathway" in consented.get("/").content.decode()
+    assert "Test Pathway" in consented.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db

@@ -136,4 +136,20 @@ document.addEventListener("click", async (event) => {
   }
 });
 
+// ✨ The homepage's menu is a <details>, so it opens without JavaScript; with it, following a link closes the menu.
+document.addEventListener("click", (event) => {
+  const menu = event.target.closest("[data-closes-on-link]");
+  if (!menu || !event.target.closest("a")) return;
+  menu.open = false;
+});
+
+// ✨ The homepage's forest moves only for those who have not asked their device for less motion. It is started here
+// rather than by `autoplay`, which would play before this check could stop it; everyone else, and anyone without
+// JavaScript, sees the still frame.
+if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  document.querySelectorAll("video[data-plays-unless-reduced-motion]").forEach((video) => {
+    video.play().catch(() => {}); // ✨ a browser that refuses keeps the still frame
+  });
+}
+
 mountSorts();

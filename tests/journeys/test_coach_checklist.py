@@ -343,7 +343,7 @@ def test_the_candidates_name_is_never_logged(participant, caplog):
 @pytest.mark.django_db
 def test_the_checklist_does_not_count_towards_progress(participant):
     """✨ It keeps no answer, so there is nothing to count: the test pathway's two, as without it."""
-    assert "0 of 2 answered" in participant.get("/").content.decode()
+    assert "0 of 2 answered" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db
@@ -588,7 +588,7 @@ def test_the_coachs_details_are_never_logged(participant, caplog):
 def test_a_chosen_coach_does_not_count_towards_progress(participant):
     choose(participant)
 
-    assert "0 of 2 answered" in participant.get("/").content.decode()
+    assert "0 of 2 answered" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db

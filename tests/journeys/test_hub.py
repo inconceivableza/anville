@@ -36,7 +36,7 @@ def the_calling_section(client):
 def test_a_participant_sees_an_intentional_empty_state_when_no_pathway_is_published(
     signed_in_client,
 ):
-    response = signed_in_client.get("/")
+    response = signed_in_client.get("/hub/")
 
     assert response.status_code == 200
     content = response.content.decode()
@@ -48,7 +48,7 @@ def test_a_participant_sees_an_intentional_empty_state_when_no_pathway_is_publis
 def test_a_signed_in_participant_is_shown_the_published_pathways_hub(signed_in_client, load_pathway):
     load_pathway(pathway_document())
 
-    content = signed_in_client.get("/").content.decode()
+    content = signed_in_client.get("/hub/").content.decode()
 
     assert "Test Pathway" in content
     assert "Before we begin" in content
@@ -88,7 +88,7 @@ def test_a_pathway_with_sections_but_no_content_renders_as_empty(signed_in_clien
         section.pop("gate", None)
     load_pathway(document)
 
-    content = signed_in_client.get("/").content.decode()
+    content = signed_in_client.get("/hub/").content.decode()
 
     assert "Nothing to begin yet" in content
     assert "Before we begin" not in content
@@ -122,7 +122,7 @@ def test_each_hub_entry_shows_its_sections_time_estimate_even_while_locked(signe
     document["content"]["sections"][1]["estimate"] = "About 15 minutes"
     load_pathway(document)
 
-    page = signed_in_client.get("/").content.decode()
+    page = signed_in_client.get("/hub/").content.decode()
 
     assert "About 15 minutes" in hub_entry(page, "Putting your calling into words")
     assert "Whole section:" not in hub_entry(page, "Putting your calling into words")  # ✨ plainly the section's here
@@ -139,7 +139,7 @@ def test_a_hub_entry_drops_its_estimate_once_the_section_is_started(signed_in_cl
 
     signed_in_client.post("/answers/baseline-bible/", {"value": "5", "version": version})
 
-    assert "About 1 minute" not in hub_entry(signed_in_client.get("/").content.decode(), "Before we begin")
+    assert "About 1 minute" not in hub_entry(signed_in_client.get("/hub/").content.decode(), "Before we begin")
 
 
 @pytest.mark.django_db
@@ -187,7 +187,7 @@ def test_loading_earlier_content_again_publishes_it_again_without_a_new_version(
 
 @pytest.mark.django_db
 def test_the_hub_loads_the_built_javascript_module(signed_in_client):
-    response = signed_in_client.get("/")
+    response = signed_in_client.get("/hub/")
 
     assert re.search(
         r'<script type="module" crossorigin="" src="/static/assets/main-[\w-]+\.js"></script>',
@@ -197,12 +197,12 @@ def test_the_hub_loads_the_built_javascript_module(signed_in_client):
 
 @pytest.mark.django_db
 def test_the_hub_loads_the_built_stylesheet(signed_in_client):
-    assert loads_the_built_stylesheet(signed_in_client.get("/").content.decode())
+    assert loads_the_built_stylesheet(signed_in_client.get("/hub/").content.decode())
 
 
 @pytest.mark.django_db
-def test_an_anonymous_visitor_is_sent_to_log_in(client):
-    response = client.get("/")
+def test_an_anonymous_visitor_to_the_hub_is_sent_to_log_in(client):
+    response = client.get("/hub/")
 
     assert response.status_code == 302
-    assert response.url == "/accounts/login/?next=/"
+    assert response.url == "/accounts/login/?next=/hub/"

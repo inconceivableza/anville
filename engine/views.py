@@ -89,6 +89,13 @@ class ParticipantState(NamedTuple):
         return Response.objects.get_or_create(participant=user, version=self.version)[0]
 
 
+def home(request):
+    """✨ The public homepage (ticket 32a), the same for everyone; "Begin" leads to sign-up, or to the hub once
+    signed in."""
+    begin = reverse("hub") if request.user.is_authenticated else reverse("account_signup")
+    return render(request, "engine/home.html", {"begin": begin})
+
+
 @login_required
 @consent_required
 def hub(request):

@@ -16,6 +16,20 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 | Reduced motion | DevTools, the ⋮ menu, More tools, Rendering, then "Emulate CSS media feature prefers-reduced-motion: reduce". |
 | Phone width | DevTools' device toolbar (⌘⇧M), at a width around 375px. |
 
+## The homepage (`/`, signed out and signed in)
+
+- Side by side with the prototype's homepage (`Prototypes for reference/original-prototype.html`) and its newer "How it works" (`how-it-works-homepagesection.html`), the words match. The only differences: "anonymously" is gone from step 1, the Churches, Writing, Newsletter, Team, Go further, Donate and Contact sections are gone, and so are the footer's Privacy Policy and Terms links.
+- The forest video plays muted and loops, with no sound and no controls. With the video blocked (DevTools, Network, right-click `hero.mp4`, "Block request URL", then reload), the still frame shows in its place.
+- Reduced motion, and without JavaScript: the still frame shows from the start and the forest never moves, not even for a moment.
+- In "How it works", steps 2–4 have greyed mockups, each labelled "In the workbook"; their words and times are as easy to read as step 1's.
+- The round menu button stays visible over the video and over the white and pale sections below it. It opens a panel listing About, How it works and Impact only, and each link scrolls to its section and closes the panel.
+- Without JavaScript, the menu still opens and its links still scroll.
+- Keyboard only: Tab reaches the menu button first, Enter opens it, and the focus ring shows on it and on each link.
+- DevTools, Network, reload: every request goes to this site (no Google Fonts, nothing else).
+- On a wide screen, About's text is centred in a narrower column than How it works' steps, and Impact is centred beneath them.
+- Phone width: the headline fits without sideways scrolling, step 4's four-column roadmap is still legible, the Begin buttons are easy to tap, each step's mockup sits above its words, and the impact figures stay beside their text.
+- Signed out, both "Begin →" buttons open sign-up; signed in, both open the hub. Signing in, and agreeing to consent, both land on the hub, not the homepage.
+
 ## Sign up
 
 - "I am 18 or over" sits beside its checkbox, as "Remember me" does on sign in.

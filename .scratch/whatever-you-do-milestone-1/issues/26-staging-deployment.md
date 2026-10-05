@@ -30,6 +30,10 @@ This can start as soon as ticket 05 lands, so hosting surprises surface early.
 
 - [ ] The enrolment code is required unless the environment turns it off: staging's environment and the runbook turn it off, or nobody can sign up
 
+**Carried from 32a**
+
+- [ ] The deployment builds the frontend (`npm run build` in `frontend/`) before collecting static files: the homepage's forest video and its still frame reach the served files only through that build
+
 **Carried from 03**
 
 - [ ] Password reset stays hidden and refused on staging until ticket 28a, even once staging sends email; the runbook says how the operator resets a password (`manage.py changepassword`). Re-enabling reset is ticket 28a

@@ -24,6 +24,7 @@ from engine.views import (
     coaching,
     comparison,
     complete_section,
+    home,
     hub,
     invitations,
     issue_invitation,
@@ -72,5 +73,6 @@ urlpatterns = [
     path("sections/<slug:section_id>/pages/<int:page>/continue/", move_past_page, name="move_past_page"),
     path("sections/<slug:section_id>/complete/", complete_section, name="complete_section"),
     path("sections/<slug:section_id>/reopen/", reopen_section, name="reopen_section"),
-    path("", hub, name="hub"),
+    path("hub/", hub, name="hub"),
+    path("", home, name="home"),
 ]

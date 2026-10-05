@@ -9,8 +9,10 @@
     {% vite_asset 'src/main.js' %}
   </head>
   <body>
-    <main class="container">
-      {% block content %}{% endblock content %}
-    </main>
+    {% block body %}
+      <main class="container">
+        {% block content %}{% endblock content %}
+      </main>
+    {% endblock body %}
   </body>
 </html>
