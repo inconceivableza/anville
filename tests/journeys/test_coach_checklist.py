@@ -415,7 +415,7 @@ def test_the_chosen_coach_is_shown_again_after_a_reload(participant):
     page = shown(participant, ONBOARDING)
 
     assert screen(page) == "chosen"
-    assert "Sam is your coach" in text(checklist_of(page))
+    assert "You've chosen Sam" in text(checklist_of(page))
     assert "sam@example.com" in text(checklist_of(page))
     assert re.search(r'<button type="submit" name="step" value="restart"[^>]*>Choose someone else</button>', page)
     assert re.search(r'<button type="submit" name="step" value="remove"[^>]*>Remove</button>', page)
@@ -525,7 +525,7 @@ def test_keeping_the_coach_goes_back_to_them_as_kept(participant):
 
     assert kept.status_code == 200
     assert screen(kept.content.decode()) == "chosen"
-    assert "Sam is your coach" in text(kept)
+    assert "You've chosen Sam" in text(kept)
     assert [(coach.name, coach.email) for coach in Contact.objects.all()] == [("Sam", "sam@example.com")]
 
 
@@ -571,7 +571,7 @@ def test_the_coach_is_shown_as_typed_never_as_markup(participant):
     page = shown(participant, ONBOARDING)
 
     assert "<b>Sam</b>" not in page
-    assert "&lt;b&gt;Sam&lt;/b&gt; is your coach" in page
+    assert "You've chosen &lt;b&gt;Sam&lt;/b&gt;" in page
 
 
 @pytest.mark.django_db

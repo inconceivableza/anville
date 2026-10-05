@@ -352,7 +352,7 @@ def test_a_chosen_coach_is_kept_on_the_coach_page_and_apart_from_the_contacts(pa
     saved = choose(participant, htmx=False)
 
     assert saved.url == f"{COACH_PAGE}#block-coach"
-    assert "Sam is your coach" in participant.get(COACH_PAGE).content.decode()
+    assert "You've chosen Sam" in participant.get(COACH_PAGE).content.decode()
     move_past(participant, 2)
     assert "sam@example.com" not in participant.get(CONTACTS_PAGE).content.decode()
 
