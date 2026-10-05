@@ -1,49 +1,15 @@
 {% extends "engine/base.html" %}
 {% comment %}
-  ✨ A participant's stored result, in the wording of the pathway version it was scored against. Each bar is
-  an SVG rect whose width is its percent of a 100-wide view box, and whose colour is a stylesheet class
-  (a construct's tone or a rank), so nothing here needs an inline style.
+  ✨ A participant's stored result, in the wording of the pathway version it was scored against.
 {% endcomment %}
 {% load section_pages %}
-{% block head_title %}{{ title }}{% endblock head_title %}
+{% block head_title %}{{ results.title }}{% endblock head_title %}
 
 {% block content %}
   <p class="back-to-hub"><a href="{% page_url section.id section.page %}">← Back to {{ section.title }}</a></p>
-  <h1>{{ title }}</h1>
+  <h1>{{ results.title }}</h1>
 
-  {% for framework in frameworks %}
-    <section class="results-section">
-      <h2>{{ framework.heading }}</h2>
-      {% if framework.subtitle %}<p class="results-desc">{{ framework.subtitle }}</p>{% endif %}
-
-      {% for bar in framework.bars %}
-        <div class="result-bar-row">
-          <div class="result-bar-label">
-            <span class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</span>
-            <span class="result-bar-score {{ bar.colour }}">{{ bar.percent }}%</span>
-          </div>
-          <svg class="result-bar-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-            <rect class="bar-fill {{ bar.colour }}" width="{{ bar.percent }}" height="10" />
-          </svg>
-          {% if bar.description %}<p class="result-bar-subdesc">{{ bar.description }}</p>{% endif %}
-        </div>
-      {% endfor %}
-
-      <details class="item-scores">
-        <summary>Show item scores</summary>
-        {% for group in framework.groups %}
-          <h3 class="item-group {{ group.colour }}">{{ group.label }}</h3>
-          <ul>
-            {% for item in group.items %}
-              <li><span>{{ item.text }}</span><span class="item-score">{{ item.value }}</span></li>
-            {% endfor %}
-          </ul>
-        {% endfor %}
-      </details>
-    </section>
-  {% endfor %}
-
-  {% if disclaimer %}<p class="results-disclaimer">{{ disclaimer }}</p>{% endif %}
+  {% include "engine/results_body.html" %}
 
   {% comment %}✨ A form, not a link: pressing it is the visit Section 1 waits on, and a browser never loads a POST ahead of time.{% endcomment %}
   <form class="results-next" method="post" action="{% url 'visit_comparison' block_id %}">

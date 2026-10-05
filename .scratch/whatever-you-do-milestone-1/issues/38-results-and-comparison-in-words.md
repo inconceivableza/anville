@@ -18,6 +18,11 @@
 - [ ] The bands, their names and the "higher, lower, much the same" wording are authored in the pathway document; the prototype's bands are placeholders until the content owner gives real ones
 - [ ] Decide here, with the content owner: whether "Show item scores" keeps its item values, and whether the gap badge keeps its points ("Others see more (+12)") or its words alone. Until decided, both stay as they are
 
+**Carried from 27**
+
+- [ ] The coach's link shows the results and comparison through the same templates as the participant's pages, naming the participant where those say "you"; redraw it there too
+- [ ] The observers' notices describe the strip as "each person's scores without their name, lowest first"; reword them to match once the strip gives each person's band in words
+
 **Context**
 
 - Variant F as prototyped replaces each page's whole per-construct block, so it drops the results page's construct descriptions and the comparison's agreement line and distribution expander; that is the prototype being throwaway, not a decision

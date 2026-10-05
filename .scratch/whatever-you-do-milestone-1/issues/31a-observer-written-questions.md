@@ -22,6 +22,11 @@
 
 - Sending the observer assessment creates the observer's one observer response, bound to their claimed secret and unique to it (ADR 0009). The written part is stored in that same response, never a second one
 
+**Carried from 27**
+
+- [ ] The notices now say only what is true without the written part: "a few open questions" and "{name} never sees your written answers" are gone from both. Put the open questions back into what the observer will do, check "Takes about 10–15 minutes" with the content owner, and add the written answers' account from the qualitative prototype ("without names attached")
+- [ ] Whatever You Do's notice says "{name} may also choose to show this to a trusted third party" (ADR 0011); say whether that covers the written answers, as 31b decides
+
 **Carried from 31**
 
 - Nothing an observer types is saved before they send it (spec, Open content and product items, "Observer autosave")

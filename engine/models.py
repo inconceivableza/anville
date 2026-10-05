@@ -237,7 +237,8 @@ class Invitation(models.Model):
 
     A coach's link is of the same kind, but asks them to accept or decline the coach's commitments instead (ticket 13c).
     It is never claimed: the participant holding a copy could claim it as easily as use it. Only the answer is kept, on
-    the link, so revoking or reissuing asks again. Each kind of link works only at its own address.
+    the link, so revoking or reissuing asks again. Each kind of link works only at its own address. Once the coach has
+    accepted, the participant's consent for them to see the results and comparison is kept on the link too (ticket 27).
     """
 
     class CoachAnswer(models.TextChoices):
@@ -253,6 +254,9 @@ class Invitation(models.Model):
     # ✨ A coach's answer, never which commitments were ticked: one affirms the coach's faith (spec, Coach). Nor when
     # they answered, which nothing needs.
     coach_answer = models.CharField(max_length=16, choices=CoachAnswer.choices, null=True, blank=True)
+    # ✨ When the participant ticked "Give my coach access to my results and this comparison" (ticket 27), while it stands. Kept on the link,
+    # as the answer is, so revoking or reissuing it, or choosing another coach, takes the consent with it (ADR 0011).
+    results_shared_at = models.DateTimeField(null=True, blank=True)
 
     @classmethod
     def issue(cls, contact, lifetime):
@@ -300,6 +304,34 @@ class Invitation(models.Model):
             coach_answer__isnull=True,
         ).update(coach_answer=answer)
         return answered == 1
+
+    @classmethod
+    def accepted_coach_of(cls, response):
+        """✨ The live link through which the participant's coach accepted, or None."""
+        return cls._accepted_by_coach(response).first()
+
+    @classmethod
+    def share_results_with_coach(cls, response):
+        """✨ Keep the participant's consent for their coach to see their results and comparison, on the live link
+        through which the coach accepted; False if there is none. One UPDATE, so a link revoked meanwhile takes none."""
+        return cls._accepted_by_coach(response).update(results_shared_at=timezone.now()) == 1
+
+    @classmethod
+    def withdraw_results_from_coach(cls, participant):
+        """✨ Take back the participant's consent for their coach to see their results, on whatever link and response
+        of theirs it was given."""
+        cls.objects.filter(contact__response__participant=participant, contact__role=Contact.Role.COACH).update(
+            results_shared_at=None
+        )
+
+    @classmethod
+    def _accepted_by_coach(cls, response):
+        return cls.objects.filter(
+            contact__response=response,
+            contact__role=Contact.Role.COACH,
+            coach_answer=cls.CoachAnswer.ACCEPTED,
+            expires_at__gt=timezone.now(),
+        )
 
     @classmethod
     def claimed_by(cls, secret):

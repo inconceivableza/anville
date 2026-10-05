@@ -25,3 +25,7 @@
 - [ ] For each question, the participant sees their answer beside the observers', without names and shuffled per question
 - [ ] No observer's written answer appears until at least three observers have sent the written part with at least one answer in it, counted over the whole part, not per question, on the page or through any other request (ADR 0008)
 - [ ] The word comparison normalises words (case, simple stemming, an authored synonym map), groups them three ways, and counts how many observers chose each; words chosen only by observers get the most weight
+
+**Carried from 27**
+
+- [ ] The coach's link shows the comparison through the participant's own comparison body once they consent (ADR 0011), so written answers put there reach the coach too. Decide whether the coach sees them; if so, the observers' notice says so, and if not, keep them out of the coach's view

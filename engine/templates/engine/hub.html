@@ -48,6 +48,27 @@
 
     {# ✨ The prototype reaches its invite screen from a "Trusted Contacts · Manage →" card; the counts on it are ticket 14's. #}
     <p class="hub-consent"><a href="{% url 'invitations' %}">Invite others to assess you →</a></p>
+    {% comment %}
+      ✨ The way to the coach page, where the coach's answer is (ticket 27). Until a coach is chosen, the original
+      prototype's "Your Mentor" card, saying "coach"; after, a pointer saying their answer in the coach page's own words,
+      and while they can see the results and comparison, a line saying so, so the participant always knows what they
+      are sharing.
+    {% endcomment %}
+    {% if coach %}
+      <p class="hub-consent">
+        <a href="{{ coach.coach_page }}">{% if coach.answer == "accepted" %}{{ coach.name }} is your coach{% elif coach.answer == "declined" %}{{ coach.name }} isn't able to be your coach{% elif coach.answer == "waiting" %}Waiting for {{ coach.name }} to answer{% else %}You've chosen {{ coach.name }}: send {{ coach.name }} a link{% endif %} →</a>
+        {% if coach.shared %}<br>{{ coach.name }} can see your results and comparison.{% endif %}
+      </p>
+    {% elif coach_page %}
+      <a class="contacts-status-card" href="{{ coach_page }}">
+        <span class="contacts-status-header">
+          <span class="contacts-status-icon" aria-hidden="true">🧭</span>
+          <span class="contacts-status-title">Your Coach</span>
+          <span class="contacts-status-manage">Add →</span>
+        </span>
+        <span class="contacts-status-text">You haven't added a coach yet. Walking through this with someone makes all the difference – add them whenever you're ready.</span>
+      </a>
+    {% endif %}
   {% else %}
     <h1>Nothing to begin yet</h1>
     <p>No pathway has been published here yet. When one is, it will appear on this page.</p>

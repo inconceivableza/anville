@@ -4,9 +4,13 @@
   then the commitments as first-person promises, each a box to tick. Accepting needs every box; declining is always
   offered, and said as a good outcome. Only the answer is kept, never the boxes, and the page says so.
 
+  Once accepted, the mock-up's "What happens next" says what this link will show; once the participant consents, it
+  shows their results and comparison, read-only, through the same bodies as their own pages (ticket 27).
+
   Departures from the mock-up: "Accept and get the first session guide →" is "Accept →", and its promise to send a
-  briefing pack is gone, since there is no guide and no email yet; so is its "What happens next", whose results for
-  the coach are ticket 27's. Accept is not held disabled until every box is ticked, nor is "n of 6 agreed" counted
+  briefing pack is gone, since there is no guide and no email yet; "What happens next" keeps the mock-up's first
+  sentence with "the first section" as "the strengths assessment" (the sort is no longer in Section 1), and promises
+  the comparison where the mock-up promised a guide (ticket 25's), on this page since nothing is sent. Accept is not held disabled until every box is ticked, nor is "n of 6 agreed" counted
   beneath them, which would need JavaScript; the server refuses an accept short of a box and says why.
 {% endcomment %}
 {% block head_title %}{{ name }} has asked you to be their coach{% endblock head_title %}
@@ -16,7 +20,22 @@
     <div class="coach-outcome coach-go">
       <h2>Thank you — {{ name }} will be told</h2>
       {{ text.coach_accepted|linebreaks }}
+      {% if not shared %}
+        <div class="coach-next">
+          <p class="coach-next-label">What happens next</p>
+          <p>{{ name }} finishes the strengths assessment and sends it to you. You'll get the results, and how others rate the same strengths. They'll appear on this page, so keep the link.</p>
+        </div>
+      {% endif %}
     </div>
+    {% if shared %}
+      <section class="coach-shared">
+        <h1>{{ name }}'s results</h1>
+        <p class="results-desc">{{ name }} is happy for you to see this, exactly as {{ name }} sees it. It goes from here if {{ name }} stops sharing it.</p>
+        {% include "engine/results_body.html" with results=shared.results %}
+        <h1>How others experience {{ name }}</h1>
+        {% include "engine/comparison_body.html" with comparison=shared.comparison for_coach=True %}
+      </section>
+    {% endif %}
   {% elif answer == "declined" %}
     <div class="coach-outcome coach-check">
       <h2>That's a good answer</h2>

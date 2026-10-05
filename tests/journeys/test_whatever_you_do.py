@@ -357,10 +357,16 @@ def test_a_chosen_coach_is_kept_on_the_coach_page_and_apart_from_the_contacts(pa
     assert "sam@example.com" not in participant.get(CONTACTS_PAGE).content.decode()
 
 
+# ✨ The observers' notice's one sentence about the coach (ticket 27), whom the faithful port never asks for.
+SHOWN_TO_THE_COACH = " {name} may also choose to show this to a trusted third party."
+
+
 def without_the_coach_step(document):
     """✨ Only this pathway asks for a coach the mock-up's way; the faithful port's own mentor screen is ticket 10b.
     The coach page goes with it, so the break that opened that page goes too, and the skip label of the break that
-    closed it."""
+    closed it, and the privacy notice's sentence saying the participant may show their coach what they see."""
+    observers = document["observers"]
+    observers["privacy_notice"] = observers["privacy_notice"].replace(SHOWN_TO_THE_COACH, "")
     for section in document["content"]["sections"]:
         blocks = [block for block in section["blocks"] if block["type"] != "coach_checklist"]
         section["blocks"] = [

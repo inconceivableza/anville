@@ -104,8 +104,20 @@ def hub(request):
         {
             "title": text_for(state.version.document["title"], "participant"),
             "hub": hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past),
+            "coach": _coach_of(state.response),
+            "coach_page": _coach_page_of(state.version.document),
         },
     )
+
+
+def _coach_page_of(document):
+    """✨ The address of the page of the document's coach checklist, at the checklist, or None for a document without
+    one, whose hub then says nothing of a coach."""
+    for block in blocks_of(document):
+        if block["type"] == "coach_checklist":
+            section = section_of(document, block["id"])
+            return f"{page_url(section['id'], page_of(section, block['id']))}#block-{block['id']}"
+    return None
 
 
 @login_required
@@ -475,9 +487,7 @@ def results(request, block_id):
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
     shown = results_page(state.version.document, result.scores, state.answers[block_id], name_shown_for(request.user))
-    shown["section"] = section
-    shown["block_id"] = block_id
-    return render(request, "engine/results.html", shown)
+    return render(request, "engine/results.html", {"results": shown, "section": section, "block_id": block_id})
 
 
 @login_required
@@ -490,14 +500,78 @@ def comparison(request, block_id):
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
-    document = state.version.document
-    assessments = ObserverResponse.assessments_for(state.response)
-    observer_average = aggregate(document, assessments.assessments)
-    shown = comparison_page(document, result.scores, state.answers[block_id], observer_average)
+    shown = _comparison_of(state.response, result.scores, state.answers[block_id])
+    context = {"comparison": shown, "block_id": block_id, "coach": _coach_sharing(state.response, block_id)}
+    return render(request, "engine/comparison.html", context)
+
+
+@login_required
+@consent_required
+@require_POST
+def share_with_coach(request, block_id):
+    """✨ The comparison's "Give my coach access to my results and this comparison", ticked or not (ticket 27). Ticking is refused until the
+    participant has visited their comparison and their coach has accepted through a link that still works; the consent
+    is then kept on that link, so it goes with it (ADR 0011). Unticking withdraws it at once, whatever else holds.
+
+    The box saves as it changes: with htmx, "Saved" and the line under it for the new state; without, the comparison
+    again, at the box."""
+    state, result, _ = _own_result(request.user, block_id)
+    if request.POST.get("share") != "on":
+        Invitation.withdraw_results_from_coach(request.user)
+    else:
+        visited = result is not None and block_id in state.response.comparisons_visited
+        if not (visited and Invitation.share_results_with_coach(state.response)):
+            refusal = "Your coach can see this only once they have accepted and you have seen your comparison."
+            return render(request, "engine/save_status.html", {"refusal": refusal}, status=403)
+    if request.headers.get("HX-Request") == "true":
+        return render(request, "engine/coach_share_saved.html", {"coach": _coach_sharing(state.response, block_id)})
+    return _see_other(f"{reverse('comparison', args=[block_id])}#coach-share")
+
+
+def _comparison_of(response, scores, sort):
+    """✨ The comparison of one participant's result with their observers, as both they and their coach see it."""
+    document = response.version.document
+    assessments = ObserverResponse.assessments_for(response)
+    shown = comparison_page(document, scores, sort, aggregate(document, assessments.assessments))
     # ✨ Below the minimum there is no comparison on the page to call illustrative.
     shown["illustrative"] = assessments.all_test_data and shown["frameworks"] is not None
-    shown["block_id"] = block_id
-    return render(request, "engine/comparison.html", shown)
+    return shown
+
+
+def _coach_sharing(response, block_id):
+    """✨ The participant's coach as the comparison's consent needs them, or None when there is nothing to say: with
+    `offer` "tick" once they accepted through a working link and the comparison was visited by its button; "expired"
+    when they accepted but the link no longer works; "awaiting" while they have not answered or have no link yet. A
+    coach who declined is offered nothing here: the coach page already says so."""
+    coach = _coach_of(response)
+    if coach is None:
+        return None
+    if coach["can_see"]:
+        offer = "tick" if block_id in response.comparisons_visited else None
+    elif coach["answer"] == Invitation.CoachAnswer.ACCEPTED:
+        offer = "expired"
+    elif coach["answer"] in ("waiting", None):
+        offer = "awaiting"
+    else:
+        offer = None
+    return {**coach, "offer": offer} if offer else None
+
+
+def _coach_of(response):
+    """✨ The coach kept, as the hub and the comparison read them, or None: their name, the coach page, their answer as
+    the coach page tells it, whether they can be shown the results (accepted through a working link) and whether they
+    are."""
+    coach = response.contacts.filter(role=Contact.Role.COACH).first() if response is not None else None
+    if coach is None:
+        return None
+    accepted = Invitation.accepted_coach_of(response)
+    return {
+        "name": coach.name,
+        "coach_page": _listed_at(coach),
+        "answer": _coach_link_state(coach.pk)["answer"],
+        "can_see": accepted is not None,
+        "shared": accepted is not None and accepted.results_shared_at is not None,
+    }
 
 
 @login_required
@@ -730,6 +804,7 @@ def _coach_page(request, invitation, token, refusal=None, ticked=(), status=200)
         "answer": invitation.coach_answer,
         "refusal": refusal,
         "token": token,
+        "shared": _shared_with_coach(invitation, name),
     }
     shown = render(request, "engine/coach_link.html", context, status=status)
     shown["Cache-Control"] = "no-store"
@@ -738,6 +813,26 @@ def _coach_page(request, invitation, token, refusal=None, ticked=(), status=200)
 
 # ✨ The authored passages of the coach's page, each naming the participant as {name}.
 COACH_TEXT_FIELDS = ("coach_invitation", "coach_accepted", "coach_declined")
+
+
+def _shared_with_coach(invitation, name):
+    """✨ The participant's results and comparison, as they see them, for a coach who accepted through this link and
+    whom they are happy to show; otherwise None. Read afresh on every visit, so a withdrawal shows at once (ticket 27).
+    Nothing else of the participant's is read: only the stored result, the sort it was scored from and the observers'
+    assessments, through the same suppression as the participant's own comparison."""
+    if invitation.coach_answer != Invitation.CoachAnswer.ACCEPTED or invitation.results_shared_at is None:
+        return None
+    participant_response = invitation.contact.response
+    document = participant_response.version.document
+    scored = _scored_block(document)
+    result = Result.objects.filter(response=participant_response, block_id=scored["id"]).first() if scored else None
+    if result is None:
+        return None
+    sort = participant_response.answers[scored["id"]]
+    return {
+        "results": results_page(document, result.scores, sort, name),
+        "comparison": _comparison_of(participant_response, result.scores, sort),
+    }
 
 
 def _coach_block(invitation):
