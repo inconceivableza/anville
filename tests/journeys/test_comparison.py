@@ -1,8 +1,10 @@
 """✨ The comparison: the participant's own result beside the mean of what their observers see (ADR 0005).
 
 Below the minimum number of observers the participant sees how many have answered and no numbers. From the minimum
-up they see each construct's percent beside the observers' mean, single observers' percents only in the distribution
-strip and in ascending order, and never which person has answered.
+up they see each construct's standing in words beside the standing of the observers' mean, and whether others see it
+higher, lower or much the same, single observers' standings only in the spread and in ascending order, never a percent
+(ticket 38), and never
+which person has answered.
 """
 
 import re
@@ -13,6 +15,7 @@ from django.contrib.auth import get_user_model
 from engine.models import Contact, Publication, Response
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.test_answers import participant  # noqa: F401 (a fixture)
+from tests.journeys.test_coach_checklist import text
 from tests.journeys.test_observer_responses import SEED_PASSWORD, an_observer, seed
 from tests.journeys.test_results import (  # noqa: F401 (signed_in is a fixture, used by name)
     SORT,
@@ -71,43 +74,50 @@ def test_below_the_minimum_the_comparison_shows_how_many_have_answered_and_no_nu
     assert "%" not in shown
 
 
-# ✨ The list of one construct's observers' percents in its distribution strip.
+# ✨ The list of one construct's observers' standings in its spread.
 STRIP_VALUES = re.compile(r'<ol class="distribution-values[^"]*"[^>]*>(.*?)</ol>', re.S)
+
+# ✨ A percent, as the comparison showed them before ticket 38, in what a reader sees.
+A_PERCENT = re.compile(r"\d+%")
 
 
 def strips(page):
-    """✨ Each construct's distribution strip: the list of its observers' percents, in the order the page gives them."""
-    return [re.findall(r"(\d+)%", strip) for strip in STRIP_VALUES.findall(page)]
-
-
-def outside_the_strips(page):
-    """✨ The page with every strip's list of observers' percents cut out, leaving what else it shows."""
-    return STRIP_VALUES.sub("", page)
-
-
-@pytest.mark.django_db
-def test_no_single_observers_percent_reaches_the_participant_outside_the_strip_only_the_means(signed_in, participant):
-    with_observers(signed_in, participant, THREE_OBSERVERS)
-
-    shown = outside_the_strips(comparison(signed_in).content.decode())
-
-    assert "70%" in shown and "30%" in shown
-    for single in ("80%", "60%", "20%", "40%"):
-        assert single not in shown
+    """✨ Each construct's spread: the list of its observers' standings, in the order the page gives them."""
+    return [
+        [text(entry).strip() for entry in re.findall(r"<li>(.*?)</li>", strip, re.S)]
+        for strip in STRIP_VALUES.findall(page)
+    ]
 
 
 @pytest.mark.django_db
-def test_each_construct_shows_the_participants_percent_beside_the_observers_mean_paired_by_construct(
+def test_from_the_minimum_no_percent_reaches_the_participant_neither_theirs_the_means_nor_any_observers(
     signed_in, participant
 ):
-    """✨ Ponder is declared before Deliver but the participant's result ranks Deliver first, so pairing by position
-    would put Deliver's 90% beside Ponder's 30%."""
+    """✨ What a reader sees, as the coach's test reads it: the drawing places its words by percents of its width, in
+    its markup, which no reader sees."""
     with_observers(signed_in, participant, THREE_OBSERVERS)
 
-    shown = comparison(signed_in).content.decode()
+    shown = text(comparison(signed_in))
 
-    assert in_order(shown, "Apostle", "90%", "70%", "Prophet", "10%", "30%")
-    assert in_order(shown, "Deliver", "90%", "70%", "Ponder", "10%", "30%")
+    assert not A_PERCENT.search(shown)
+
+
+@pytest.mark.django_db
+def test_each_construct_names_the_participants_standing_and_the_observers_and_how_they_see_it_paired_by_construct(
+    signed_in, participant
+):
+    """✨ An even share is 50: the participant's 90 and the observers' mean of 70 are both Leading, 10 and 30 both Less
+    used, and every gap is 20. Ponder is declared before Deliver but the participant's result ranks Deliver first, so
+    pairing by position would put Deliver's Leading beside Ponder's Less used. Each mark is named in words, for screen
+    readers, as the drawing is hidden from them."""
+    with_observers(signed_in, participant, THREE_OBSERVERS)
+
+    shown = text(comparison(signed_in))
+
+    at_90 = ["You: Leading", "Others: Leading", "Others place this lower"]
+    at_10 = ["You: Less used", "Others: Less used", "Others place this higher"]
+    assert in_order(shown, "Apostle", *at_90, "Prophet", *at_10)
+    assert in_order(shown, "Deliver", *at_90, "Ponder", *at_10)
 
 
 @pytest.mark.django_db
@@ -172,7 +182,7 @@ def test_a_seeded_participant_reaches_the_comparison_from_their_results_page(cli
     page = client.post(button.group(1), follow=True)
     assert page.redirect_chain[-1][0].endswith("/comparison/")
     assert page.status_code == 200
-    assert "%" in page.content.decode()
+    assert "Others:" in text(page)
     assert "illustrative" in page.content.decode()
 
 
@@ -223,15 +233,16 @@ def test_each_construct_shows_how_far_the_observers_agree(signed_in, participant
 
 
 @pytest.mark.django_db
-def test_the_strip_gives_each_observers_percent_in_ascending_order_never_the_order_they_answered(
+def test_the_spread_gives_each_observers_standing_in_ascending_order_never_the_order_they_answered(
     signed_in, participant
 ):
-    """✨ Observers answer 80, then 60, then 70. Apostle's strip comes first, as the participant ranks it first."""
+    """✨ Observers answer 80, then 60, then 70: against an even share of 50, Leading, Strong, Leading. Apostle's strip
+    comes first, as the participant ranks it first."""
     with_observers(signed_in, participant, [observer_sort(80), observer_sort(60), observer_sort(70)])
 
     apostle = strips(comparison(signed_in).content.decode())[0]
 
-    assert apostle == ["60", "70", "80"]
+    assert apostle == ["Strong", "Leading", "Leading"]
 
 
 @pytest.mark.django_db

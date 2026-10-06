@@ -1,0 +1,9 @@
+{% comment %}
+  ✨ The line every construct is drawn on, as variant F drew it (ticket 38): an axis from 0 to 100 along y = 3, with a
+  little room past each end in its SVG's view box, a short solid tick at each end, and a dashed tick at `even_at`, an
+  even share of the framework. Included inside each drawing's SVG, before its marks, so they sit on top.
+{% endcomment %}
+<line class="result-axis-line" x1="0" y1="3" x2="100" y2="3" />
+<line class="result-axis-end" x1="0" y1="1.5" x2="0" y2="4.5" />
+<line class="result-axis-end" x1="100" y1="1.5" x2="100" y2="4.5" />
+<line class="result-even" x1="{{ even_at }}" y1="0.5" x2="{{ even_at }}" y2="5.5" />

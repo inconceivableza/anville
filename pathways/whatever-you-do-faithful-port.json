@@ -412,7 +412,7 @@
     "scoring": { "method": "compositional_share" }
   },
   "observers": {
-    "privacy_notice": "[Draft: this notice must be written properly before anyone real takes part.]\n\n{name} has asked you to help them see their strengths as others see them. You'll sort some strengths into buckets and adjust the intensity of each. Takes about 10–15 minutes.\n\nWhat we keep: your answers, and how you know {name}. You don't give your name: we know who this link was sent to because {name} added you to their list, and that is kept apart from your answers.\n\nWhat {name} sees of your answers: nothing until enough people have answered. Then, the average of everyone's answers, and each person's scores without their name, lowest first. Your name is never shown with your answers.\n\nIf you change your mind, you can withdraw while this link works, and your answers will be deleted."
+    "privacy_notice": "[Draft: this notice must be written properly before anyone real takes part.]\n\n{name} has asked you to help them see their strengths as others see them. You'll sort some strengths into buckets and adjust the intensity of each. Takes about 10–15 minutes.\n\nWhat we keep: your answers, and how you know {name}. You don't give your name: we know who this link was sent to because {name} added you to their list, and that is kept apart from your answers.\n\nWhat {name} sees of your answers: nothing until enough people have answered. Then, the average of everyone's answers, and each person's answers without their name, lowest first, as a word such as \"Strong\" and a dot on a line. Your name is never shown with your answers.\n\nIf you change your mind, you can withdraw while this link works, and your answers will be deleted."
   },
   "presentation": {
     "results_title": "{name}, here’s your profile",
@@ -455,6 +455,11 @@
     },
     "comparison": {
       "significant_gap": 5,
+      "seen_by_others": {
+        "others_higher": "Others place this higher",
+        "you_higher": "Others place this lower",
+        "much_the_same": "Much the same"
+      },
       "agreement": {
         "bands": [
           { "up_to": 6, "label": "Strong agreement" },

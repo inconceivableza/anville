@@ -1,4 +1,4 @@
-"""✨ Where a construct's share stands, in words: its band by how far it sits from an even share of its framework
+"""✨ Where a construct's share stands, in words: its standing, by how far it sits from an even share of its framework
 (ticket 38).
 
 The bands are the pathway document's `presentation.standing`, falling back to variant F's placeholders until the content
@@ -20,7 +20,8 @@ def standing(document, percent, constructs):
     """✨ The label of the highest band a share reaches, whatever order the bands are written in, or the label for below.
 
     An even share is 100 divided among the framework's `constructs`, so a share is `percent × constructs` percent of
-    it, kept in whole numbers so a share exactly on a band's edge is in it.
+    it. A participant's own share is a whole number, so this is exact for them, and a share exactly on a band's edge
+    is in it; an observers' mean is compared just as it is.
     """
     of_even = percent * constructs
     settings = document.get("presentation", {}).get("standing", DEFAULT_STANDING)

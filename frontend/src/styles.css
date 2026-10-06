@@ -892,7 +892,8 @@ p.time-estimate {
 }
 
 .question-card .coach-confirm,
-.coach-share .coach-confirm {
+.coach-share .coach-confirm,
+.comparison-spread-toggle {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -901,7 +902,8 @@ p.time-estimate {
   cursor: pointer;
 }
 
-.coach-confirm input {
+.coach-confirm input,
+.comparison-spread-toggle input {
   flex-shrink: 0;
   width: 18px;
   height: 18px;
@@ -1398,8 +1400,7 @@ html[data-javascript="loaded"] .invitation-copy {
   margin-bottom: 4px;
 }
 
-.result-bar-name,
-.result-bar-score {
+.result-bar-name {
   font-weight: 600;
 }
 
@@ -1409,17 +1410,10 @@ html[data-javascript="loaded"] .invitation-copy {
   font-size: 12px;
 }
 
-.result-bar-track {
-  display: block;
-  width: 100%;
-  height: 10px;
-  background: var(--border);
-  border-radius: 5px;
-}
+/* ✨ A construct's standing in words and its dot on the framework's axis, run out from a dashed tick at an even share
+   in the axis's middle (ticket 38, variant F). */
 
-/* A construct's band in words and its dot on the framework's axis, run out from a dashed tick at an even share (ticket 38, variant F) */
-
-.result-band {
+.result-standing {
   font-weight: 700;
   white-space: nowrap;
 }
@@ -1428,11 +1422,19 @@ html[data-javascript="loaded"] .invitation-copy {
   display: block;
   width: 100%;
   height: auto;
+  /* ✨ So the arrow past the right-hand end, for a share beyond it, shows whole. */
+  overflow: visible;
 }
 
 .result-axis-line {
   stroke: var(--border);
   stroke-width: 0.6;
+}
+
+.result-axis-end {
+  stroke: var(--ink-muted);
+  stroke-width: 0.6;
+  vector-effect: non-scaling-stroke;
 }
 
 .result-even {
@@ -1511,109 +1513,136 @@ html[data-javascript="loaded"] .invitation-copy {
   margin-bottom: 20px;
 }
 
-.comparison-legend {
-  display: flex;
-  gap: 20px;
-  font-size: 13px;
-  color: var(--ink-muted);
-  margin-bottom: 20px;
-}
-
-.comparison-key-you,
-.comparison-key-others {
-  font-weight: 600;
-}
-
-.comparison-key-you,
+/* ✨ The comparison's two colours: the participant's and the observers', on the axis and in the words (ticket 38). */
 .comparison-you {
   color: var(--gold);
   fill: var(--gold);
 }
 
-.comparison-key-others,
 .comparison-others {
   color: var(--blue-soft);
   fill: var(--blue-soft);
 }
 
+/* ✨ Holds the person and group icons the comparison draws with; takes no room itself. */
+.comparison-marks {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ✨ Each construct as variant F laid it out: the name, the drawing and the words in a row, with room under the
+   drawing for how far the observers agree while the card's spread is ticked. On a phone they stack. */
 .comparison-pair {
-  margin-bottom: 18px;
-}
-
-.comparison-pair .result-bar-name {
-  font-size: 14px;
-  margin-bottom: 6px;
-}
-
-.comparison-bar-row {
-  display: flex;
+  display: grid;
+  /* ✨ The name's column just wide enough for the longest name or persona ("The Philosopher"), the same on every
+     row so the lines line up, leaving the rest to the line. */
+  grid-template-columns: 96px 1fr minmax(120px, auto);
+  grid-template-areas:
+    "name drawing words"
+    ". spread words";
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  column-gap: 12px;
+  margin-bottom: 14px;
 }
 
-.comparison-bar-row .result-bar-track {
-  flex: 1;
-}
-
-.comparison-agreement {
-  font-size: 12px;
-  color: var(--ink-muted);
-  margin: 2px 0 0 56px;
-}
-
-/* ✨ Each construct's distribution strip, folded away as in the prototype. */
-.distribution {
-  margin: 6px 0 0 56px;
-  font-size: 12px;
-  color: var(--ink-muted);
-}
-
-.distribution summary {
-  cursor: pointer;
-}
-
-.distribution-drawing {
-  display: block;
-  width: 100%;
-  height: 14px;
-  margin: 8px 0 4px;
-  background: var(--cream);
-  border-radius: 4px;
-}
-
-.distribution-band {
-  opacity: 0.2;
-}
-
-.distribution-yours {
-  fill: var(--ink);
-}
-
-.distribution-key {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 0 4px;
-}
-
-.distribution-yours-key {
-  display: inline-block;
-  width: 3px;
-  height: 12px;
-  background: var(--ink);
-}
-
-.distribution-caption {
+.comparison-name {
+  grid-area: name;
+  font-size: 13px;
   margin: 0;
 }
 
-.distribution-values {
+/* ✨ The persona on a line of its own under the construct's name, so the name's column can stay narrow. */
+.comparison-name .result-bar-persona {
+  display: block;
+}
+
+.comparison-axis {
+  grid-area: drawing;
+  display: block;
+  width: 100%;
+  height: auto;
+  /* ✨ So the arrow past the right-hand end, for a share beyond it, shows whole. */
+  overflow: visible;
+}
+
+.comparison-gap {
+  fill: var(--border);
+}
+
+.comparison-words {
+  grid-area: words;
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-  margin: 2px 0 0;
-  padding: 0;
+  flex-direction: column;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.comparison-seen-by-others {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+@media (max-width: 600px) {
+  .comparison-pair {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "name"
+      "drawing"
+      "words"
+      "spread";
+  }
+}
+
+/* ✨ The spread, as in the original prototype, for every construct in a profile card at once: while the tick at the
+   card's foot is ticked, each construct shows each observer's dot in place of the observers' mean, and how far they
+   agree under its line; for screen readers it also holds their standings in words. Untouched, none of it shows, nor
+   is it read. */
+.comparison-spread-toggle {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* ✨ Hidden, not taken away, so its line's room is kept: ticking the spread never moves anything down. Hidden this
+   way it is not read by screen readers either. */
+.distribution {
+  grid-area: spread;
+  visibility: hidden;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+/* ✨ In the observers' blue, as their dots above it are, so it is plainly about them. */
+.distribution-agreement {
+  display: block;
+  overflow: visible;
+  font-size: 11px;
+  font-weight: 600;
+  fill: var(--blue-soft);
+}
+
+.distribution-dot {
+  display: none;
+}
+
+.comparison-framework:has(.comparison-spread-toggle input:checked) .distribution {
+  visibility: visible;
+}
+
+.comparison-framework:has(.comparison-spread-toggle input:checked) .distribution-dot {
+  display: inline;
+}
+
+.comparison-framework:has(.comparison-spread-toggle input:checked) .comparison-mean {
+  display: none;
+}
+
+.distribution-values {
   /* ✨ No numbers, which would read as first, second and third person. */
   list-style: none;
 }
@@ -1685,20 +1714,6 @@ html[data-javascript="loaded"] .invitation-copy {
   font-size: 14px;
   line-height: 1.5;
   margin: 0;
-}
-
-.comparison-who {
-  font-size: 11px;
-  font-weight: 600;
-  min-width: 48px;
-  text-align: right;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.comparison-bar-row .result-bar-score {
-  font-size: 12px;
-  min-width: 36px;
 }
 
 .comparison-waiting {

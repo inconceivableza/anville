@@ -167,8 +167,8 @@
                 "above": { "$ref": "#/$defs/text" }
               }
             },
-            "placement": {
-              "description": "How the observers place each construct against the participant, beside its drawing: higher or lower when the gap is significant, otherwise much the same. Placeholders when left out.",
+            "seen_by_others": {
+              "description": "Whether others see each construct higher or lower than the participant, beside its drawing, when the gap is significant; otherwise much the same. Placeholders when left out.",
               "type": "object",
               "additionalProperties": false,
               "required": ["others_higher", "you_higher", "much_the_same"],

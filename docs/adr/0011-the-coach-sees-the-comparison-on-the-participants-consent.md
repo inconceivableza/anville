@@ -8,6 +8,8 @@ Once the coach has accepted and the participant has visited their comparison, th
 
 The consent is kept on the coach's link, beside the coach's answer, not on the participant's response. Revoking or reissuing the link, saving another coach or removing this one then ends it with nothing extra to clear, and a new coach never inherits it. The tick is offered on the comparison alone, since the coach sees both pages and the comparison is the later of the two.
 
+Note, 6 Oct (ticket 38): the comparison no longer shows any percent. Its spread shows each observer's standing and a dot on a line, lowest first, and the coach sees the same.
+
 > ✨ Drafted with AI assistance.
 
 ## Considered options

@@ -1,10 +1,10 @@
-"""✨ How the observers place a construct against the participant, in words: higher, lower or much the same, by the
-document's significant gap (ticket 38).
+"""✨ Whether others see a construct higher, lower or much the same as the participant, in words, by the document's
+significant gap (ticket 38).
 """
 
 import pytest
 
-from engine.document.comparison import placement
+from engine.document.comparison import seen_by_others
 from tests.documents import sort_pathway
 
 
@@ -19,12 +19,12 @@ from tests.documents import sort_pathway
     ],
     ids=["others 5 higher", "others 4 higher", "no gap", "others 4 lower", "others 5 lower"],
 )
-def test_the_observers_place_a_construct_higher_lower_or_much_the_same_from_the_significant_gap(you, others, words):
+def test_others_see_a_construct_higher_lower_or_much_the_same_from_the_significant_gap(you, others, words):
     document = sort_pathway()
-    document["presentation"]["comparison"]["placement"] = {
+    document["presentation"]["comparison"]["seen_by_others"] = {
         "others_higher": "Seen as more",
         "you_higher": "Seen as less",
         "much_the_same": "About the same",
     }
 
-    assert placement(document, you, others) == words
+    assert seen_by_others(document, you, others) == words

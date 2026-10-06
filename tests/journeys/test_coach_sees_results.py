@@ -21,7 +21,11 @@ from tests.journeys.test_invitations import observer  # noqa: F401 (a fixture, u
 from tests.journeys.test_observer_responses import an_observer
 from tests.journeys.test_results import SORT, submit_sort
 
-# ✨ A percent as the results and the comparison show one. The coach's page shows none until it shows those.
+# ✨ The participant's Apostle standing, as the results and the comparison say it (ticket 38). The coach's page says it only
+# when it shows those.
+SHOWN = "Leading"
+
+# ✨ A percent, which neither the results nor the comparison shows any more.
 A_PERCENT = re.compile(r"\d+%")
 
 
@@ -83,15 +87,16 @@ def test_with_consent_the_coachs_link_shows_the_results_and_comparison_and_withd
 ):
     with_a_result(signed_in, participant)
     link = an_accepted_coach(signed_in, observer)
-    assert not A_PERCENT.search(what_the_coach_sees(observer, link))
+    assert SHOWN not in what_the_coach_sees(observer, link)
 
     assert share(signed_in).status_code == 303
     shared = what_the_coach_sees(observer, link)
-    assert "90%" in shared  # ✨ the participant's own result
-    assert "70%" in shared and "30%" in shared  # ✨ the observers' means
+    assert "participant: Leading" in shared  # ✨ the participant's own, named for them as "You" is for the participant
+    assert "Others: Leading" in shared and "Others: Less used" in shared  # ✨ the observers' means
+    assert not A_PERCENT.search(shared)
 
     assert share(signed_in, happy=False).status_code == 303
-    assert not A_PERCENT.search(what_the_coach_sees(observer, link))
+    assert SHOWN not in what_the_coach_sees(observer, link)
 
 
 @pytest.mark.django_db
@@ -105,10 +110,10 @@ def test_below_the_minimum_the_coach_sees_how_many_have_answered_and_no_observer
 
     shared = what_the_coach_sees(observer, link)
 
-    assert "Leading" in shared  # ✨ the participant's own result, in words (ticket 38)
+    assert SHOWN in shared  # ✨ the participant's own result
     assert "2 of 3" in shared
-    for observers_number in ("75%", "25%", "80%", "70%"):
-        assert observers_number not in shared
+    assert "Others:" not in shared
+    assert not A_PERCENT.search(shared)
 
 
 @pytest.mark.django_db
@@ -142,7 +147,7 @@ def test_consent_is_refused_until_the_coach_has_accepted(signed_in, participant,
     if coach == "waiting":
         answer_as_coach(observer, link, "accept")
     if link is not None:
-        assert not A_PERCENT.search(what_the_coach_sees(observer, link))
+        assert SHOWN not in what_the_coach_sees(observer, link)
 
 
 @pytest.mark.django_db
@@ -155,7 +160,7 @@ def test_consent_is_refused_before_the_participant_has_visited_their_comparison(
     refused = share(signed_in)
 
     assert refused.status_code == 403
-    assert not A_PERCENT.search(what_the_coach_sees(observer, link))
+    assert SHOWN not in what_the_coach_sees(observer, link)
 
 
 @pytest.mark.django_db
@@ -178,4 +183,4 @@ def test_revoking_reissuing_or_changing_the_coach_ends_access_and_clears_the_con
     new = an_accepted_coach(signed_in, observer)  # ✨ issuing again is the reissue
 
     assert observer.get(old).status_code == 404
-    assert not A_PERCENT.search(what_the_coach_sees(observer, new))
+    assert SHOWN not in what_the_coach_sees(observer, new)

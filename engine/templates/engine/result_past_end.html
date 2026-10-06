@@ -1,0 +1,6 @@
+{% comment %}
+  ✨ A small arrow just past an axis's right-hand end, at height `y`, in the stylesheet class `colour`: the dot at the
+  end stands for a share beyond it, more than twice an even share, which the axis cannot place (ticket 38). The
+  axis's SVG lets it run past its view box.
+{% endcomment %}
+<path class="result-past-end {{ colour }}" d="M102.6 -1.1 L104.6 0 L102.6 1.1 Z" transform="translate(0 {{ y }})" />

@@ -153,15 +153,19 @@ One block's captured value within a response, keyed by that block's permanent id
 _Avoid_: field value, datum.
 
 **Result**:
-The scores and presentation computed from an assessment against the pathway version it was answered on. A **self-result** comes from a self-assessment and is persisted once rather than recomputed. An **observer result** comes from one observer assessment and is worked out when needed, never stored or shown on its own. The comparison's distribution strip shows each observer's percent for one construct at a time, each construct's in ascending order on its own, so no observer result can be put back together from it.
+The scores and presentation computed from an assessment against the pathway version it was answered on. A **self-result** comes from a self-assessment and is persisted once rather than recomputed. An **observer result** comes from one observer assessment and is worked out when needed, never stored or shown on its own. The comparison's spread shows each observer's standing and a dot at their share for one construct at a time, each construct's in ascending order on its own, so no observer result can be put back together from it.
 _Avoid_: report, profile, profiling, outcome.
+
+**Standing**:
+Where a construct's share sits against an even share of its framework, said in a word from the pathway document, such as "Leading", "Strong", "Present" or "Less used". Results and the comparison show standings, never percents. In the document, a standing's thresholds are its `bands`, as the agreement's are; on the page it is always a standing.
+_Avoid_: band (the agreement's word, and a bucket's synonym to avoid), level, rating.
 
 **Observer average**:
 The observer results for one participant averaged, with every number hidden below the minimum number of observers.
 _Avoid_: aggregate, observers' result, others' profile.
 
 **Comparison**:
-A participant's self-result beside their observer average.
+A participant's self-result beside their observer average: each construct's two standings, and whether others see it higher, lower or much the same.
 _Avoid_: gap analysis, 360.
 
 **Enrolment code**:
