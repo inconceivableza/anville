@@ -90,7 +90,9 @@ esac
 : "${ADMIN_SSH_KEY_FILE:?set it to the public key file of the operator}"
 : "${DEPLOY_SSH_KEY_FILE:?set it to the public key file of the deploy workflow}"
 [[ "$ADMIN_USER" =~ ^[a-z][a-z0-9_-]*$ ]] || die "'$ADMIN_USER' is not a usable account name"
-[ "$ADMIN_USER" != deploy ] && [ "$ADMIN_USER" != root ] || die "ADMIN_USER cannot be '$ADMIN_USER'"
+case "$ADMIN_USER" in
+  deploy | root) die "ADMIN_USER cannot be '$ADMIN_USER'" ;;
+esac
 
 SERVER_TYPE=${SERVER_TYPE:-$DEFAULT_TYPE}
 LOCATION=${LOCATION:-fsn1}

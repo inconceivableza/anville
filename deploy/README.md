@@ -147,7 +147,7 @@ Sign in as someone who exists in the dump and check that their answers are there
 deploy/check.sh
 ```
 
-It needs `shellcheck` and `helm`, and renders the chart with every environment's values. The build workflow runs it before building an image.
+It needs `shellcheck` 0.11 (`pip install shellcheck-py==0.11.0.1`; versions differ in what they flag) and `helm`, and renders the chart with every environment's values. The build workflow runs it, with that same shellcheck, before building an image. That check deploys nothing.
 
 ## What has been tested
 

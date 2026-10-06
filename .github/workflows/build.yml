@@ -64,8 +64,10 @@ jobs:
       - name: Run the tests
         run: pytest
 
-  # The charts and scripts a deploy uses, as far as they can be checked without a cluster.
-  deploy-files:
+  # The charts and scripts a deploy uses, as far as they can be checked without a cluster. This deploys
+  # nothing: only deploy.yml deploys, and only when it is run by hand.
+  check-deploy-files:
+    name: Check the deploy files (deploys nothing)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -74,11 +76,20 @@ jobs:
         with:
           version: v4.3.0
 
+      # The same shellcheck as deploy/README.md asks for, since versions differ in what they flag. Through
+      # setup-python, because the runner's own Python refuses packages installed outside a virtual environment.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install shellcheck
+        run: pip install shellcheck-py==0.11.0.1
+
       - name: Check the charts and scripts
         run: deploy/check.sh
 
   image:
-    needs: [test, deploy-files]
+    needs: [test, check-deploy-files]
     runs-on: ubuntu-latest
     permissions:
       contents: read
