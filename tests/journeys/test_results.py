@@ -103,14 +103,16 @@ def test_before_a_sort_is_submitted_the_results_page_sends_the_participant_to_th
 
 
 @pytest.mark.django_db
-def test_the_results_page_greets_the_participant_and_ranks_both_profiles(signed_in):
+def test_the_results_page_greets_the_participant_and_ranks_both_profiles_in_words_with_no_percent(signed_in):
+    """✨ Two constructs a framework make an even share 50, so 90 is well above it and 10 well below (ticket 38)."""
     submit_sort(signed_in, complete_sort())
 
     page = results(signed_in).content.decode()
 
     assert "participant, here’s your profile" in page
-    assert in_order(page, "Your gifting", "Apostle", "90%", "Prophet", "10%")
-    assert in_order(page, "Your energy", "Deliver", "90%", "Ponder", "10%")
+    assert in_order(page, "Your gifting", "Apostle", "Leading", "Prophet", "Less used")
+    assert in_order(page, "Your energy", "Deliver", "Leading", "Ponder", "Less used")
+    assert not re.search(r"\d+%", page)
 
 
 @pytest.mark.django_db
@@ -147,9 +149,9 @@ def test_apest_bars_take_their_constructs_tone_and_tied_pep_bars_share_a_rank_co
 
     page = results(signed_in).content.decode()
 
-    assert 'class="bar-fill tone-violet"' in page
-    assert 'class="bar-fill tone-rose"' in page
-    assert page.count('class="bar-fill rank-1"') == 2
+    assert 'class="result-dot tone-violet"' in page
+    assert 'class="result-dot tone-rose"' in page
+    assert page.count('class="result-dot rank-1"') == 2
     assert "rank-2" not in page
 
 

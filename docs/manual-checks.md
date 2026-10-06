@@ -178,7 +178,10 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 ## Results
 
-- PEP bars that tie share a colour.
+- Each construct reads as variant F (`prototype/result-bars`, `?variant=F`) did, without its ratio: its name and persona on the left, its band on the right in its colour ("Leading", "Strong", "Present" or "Less used"), and beneath, a line across the full width with a dashed tick at an even share and the construct's dot, joined to the tick by a short line in the same colour. No percent anywhere on the page. The strongest construct's dot sits near the right-hand end; the tick lines up down a framework's rows. The description, "Show item scores" (values unchanged) and the disclaimer are still there.
+- PEP dots that tie share a colour.
+- Phone width: each row's line still spans the width, the band stays on one line beside the name, and no dot is cut off at either end.
+- A screen reader reads each construct's name, persona and band, and passes over the drawing.
 
 ## The comparison (the results page's "Compare with how others see you →")
 

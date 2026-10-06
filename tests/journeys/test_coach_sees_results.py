@@ -105,7 +105,7 @@ def test_below_the_minimum_the_coach_sees_how_many_have_answered_and_no_observer
 
     shared = what_the_coach_sees(observer, link)
 
-    assert "90%" in shared
+    assert "Leading" in shared  # ✨ the participant's own result, in words (ticket 38)
     assert "2 of 3" in shared
     for observers_number in ("75%", "25%", "80%", "70%"):
         assert observers_number not in shared

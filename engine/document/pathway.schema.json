@@ -113,6 +113,28 @@
           "$ref": "#/$defs/text"
         },
         "disclaimer": { "$ref": "#/$defs/text" },
+        "standing": {
+          "description": "Where a construct's share stands, in words, on the results page and the comparison, by how far it sits from an even share of its framework (an even share is 100 divided among the framework's constructs). A share takes the highest band whose at_least, a percent of an even share, it reaches, in whatever order the bands are written; below them all it takes the below label. Placeholders (Leading 125, Strong 105, Present 85, Less used) when left out.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["bands", "below"],
+          "properties": {
+            "bands": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["at_least", "label"],
+                "properties": {
+                  "at_least": { "type": "integer", "minimum": 0 },
+                  "label": { "$ref": "#/$defs/text" }
+                }
+              }
+            },
+            "below": { "$ref": "#/$defs/text" }
+          }
+        },
         "comparison": {
           "description": "What the comparison makes of the self-result beside the observer average, and its wording (ADR 0005). The thresholds are the prototype's when left out.",
           "type": "object",
@@ -143,6 +165,17 @@
                   }
                 },
                 "above": { "$ref": "#/$defs/text" }
+              }
+            },
+            "placement": {
+              "description": "How the observers place each construct against the participant, beside its drawing: higher or lower when the gap is significant, otherwise much the same. Placeholders when left out.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["others_higher", "you_higher", "much_the_same"],
+              "properties": {
+                "others_higher": { "$ref": "#/$defs/text" },
+                "you_higher": { "$ref": "#/$defs/text" },
+                "much_the_same": { "$ref": "#/$defs/text" }
               }
             },
             "gaps": {

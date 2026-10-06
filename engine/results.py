@@ -5,9 +5,12 @@ Nothing here touches the database or a request. The numbers come from the stored
 recomputed; the words and tones come from the same pathway version the result was scored against.
 """
 
+import math
+
 from engine.document.comparison import agreement, comparison_settings, largest_gaps
 from engine.document.observers import minimum_observers
 from engine.document.scoring import percents_by_construct
+from engine.document.standing import standing
 from engine.document.text import text_for
 
 # ✨ The stylesheet defines --rank-1 to --rank-6; every rank below the sixth takes the sixth colour.
@@ -42,6 +45,7 @@ def results_page(document, scores, sort, name, role="participant"):
         "title": text_for(title, role).replace("{name}", name),
         "frameworks": [
             _framework(
+                document,
                 frameworks[scored["framework"]],
                 framework_presentation.get(scored["framework"], {}),
                 scored["constructs"],
@@ -174,10 +178,23 @@ def _reflection(document, scores, observed):
     }
 
 
-def _framework(framework, presentation, ranked_constructs, construct_presentation, items, sort, role):
+def _axis_top(percents):
+    """✨ Where a framework's axis ends, as variant F drew it: the next ten up from the largest percent it shows, and
+    never below ten, so the strongest construct sits near the right-hand end."""
+    return max(10, math.ceil(max(percents) / 10) * 10)
+
+
+def _at(percent, top):
+    """✨ Where a percent sits on an axis ending at `top`, as a percent of the axis's width, for the SVG to draw."""
+    return round(percent / top * 100, 2)
+
+
+def _framework(document, framework, presentation, ranked_constructs, construct_presentation, items, sort, role):
     labels = {construct["id"]: text_for(construct["label"], role) for construct in framework["constructs"]}
     by_rank = presentation.get("bars") == "rank"
     ranks = bar_ranks([construct["percent"] for construct in ranked_constructs])
+    constructs = len(framework["constructs"])
+    top = _axis_top([construct["percent"] for construct in ranked_constructs])
     bars = []
     for construct, rank in zip(ranked_constructs, ranks):
         shown = construct_presentation.get(construct["construct"], {})
@@ -185,6 +202,8 @@ def _framework(framework, presentation, ranked_constructs, construct_presentatio
             {
                 "label": labels[construct["construct"]],
                 "percent": construct["percent"],
+                "band": text_for(standing(document, construct["percent"], constructs), role),
+                "at": _at(construct["percent"], top),
                 "persona": _text(shown, "persona", role),
                 "description": _text(shown, "description", role),
                 "colour": f"rank-{rank}" if by_rank else _tone(shown),
@@ -193,6 +212,8 @@ def _framework(framework, presentation, ranked_constructs, construct_presentatio
     return {
         "heading": _text(presentation, "heading", role) or text_for(framework["label"], role),
         "subtitle": _text(presentation, "subtitle", role),
+        # ✨ The dashed tick: an even share of the framework, 100 divided among its constructs.
+        "even_at": _at(100 / constructs, top),
         "bars": bars,
         # ✨ The item scores, grouped by construct in the order they were declared, as the prototype listed them.
         "groups": [

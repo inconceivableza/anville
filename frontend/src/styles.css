@@ -1417,6 +1417,36 @@ html[data-javascript="loaded"] .invitation-copy {
   border-radius: 5px;
 }
 
+/* A construct's band in words and its dot on the framework's axis, run out from a dashed tick at an even share (ticket 38, variant F) */
+
+.result-band {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.result-axis {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.result-axis-line {
+  stroke: var(--border);
+  stroke-width: 0.6;
+}
+
+.result-even {
+  stroke: var(--ink);
+  stroke-width: 0.6;
+  stroke-dasharray: 1 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.result-stem {
+  stroke: currentColor;
+  stroke-width: 0.8;
+}
+
 .result-bar-subdesc {
   font-size: 12px;
   color: var(--ink-muted);

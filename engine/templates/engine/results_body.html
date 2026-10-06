@@ -1,8 +1,10 @@
 {% comment %}
   ✨ The results themselves, from `results`: each framework's bars and item scores, then the disclaimer. Shared by the
-  participant's results page and, once they consent, their coach's link (ticket 27), so both see the same. Each bar is
-  an SVG rect whose width is its percent of a 100-wide view box, and whose colour is a stylesheet class (a construct's
-  tone or a rank), so nothing here needs an inline style.
+  participant's results page and, once they consent, their coach's link (ticket 27), so both see the same. Each
+  construct is said in words, its band, and drawn as variant F drew it (ticket 38): a dot on its framework's axis, run
+  out from a dashed tick at an even share. Positions are percents of the axis's 100-wide view box, a little wider so a
+  dot at either end is whole, and colours are stylesheet classes (a construct's tone or a rank), so nothing here needs an
+  inline style. The drawing is hidden from screen readers, as the band says it.
 {% endcomment %}
 {% for framework in results.frameworks %}
   <section class="results-section">
@@ -13,10 +15,13 @@
       <div class="result-bar-row">
         <div class="result-bar-label">
           <span class="result-bar-name">{{ bar.label }}{% if bar.persona %} <span class="result-bar-persona">{{ bar.persona }}</span>{% endif %}</span>
-          <span class="result-bar-score {{ bar.colour }}">{{ bar.percent }}%</span>
+          <span class="result-band {{ bar.colour }}">{{ bar.band }}</span>
         </div>
-        <svg class="result-bar-track" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-          <rect class="bar-fill {{ bar.colour }}" width="{{ bar.percent }}" height="10" />
+        <svg class="result-axis" viewBox="-3 0 106 6" aria-hidden="true" focusable="false">
+          <line class="result-axis-line" x1="0" y1="3" x2="100" y2="3" />
+          <line class="result-even" x1="{{ framework.even_at }}" y1="0.5" x2="{{ framework.even_at }}" y2="5.5" />
+          <line class="result-stem {{ bar.colour }}" x1="{{ framework.even_at }}" y1="3" x2="{{ bar.at }}" y2="3" />
+          <circle class="result-dot {{ bar.colour }}" cx="{{ bar.at }}" cy="3" r="2" />
         </svg>
         {% if bar.description %}<p class="result-bar-subdesc">{{ bar.description }}</p>{% endif %}
       </div>

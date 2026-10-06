@@ -554,6 +554,14 @@
       { "construct": "deliver", "tone": "brown", "persona": "The Doer", "description": "Rolling up sleeves and pushing the work over the finish line" }
     ],
     "disclaimer": "Important: This is a free, rapid, directional tool, designed to give you a useful starting point for reflection and conversation. It is not backed by extensive psychometric datasets or rigorous validation (yet). Please treat these results as indicative, not definitive.",
+    "standing": {
+      "bands": [
+        { "at_least": 125, "label": "Leading" },
+        { "at_least": 105, "label": "Strong" },
+        { "at_least": 85, "label": "Present" }
+      ],
+      "below": "Less used"
+    },
     "comparison": {
       "significant_gap": 5,
       "agreement": {
