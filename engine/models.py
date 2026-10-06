@@ -7,7 +7,7 @@ from django.db import models, transaction
 from django.db.models import F, Func, Value
 from django.utils import timezone
 
-from engine.document.gates import comparison_visit_key
+from engine.document.gates import comparison_visit_key, links_issued_key
 
 
 class PathwayVersion(models.Model):
@@ -192,13 +192,18 @@ class Response(models.Model):
     def answers_with_contacts_and_visits(self):
         """✨ The stored answers, with each block's contacts read in as its answer, as the gate and progress read it.
         Each contact carries its id, which a contact list's rows send back so a save can tell them apart. Each visit to
-        a sort's comparison is read in too, under a key no block can have, for a `comparison_visited` clause."""
-        kept = {}
-        for contact in self.contacts.order_by("block_id", "position"):
+        a sort's comparison is read in too, under a key no block can have, for a `comparison_visited` clause, and so is
+        how many of each block's people have a working link, for a `links_issued` clause."""
+        kept, links = {}, {}
+        now = timezone.now()
+        for contact in self.contacts.select_related("invitation").order_by("block_id", "position"):
             person = {"name": contact.name, "email": contact.email, "id": contact.pk}
             kept.setdefault(contact.block_id, []).append(person)
+            if contact.live_invitation(now) is not None:
+                key = links_issued_key(contact.block_id)
+                links[key] = links.get(key, 0) + 1
         visits = {comparison_visit_key(block_id): at for block_id, at in self.comparisons_visited.items()}
-        return {**self.answers, **kept, **visits}
+        return {**self.answers, **kept, **visits, **links}
 
 
 class Contact(models.Model):
@@ -221,6 +226,15 @@ class Contact(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["response", "block_id", "position"], name="one_contact_per_row"),
         ]
+
+    def live_invitation(self, now=None):
+        """✨ This contact's invitation while its link still works, or None: never issued, revoked (which deletes it) or
+        expired."""
+        try:
+            invitation = self.invitation
+        except Invitation.DoesNotExist:
+            return None
+        return invitation if invitation.works(now) else None
 
 
 class Invitation(models.Model):
@@ -257,6 +271,10 @@ class Invitation(models.Model):
     # ✨ When the participant ticked "Give my coach access to my results and this comparison" (ticket 27), while it stands. Kept on the link,
     # as the answer is, so revoking or reissuing it, or choosing another coach, takes the consent with it (ADR 0011).
     results_shared_at = models.DateTimeField(null=True, blank=True)
+
+    def works(self, now=None):
+        """✨ Whether this link still works: it has not expired. A revoked link has no record to ask."""
+        return self.expires_at > (now or timezone.now())
 
     @classmethod
     def issue(cls, contact, lifetime):

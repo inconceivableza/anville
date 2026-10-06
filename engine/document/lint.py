@@ -4,7 +4,7 @@ Runs only on a document that has already passed the schema, so it relies on the 
 """
 
 from engine.document.blocks import BLOCK_TYPES, block_types_by_id
-from engine.document.gates import CLAUSE_ANSWER_KINDS, clauses_of
+from engine.document.gates import CLAUSE_ANSWER_KINDS, CLAUSE_BLOCK_TYPES, clauses_of
 from engine.document.problem import Problem
 
 
@@ -129,8 +129,9 @@ def _empty_pages(document):
 
 # ✨ "That has been done" is a fair condition on finishing a section, wherever it was done (ticket 09, where
 # Section 1 waits on the sort in the Strengths assessment). What another section's answer holds is for that
-# section's own gate to judge. So is "its comparison has been visited" (ticket 16c), for the same sort.
-_CLAUSES_THAT_MAY_LOOK_ELSEWHERE = {"has_answer", "comparison_visited"}
+# section's own gate to judge. So is "its comparison has been visited" (ticket 16c), for the same sort, and "these
+# people have their links" (ticket 40), where Section 1 waits on the coach and contacts named in onboarding.
+_CLAUSES_THAT_MAY_LOOK_ELSEWHERE = {"has_answer", "comparison_visited", "links_issued"}
 
 
 def _unreadable_clauses(document):
@@ -150,7 +151,8 @@ def _unreadable_clauses(document):
                 yield Problem(
                     path,
                     f"Block '{named}' is in another section; "
-                    "only a 'has_answer' or 'comparison_visited' clause may name a block outside its own section.",
+                    "only a 'has_answer', 'comparison_visited' or 'links_issued' clause may name a block outside its "
+                    "own section.",
                 )
             elif not _can_read(clause["type"], block_types[named]):
                 type_name = block_types[named].name
@@ -163,6 +165,8 @@ def _unreadable_clauses(document):
 
 
 def _can_read(clause_type, block_type):
+    if clause_type in CLAUSE_BLOCK_TYPES:
+        return block_type.name in CLAUSE_BLOCK_TYPES[clause_type]
     if not block_type.is_interactive:
         return False
     readable = CLAUSE_ANSWER_KINDS[clause_type]

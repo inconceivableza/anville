@@ -158,6 +158,14 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Screen reader: Tab to the button. It is a link styled as a button, since it goes to another page, so VoiceOver reads "Open Strengths Assessment, right arrow, link" and tells you how to follow it. Control-Option-Right arrow then reads the status.
 - Phone width: the card's text and button wrap, and the status chip stays a small pill the width of its words rather than stretching across the card.
 
+## The Workbook (after Section 1, with the coach's and two observers' links issued)
+
+- The hub lists onboarding, Section 1, the Strengths assessment, the Workbook and Section 5, and nothing of Sections 2–4.
+- Section 1's checklist ticks "Choose a coach and send them their link" and "Send at least 2 people their links" as each link is issued, after a reload.
+- "Download the workbook (PDF)" opens the PDF in the browser's own viewer, not a blank page or a download of an HTML error, and saving it from there keeps the name `whatever-you-do-workbook.pdf`. The page's last paragraph says the workbook is a draft.
+- Keyboard only: Tab reaches the button and Enter opens the PDF; Tab then reaches "I've finished the workbook".
+- Phone width: the button wraps rather than running off the screen, and the PDF opens in the phone's viewer.
+
 ## The sort
 
 - The cards come in a different order on each visit. The counter reads "1/36" and counts up.

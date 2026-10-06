@@ -1,13 +1,13 @@
 import json
 from typing import NamedTuple
 
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.humanize.templatetags.humanize import apnumber
 from django.db import IntegrityError
-from django.http import Http404, HttpResponse, HttpResponseBadRequest
+from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.utils import timezone
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_POST
 
@@ -448,7 +448,7 @@ def _coach_link_state(contact_id, issued=None):
     answer ("waiting" while a working link is unanswered, None with no link at all), and the link itself if it was
     just issued. An answer outlasts the link's expiry, but not its revoking: it belongs to the link it came through."""
     invitation = Invitation.objects.filter(contact_id=contact_id).first()
-    live = invitation if invitation is not None and invitation.expires_at > timezone.now() else None
+    live = invitation if invitation is not None and invitation.works() else None
     answer = invitation.coach_answer if invitation is not None else None
     return {
         "contact_id": contact_id,
@@ -614,6 +614,21 @@ def _own_result(user, block_id):
         "page": page_of(section, block_id),
     }
     return state, result, shown_section
+
+
+@login_required
+@consent_required
+def download(request, block_id):
+    """✨ A download block's file, served only to a participant who has reached the block, as a section's content is
+    (ticket 40). The schema keeps the file's name to letters, digits and hyphens, so it cannot leave the folder."""
+    state = _participant(request.user)
+    block = _block_of_type(state.version, block_id, "download")
+    if not _is_open(state, section_of(state.version.document, block_id), block):
+        return HttpResponseForbidden("This file opens once you reach it.")
+    path = settings.PATHWAY_FILES_DIR / block["file"]
+    if not path.is_file():
+        raise Http404("This pathway's file is not here.")
+    return FileResponse(path.open("rb"), content_type="application/pdf", filename=block["file"])
 
 
 @login_required
@@ -939,7 +954,7 @@ def _invitations_page(request, issued=None, refused=None, status=200):
             .select_related("invitation")
             .order_by("block_id", "position")
         )
-    people = [{"contact": contact, "invitation": _live_invitation(contact)} for contact in contacts]
+    people = [{"contact": contact, "invitation": contact.live_invitation()} for contact in contacts]
     contact_lists = _contact_lists_to_edit(state, request.GET, refused or {})
     shown = {"people": people, "issued": issued, "contact_lists": contact_lists}
     if state.version is not None:
@@ -964,15 +979,6 @@ def _contact_lists_to_edit(state, query, refused):
         and block["id"] not in state.fixed
         and _is_open(state, section_of(document, block["id"]), block)
     ]
-
-
-def _live_invitation(contact):
-    """✨ The contact's invitation while its link still works, or None."""
-    try:
-        invitation = contact.invitation
-    except Invitation.DoesNotExist:
-        return None
-    return invitation if invitation.expires_at > timezone.now() else None
 
 
 def _own_contact_or_404(user, contact_id):

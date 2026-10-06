@@ -254,6 +254,7 @@ BLOCK_TYPES = {
         ),
         BlockType("sort_assessment", captures=SORT, scored=True, widget=_sort_widget),
         BlockType("section_link", text_fields=("body", "button_label")),
+        BlockType("download", text_fields=("body", "button_label")),
         # ✨ Never shown: it splits its section into pages (`pages_of`), and may word the way on from the page it ends.
         BlockType("page_break", text_fields=("skip_label",)),
     ]

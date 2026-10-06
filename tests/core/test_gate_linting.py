@@ -31,7 +31,8 @@ def test_a_clause_about_what_an_answer_holds_may_not_name_a_block_in_another_sec
             path=f"{CLAUSE_PATH}/block",
             message=(
                 "Block 'elsewhere' is in another section; "
-                "only a 'has_answer' or 'comparison_visited' clause may name a block outside its own section."
+                "only a 'has_answer', 'comparison_visited' or 'links_issued' clause may name a block outside its "
+                "own section."
             ),
         )
     ]

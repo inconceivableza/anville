@@ -138,6 +138,10 @@ STATIC_URL = "static/"
 
 STATICFILES_DIRS = [BASE_DIR / "frontend" / "dist"]
 
+# ✨ Files a pathway's download blocks offer, such as the workbook (ticket 40). Served by a view that checks the
+# participant has reached the block, never as static files, which anyone could fetch.
+PATHWAY_FILES_DIR = BASE_DIR / "pathways" / "files"
+
 DJANGO_VITE = {
     "default": {
         "manifest_path": BASE_DIR / "frontend" / "dist" / "manifest.json",

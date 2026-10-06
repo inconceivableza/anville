@@ -7,7 +7,7 @@ before a section may be completed, and each failing clause contributes its own a
 import pytest
 
 from engine.document import checklist, gate_passes, unmet
-from engine.document.gates import comparison_visit_key
+from engine.document.gates import comparison_visit_key, links_issued_key
 
 
 def section_gated_by(*clauses):
@@ -174,6 +174,19 @@ def test_comparison_visited_passes_only_once_the_comparison_has_been_visited_not
 
     assert unmet(section, sorted_only) == ["View the comparison."]
     assert unmet(section, visited) == []
+
+
+# links_issued
+
+
+@pytest.mark.parametrize("issued, passes", [(None, False), (0, False), (1, False), (2, True), (3, True)])
+def test_links_issued_passes_once_enough_of_the_blocks_people_hold_a_working_link(issued, passes):
+    """✨ The people named are not enough: it counts the working links, which is all a participant can be seen to do."""
+    section = section_gated_by(clause("links_issued", block="contacts", min=2, message="Send two links."))
+    named = [{"name": f"Person {n}", "email": f"person{n}@example.com", "id": n} for n in range(3)]
+    answers = {"contacts": named} if issued is None else {"contacts": named, links_issued_key("contacts"): issued}
+
+    assert unmet(section, answers) == ([] if passes else ["Send two links."])
 
 
 # Combinations, and a message for each failing clause

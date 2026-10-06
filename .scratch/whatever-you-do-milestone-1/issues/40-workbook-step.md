@@ -4,17 +4,17 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2a (ends 8 Oct, before FaithTech)
 
 **Spec:** Engine: sections, tracks, gates, progress; Hub, progress and gates; Open content and product items
 
-- [ ] Sections 2–4 no longer appear on the hub or in any link; their content stays in the faithful port, and the drift test sets the difference aside on purpose
-- [ ] The Workbook step links to the PDF, served by the app, and is completed by the participant when they are ready
-- [ ] It opens once the participant's own assessment is in and they have invited their coach and observers; decide here what counts as invited (links issued, how many) and what a participant who skipped choosing a coach needs
-- [ ] The letter and its closing ratings (ticket 05) open after the Workbook step, in place of after Section 3
-- [ ] A placeholder PDF stands in until the content owner's arrives
+- [x] Sections 2–4 no longer appear on the hub or in any link; their content stays in the faithful port, and the drift test sets the difference aside on purpose
+- [x] The Workbook step links to the PDF, served by the app, and is completed by the participant when they are ready
+- [x] It opens once the participant's own assessment is in and they have invited their coach and observers; decide here what counts as invited (links issued, how many) and what a participant who skipped choosing a coach needs
+- [x] The letter and its closing ratings (ticket 05) open after the Workbook step, in place of after Section 3
+- [x] A placeholder PDF stands in until the content owner's arrives
 
 **Context**
 

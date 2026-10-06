@@ -13,21 +13,28 @@ from pathlib import Path
 import pytest
 from django.utils.html import escape
 
-from engine.models import Contact, Response
+from engine.models import Contact, ObserverResponse, Response
+from tests.journeys.pages import gate_checklist
 from tests.journeys.test_coach_checklist import choose
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
+from tests.journeys.test_invitations import invitation_action, issue_link
 from tests.prototype import js_string
 from tests.journeys.test_whatever_you_do_faithful_port import (
     A_LETTER,
-    A_STATEMENT,
+    A_REFLECTION,
     ADD_FIVE,
     ANSWER_ALL_FOUR,
     BASELINE_STATEMENTS,
+    COMPLETE_THE_ASSESSMENT,
+    COMPLETE_THE_REFLECTIONS,
+    VIEW_THE_COMPARISON,
     add_people,
     answer,
     complete,
     move_past,
     onboarding_pages,
+    submit_the_sort,
+    visit_the_comparison,
 )
 from tests.journeys.test_whatever_you_do_faithful_port import SLOTS as PROTOTYPE_SLOTS
 from tests.journeys.test_whatever_you_do_faithful_port import the_pathway as the_faithful_port
@@ -76,11 +83,9 @@ def answer_onboarding(client):
 
 
 def through_to_the_letter(client):
-    answer_onboarding(client)
-    complete(client, "onboarding")
-    answer(client, "s2a-reading", "true")
-    answer(client, "cl-statement", A_STATEMENT)
-    complete(client, "calling")
+    """✨ Section 1 done with everyone invited, then the Workbook finished, which is what opens the letter."""
+    through_to_the_workbook(client)
+    complete(client, "workbook")
     return client
 
 
@@ -139,7 +144,8 @@ def test_the_letter_cannot_be_sent_without_the_fifth_after_rating(participant):
 
 @pytest.mark.django_db
 def test_progress_counts_the_two_new_ratings(participant):
-    assert "0 of 18 answered" in participant.get("/hub/").content.decode()  # ✨ the faithful port's 16, and two more
+    # ✨ The faithful port's 16 and two more, less Section 3's reading and statement, which went with it (ticket 40).
+    assert "0 of 16 answered" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db
@@ -188,19 +194,17 @@ def test_all_five_end_ratings_are_fixed_once_the_letter_is_sent(participant):
 
 
 def test_every_section_but_section_1_says_how_long_it_takes():
-    """✨ Our own figures, not the prototype's, which gave none: to confirm with the owner. A section that is not
-    mostly built yet says "? min" until it is (Sections 2 and 4, Section 3's sentence builder, and the letter,
-    until it has been timed by hand). Section 1 has none: it cannot be finished without the sort, so its own
-    few minutes would read as less than the Strengths assessment it leads to."""
+    """✨ Our own figures, not the prototype's, which gave none: to confirm with the owner. The letter says "? min"
+    until it has been timed by hand, and the Workbook says what the booklet itself says. Section 1 has none: it
+    cannot be finished without the sort, so its own few minutes would read as less than the Strengths assessment
+    it leads to."""
     sections = the_pathway()["content"]["sections"]
 
     assert {section["id"]: section.get("estimate") for section in sections} == {
         "onboarding": "About 1 minute",
         "designed": None,
         "strengths": "About 10 minutes",
-        "shape": "? min",
-        "calling": "? min",
-        "growth": "? min",
+        "workbook": "Three or four sittings of half an hour",
         "letter": "? min",
     }
 
@@ -393,7 +397,7 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     """✨ The fifth rating is added to the faithful port here and the result compared whole, so a change made to
     one document and not the other fails, and so does a slip in the fifth rating itself (its place, its anchors,
     its gate clause, or a message still saying four). The minimum-length messages are reworded the same way,
-    and the time estimates, checked above, are set aside."""
+    the time estimates, checked above, are set aside, and so is the Workbook in place of Sections 2–4."""
     expected = the_faithful_port()
     for section in expected["content"]["sections"]:
         for clause in section.get("gate", {}).get("clauses", []):
@@ -410,12 +414,35 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
         plan_clause = next(index for index, clause in enumerate(clauses) if clause.get("block") == f"{prefix}-plan")
         clauses.insert(plan_clause + 1, {"type": "has_answer", "block": f"{prefix}-peace", "message": ANSWER_ALL_FIVE})
     two_contacts_for_now(expected)
+    the_workbook_in_place_of_sections_2_to_4(expected)
 
     assert without_the_coach_step(without_estimates(the_pathway())) == expected
 
 
+def the_workbook_in_place_of_sections_2_to_4(document):
+    """✨ Sections 2–4 are done on paper here, so this pathway leaves them out, keeping them in the faithful port, and
+    offers the content owner's workbook in their place (ticket 40). The Workbook is new content with nothing in the
+    faithful port to compare it with, so it is taken as it is; the tests above say what it does. Section 1 asks for
+    the coach's link and two observers' links, which opens the Workbook, and the letter waits for the Workbook."""
+    sections = document["content"]["sections"]
+    sections[:] = [section for section in sections if section["id"] not in ("shape", "calling", "growth")]
+    workbook = next(s for s in without_estimates(the_pathway())["content"]["sections"] if s["id"] == "workbook")
+    strengths = next(index for index, section in enumerate(sections) if section["id"] == "strengths")
+    sections.insert(strengths + 1, workbook)
+    designed = next(section for section in sections if section["id"] == "designed")
+    designed["gate"]["clauses"] += [
+        {"type": "links_issued", "block": "coach", "min": 1, "message": SEND_THE_COACH},
+        {"type": "links_issued", "block": "contacts", "min": 2, "message": SEND_TWO},
+    ]
+    next(section for section in sections if section["id"] == "letter")["requires"] = ["workbook"]
+
+
 def two_contacts_for_now(document):
-    """✨ The faithful port asks for the prototype's five people; this pathway asks for two, in each place it says so."""
+    """✨ The faithful port asks for the prototype's five people; this pathway asks for two, in each place it says so:
+    onboarding's list, and Section 1's Strengths assessment card."""
+    for block in document["content"]["sections"][1]["blocks"]:
+        if block["id"] == "strengths-link":
+            block["body"] = block["body"].replace("at least 5 trusted people", "at least 2 trusted people")
     onboarding = document["content"]["sections"][0]
     for block in onboarding["blocks"]:
         if block["type"] == "contact_list":
@@ -425,3 +452,143 @@ def two_contacts_for_now(document):
     for clause in onboarding["gate"]["clauses"]:
         if clause["message"] == ADD_FIVE:
             clause.update(min=2, message=ADD_TWO)
+
+
+# The Workbook, in place of Sections 2–4 (ticket 40)
+
+# ✨ One sentence whether or not a coach has been chosen, since skipping the coach in onboarding put the choice off.
+SEND_THE_COACH = "Choose a coach and send them their link to continue."
+SEND_TWO = "Send at least 2 people their links to continue."
+WORKBOOK_PDF = "/downloads/workbook-pdf/"
+
+
+def issue_the_coachs_link(client):
+    """✨ The coach page's "issue" button, as the participant presses it."""
+    page = client.get(COACH_PAGE).content.decode()
+    issue = re.search(r'formaction="(/invitations/\d+/issue/)"', page).group(1)
+    assert client.post(issue).status_code == 303
+
+
+def through_section_1_without_inviting(client):
+    """✨ Onboarding done, then everything Section 1 asks of the participant themselves: the reading, the sort, the
+    comparison visited (with no observer answers, its below-minimum explanation) and the reflection."""
+    answer_onboarding(client)
+    complete(client, "onboarding")
+    answer(client, "gifts-reading", "true")
+    submit_the_sort(client)
+    visit_the_comparison(client)
+    answer(client, "gifts-summary", A_REFLECTION)
+    return client
+
+
+def invite_everyone(client):
+    """✨ A coach chosen and their link issued, and two people added and each given a link."""
+    choose(client)
+    issue_the_coachs_link(client)
+    add_people(client, 2)
+    issue_link(client, "Person 0")
+    issue_link(client, "Person 1")
+
+
+def through_to_the_workbook(client):
+    """✨ Section 1 done with everyone invited and completed, which opens the Workbook."""
+    through_section_1_without_inviting(client)
+    invite_everyone(client)
+    assert complete(client, "designed").status_code == 303
+    return client
+
+
+@pytest.mark.django_db
+def test_section_1_is_completed_only_once_the_coach_and_two_people_have_their_links(participant):
+    """✨ Skipping the coach in onboarding put the choice off until here, so a coach is needed (ticket 40). Naming
+    people is not inviting them: it is their working links that count."""
+    client = through_section_1_without_inviting(participant)
+    choose(client)
+    add_people(client, 2)
+
+    refused = complete(client, "designed")
+
+    assert refused.status_code == 400
+    assert gate_checklist(refused.content.decode()) == {
+        COMPLETE_THE_ASSESSMENT: True,
+        VIEW_THE_COMPARISON: True,
+        COMPLETE_THE_REFLECTIONS: True,
+        SEND_THE_COACH: False,
+        SEND_TWO: False,
+    }
+    issue_the_coachs_link(client)
+    issue_link(client, "Person 0")
+    assert gate_checklist(complete(client, "designed").content.decode())[SEND_TWO] is False
+    issue_link(client, "Person 1")
+    assert complete(client, "designed").status_code == 303
+
+
+@pytest.mark.django_db
+def test_a_participant_with_no_coach_is_asked_for_their_coachs_link(participant):
+    client = through_section_1_without_inviting(participant)
+    add_people(client, 2)
+    issue_link(client, "Person 0")
+    issue_link(client, "Person 1")
+
+    refused = complete(client, "designed")
+
+    assert refused.status_code == 400
+    assert gate_checklist(refused.content.decode())[SEND_THE_COACH] is False
+
+
+@pytest.mark.django_db
+def test_a_revoked_link_no_longer_counts(participant):
+    client = through_section_1_without_inviting(participant)
+    invite_everyone(client)
+
+    client.post(invitation_action(client, "Person 1", "revoke"))
+
+    refused = complete(client, "designed")
+    assert refused.status_code == 400
+    assert gate_checklist(refused.content.decode())[SEND_TWO] is False
+
+
+@pytest.mark.django_db
+def test_the_workbook_opens_once_section_1_is_complete_without_waiting_on_any_observer(participant):
+    client = through_section_1_without_inviting(participant)
+    invite_everyone(client)
+    assert client.get("/sections/workbook/").status_code == 302
+
+    complete(client, "designed")
+
+    assert client.get("/sections/workbook/").status_code == 200
+    assert not ObserverResponse.objects.exists()
+
+
+@pytest.mark.django_db
+def test_the_workbook_pdf_is_refused_until_the_workbook_is_reached_then_served_from_its_page(participant):
+    client = through_section_1_without_inviting(participant)
+    invite_everyone(client)
+    assert client.get(WORKBOOK_PDF).status_code == 403
+
+    complete(client, "designed")
+
+    assert f'href="{WORKBOOK_PDF}"' in client.get("/sections/workbook/").content.decode()
+    served = client.get(WORKBOOK_PDF)
+    assert served.status_code == 200
+    assert served["Content-Type"] == "application/pdf"
+    assert b"".join(served.streaming_content).startswith(b"%PDF")
+
+
+@pytest.mark.django_db
+def test_the_letter_opens_once_the_participant_has_finished_the_workbook(participant):
+    """✨ In place of after Section 3. The Workbook has no gate: the participant says when they are done."""
+    client = through_to_the_workbook(participant)
+    assert client.get("/sections/letter/").status_code == 302
+
+    assert complete(client, "workbook").status_code == 303
+
+    assert client.get("/sections/letter/").status_code == 200
+
+
+@pytest.mark.django_db
+def test_sections_2_to_4_are_neither_on_the_hub_nor_reachable(participant):
+    """✨ Their content stays in the faithful port; here they are done on paper, in the Workbook. The hub lists only the
+    track's sections, so a section that cannot be reached is not on it either."""
+    for section_id in ("shape", "calling", "growth"):
+        assert participant.get(f"/sections/{section_id}/").status_code == 404

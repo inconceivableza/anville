@@ -283,7 +283,7 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "section_link", "page_break"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "section_link", "download", "page_break"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
@@ -295,6 +295,7 @@
         { "if": { "properties": { "type": { "const": "coach_checklist" } } }, "then": { "$ref": "#/$defs/coach_checklist" } },
         { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } },
         { "if": { "properties": { "type": { "const": "section_link" } } }, "then": { "$ref": "#/$defs/section_link" } },
+        { "if": { "properties": { "type": { "const": "download" } } }, "then": { "$ref": "#/$defs/download" } },
         { "if": { "properties": { "type": { "const": "page_break" } } }, "then": { "$ref": "#/$defs/page_break" } }
       ]
     },
@@ -532,6 +533,30 @@
         }
       }
     },
+    "download": {
+      "description": "A file for the participant to download, such as a workbook to print. The app serves it only to a participant who has reached this block.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "file", "button_label"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "download" },
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "file": {
+          "description": "The PDF's name in the pathways/files folder, such as 'whatever-you-do-workbook.pdf'.",
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*\\.pdf$"
+        },
+        "body": {
+          "description": "Plain text saying what the file is for. A blank line starts a new paragraph.",
+          "$ref": "#/$defs/text"
+        },
+        "button_label": {
+          "description": "The wording of the button that downloads it, such as 'Download the workbook (PDF)'.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
     "long_text": {
       "type": "object",
       "additionalProperties": false,
@@ -568,7 +593,8 @@
             "entry_count",
             "distinct_value_count",
             "every_entry_has",
-            "comparison_visited"
+            "comparison_visited",
+            "links_issued"
           ]
         }
       },
@@ -578,7 +604,8 @@
         { "if": { "properties": { "type": { "const": "entry_count" } } }, "then": { "$ref": "#/$defs/entry_count" } },
         { "if": { "properties": { "type": { "const": "distinct_value_count" } } }, "then": { "$ref": "#/$defs/distinct_value_count" } },
         { "if": { "properties": { "type": { "const": "every_entry_has" } } }, "then": { "$ref": "#/$defs/every_entry_has" } },
-        { "if": { "properties": { "type": { "const": "comparison_visited" } } }, "then": { "$ref": "#/$defs/comparison_visited" } }
+        { "if": { "properties": { "type": { "const": "comparison_visited" } } }, "then": { "$ref": "#/$defs/comparison_visited" } },
+        { "if": { "properties": { "type": { "const": "links_issued" } } }, "then": { "$ref": "#/$defs/links_issued" } }
       ]
     },
     "clause_message": {
@@ -663,6 +690,18 @@
       "properties": {
         "type": { "const": "comparison_visited" },
         "block": { "$ref": "#/$defs/identifier" },
+        "message": { "$ref": "#/$defs/clause_message" }
+      }
+    },
+    "links_issued": {
+      "description": "At least this many of the people a contact list or coach checklist holds have a working link. Issued is enough: nobody need have answered.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "block", "min", "message"],
+      "properties": {
+        "type": { "const": "links_issued" },
+        "block": { "$ref": "#/$defs/identifier" },
+        "min": { "type": "integer", "minimum": 1 },
         "message": { "$ref": "#/$defs/clause_message" }
       }
     },

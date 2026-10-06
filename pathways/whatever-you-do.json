@@ -223,7 +223,7 @@
             "id": "strengths-link",
             "type": "section_link",
             "section": "strengths",
-            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 5 trusted people to assess you too.",
+            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 2 trusted people to assess you too.",
             "button_label": "Open Strengths Assessment →",
             "holds_what_follows": true
           },
@@ -250,6 +250,18 @@
               "type": "has_answer",
               "block": "gifts-summary",
               "message": "Complete the gifts reflections to continue."
+            },
+            {
+              "type": "links_issued",
+              "block": "coach",
+              "min": 1,
+              "message": "Choose a coach and send them their link to continue."
+            },
+            {
+              "type": "links_issued",
+              "block": "contacts",
+              "min": 2,
+              "message": "Send at least 2 people their links to continue."
             }
           ]
         }
@@ -271,91 +283,18 @@
         }
       },
       {
-        "id": "shape",
-        "title": "Section 2: The shape of your life",
-        "estimate": "? min",
-        "requires": ["onboarding"],
+        "id": "workbook",
+        "title": "The Workbook",
+        "estimate": "Three or four sittings of half an hour",
+        "requires": ["designed"],
+        "complete_label": "I've finished the workbook",
         "blocks": [
           {
-            "id": "timeline-task",
-            "type": "rich_text",
-            "variant": "hint",
-            "label": "The task",
-            "body": "Your gifts are only part of the picture. God also speaks through your circumstances, the people around you, the fruit of your work, and your prayers – and all of it happened somewhere in your story. Map out your life, then lay those things over the top and look for the threads."
-          }
-        ]
-      },
-      {
-        "id": "calling",
-        "title": "Section 3: Putting your calling into words",
-        "estimate": "? min",
-        "requires": ["onboarding"],
-        "blocks": [
-          {
-            "id": "calling-task",
-            "type": "rich_text",
-            "variant": "hint",
-            "label": "The task",
-            "body": "First articulate your specific calling, drawing together everything from Sections 1 & 2. Then think through three different ways it could play out – in the marketplace and in a local church context – and how it might evolve over your lifetime."
-          },
-          {
-            "id": "s2a-reading",
-            "type": "scripture_reading",
-            "heading": "Read these passages before continuing",
-            "passages": [
-              {
-                "reference": "Matthew 28:18–20",
-                "text": "And Jesus came and said to them, \"All authority in heaven and on earth has been given to me. Go therefore and make disciples of all nations, baptising them in the name of the Father and of the Son and of the Holy Spirit, teaching them to observe all that I have commanded you. And behold, I am with you always, to the end of the age.\""
-              },
-              {
-                "reference": "Matthew 22:36–40",
-                "text": "\"Teacher, which is the great commandment in the Law?\" And he said to him, \"You shall love the Lord your God with all your heart and with all your soul and with all your mind. This is the great and first commandment. And a second is like it: You shall love your neighbour as yourself. On these two commandments depend all the Law and the Prophets.\""
-              },
-              {
-                "reference": "1 Corinthians 15:58",
-                "text": "Therefore, my beloved brothers, be steadfast, immovable, always abounding in the work of the Lord, knowing that in the Lord your labour is not in vain."
-              },
-              {
-                "reference": "Acts 18:1–4",
-                "text": "After this Paul left Athens and went to Corinth. And he found a Jew named Aquila, a native of Pontus, recently come from Italy with his wife Priscilla. And because he was of the same trade he stayed with them and worked, for they were tentmakers by trade. And he reasoned in the synagogue every Sabbath, and tried to persuade Jews and Greeks."
-              },
-              {
-                "reference": "Psalm 37:3–7",
-                "text": "Trust in the Lord, and do good; dwell in the land and befriend faithfulness. Delight yourself in the Lord, and he will give you the desires of your heart. Commit your way to the Lord; trust in him, and he will act. He will bring forth your righteousness as the light, and your justice as the noonday. Be still before the Lord and wait patiently for him."
-              }
-            ],
-            "note": "Our general calling is the great commission and greatest commandments. Our specific calling works within this – playing out in different contexts and seasons, with patient trust in God's timing running through it all.",
-            "confirm_label": "I've read these passages and I'm ready to continue"
-          },
-          {
-            "id": "cl-statement",
-            "type": "long_text",
-            "prompt": "Now write it in your own words. This is the sentence you will keep coming back to."
-          }
-        ],
-        "gate": {
-          "clauses": [
-            {
-              "type": "min_text_length",
-              "block": "cl-statement",
-              "min": 10,
-              "message": "Write your calling statement (at least 10 characters) to continue."
-            }
-          ]
-        }
-      },
-      {
-        "id": "growth",
-        "title": "Section 4: Growth plan",
-        "estimate": "? min",
-        "requires": ["calling"],
-        "blocks": [
-          {
-            "id": "growth-task",
-            "type": "rich_text",
-            "variant": "hint",
-            "label": "The task",
-            "body": "Now make a concrete plan: how will you refine your sense of calling, grow in it, and walk in it? This is where discernment turns into action."
+            "id": "workbook-pdf",
+            "type": "download",
+            "file": "whatever-you-do-workbook.pdf",
+            "body": "Sections two to four, to work through on paper.\n\nThis booklet covers the middle of the course, which works better on paper. At the end it will send you back online to finish.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their assessments of you – don’t let that stop you making progress on the workbook.\n\nFor now this is a draft of the workbook. The finished version will take its place.",
+            "button_label": "Download the workbook (PDF)"
           }
         ]
       },
@@ -363,7 +302,7 @@
         "id": "letter",
         "title": "Section 5: A letter to your future self",
         "estimate": "? min",
-        "requires": ["calling"],
+        "requires": ["workbook"],
         "blocks": [
           {
             "id": "lt-task",

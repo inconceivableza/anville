@@ -64,13 +64,20 @@ python manage.py load_pathway pathways/whatever-you-do.json
 
 `pathways/whatever-you-do.json` is *Whatever You Do* itself, as far as it has been authored:
 five baseline ratings, Section 1 with its scripture and reflection, the Strengths assessment (the sort and
-its results, in a section of its own so the offline track can share it), the calling-statement section
-and the letter, with Sections 2 and 4 carrying their hint text until their activities are built.
+its results, in a section of its own so the offline track can share it), the Workbook and the letter.
+Sections 2–4 are done on paper, in the content owner's workbook, which the Workbook section offers as a PDF once
+Section 1 is complete, and Section 1 asks for the coach's link and two observers' links before then.
 `pathways/example.json` is a smaller file for trying the loader out.
 
+The workbook PDF is `pathways/files/whatever-you-do-workbook.pdf`, served only to a participant who has reached the
+Workbook. For now it is the content owner's draft, saved from the Word file in `Prototypes for reference/`, and the
+Workbook page says so; replace it, under the same name, with the finished PDF when it arrives, and take the draft
+sentence out of the Workbook's text.
+
 `pathways/whatever-you-do-faithful-port.json` is the faithful port: the same pathway as the original
-prototype has it, without the content owner's later changes (so far, the fifth baseline rating; it also asks for five
-contacts where *Whatever You Do* asks for two for now).
+prototype has it, without the content owner's later changes (so far, the fifth baseline rating, the coach page and the
+Workbook in place of Sections 2–4, which the faithful port keeps; it also asks for five contacts where *Whatever You
+Do* asks for two for now).
 Both documents grow together, and a test fails if they differ in anything else, so the finished
 pathway can be compared with the original prototype's. Load it the same way to see the original prototype's
 version. Both are titled *Whatever You Do*, so loading one publishes it in place of the other: load

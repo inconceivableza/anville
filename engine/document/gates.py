@@ -22,11 +22,22 @@ CLAUSE_ANSWER_KINDS = {
     "comparison_visited": ("sort",),
 }
 
+# ✨ A clause that reads something other than a block's answer names the block types it can read instead.
+CLAUSE_BLOCK_TYPES = {
+    "links_issued": ("contact_list", "coach_checklist"),
+}
+
 
 def comparison_visit_key(block_id):
     """✨ Where the answers the gate reads hold the participant's visit to a sort's comparison. An identifier
     cannot hold a "/", so this never meets a block's own answer."""
     return f"{block_id}/comparison"
+
+
+def links_issued_key(block_id):
+    """✨ Where the answers the gate reads hold how many of a block's people have a working link: a contact list's
+    observers, or a coach checklist's coach. Like `comparison_visit_key`, never a block's own answer."""
+    return f"{block_id}/links"
 
 
 def gate_passes(section, answers):
@@ -71,9 +82,12 @@ def _passes(clause, answers):
 
 
 def _reads(clause):
-    """✨ What a clause reads: the named block's answer, or for `comparison_visited`, the visit to its comparison."""
+    """✨ What a clause reads: the named block's answer, for `comparison_visited` the visit to its comparison, and for
+    `links_issued` how many of its people have a working link."""
     if clause["type"] == "comparison_visited":
         return comparison_visit_key(clause["block"])
+    if clause["type"] == "links_issued":
+        return links_issued_key(clause["block"])
     return clause["block"]
 
 
@@ -120,6 +134,11 @@ def _comparison_visited(clause, visit):
     return has_content(visit)
 
 
+def _links_issued(clause, issued):
+    # ✨ Issued, not answered: a participant is never held back waiting on someone else (ticket 40).
+    return (issued or 0) >= clause["min"]
+
+
 CLAUSES = {
     "has_answer": _has_answer,
     "min_text_length": _min_text_length,
@@ -127,6 +146,7 @@ CLAUSES = {
     "distinct_value_count": _distinct_value_count,
     "every_entry_has": _every_entry_has,
     "comparison_visited": _comparison_visited,
+    "links_issued": _links_issued,
 }
 
 
