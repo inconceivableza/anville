@@ -24,9 +24,9 @@
 **Context**
 
 - This ticket was cut down from sharing chosen sections to one consent for the results and comparison, the only feedback the pathway has while Sections 2–4 are hidden. Sharing other sections waits for the online journey (17–21)
-- The coach preview and briefs (25) are separate, and drop to 2b first if time runs short
+- The coach preview and briefs (25, since split into 25a and 25b) are separate
 
 ## Answer
 
 - Decisions: ADR 0011; spec, Implementation Decisions › Coach and Observers (ADR 0005)
-- Carried to 25 (the guide in "What happens next"), 31a (the notices' open questions and written answers), 31b (whether written answers reach the coach), 38 (the coach's view and the notices' strip wording)
+- Carried to 25a (the guide in "What happens next"), 31a (the notices' open questions and written answers), 31b (whether written answers reach the coach), 38 (the coach's view and the notices' strip wording)
