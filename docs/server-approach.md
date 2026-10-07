@@ -57,6 +57,7 @@ deploy/
 | Firewall rules in the chart, synced to the host | Dropped. Hetzner Cloud Firewall and UFW, both fixed at 22, 80, 443 | No per-service ports that change |
 | OCI A1 ARM node, `oci-create.sh` | Hetzner CX, `hcloud-create.sh` | The host provider |
 | SQLite on a volume | PostgreSQL, in-cluster or managed | See section 7 |
+| — | One PostgreSQL server per environment, in the environment's chart, not one per host in the bootstrap chart | Isolation, recovery and upgrades stay per environment, at the price of some memory per environment. Section 7 gives the reasons, and what sharing one server would take |
 | Redis subchart, off | Not included | Add when a worker exists (email, PDF export) |
 
 ## 3. The image
@@ -190,6 +191,27 @@ Three levels, chosen per environment from its values. The chart and the deploy w
 - Ubicloud's pricing, regions and firewall behaviour were not verifiable when the sizing doc was written and are still unverified here.
 
 **Level B** is the alternative if Ubicloud is not wanted for production: more setup and a standing responsibility, as the sizing doc says. It need not be designed until a production environment is near.
+
+**One server per environment, not one per host.** At levels A and B each environment runs its own PostgreSQL server in its own namespace. A single server per host, installed by the bootstrap chart with a database for each environment, would use less memory, but:
+
+- **Isolation (ADR 0002).** Each environment has its own superuser and password, and its NetworkPolicy admits only its own pods. No environment can fill another's disk, use up its connections or slow it with a runaway query. A shared server puts every environment's data behind one superuser.
+- **Recovery per environment.** A nightly `pg_dump` works per database either way, but pgBackRest's point-in-time recovery (level B) restores a whole server. On a shared server, one organisation could not be rolled back to 14:32 without rolling back every other one too.
+- **Upgrades per environment.** A PostgreSQL major upgrade, a configuration change or a restart affects only the environment that wanted it. In the bootstrap chart, which is installed once and otherwise left alone, it would affect every environment at once.
+- **Nothing to provision.** The chart's server creates its database from `POSTGRES_PASSWORD` on first start, and deleting the namespace removes it. A shared server needs a step, holding its superuser password, that creates each environment's role and database before the first deploy, and drops them when the environment goes.
+- **Each environment moves alone.** It can go to another host, or to level C, by changing only its own values.
+
+The cost is memory: the chart requests 192 MiB for each environment's PostgreSQL, part of the 300–500 MB per environment in section 6. That is affordable for the few environments a host carries now.
+
+**If many small environments are to share a host**, for instance short-lived staging environments where memory runs out first, one shared server per host can be added without reworking the chart, because the level C path already takes any `DATABASE_URL`. It needs:
+
+- A PostgreSQL StatefulSet in its own namespace, with its own volume and a superuser password kept off the environments' secrets: in the bootstrap chart, or better a separate chart, so the bootstrap chart's cert-manager and issuers are not upgraded with it.
+- A provisioning step per environment, run by the operator or a Job in that namespace: `CREATE ROLE` with the environment's password and `CREATE DATABASE ... OWNER` that role, then `REVOKE CONNECT ... FROM PUBLIC` on each database, so no environment's role can open another's. A matching step drops both when the environment is removed.
+- A NetworkPolicy on the shared server admitting the namespaces of the environments that use it, by namespace label, in place of the per-environment policy.
+- In each such environment's values, `postgres.enabled: false`, and in its secrets, a `DATABASE_URL` naming its own role and database on the shared Service (`<release>-postgres.<namespace>.svc.cluster.local`). No TLS is needed, since the connection stays on the host.
+- The nightly dump, unchanged: it already runs `pg_dump` against the environment's `DATABASE_URL`, and the environment's role owns its database, so the dump stays per environment and goes to the environment's own Storage Box directory.
+- One server's limits and tuning for all of them: `max_connections` above the sum of every environment's gunicorn workers plus the backups (each worker holds a connection while `CONN_MAX_AGE` lasts), and a memory limit sized for the total.
+
+Point-in-time recovery for a shared server stays all-or-nothing, so shared servers suit staging, and production keeps one server per environment.
 
 **Restores are rehearsed.** A dump is restored into a scratch namespace with no ingress, on a host of the same tier, and the smoke test run against it by port-forward. Production dumps are never restored onto a staging host: the sizing doc calls that a data-protection event, and it is.
 
