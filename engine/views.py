@@ -26,7 +26,16 @@ from engine.document import (
     text_for,
     unmet,
 )
-from engine.document.blocks import CONTACTS, blocks_of, break_after, page_count, page_of, pages_of, section_of
+from engine.document.blocks import (
+    CONTACTS,
+    blocks_of,
+    break_after,
+    page_count,
+    page_of,
+    pages_of,
+    section_of,
+    translation_shown,
+)
 from engine.document.coach import (
     candidate_name_from_form,
     checklist_answers,
@@ -94,6 +103,14 @@ def home(request):
     signed in."""
     begin = reverse("hub") if request.user.is_authenticated else reverse("account_signup")
     return render(request, "engine/home.html", {"begin": begin})
+
+
+def credits_page(request):
+    """✨ The copyright notice of each translation the published pathway quotes, open to anyone, since the public
+    homepage quotes scripture too. The publishers ask for their notices on the work's copyright page (ticket 39)."""
+    version = Publication.current_version()
+    translations = version.document.get("translations", {}) if version else {}
+    return render(request, "engine/credits.html", {"translations": translations.values()})
 
 
 @login_required
@@ -1169,6 +1186,9 @@ def _block_for_participant(document, block, answers, fixed, states, asked_rows=0
     coach's link just issued."""
     widget = BLOCK_TYPES[block["type"]].widget
     text = authored_text(block, "participant")
+    if block["type"] == "scripture_reading":
+        for passage, shown in zip(block["passages"], text["passages"]):
+            shown["translation"] = translation_shown(document, passage)
     is_checklist = block["type"] == "coach_checklist"
     return {
         "rows": _contact_rows(block, answers, asked_rows) if block["type"] == "contact_list" else None,

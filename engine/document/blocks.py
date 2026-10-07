@@ -282,6 +282,13 @@ def authored_text(block, role):
     return text
 
 
+def translation_shown(document, passage):
+    """✨ The translation named beside a passage's reference: its own, unless that is the document's, which the
+    credits page says is the one used unless otherwise indicated. None when nothing is to be named."""
+    own = passage.get("translation")
+    return own if own != document.get("translation") else None
+
+
 def blocks_of(document):
     """✨ Every block in the document, in the order it was authored."""
     for section in document["content"]["sections"]:

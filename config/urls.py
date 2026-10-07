@@ -24,6 +24,7 @@ from engine.views import (
     coaching,
     comparison,
     complete_section,
+    credits_page,
     download,
     home,
     hub,
@@ -76,5 +77,6 @@ urlpatterns = [
     path("sections/<slug:section_id>/complete/", complete_section, name="complete_section"),
     path("sections/<slug:section_id>/reopen/", reopen_section, name="reopen_section"),
     path("hub/", hub, name="hub"),
+    path("credits/", credits_page, name="credits"),
     path("", home, name="home"),
 ]

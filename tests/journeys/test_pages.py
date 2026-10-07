@@ -12,7 +12,7 @@ from html import unescape
 import pytest
 
 from engine.models import Response
-from tests.documents import pathway_document, scripture_reading, sort_pathway
+from tests.documents import pathway_document, scripture_reading, sort_pathway, translated
 from tests.journeys.pages import gate_checklist, version_on
 from tests.journeys.test_coach_checklist import step, the_coach_checklist
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
@@ -255,7 +255,7 @@ def test_going_on_past_an_unconfirmed_reading_is_refused_though_the_page_needs_n
     signed_in_client, load_pathway  # noqa: F811
 ):
     """✨ The page offers no "Continue →" beneath an unconfirmed reading; a request made by hand is refused too."""
-    load_pathway(paged_onboarding(second_page=[scripture_reading()]))
+    load_pathway(translated(paged_onboarding(second_page=[scripture_reading()])))
     through_to(signed_in_client, 2)
 
     refused = move_past(signed_in_client, 2)
@@ -267,7 +267,7 @@ def test_going_on_past_an_unconfirmed_reading_is_refused_though_the_page_needs_n
 
 @pytest.mark.django_db
 def test_going_on_past_a_confirmed_reading_is_allowed(signed_in_client, load_pathway):  # noqa: F811
-    load_pathway(paged_onboarding(second_page=[scripture_reading()]))
+    load_pathway(translated(paged_onboarding(second_page=[scripture_reading()])))
     through_to(signed_in_client, 2)
     save(signed_in_client, "reading", "true")
 

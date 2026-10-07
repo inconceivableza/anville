@@ -479,7 +479,7 @@ def test_section_1_reads_the_prototypes_question_and_passages(participant):
     assert "to another the interpretation of tongues." in page
     assert "Do all speak with tongues? Do all interpret?" in page
     assert "1 Peter 4:9–11" in page
-    assert "To him belong glory and dominion forever and ever. Amen." in page
+    assert "To him belong glory and dominion for ever and ever. Amen." in page
     assert "As you read, reflect: what gifts do you see in yourself?" in page
     assert escape("I've read these passages and I'm ready to continue") in page
 

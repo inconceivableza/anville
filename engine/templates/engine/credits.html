@@ -1,0 +1,18 @@
+{% extends "engine/base.html" %}
+{% comment %}
+  ✨ The credits page every page links to: the notice each quoted translation's publisher asks for, word for word.
+  The pathway's translations come first, from its document, so its "Unless otherwise indicated" notice is read
+  before the exceptions. The homepage's Colossians 3:23 is the homepage's own, so its notice follows whatever pathway
+  is published, until ticket 32b moves the homepage into content.
+{% endcomment %}
+{% block head_title %}Credits{% endblock head_title %}
+
+{% block content %}
+  <h1>Credits</h1>
+  {% for translation in translations %}
+    <h2 class="credits-name">{{ translation.name }}</h2>
+    <p class="credits-notice">{{ translation.notice }}</p>
+  {% endfor %}
+  <h2 class="credits-name">New International Version Anglicised</h2>
+  <p class="credits-notice">Scripture quotations marked NIV taken from the Holy Bible, New International Version Anglicised Copyright © 1979, 1984, 2011 Biblica. Used by permission of Hodder &amp; Stoughton Ltd, an Hachette UK company. All rights reserved. 'NIV' is a registered trademark of Biblica UK trademark number 1448790.</p>
+{% endblock content %}

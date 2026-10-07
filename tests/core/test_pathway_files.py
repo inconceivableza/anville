@@ -6,7 +6,8 @@ import pytest
 
 from engine.document import BLOCK_TYPES, validate
 
-PATHWAY_FILES = sorted((Path(__file__).resolve().parents[2] / "pathways").glob("*.json"))
+ROOT = Path(__file__).resolve().parents[2]
+PATHWAY_FILES = sorted((ROOT / "pathways").glob("*.json"))
 
 
 def test_the_repository_holds_at_least_one_pathway_document():
@@ -16,6 +17,19 @@ def test_the_repository_holds_at_least_one_pathway_document():
 @pytest.mark.parametrize("path", PATHWAY_FILES, ids=lambda path: path.name)
 def test_every_pathway_document_in_the_repository_is_valid(path):
     assert validate(json.loads(path.read_text(encoding="utf-8"))) == []
+
+
+def test_the_repository_has_no_licence_while_its_pathways_quote_scripture_by_permission():
+    """✨ The scripture is quoted by its publishers' permission, which no licence of ours can pass on, and the ESV's
+    notice forbids a Creative Commons one by name (ticket 39). Adding a licence is a decision to make first, and this
+    test is changed with it."""
+    quoting = [path.name for path in PATHWAY_FILES if json.loads(path.read_text(encoding="utf-8")).get("translations")]
+    licences = [path.name for path in ROOT.iterdir() if re.match(r"(LICEN[CS]E|COPYING)", path.name, re.IGNORECASE)]
+
+    assert not (quoting and licences), (
+        f"{licences} would license the scripture quoted in {quoting}. Decide the licence first: see the spec, "
+        "Legalities are parked, not forgotten."
+    )
 
 
 # ✨ The faithful port keeps the prototype's wording, which does not say how much is needed.

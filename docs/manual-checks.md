@@ -166,6 +166,13 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Keyboard only: Tab reaches the button and Enter opens the PDF; Tab then reaches "I've finished the workbook".
 - Phone width: the button wraps rather than running off the screen, and the PDF opens in the phone's viewer.
 
+## Scripture and the credits page (Section 1's reading, the homepage, `/credits/`)
+
+- Section 1's passages show their references with no "(ESV)"; the homepage footer reads "Colossians 3:23 (NIV)".
+- "Credits" sits at the foot of every page, the homepage's among its footer links, and leads to the credits page, signed in or not. It shows the ESV notice beginning "Unless otherwise indicated", then the NIV notice "marked NIV", each under its translation's name and word for word, with "®", "©" and "&" intact.
+- Whenever a passage is added or changed, compare its text with the publisher's word for word (for example the ESVUK or NIVUK on Bible Gateway): any cut is marked "…" or by its reference ("7a").
+- Phone width: the notices wrap, and the footer link stays clear of the page's last block.
+
 ## The sort
 
 - The cards come in a different order on each visit. The counter reads "1/36" and counts up.

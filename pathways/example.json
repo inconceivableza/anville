@@ -1,6 +1,13 @@
 {
   "format": 1,
   "title": "Example pathway",
+  "translations": {
+    "NIV": {
+      "name": "New International Version Anglicised",
+      "notice": "Scripture quotations taken from the Holy Bible, New International Version Anglicised Copyright © 1979, 1984, 2011 Biblica. Used by permission of Hodder & Stoughton Ltd, an Hachette UK company. All rights reserved. 'NIV' is a registered trademark of Biblica UK trademark number 1448790."
+    }
+  },
+  "translation": "NIV",
   "content": {
     "sections": [
       {
@@ -39,7 +46,7 @@
             "heading": "Read these first",
             "passages": [
               {
-                "reference": "Colossians 3:23-24",
+                "reference": "Colossians 3:23",
                 "text": "Whatever you do, work at it with all your heart, as working for the Lord, not for human masters."
               }
             ],

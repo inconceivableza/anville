@@ -3,11 +3,11 @@
 import pytest
 
 from engine.document import AnswerRefused, answer_from_form, answerable_block, authored_text, validate
-from tests.documents import pathway_document, scripture_reading
+from tests.documents import pathway_document, scripture_reading, translated
 
 
 def document_with_a_reading(**fields):
-    document = pathway_document()
+    document = translated(pathway_document())
     document["content"]["sections"][1]["blocks"].insert(0, scripture_reading(**fields))
     return document
 
@@ -21,6 +21,29 @@ def test_a_reading_needs_at_least_one_passage_and_each_passage_a_reference_and_i
     [problem] = validate(document_with_a_reading(passages=[{"reference": "1 Corinthians 12"}]))
     assert problem.path == "/content/sections/1/blocks/0/passages/0"
     assert "'text' is a required property" in problem.message
+
+
+def test_a_translation_named_by_a_passage_or_the_document_must_be_declared():
+    undeclared = {"reference": "Psalm 1", "text": "Blessed.", "translation": "NLT"}
+    [problem] = validate(document_with_a_reading(passages=[undeclared]))
+    assert problem.path == "/content/sections/1/blocks/0/passages/0/translation"
+
+    document = document_with_a_reading()
+    document["translation"] = "NLT"
+    [problem] = validate(document)
+    assert problem.path == "/translation"
+
+
+def test_a_passage_needs_a_translation_of_its_own_when_the_document_names_none():
+    """✨ Every passage shown names its translation, so one with nothing to fall back on is refused (ticket 39)."""
+    document = document_with_a_reading()
+    del document["translation"]
+
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/1/blocks/0/passages/0"
+
+    document["content"]["sections"][1]["blocks"][0]["passages"][0]["translation"] = "NIV"
+    assert validate(document) == []
 
 
 def test_a_readings_note_and_confirm_label_are_optional():

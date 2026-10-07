@@ -10,6 +10,27 @@
   "properties": {
     "format": { "const": 1 },
     "title": { "$ref": "#/$defs/text" },
+    "translations": {
+      "description": "The Bible translations the pathway quotes, keyed by the abbreviation shown beside each passage, such as 'ESV'. Each one's notice is shown on the credits page.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "notice"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "notice": {
+            "description": "The copyright notice the translation's publisher asks for, word for word.",
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "translation": {
+      "description": "The translation a passage is from when it names none of its own: one of 'translations'.",
+      "type": "string"
+    },
     "content": {
       "type": "object",
       "additionalProperties": false,
@@ -361,6 +382,10 @@
               "text": {
                 "description": "The passage itself. Plain text; a blank line starts a new paragraph.",
                 "$ref": "#/$defs/text"
+              },
+              "translation": {
+                "description": "The translation this passage is from, when not the document's: one of 'translations'.",
+                "type": "string"
               }
             }
           }

@@ -14,6 +14,21 @@ def scripture_reading(**fields):
     }
 
 
+ESV_NOTICE = "Unless otherwise indicated, scripture quotations are from the ESV Bible, used by permission."
+NIV_NOTICE = "Scripture quotations marked NIV are from the Holy Bible, NIV, used by permission."
+
+
+def translated(document):
+    """✨ The document with the translations its scripture is quoted from, the ESV by default, as any document
+    quoting scripture must have."""
+    document["translations"] = {
+        "ESV": {"name": "English Standard Version", "notice": ESV_NOTICE},
+        "NIV": {"name": "New International Version", "notice": NIV_NOTICE},
+    }
+    document["translation"] = "ESV"
+    return document
+
+
 def pathway_document():
     return {
         "format": 1,

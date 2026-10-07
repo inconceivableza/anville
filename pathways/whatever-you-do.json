@@ -1,6 +1,13 @@
 {
   "format": 1,
   "title": "Whatever You Do",
+  "translations": {
+    "ESV": {
+      "name": "English Standard Version Anglicized",
+      "notice": "Unless otherwise indicated, all Scripture quotations are from the Anglicized ESV® Bible, copyright © 2002 by Crossway and HarperCollins Publishers, London. Used by permission. All rights reserved. May not copy or download more than 500 consecutive verses of the Anglicized ESV® Bible or more than one half of any book of the Anglicized ESV® Bible."
+    }
+  },
+  "translation": "ESV",
   "content": {
     "sections": [
       {
@@ -207,7 +214,7 @@
               },
               {
                 "reference": "1 Peter 4:9–11",
-                "text": "Show hospitality to one another without grumbling. As each has received a gift, use it to serve one another, as good stewards of God's varied grace: whoever speaks, as one who speaks oracles of God; whoever serves, as one who serves by the strength that God supplies – in order that in everything God may be glorified through Jesus Christ. To him belong glory and dominion forever and ever. Amen."
+                "text": "Show hospitality to one another without grumbling. As each has received a gift, use it to serve one another, as good stewards of God's varied grace: whoever speaks, as one who speaks oracles of God; whoever serves, as one who serves by the strength that God supplies—in order that in everything God may be glorified through Jesus Christ. To him belong glory and dominion for ever and ever. Amen."
               }
             ],
             "note": "As you read, reflect: what gifts do you see in yourself? Which do others affirm in you? Which are notably absent – and what might that tell you about how God has designed you?",

@@ -1,6 +1,13 @@
 {
   "format": 1,
   "title": "Whatever You Do",
+  "translations": {
+    "ESV": {
+      "name": "English Standard Version Anglicized",
+      "notice": "Unless otherwise indicated, all Scripture quotations are from the Anglicized ESV® Bible, copyright © 2002 by Crossway and HarperCollins Publishers, London. Used by permission. All rights reserved. May not copy or download more than 500 consecutive verses of the Anglicized ESV® Bible or more than one half of any book of the Anglicized ESV® Bible."
+    }
+  },
+  "translation": "ESV",
   "content": {
     "sections": [
       {
@@ -114,7 +121,7 @@
               },
               {
                 "reference": "1 Peter 4:9–11",
-                "text": "Show hospitality to one another without grumbling. As each has received a gift, use it to serve one another, as good stewards of God's varied grace: whoever speaks, as one who speaks oracles of God; whoever serves, as one who serves by the strength that God supplies – in order that in everything God may be glorified through Jesus Christ. To him belong glory and dominion forever and ever. Amen."
+                "text": "Show hospitality to one another without grumbling. As each has received a gift, use it to serve one another, as good stewards of God's varied grace: whoever speaks, as one who speaks oracles of God; whoever serves, as one who serves by the strength that God supplies—in order that in everything God may be glorified through Jesus Christ. To him belong glory and dominion for ever and ever. Amen."
               }
             ],
             "note": "As you read, reflect: what gifts do you see in yourself? Which do others affirm in you? Which are notably absent – and what might that tell you about how God has designed you?",
@@ -209,7 +216,7 @@
             "passages": [
               {
                 "reference": "Matthew 28:18–20",
-                "text": "And Jesus came and said to them, \"All authority in heaven and on earth has been given to me. Go therefore and make disciples of all nations, baptising them in the name of the Father and of the Son and of the Holy Spirit, teaching them to observe all that I have commanded you. And behold, I am with you always, to the end of the age.\""
+                "text": "And Jesus came and said to them, \"All authority in heaven and on earth has been given to me. Go therefore and make disciples of all nations, baptizing them in the name of the Father and of the Son and of the Holy Spirit, teaching them to observe all that I have commanded you. And behold, I am with you always, to the end of the age.\""
               },
               {
                 "reference": "Matthew 22:36–40",
@@ -221,11 +228,11 @@
               },
               {
                 "reference": "Acts 18:1–4",
-                "text": "After this Paul left Athens and went to Corinth. And he found a Jew named Aquila, a native of Pontus, recently come from Italy with his wife Priscilla. And because he was of the same trade he stayed with them and worked, for they were tentmakers by trade. And he reasoned in the synagogue every Sabbath, and tried to persuade Jews and Greeks."
+                "text": "After this Paul left Athens and went to Corinth. And he found a Jew named Aquila, a native of Pontus, recently come from Italy with his wife Priscilla … and because he was of the same trade he stayed with them and worked, for they were tentmakers by trade. And he reasoned in the synagogue every Sabbath, and tried to persuade Jews and Greeks."
               },
               {
                 "reference": "Psalm 37:3–7",
-                "text": "Trust in the Lord, and do good; dwell in the land and befriend faithfulness. Delight yourself in the Lord, and he will give you the desires of your heart. Commit your way to the Lord; trust in him, and he will act. He will bring forth your righteousness as the light, and your justice as the noonday. Be still before the Lord and wait patiently for him."
+                "text": "Trust in the Lord, and do good; dwell in the land and befriend faithfulness. Delight yourself in the Lord, and he will give you the desires of your heart. Commit your way to the Lord; trust in him, and he will act. He will bring forth your righteousness as the light, and your justice as the noonday. Be still before the Lord and wait patiently for him …"
               }
             ],
             "note": "Our general calling is the great commission and greatest commandments. Our specific calling works within this – playing out in different contexts and seasons, with patient trust in God's timing running through it all.",

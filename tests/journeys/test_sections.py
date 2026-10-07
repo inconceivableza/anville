@@ -10,7 +10,7 @@ import re
 import pytest
 
 from engine.models import Response
-from tests.documents import complete_sort, pathway_document, scripture_reading, sort_pathway
+from tests.documents import complete_sort, pathway_document, scripture_reading, sort_pathway, translated
 from tests.journeys.pages import gate_checklist, loads_the_built_stylesheet
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_results import in_order
@@ -424,9 +424,23 @@ def test_progress_counts_the_interactive_blocks_and_not_the_prose(signed_in_clie
 
 @pytest.fixture
 def document_with_a_reading():
-    document = pathway_document()
+    document = translated(pathway_document())
     document["content"]["sections"][1]["blocks"].insert(0, scripture_reading())
     return document
+
+
+@pytest.mark.django_db
+def test_a_passage_names_its_translation_beside_its_reference_only_when_it_is_not_the_documents(
+    open_calling, document_with_a_reading
+):
+    """✨ The credits page says the document's translation is the one used unless otherwise indicated."""
+    reading = document_with_a_reading["content"]["sections"][1]["blocks"][0]
+    reading["passages"].append({"reference": "Colossians 3:23", "text": "Whatever you do.", "translation": "NIV"})
+
+    page = open_calling(document_with_a_reading).get(CALLING).content.decode()
+
+    assert "Colossians 3:23 (NIV)" in page
+    assert "(ESV)" not in page
 
 
 @pytest.mark.django_db

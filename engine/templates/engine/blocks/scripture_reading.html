@@ -8,7 +8,7 @@
   {% for passage in block.text.passages %}
     <blockquote class="scripture-passage">
       {{ passage.text|linebreaks }}
-      <cite class="scripture-ref">{{ passage.reference }}</cite>
+      <cite class="scripture-ref">{{ passage.reference }}{% if passage.translation %} ({{ passage.translation }}){% endif %}</cite>
     </blockquote>
   {% endfor %}
   {% if block.text.note %}<p class="scripture-note">{{ block.text.note }}</p>{% endif %}

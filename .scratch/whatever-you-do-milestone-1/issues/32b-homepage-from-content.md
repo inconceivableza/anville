@@ -23,6 +23,11 @@
 
 - The homepage's results illustration still shows percents (24%, 29% and so on), where the results page and the comparison now show standings in words; redraw it to match when its figures become authored
 
+**Carried from 39**
+
+- [ ] The footer's verse (Colossians 3:23, NIV) becomes authored with its translation declared like a passage's, and the credits page's NIV notice, written into its template today, moves into content with it
+- The repository's licence depends on where the scripture lives: keeping it to authored content makes it possible to leave out of an open licence (spec, Legalities are parked, not forgotten)
+
 **Context**
 
 - Open before building: where homepage content lives (the pathway document, or a document of its own per deployment), and whether How it works takes its time figures from the pathway's own time estimates

@@ -24,6 +24,7 @@ def lint(document):
         *_loads_per_framework(document, construct_ids),
         *_sort_needs(document),
         *_ungated_sorts(document),
+        *_undeclared_translations(document),
     ]
 
 
@@ -221,6 +222,26 @@ def _ungated_sorts(document):
                     f"/content/sections/{s}/blocks/{b}",
                     f"Block '{block['id']}' is a sort, so its section's gate needs a 'has_answer' clause for it.",
                 )
+
+
+def _undeclared_translations(document):
+    """✨ Every passage is from a translation, so its publisher's notice can point at it: the translation a passage
+    or the document names must be declared, and a passage naming none needs the document's."""
+    declared = document.get("translations", {})
+    named = []
+    if "translation" in document:
+        named.append(("/translation", document["translation"]))
+    for s, section in enumerate(document["content"]["sections"]):
+        for b, block in enumerate(section["blocks"]):
+            for p, passage in enumerate(block.get("passages", []) if block["type"] == "scripture_reading" else []):
+                path = f"/content/sections/{s}/blocks/{b}/passages/{p}"
+                if "translation" in passage:
+                    named.append((f"{path}/translation", passage["translation"]))
+                elif "translation" not in document:
+                    yield Problem(path, "A passage must name its translation, since the pathway names none for it.")
+    for path, translation in named:
+        if translation not in declared:
+            yield Problem(path, f"There is no translation '{translation}' in this pathway.")
 
 
 def _loads_per_framework(document, construct_ids):
