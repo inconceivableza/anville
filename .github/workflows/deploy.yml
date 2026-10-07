@@ -26,6 +26,12 @@ concurrency:
   group: deploy
   cancel-in-progress: false
 
+# Named, bash runs with -e and -o pipefail. GitHub's unnamed default has no pipefail, so a failing command
+# piped into tee would pass.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   # Before the environment's secrets are in reach: is this an environment, and is there such an image?
   check:

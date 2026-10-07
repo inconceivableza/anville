@@ -16,6 +16,11 @@ permissions:
 env:
   IMAGE: ghcr.io/inconceivableza/anville
 
+# Named, bash runs with -e and -o pipefail. GitHub's unnamed default has no pipefail.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   test:
     runs-on: ubuntu-latest
