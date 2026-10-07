@@ -4,6 +4,11 @@ import re
 from html import unescape
 
 
+def main_of(page):
+    """✨ The page's own content, without the header and its pathway sidebar, which repeat the hub's steps."""
+    return re.search(r"<main.*?</main>", page, re.S).group(0)
+
+
 def gate_checklist(page):
     """✨ The gate's checklist beneath "Mark complete", as {message: whether it is met}."""
     items = re.findall(r'<li class="gate-item( is-met)?">.*?<span class="gate-message">(.*?)</span>', page, re.S)

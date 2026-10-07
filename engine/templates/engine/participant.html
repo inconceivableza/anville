@@ -1,0 +1,5 @@
+{% extends "engine/base.html" %}
+{# ✨ Every participant page: the engine's own, with the header and its pathway sidebar (ticket 41a). Observers' and #}
+{# the coach's pages extend engine/base.html instead: they have no account, so nothing to sign out of or find. The #}
+{# header needs someone signed in, so a public page extending this one (credits) shows it to them alone. #}
+{% block header %}{% if user.is_authenticated %}{% include "engine/participant_header.html" %}{% endif %}{% endblock header %}

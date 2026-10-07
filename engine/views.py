@@ -122,26 +122,77 @@ def hub(request):
         return render(request, "engine/hub.html", {})
     if not any(section["blocks"] for section in state.sections):
         return render(request, "engine/hub.html", {})  # ✨ no content is the empty state, never a fallback
+    hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
     return render(
         request,
         "engine/hub.html",
         {
             "title": text_for(state.version.document["title"], "participant"),
-            "hub": hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past),
+            "hub": hub,
             "coach": _coach_of(state.response),
-            "coach_page": _coach_page_of(state.version.document),
+            "coach_page": _coach_page_of(state.version.document, hub),
         },
     )
 
 
-def _coach_page_of(document):
+def _coach_page_of(document, hub):
     """✨ The address of the page of the document's coach checklist, at the checklist, or None for a document without
-    one, whose hub then says nothing of a coach."""
+    one, whose hub then says nothing of a coach. None too while the participant's `hub` has its section locked, as a
+    locked section's pages are never linked."""
     for block in blocks_of(document):
         if block["type"] == "coach_checklist":
             section = section_of(document, block["id"])
+            if any(state.id == section["id"] and state.is_locked for state in hub.sections):
+                return None
             return f"{page_url(section['id'], page_of(section, block['id']))}#block-{block['id']}"
     return None
+
+
+def participant_nav(request):
+    """✨ The header and sidebar of every participant page (ticket 41a), as `engine/participant_header.html` needs them:
+    the pathway's name, and unless the site switches it off, the sidebar. The sidebar's sections are the hub's own, so
+    their statuses and locks are the hub's; a locked section carries no address, and neither does a page within it,
+    such as the coach page. Results and the comparison are listed once there is a result, since before then they lead
+    only back to the sort. `current` is the section whose page this is, if any."""
+    state = _participant(request.user)
+    if state.version is None:
+        return {"title": None, "sidebar": None}
+    document = state.version.document
+    title = text_for(document["title"], "participant")
+    if not settings.ANVILLE_SIDEBAR or not any(section["blocks"] for section in state.sections):
+        return {"title": title, "sidebar": None}
+    hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    links = []
+    scored = _scored_block(document)
+    if scored and Result.objects.filter(response=state.response, block_id=scored["id"]).exists():
+        links += [
+            ("Your results", reverse("results", args=[scored["id"]])),
+            ("How others experience you", reverse("comparison", args=[scored["id"]])),
+        ]
+    links.append(("Invite others to assess you", reverse("invitations")))
+    coach_page = _coach_page_of(document, hub)
+    if coach_page:
+        links.append(("Your coach", coach_page))
+    return {
+        "title": title,
+        "sidebar": {
+            "sections": hub.sections,
+            "current": _current_section(request, document),
+            "links": [{"label": label, "href": href, "is_current": href == request.path} for label, href in links],
+        },
+    }
+
+
+def _current_section(request, document):
+    """✨ The identifier of the section whose page this is, or None. Every address naming a section is that section's,
+    a refused "Continue →" or completion included; a coach checklist's step, without JavaScript, shows the page of the
+    checklist's section."""
+    match = request.resolver_match
+    if match is None:
+        return None
+    if match.url_name == "coach_checklist":
+        return section_of(document, match.kwargs["block_id"])["id"]
+    return match.kwargs.get("section_id")
 
 
 @login_required

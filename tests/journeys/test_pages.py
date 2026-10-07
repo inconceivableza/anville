@@ -13,7 +13,7 @@ import pytest
 
 from engine.models import Response
 from tests.documents import pathway_document, scripture_reading, sort_pathway, translated
-from tests.journeys.pages import gate_checklist, version_on
+from tests.journeys.pages import gate_checklist, main_of, version_on
 from tests.journeys.test_coach_checklist import step, the_coach_checklist
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 
@@ -472,7 +472,7 @@ def test_going_back_keeps_the_pages_already_gone_through(participant):
 def test_the_hub_shows_a_paged_section_once_and_leads_to_the_page_reached(participant):
     through_to(participant, 2)
 
-    hub = shown(participant, "/hub/")
+    hub = main_of(shown(participant, "/hub/"))
 
     assert hub.count("Before we begin</a>") == 1
     assert f'href="{SECOND}"' in hub

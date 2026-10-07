@@ -16,7 +16,7 @@ from django.utils.html import escape
 
 from engine.document.blocks import pages_of
 from engine.models import Contact, Publication, Response
-from tests.journeys.pages import gate_checklist
+from tests.journeys.pages import gate_checklist, main_of
 from tests.journeys.test_consent import give_consent
 from tests.journeys.test_hub import a_fresh_participant, signed_in_client  # noqa: F401  (a fixture, used by name)
 
@@ -486,7 +486,7 @@ def test_section_1_reads_the_prototypes_question_and_passages(participant):
 
 @pytest.mark.django_db
 def test_section_1s_activity_waits_for_the_reading_to_be_confirmed(participant):
-    page = onboarded(participant).get(SECTION_1).content.decode()
+    page = main_of(onboarded(participant).get(SECTION_1).content.decode())
 
     assert STRENGTHS_LINK not in page
     assert GIFTS_REFLECTION not in page
@@ -494,7 +494,7 @@ def test_section_1s_activity_waits_for_the_reading_to_be_confirmed(participant):
 
 @pytest.mark.django_db
 def test_after_the_reading_section_1_links_to_the_strengths_assessment_by_the_prototypes_button(participant):
-    page = through_to_section_1s_activity(participant).get(SECTION_1).content.decode()
+    page = main_of(through_to_section_1s_activity(participant).get(SECTION_1).content.decode())
 
     assert "you sort and rate your strengths across 36 areas" in page
     assert re.search(rf"{STRENGTHS_LINK}[^>]*>\s*Open Strengths Assessment →\s*</a>", page)

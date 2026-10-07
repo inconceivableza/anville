@@ -1,0 +1,41 @@
+{% load navigation section_pages %}
+{% comment %}
+  ✨ The header of every participant page (ticket 41a): the pathway's name, leading to the hub; the sidebar; and "Sign
+  out", allauth's own, a POST so no page loaded ahead of time signs anyone out, leading to the homepage.
+
+  The sidebar is a <details>, so it opens and closes without JavaScript. Its sections are the hub's, with the same
+  statuses and locks: a locked section is named but not linked, as on the hub. The site can switch it off
+  (ANVILLE_SIDEBAR), leaving the rest of the header.
+{% endcomment %}
+{% participant_nav as nav %}
+<header class="site-header">
+  <a class="site-header-title" href="{% url 'hub' %}">{{ nav.title|default:"Anville" }}</a>
+  {% if nav.sidebar %}
+    <details class="pathway-nav-toggle">
+      <summary class="btn btn-secondary btn-sm">Your pathway</summary>
+      <nav class="pathway-nav" aria-label="Your pathway">
+        <ol class="pathway-nav-sections">
+          {% for section in nav.sidebar.sections %}
+            <li class="pathway-nav-section{% if section.is_next %} is-next{% endif %}{% if section.id == nav.sidebar.current %} is-current{% endif %}">
+              <span class="status-chip status-{{ section.status }}">{{ section.label }}</span>
+              {% if section.is_locked %}
+                <span class="pathway-nav-title">{{ section.title }}</span>
+              {% else %}
+                <a class="pathway-nav-title" href="{% page_url section.id section.page %}"{% if section.id == nav.sidebar.current %} aria-current="page"{% endif %}>{{ section.title }}</a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ol>
+        <ul class="pathway-nav-links">
+          {% for link in nav.sidebar.links %}
+            <li><a href="{{ link.href }}"{% if link.is_current %} aria-current="page"{% endif %}>{{ link.label }}</a></li>
+          {% endfor %}
+        </ul>
+      </nav>
+    </details>
+  {% endif %}
+  <form method="post" action="{% url 'account_logout' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-secondary btn-sm">Sign out</button>
+  </form>
+</header>

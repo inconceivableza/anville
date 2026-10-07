@@ -11,7 +11,7 @@ import pytest
 
 from engine.models import Response
 from tests.documents import complete_sort, pathway_document, scripture_reading, sort_pathway, translated
-from tests.journeys.pages import gate_checklist, loads_the_built_stylesheet
+from tests.journeys.pages import gate_checklist, loads_the_built_stylesheet, main_of
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_results import in_order
 
@@ -604,7 +604,7 @@ def test_a_link_with_a_button_label_leads_there_by_that_button(open_calling):
     page = open_calling(with_a_button()).get(CALLING).content.decode()
 
     assert re.search(r'href="/sections/strengths/"[^>]*>\s*Open Strengths Assessment →\s*</a>', page)
-    assert page.count(STRENGTHS_LINK) == 1  # ✨ the button is the way there, so the title is not a second one
+    assert main_of(page).count(STRENGTHS_LINK) == 1  # ✨ the button is the way there, so the title is not a second one
     assert "Strengths assessment" in page
     assert "status-chip status-not-started" in page
 

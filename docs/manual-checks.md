@@ -51,6 +51,18 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Once agreed, "Go to your pathway" and "Withdraw my consent" look alike in size, stacked as the first two buttons were.
 - With a section open in one tab, withdraw in another, then type in the first tab: the page goes to the consent page rather than showing "Saved" or an error.
 
+## The header and the pathway sidebar (every participant page)
+
+- The hub, each section page, results, the comparison and invitations have the header: "Your pathway" on the left, the pathway's name (leading to the hub), and "Sign out" on the right. The coach's page and the observer's pages have none of it, even in the participant's own signed-in browser.
+- "Your pathway" opens a panel down the left listing the hub's sections with their status chips; the section you are in is highlighted, and a locked section is greyed and not a link. Below them: invitations, the coach page once Section 1 is open, and results and the comparison once the sort is in. Pressing "Your pathway" again closes it.
+- Without JavaScript, the panel opens and closes just the same.
+- Keyboard only: Tab reaches "Your pathway", Enter or Space opens it, and Tab then moves through its links, with the focus ring showing on each.
+- Screen reader: "Your pathway" is announced as collapsed or expanded, and the step you are on as the current page.
+- Phone width: the header fits on one line or wraps tidily, the panel fills most of the width without sideways scrolling, and a long list scrolls inside the panel.
+- "Sign out" lands on the homepage, signed out.
+- The footer's "Credits" shows the header while signed in, and the plain page once signed out.
+- With `ANVILLE_SIDEBAR=false` in `.env` and the server restarted, "Your pathway" is gone; the pathway's name and "Sign out" remain.
+
 ## Autosaved answers (long text, 1–10 scale, single select)
 
 - Typing or choosing shows "Saved"; changing the answer again clears it; a slow save shows "Saving…".

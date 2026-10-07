@@ -4,21 +4,22 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2a (ends 8 Oct, before FaithTech)
 
 **Spec:** Hub, progress and gates; Engine: sections, tracks, gates, progress
 
-- [ ] Every participant page has a header with the pathway's name leading to the hub, a button that opens the sidebar, and a way to sign out that leads to the homepage; observers' and the coach's pages have none of these
-- [ ] The sidebar lists the same steps as the hub, with the same status and locks, the current one marked; locked steps are shown but not linked
-- [ ] Results, the comparison, the invitations page and the coach page are reachable from the sidebar
-- [ ] The sidebar opens and closes with or without JavaScript
-- [ ] The sidebar can be switched off for the whole site by a setting, leaving the header, its link to the hub and sign out
+- [x] Every participant page has a header with the pathway's name leading to the hub, a button that opens the sidebar, and a way to sign out that leads to the homepage; observers' and the coach's pages have none of these
+- [x] The sidebar lists the same steps as the hub, with the same status and locks, the current one marked; locked steps are shown but not linked
+- [x] Results, the comparison, the invitations page and the coach page are reachable from the sidebar
+- [x] The sidebar opens and closes with or without JavaScript
+- [x] The sidebar can be switched off for the whole site by a setting, leaving the header, its link to the hub and sign out
 
 **Context**
 
 - The Strengths assessment belongs to Section 1 in the participant's eyes, though it is its own section in the document. 41b shows it indented under Section 1 on the hub, and the sidebar follows the hub
+- The consent page keeps the account pages' layout, without the header: it comes before the pathway and already links to the hub. The credits page is public, and shows the header only to someone signed in
 - Breadcrumbs were considered and left out for now. If they are added later, they should be switchable by a setting in the same way
 
 **Original criteria (replaced 7 Oct)**

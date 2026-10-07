@@ -11,6 +11,7 @@ import pytest
 from engine.document.scoring import score
 from engine.models import Response, Result
 from tests.documents import complete_sort, sort_pathway
+from tests.journeys.pages import main_of
 from tests.journeys.test_answers import answer, participant  # noqa: F401 (a fixture)
 from tests.journeys.test_consent import give_consent
 from tests.journeys.test_hub import a_fresh_participant
@@ -131,7 +132,7 @@ def test_the_item_scores_are_listed_in_an_expandable_list_with_the_participants_
 
     page = results(signed_in).content.decode()
 
-    listed = re.search(r"<details.*?</details>", page, re.S).group(0)
+    listed = re.search(r"<details.*?</details>", main_of(page), re.S).group(0)
     assert in_order(listed, "Apostle", "Building something that will outlast you", "90")
     assert in_order(listed, "Prophet", "Going against the grain", "10")
 

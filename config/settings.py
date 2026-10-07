@@ -68,11 +68,15 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_ADAPTER = "access.adapter.AccountAdapter"
 LOGIN_REDIRECT_URL = "hub"
+ACCOUNT_LOGOUT_REDIRECT_URL = "home"  # ✨ the header's "Sign out" leads to the homepage (ticket 41a)
 ACCOUNT_SIGNUP_FORM_CLASS = "access.forms.EnrolmentCodeSignupForm"
 ACCOUNT_FORMS = {"login": "access.forms.SignInForm"}
 # ✨ On unless the environment turns it off, so a deployment that forgets the setting admits nobody without the code.
 ANVILLE_ENROLMENT_REQUIRED = env.bool("ANVILLE_ENROLMENT_REQUIRED", default=True)
 ANVILLE_ENROLMENT_CODE = env("ANVILLE_ENROLMENT_CODE", default="")
+# ✨ The pathway sidebar the header opens on every participant page (ticket 41a). Off leaves the header, its link to
+# the hub and "Sign out".
+ANVILLE_SIDEBAR = env.bool("ANVILLE_SIDEBAR", default=True)
 
 ROOT_URLCONF = "config.urls"
 
