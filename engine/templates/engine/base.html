@@ -1,5 +1,7 @@
 {% load django_vite %}
-{# ✨ Every engine page. The account pages have their own base, replacing allauth's. #}
+{# ✨ Every engine page. The account pages have their own base, replacing allauth's #}
+{# (access/templates/allauth/layouts/base.html), and the homepage overrides `body`, so anything sitewide, such as #}
+{# the credits link, goes in all three. #}
 <!doctype html>
 <html lang="en-GB">
   <head>
