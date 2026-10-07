@@ -122,7 +122,7 @@ Its `values.yaml` holds only the deltas:
 
 ```yaml
 tier: staging                       # staging | production
-host: staging-1                     # which host carries it; informational, checked by the deploy
+host: anville-staging-01.vabl.dev   # the canonical name of the host that carries it (section 9)
 hostname: anville.vabl.dev
 issuer: letsencrypt-prod
 postgres:
@@ -138,8 +138,7 @@ Its GitHub Environment holds:
 
 | Kind | Name | Notes |
 |---|---|---|
-| Variable | `DEPLOY_HOST` | The host's address. Environments on one host repeat it |
-| Secret | `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`, `KUBECONFIG` | Access to that host |
+| Secret | `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`, `KUBECONFIG` | Access to the host its values name. Environments on one host repeat them. The deploy reaches the host by its canonical name, so `DEPLOY_KNOWN_HOSTS` is scanned by that name |
 | Secret | `DJANGO_SECRET_KEY` | Never shared between environments |
 | Secret | `ANVILLE_ENROLMENT_CODE` | Per environment, and only where its values turn `enrolment.required` on. The chart turns it on unless told otherwise, as the application does; `whatever-you-do-staging` turns it off (ticket 37) |
 | Secret | `POSTGRES_PASSWORD` | In-cluster database; the chart composes `DATABASE_URL` from it, so it must be safe inside a URL: letters, digits, `-` and `_` only. It is read when the database is first created, and changing it later does not change the database's password |
@@ -155,15 +154,15 @@ Production environments get GitHub's required-reviewer rule. Staging environment
 
 | Stage | Hosts | Environments |
 |---|---|---|
-| Now | `staging-1` (CX23) | `whatever-you-do-staging` at `anville.vabl.dev` |
-| Later | plus `production-1` (CX33) | plus `whatever-you-do-production` at `whateveryoudo.org` |
+| Now | `anville-staging-01.vabl.dev` (CX23) | `whatever-you-do-staging` at `anville.vabl.dev` |
+| Later | plus `anville-production-01` (CX33) | plus `whatever-you-do-production` at `whateveryoudo.org` |
 | Several pathways under test | the same two, until one fills | more namespaces on the host of the matching tier, each with its own hostname |
 
 Rules that keep this safe:
 
 - **Tiers never share a host.** Staging holds fake data only (spec, story 87); production holds special-category data. A staging host is also where experiments with the cluster itself happen.
 - **Environments of the same tier may share a host.** Each still has its own database, secrets and namespace, so ADR 0002's isolation holds at the data level. A rough guide: each environment costs 300–500 MB of RAM (two gunicorn workers and a small PostgreSQL) on top of roughly 1 GB for k3s, Traefik and cert-manager, so a CX23 carries three or four staging environments. That figure is an estimate and should be measured on the first one.
-- **An organisation that needs its own Hetzner account gets its own host**, from the same cloud-init template. Moving an environment between hosts is a restore plus a change of `DEPLOY_HOST`.
+- **An organisation that needs its own Hetzner account gets its own host**, from the same cloud-init template. Moving an environment between hosts is a restore plus a change of `host` in its values, and of the three access secrets.
 
 For now one operator holds the Hetzner project, the repository and its GitHub Environments. Ticket 26 expects the Hetzner account to belong to the content owner with the developer deploying into it; that split is deliberately not handled yet. Nothing above prevents it later, since the workflow reaches a host only through an SSH key and a kubeconfig.
 
@@ -235,15 +234,20 @@ Promotion stays explicit: production is a deliberate run of the same workflow wi
 
 ## 9. The host
 
-Created once by `deploy/infra/hcloud-create.sh`, which uses the `hcloud` CLI to:
+**Each host has a canonical name**, `anville-<tier>-<number>` under a domain the operator controls, such as `anville-staging-01.vabl.dev`. The number is never reused, so a name always means one machine. The name is the server's name in Hetzner, the host's hostname and its reverse DNS, and a node label (`anville-host`) beside the tier. Each environment's `host` value holds it: the deploy workflow reaches the host by that name, and `deploy.sh` refuses a node labelled with another. The A record for the name is made by hand once the script has printed the address, like every other record here (section 10), so no DNS credentials are needed to create a host.
+
+**Each host is created in a named Hetzner project.** The script is given an `hcloud` context, named after the project and holding an API token made in it, and uses only that context, whichever is active. It refuses to run while `HCLOUD_TOKEN` is set, since that token would override the context's and could belong to any project. A token cannot be asked which project it belongs to, so the context's name is only as true as the token put in it.
+
+Created once by `deploy/infra/hcloud-create.sh <project> <host> <tier>`, which first refuses a name that is not fully qualified, does not name its tier, already resolves, or is already a server's in the project, and then uses the `hcloud` CLI to:
 
 1. create a Hetzner Cloud Firewall admitting 22, 80 and 443 over TCP, and ICMP, unless the project already has it;
 2. add the operator's public key to the project, so that Hetzner sets no root password and emails none;
-3. create the server in an EU location (FSN1, NBG1 or HEL1) from the Ubuntu LTS image, passing the rendered cloud-init as user data, attaching the firewall and enabling Hetzner backups.
+3. create the server, named with the host's canonical name, in an EU location (FSN1, NBG1 or HEL1) from the Ubuntu LTS image, passing the rendered cloud-init as user data, attaching the firewall and enabling Hetzner backups;
+4. set the reverse DNS of its IPv4 address to the canonical name.
 
-It ends by printing what to do next: how to wait for the first boot, and where each of the host's GitHub Environment values comes from. `hcloud-create.sh --render` prints the cloud-init and creates nothing.
+It ends by printing what to do next: the A record to make, how to wait for the first boot, and what each environment on the host needs. `hcloud-create.sh --render` prints the cloud-init and creates nothing.
 
-The host's tier is a parameter of the template, which sets it as a k3s node label for the deploy workflow to check.
+The host's tier and canonical name are parameters of the template, which sets the hostname from the name, and both as k3s node labels for the deploy workflow to check.
 
 `cloud-init.yaml.template` is LivePace's with the provider-specific parts changed:
 
@@ -270,13 +274,13 @@ PostgreSQL has no public endpoint at levels A and B.
 | `whatever-you-do-production` | `whateveryoudo.org` (envisaged) | Not yet determined |
 | Further staging environments | Suggested: `<deployment>.anville.vabl.dev` | Cloudflare |
 
-Each environment has one A record pointing at its host. With HTTP-01 the record must exist, and resolve to the host, before the first deploy, or the certificate cannot be issued.
+Each host has an A record for its canonical name (section 9), made by hand once it is created. Each environment's hostname is a CNAME to that name, so rebuilding a host changes one record, not one per environment. A zone's apex cannot be a CNAME: there, an A record with the host's address, unless the DNS provider flattens a CNAME, as Cloudflare does. With HTTP-01 the record must exist, and resolve to the host, before the first deploy, or the certificate cannot be issued.
 
 - **No AAAA record for now.** k3s is installed with an IPv4-only pod network, and its load balancer then publishes 80 and 443 on the host's IPv4 address only. An AAAA record would send IPv6 visitors, and Let's Encrypt's validation, which prefers IPv6, to an address where nothing answers. Serving over IPv6 means installing k3s dual-stack, a change to the cloud-init template to make when it is wanted. This is reasoned from how k3s works and has not been tried on a host.
 
 - **Cloudflare records are DNS-only, not proxied.** Proxying would end TLS at Cloudflare, break the plain HTTP-01 path unless configured around, and put a further processor in front of participants' answers. Traefik on the host is the only TLS endpoint.
 - **`.dev` is HTTPS-only in browsers.** The whole top-level domain is HSTS-preloaded, so a browser will not load `anville.vabl.dev` over plain HTTP and will not let anyone click past a certificate warning. The first deploy must therefore go straight to `letsencrypt-prod`; trying it out with Let's Encrypt's test issuer produces a site no browser will open. Use `curl -k` against `/healthz` if the test issuer is wanted for a dry run.
-- **Production does not depend on the DNS decision.** HTTP-01 needs only that `whateveryoudo.org` resolves to the host. The apex needs an A record there; if `www.whateveryoudo.org` is wanted, it is a second hostname on the same Ingress and certificate, redirected to the apex, and both go in `DJANGO_ALLOWED_HOSTS`.
+- **Production does not depend on the DNS decision.** HTTP-01 needs only that `whateveryoudo.org` resolves to the host. The apex needs an A record there, or a flattened CNAME; if `www.whateveryoudo.org` is wanted, it is a second hostname on the same Ingress and certificate, redirected to the apex, and both go in `DJANGO_ALLOWED_HOSTS`.
 - **Cloudflare DNS-01 is the alternative for staging only**, as LivePace does it: a certificate before the records point anywhere, and one wildcard for `*.anville.vabl.dev` covering every later staging environment. It costs a Cloudflare API token on the staging host that can edit the `vabl.dev` zone, which holds more than Anville. It is left out until the number of staging environments makes the wildcard worth that.
 
 A staging environment is private in the sense ticket 26 means: an unadvertised hostname and fake data only. Its sign-up is open, since ticket 37 turned the enrolment code off there, so the chart sets `ANVILLE_DEMO_NOTICE` on every staging-tier environment, as it sets the email disclaimer: the homepage and the account pages say it is a demo, to use made-up details, and that data may be wiped. The wording is `demo.notice` in its values, and may be changed but not emptied. The enrolment code can still be turned back on per environment (`enrolment.required`). If that is not enough, Traefik can put basic authentication in front of a staging environment from its values; note that observers following a link would meet it too.
@@ -338,7 +342,7 @@ k3s is more machinery than one Django service strictly needs. It is kept because
 
 The steps for the first environment, `whatever-you-do-staging`, are in ticket 26 (`.scratch/whatever-you-do-milestone-1/issues/26-staging-deployment.md`), and are not repeated here.
 
-Later, each when needed: `production-1` and the production environment; the choice between levels B and C; actual email on staging, with its disclaimer; a lasting email set-up for production; automatic staging deploys; a second environment on `staging-1`.
+Later, each when needed: `anville-production-01` and the production environment; the choice between levels B and C; actual email on staging, with its disclaimer; a lasting email set-up for production; automatic staging deploys; a second environment on `anville-staging-01`.
 
 ## 15. Open questions
 

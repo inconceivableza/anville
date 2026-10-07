@@ -1,7 +1,7 @@
 # ✨ whatever-you-do-staging: the first environment (ticket 26). Only what differs from the chart's defaults.
 
 tier: staging
-host: staging-1
+host: anville-staging-01.vabl.dev
 hostname: anville.vabl.dev
 
 # Anyone may sign up (ticket 37). The instance holds fake data only, and says so where people sign up.

@@ -8,7 +8,7 @@
 # Usage: tunnel.sh open | close
 #
 # From the environment, for open:
-#   DEPLOY_HOST          the host's address
+#   DEPLOY_HOST          the host's canonical name, from the environment's values (or its address)
 #   DEPLOY_SSH_KEY       the deploy account's private key, itself and not a file's name
 #   DEPLOY_KNOWN_HOSTS   the host's key, as ssh-keyscan prints it. A host that shows another is refused
 #   DEPLOY_SSH_PORT      default 22
@@ -20,7 +20,7 @@ DIR=${TUNNEL_DIR:-${RUNNER_TEMP:-${TMPDIR:-/tmp}}/anville-tunnel}
 
 case "${1:-}" in
   open)
-    : "${DEPLOY_HOST:?set it to the address of the host}"
+    : "${DEPLOY_HOST:?set it to the canonical name of the host}"
     : "${DEPLOY_SSH_KEY:?set it to the private key of the deploy account}"
     : "${DEPLOY_KNOWN_HOSTS:?set it to the host key, as ssh-keyscan prints it}"
     (

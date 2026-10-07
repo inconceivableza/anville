@@ -3,6 +3,12 @@
 # __PLACEHOLDERS__ and passes the result to Hetzner as user data. A host is never edited by hand afterwards:
 # change this file and make a new host.
 
+# The host's canonical name, which is also its server's name in Hetzner. Its A record is made by hand.
+hostname: __SHORT_NAME__
+fqdn: __HOST__
+prefer_fqdn_over_hostname: false
+manage_etc_hosts: true
+
 users:
   # The deploy workflow's account. Its key can do one thing, forward a port to the k3s API on this host:
   # no shell, no sudo, no other forwarding.
@@ -61,7 +67,8 @@ write_files:
       Unattended-Upgrade::Automatic-Reboot "true";
       Unattended-Upgrade::Automatic-Reboot-Time "03:30";
 
-  # The tier label is what stops a production environment being deployed to a staging host, or the reverse.
+  # The tier label is what stops a production environment being deployed to a staging host, or the reverse,
+  # and the host label what stops an environment being deployed to a host other than the one its values name.
   # The kubeconfig stays root's own: the deploy workflow holds a copy as a secret and reaches the API
   # through its tunnel.
   - path: /etc/rancher/k3s/config.yaml
@@ -70,6 +77,7 @@ write_files:
       secrets-encryption: true
       node-label:
         - "anville-tier=__TIER__"
+        - "anville-host=__HOST__"
 
 runcmd:
   - sysctl --system
@@ -90,4 +98,4 @@ runcmd:
   # k3s in server mode, with its bundled Traefik. It brings kubectl; Helm runs in the deploy workflow.
   - curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=__K3S_CHANNEL__ sh -
 
-final_message: "Anville __TIER__ host ready after $UPTIME seconds"
+final_message: "__HOST__, an Anville __TIER__ host, ready after $UPTIME seconds"

@@ -1,16 +1,24 @@
 #!/usr/bin/env bash
 # ✨ Create an Anville host on Hetzner Cloud (docs/server-approach.md, section 9).
 #
-# It makes sure the firewall and the operator's SSH key exist in the Hetzner project, then creates one
+# It makes sure the firewall and the operator's SSH key exist in the named Hetzner project, then creates one
 # server whose first boot is cloud-init.yaml.template, with backups on. Run it once per host.
+#
+# Each host has a canonical name, such as anville-staging-01.vabl.dev: its server's name in Hetzner, its own
+# hostname, its reverse DNS and the name every environment on it uses to reach it. The A record for that name
+# is made by hand, once the script has printed the address.
 
 set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: hcloud-create.sh [--render] <host-name> <tier>
+Usage: hcloud-create.sh [--render] <project> <host> <tier>
 
-  <host-name>   The server's name, such as staging-1
+  <project>     The hcloud context for the Hetzner project the host belongs in, named after that project
+                (hcloud context create <project>, with an API token made in that project). Only this
+                context is used, whichever is active
+  <host>        The host's canonical name, such as anville-staging-01.vabl.dev. Used for no other host:
+                a name that already resolves is refused. Its first label names the tier
   <tier>        staging or production. It becomes a label on the k3s node, which every deploy checks
   --render      Print the cloud-init the host would be given, and create nothing
 
@@ -23,9 +31,9 @@ From the environment:
   LOCATION              Default: fsn1. Keep to the EU: fsn1, nbg1 or hel1
   IMAGE                 Default: ubuntu-24.04
   K3S_CHANNEL           Default: stable
-  HCLOUD_TOKEN          Read by hcloud itself, unless it has an active context
 
-Needs the hcloud CLI, signed in to the Hetzner project the host belongs to.
+HCLOUD_TOKEN must not be set: it would override the context's token, so the project would be whichever
+the token belongs to. Needs the hcloud CLI, and getent, dig or python3 to look the name up.
 USAGE
 }
 
@@ -51,11 +59,35 @@ render() {
   local text
   text=$(< "$TEMPLATE")
   text=${text//__TIER__/$TIER}
+  text=${text//__HOST__/$HOST}
+  text=${text//__SHORT_NAME__/$SHORT_NAME}
   text=${text//__ADMIN_USER__/$ADMIN_USER}
   text=${text//__ADMIN_SSH_PUBLIC_KEY__/$ADMIN_KEY}
   text=${text//__DEPLOY_SSH_PUBLIC_KEY__/$DEPLOY_KEY}
   text=${text//__K3S_CHANNEL__/$K3S_CHANNEL}
   printf '%s\n' "$text"
+}
+
+# The addresses the name has in public DNS now, if any. getent on Linux; dig on macOS, which has no getent.
+addresses_of() {
+  if command -v getent > /dev/null; then
+    { getent ahosts "$1" || true; } | awk '{ print $1 }' | sort -u
+  elif command -v dig > /dev/null; then
+    { dig +short A "$1"; dig +short AAAA "$1"; } | grep -v '\.$' || true
+  elif command -v python3 > /dev/null; then
+    python3 -c 'import socket, sys
+try:
+    print("\n".join(sorted({a[4][0] for a in socket.getaddrinfo(sys.argv[1], None)})))
+except socket.gaierror:
+    pass' "$1"
+  else
+    die "cannot look $1 up: needs getent, dig or python3"
+  fi
+}
+
+# Every hcloud call goes to the named project's context, never to whichever one happens to be active.
+hc() {
+  hcloud --context "$PROJECT" "$@"
 }
 
 RENDER_ONLY=false
@@ -67,13 +99,15 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
   usage
   exit 0
 fi
-if [ $# -ne 2 ]; then
+if [ $# -ne 3 ]; then
   usage >&2
   exit 2
 fi
 
-HOST_NAME=$1
-TIER=$2
+PROJECT=$1
+HOST=$2
+TIER=$3
+SHORT_NAME=${HOST%%.*}
 HERE=$(cd "$(dirname "$0")" && pwd)
 TEMPLATE=$HERE/cloud-init.yaml.template
 RULES=$HERE/firewall-rules.json
@@ -84,7 +118,15 @@ case "$TIER" in
   production) DEFAULT_TYPE=cx33 ;;
   *) die "the tier must be staging or production, not '$TIER'" ;;
 esac
-[[ "$HOST_NAME" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]] || die "'$HOST_NAME' is not a usable server name"
+[[ "$PROJECT" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]*$ ]] || die "'$PROJECT' is not a usable context name"
+# A fully qualified name, short enough to be a Kubernetes label's value as well.
+[[ "$HOST" =~ ^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.)+[a-z]([a-z0-9-]*[a-z0-9])?$ ]] \
+  || die "'$HOST' is not a fully qualified host name, such as anville-$TIER-01.vabl.dev"
+[ ${#HOST} -le 63 ] || die "'$HOST' is longer than 63 characters"
+case "$SHORT_NAME" in
+  *"$TIER"*) ;;
+  *) die "'$HOST' does not name its tier: a $TIER host's first label says $TIER, such as anville-$TIER-01" ;;
+esac
 
 : "${ADMIN_USER:?set it to the account name the operator will use on the host}"
 : "${ADMIN_SSH_KEY_FILE:?set it to the public key file of the operator}"
@@ -108,29 +150,37 @@ if $RENDER_ONLY; then
 fi
 
 command -v hcloud > /dev/null || die "the hcloud CLI is not installed"
-if hcloud server describe "$HOST_NAME" > /dev/null 2>&1; then
-  die "a server named $HOST_NAME already exists in this Hetzner project"
+[ -z "${HCLOUD_TOKEN:-}" ] \
+  || die "unset HCLOUD_TOKEN: it overrides the context's token, so the host could land in another project"
+hcloud context list -o noheader -o columns=name | grep -qxF "$PROJECT" \
+  || die "there is no hcloud context named $PROJECT. Make one with an API token from that Hetzner project: hcloud context create $PROJECT"
+
+# A canonical name names one host. One that resolves belongs to a host already, or is a stale record.
+EXISTING=$(addresses_of "$HOST")
+[ -z "$EXISTING" ] || die "$HOST already resolves, to $(echo "$EXISTING" | paste -sd ' ' -). Choose the next number, or remove the record if its host is gone"
+if hc server describe "$HOST" > /dev/null 2>&1; then
+  die "a server named $HOST already exists in the Hetzner project $PROJECT"
 fi
 
-if ! hcloud firewall describe "$FIREWALL" > /dev/null 2>&1; then
+if ! hc firewall describe "$FIREWALL" > /dev/null 2>&1; then
   echo "Creating the firewall $FIREWALL (22, 80, 443 and ping)"
-  hcloud firewall create --name "$FIREWALL" --rules-file "$RULES"
+  hc firewall create --name "$FIREWALL" --rules-file "$RULES"
 fi
 
 # Given to Hetzner so that it sets no root password and emails none. Root cannot sign in over SSH either way.
 SSH_KEY_NAME=anville-$ADMIN_USER
-if ! hcloud ssh-key describe "$SSH_KEY_NAME" > /dev/null 2>&1; then
+if ! hc ssh-key describe "$SSH_KEY_NAME" > /dev/null 2>&1; then
   echo "Adding the operator's key to the Hetzner project as $SSH_KEY_NAME"
-  hcloud ssh-key create --name "$SSH_KEY_NAME" --public-key "$ADMIN_KEY"
+  hc ssh-key create --name "$SSH_KEY_NAME" --public-key "$ADMIN_KEY"
 fi
 
 USER_DATA=$(mktemp)
 trap 'rm -f "$USER_DATA"' EXIT
 render > "$USER_DATA"
 
-echo "Creating $HOST_NAME: $SERVER_TYPE in $LOCATION, $IMAGE, tier $TIER"
-hcloud server create \
-  --name "$HOST_NAME" \
+echo "Creating $HOST in the Hetzner project $PROJECT: $SERVER_TYPE in $LOCATION, $IMAGE, tier $TIER"
+hc server create \
+  --name "$HOST" \
   --type "$SERVER_TYPE" \
   --image "$IMAGE" \
   --location "$LOCATION" \
@@ -141,23 +191,32 @@ hcloud server create \
   --label "tier=$TIER" \
   --user-data-from-file "$USER_DATA"
 
-ADDRESS=$(hcloud server ip "$HOST_NAME")
+ADDRESS=$(hc server ip "$HOST")
+echo "Setting the reverse DNS of $ADDRESS to $HOST"
+hc server set-rdns --ip "$ADDRESS" --hostname "$HOST" "$HOST"
 
 cat <<NEXT
 
-$HOST_NAME is created at $ADDRESS. Its first boot takes a few minutes. Then:
+$HOST is created in the Hetzner project $PROJECT, at $ADDRESS. Its first boot takes a few minutes. Then:
 
-  1. Wait for it to finish, and confirm the node is ready with its tier:
-       ssh $ADMIN_USER@$ADDRESS 'cloud-init status --wait && sudo k3s kubectl get nodes --show-labels'
+  1. Create its DNS record by hand, DNS only (not proxied in Cloudflare), and no AAAA record:
+       $HOST.  A  $ADDRESS
+     and wait until it resolves:
+       dig +short $HOST
 
-  2. Confirm the k3s API is not reachable from outside (this should time out):
-       nc -vz -w 5 $ADDRESS 6443
+  2. Wait for the first boot to finish, and confirm the node is ready with its tier and name:
+       ssh $ADMIN_USER@$HOST 'cloud-init status --wait && sudo k3s kubectl get nodes --show-labels'
 
-  3. For each environment on this host, in its GitHub Environment:
-       DEPLOY_HOST          $ADDRESS
-       DEPLOY_KNOWN_HOSTS   the output of: ssh-keyscan -t ed25519 $ADDRESS
-       KUBECONFIG           the output of: ssh $ADMIN_USER@$ADDRESS 'sudo cat /etc/rancher/k3s/k3s.yaml'
-       DEPLOY_SSH_KEY       the private key that matches $DEPLOY_SSH_KEY_FILE
+  3. Confirm the k3s API is not reachable from outside (this should time out):
+       nc -vz -w 5 $HOST 6443
 
-  4. Point each environment's DNS A record at $ADDRESS.
+  4. For each environment on this host:
+       in its values.yaml:      host: $HOST
+       in its GitHub Environment:
+         DEPLOY_KNOWN_HOSTS     the output of: ssh-keyscan -t ed25519 $HOST
+         KUBECONFIG             the output of: ssh $ADMIN_USER@$HOST 'sudo cat /etc/rancher/k3s/k3s.yaml'
+         DEPLOY_SSH_KEY         the private key that matches $DEPLOY_SSH_KEY_FILE
+
+  5. Point each environment's hostname at the host: a CNAME to $HOST, or, where the hostname is a
+     zone's apex and the DNS provider cannot flatten a CNAME, an A record to $ADDRESS.
 NEXT

@@ -6,7 +6,9 @@
 # staging | production. A deploy checks it against the tier label of the host's k3s node.
 tier: staging
 
-# The host that carries this environment. Informational.
+# The canonical name of the host that carries this environment, such as anville-staging-01.vabl.dev. The
+# deploy workflow reaches the host by this name, and refuses a host whose k3s node is labelled otherwise.
+# Not used by the chart itself.
 host: ""
 
 # The public hostname. Empty means no ingress: the environment is reachable only by port-forward,

@@ -25,26 +25,29 @@ Two words are used as that document uses them. A **host** is one Hetzner Cloud s
 
 ## Create a host
 
-Needs the `hcloud` CLI, signed in to the Hetzner project, and two key pairs: the operator's own, and one made for the deploy workflow alone.
+Each host has a **canonical name**, such as `anville-staging-01.vabl.dev`: `anville-<tier>-<number>` under a domain the operator controls, with the number never reused. It is the server's name in Hetzner, the host's own hostname and its reverse DNS, a label on its k3s node, and the name every environment on it uses to reach it. Its A record is made by hand.
+
+Needs the `hcloud` CLI with a context for the Hetzner project the host belongs in, and two key pairs: the operator's own, and one made for the deploy workflow alone. Name the context after the project. The script uses only the context it is given, whichever is active, and refuses to run while `HCLOUD_TOKEN` is set, since that would override the context's token.
 
 ```sh
+hcloud context create anville      # asks for an API token: in the Hetzner Console, that project's Security, API tokens, Read & Write
 ssh-keygen -t ed25519 -N "" -C "anville deploy" -f ~/.ssh/anville-deploy
 
 ADMIN_USER=<your account name> \
 ADMIN_SSH_KEY_FILE=~/.ssh/id_ed25519.pub \
 DEPLOY_SSH_KEY_FILE=~/.ssh/anville-deploy.pub \
-deploy/infra/hcloud-create.sh staging-1 staging
+deploy/infra/hcloud-create.sh anville anville-staging-01.vabl.dev staging
 ```
 
-`hcloud-create.sh --render staging-1 staging` prints the cloud-init and creates nothing. When the script finishes it prints the next steps: how to wait for the first boot, how to confirm that 6443 is closed, and where each of the host's GitHub Environment values comes from.
+`hcloud-create.sh --render anville anville-staging-01.vabl.dev staging` prints the cloud-init and creates nothing. Before creating anything, the script refuses a name that already resolves, or that a server in the project already has. When it finishes it prints the next steps: the A record to make, how to wait for the first boot, how to confirm that 6443 is closed, and what each environment on the host needs.
 
-The host's tier is fixed when it is created. A deploy refuses an environment of the other tier.
+The host's tier is fixed when it is created, and its first label must name it. A deploy refuses an environment of the other tier, and one whose values name another host.
 
 ## Add an environment
 
-1. Copy an existing directory of `environments/` to `environments/<deployment>-<tier>/` and edit its `values.yaml`: the tier, the host, the hostname.
+1. Copy an existing directory of `environments/` to `environments/<deployment>-<tier>/` and edit its `values.yaml`: the tier, the host (its canonical name), the hostname.
 2. Create a GitHub Environment of the same name, holding what `secrets.example.yaml` lists. Generate each secret afresh. Give a production environment a required reviewer.
-3. Point a DNS A record for the hostname at the host. In Cloudflare, DNS-only, not proxied. No AAAA record: a host serves over IPv4 only for now. The record must resolve before the first deploy, or no certificate can be issued.
+3. Point the hostname at the host: a CNAME to the host's canonical name, or an A record with its address where the hostname is a zone's apex and the DNS provider cannot flatten a CNAME (Cloudflare can). In Cloudflare, DNS-only, not proxied. No AAAA record: a host serves over IPv4 only for now. The record must resolve before the first deploy, or no certificate can be issued.
 4. For the backup, create a Storage Box sub-account for this environment alone and give it the public half of `BACKUP_SSH_KEY`.
 5. Deploy.
 
@@ -153,9 +156,9 @@ It needs `shellcheck` 0.11 (`pip install shellcheck-py==0.11.0.1`; versions diff
 
 Without a host, a registry push or Docker, as far as each piece allows:
 
-- `hcloud-create.sh`: run end to end against a local stand-in for the Hetzner API; the rendered cloud-init passes cloud-init's own schema check.
+- `hcloud-create.sh`: run end to end against a local stand-in for the Hetzner API, through a named context, including each refusal (no such context, `HCLOUD_TOKEN` set, a name that resolves, a name already a server's, a name that is not fully qualified or does not name its tier); the rendered cloud-init passes cloud-init's own schema check.
 - The charts: installed into a real Kubernetes API server with no node, so every object was accepted and no pod ran.
-- `deploy.sh`: run against that same API server, including each refusal (missing secrets, wrong tier, a password unfit for a URL). Its cert-manager step pulled the pinned chart from quay.io and installed it there: the six definitions and three deployments were accepted. It could go no further without a node, since cert-manager's own start-up check is a job, and the issuers were refused, as they should be, while its webhook was not running.
+- `deploy.sh`: run against that same API server, including each refusal (missing secrets, wrong tier, a node labelled as another host or not at all, values naming no host, a password unfit for a URL). Its cert-manager step pulled the pinned chart from quay.io and installed it there: the six definitions and three deployments were accepted. It could go no further without a node, since cert-manager's own start-up check is a job, and the issuers were refused, as they should be, while its webhook was not running.
 - `tunnel.sh`: run through a local SSH server to that API server, including a wrong host key and a wrong key.
 - `resolve-image-digest.sh`: run against another public image on GitHub Container Registry.
 - `assert-version.sh`: run against gunicorn serving this repository.
