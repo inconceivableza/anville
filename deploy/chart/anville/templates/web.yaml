@@ -1,0 +1,129 @@
+{{- /*
+✨ The web service: one replica, replaced rather than rolled, with the migration run first in the same pod.
+
+With one replica and Recreate there is exactly one migrator, and a failed migration fails the deploy. A
+hook Job would not do for a first install, when the in-cluster database does not exist until the release
+does. Move the migration to a Job if replicas ever exceed one.
+*/ -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "anville.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "anville.selector" (list . "web") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "anville.labels" . | nindent 8 }}
+        app.kubernetes.io/component: web
+      {{- with .Values.secretChecksum }}
+      annotations:
+        anville/secret-checksum: {{ . | quote }}
+      {{- end }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: migrate
+          image: {{ include "anville.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["python", "manage.py", "migrate", "--noinput"]
+          env:
+            {{- include "anville.djangoEnv" . | nindent 12 }}
+          securityContext:
+            {{- include "anville.containerSecurity" . | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      containers:
+        - name: web
+          image: {{ include "anville.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            {{- include "anville.djangoEnv" . | nindent 12 }}
+          # Asked of the pod directly, so it must name a host Django accepts.
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              httpHeaders:
+                - name: Host
+                  value: {{ include "anville.host" . | quote }}
+            periodSeconds: 10
+            timeoutSeconds: 5
+          # Only whether gunicorn is listening. A database that is down is not mended by restarting this.
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- include "anville.containerSecurity" . | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "anville.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  selector:
+    {{- include "anville.selector" (list . "web") | nindent 4 }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+{{- if .Values.hostname }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "anville.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+  annotations:
+    cert-manager.io/cluster-issuer: {{ .Values.issuer }}
+spec:
+  ingressClassName: {{ .Values.ingressClassName }}
+  tls:
+    - hosts:
+        - {{ .Values.hostname }}
+      secretName: {{ .Release.Name }}-tls
+  rules:
+    - host: {{ .Values.hostname }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Release.Name }}
+                port:
+                  name: http
+{{- end }}

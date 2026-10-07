@@ -1,0 +1,11 @@
+{% comment %}
+  ✨ Said plainly wherever someone may sign up to a demo deployment, whose sign-up is open (tickets 26 and 37):
+  that it is a demo, to use made-up details, and that what is entered may be wiped. Shown only when the
+  deployment sets ANVILLE_DEMO_NOTICE; a production deployment never does.
+{% endcomment %}
+{% if demo_notice %}
+  <div class="demo-notice" role="note">
+    <strong>Demo</strong>
+    {{ demo_notice }}
+  </div>
+{% endif %}

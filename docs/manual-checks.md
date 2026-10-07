@@ -26,6 +26,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Without JavaScript, the menu still opens and its links still scroll.
 - Keyboard only: Tab reaches the menu button first, Enter opens it, and the focus ring shows on it and on each link.
 - DevTools, Network, reload: every request goes to this site (no Google Fonts, nothing else).
+- With `ANVILLE_DEMO_NOTICE` set in `.env` (as every staging environment has it), the amber "Demo" notice sits under "Begin →" over the video, easy to read at phone width and on a wide screen, and at the top of the sign-up and sign-in pages. With it unset, neither shows.
 - On a wide screen, About's text is centred in a narrower column than How it works' steps, and Impact is centred beneath them.
 - Phone width: the headline fits without sideways scrolling, step 4's four-column roadmap is still legible, the Begin buttons are easy to tap, each step's mockup sits above its words, and the impact figures stay beside their text.
 - Signed out, both "Begin →" buttons open sign-up; signed in, both open the hub. Signing in, and agreeing to consent, both land on the hub, not the homepage.

@@ -1,0 +1,29 @@
+[
+  {
+    "description": "SSH",
+    "direction": "in",
+    "protocol": "tcp",
+    "port": "22",
+    "source_ips": ["0.0.0.0/0", "::/0"]
+  },
+  {
+    "description": "HTTP, for the redirect to HTTPS and for Let's Encrypt",
+    "direction": "in",
+    "protocol": "tcp",
+    "port": "80",
+    "source_ips": ["0.0.0.0/0", "::/0"]
+  },
+  {
+    "description": "HTTPS",
+    "direction": "in",
+    "protocol": "tcp",
+    "port": "443",
+    "source_ips": ["0.0.0.0/0", "::/0"]
+  },
+  {
+    "description": "Ping",
+    "direction": "in",
+    "protocol": "icmp",
+    "source_ips": ["0.0.0.0/0", "::/0"]
+  }
+]

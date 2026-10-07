@@ -1,0 +1,87 @@
+# ✨ The defaults for every environment (docs/server-approach.md, section 5). An environment's own
+# deploy/environments/<environment>/values.yaml holds only what differs.
+#
+# These defaults are safe on their own: no hostname, so no ingress and no certificate.
+
+# staging | production. A deploy checks it against the tier label of the host's k3s node.
+tier: staging
+
+# The host that carries this environment. Informational.
+host: ""
+
+# The public hostname. Empty means no ingress: the environment is reachable only by port-forward,
+# which is how a restore is rehearsed.
+hostname: ""
+
+# The cert-manager ClusterIssuer for the hostname's certificate: letsencrypt-staging or letsencrypt-prod.
+issuer: letsencrypt-staging
+ingressClassName: traefik
+
+image:
+  repository: ghcr.io/inconceivableza/anville
+  # Set by the deploy workflow. An environment runs a digest, never a tag.
+  digest: ""
+  pullPolicy: IfNotPresent
+
+# The Secret the deploy workflow applies to the namespace before this chart. The chart only refers to it.
+# Its keys are listed in deploy/environments/<environment>/secrets.example.yaml.
+secretName: anville
+# A hash of that Secret's contents, set by the deploy workflow, so that changing a secret restarts the pods.
+secretChecksum: ""
+
+web:
+  # gunicorn workers.
+  workers: 2
+  # How long browsers are told to refuse plain HTTP for the hostname.
+  hstsSeconds: 3600
+  # Seconds a database connection is kept for reuse.
+  connMaxAge: 60
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 256Mi
+  limits:
+    memory: 512Mi
+
+# What a staging environment says on its homepage and account pages, since its sign-up may be open and it holds
+# fake data only. A staging environment may reword it and may not empty it; a production environment never
+# shows it.
+demo:
+  notice: >-
+    This is a demo. Please use made-up details, not your own: anything entered here may be wiped.
+
+enrolment:
+  # Whether sign-up asks for the ANVILLE_ENROLMENT_CODE secret. On by default, as in the application, so an
+  # environment that forgets to say admits nobody without the code. Off, sign-up is open to anyone.
+  required: true
+
+email:
+  # The address messages come from (DEFAULT_FROM_EMAIL). The provider is the EMAIL_URL secret; without it
+  # email is fake, and each message is written to the pod's log.
+  from: ""
+  # What every message from a staging environment says, in its subject as [TEST] and at the top of its body.
+  # A staging environment may reword it and may not empty it; a production environment never carries it.
+  disclaimer: >-
+    This message comes from a test system for Anville. It is not intended for production use.
+    If you were not expecting it, please ignore it.
+
+postgres:
+  # true: PostgreSQL runs in this namespace, and the Secret holds POSTGRES_PASSWORD.
+  # false: a managed database, and the Secret holds DATABASE_URL.
+  enabled: true
+  image: postgres:17
+  storage: 5Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 192Mi
+    limits:
+      memory: 512Mi
+
+backup:
+  # A nightly pg_dump sent over SFTP to BACKUP_TARGET, with the BACKUP_SSH_KEY and BACKUP_KNOWN_HOSTS secrets.
+  enabled: false
+  schedule: "15 2 * * *"
+  # How many dumps to keep at the target. Older ones are removed after each successful upload.
+  keep: 30
