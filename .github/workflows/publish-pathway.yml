@@ -1,0 +1,96 @@
+# ✨ Publish a pathway document to one environment (docs/server-approach.md, section 8). Run by hand: a deploy
+# never publishes one, since that would overwrite a version published another way.
+#
+# The document is the one in pathways/ on the branch or tag this is run from, and the environment's running
+# version checks it before publishing it. Publishing content that is already published changes nothing.
+name: publish-pathway
+run-name: Publish ${{ inputs.pathway }} to ${{ inputs.environment }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      pathway:
+        description: A document in pathways/, as it is on the branch chosen above
+        required: true
+        type: choice
+        # Every file in pathways/, and nothing else: deploy/check.sh fails when the two differ.
+        options:
+          - whatever-you-do.json
+          - whatever-you-do-faithful-port.json
+          - example.json
+        default: whatever-you-do.json
+      environment:
+        description: The environment to publish it to
+        required: true
+        type: environment
+
+permissions:
+  contents: read
+
+# The deploy workflow's group, so a publish never meets a deploy restarting the same pods.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+# Named, bash runs with -e and -o pipefail. GitHub's unnamed default has no pipefail.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      ENVIRONMENT: ${{ inputs.environment }}
+      PATHWAY: ${{ inputs.pathway }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Find the environment's host
+        id: environment
+        run: |
+          if ! [[ "$ENVIRONMENT" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]] || ! [ -f "deploy/environments/$ENVIRONMENT/values.yaml" ]; then
+            echo "::error::There is no environment '$ENVIRONMENT' in deploy/environments/"
+            exit 1
+          fi
+          host=$(yq '.host // ""' "deploy/environments/$ENVIRONMENT/values.yaml")
+          if [ -z "$host" ]; then
+            echo "::error::deploy/environments/$ENVIRONMENT/values.yaml names no host"
+            exit 1
+          fi
+          echo "host=$host" >> "$GITHUB_OUTPUT"
+
+      - name: Open the tunnel to the host
+        env:
+          DEPLOY_HOST: ${{ steps.environment.outputs.host }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
+        run: |
+          if [ -z "$KUBECONFIG_CONTENT" ]; then
+            echo "::error::The GitHub Environment '$ENVIRONMENT' has no KUBECONFIG secret"
+            exit 1
+          fi
+          deploy/tunnel.sh open
+          (umask 077; printf '%s\n' "$KUBECONFIG_CONTENT" > "$RUNNER_TEMP/kubeconfig")
+          echo "KUBECONFIG=$RUNNER_TEMP/kubeconfig" >> "$GITHUB_ENV"
+
+      - name: Publish
+        run: deploy/publish-pathway.sh "$ENVIRONMENT" "$PATHWAY" | tee "$RUNNER_TEMP/publish.log"
+
+      - name: Close the tunnel
+        if: always()
+        run: |
+          deploy/tunnel.sh close
+          rm -f "$RUNNER_TEMP/kubeconfig"
+
+      - name: Report
+        env:
+          REF: ${{ github.ref_name }}
+        run: |
+          {
+            echo "Published \`pathways/$PATHWAY\` from \`$REF\` (\`$GITHUB_SHA\`) to **$ENVIRONMENT**"
+            echo
+            tail -n 1 "$RUNNER_TEMP/publish.log"
+          } >> "$GITHUB_STEP_SUMMARY"

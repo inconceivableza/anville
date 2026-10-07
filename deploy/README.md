@@ -19,9 +19,10 @@ Two words are used as that document uses them. A **host** is one Hetzner Cloud s
 | `tunnel.sh` | Opens and closes the SSH tunnel to a host's k3s API |
 | `deploy.sh` | Deploys one environment through that tunnel |
 | `assert-version.sh` | Confirms from outside that the commit just deployed is the one being served |
+| `publish-pathway.sh` | Publishes a document from `pathways/` to one environment through that tunnel |
 | `check.sh` | Checks all of the above that can be checked without a cluster |
 
-`.github/workflows/build.yml` builds the image, and `.github/workflows/deploy.yml` runs the four deploy scripts in order.
+`.github/workflows/build.yml` builds the image, `.github/workflows/deploy.yml` runs the four deploy scripts in order, and `.github/workflows/publish-pathway.yml` opens the tunnel and runs `publish-pathway.sh`.
 
 ## Create a host
 
@@ -64,7 +65,7 @@ gh workflow run deploy.yml -f environment=whatever-you-do-staging -f tag=latest
 
 `tag` may be a commit, a `v*` tag or `latest`. The workflow resolves it to a digest, opens the tunnel, checks the host's tier, applies the environment's secrets, installs cert-manager and the issuers if the host lacks them, installs or upgrades the environment, and then asks `https://<hostname>/healthz` which commit is answering. It fails if that is not the commit it deployed.
 
-A deploy runs migrations. It does not load a pathway.
+A deploy runs migrations. It does not publish a pathway: see "Publish a pathway" below.
 
 ## After the first deploy
 
@@ -72,11 +73,26 @@ On the host, as the operator. `k` is short for `sudo k3s kubectl -n <environment
 
 ```sh
 k exec -it deployment/anville -- python manage.py createsuperuser
-k exec deployment/anville -- python manage.py load_pathway pathways/whatever-you-do.json
 k exec deployment/anville -- python manage.py seed_observers --help    # staging only
 ```
 
-Loading a pathway is always this deliberate step. `load_pathway` publishes whatever file it is given, so run on every deploy it would overwrite a version published another way.
+Then publish the environment's pathway, as below.
+
+## Publish a pathway
+
+```sh
+gh workflow run publish-pathway.yml --ref main -f pathway=whatever-you-do.json -f environment=whatever-you-do-staging
+```
+
+Or on GitHub: Actions, `publish-pathway`, Run workflow, and choose the branch, the pathway and the environment from the lists. The document is the one in `pathways/` on the branch chosen, not the copy in the deployed image. It is sent into the environment's running pod and loaded there with `load_pathway`, so the deployed version checks it: a document that version cannot read is refused, and nothing changes. Publishing content that is already published changes nothing either. Each run waits for any deploy to finish first.
+
+The pathway list is fixed in the workflow, since GitHub cannot list a directory for it. When a file is added to or removed from `pathways/`, change the workflow's `options` too: `check.sh`, and so the build workflow, fails until they match. The environment list is the repository's GitHub Environments, and one with no directory in `environments/` is refused.
+
+Publishing is always this deliberate step. `load_pathway` publishes whatever file it is given, so run on every deploy it would overwrite a version published another way. Without GitHub, the same is `deploy/publish-pathway.sh <environment> <pathway>` with a tunnel and kubeconfig of your own, or on the host, with a copy of the document there:
+
+```sh
+k exec -i deployment/anville -c web -- sh -c 'cat > /tmp/p.json && python manage.py load_pathway /tmp/p.json' < pathways/whatever-you-do.json
+```
 
 ## Day to day
 
@@ -150,7 +166,7 @@ Sign in as someone who exists in the dump and check that their answers are there
 deploy/check.sh
 ```
 
-It needs `shellcheck` 0.11 (`pip install shellcheck-py==0.11.0.1`; versions differ in what they flag) and `helm`, and renders the chart with every environment's values. The build workflow runs it, with that same shellcheck, before building an image. That check deploys nothing.
+It needs `shellcheck` 0.11 (`pip install shellcheck-py==0.11.0.1`; versions differ in what they flag), `helm` and `yq`. It renders the chart with every environment's values, and checks that `publish-pathway.yml` offers exactly the files in `pathways/`. The build workflow runs it, with that same shellcheck, before building an image. That check deploys nothing.
 
 ## What has been tested
 
@@ -162,6 +178,7 @@ Without a host, a registry push or Docker, as far as each piece allows:
 - `tunnel.sh`: run through a local SSH server to that API server, including a wrong host key and a wrong key.
 - `resolve-image-digest.sh`: run against another public image on GitHub Container Registry.
 - `assert-version.sh`: run against gunicorn serving this repository.
+- `publish-pathway.sh`: run with `kubectl` stubbed to run the pod's command here, against a throwaway database: a first publish, the same again (no change), another document, a broken one (refused, nothing published), and names that are not an environment or a pathway. `kubectl exec` carrying the document to a real pod is not yet proven.
 - The backup script: run against a local SFTP server, with `pg_dump` stubbed.
 
 Not yet proven anywhere: the `Dockerfile` as a Docker build, the cloud-init on a real first boot, the deploy key's restriction in `authorized_keys`, cert-manager starting and issuing a certificate, a pod starting, a real dump, and the restore above.
