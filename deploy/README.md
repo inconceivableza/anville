@@ -73,9 +73,11 @@ A deploy runs migrations. It does not publish a pathway: see "Publish a pathway"
 On the host, as the operator. `k` is short for `sudo k3s kubectl -n <environment>`.
 
 ```sh
-k exec -it deployment/anville -- python manage.py createsuperuser
+k exec -it deployment/anville -- python manage.py createsuperuser --username operator --email ""
 k exec deployment/anville -- python manage.py seed_observers --help    # staging only
 ```
+
+The operator's account is given a username and no email address on purpose. Signing in to the site is by email (`ACCOUNT_LOGIN_METHODS`), so an account with no email can reach `/admin/`, where Django's own backend takes the username, and cannot reach the hub at all. The operator is then never walked into the consent flow, leaves no consent or answers among the participants' own, and `username == email` goes on meaning "this row is a participant". An email address on the account would also take that address out of use, since no participant can sign up with an address another user holds. To see what a participant sees, sign up an ordinary account. `/admin/` is served on the public hostname, so that password belongs with the environment's other secrets.
 
 Then publish the environment's pathway, as below.
 
@@ -126,7 +128,7 @@ It installs the pinned release after checking its checksum, unless that version 
 
 **Fake email.** An environment with no `EMAIL_URL` secret delivers nothing: each message is written to the pod's log. On a staging environment it is written with the test-system disclaimer it would carry if it were sent: `[TEST]` before the subject, and the disclaimer at the top of the body. To see one, run `k exec deployment/anville -- python manage.py sendtestemail someone@example.com` and read the log. The log then holds whatever links the messages carried, which is acceptable only where the data is fake. A production environment cannot be deployed without `EMAIL_URL`.
 
-**Resetting a password.** Password reset is refused until ticket 28a. Until then the operator runs `changepassword`, as above. allauth derives the username from the start of the email address; the admin shows it.
+**Resetting a password.** Password reset is refused until ticket 28a. Until then the operator runs `changepassword`, as above. A participant's username is their whole email address (ticket 37), so that is what the command takes; the admin shows it. The operator's own account is the exception: a username of its own, and no email address.
 
 **Changing a secret.** Change it in the GitHub Environment and deploy again. The pods restart only when a secret has changed. `POSTGRES_PASSWORD` is the exception: PostgreSQL reads it once, when its data is first created.
 
