@@ -466,7 +466,8 @@ p.time-estimate {
 }
 
 /* ✨ Back to the page before, beside the way on as "Back" is beside "Continue →" in the coach checklist; the way on
-   takes the rest of the row, and on a narrow phone the two still share it (ticket 41e) */
+   takes the rest of the row. On the narrowest phones (under about 360px) the way on wraps to a line of its own
+   (ticket 41e) */
 .way-on {
   display: flex;
   gap: 10px;

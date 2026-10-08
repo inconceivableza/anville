@@ -124,10 +124,19 @@ document.addEventListener("click", (event) => {
 // ✨ Each coach checklist screen takes the last one's place in the page, which leaves the window where it was: after
 // "Continue →" from the short intro, part way down the long questions. As a new page would, bring a screen whose top
 // has gone out of view back to it, and move the focus to its heading, so a screen reader says where they now are
-// (ticket 41e). htmx fires this on the new screen itself.
+// (ticket 41e). Only for a new screen: the same one sent back (a refusal beside its button, a coach's link issued or
+// revoked) stays where it is. htmx fires this on the new screen itself.
+let checklistScreenBefore = null;
+
+document.addEventListener("htmx:beforeRequest", (event) => {
+  const checklist = event.target.closest?.(".coach-checklist");
+  if (checklist) checklistScreenBefore = checklist.dataset.screen;
+});
+
 document.addEventListener("htmx:afterSettle", (event) => {
   const checklist = event.target;
   if (!checklist.classList?.contains("coach-checklist")) return;
+  if (checklist.dataset.screen === checklistScreenBefore) return;
   if (checklist.getBoundingClientRect().top < 0) checklist.scrollIntoView({ block: "start" });
   const heading = checklist.querySelector("h2");
   if (!heading || checklist.contains(document.activeElement)) return;

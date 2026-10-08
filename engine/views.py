@@ -32,6 +32,7 @@ from engine.document.blocks import (
     blocks_of,
     break_after,
     coach_brief,
+    landing_of,
     page_count,
     page_of,
     pages_of,
@@ -558,8 +559,7 @@ def _saved(request, state, section, block_id, contact_ids=None):
         shown = _section_page(state, section, page)
         return render(request, "engine/save_result.html", {**shown, "contact_ids": contact_ids})
     block = next(block for block in section["blocks"] if block["id"] == block_id)
-    at = f"block-{block_id}-confirmed" if BLOCK_TYPES[block["type"]].opens_what_follows else f"block-{block_id}"
-    return _see_other(f"{page_url(section['id'], page)}{_rows_query(request.POST)}#{at}")
+    return _see_other(f"{page_url(section['id'], page)}{_rows_query(request.POST)}#{landing_of(block)}")
 
 
 def _rows_query(posted):
@@ -1328,6 +1328,7 @@ def _block_for_participant(document, block, answers, fixed, states, asked_rows=0
         "rows": _contact_rows(block, answers, asked_rows) if block["type"] == "contact_list" else None,
         "checklist": _opening_checklist(text, _coach_kept(answers, block["id"]), issued) if is_checklist else None,
         "id": block["id"],
+        "landing": landing_of(block),  # ✨ where saving it without JavaScript comes back to
         "type": block["type"],
         "template": f"engine/blocks/{block['type']}.html",
         "variant": block.get("variant", "plain"),

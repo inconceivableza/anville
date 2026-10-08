@@ -14,7 +14,7 @@
   {% if block.text.note %}<p class="scripture-note">{{ block.text.note }}</p>{% endif %}
   {% if block.answer %}
     {# ✨ Where confirming lands without JavaScript, so the activity it opened is just beneath (ticket 41e). #}
-    <p id="block-{{ block.id }}-confirmed" class="scripture-confirmed">{{ block.text.confirm_label|default:"I have read these" }} ✓</p>
+    <p id="{{ block.landing }}" class="scripture-confirmed">{{ block.text.confirm_label|default:"I have read these" }} ✓</p>
   {% else %}
     <form class="scripture-confirm" method="post" action="{% url 'save_answer' block.id %}">
       {% csrf_token %}

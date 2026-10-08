@@ -44,7 +44,9 @@
       <p class="gate-refused">This section was not marked complete: it is not finished yet.</p>
     {% endif %}
   {% else %}
-    {% if offers_way_on and is_complete and not section.is_part %}
+    {% if section.is_part %}
+      {# ✨ A part of a section is complete once its gate passes, so it has no completion of its own (ticket 41b). #}
+    {% elif offers_way_on and is_complete %}
       {% if holds_fixed_answers %}
         <p class="completion-done">You marked this section complete. Ratings fixed when you completed this section can no longer be changed.</p>
       {% else %}
@@ -55,7 +57,6 @@
         <button type="submit" class="btn btn-secondary btn-sm">Mark as not complete</button>
       </form>
     {% endif %}
-    {# ✨ A part of a section is complete once its gate passes, so it has no completion of its own (ticket 41b). #}
     {% if page.number > 1 %}<div class="way-on">{% include "engine/previous_page.html" %}</div>{% endif %}
   {% endif %}
 </div>

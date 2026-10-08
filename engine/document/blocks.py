@@ -348,6 +348,14 @@ def page_of(section, block_id):
     return None
 
 
+def landing_of(block):
+    """✨ The id on its page that saving a block without JavaScript comes back to: the block's own, or for a block that
+    opens what follows (a reading), its confirmation, with what it opened just beneath (ticket 41e)."""
+    if BLOCK_TYPES[block["type"]].opens_what_follows:
+        return f"block-{block['id']}-confirmed"
+    return f"block-{block['id']}"
+
+
 def section_of(document, block_id):
     """✨ The section a block belongs to, or None. A block identifier is unique across the pathway."""
     for section in document["content"]["sections"]:

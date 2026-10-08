@@ -2,8 +2,8 @@
 {% comment %}
   ✨ The way back to the page before, on every page but the first. As the prototype's screens go back with "← Back";
   a page already gone through stays open to return to. Worded "← Previous page" so it reads apart from "← Back to
-  the hub" at the top, and it lands at that page's way on, the "Continue →" pressed to leave it, as the browser's own
-  Back would (ticket 41e).
+  the hub" at the top, and it lands at that page's way on, the "Continue →" pressed to leave it, rather than its top
+  (ticket 41e).
 {% endcomment %}
 {% if page.number > 1 %}
   {% page_url section.id page.number|add:"-1" as previous %}
