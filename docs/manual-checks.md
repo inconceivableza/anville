@@ -176,8 +176,8 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 - On the hub, each entry's estimate is quieter than its title: at the right-hand end of the title's line on a wide screen, lined up down the page, and on a line of its own under the title at phone width. A locked entry's note sits beneath.
 - Once something in a section is answered (the sort submitted, one onboarding rating), its estimate has gone from its hub entry and its page.
-- Section 5's "This part: ? min" above its two activities stays after answering.
-- On a section page the estimate sits under the heading as "Whole section: …"; in Section 5, "This part: ? min" also sits above the letter's task and above the closing ratings' introduction, and reads as belonging to what follows it. The two labels at the top of Section 5 read as different things.
+- Section 5's "This part: …" above its two activities stays after answering.
+- On a section page the estimate sits under the heading as "Whole section: …"; in Section 5, "This part: …" also sits above the letter's task and above the closing ratings' introduction, and reads as belonging to what follows it. The two labels at the top of Section 5 read as different things.
 - Phone width: a long title wraps, and its estimate stays on the line beneath it.
 
 ## A link to another section (Section 1's Strengths assessment card)

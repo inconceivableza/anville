@@ -25,5 +25,5 @@
 
 **Carried from 09**
 
-- [ ] Sections 4 and 5 say "? min" in `pathways/whatever-you-do.json`, and so do Section 5's two activities (on `lt-task` and `pl-intro`, shown as "This part: ? min"). Once each is built, time it by hand and give the real figures, agreed with the developer, and ideally the content owner; Section 4's prompts may carry their own if it has several activities. The faithful port has no estimates, and the drift test sets them aside
+- [ ] Section 5 and its two activities carry 41c's figures ("About 15 minutes", and 10 and 5 on `lt-task` and `pl-intro`). Once Sections 4 and 5 are built, time each by hand and give the real figures, agreed with the developer, and ideally the content owner; Section 4's prompts may carry their own if it has several activities. The faithful port has no estimates, and the drift test sets them aside
 - A section's estimate goes once something in it is answered; an activity's stays, which the developer judged fine at ticket 09's hand check

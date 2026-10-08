@@ -4,15 +4,15 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2a (ends 8 Oct, before FaithTech)
 
 **Spec:** Open content and product items
 
-- [ ] No step or activity shows a placeholder time ("? min")
-- [ ] Onboarding, the Strengths assessment and Section 5 with its two activities show the figures below
-- [ ] The Workbook keeps the workbook's own "three or four sittings of half an hour", which agrees with the homepage's timeline, words and plan (130 minutes)
+- [x] No step or activity shows a placeholder time ("? min")
+- [x] Onboarding, the Strengths assessment and Section 5 with its two activities show the figures below
+- [x] The Workbook keeps the workbook's own "three or four sittings of half an hour", which agrees with the homepage's timeline, words and plan (130 minutes)
 
 **Figures**
 

@@ -195,18 +195,18 @@ def test_all_five_end_ratings_are_fixed_once_the_letter_is_sent(participant):
 
 
 def test_every_section_but_section_1_says_how_long_it_takes():
-    """✨ Our own figures, not the prototype's, which gave none: to confirm with the owner. The letter says "? min"
-    until it has been timed by hand, and the Workbook says what the booklet itself says. Section 1 has none: it
+    """✨ Our own figures, not the prototype's, which gave none: to confirm with the owner. They agree with the
+    homepage's timeline (ticket 41c), and the Workbook says what the booklet itself says. Section 1 has none: it
     cannot be finished without the sort, so its own few minutes would read as less than the Strengths assessment
     it leads to."""
     sections = the_pathway()["content"]["sections"]
 
     assert {section["id"]: section.get("estimate") for section in sections} == {
-        "onboarding": "About 1 minute",
+        "onboarding": "About 10 minutes",
         "designed": None,
-        "strengths": "About 10 minutes",
+        "strengths": "About 15 minutes",
         "workbook": "Three or four sittings of half an hour",
-        "letter": "? min",
+        "letter": "About 15 minutes",
     }
 
 
@@ -220,7 +220,7 @@ def test_the_letter_and_the_closing_ratings_each_say_how_long_they_take():
         if block.get("estimate")
     ]
 
-    assert estimated == [("letter", "lt-task", "? min"), ("letter", "pl-intro", "? min")]
+    assert estimated == [("letter", "lt-task", "About 10 minutes"), ("letter", "pl-intro", "About 5 minutes")]
 
 
 COACH_PROTOTYPE = (DOCUMENT.parents[1] / "Prototypes for reference" / "coach-selection-prototype.html").read_text(
