@@ -26,6 +26,12 @@ concurrency:
   group: deploy
   cancel-in-progress: false
 
+# Named, bash runs with -e and -o pipefail. GitHub's unnamed default has no pipefail, so a failing command
+# piped into tee would pass.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   # Before the environment's secrets are in reach: is this an environment, and is there such an image?
   check:
@@ -33,6 +39,7 @@ jobs:
     outputs:
       digest: ${{ steps.image.outputs.digest }}
       commit: ${{ steps.image.outputs.commit }}
+      host: ${{ steps.environment.outputs.host }}
       hostname: ${{ steps.environment.outputs.hostname }}
     steps:
       - uses: actions/checkout@v7
@@ -46,6 +53,12 @@ jobs:
             echo "::error::There is no environment '$ENVIRONMENT' in deploy/environments/"
             exit 1
           fi
+          host=$(yq '.host // ""' "deploy/environments/$ENVIRONMENT/values.yaml")
+          if [ -z "$host" ]; then
+            echo "::error::deploy/environments/$ENVIRONMENT/values.yaml names no host"
+            exit 1
+          fi
+          echo "host=$host" >> "$GITHUB_OUTPUT"
           echo "hostname=$(yq '.hostname // ""' "deploy/environments/$ENVIRONMENT/values.yaml")" >> "$GITHUB_OUTPUT"
 
       - name: Resolve the image's digest and commit
@@ -70,9 +83,10 @@ jobs:
         with:
           version: v4.3.0
 
+      # By the host's canonical name, from the environment's values.
       - name: Open the tunnel to the host
         env:
-          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+          DEPLOY_HOST: ${{ needs.check.outputs.host }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}

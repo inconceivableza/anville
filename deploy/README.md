@@ -19,32 +19,36 @@ Two words are used as that document uses them. A **host** is one Hetzner Cloud s
 | `tunnel.sh` | Opens and closes the SSH tunnel to a host's k3s API |
 | `deploy.sh` | Deploys one environment through that tunnel |
 | `assert-version.sh` | Confirms from outside that the commit just deployed is the one being served |
+| `publish-pathway.sh` | Publishes a document from `pathways/` to one environment through that tunnel |
 | `check.sh` | Checks all of the above that can be checked without a cluster |
 
-`.github/workflows/build.yml` builds the image, and `.github/workflows/deploy.yml` runs the four deploy scripts in order.
+`.github/workflows/build.yml` builds the image, `.github/workflows/deploy.yml` runs the four deploy scripts in order, and `.github/workflows/publish-pathway.yml` opens the tunnel and runs `publish-pathway.sh`.
 
 ## Create a host
 
-Needs the `hcloud` CLI, signed in to the Hetzner project, and two key pairs: the operator's own, and one made for the deploy workflow alone.
+Each host has a **canonical name**, such as `anville-staging-01.vabl.dev`: `anville-<tier>-<number>` under a domain the operator controls, with the number never reused. It is the server's name in Hetzner, the host's own hostname and its reverse DNS, a label on its k3s node, and the name every environment on it uses to reach it. Its A record is made by hand.
+
+Needs the `hcloud` CLI with a context for the Hetzner project the host belongs in, and two key pairs: the operator's own, and one made for the deploy workflow alone. Name the context after the project. The script uses only the context it is given, whichever is active, and refuses to run while `HCLOUD_TOKEN` is set, since that would override the context's token.
 
 ```sh
+hcloud context create anville      # asks for an API token: in the Hetzner Console, that project's Security, API tokens, Read & Write
 ssh-keygen -t ed25519 -N "" -C "anville deploy" -f ~/.ssh/anville-deploy
 
 ADMIN_USER=<your account name> \
 ADMIN_SSH_KEY_FILE=~/.ssh/id_ed25519.pub \
 DEPLOY_SSH_KEY_FILE=~/.ssh/anville-deploy.pub \
-deploy/infra/hcloud-create.sh staging-1 staging
+deploy/infra/hcloud-create.sh anville anville-staging-01.vabl.dev staging
 ```
 
-`hcloud-create.sh --render staging-1 staging` prints the cloud-init and creates nothing. When the script finishes it prints the next steps: how to wait for the first boot, how to confirm that 6443 is closed, and where each of the host's GitHub Environment values comes from.
+`hcloud-create.sh --render anville anville-staging-01.vabl.dev staging` prints the cloud-init and creates nothing. Before creating anything, the script refuses a name that already resolves, or that a server in the project already has. When it finishes it prints the next steps: the A record to make, how to wait for the first boot, how to confirm that 6443 is closed, and what each environment on the host needs.
 
-The host's tier is fixed when it is created. A deploy refuses an environment of the other tier.
+The host's tier is fixed when it is created, and its first label must name it. A deploy refuses an environment of the other tier, and one whose values name another host.
 
 ## Add an environment
 
-1. Copy an existing directory of `environments/` to `environments/<deployment>-<tier>/` and edit its `values.yaml`: the tier, the host, the hostname.
+1. Copy an existing directory of `environments/` to `environments/<deployment>-<tier>/` and edit its `values.yaml`: the tier, the host (its canonical name), the hostname.
 2. Create a GitHub Environment of the same name, holding what `secrets.example.yaml` lists. Generate each secret afresh. Give a production environment a required reviewer.
-3. Point a DNS A record for the hostname at the host. In Cloudflare, DNS-only, not proxied. No AAAA record: a host serves over IPv4 only for now. The record must resolve before the first deploy, or no certificate can be issued.
+3. Point the hostname at the host: a CNAME to the host's canonical name, or an A record with its address where the hostname is a zone's apex and the DNS provider cannot flatten a CNAME (Cloudflare can). In Cloudflare, DNS-only, not proxied. No AAAA record: a host serves over IPv4 only for now. The record must resolve before the first deploy, or no certificate can be issued.
 4. For the backup, create a Storage Box sub-account for this environment alone and give it the public half of `BACKUP_SSH_KEY`.
 5. Deploy.
 
@@ -61,7 +65,7 @@ gh workflow run deploy.yml -f environment=whatever-you-do-staging -f tag=latest
 
 `tag` may be a commit, a `v*` tag or `latest`. The workflow resolves it to a digest, opens the tunnel, checks the host's tier, applies the environment's secrets, installs cert-manager and the issuers if the host lacks them, installs or upgrades the environment, and then asks `https://<hostname>/healthz` which commit is answering. It fails if that is not the commit it deployed.
 
-A deploy runs migrations. It does not load a pathway.
+A deploy runs migrations. It does not publish a pathway: see "Publish a pathway" below.
 
 ## After the first deploy
 
@@ -69,11 +73,26 @@ On the host, as the operator. `k` is short for `sudo k3s kubectl -n <environment
 
 ```sh
 k exec -it deployment/anville -- python manage.py createsuperuser
-k exec deployment/anville -- python manage.py load_pathway pathways/whatever-you-do.json
 k exec deployment/anville -- python manage.py seed_observers --help    # staging only
 ```
 
-Loading a pathway is always this deliberate step. `load_pathway` publishes whatever file it is given, so run on every deploy it would overwrite a version published another way.
+Then publish the environment's pathway, as below.
+
+## Publish a pathway
+
+```sh
+gh workflow run publish-pathway.yml --ref main -f pathway=whatever-you-do.json -f environment=whatever-you-do-staging
+```
+
+Or on GitHub: Actions, `publish-pathway`, Run workflow. Choose the branch to publish from in "Use workflow from" (`--ref` above), then the pathway and the environment. The document is the one in `pathways/` on that branch, not the copy in the deployed image. The branch must hold the workflow, and the pathway list offered is the one in that branch's copy of it; GitHub cannot offer a list of branches any other way. It is sent into the environment's running pod and loaded there with `load_pathway`, so the deployed version checks it: a document that version cannot read is refused, and nothing changes. Publishing content that is already published changes nothing either. Each run waits for any deploy to finish first.
+
+The pathway list is fixed in the workflow, since GitHub cannot list a directory for it. When a file is added to or removed from `pathways/`, change the workflow's `options` too: `check.sh`, and so the build workflow, fails until they match. The environment list is the repository's GitHub Environments, and one with no directory in `environments/` is refused.
+
+Publishing is always this deliberate step. `load_pathway` publishes whatever file it is given, so run on every deploy it would overwrite a version published another way. Without GitHub, the same is `deploy/publish-pathway.sh <environment> <pathway>` with a tunnel and kubeconfig of your own, or on the host, with a copy of the document there:
+
+```sh
+k exec -i deployment/anville -c web -- sh -c 'cat > /tmp/p.json && python manage.py load_pathway /tmp/p.json' < pathways/whatever-you-do.json
+```
 
 ## Day to day
 
@@ -147,18 +166,19 @@ Sign in as someone who exists in the dump and check that their answers are there
 deploy/check.sh
 ```
 
-It needs `shellcheck` 0.11 (`pip install shellcheck-py==0.11.0.1`; versions differ in what they flag) and `helm`, and renders the chart with every environment's values. The build workflow runs it, with that same shellcheck, before building an image. That check deploys nothing.
+It needs `shellcheck` 0.11 (`pip install shellcheck-py==0.11.0.1`; versions differ in what they flag), `helm` and `yq`. It renders the chart with every environment's values, and checks that `publish-pathway.yml` offers exactly the files in `pathways/`. The build workflow runs it, with that same shellcheck, before building an image. That check deploys nothing.
 
 ## What has been tested
 
 Without a host, a registry push or Docker, as far as each piece allows:
 
-- `hcloud-create.sh`: run end to end against a local stand-in for the Hetzner API; the rendered cloud-init passes cloud-init's own schema check.
+- `hcloud-create.sh`: run end to end against a local stand-in for the Hetzner API, through a named context, including each refusal (no such context, `HCLOUD_TOKEN` set, a name that resolves, a name already a server's, a name that is not fully qualified or does not name its tier); the rendered cloud-init passes cloud-init's own schema check.
 - The charts: installed into a real Kubernetes API server with no node, so every object was accepted and no pod ran.
-- `deploy.sh`: run against that same API server, including each refusal (missing secrets, wrong tier, a password unfit for a URL). Its cert-manager step pulled the pinned chart from quay.io and installed it there: the six definitions and three deployments were accepted. It could go no further without a node, since cert-manager's own start-up check is a job, and the issuers were refused, as they should be, while its webhook was not running.
+- `deploy.sh`: run against that same API server, including each refusal (missing secrets, wrong tier, a node labelled as another host or not at all, values naming no host, a password unfit for a URL). Its cert-manager step pulled the pinned chart from quay.io and installed it there: the six definitions and three deployments were accepted. It could go no further without a node, since cert-manager's own start-up check is a job, and the issuers were refused, as they should be, while its webhook was not running.
 - `tunnel.sh`: run through a local SSH server to that API server, including a wrong host key and a wrong key.
 - `resolve-image-digest.sh`: run against another public image on GitHub Container Registry.
 - `assert-version.sh`: run against gunicorn serving this repository.
+- `publish-pathway.sh`: run with `kubectl` stubbed to run the pod's command here, against a throwaway database: a first publish, the same again (no change), another document, a broken one (refused, nothing published), and names that are not an environment or a pathway. `kubectl exec` carrying the document to a real pod is not yet proven.
 - The backup script: run against a local SFTP server, with `pg_dump` stubbed.
 
 Not yet proven anywhere: the `Dockerfile` as a Docker build, the cloud-init on a real first boot, the deploy key's restriction in `authorized_keys`, cert-manager starting and issuing a certificate, a pod starting, a real dump, and the restore above.

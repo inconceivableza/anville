@@ -68,7 +68,9 @@ setting() {
   yq eval-all '. as $item ireduce ({}; . * $item)' "$CHART/values.yaml" "$VALUES" | yq "$1"
 }
 TIER=$(setting .tier)
+HOST=$(setting .host)
 HOSTNAME_SERVED=$(setting .hostname)
+[ -n "$HOST" ] || die "$ENVIRONMENT names no host: its values.yaml needs host, the canonical name of the host that carries it"
 POSTGRES=$(setting .postgres.enabled)
 ENROLMENT=$(setting .enrolment.required)
 BACKUP=$(setting .backup.enabled)
@@ -93,7 +95,10 @@ echo "== The host"
 # A production environment aimed at a staging host, or the reverse, stops here.
 HOST_TIERS=$(kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.labels.anville-tier}{"\n"}{end}' | sort -u)
 [ "$HOST_TIERS" = "$TIER" ] || die "$ENVIRONMENT is a $TIER environment, and this host's tier is '${HOST_TIERS:-not set}'"
-echo "A $TIER host, for a $TIER environment"
+# So does a kubeconfig, or a tunnel, that reaches a host other than the one the environment's values name.
+HOST_NAMES=$(kubectl get nodes -o jsonpath='{range .items[*]}{.metadata.labels.anville-host}{"\n"}{end}' | sort -u)
+[ "$HOST_NAMES" = "$HOST" ] || die "$ENVIRONMENT belongs on $HOST, and this host is '${HOST_NAMES:-not named}'"
+echo "$HOST, a $TIER host, for a $TIER environment"
 
 echo "== Namespace and secrets"
 kubectl create namespace "$ENVIRONMENT" --dry-run=client -o yaml | kubectl apply -f -

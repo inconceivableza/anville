@@ -4,7 +4,7 @@
   "required": ["tier", "image", "secretName", "postgres", "backup"],
   "properties": {
     "tier": { "enum": ["staging", "production"] },
-    "host": { "type": "string" },
+    "host": { "type": "string", "maxLength": 63, "pattern": "^$|^([a-z0-9]([a-z0-9-]*[a-z0-9])?\\.)+[a-z]([a-z0-9-]*[a-z0-9])?$" },
     "hostname": { "type": "string", "pattern": "^$|^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$" },
     "issuer": { "enum": ["letsencrypt-staging", "letsencrypt-prod"] },
     "ingressClassName": { "type": "string", "minLength": 1 },
