@@ -190,18 +190,3 @@ deploy/check.sh
 
 It needs `shellcheck` 0.11 (`pip install shellcheck-py==0.11.0.1`; versions differ in what they flag), `helm` and `yq`. It renders the chart with every environment's values, and checks that `publish-pathway.yml` offers exactly the files in `pathways/`. The build workflow runs it, with that same shellcheck, before building an image. That check deploys nothing.
 
-## What has been tested
-
-Without a host, a registry push or Docker, as far as each piece allows:
-
-- `hcloud-create.sh`: run end to end against a local stand-in for the Hetzner API, through a named context, including each refusal (no such context, `HCLOUD_TOKEN` set, a name that resolves, a name already a server's, a name that is not fully qualified or does not name its tier); the rendered cloud-init passes cloud-init's own schema check.
-- The charts: installed into a real Kubernetes API server with no node, so every object was accepted and no pod ran.
-- `deploy.sh`: run against that same API server, including each refusal (missing secrets, wrong tier, a node labelled as another host or not at all, values naming no host, a password unfit for a URL). Its cert-manager step pulled the pinned chart from quay.io and installed it there: the six definitions and three deployments were accepted. It could go no further without a node, since cert-manager's own start-up check is a job, and the issuers were refused, as they should be, while its webhook was not running.
-- `tunnel.sh`: run through a local SSH server to that API server, including a wrong host key and a wrong key.
-- `resolve-image-digest.sh`: run against another public image on GitHub Container Registry.
-- `assert-version.sh`: run against gunicorn serving this repository.
-- `publish-pathway.sh`: run with `kubectl` stubbed to run the pod's command here, against a throwaway database: a first publish, the same again (no change), another document, a broken one (refused, nothing published), and names that are not an environment or a pathway. `kubectl exec` carrying the document to a real pod is not yet proven.
-- `install-k9s.sh`: run with `apt-get` stubbed, through `bash -s` as above: it fetched the pinned arm64 package, checked it, and left standard input to the script; it refused a wrong checksum, a user other than root and an operator with no account; it added the alias once, replaced an earlier one, and did nothing the second time. The amd64 package's checksum was checked by hand. The rendered cloud-init carries the script byte for byte.
-- The backup script: run against a local SFTP server, with `pg_dump` stubbed.
-
-Not yet proven anywhere: the `Dockerfile` as a Docker build, the cloud-init on a real first boot, the deploy key's restriction in `authorized_keys`, cert-manager starting and issuing a certificate, a pod starting, a real dump, and the restore above.
