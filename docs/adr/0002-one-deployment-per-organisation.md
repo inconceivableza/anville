@@ -6,6 +6,8 @@ status: accepted
 
 Anville is meant to be usable by many churches and organisations, and may be open source. We will not build multi-tenancy: each organisation runs its own deployment with its own database and configuration, and the data model has no organisation concept. The prior plan made organisation a real tenancy boundary from the start; that is rejected here.
 
+Note, 8 Oct: "organisation" here means a tenant. ADR 0012 adds an `Organisation` model for churches and ministries gathering participants into groups within one deployment, replacing the first consequence below. The decision against tenancy stands.
+
 > ✨ Drafted with AI assistance.
 
 ## Considered options
