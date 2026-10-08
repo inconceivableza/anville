@@ -1,16 +1,18 @@
 # ✨ Publish a pathway document to one environment (docs/server-approach.md, section 8). Run by hand: a deploy
 # never publishes one, since that would overwrite a version published another way.
 #
-# The document is the one in pathways/ on the branch or tag this is run from, and the environment's running
-# version checks it before publishing it. Publishing content that is already published changes nothing.
+# The branch to publish from is GitHub's own "Use workflow from" list, the only branch list GitHub can offer:
+# a choice input's options are fixed in the file. The document is the one in pathways/ on that branch, and the
+# environment's running version checks it before publishing it. Publishing content that is already published
+# changes nothing.
 name: publish-pathway
-run-name: Publish ${{ inputs.pathway }} to ${{ inputs.environment }}
+run-name: Publish ${{ inputs.pathway }} from ${{ github.ref_name }} to ${{ inputs.environment }}
 
 on:
   workflow_dispatch:
     inputs:
       pathway:
-        description: A document in pathways/, as it is on the branch chosen above
+        description: The pathway, from pathways/ on the branch chosen in "Use workflow from" above
         required: true
         type: choice
         # Every file in pathways/, and nothing else: deploy/check.sh fails when the two differ.
