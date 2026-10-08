@@ -97,6 +97,38 @@ Publishing is always this deliberate step. `load_pathway` publishes whatever fil
 k exec -i deployment/anville -c web -- sh -c 'cat > /tmp/p.json && python manage.py load_pathway /tmp/p.json' < pathways/whatever-you-do.json
 ```
 
+## Set up email (Mailjet)
+
+An environment starts with fake email (see "Day to day"). To deliver real email it needs a Mailjet API key of its own, a sending domain validated in Mailjet, and `email.from` at that domain. For `whatever-you-do-staging` the domain is `mail.anville.vabl.dev`, kept for mail alone: the SPF record has to sit at the sending domain itself, and `anville.vabl.dev` is a CNAME, which can hold no other record. Mailjet's screens change from time to time; the names below are the ones it used when this was written.
+
+1. **Check that the host can reach Mailjet** on port 587, which Hetzner leaves open (25 and 465 are blocked on new accounts). On the host: `nc -vz in-v3.mailjet.com 587` should say it succeeded.
+2. **An API key for the environment.** In Mailjet, Account settings, API Key Management (Primary and Subaccount): create a subaccount named after the environment, such as `whatever-you-do-staging`, and keep its API key and secret key. A key of its own can be revoked without touching another environment, and its sending is counted apart. The Free and Essential plans allow one subaccount, so a second environment needs a larger plan or Mailjet's support.
+3. **The sending domain.** In Mailjet, Account settings, Senders & Domains: add the domain `mail.anville.vabl.dev`. Mailjet shows the records to make. In Cloudflare, add each as a TXT record (TXT records are never proxied):
+
+   | Name | Value |
+   |---|---|
+   | `mailjet._<token>.mail.anville.vabl.dev` | the ownership token Mailjet shows |
+   | `mail.anville.vabl.dev` | `v=spf1 include:spf.mailjet.com ~all` |
+   | `mailjet._domainkey.mail.anville.vabl.dev` | the DKIM public key Mailjet shows |
+   | `_dmarc.mail.anville.vabl.dev` | `v=DMARC1; p=none` |
+
+   Then, in Mailjet, check the domain again until it shows the domain validated and SPF and DKIM as authenticated. DMARC is not Mailjet's to check, but Gmail and Yahoo expect it.
+4. **The address.** `email.from` in the environment's `values.yaml`, at that domain. For staging it is already `Anville (staging) <noreply@mail.anville.vabl.dev>`. A deploy refuses an environment that has `EMAIL_URL` but no `email.from`, since Mailjet would refuse every message from Django's `webmaster@localhost`.
+5. **The secret.** In the GitHub Environment, add `EMAIL_URL` as `smtp+tls://<API key>:<secret key>@in-v3.mailjet.com:587`.
+6. **Deploy.** The pods restart, since a secret has changed.
+7. **Send a test** to a mailbox you can read:
+
+   ```sh
+   k exec deployment/anville -- python manage.py sendtestemail <your address>
+   ```
+
+   On staging it should arrive with `[TEST]` before the subject and the disclaimer at the top of the body, from the address in `email.from`. In the message's headers (Gmail: Show original), DKIM should pass for `mail.anville.vabl.dev`, and DMARC should pass. Mailjet's statistics for the subaccount show the message too. A new Mailjet account may hold its first messages while Mailjet reviews it; they are delivered once it is approved.
+8. **Password reset stays refused** until ticket 28a, email or not: `https://<hostname>/accounts/password/reset/` still says it is unavailable.
+
+Staging's accounts use reserved example domains, which receive nothing: a message to one bounces, and bounces count against the sending domain. Real email from staging reaches only the real addresses of people who know they are testing, which are then the one kind of real data staging holds.
+
+To go back to fake email, delete `EMAIL_URL` from the GitHub Environment and deploy again. To stop all sending at once, revoke the subaccount's key in Mailjet.
+
 ## Day to day
 
 ```sh
@@ -126,7 +158,7 @@ ssh <operator>@<host> 'sudo bash -s' < deploy/infra/install-k9s.sh
 
 It installs the pinned release after checking its checksum, unless that version is already there, and gives the account that ran `sudo` the alias, replacing an earlier `k9` alias rather than adding a second. Unattended upgrades do not update it: to change the version, edit the version and the two checksums at the top of the script and run it on each host the same way.
 
-**Fake email.** An environment with no `EMAIL_URL` secret delivers nothing: each message is written to the pod's log. On a staging environment it is written with the test-system disclaimer it would carry if it were sent: `[TEST]` before the subject, and the disclaimer at the top of the body. To see one, run `k exec deployment/anville -- python manage.py sendtestemail someone@example.com` and read the log. The log then holds whatever links the messages carried, which is acceptable only where the data is fake. A production environment cannot be deployed without `EMAIL_URL`.
+**Fake email.** An environment with no `EMAIL_URL` secret delivers nothing: each message is written to the pod's log. On a staging environment it is written with the test-system disclaimer it would carry if it were sent: `[TEST]` before the subject, and the disclaimer at the top of the body. To see one, run `k exec deployment/anville -- python manage.py sendtestemail someone@example.com` and read the log. The log then holds whatever links the messages carried, which is acceptable only where the data is fake. A production environment cannot be deployed without `EMAIL_URL`. "Set up email (Mailjet)" above turns real email on.
 
 **Resetting a password.** Password reset is refused until ticket 28a. Until then the operator runs `changepassword`, as above. A participant's username is their whole email address (ticket 37), so that is what the command takes; the admin shows it. The operator's own account is the exception: a username of its own, and no email address.
 

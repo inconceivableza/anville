@@ -71,7 +71,7 @@ Steps 1 to 3, 6, 9, 10, 12 and 12a have no dependency on the human steps and can
 Not needed for 9 Oct. It is kept in this ticket because tickets 28a and 43 wait on it for email delivery on staging; split it out if that is tidier.
 
 18. **The disclaimer** (section 11). `ANVILLE_EMAIL_DISCLAIMER`, applied to the subject and body of every outgoing message by a wrapping email backend, with tests; the chart sets it for every staging-tier environment.
-19. *Human.* **Mailjet.** An API key for this environment and a sending address at `anville.vabl.dev`, validated with records in Cloudflare.
+19. *Human.* **Mailjet.** A subaccount API key for this environment and the sending domain `mail.anville.vabl.dev`, validated with records in Cloudflare (`anville.vabl.dev` is a CNAME, so cannot hold the SPF record). `email.from` is already set. deploy/README.md, "Set up email (Mailjet)", gives the steps.
 20. *Human.* **Switch over.** Add `EMAIL_URL` to the GitHub Environment, redeploy, and run `manage.py sendtestemail` to a real mailbox. Check that the message arrives with the disclaimer, and that password reset is still refused.
 
 **Context**

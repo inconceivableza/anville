@@ -18,7 +18,7 @@
 #   POSTGRES_PASSWORD                                   when postgres.enabled
 #   DATABASE_URL                                        when not
 #   BACKUP_TARGET, BACKUP_SSH_KEY, BACKUP_KNOWN_HOSTS   when backup.enabled
-#   EMAIL_URL                                           optional on staging, required on production
+#   EMAIL_URL                                           optional on staging, required on production; needs email.from
 #   ACME_EMAIL                                          optional
 #
 # Needs kubectl, helm and yq.
@@ -74,6 +74,7 @@ HOSTNAME_SERVED=$(setting .hostname)
 POSTGRES=$(setting .postgres.enabled)
 ENROLMENT=$(setting .enrolment.required)
 BACKUP=$(setting .backup.enabled)
+FROM=$(setting .email.from)
 
 # The secrets this environment needs, by what it is. Nothing is applied until all are there.
 NEEDED=(DJANGO_SECRET_KEY)
@@ -87,6 +88,10 @@ for name in "${NEEDED[@]}"; do
   [ -n "${!name:-}" ] || MISSING+=("$name")
 done
 [ ${#MISSING[@]} -eq 0 ] || die "$ENVIRONMENT needs these secrets, which are not set: ${MISSING[*]}"
+# Real email from Django's webmaster@localhost would be refused by the provider, message by message.
+if [ -n "${EMAIL_URL:-}" ] && [ -z "$FROM" ]; then
+  die "$ENVIRONMENT has EMAIL_URL, so its values.yaml needs email.from: an address at the domain the provider has validated"
+fi
 if [ "$POSTGRES" = true ] && ! [[ "$POSTGRES_PASSWORD" =~ ^[A-Za-z0-9_-]+$ ]]; then
   die "POSTGRES_PASSWORD becomes part of a URL, so it may hold only letters, digits, - and _"
 fi

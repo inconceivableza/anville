@@ -8,6 +8,11 @@ hostname: anville.vabl.dev
 enrolment:
   required: false
 
+# Where its email comes from once EMAIL_URL is set: a domain validated in Mailjet, kept for mail alone, since
+# anville.vabl.dev is a CNAME and cannot also hold the SPF record (deploy/README.md, "Set up email").
+email:
+  from: "Anville (staging) <noreply@mail.anville.vabl.dev>"
+
 # Let's Encrypt's real service from the first deploy. Browsers refuse .dev over anything but trusted HTTPS,
 # so a certificate from the test issuer would give a site that cannot be opened.
 issuer: letsencrypt-prod
