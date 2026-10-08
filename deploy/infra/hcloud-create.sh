@@ -65,6 +65,7 @@ render() {
   text=${text//__ADMIN_SSH_PUBLIC_KEY__/$ADMIN_KEY}
   text=${text//__DEPLOY_SSH_PUBLIC_KEY__/$DEPLOY_KEY}
   text=${text//__K3S_CHANNEL__/$K3S_CHANNEL}
+  text=${text//__INSTALL_K9S_B64__/$INSTALL_K9S}
   printf '%s\n' "$text"
 }
 
@@ -143,6 +144,8 @@ K3S_CHANNEL=${K3S_CHANNEL:-stable}
 ADMIN_KEY=$(public_key "$ADMIN_SSH_KEY_FILE")
 DEPLOY_KEY=$(public_key "$DEPLOY_SSH_KEY_FILE")
 [ "$ADMIN_KEY" != "$DEPLOY_KEY" ] || die "the operator and the deploy workflow must not share a key"
+# Whole, as one line the template can hold. Without --wrap, which macOS's base64 lacks.
+INSTALL_K9S=$(base64 < "$HERE/install-k9s.sh" | tr -d '\n')
 
 if $RENDER_ONLY; then
   render

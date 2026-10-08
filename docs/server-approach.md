@@ -27,14 +27,17 @@ deploy/
   infra/
     cloud-init.yaml.template
     hcloud-create.sh                  # firewall + server, from the template
+    install-k9s.sh                    # k9s for the operator, carried by the template
   resolve-image-digest.sh             # the four steps of a deploy, each a script
   tunnel.sh
   deploy.sh
   assert-version.sh
+  publish-pathway.sh                  # a pathway document into one environment
   check.sh                            # shellcheck and helm over all of deploy/
   README.md                           # how to do each thing
 .github/workflows/build.yml
 .github/workflows/deploy.yml
+.github/workflows/publish-pathway.yml
 ```
 
 ## 2. What carries over from LivePace, and what does not
@@ -254,7 +257,10 @@ The host's tier and canonical name are parameters of the template, which sets th
 - two accounts: `deploy` for the workflow, and a named interactive sudoer. The deploy key is restricted in `authorized_keys` to one thing, forwarding a port to the k3s API on the host: it has no shell, no sudo and cannot read the kubeconfig, a copy of which the workflow holds as a secret. Root login over SSH is disabled; Hetzner images otherwise leave root as the login;
 - base packages, 2 GiB swap, `vm.swappiness=10`, SSH without passwords, and unattended upgrades, which restart the host at 03:30 UTC when an update needs it;
 - UFW admitting 22, 80 and 443, with the k3s pod and service networks allowed. **6443 is not opened**;
-- k3s in server mode with its bundled Traefik and kubectl, with secrets encrypted at rest. Helm is not installed on the host: it runs in the deploy workflow, through the tunnel. Nothing in the template depends on the architecture, so an ARM host remains possible.
+- k3s in server mode with its bundled Traefik and kubectl, with secrets encrypted at rest. Helm is not installed on the host: it runs in the deploy workflow, through the tunnel;
+- k9s, for the operator to look at the cluster in a terminal (`sudo k9s --kubeconfig /etc/rancher/k3s/k3s.yaml`), a pinned release checked against its checksum by `infra/install-k9s.sh`, which the template carries whole. It is not in an apt repository, so unattended upgrades leave it alone; the same script, run over SSH, installs it on an older host or changes its version.
+
+Nothing in the template depends on the architecture, so an ARM host remains possible: k9s is fetched for the host's.
 
 The outside-in check that LivePace does with a probe script is done here by step 6 of the deploy.
 
