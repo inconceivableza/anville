@@ -156,6 +156,10 @@ _Avoid_: admin, editor, content manager.
 One running Anville, with its own host, database, domain, users and pathway. Should tenancy come, it separates deployments, never organisations.
 _Avoid_: instance, tenant (for an organisation), site.
 
+**Operator**:
+Whoever runs a deployment, with access to its database and the operator's admin. Creates organisations and grants admin rights, and can read everything a deployment holds.
+_Avoid_: admin, superuser, platform owner.
+
 **Organisation**:
 A church or ministry that gathers participants into groups within a deployment and follows their progress. A participant may belong to several.
 _Avoid_: tenant, client, account.
