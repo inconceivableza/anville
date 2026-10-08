@@ -1,14 +1,15 @@
 {% comment %}
   ✨ Every requirement stays listed beneath the button, ticked once met, so nothing comes and goes with
   each autosave: above the button a message moved it, and one that vanished shortened the page under a
-  participant scrolled to its foot. The tick is decoration; a screen reader is told "Done" in words.
+  participant scrolled to its foot. The tick is decoration; a screen reader is told "Done" in words. A requirement met
+  on another page, while unmet, leads there (ticket 41b).
 {% endcomment %}
 {% if checklist %}
   <ul class="gate-messages">
-    {% for message, met in checklist %}
+    {% for message, met, href in checklist %}
       <li class="gate-item{% if met %} is-met{% endif %}">
         {% if met %}<span class="gate-mark" aria-hidden="true">✓</span> <span class="visually-hidden">Done:</span>{% else %}<span class="gate-mark" aria-hidden="true">•</span>{% endif %}
-        <span class="gate-message">{{ message }}</span>
+        {% if href and not met %}<a class="gate-link" href="{{ href }}"><span class="gate-message">{{ message }}</span></a>{% else %}<span class="gate-message">{{ message }}</span>{% endif %}
       </li>
     {% endfor %}
   </ul>

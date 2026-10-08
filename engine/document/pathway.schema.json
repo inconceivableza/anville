@@ -291,6 +291,10 @@
         "id": { "$ref": "#/$defs/identifier" },
         "title": { "$ref": "#/$defs/text" },
         "requires": { "type": "array", "items": { "$ref": "#/$defs/identifier" } },
+        "part_of": {
+          "description": "The section this one is a part of, such as the Strengths assessment within Section 1. A part is listed under that section, has no completion of its own (it is complete once its gate passes), and its pages lead back to that section.",
+          "$ref": "#/$defs/identifier"
+        },
         "estimate": { "$ref": "#/$defs/estimate" },
         "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } },
         "gate": { "$ref": "#/$defs/gate" },

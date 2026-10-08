@@ -1,0 +1,22 @@
+{% load section_pages %}
+{% comment %}
+  ✨ One section's entry in the sidebar, with any `parts` of it listed within it (ticket 41b). A part is given no parts.
+  The highlight of the section you are in, or of the next step, is on the entry's own row, not on the parts within it.
+{% endcomment %}
+<li class="pathway-nav-section{% if section.is_next %} is-next{% endif %}{% if section.id == current %} is-current{% endif %}">
+  <span class="pathway-nav-row">
+    <span class="status-chip status-{{ section.status }}">{{ section.label }}</span>
+    {% if section.is_locked %}
+      <span class="pathway-nav-title">{{ section.title }}</span>
+    {% else %}
+      <a class="pathway-nav-title" href="{% page_url section.id section.page %}"{% if section.id == current %} aria-current="page"{% endif %}>{{ section.title }}</a>
+    {% endif %}
+  </span>
+  {% if parts %}
+    <ol class="pathway-nav-parts">
+      {% for part in parts %}
+        {% include "engine/pathway_nav_section.html" with section=part parts=None %}
+      {% endfor %}
+    </ol>
+  {% endif %}
+</li>

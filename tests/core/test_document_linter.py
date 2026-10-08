@@ -210,3 +210,43 @@ def test_a_link_must_say_which_section_it_leads_to():
     del document["content"]["sections"][1]["blocks"][1]["section"]
 
     assert validate(document) == [Problem(path="/content/sections/1/blocks/1", message="'section' is a required property")]
+
+
+def test_a_section_may_be_a_part_of_another_section():
+    """✨ The Strengths assessment within Section 1 (ticket 41b)."""
+    document = sort_pathway()
+    document["content"]["sections"][2]["part_of"] = "calling"
+
+    assert validate(document) == []
+
+
+def test_a_part_with_no_gate_is_reported():
+    """✨ A part is complete once its gate passes, so without one it would be complete before it was ever opened."""
+    document = sort_pathway()
+    calling = document["content"]["sections"][1]
+    calling["part_of"] = "onboarding"
+    del calling["gate"]
+
+    assert validate(document) == [
+        Problem(
+            path="/content/sections/1/part_of",
+            message="A part of a section needs a gate: it is complete once its gate passes, so without one it would "
+            "be complete before it is begun.",
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    "parts, message",
+    [
+        ({2: "section-9"}, "There is no section 'section-9' in this pathway."),
+        ({2: "strengths"}, "A section cannot be a part of itself."),
+        ({1: "onboarding", 2: "calling"}, "Section 'calling' is itself a part of a section, so it cannot have parts."),
+    ],
+)
+def test_a_section_that_is_a_part_of_no_section_it_can_be_is_reported(parts, message):
+    document = sort_pathway()
+    for index, part_of in parts.items():
+        document["content"]["sections"][index]["part_of"] = part_of
+
+    assert validate(document) == [Problem(path="/content/sections/2/part_of", message=message)]

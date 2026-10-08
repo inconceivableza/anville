@@ -55,10 +55,11 @@ from engine.document.contacts import (
     rows_to_show,
 )
 from engine.document.aggregation import aggregate
-from engine.document.gates import has_content
+from engine.document.gates import clauses_of, has_content
 from engine.document.scoring import score
 from engine.hub import (
     block_ids_fixed_on_completion,
+    complete_sections,
     hub_for,
     is_locked,
     open_blocks,
@@ -87,9 +88,15 @@ class ParticipantState(NamedTuple):
     def reached(self, section):
         """✨ The page of a section this participant has reached, or None while the section is locked. Every way into
         a section (its address, "Continue →", completion, an answer or a checklist step) is guarded by this."""
-        if is_locked(section, self.completed):
+        if is_locked(section, self.completed, self.answers, self.sections, self.moved_past):
             return None
         return page_reached(section, self.moved_past, self.answers, self.sections)
+
+    def with_answers(self, answers):
+        """✨ This state with `answers` in place of its own, and what is complete worked out again from them, since a part
+        of a section is complete once its gate passes."""
+        stored = self.response.completed_sections if self.response is not None else ()
+        return self._replace(answers=answers, completed=complete_sections(self.sections, answers, stored))
 
     def stored_response(self, user):
         """✨ Their response, begun now if this is the first thing they store."""
@@ -144,8 +151,14 @@ def _coach_page_of(document, hub):
             section = section_of(document, block["id"])
             if any(state.id == section["id"] and state.is_locked for state in hub.sections):
                 return None
-            return f"{page_url(section['id'], page_of(section, block['id']))}#block-{block['id']}"
+            return _block_address(document, block["id"])
     return None
+
+
+def _block_address(document, block_id):
+    """✨ The address of the page a block is on, at the block."""
+    section = section_of(document, block_id)
+    return f"{page_url(section['id'], page_of(section, block_id))}#block-{block_id}"
 
 
 def participant_nav(request):
@@ -176,7 +189,7 @@ def participant_nav(request):
     return {
         "title": title,
         "sidebar": {
-            "sections": hub.sections,
+            "outline": hub.outline(),
             "current": _current_section(request, document),
             "links": [{"label": label, "href": href, "is_current": href == request.path} for label, href in links],
         },
@@ -265,9 +278,12 @@ def move_past_page(request, section_id, page):
 @require_POST
 def complete_section(request, section_id):
     """✨ The participant's own act of finishing a section, re-checked here rather than trusted to the page. It is
-    done from the section's last page, so a participant who has not reached it is sent to the page they have."""
+    done from the section's last page, so a participant who has not reached it is sent to the page they have. A part of
+    a section has no completion of its own: it is complete once its gate passes."""
     state = _participant(request.user)
     section = _section_or_404(state.version, section_id)
+    if "part_of" in section:
+        raise Http404("A part of a section is complete once its gate passes, with no completion of its own.")
     reached = state.reached(section)
     if reached is None:
         return redirect("hub")
@@ -280,11 +296,8 @@ def complete_section(request, section_id):
 
     fixed_block_ids = block_ids_fixed_on_completion(section, state.answers)
     state.stored_response(request.user).complete_section(section_id, fixed_block_ids=fixed_block_ids)
-    # ✨ On to whatever the hub would now point at, as the prototype moves from screen to screen; the hub once
-    # nothing is left.
-    completed = state.completed | {section_id}
-    next_step = hub_for(state.sections, state.answers, completed, moved_past=state.moved_past).next_step
-    return _see_other(page_url(next_step.id, next_step.page)) if next_step else _see_other("hub")
+    # ✨ Back to the hub, which points at the next step, as the prototype's `completePillar` goes (ticket 41b).
+    return _see_other("hub")
 
 
 @login_required
@@ -342,7 +355,7 @@ def save_answer(request, block_id):
 
     participant_response = state.stored_response(request.user)
     # ✨ The row is updated in place, so the answers read before are a step behind what is about to be stored.
-    saved = state._replace(answers={**state.answers, block_id: value})
+    saved = state.with_answers({**state.answers, block_id: value})
     if block_type.captures is CONTACTS:
         saved_contacts = participant_response.replace_contacts(block_id, value, Contact.Role.CONTACT)
         if request.POST.get("next") == "invitations":
@@ -406,7 +419,7 @@ def coach_checklist(request, block_id):
     if not is_htmx and stored:
         # ✨ Once stored, the checklist is behind: the page shows only the coach kept, so it is safe to go back to.
         return _see_other(f"{page_url(section['id'], page)}#block-{block_id}")
-    shown = _section_page(state._replace(answers=kept), section, page)
+    shown = _section_page(state.with_answers(kept), section, page)
     checklist_block = next(on_page for on_page in shown["section"]["blocks"] if on_page["id"] == block_id)
     checklist_block["checklist"] = _checklist_screen(checklist_block["text"], **screen)
     if is_htmx:
@@ -556,7 +569,8 @@ def results(request, block_id):
     """✨ The participant's own stored result for a scored block, never recomputed and never anyone else's.
 
     Before there is a result, the participant is sent to the page of the block's section the sort is on. After, the
-    page leads back there too, since that is where the section is completed.
+    page leads back to the section that one is a part of (ticket 41b), or else to the sort's own section, where it is
+    completed.
     """
     state, result, section = _own_result(request.user, block_id)
     if result is None:
@@ -576,7 +590,12 @@ def comparison(request, block_id):
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
     shown = _comparison_of(state.response, result.scores, state.answers[block_id])
-    context = {"comparison": shown, "block_id": block_id, "coach": _coach_sharing(state.response, block_id)}
+    context = {
+        "comparison": shown,
+        "block_id": block_id,
+        "coach": _coach_sharing(state.response, block_id),
+        "back": section["back"],
+    }
     return render(request, "engine/comparison.html", context)
 
 
@@ -666,7 +685,8 @@ def visit_comparison(request, block_id):
 
 def _own_result(user, block_id):
     """✨ The participant's state, their stored result for a scored block (None before they have one), and the section
-    the sort is on with its page. A block that is not scored is a 404."""
+    the sort is on with its page, and `back`, where the results and the comparison lead back to: the section that one
+    is a part of, if it is one (ticket 41b), or else that section itself. A block that is not scored is a 404."""
     state = _participant(user)
     try:
         block = answerable_block(state.version.document, block_id) if state.version else None
@@ -676,12 +696,9 @@ def _own_result(user, block_id):
         raise Http404("This pathway version has no scored block by that identifier.")
     section = section_of(state.version.document, block_id)
     result = Result.objects.filter(response=state.response, block_id=block_id).first()
-    shown_section = {
-        "id": section["id"],
-        "title": text_for(section["title"], "participant"),
-        "page": page_of(section, block_id),
-    }
-    return state, result, shown_section
+    title, page = text_for(section["title"], "participant"), page_of(section, block_id)
+    back = _section_this_is_part_of(state, section) or {"title": title, "href": page_url(section["id"], page)}
+    return state, result, {"id": section["id"], "title": title, "page": page, "back": back}
 
 
 @login_required
@@ -770,9 +787,7 @@ def _listed_at(contact):
     the page of the coach checklist that chose them for a coach."""
     if contact.role != Contact.Role.COACH:
         return f"{reverse('invitations')}#person-{contact.pk}"
-    document = contact.response.version.document
-    section = section_of(document, contact.block_id)
-    return f"{page_url(section['id'], page_of(section, contact.block_id))}#block-{contact.block_id}"
+    return _block_address(contact.response.version.document, contact.block_id)
 
 
 def observe(request, token):
@@ -1095,13 +1110,16 @@ def _participant(user, first_version=Publication.current_version):
     if participant_response is None:
         version = first_version()
         sections = track_sections(version.document) if version else []
-        return ParticipantState(None, version, sections, {}, set(), {}, set())
+        return ParticipantState(None, version, sections, {}, complete_sections(sections, {}, ()), {}, set())
+    sections = track_sections(participant_response.version.document)
+    answers = participant_response.answers_with_contacts_and_visits()
     return ParticipantState(
         response=participant_response,
         version=participant_response.version,
-        sections=track_sections(participant_response.version.document),
-        answers=participant_response.answers_with_contacts_and_visits(),
-        completed=set(participant_response.completed_sections),
+        sections=sections,
+        answers=answers,
+        # ✨ A part of a section is complete once its gate passes, so locks and the hub count it without a completion.
+        completed=complete_sections(sections, answers, participant_response.completed_sections),
         moved_past=participant_response.moved_past_by_section(),
         fixed=set(participant_response.fixed_answers),
     )
@@ -1163,9 +1181,12 @@ def _section_page(state, section, page=1, asked_rows=0, issued=None):
     sort_pending = any(BLOCK_TYPES[block["type"]].scored and block["id"] not in answers for block in blocks)
     # ✨ A link shows the section it leads to exactly as the hub would: its title, its status and whether it is open.
     hub = hub_for(state.sections, answers, state.completed, moved_past=state.moved_past)
-    gate_checklist = checklist(section, answers, page=page)
+    links = _requirement_links(state, section)
+    gate_checklist = [(message, met, links.get(message)) for message, met in checklist(section, answers, page=page)]
     states = {other.id: other for other in hub.sections}
     return {
+        # ✨ Where "← Back" at the top leads: the section this is a part of, or else the hub.
+        "back": _section_this_is_part_of(state, section),
         "page": {
             "number": page,
             "is_last": is_last,
@@ -1183,6 +1204,7 @@ def _section_page(state, section, page=1, asked_rows=0, issued=None):
             "title": text_for(section["title"], "participant"),
             "estimate": states[section["id"]].estimate,
             "complete_label": text_for(section.get("complete_label", "Mark complete"), "participant"),
+            "is_part": "part_of" in section,
             "blocks": [
                 _block_for_participant(version.document, block, answers, fixed, states, asked_rows, issued)
                 for block in blocks
@@ -1194,9 +1216,37 @@ def _section_page(state, section, page=1, asked_rows=0, issued=None):
         # ✨ The way on, "Continue →" or completion. Going on from a page is refused on exactly these and `unmet`.
         "offers_way_on": activity_open and not sort_pending,
         # ✨ What the checklist marks unmet: on the last page, where completing checks it, the whole gate.
-        "unmet": [message for message, met in gate_checklist if not met],
+        "unmet": [message for message, met, _ in gate_checklist if not met],
         "checklist": gate_checklist,
     }
+
+
+def _section_this_is_part_of(state, section):
+    """✨ The section a part of a section belongs to, as its ways back name it: {"title", "href"}, at the page of it the
+    participant has reached. None for a section that is not a part, or whose section is outside the track or locked."""
+    parent_section = section_by_id(state.version.document, section["part_of"]) if "part_of" in section else None
+    reached = state.reached(parent_section) if parent_section else None
+    if reached is None:
+        return None
+    return {"title": text_for(parent_section["title"], "participant"), "href": page_url(parent_section["id"], reached)}
+
+
+def _requirement_links(state, section):
+    """✨ Where each of a section's requirements met on another page is met, by its message (ticket 41b): a coach's link
+    on the coach page, people's links on the invitations page. One whose page is not open yet is left out."""
+    document = state.version.document
+    links = {}
+    for clause in clauses_of(section):
+        if clause["type"] != "links_issued":
+            continue
+        block = next(block for block in blocks_of(document) if block["id"] == clause["block"])
+        if not _is_open(state, section_of(document, block["id"]), block):
+            continue
+        is_coach = block["type"] == "coach_checklist"
+        links[text_for(clause["message"], "participant")] = (
+            _block_address(document, block["id"]) if is_coach else reverse("invitations")
+        )
+    return links
 
 
 def _skip_label(section, page, answers):

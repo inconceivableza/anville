@@ -1,10 +1,11 @@
-{% load navigation section_pages %}
+{% load navigation %}
 {% comment %}
   ✨ The header of every participant page (ticket 41a): the pathway's name, leading to the hub; the sidebar; and "Sign
   out", allauth's own, a POST so no page loaded ahead of time signs anyone out, leading to the homepage.
 
   The sidebar is a <details>, so it opens and closes without JavaScript. Its sections are the hub's, with the same
-  statuses and locks: a locked section is named but not linked, as on the hub. The site can switch it off
+  statuses and locks: a locked section is named but not linked, as on the hub, and a part of a section is listed within
+  that section's entry (ticket 41b). The site can switch it off
   (ANVILLE_SIDEBAR), leaving the rest of the header.
 {% endcomment %}
 {% participant_nav as nav %}
@@ -15,15 +16,8 @@
       <summary class="btn btn-secondary btn-sm">Your pathway</summary>
       <nav class="pathway-nav" aria-label="Your pathway">
         <ol class="pathway-nav-sections">
-          {% for section in nav.sidebar.sections %}
-            <li class="pathway-nav-section{% if section.is_next %} is-next{% endif %}{% if section.id == nav.sidebar.current %} is-current{% endif %}">
-              <span class="status-chip status-{{ section.status }}">{{ section.label }}</span>
-              {% if section.is_locked %}
-                <span class="pathway-nav-title">{{ section.title }}</span>
-              {% else %}
-                <a class="pathway-nav-title" href="{% page_url section.id section.page %}"{% if section.id == nav.sidebar.current %} aria-current="page"{% endif %}>{{ section.title }}</a>
-              {% endif %}
-            </li>
+          {% for entry in nav.sidebar.outline %}
+            {% include "engine/pathway_nav_section.html" with section=entry.section parts=entry.parts current=nav.sidebar.current %}
           {% endfor %}
         </ol>
         <ul class="pathway-nav-links">

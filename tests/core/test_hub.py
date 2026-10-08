@@ -246,6 +246,27 @@ def test_a_link_holds_nothing_back_unless_its_author_asks_it_to():
     assert all_of_it is True
 
 
+# A part of a section
+
+
+def test_a_part_of_a_section_is_complete_once_its_gate_passes_with_nothing_stored():
+    """✨ The Strengths assessment within Section 1 (ticket 41b): it has no "Mark complete" of its own."""
+    part = {**STRENGTHS, "part_of": "gifts", "requires": []}
+    sections = [section("gifts", blocks=[link("to-strengths", "strengths")]), part]
+
+    assert statuses(sections)[1] == NOT_STARTED
+    assert statuses(sections, answers={"sort": "Sorted"}, completed=[])[1] == COMPLETE
+
+
+def test_a_part_is_locked_until_the_participant_reaches_its_sections_link_to_it():
+    """✨ As the prototype opens the Strengths assessment only from Section 1, once its passages are read (ticket 41b)."""
+    part = {**STRENGTHS, "part_of": "gifts"}
+    gifts = section("gifts", blocks=[reading("read"), link("to-strengths", "strengths"), long_text("a")])
+
+    assert statuses([gifts, part])[1] == LOCKED
+    assert statuses([gifts, part], answers={"read": True})[1] == NOT_STARTED
+
+
 # What the hub says about each section
 
 

@@ -72,6 +72,7 @@
   {% endif %}
 
   <div class="nav-buttons">
-    <a class="btn btn-secondary" href="{% url 'hub' %}">← Back to workbook</a>
+    {# ✨ The prototype's "← Back to workbook" meant its hub; "the Workbook" is now a section of its own (ticket 41b). #}
+    <a class="btn btn-secondary" href="{% url 'hub' %}">← Back to the hub</a>
   </div>
 {% endblock content %}

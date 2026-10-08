@@ -177,13 +177,13 @@ def test_a_participant_completes_a_section_once_its_gate_passes(open_calling):
 
 
 @pytest.mark.django_db
-def test_completing_a_section_leads_on_to_the_next_step(signed_in_client, load_pathway):  # noqa: F811
-    """✨ As the prototype moves from one screen to the next, rather than back to the hub each time."""
+def test_completing_a_section_onboarding_included_leads_back_to_the_hub(signed_in_client, load_pathway):  # noqa: F811
+    """✨ As the prototype's `completePillar` goes to the hub, which points at the next step (ticket 41b)."""
     load_pathway(pathway_document())
 
     response = signed_in_client.post("/sections/onboarding/complete/")
 
-    assert (response.status_code, response.url) == (303, CALLING)
+    assert (response.status_code, response.url) == (303, "/hub/")
 
 
 @pytest.mark.django_db

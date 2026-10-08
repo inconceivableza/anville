@@ -172,6 +172,7 @@
         "id": "strengths",
         "title": "Strengths assessment",
         "requires": ["onboarding"],
+        "part_of": "designed",
         "blocks": [{ "id": "strengths-sort", "type": "sort_assessment" }],
         "gate": {
           "clauses": [

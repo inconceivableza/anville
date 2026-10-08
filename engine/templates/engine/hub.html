@@ -29,20 +29,10 @@
       <p class="progress">{{ hub.answered }} of {{ hub.total }} answered</p>
     {% endif %}
 
+    {# ✨ A part of a section, such as the Strengths assessment, is listed within that section's entry (ticket 41b). #}
     <ol class="hub-sections">
-      {% for section in hub.sections %}
-        <li class="hub-section{% if section.is_next %} is-next{% endif %}">
-          <span class="status-chip status-{{ section.status }}">{{ section.label }}</span>
-          {% if section.is_locked %}
-            <span class="hub-section-title">{{ section.title }}</span>
-          {% else %}
-            <a class="hub-section-title" href="{% page_url section.id section.page %}">{{ section.title }}</a>
-          {% endif %}
-          {% if section.estimate %}<span class="time-estimate">{{ section.estimate }}</span>{% endif %}
-          {% if section.is_locked %}
-            <span class="hub-section-note">Complete what comes before this to open it.</span>
-          {% endif %}
-        </li>
+      {% for entry in hub.outline %}
+        {% include "engine/hub_section.html" with section=entry.section parts=entry.parts %}
       {% endfor %}
     </ol>
 

@@ -29,7 +29,8 @@ LABELS = {
 class SectionState(NamedTuple):
     """✨ One section as the hub sees it. `is_next` marks the one section the hub points the participant at.
     `estimate` is the authored time it takes, or None once the section has been begun. `page` is the page of it
-    the participant has reached, which is where the hub leads."""
+    the participant has reached, which is where the hub leads. `part_of` is the section it is a part of, if any.
+    `lock_note` says, while it is locked, what opens it."""
 
     id: str
     title: str
@@ -38,10 +39,19 @@ class SectionState(NamedTuple):
     is_next: bool = False
     estimate: str | None = None
     page: int = 1
+    part_of: str | None = None
+    lock_note: str | None = None
 
     @property
     def is_locked(self):
         return self.status == LOCKED
+
+
+class OutlineEntry(NamedTuple):
+    """✨ One section as the hub and the sidebar list it, with the parts of it listed under it (ticket 41b)."""
+
+    section: SectionState
+    parts: tuple
 
 
 class Hub(NamedTuple):
@@ -51,6 +61,16 @@ class Hub(NamedTuple):
     next_step: SectionState | None
     answered: int
     total: int
+
+    def outline(self):
+        """✨ The sections as the hub and the sidebar list them, as `OutlineEntry`s, each with the parts listed under it.
+        A part of a section outside the track is listed on its own."""
+        listed = {state.id for state in self.sections if state.part_of is None}
+        return [
+            OutlineEntry(state, tuple(part for part in self.sections if part.part_of == state.id))
+            for state in self.sections
+            if state.part_of not in listed
+        ]
 
 
 def track_sections(document):
@@ -123,20 +143,83 @@ def block_ids_fixed_on_completion(section, answers):
     ]
 
 
-def is_locked(section, completed):
-    """✨ Whether a section is still shut, because a section it requires has not been completed.
+def is_locked(section, completed, answers=None, sections=(), moved_past=None):
+    """✨ Whether a section is still shut, because a section it requires has not been completed, or, for a part of a
+    section in the track's `sections`, because the participant has not yet reached that section's link to it.
 
     A section the participant has already completed is never shut again, whatever happens to the sections
     it required. Otherwise the hub would show it as complete, link to it, and bounce them back here.
     """
     if section["id"] in completed:
         return False
-    return not set(section.get("requires", [])) <= set(completed)
+    if not _requires_met(section, completed):
+        return True
+    return _waiting_on(section, completed, answers or {}, sections, moved_past or {}) is not None
+
+
+def _requires_met(section, completed):
+    """✨ Whether every section this one requires has been completed."""
+    return set(section.get("requires", [])) <= set(completed)
+
+
+class WaitingOn(NamedTuple):
+    """✨ What a part of a section waits on: that section, and the block in it holding the way to the part shut, if a
+    block does (None while that section is locked, or its page with the link not yet reached)."""
+
+    section: dict
+    holding: dict | None
+
+
+def _waiting_on(part, completed, answers, sections, moved_past):
+    """✨ What a part of a section is shut by until the participant reaches it from that section, as a `WaitingOn`, or
+    None once it is reached. The original prototype opens its Strengths assessment only from Section 1, once its
+    passages are read (ticket 41b). A part whose section has no link to it opens with that section; one whose section
+    is outside the track, such as the offline track's Strengths assessment without Section 1, by its own requirements
+    alone."""
+    parent = next((section for section in sections if section["id"] == part.get("part_of")), None)
+    if parent is None:
+        return None
+    if is_locked(parent, completed):
+        return WaitingOn(parent, None)
+    link = next(
+        (block for block in parent["blocks"] if block["type"] == "section_link" and block["section"] == part["id"]),
+        None,
+    )
+    if link is None:
+        return None
+    reached = page_reached(parent, moved_past, answers, sections)
+    blocks, all_open = open_blocks(parent, answers, sections, up_to_page=reached)
+    if link in blocks:
+        return None
+    return WaitingOn(parent, None if all_open else blocks[-1])
+
+
+def _lock_note(section, completed, answers, sections, moved_past, role):
+    """✨ What the hub says under a locked section: for a part waiting on its section, where it opens from and, while a
+    reading there is unconfirmed, what opens it; otherwise the engine's general note."""
+    waiting = _waiting_on(section, completed, answers, sections, moved_past)
+    if waiting is None or not _requires_met(section, completed):
+        return "Complete what comes before this to open it."
+    title = text_for(waiting.section["title"], role)
+    if waiting.holding is not None and BLOCK_TYPES[waiting.holding["type"]].opens_what_follows:
+        return f"Opens from {title}, once you've read the passages."
+    return f"Opens from {title}."
+
+
+def complete_sections(sections, answers, completed):
+    """✨ The sections that are complete: those the participant completed, and each part of a section whose gate passes.
+
+    A part has no completion of its own (ticket 41b), as the original prototype's Strengths assessment has none within
+    Section 1, so it is complete exactly when its gate passes, worked out here rather than stored.
+    """
+    parts_done = {section["id"] for section in sections if "part_of" in section and gate_passes(section, answers)}
+    return set(completed) | parts_done
 
 
 def hub_for(sections, answers, completed, role="participant", moved_past=None):
     """✨ A participant's hub over one track's sections. `moved_past` holds, by section, the pages moved past."""
     moved_past = moved_past or {}
+    completed = complete_sections(sections, answers, completed)
     states = [_state(section, answers, completed, role, moved_past, sections) for section in sections]
     next_step = next((state for state in states if state.status in (NOT_STARTED, IN_PROGRESS)), None)
     states = [state._replace(is_next=state is next_step) for state in states]
@@ -150,7 +233,7 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None):
 
 
 def _state(section, answers, completed, role, moved_past, sections):
-    status = _status(section, answers, completed)
+    status = _status(section, answers, completed, sections, moved_past)
     return SectionState(
         id=section["id"],
         title=text_for(section["title"], role),
@@ -158,6 +241,8 @@ def _state(section, answers, completed, role, moved_past, sections):
         label=LABELS[status],
         estimate=_estimate(section, status, role),
         page=page_reached(section, moved_past, answers, sections),
+        part_of=section.get("part_of"),
+        lock_note=_lock_note(section, completed, answers, sections, moved_past, role) if status == LOCKED else None,
     )
 
 
@@ -168,10 +253,10 @@ def _estimate(section, status, role):
     return text_for(section["estimate"], role)
 
 
-def _status(section, answers, completed):
+def _status(section, answers, completed, sections, moved_past):
     if section["id"] in completed:
         return COMPLETE  # ✨ completing is the participant's own act, so it outlasts any later change
-    if is_locked(section, completed):
+    if is_locked(section, completed, answers, sections, moved_past):
         return LOCKED
     if any(has_content(answers.get(block["id"])) for block in _interactive_blocks(section)):
         return IN_PROGRESS

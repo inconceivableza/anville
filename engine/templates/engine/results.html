@@ -2,11 +2,10 @@
 {% comment %}
   ✨ A participant's stored result, in the wording of the pathway version it was scored against.
 {% endcomment %}
-{% load section_pages %}
 {% block head_title %}{{ results.title }}{% endblock head_title %}
 
 {% block content %}
-  <p class="back-to-hub"><a href="{% page_url section.id section.page %}">← Back to {{ section.title }}</a></p>
+  <p class="back-to-hub"><a href="{{ section.back.href }}">← Back to {{ section.back.title }}</a></p>
   <h1>{{ results.title }}</h1>
 
   {% include "engine/results_body.html" %}

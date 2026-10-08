@@ -24,3 +24,8 @@
 
 - Rich text has no links or emphasis yet, and the workbook download above needs a link. Once rich text can carry one, two things the results page left out can come back: the prototype's "Want to go deeper?" block, with its outbound links to 5Q and Working Genius (`buildResults()`, after the disclaimer), and the bold on "Important:" at the start of the validity disclaimer, which is plain text in `presentation.disclaimer`
 - If the closing ratings' "require the sort to be answered" is a gate clause rather than a lock, it names a block in another section, which the linter refuses today. Ticket 09 meets the same rule for Section 1's gate and should settle it first
+
+**Carried from 41b**
+
+- [ ] The Strengths assessment is a part of Section 1 (`part_of`) and opens only once Section 1's reading is confirmed. In a track without Section 1 it opens by its own requirements alone; nothing tests that yet, since tracks do not exist. Add a journey test that the offline track opens it with onboarding
+- On the offline hub, with Section 1 absent, the Strengths assessment is listed on its own, and its results page and comparison lead back to its own page rather than to Section 1

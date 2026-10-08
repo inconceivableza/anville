@@ -278,6 +278,7 @@
         "title": "Strengths assessment",
         "estimate": "About 10 minutes",
         "requires": ["onboarding"],
+        "part_of": "designed",
         "blocks": [{ "id": "strengths-sort", "type": "sort_assessment" }],
         "gate": {
           "clauses": [

@@ -54,6 +54,10 @@ _Avoid_: v1, original version, baseline document.
 A top-level division of a pathway, presented to the participant as one unit of work.
 _Avoid_: pillar, chapter, step, module.
 
+**Part** (of a section):
+A section that belongs within another, as the Strengths assessment belongs within Section 1. It is listed under that section, has no completion of its own (it is complete once its gate passes), and leads back to that section.
+_Avoid_: subsection, child section.
+
 **Track**:
 A participant-chosen, ordered list of a pathway's sections with its own hub. A section may belong to more than one track, and a participant's answers persist when they switch.
 _Avoid_: journey, path, route.

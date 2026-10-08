@@ -1,0 +1,21 @@
+{% load section_pages %}
+{# ✨ One section's entry on the hub, with any `parts` of it listed within it (ticket 41b). A part is given no parts. #}
+<li class="hub-section{% if section.is_next %} is-next{% endif %}">
+  <span class="status-chip status-{{ section.status }}">{{ section.label }}</span>
+  {% if section.is_locked %}
+    <span class="hub-section-title">{{ section.title }}</span>
+  {% else %}
+    <a class="hub-section-title" href="{% page_url section.id section.page %}">{{ section.title }}</a>
+  {% endif %}
+  {% if section.estimate %}<span class="time-estimate">{{ section.estimate }}</span>{% endif %}
+  {% if section.is_locked %}
+    <span class="hub-section-note">{{ section.lock_note }}</span>
+  {% endif %}
+  {% if parts %}
+    <ol class="hub-parts">
+      {% for part in parts %}
+        {% include "engine/hub_section.html" with section=part parts=None %}
+      {% endfor %}
+    </ol>
+  {% endif %}
+</li>

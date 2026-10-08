@@ -27,6 +27,7 @@ from tests.journeys.test_whatever_you_do_faithful_port import (
     BASELINE_STATEMENTS,
     COMPLETE_THE_ASSESSMENT,
     COMPLETE_THE_REFLECTIONS,
+    SECTION_1,
     VIEW_THE_COMPARISON,
     add_people,
     answer,
@@ -534,6 +535,22 @@ def test_a_participant_with_no_coach_is_asked_for_their_coachs_link(participant)
 
     assert refused.status_code == 400
     assert gate_checklist(refused.content.decode())[SEND_THE_COACH] is False
+
+
+def gate_links(page):
+    """✨ The gate's messages that are links, as {message: where it leads}."""
+    linked = re.findall(r'<a [^>]*href="([^"]*)"[^>]*>\s*<span class="gate-message">(.*?)</span>', page, re.S)
+    return {message: href for href, message in linked}
+
+
+@pytest.mark.django_db
+def test_section_1s_unmet_links_lead_to_the_coach_page_and_the_invitations_page(participant):
+    """✨ Ticket 41b: Section 1 says what it is still waiting on, and leads there."""
+    client = through_section_1_without_inviting(participant)
+
+    page = client.get(SECTION_1).content.decode()
+
+    assert gate_links(page) == {SEND_THE_COACH: f"{COACH_PAGE}#block-coach", SEND_TWO: "/invitations/"}
 
 
 @pytest.mark.django_db

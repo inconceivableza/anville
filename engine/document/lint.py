@@ -16,6 +16,7 @@ def lint(document):
         *_duplicates(identifiers),
         *_duplicate_options(document),
         *_missing_sections(document, section_ids),
+        *_impossible_parts(document, section_ids),
         *_unknown_linked_sections(document, section_ids),
         *_links_holding_their_own_section(document),
         *_empty_pages(document),
@@ -86,6 +87,29 @@ def _missing_sections(document, section_ids):
         for r, required in enumerate(section.get("requires", [])):
             if required not in section_ids:
                 yield Problem(f"/content/sections/{s}/requires/{r}", f"There is no section '{required}' in this pathway.")
+
+
+def _impossible_parts(document, section_ids):
+    """✨ A section can be a part only of another section of the pathway, and only of one that is not a part itself, so
+    the hub lists it one level down and its ways back lead to a section with a completion of its own (ticket 41b). A
+    part needs a gate, since passing it is the only way a part is completed."""
+    parts = {section["id"] for section in document["content"]["sections"] if "part_of" in section}
+    for s, section in enumerate(document["content"]["sections"]):
+        part_of, path = section.get("part_of"), f"/content/sections/{s}/part_of"
+        if part_of is None:
+            continue
+        if part_of not in section_ids:
+            yield Problem(path, f"There is no section '{part_of}' in this pathway.")
+        elif part_of == section["id"]:
+            yield Problem(path, "A section cannot be a part of itself.")
+        elif part_of in parts:
+            yield Problem(path, f"Section '{part_of}' is itself a part of a section, so it cannot have parts.")
+        elif not clauses_of(section):
+            yield Problem(
+                path,
+                "A part of a section needs a gate: it is complete once its gate passes, so without one it would be "
+                "complete before it is begun.",
+            )
 
 
 def _unknown_linked_sections(document, section_ids):

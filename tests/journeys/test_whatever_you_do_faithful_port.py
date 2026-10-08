@@ -155,13 +155,13 @@ def test_going_back_to_select_asks_for_a_reason_again(participant):
 
 
 @pytest.mark.django_db
-def test_onboarding_ends_with_the_prototypes_continue_and_leads_on_to_section_1(participant):
-    """✨ The prototype's baseline button reads "Continue →" once all four are answered, and its first run
-    goes on into Section 1 rather than back to the hub."""
+def test_onboarding_ends_with_the_prototypes_continue_and_leads_to_the_hub(participant):
+    """✨ The prototype's baseline button reads "Continue →" once all four are answered. Its first run went on into
+    Section 1, but completing any section, onboarding included, now leads to the hub (ticket 41b)."""
     assert ">Continue →</button>" in participant.get("/sections/onboarding/").content.decode()
     answer_onboarding(participant)
 
-    assert complete(participant, "onboarding").url == "/sections/designed/"
+    assert complete(participant, "onboarding").url == "/hub/"
 
 
 @pytest.mark.django_db
@@ -429,42 +429,35 @@ def through_to_section_1s_activity(client):
 
 
 @pytest.mark.django_db
-def test_the_strengths_assessment_is_its_own_section_opened_by_onboarding_alone(participant):
+def test_the_strengths_assessment_is_its_own_section_opened_by_onboarding_and_section_1s_reading(participant):
     assert participant.get(STRENGTHS).status_code == 302
 
-    page = onboarded(participant).get(STRENGTHS).content.decode()
+    page = through_to_section_1s_activity(participant).get(STRENGTHS).content.decode()
 
     assert 'data-sort="sort-strengths-sort"' in page
 
 
 @pytest.mark.django_db
-def test_the_sort_can_be_done_before_section_1s_passages_are_read(participant):
-    """✨ The accepted cost of giving the sort a section of its own, so the offline track can use it alone."""
-    response = submit_the_sort(onboarded(participant))
+def test_the_sort_is_shut_until_section_1s_passages_are_read(participant):
+    """✨ As the prototype opens it only from Section 1 (ticket 41b), where ticket 09 had accepted it opening with
+    onboarding. A track without Section 1, such as the offline one, still opens it by its own requirements."""
+    client = onboarded(participant)
 
-    assert (response.status_code, response.url) == (303, "/results/strengths-sort/")
-    assert "gifts-reading" not in Response.objects.get().answers
+    shut = client.get(STRENGTHS)
+    assert (shut.status_code, shut.get("Location")) == (302, "/hub/")
+    assert submit_the_sort(client).status_code == 403
+    assert "strengths-sort" not in Response.objects.get().answers
 
 
 @pytest.mark.django_db
 def test_a_finished_sort_leads_to_its_results_and_offers_no_retake(participant):
-    client = onboarded(participant)
+    client = through_to_section_1s_activity(participant)
     submit_the_sort(client)
 
     page = client.get(STRENGTHS).content.decode()
 
     assert 'href="/results/strengths-sort/"' in page
     assert "data-sort=" not in page
-
-
-@pytest.mark.django_db
-def test_the_strengths_assessment_is_completed_only_once_the_sort_is_in(participant):
-    client = onboarded(participant)
-
-    assert complete(client, "strengths").status_code == 400
-
-    submit_the_sort(client)
-    assert complete(client, "strengths").status_code == 303
 
 
 @pytest.mark.django_db
@@ -535,9 +528,8 @@ def test_section_1s_reflection_box_carries_the_prototypes_ghost_text(participant
 def test_the_link_in_section_1_shows_how_far_the_strengths_assessment_has_got(participant):
     client = through_to_section_1s_activity(participant)
     submit_the_sort(client)
-    complete(client, "strengths")
 
-    assert "status-chip status-complete" in client.get(SECTION_1).content.decode()
+    assert "status-chip status-complete" in main_of(client.get(SECTION_1).content.decode())
 
 
 @pytest.mark.django_db

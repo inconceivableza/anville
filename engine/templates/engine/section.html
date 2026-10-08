@@ -10,7 +10,11 @@
 {% block head_title %}{{ section.title }}{% endblock head_title %}
 
 {% block content %}
-  <p class="back-to-hub"><a href="{% url 'hub' %}">← Back to the hub</a></p>
+  {% if back %}
+    <p class="back-to-hub"><a href="{{ back.href }}">← Back to {{ back.title }}</a></p>
+  {% else %}
+    <p class="back-to-hub"><a href="{% url 'hub' %}">← Back to the hub</a></p>
+  {% endif %}
   <h1>{{ section.title }}</h1>
   {# ✨ The lead-ins are the engine's wording, so the section's figure and an activity's just beneath it read apart. #}
   {% if section.estimate %}<p class="time-estimate">Whole section: {{ section.estimate }}</p>{% endif %}

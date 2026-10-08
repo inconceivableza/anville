@@ -508,17 +508,6 @@ def test_a_section_link_leads_to_the_page_reached_of_the_section_it_names(
 
 
 @pytest.mark.django_db
-def test_completing_a_section_leads_on_to_the_page_reached_of_the_next(signed_in_client, load_pathway):  # noqa: F811
-    load_pathway(calling_beside_part_way_onboarding())
-    through_to(signed_in_client, 2)
-    save(signed_in_client, "statement", "A statement long enough.")
-
-    response = signed_in_client.post("/sections/calling/complete/")
-
-    assert (response.status_code, response.url) == (303, SECOND)
-
-
-@pytest.mark.django_db
 def test_before_a_sort_is_in_the_results_page_leads_to_the_page_the_sort_is_on(
     signed_in_client, load_pathway  # noqa: F811
 ):

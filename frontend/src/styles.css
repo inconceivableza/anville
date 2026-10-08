@@ -195,7 +195,8 @@ body {
   list-style: none;
 }
 
-.pathway-nav-section {
+/* ✨ The highlight is on an entry's own row, so a section's parts listed within it are not highlighted with it */
+.pathway-nav-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -205,13 +206,19 @@ body {
   border-radius: 0 10px 10px 0;
 }
 
-.pathway-nav-section.is-next {
+.pathway-nav-section.is-next > .pathway-nav-row {
   border-left-color: var(--gold-light);
 }
 
-.pathway-nav-section.is-current {
+.pathway-nav-section.is-current > .pathway-nav-row {
   background: var(--gold-pale);
   border-left-color: var(--gold);
+}
+
+/* ✨ A part of a section, indented within that section's entry (ticket 41b) */
+.pathway-nav-parts {
+  list-style: none;
+  padding-left: 32px;
 }
 
 .pathway-nav-title {
@@ -371,6 +378,24 @@ a.hub-section-title:hover {
   flex-basis: 100%;
   font-size: 13px;
   color: var(--ink-muted);
+}
+
+/* ✨ A part of a section (the Strengths assessment within Section 1), on a line of its own within that section's card,
+   indented and quieter than a section of its own (ticket 41b) */
+.hub-parts {
+  flex-basis: 100%;
+  list-style: none;
+  padding-left: 24px;
+}
+
+.hub-parts .hub-section {
+  padding: 12px 16px;
+  margin-bottom: 0;
+  background: var(--cream);
+}
+
+.hub-parts .hub-section-title {
+  font-size: 16px;
 }
 
 /* An authored "About 15 minutes": beside a hub entry's title, under a section's heading, above an activity */

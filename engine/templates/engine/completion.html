@@ -26,6 +26,8 @@
       {% if refused %}
         <p class="gate-refused">This page is not finished yet.</p>
       {% endif %}
+    {% elif section.is_part %}
+      {# ✨ A part of a section is complete once its gate passes, so it has no completion of its own (ticket 41b). #}
     {% elif is_complete %}
       {% if holds_fixed_answers %}
         <p class="completion-done">You marked this section complete. Ratings fixed when you completed this section can no longer be changed.</p>
