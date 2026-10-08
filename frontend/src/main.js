@@ -121,6 +121,20 @@ document.addEventListener("click", (event) => {
   addContactRow(button);
 });
 
+// ✨ Each coach checklist screen takes the last one's place in the page, which leaves the window where it was: after
+// "Continue →" from the short intro, part way down the long questions. As a new page would, bring a screen whose top
+// has gone out of view back to it, and move the focus to its heading, so a screen reader says where they now are
+// (ticket 41e). htmx fires this on the new screen itself.
+document.addEventListener("htmx:afterSettle", (event) => {
+  const checklist = event.target;
+  if (!checklist.classList?.contains("coach-checklist")) return;
+  if (checklist.getBoundingClientRect().top < 0) checklist.scrollIntoView({ block: "start" });
+  const heading = checklist.querySelector("h2");
+  if (!heading || checklist.contains(document.activeElement)) return;
+  heading.tabIndex = -1;
+  heading.focus({ preventScroll: true });
+});
+
 // ✨ Copy an issued observer link, as the prototype's Copy button does. Without JavaScript the field is still there
 // to select and copy by hand.
 document.addEventListener("click", async (event) => {

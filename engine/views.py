@@ -550,13 +550,16 @@ def _saved(request, state, section, block_id, contact_ids=None):
     """✨ What a stored answer sends back: with htmx, the status and its page's gate; without, its page again.
 
     A contact list's "add another" without JavaScript saves the list and asks for one more row than it showed,
-    which the page then shows.
+    which the page then shows. A block that opens what follows (a reading) lands at its confirmation, with what it
+    opened beneath, rather than back at its top above what was just read (ticket 41e).
     """
     page = page_of(section, block_id)
     if request.headers.get("HX-Request") == "true":
         shown = _section_page(state, section, page)
         return render(request, "engine/save_result.html", {**shown, "contact_ids": contact_ids})
-    return _see_other(f"{page_url(section['id'], page)}{_rows_query(request.POST)}#block-{block_id}")
+    block = next(block for block in section["blocks"] if block["id"] == block_id)
+    at = f"block-{block_id}-confirmed" if BLOCK_TYPES[block["type"]].opens_what_follows else f"block-{block_id}"
+    return _see_other(f"{page_url(section['id'], page)}{_rows_query(request.POST)}#{at}")
 
 
 def _rows_query(posted):

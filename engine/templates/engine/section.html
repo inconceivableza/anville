@@ -1,5 +1,4 @@
 {% extends "engine/participant.html" %}
-{% load section_pages %}
 {% comment %}
   ✨ One section. Only the blocks the server decided to send are here: an activity behind a scripture reading
   the participant has not confirmed is absent from the page, not hidden in it, and will not take an answer.
@@ -27,14 +26,6 @@
     {% include block.template %}
   {% endfor %}
 
+  {# ✨ With the way back to the page before, beside the way on (ticket 41e). #}
   {% include "engine/completion.html" %}
-
-  {% comment %}
-    ✨ As the prototype's screens go back with "← Back"; a page already gone through stays open to return to. Worded
-    "← Previous page" so it reads apart from "← Back to the hub" at the top (ticket 41e).
-  {% endcomment %}
-  {% if page.number > 1 %}
-    {% page_url section.id page.number|add:"-1" as previous %}
-    <p class="page-back"><a class="btn btn-secondary" href="{{ previous }}">← Previous page</a></p>
-  {% endif %}
 {% endblock content %}

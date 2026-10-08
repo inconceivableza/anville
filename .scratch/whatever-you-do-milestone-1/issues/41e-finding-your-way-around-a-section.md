@@ -4,7 +4,7 @@
 
 **Blocked by:** 41b (The flow back to the hub and Section 1)
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** not yet decided
 
@@ -13,7 +13,7 @@
 - [x] A completed section opens at its first page from the hub and the sidebar; a section in progress still opens at the page reached
 - [x] On a section split into pages, the way to the previous page reads "← Previous page", apart from "← Back to the hub", and each page says which it is ("Page 2 of 3")
 - [x] The invitations page has "← Back to the hub" at its top, as section pages do, and no participant page is without a way back
-- [ ] Going on to a page, going back to one, and confirming a reading each land where the participant expects, not jumping to the top or part way down
+- [x] Going on to a page, going back to one, and confirming a reading each land where the participant expects, not jumping to the top or part way down
 
 **Context**
 

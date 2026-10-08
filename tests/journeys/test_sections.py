@@ -488,12 +488,16 @@ def test_the_reading_itself_can_always_be_answered_since_it_is_what_opens_the_re
 
 
 @pytest.mark.django_db
-def test_confirming_a_reading_sends_the_participant_back_to_its_own_section(open_calling, document_with_a_reading):
+def test_confirming_a_reading_lands_at_its_confirmation_with_the_activity_it_opened_beneath(
+    open_calling, document_with_a_reading
+):
+    """✨ Not back at the reading's top, above the passages just read (ticket 41e)."""
     client = open_calling(document_with_a_reading)
 
     response = client.post("/answers/reading/", {"value": "true", "version": _version_id()})
 
-    assert (response.status_code, response.url) == (303, f"{CALLING}#block-reading")
+    assert (response.status_code, response.url) == (303, f"{CALLING}#block-reading-confirmed")
+    assert 'id="block-reading-confirmed"' in client.get(CALLING).content.decode()
 
 
 # A link to another section

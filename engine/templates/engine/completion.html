@@ -8,12 +8,16 @@
   The wrapper is always here, even with nothing in it, so the autosave always has something to swap into.
   It is the gate's own state that is refreshed, never the blocks: only a scripture reading opens more of a
   section, and confirming one reloads the page, so a save can never reveal a block that was not already here.
+
+  "← Previous page" sits beside the way on, as "Back" sits beside "Continue →" in the coach checklist, and on its
+  own where there is no way on beside it (ticket 41e).
 {% endcomment %}
 <div id="completion"{% if offers_way_on %} class="completion"{% endif %}{% if out_of_band %} hx-swap-oob="true"{% endif %}>
-  {% if offers_way_on %}
-    {% if not page.is_last %}
-      {# ✨ Every page but the last goes on to the next, held by that page's own requirements, listed as below. While #}
-      {# ✨ nothing on it is answered, a break with a skip label words it as a way past, and it steps back from primary. #}
+  {% if offers_way_on and not page.is_last %}
+    {# ✨ Every page but the last goes on to the next, held by that page's own requirements, listed as below. While #}
+    {# ✨ nothing on it is answered, a break with a skip label words it as a way past, and it steps back from primary. #}
+    <div class="way-on">
+      {% include "engine/previous_page.html" %}
       <form method="post" action="{% url 'move_past_page' section.id page.number %}">
         {% csrf_token %}
         {% if page.skip_label %}
@@ -22,13 +26,25 @@
           <button type="submit" class="btn btn-primary btn-full"{% if unmet %} disabled{% endif %}>{{ page.continue_label }}</button>
         {% endif %}
       </form>
-      {% include "engine/gate_checklist.html" %}
-      {% if refused %}
-        <p class="gate-refused">This page is not finished yet.</p>
-      {% endif %}
-    {% elif section.is_part %}
-      {# ✨ A part of a section is complete once its gate passes, so it has no completion of its own (ticket 41b). #}
-    {% elif is_complete %}
+    </div>
+    {% include "engine/gate_checklist.html" %}
+    {% if refused %}
+      <p class="gate-refused">This page is not finished yet.</p>
+    {% endif %}
+  {% elif offers_way_on and not section.is_part and not is_complete %}
+    <div class="way-on">
+      {% include "engine/previous_page.html" %}
+      <form method="post" action="{% url 'complete_section' section.id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary btn-full"{% if unmet %} disabled{% endif %}>{{ section.complete_label }}</button>
+      </form>
+    </div>
+    {% include "engine/gate_checklist.html" %}
+    {% if refused %}
+      <p class="gate-refused">This section was not marked complete: it is not finished yet.</p>
+    {% endif %}
+  {% else %}
+    {% if offers_way_on and is_complete and not section.is_part %}
       {% if holds_fixed_answers %}
         <p class="completion-done">You marked this section complete. Ratings fixed when you completed this section can no longer be changed.</p>
       {% else %}
@@ -38,15 +54,8 @@
         {% csrf_token %}
         <button type="submit" class="btn btn-secondary btn-sm">Mark as not complete</button>
       </form>
-    {% else %}
-      <form method="post" action="{% url 'complete_section' section.id %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-primary btn-full"{% if unmet %} disabled{% endif %}>{{ section.complete_label }}</button>
-      </form>
-      {% include "engine/gate_checklist.html" %}
-      {% if refused %}
-        <p class="gate-refused">This section was not marked complete: it is not finished yet.</p>
-      {% endif %}
     {% endif %}
+    {# ✨ A part of a section is complete once its gate passes, so it has no completion of its own (ticket 41b). #}
+    {% if page.number > 1 %}<div class="way-on">{% include "engine/previous_page.html" %}</div>{% endif %}
   {% endif %}
 </div>

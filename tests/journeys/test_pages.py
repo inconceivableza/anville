@@ -448,7 +448,8 @@ def test_a_locked_sections_pages_stay_locked(participant):
 
 @pytest.mark.django_db
 def test_each_page_says_which_it_is_and_after_the_first_leads_to_the_previous_page(participant):
-    """✨ "← Previous page", apart from "← Back to the hub" at the top (ticket 41e)."""
+    """✨ "← Previous page", apart from "← Back to the hub" at the top (ticket 41e). It lands at the earlier page's
+    way on, the "Continue →" pressed to leave it, as the browser's own Back would, not at that page's top."""
     through_to(participant, 3)
 
     assert [which_page_on(shown(participant, page)) for page in (FIRST, SECOND, THIRD)] == [
@@ -457,8 +458,8 @@ def test_each_page_says_which_it_is_and_after_the_first_leads_to_the_previous_pa
         "Page 3 of 3",
     ]
     assert previous_page(shown(participant)) is None
-    assert previous_page(shown(participant, SECOND)) == FIRST
-    assert previous_page(shown(participant, THIRD)) == SECOND
+    assert previous_page(shown(participant, SECOND)) == f"{FIRST}#completion"
+    assert previous_page(shown(participant, THIRD)) == f"{SECOND}#completion"
 
 
 @pytest.mark.django_db
