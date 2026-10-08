@@ -353,6 +353,7 @@ So FaithTech sees, on staging: the homepage, onboarding with a display name, Sec
   4. Does it assert authored wording or layout? Cut it: the pathway document and the drift test own the copy, and layout is a hand check in `docs/manual-checks.md`.
   5. Would it break in a refactor that changes no behaviour? Cut it or rewrite it.
 - A ticket's list is roughly one or two tests per criterion plus its refusals, about 5–10 tests, not 50. Rank the list by risk so the developer can cut from the bottom. If a logic or privacy bug reaches a hand check or a demo that a test would have caught, add that test and loosen the cap for that kind of behaviour; if nothing gets through for a few tickets, the cap is about right. The journey tests so far repeat engine behaviour per block and assert wording (the coach checklist alone has 52 tests); folding them into engine tests is tidying without a ticket.
+- A change to authored content alone (a figure, a word) needs no red–green: edit the pathway, and any record of the copy in this spec, and check it by hand (41c follow-up).
 - The list below is the pool a ticket's list is drawn from, not a list to copy whole. Journey tests cover, at least:
   - direct navigation to a locked section is refused by the server;
   - each prototype gate is reproduced with a message per failing clause;

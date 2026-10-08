@@ -195,32 +195,32 @@ def test_all_five_end_ratings_are_fixed_once_the_letter_is_sent(participant):
 
 
 def test_every_section_but_section_1_says_how_long_it_takes():
-    """✨ Taken from the workbook, then the homepage, then the original prototype, then what seems reasonable, as the
-    spec's time estimates say: the Workbook says what the booklet itself says, and the Strengths assessment what the
-    original prototype says of its sort. Section 1 has none: it cannot be finished without the sort, so its own few
-    minutes would read as less than the Strengths assessment it leads to."""
+    """✨ Which sections say how long they take, not the figures, which are the pathway's and are listed with their
+    sources in the spec's time estimates. Section 1 has none: it cannot be finished without the sort, so its own few
+    minutes would read as less than the Strengths assessment it leads to. None is a placeholder ("? min")."""
     sections = the_pathway()["content"]["sections"]
 
-    assert {section["id"]: section.get("estimate") for section in sections} == {
-        "onboarding": "About 10 minutes",
-        "designed": None,
-        "strengths": "About 10 minutes",
-        "workbook": "Three or four sittings of half an hour",
-        "letter": "About 15 minutes",
-    }
+    assert [section["id"] for section in sections if section.get("estimate")] == [
+        "onboarding",
+        "strengths",
+        "workbook",
+        "letter",
+    ]
+    assert not any("?" in section.get("estimate", "") for section in sections)
 
 
 def test_the_letter_and_the_closing_ratings_each_say_how_long_they_take():
     """✨ The letter section is the only one with two activities, so each carries its own estimate, on the
     block that starts it. A scripture reading leads into an activity rather than being one (the spec)."""
-    estimated = [
-        (section["id"], block["id"], block["estimate"])
+    estimated = {
+        (section["id"], block["id"]): block["estimate"]
         for section in the_pathway()["content"]["sections"]
         for block in section["blocks"]
         if block.get("estimate")
-    ]
+    }
 
-    assert estimated == [("letter", "lt-task", "About 10 minutes"), ("letter", "pl-intro", "About 5 minutes")]
+    assert list(estimated) == [("letter", "lt-task"), ("letter", "pl-intro")]
+    assert not any("?" in estimate for estimate in estimated.values())
 
 
 COACH_PROTOTYPE = (DOCUMENT.parents[1] / "Prototypes for reference" / "coach-selection-prototype.html").read_text(
