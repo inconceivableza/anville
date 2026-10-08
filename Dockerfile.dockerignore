@@ -1,0 +1,20 @@
+# ✨ The image is public. Nothing reaches the build unless it is named here, so a .env, a database dump or
+# a private pathway left in the working directory cannot end up in it.
+#
+# Named after the Dockerfile, so that it applies to that build alone. A plain .dockerignore here would also
+# hide the devcontainer's own files from the devcontainer's build, whose context is this same directory.
+*
+
+!requirements.txt
+!manage.py
+!gunicorn.conf.py
+!config/
+!access/
+!engine/
+!pathways/
+!frontend/
+
+frontend/node_modules/
+frontend/dist/
+**/__pycache__/
+**/*.pyc

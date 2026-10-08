@@ -14,6 +14,14 @@ def fresh_rate_limits():
     cache.clear()
 
 
+@pytest.fixture(autouse=True)
+def static_files_found_only_when_asked_for(settings):
+    """✨ WhiteNoise indexes everything collectstatic gathered each time Django's request handling is built, which is
+    once for every test client. With a staticfiles/ directory left by trying the deployed set-up, that made the suite
+    four times slower. This is WhiteNoise's development mode, which looks a file up only when it is requested."""
+    settings.WHITENOISE_AUTOREFRESH = True
+
+
 @pytest.fixture
 def load_pathway(tmp_path):
     """✨ Write a pathway document to a file and load it the way an author does; returns the command's output."""

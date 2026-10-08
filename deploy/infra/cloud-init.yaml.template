@@ -1,0 +1,101 @@
+#cloud-config
+# ✨ First boot of an Anville host (docs/server-approach.md, section 9). hcloud-create.sh fills in the
+# __PLACEHOLDERS__ and passes the result to Hetzner as user data. A host is never edited by hand afterwards:
+# change this file and make a new host.
+
+# The host's canonical name, which is also its server's name in Hetzner. Its A record is made by hand.
+hostname: __SHORT_NAME__
+fqdn: __HOST__
+prefer_fqdn_over_hostname: false
+manage_etc_hosts: true
+
+users:
+  # The deploy workflow's account. Its key can do one thing, forward a port to the k3s API on this host:
+  # no shell, no sudo, no other forwarding.
+  - name: deploy
+    gecos: Deploy workflow
+    shell: /usr/sbin/nologin
+    lock_passwd: true
+    ssh_authorized_keys:
+      - 'restrict,port-forwarding,permitopen="127.0.0.1:6443" __DEPLOY_SSH_PUBLIC_KEY__'
+  # The operator's account.
+  - name: __ADMIN_USER__
+    gecos: Operator
+    shell: /bin/bash
+    groups: [sudo]
+    sudo: "ALL=(ALL) NOPASSWD:ALL"
+    lock_passwd: true
+    ssh_authorized_keys:
+      - '__ADMIN_SSH_PUBLIC_KEY__'
+
+disable_root: true
+ssh_pwauth: false
+
+package_update: true
+package_upgrade: true
+packages:
+  - ca-certificates
+  - curl
+  - ufw
+  - unattended-upgrades
+
+swap:
+  filename: /swapfile
+  size: 2G
+
+write_files:
+  - path: /etc/sysctl.d/90-anville.conf
+    content: |
+      vm.swappiness=10
+
+  # Read before the image's own files, and sshd keeps the first value it meets.
+  - path: /etc/ssh/sshd_config.d/01-anville.conf
+    content: |
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PermitRootLogin no
+      AllowUsers deploy __ADMIN_USER__
+
+  - path: /etc/apt/apt.conf.d/20auto-upgrades
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+
+  # Security updates that need a restart get one, at a quiet hour (UTC) after the nightly database dump.
+  - path: /etc/apt/apt.conf.d/52anville-unattended-upgrades
+    content: |
+      Unattended-Upgrade::Automatic-Reboot "true";
+      Unattended-Upgrade::Automatic-Reboot-Time "03:30";
+
+  # The tier label is what stops a production environment being deployed to a staging host, or the reverse,
+  # and the host label what stops an environment being deployed to a host other than the one its values name.
+  # The kubeconfig stays root's own: the deploy workflow holds a copy as a secret and reaches the API
+  # through its tunnel.
+  - path: /etc/rancher/k3s/config.yaml
+    content: |
+      write-kubeconfig-mode: "0600"
+      secrets-encryption: true
+      node-label:
+        - "anville-tier=__TIER__"
+        - "anville-host=__HOST__"
+
+runcmd:
+  - sysctl --system
+  - systemctl restart ssh
+
+  # 22, 80 and 443 only, as in the Hetzner Cloud Firewall in front. 6443, the k3s API, is deliberately absent.
+  # The two networks are k3s's pods and services, and routed traffic is what reaches a pod from 80 and 443.
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw default allow routed
+  - ufw allow 22/tcp
+  - ufw allow 80/tcp
+  - ufw allow 443/tcp
+  - ufw allow from 10.42.0.0/16
+  - ufw allow from 10.43.0.0/16
+  - ufw --force enable
+
+  # k3s in server mode, with its bundled Traefik. It brings kubectl; Helm runs in the deploy workflow.
+  - curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=__K3S_CHANNEL__ sh -
+
+final_message: "__HOST__, an Anville __TIER__ host, ready after $UPTIME seconds"

@@ -1327,6 +1327,35 @@ form + .way-on,
   margin-bottom: 4px;
 }
 
+/* ✨ A demo deployment's notice, on the homepage and the account pages (ticket 26): amber, as a caution is
+   elsewhere, so it does not read as part of the pathway's own content. */
+
+.demo-notice {
+  background: var(--warn-pale);
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  margin-bottom: 20px;
+  font-size: 15px;
+  color: var(--ink);
+  line-height: 1.5;
+  text-align: left;
+}
+
+.demo-notice strong {
+  color: var(--warn);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.hp-hero-inner .demo-notice {
+  max-width: 520px;
+  margin: 32px auto 0;
+}
+
 /* Scripture reading: the passages, the note beneath them, and the confirmation that opens the activity */
 
 .scripture {

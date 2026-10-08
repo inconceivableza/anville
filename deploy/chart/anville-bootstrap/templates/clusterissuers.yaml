@@ -1,0 +1,30 @@
+{{- /*
+✨ Two issuers, both HTTP-01 through the host's ingress.
+
+"staging" in an issuer's name is Let's Encrypt's test service, which issues certificates no browser trusts
+and has generous limits. It has nothing to do with an environment's tier: every real environment, staging
+tier included, uses letsencrypt-prod.
+*/ -}}
+{{- $issuers := dict "letsencrypt-staging" "https://acme-staging-v02.api.letsencrypt.org/directory" "letsencrypt-prod" "https://acme-v02.api.letsencrypt.org/directory" -}}
+{{- range $name, $server := $issuers }}
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ $name }}
+  labels:
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/part-of: anville
+spec:
+  acme:
+    server: {{ $server }}
+    {{- with $.Values.acmeEmail }}
+    email: {{ . | quote }}
+    {{- end }}
+    privateKeySecretRef:
+      name: {{ $name }}-account-key
+    solvers:
+      - http01:
+          ingress:
+            ingressClassName: {{ $.Values.ingressClassName }}
+{{- end }}

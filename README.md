@@ -46,6 +46,62 @@ Password reset is switched off until email delivery exists (ticket 28a), so sign
 
 After changing anything in `frontend/src/`, run `npm run build` again in `frontend/`.
 
+## Running in a devcontainer
+
+The setup above assumes you are on the machine running Docker. Inside a devcontainer you usually are not: there is no Docker client, so `docker compose up -d` stays a host command, and a Postgres published on the host's loopback is not reachable from the container. The devcontainer image also has to provide Python 3.13 itself, and the frontend build still has to be run somewhere.
+
+Postgres can live on either side. Pick one.
+
+### Postgres inside the devcontainer
+
+Install PostgreSQL 17 in the devcontainer image and run it there. `compose.yaml` goes unused and `.env` needs no change, because from the container's point of view the database really is on `localhost:5432`. Everything sits in one place, at the cost of rebuilding the image when it changes, and the data lives and dies with the container.
+
+### Postgres from compose on the host
+
+Run `docker compose up -d` on the host as before, and give the `db` service a second network — the one the devcontainer itself runs on — so the two containers can talk to each other directly. The network name is particular to your machine, so this belongs in `compose.override.yaml`, which compose merges over `compose.yaml` automatically and which is gitignored:
+
+```yaml
+services:
+  db:
+    networks:
+      - default
+      - devcontainer        # whatever network your devcontainer is on
+
+networks:
+  devcontainer:
+    external: true
+```
+
+Both containers are then on the same user-defined Docker network, where Docker's embedded DNS resolves container names, and the devcontainer reaches the database by container name: compose names it after the project directory, so here `anville-db-1:5432`. List both networks: that list replaces the implicit one rather than adding to it, so leaving `default` out would cut the service off from the rest of the project. Keep the `127.0.0.1:5432` publication too if you still want to reach it from the host.
+
+This is worth preferring to a tunnel. The published `127.0.0.1:5432` is the *host's* loopback, which is not the container's, so connecting to `localhost:5432` from inside the devcontainer is simply refused. A shared network removes the problem rather than working around it. If you do tunnel instead, it has to listen *inside* the container and forward out to the host's 5432; a forward that listens on the host is the opposite direction and will fight compose for the port.
+
+### Settings in `.env`
+
+`.env` is a single file on both sides of the mount, so it cannot name the database twice. Leave it as the host's and override the one variable in the container's environment:
+
+```sh
+export DATABASE_URL=postgres://anville:anville@anville-db-1:5432/anville
+```
+
+`config/settings.py` reads `.env` through django-environ's `read_env()`, which does not overwrite anything already in the environment, so a real environment variable wins over the file. Setting it in the devcontainer's own configuration makes it stick across rebuilds. Nothing else in `.env` differs from the host.
+
+Take care that `DJANGO_SECRET_KEY` does not contain a `$`. Compose reads this same `.env` for its own variable substitution and will warn about, and blank out, anything that looks like `$name` — generate another key if yours trips it.
+
+### Reaching the development server from the host
+
+`runserver` binds to `127.0.0.1:8000`, the container's own loopback, which nothing outside the container can reach. Bind it to every interface instead:
+
+```sh
+python manage.py runserver 0.0.0.0:8000
+```
+
+Then forward port 8000 from the host into the container. Note this is the opposite direction to the database: here the listener belongs on the host and the traffic travels inward. Editors that attach to a devcontainer generally do this for you — look for their forwarded-ports list — and failing that any `ssh -L` style tunnel listening on the host and pointing at the container's port 8000 will serve.
+
+`DJANGO_ALLOWED_HOSTS` already lists `localhost`, so http://localhost:8000 is accepted. Reaching the site by any other name means adding that name to the list.
+
+One thing to watch if your editor forwards ports automatically: do not let it forward 5432. A listener on the host's 5432 stops compose from binding the port, and in the meantime connections to it are accepted and then hang rather than being refused, which is a slow thing to diagnose.
+
 ## Age and consent
 
 Sign-up asks for an "I am 18 or over" confirmation beside the enrolment code, and keeps neither: there is no date of birth anywhere (ADR 0004).
@@ -165,6 +221,45 @@ An observer's answers are kept as an `ObserverResponse` (an observer assessment 
 The observer's page runs the same sort widget in observer wording. It sends the observer assessment once, to `/observe/assessment/` by the cookie or to `/observe/<secret>/assessment/` from their own link; the participant's copy of the link is refused there as any wrong link is. The `ObserverResponse` keeps a hash of the claimed secret, prefixed so it never equals the invitation's, so it outlives the link and only the secret finds it again (ADR 0007, ADR 0009). A second send from the same secret is refused (409), and after sending the page only says thank you.
 
 To show the comparison without three real observers, `python manage.py seed_observers --observers 3` creates a fake participant, `seed-participant-<n>@example.com` with the password `information.` (`--password` sets another) and consent already given, with a self-assessment and self-result of their own and that many submitted test observers, their values the same on every run. Everything it creates is marked as test data on the server; it needs a published pathway with an assessment block.
+
+## Settings for a deployed environment
+
+Everything a deployed copy needs is read from the environment, so one build serves every deployment (ADR 0002). [docs/server-approach.md](docs/server-approach.md) describes how a deployment is run. Development needs none of these: left unset, each keeps the behaviour described above.
+
+| Variable | Unset | Set |
+|---|---|---|
+| `DJANGO_HTTPS` | No forwarded header is trusted and plain HTTP is served | `true` behind a proxy that ends TLS: its `X-Forwarded-Proto` is trusted, plain HTTP is redirected to HTTPS, and the session, CSRF and observer cookies are marked Secure. Never set it without such a proxy in front, or anyone can claim to be on HTTPS |
+| `DJANGO_HSTS_SECONDS` | No `Strict-Transport-Security` header | How long browsers should refuse plain HTTP. Only read when `DJANGO_HTTPS` is on |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | None | Further origins allowed to post forms, comma-separated. Not needed when the proxy passes the `Host` header on |
+| `DATABASE_CONN_MAX_AGE` | A database connection per request | Seconds to keep a connection for reuse |
+| `EMAIL_URL` | Email is fake: each message is printed in the server's output and nothing is delivered | The provider, as `smtp+tls://key:secret@host:587` |
+| `DEFAULT_FROM_EMAIL` | `webmaster@localhost` | The address messages come from |
+| `ANVILLE_EMAIL_DISCLAIMER` | Messages go as written | For a test system that can reach real mailboxes: every message has `[TEST]` put before its subject and this text at the top of its body, plain and HTML alike. The chart sets it on every staging environment |
+| `ANVILLE_DEMO_NOTICE` | Nothing is said | For a demo deployment: this text is shown on the homepage and on the account pages (sign up, sign in), saying it is a demo. The chart sets it on every staging environment |
+| `ANVILLE_COMMIT` | `unknown` | The commit the code was built from. The image sets it |
+
+`/healthz` answers `{"status": "ok", "commit": "…"}` when the database can be reached, and 503 when it cannot. It still wants a `Host` header that `DJANGO_ALLOWED_HOSTS` lists.
+
+With `DJANGO_DEBUG` off, errors are printed to the server's output with any observer's or coach's link redacted, since whoever holds such a link can answer as them.
+
+To serve the way a deployment does, gather the static files and start gunicorn, which reads `gunicorn.conf.py`:
+
+```sh
+python manage.py collectstatic --noinput
+gunicorn
+```
+
+gunicorn keeps no access log, for the same reason as the redaction. WhiteNoise serves the static files from `staticfiles/`, and tells browsers to keep Vite's hashed files for good.
+
+### The image
+
+The `Dockerfile` builds the one image every deployment runs: the frontend built by Vite, the static files gathered, and gunicorn started as a user with no privileges. `Dockerfile.dockerignore` admits only what the image needs, because the image is public. To run it against the compose database:
+
+```sh
+docker compose --profile app up --build
+```
+
+That migrates the database, then serves at http://localhost:8001, beside any `runserver` on 8000. It takes the secret key and enrolment code from `.env` and runs with `DJANGO_DEBUG` off. Plain `docker compose up -d` still starts only the database.
 
 ## Tests
 

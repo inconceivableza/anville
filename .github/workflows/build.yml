@@ -1,0 +1,156 @@
+# ✨ Tests, then the one image every environment runs (docs/server-approach.md, section 4).
+#
+# Every push is tested and has its image built. The image is pushed to GitHub Container Registry only for a
+# v* tag or a manual run, so an ordinary push to a branch publishes nothing.
+name: build
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  IMAGE: ghcr.io/inconceivableza/anville
+
+# Named, bash runs with -e and -o pipefail. GitHub's unnamed default has no pipefail.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: anville
+          POSTGRES_PASSWORD: anville
+          POSTGRES_DB: anville
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U anville -d anville"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      DJANGO_SECRET_KEY: only-for-tests
+      DATABASE_URL: postgres://anville:anville@localhost:5432/anville
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      # The tests read the built stylesheet and its manifest.
+      - name: Build the frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Install the requirements
+        run: pip install -r requirements-dev.txt
+
+      - name: Run the tests
+        run: pytest
+
+  # The charts and scripts a deploy uses, as far as they can be checked without a cluster. This deploys
+  # nothing: only deploy.yml deploys, and only when it is run by hand.
+  check-deploy-files:
+    name: Check the deploy files (deploys nothing)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: azure/setup-helm@v5
+        with:
+          version: v4.3.0
+
+      # The same shellcheck as deploy/README.md asks for, since versions differ in what they flag. Through
+      # setup-python, because the runner's own Python refuses packages installed outside a virtual environment.
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install shellcheck
+        run: pip install shellcheck-py==0.11.0.1
+
+      - name: Check the charts and scripts
+        run: deploy/check.sh
+
+  image:
+    needs: [test, check-deploy-files]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      PUSH: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v') }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Sign in to GitHub Container Registry
+        if: env.PUSH == 'true'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The commit is the tag a deploy pins; latest follows the newest pushed build; a v* tag is kept too.
+      - name: Name the image
+        id: name
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          {
+            echo "tags<<END"
+            echo "$IMAGE:$GITHUB_SHA"
+            echo "$IMAGE:latest"
+            if [ "$REF_TYPE" = "tag" ]; then
+              echo "$IMAGE:$REF_NAME"
+            fi
+            echo "END"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build the image, and push it for a tag or a manual run
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: ${{ env.PUSH == 'true' }}
+          tags: ${{ steps.name.outputs.tags }}
+          build-args: |
+            ANVILLE_COMMIT=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Report what was pushed
+        if: env.PUSH == 'true'
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          {
+            echo "Pushed \`$IMAGE:$GITHUB_SHA\`"
+            echo
+            echo "Digest: \`$DIGEST\`"
+          } >> "$GITHUB_STEP_SUMMARY"

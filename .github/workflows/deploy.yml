@@ -1,0 +1,132 @@
+# ✨ Deploy one environment (docs/server-approach.md, section 8). Run by hand: this is the only way an
+# environment changes. Promotion to production is this same workflow, run with the tag that staging tested.
+#
+# The steps that matter are scripts under deploy/, so that each can be run and tested away from here.
+name: deploy
+run-name: Deploy ${{ inputs.tag }} to ${{ inputs.environment }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: A directory of deploy/environments/, such as whatever-you-do-staging
+        required: true
+        type: string
+      tag:
+        description: "The image to deploy: a commit, a v* tag, or latest"
+        required: true
+        default: latest
+        type: string
+
+permissions:
+  contents: read
+
+# One deploy at a time, so that two never touch one host together.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+# Named, bash runs with -e and -o pipefail. GitHub's unnamed default has no pipefail, so a failing command
+# piped into tee would pass.
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # Before the environment's secrets are in reach: is this an environment, and is there such an image?
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.image.outputs.digest }}
+      commit: ${{ steps.image.outputs.commit }}
+      host: ${{ steps.environment.outputs.host }}
+      hostname: ${{ steps.environment.outputs.hostname }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Find the environment
+        id: environment
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          if ! [[ "$ENVIRONMENT" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?$ ]] || ! [ -f "deploy/environments/$ENVIRONMENT/values.yaml" ]; then
+            echo "::error::There is no environment '$ENVIRONMENT' in deploy/environments/"
+            exit 1
+          fi
+          host=$(yq '.host // ""' "deploy/environments/$ENVIRONMENT/values.yaml")
+          if [ -z "$host" ]; then
+            echo "::error::deploy/environments/$ENVIRONMENT/values.yaml names no host"
+            exit 1
+          fi
+          echo "host=$host" >> "$GITHUB_OUTPUT"
+          echo "hostname=$(yq '.hostname // ""' "deploy/environments/$ENVIRONMENT/values.yaml")" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve the image's digest and commit
+        id: image
+        env:
+          TAG: ${{ inputs.tag }}
+        run: deploy/resolve-image-digest.sh "$TAG" | tee -a "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: check
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      ENVIRONMENT: ${{ inputs.environment }}
+      DIGEST: ${{ needs.check.outputs.digest }}
+      COMMIT: ${{ needs.check.outputs.commit }}
+      HOSTNAME_SERVED: ${{ needs.check.outputs.hostname }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: azure/setup-helm@v5
+        with:
+          version: v4.3.0
+
+      # By the host's canonical name, from the environment's values.
+      - name: Open the tunnel to the host
+        env:
+          DEPLOY_HOST: ${{ needs.check.outputs.host }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
+        run: |
+          if [ -z "$KUBECONFIG_CONTENT" ]; then
+            echo "::error::The GitHub Environment '$ENVIRONMENT' has no KUBECONFIG secret"
+            exit 1
+          fi
+          deploy/tunnel.sh open
+          (umask 077; printf '%s\n' "$KUBECONFIG_CONTENT" > "$RUNNER_TEMP/kubeconfig")
+          echo "KUBECONFIG=$RUNNER_TEMP/kubeconfig" >> "$GITHUB_ENV"
+
+      - name: Deploy
+        env:
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          ANVILLE_ENROLMENT_CODE: ${{ secrets.ANVILLE_ENROLMENT_CODE }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKUP_TARGET: ${{ secrets.BACKUP_TARGET }}
+          BACKUP_SSH_KEY: ${{ secrets.BACKUP_SSH_KEY }}
+          BACKUP_KNOWN_HOSTS: ${{ secrets.BACKUP_KNOWN_HOSTS }}
+          EMAIL_URL: ${{ secrets.EMAIL_URL }}
+          ACME_EMAIL: ${{ vars.ACME_EMAIL }}
+        run: deploy/deploy.sh "$ENVIRONMENT" "$DIGEST"
+
+      # From outside, through DNS, the certificate and the ingress: is the commit just deployed the one answering?
+      - name: Assert the version being served
+        if: env.HOSTNAME_SERVED != ''
+        run: deploy/assert-version.sh "https://$HOSTNAME_SERVED/healthz" "$COMMIT"
+
+      - name: Close the tunnel
+        if: always()
+        run: |
+          deploy/tunnel.sh close
+          rm -f "$RUNNER_TEMP/kubeconfig"
+
+      - name: Report
+        run: |
+          {
+            echo "Deployed \`$COMMIT\` to **$ENVIRONMENT**"
+            echo
+            echo "Image: \`$DIGEST\`"
+          } >> "$GITHUB_STEP_SUMMARY"

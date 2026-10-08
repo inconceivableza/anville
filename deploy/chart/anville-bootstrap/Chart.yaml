@@ -1,0 +1,5 @@
+apiVersion: v2
+name: anville-bootstrap
+description: What an Anville host needs once, whatever environments it carries. The Let's Encrypt issuers.
+type: application
+version: 0.1.0

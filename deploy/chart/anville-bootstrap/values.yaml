@@ -1,0 +1,8 @@
+# ✨ Installed once per host, after cert-manager itself, which the deploy workflow installs from its own chart
+# (docs/server-approach.md, section 5).
+
+# Where Let's Encrypt sends notices about certificates that are about to expire. Optional.
+acmeEmail: ""
+
+# The ingress class that answers Let's Encrypt's HTTP-01 challenge. k3s brings Traefik.
+ingressClassName: traefik

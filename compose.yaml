@@ -9,7 +9,33 @@ services:
       - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "anville", "-d", "anville"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ✨ Optional: the image a deployment runs, against the database above. Started only by
+  # `docker compose --profile app up --build`; plain `docker compose up -d` still starts the database alone.
+  app:
+    profiles: [app]
+    build:
+      context: .
+      args:
+        ANVILLE_COMMIT: ${ANVILLE_COMMIT:-development}
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DJANGO_DEBUG: "false"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      DATABASE_URL: postgres://anville:anville@db:5432/anville
+    command: sh -c "python manage.py migrate && exec gunicorn"
+    ports:
+      - "127.0.0.1:8001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   pgdata:
-  
