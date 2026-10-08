@@ -195,16 +195,16 @@ def test_all_five_end_ratings_are_fixed_once_the_letter_is_sent(participant):
 
 
 def test_every_section_but_section_1_says_how_long_it_takes():
-    """✨ Our own figures, not the prototype's, which gave none: to confirm with the owner. They agree with the
-    homepage's timeline (ticket 41c), and the Workbook says what the booklet itself says. Section 1 has none: it
-    cannot be finished without the sort, so its own few minutes would read as less than the Strengths assessment
-    it leads to."""
+    """✨ Taken from the workbook, then the homepage, then the original prototype, then what seems reasonable, as the
+    spec's time estimates say: the Workbook says what the booklet itself says, and the Strengths assessment what the
+    original prototype says of its sort. Section 1 has none: it cannot be finished without the sort, so its own few
+    minutes would read as less than the Strengths assessment it leads to."""
     sections = the_pathway()["content"]["sections"]
 
     assert {section["id"]: section.get("estimate") for section in sections} == {
         "onboarding": "About 10 minutes",
         "designed": None,
-        "strengths": "About 15 minutes",
+        "strengths": "About 10 minutes",
         "workbook": "Three or four sittings of half an hour",
         "letter": "About 15 minutes",
     }
