@@ -152,17 +152,17 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 ## Pages within a section (onboarding)
 
-- Onboarding plays as three pages in Whatever You Do (the reason and the five ratings; "Walking with a coach"; "Who knows you best?") and two in the faithful port (no coach page). Each page is headed by the section's title, with no page count.
+- Onboarding plays as three pages in Whatever You Do (the reason and the five ratings; "Walking with a coach"; "Who knows you best?") and two in the faithful port (no coach page). Each page is headed by the section's title, with "Page 1 of 3" (or "of 2") quietly beneath it. A section of one page, such as Section 1, says nothing of pages.
 - Every page but the last ends in a full-width "Continue →", disabled until that page's own requirements are met, which are listed beneath it as the gate's are. The coach page lists none, and its way on is never disabled: a secondary "I'll sort this later →" until a coach is kept, then "Continue with Sam →". The last page ends in onboarding's own "Continue →", which completes it.
 - "Continue →" goes to the next page, at its top. Pressing it on a page with a requirement unmet (re-enable the button in DevTools) comes back with "This page is not finished yet." beneath it.
-- "← Back", a secondary button not the page's full width, sits beneath the way on and its checklist, not beside the button, so "Continue →" is in the same place on every page. It is on every page but the first and goes to the page before, with its answers as left. The first page has none.
+- "← Previous page", a secondary button not the page's full width, sits beneath the way on and its checklist, not beside the button, so "Continue →" is in the same place on every page. It is on every page but the first and goes to the page before, with its answers as left. The first page has none.
 - Going back and clearing the reason, then going forward again: the last page's checklist also lists "Choose what's bringing you to the course…" unticked, and completing is refused with it.
-- Typing `/sections/onboarding/pages/3/` before reaching it lands on the page reached. The hub's "Carry on" and onboarding's entry lead to the page reached, not the first.
+- Typing `/sections/onboarding/pages/3/` before reaching it lands on the page reached. The hub's "Carry on" and onboarding's entry lead to the page reached, not the first. Once onboarding is complete, its hub entry and its sidebar entry open it at page 1, and "← Back to the hub" at the top of every page goes to the hub.
 - Refreshing any page keeps you on it. (A refused "Continue →" is the exception, as a refused completion is: the browser offers to send the form again.)
-- Without JavaScript: "Continue →" and "← Back" both work, and the coach checklist's buttons come back to the coach page, not the first.
-- Keyboard only: after the page's fields, Tab reaches "Continue →", then "← Back".
-- Screen reader: each page's heading is read on arrival; "← Back" is read as a link.
-- Phone width: "Continue →" fills the width, and "← Back" sits on its own line beneath the checklist.
+- Without JavaScript: "Continue →" and "← Previous page" both work, and the coach checklist's buttons come back to the coach page, not the first.
+- Keyboard only: after the page's fields, Tab reaches "Continue →", then "← Previous page".
+- Screen reader: each page's heading is read on arrival, then "Page 2 of 3"; "← Previous page" is read as a link.
+- Phone width: "Continue →" fills the width, and "← Previous page" sits on its own line beneath the checklist.
 
 ## Fixed ratings (after completing onboarding, or Section 5)
 
@@ -199,7 +199,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 ## Scripture and the credits page (Section 1's reading, the homepage, `/credits/`)
 
 - Section 1's passages show their references with no "(ESV)"; the homepage footer reads "Colossians 3:23 (NIV)".
-- "Credits" sits at the foot of every page, the homepage's among its footer links, and leads to the credits page, signed in or not. It shows the ESV notice beginning "Unless otherwise indicated", then the NIV notice "marked NIV", each under its translation's name and word for word, with "®", "©" and "&" intact.
+- "Credits" sits at the foot of every page, the homepage's among its footer links, and leads to the credits page, signed in or not. It shows the ESV notice beginning "Unless otherwise indicated", then the NIV notice "marked NIV", each under its translation's name and word for word, with "®", "©" and "&" intact. Signed in, "← Back to the hub" is at its top; signed out, it is not.
 - Whenever a passage is added or changed, compare its text with the publisher's word for word (for example the ESVUK or NIVUK on Bible Gateway): any cut is marked "…" or by its reference ("7a").
 - Phone width: the notices wrap, and the footer link stays clear of the page's last block.
 
@@ -244,6 +244,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 ## Inviting observers (the hub's "Invite others to assess you →")
 
+- "← Back to the hub" is at the top, as on a section's page, and still at the foot.
 - Issuing a link shows it under that person's name, in a read-only field with Copy. Copy puts the whole link on the clipboard and reads "Copied"; pasting it in a private window opens "You've been invited".
 - Without JavaScript, there is no Copy button, and the link in the field can be selected and copied by hand.
 - With enough people listed that the page scrolls: with JavaScript, issuing, reissuing or revoking a lower person's link changes only their row, and the page does not move; the new link is focused. Without JavaScript, the page comes back opened at that person, not at the top.

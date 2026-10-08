@@ -16,6 +16,7 @@ from tests.documents import pathway_document, scripture_reading, sort_pathway, t
 from tests.journeys.pages import gate_checklist, main_of, version_on
 from tests.journeys.test_coach_checklist import step, the_coach_checklist
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
+from tests.journeys.test_navigation import section_in, sidebar_of
 
 FIRST = "/sections/onboarding/"
 SECOND = "/sections/onboarding/pages/2/"
@@ -84,10 +85,16 @@ def way_on(page):
     return form.group(1), unescape(form.group(3)).strip(), " disabled" in form.group(2)
 
 
-def back(page):
-    """✨ Where a page's "← Back" leads, or None if it has none."""
-    link = re.search(r'<a [^>]*href="([^"]+)"[^>]*>← Back</a>', page)
+def previous_page(page):
+    """✨ Where a page's "← Previous page" leads, or None if it has none."""
+    link = re.search(r'<a [^>]*href="([^"]+)"[^>]*>← Previous page</a>', page)
     return link.group(1) if link else None
+
+
+def which_page_on(page):
+    """✨ What a page says of which page it is ("Page 2 of 3"), or None if it says nothing."""
+    said = re.search(r"Page \d+ of \d+", main_of(page))
+    return said.group(0) if said else None
 
 
 # One page at a time
@@ -440,12 +447,25 @@ def test_a_locked_sections_pages_stay_locked(participant):
 
 
 @pytest.mark.django_db
-def test_each_page_after_the_first_leads_back_to_the_one_before(participant):
+def test_each_page_says_which_it_is_and_after_the_first_leads_to_the_previous_page(participant):
+    """✨ "← Previous page", apart from "← Back to the hub" at the top (ticket 41e)."""
     through_to(participant, 3)
 
-    assert back(shown(participant)) is None
-    assert back(shown(participant, SECOND)) == FIRST
-    assert back(shown(participant, THIRD)) == SECOND
+    assert [which_page_on(shown(participant, page)) for page in (FIRST, SECOND, THIRD)] == [
+        "Page 1 of 3",
+        "Page 2 of 3",
+        "Page 3 of 3",
+    ]
+    assert previous_page(shown(participant)) is None
+    assert previous_page(shown(participant, SECOND)) == FIRST
+    assert previous_page(shown(participant, THIRD)) == SECOND
+
+
+@pytest.mark.django_db
+def test_a_section_of_one_page_says_nothing_of_pages(signed_in_client, load_pathway):  # noqa: F811
+    load_pathway(pathway_document())
+
+    assert which_page_on(shown(signed_in_client)) is None
 
 
 @pytest.mark.django_db
@@ -484,7 +504,23 @@ def test_the_hub_leads_to_the_first_page_until_the_participant_goes_on(participa
     assert f'href="{FIRST}"' in shown(participant, "/hub/")
 
 
-# Every other way to a section leads to the page reached, as the hub does
+@pytest.mark.django_db
+def test_a_completed_section_opens_at_its_first_page_from_the_hub_and_the_sidebar(participant):
+    """✨ Reopened to reread, not part way through as when it was left (ticket 41e)."""
+    through_to(participant, 3)
+    participant.post("/sections/onboarding/complete/")
+
+    hub = shown(participant, "/hub/")
+    entry = section_in(sidebar_of(hub), "Before we begin")
+
+    assert f'href="{FIRST}"' in main_of(hub)
+    assert f'href="{THIRD}"' not in main_of(hub)
+    assert f'href="{FIRST}"' in entry
+
+
+# Every other way to a section leads to the page reached, as the hub does while it is in progress. A part's way back
+# to its section keeps to the page reached even once that section is complete: it returns to the page holding the
+# link the participant came by, where the hub opens a completed section at its start (ticket 41e)
 
 
 def calling_beside_part_way_onboarding():

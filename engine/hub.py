@@ -29,8 +29,8 @@ LABELS = {
 class SectionState(NamedTuple):
     """✨ One section as the hub sees it. `is_next` marks the one section the hub points the participant at.
     `estimate` is the authored time it takes, or None once the section has been begun. `page` is the page of it
-    the participant has reached, which is where the hub leads. `part_of` is the section it is a part of, if any.
-    `lock_note` says, while it is locked, what opens it."""
+    the participant has reached, or the first once it is complete, which is where the hub leads. `part_of` is the
+    section it is a part of, if any. `lock_note` says, while it is locked, what opens it."""
 
     id: str
     title: str
@@ -240,7 +240,8 @@ def _state(section, answers, completed, role, moved_past, sections):
         status=status,
         label=LABELS[status],
         estimate=_estimate(section, status, role),
-        page=page_reached(section, moved_past, answers, sections),
+        # ✨ A completed section is reopened to reread, so from its start rather than where it was left (ticket 41e).
+        page=1 if status == COMPLETE else page_reached(section, moved_past, answers, sections),
         part_of=section.get("part_of"),
         lock_note=_lock_note(section, completed, answers, sections, moved_past, role) if status == LOCKED else None,
     )

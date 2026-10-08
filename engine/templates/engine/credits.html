@@ -9,6 +9,8 @@
 {% block head_title %}Credits{% endblock head_title %}
 
 {% block content %}
+  {# ✨ As on a section's page (ticket 41e); someone signed out has no hub to go back to. #}
+  {% if user.is_authenticated %}<p class="back-to-hub"><a href="{% url 'hub' %}">← Back to the hub</a></p>{% endif %}
   <h1>Credits</h1>
   {% for translation in translations %}
     <h2 class="credits-name">{{ translation.name }}</h2>

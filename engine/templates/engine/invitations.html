@@ -7,6 +7,8 @@
 {% block head_title %}Invite others to assess you{% endblock head_title %}
 
 {% block content %}
+  {# ✨ At the top, as on a section's page (ticket 41e); the prototype's own way back stays at the foot. #}
+  <p class="back-to-hub"><a href="{% url 'hub' %}">← Back to the hub</a></p>
   <div class="section-header">
     <h2>Invite others to assess you</h2>
     <p>The most valuable insights come from comparing your self-perception with how others see you. Invite people who know you well.</p>

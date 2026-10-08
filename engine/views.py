@@ -1218,6 +1218,7 @@ def _section_page(state, section, page=1, asked_rows=0, issued=None):
         "back": _section_this_is_part_of(state, section),
         "page": {
             "number": page,
+            "count": page_count(section),
             "is_last": is_last,
             "skip_label": _skip_label(section, page, answers),
             "continue_label": _continue_label(section, page, answers),

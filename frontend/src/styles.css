@@ -458,6 +458,13 @@ p.time-estimate {
   margin-top: 32px;
 }
 
+/* ✨ "Page 2 of 3", under a paged section's heading */
+.page-count {
+  font-size: 13px;
+  color: var(--ink-muted);
+  margin-bottom: 8px;
+}
+
 /* ✨ Back to the page before, beneath the way on so the primary button stays where it is on every page */
 .page-back {
   margin-top: 16px;
