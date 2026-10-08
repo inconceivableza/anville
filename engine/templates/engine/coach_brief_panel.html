@@ -1,0 +1,16 @@
+{% comment %}
+  ✨ The coach brief beside the consent on the participant's comparison, so they know what their coach has been asked
+  to do with what they share: a panel that opens and closes without JavaScript, as the prototype's was on its "Send to
+  Mentor" screen. Its subtitle keeps the prototype's, less "Sent with this." (nothing is sent) and the "with it" that
+  pointed back to it (ticket 25a).
+{% endcomment %}
+<details class="coach-brief" data-coach-brief>
+  <summary>
+    <span class="coach-brief-icon" aria-hidden="true">🧭</span>
+    <span>
+      <span class="coach-brief-title">{{ brief.title }} – coach guidance</span>
+      <span class="coach-brief-sub">Tap to see what your coach is asked to do.</span>
+    </span>
+  </summary>
+  {% include "engine/coach_brief_body.html" %}
+</details>

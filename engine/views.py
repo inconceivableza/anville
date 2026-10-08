@@ -2,6 +2,7 @@ import json
 from typing import NamedTuple
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.humanize.templatetags.humanize import apnumber
 from django.db import IntegrityError
@@ -30,6 +31,7 @@ from engine.document.blocks import (
     CONTACTS,
     blocks_of,
     break_after,
+    coach_brief,
     page_count,
     page_of,
     pages_of,
@@ -590,10 +592,12 @@ def comparison(request, block_id):
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
     shown = _comparison_of(state.response, result.scores, state.answers[block_id])
+    sort = next(block for block in blocks_of(state.response.version.document) if block["id"] == block_id)
     context = {
         "comparison": shown,
         "block_id": block_id,
         "coach": _coach_sharing(state.response, block_id),
+        "brief": coach_brief(sort),
         "back": section["back"],
     }
     return render(request, "engine/comparison.html", context)
@@ -883,17 +887,39 @@ def answer_coaching(request, token):
         if invitation is None:
             return _refuse_link(request)
         return _coach_page(request, invitation, token, refusal=ANSWERED_ALREADY, status=409)
+    messages.add_message(request, messages.INFO, "answered", extra_tags=JUST_ANSWERED)
     return _see_other("coaching", token)
 
 
 ANSWERED_ALREADY = "You've already answered."
 
+# ✨ Marks the page a coach's answer leads to, so its thanks is said once and not on every later visit (ticket 25a).
+JUST_ANSWERED = "coach-just-answered"
+
+
+def _just_answered(request):
+    """✨ Whether this page is the one the coach's answer led to. Reading the flash messages uses them all up, so any
+    other is put back for the page it was meant for."""
+    others = []
+    found = False
+    for message in messages.get_messages(request):
+        if message.extra_tags == JUST_ANSWERED:
+            found = True
+        else:
+            others.append(message)
+    for message in others:
+        messages.add_message(request, message.level, message.message, extra_tags=message.extra_tags)
+    return found
+
 
 def _coach_page(request, invitation, token, refusal=None, ticked=(), status=200):
     """✨ The coach's page for a live coach's link: the participant's name, the authored invitation, each commitment
-    with its note as a box (`ticked` as last sent, on a refusal), or once answered, what follows the answer. Never
-    cached, since it is reached by a secret."""
-    _, name = _asked_by(invitation)
+    with its note as a box (`ticked` as last sent, on a refusal), or once answered, what follows the answer: thanks
+    only on the page their accepting led to, and while the participant shares their results, the sort's brief with them
+    (ticket 25a). Never cached, since it is reached by a secret."""
+    document, name = _asked_by(invitation)
+    shared = _shared_with_coach(invitation, name)
+    scored = _scored_block(document)
     text = authored_text(_coach_block(invitation), "participant")
     named = {field: text.get(field, "").replace("{name}", name) for field in COACH_TEXT_FIELDS}
     promises = [
@@ -909,7 +935,10 @@ def _coach_page(request, invitation, token, refusal=None, ticked=(), status=200)
         "answer": invitation.coach_answer,
         "refusal": refusal,
         "token": token,
-        "shared": _shared_with_coach(invitation, name),
+        "shared": shared,
+        "brief": coach_brief(scored) if shared and scored else None,
+        "briefed": bool(scored and coach_brief(scored)),  # ✨ so "What happens next" promises a guide only if one comes
+        "just_accepted": _just_answered(request),
     }
     shown = render(request, "engine/coach_link.html", context, status=status)
     shown["Cache-Control"] = "no-store"

@@ -279,7 +279,28 @@
         "estimate": "About 10 minutes",
         "requires": ["onboarding"],
         "part_of": "designed",
-        "blocks": [{ "id": "strengths-sort", "type": "sort_assessment" }],
+        "blocks": [
+          {
+            "id": "strengths-sort",
+            "type": "sort_assessment",
+            "coach_brief": {
+              "title": "Session 1 – Their gifts",
+              "purpose": "Help them believe what the assessment is telling them, and notice where they discount themselves.",
+              "length": "45–60 minutes",
+              "questions": [
+                { "text": "Which of these results surprised you, and which felt obvious?" },
+                { "text": "Where others rated you higher than you rated yourself – why do you think that gap is there?" },
+                { "text": "What is something you are good at that you have stopped noticing because it comes easily?" },
+                { "text": "Which of these strengths do you actually enjoy using, and which just drain you?" }
+              ],
+              "watch_for": [
+                { "text": "People routinely dismiss their strongest gift as \"nothing special\". If they wave something away, slow down and ask about it." },
+                { "text": "A low score is not a failing. Help them read the whole profile, not just hunt for weaknesses." }
+              ],
+              "avoid": "Do not treat the assessment as a verdict. It is a conversation starter, not a diagnosis."
+            }
+          }
+        ],
         "gate": {
           "clauses": [
             {

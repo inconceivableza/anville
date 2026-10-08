@@ -213,6 +213,8 @@ class BlockType(NamedTuple):
         return self.captures is not None
 
 
+# ✨ Never remove or rename an entry while any stored pathway version uses it: versions are never edited, so every
+# response pinned to one would break (spec, The pathway document and versions).
 BLOCK_TYPES = {
     block_type.name: block_type
     for block_type in [
@@ -293,6 +295,21 @@ def blocks_of(document):
     """✨ Every block in the document, in the order it was authored."""
     for section in document["content"]["sections"]:
         yield from section["blocks"]
+
+
+def coach_brief(block):
+    """✨ The coach brief a sort carries, in the participant's wording, as both the consent beside their comparison
+    and the coach's link show it; None for a sort without one (ticket 25a)."""
+    brief = block.get("coach_brief")
+    if brief is None:
+        return None
+    return {
+        **{field: text_for(brief[field], "participant") for field in ("title", "purpose", "length", "avoid")},
+        **{
+            field: [{"text": text_for(entry["text"], "participant")} for entry in brief[field]]
+            for field in ("questions", "watch_for")
+        },
+    }
 
 
 def block_types_by_id(document):

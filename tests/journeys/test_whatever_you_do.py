@@ -369,10 +369,13 @@ SHOWN_TO_THE_COACH = " {name} may also choose to show this to a trusted third pa
 def without_the_coach_step(document):
     """✨ Only this pathway asks for a coach the mock-up's way; the faithful port's own mentor screen is ticket 10b.
     The coach page goes with it, so the break that opened that page goes too, and the skip label of the break that
-    closed it, and the privacy notice's sentence saying the participant may show their coach what they see."""
+    closed it, and the privacy notice's sentence saying the participant may show their coach what they see. So does
+    the sort's coach brief (ticket 25a), as the faithful port has no coach to read it."""
     observers = document["observers"]
     observers["privacy_notice"] = observers["privacy_notice"].replace(SHOWN_TO_THE_COACH, "")
     for section in document["content"]["sections"]:
+        for block in section["blocks"]:
+            block.pop("coach_brief", None)
         blocks = [block for block in section["blocks"] if block["type"] != "coach_checklist"]
         section["blocks"] = [
             block

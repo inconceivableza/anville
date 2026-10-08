@@ -1,0 +1,20 @@
+{% comment %}
+  ✨ A coach brief's guidance, as the original prototype's mentor brief lays it out: purpose and suggested length, the
+  questions to ask, what to look out for, and what to avoid. Shared by the participant's panel and the coach's link
+  page (ticket 25a). The prototype's closing placeholder, that the guidance "will be sent", is not ported.
+{% endcomment %}
+<div class="coach-brief-body">
+  <div class="coach-brief-meta">
+    <span><strong>Purpose</strong> {{ brief.purpose }}</span>
+    <span><strong>Suggested length</strong> {{ brief.length }}</span>
+  </div>
+  <div class="coach-brief-sect">
+    <div class="coach-brief-label">Questions to ask</div>
+    <ul>{% for entry in brief.questions %}<li>{{ entry.text }}</li>{% endfor %}</ul>
+  </div>
+  <div class="coach-brief-sect">
+    <div class="coach-brief-label">What to look out for</div>
+    <ul>{% for entry in brief.watch_for %}<li>{{ entry.text }}</li>{% endfor %}</ul>
+  </div>
+  <div class="coach-brief-avoid"><strong>Avoid</strong> {{ brief.avoid }}</div>
+</div>

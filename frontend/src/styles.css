@@ -960,6 +960,128 @@ p.time-estimate {
   margin-top: 32px;
 }
 
+/* ✨ The coach brief, as the original prototype's .mb-brief draws it: a panel on the participant's section, and open
+   on the coach's link (ticket 25a) */
+.coach-brief {
+  background: var(--gold-pale);
+  border: 1px solid var(--gold-glow);
+  border-radius: 12px;
+  margin: 16px 0;
+  overflow: hidden;
+}
+
+.coach-brief > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.coach-brief > summary::-webkit-details-marker {
+  display: none;
+}
+
+.coach-brief > summary::after {
+  content: "\25be";
+  margin-left: auto;
+  color: var(--gold);
+  font-size: 12px;
+}
+
+.coach-brief[open] > summary::after {
+  content: "\25b4";
+}
+
+.coach-brief-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.coach-brief-title {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.coach-brief-sub {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-muted);
+  margin-top: 1px;
+}
+
+.coach-brief-open > .coach-brief-title {
+  margin: 0;
+  padding: 14px 16px;
+}
+
+.coach-brief-body {
+  padding: 14px 16px 16px;
+  border-top: 1px solid var(--gold-glow);
+}
+
+.coach-brief-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.coach-brief-meta span {
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.55;
+}
+
+.coach-brief-meta strong,
+.coach-brief-label,
+.coach-brief-avoid strong {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  display: block;
+}
+
+.coach-brief-label {
+  margin-bottom: 6px;
+}
+
+.coach-brief-sect {
+  margin-bottom: 14px;
+}
+
+.coach-brief-sect ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.coach-brief-sect li {
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.6;
+  margin-bottom: 5px;
+}
+
+.coach-brief-avoid {
+  background: var(--white);
+  border-left: 3px solid var(--red-soft);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.55;
+}
+
+.coach-brief-avoid strong {
+  color: var(--red-soft);
+  margin-bottom: 2px;
+}
+
 /* ✨ The hub's "Your Coach · Add →" card, as the original prototype's "Your Mentor" card draws it (ticket 27) */
 .contacts-status-card {
   display: block;

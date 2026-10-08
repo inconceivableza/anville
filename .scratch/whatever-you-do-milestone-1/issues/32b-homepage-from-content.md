@@ -28,6 +28,10 @@
 - [ ] The footer's verse (Colossians 3:23, NIV) becomes authored with its translation declared like a passage's, and the credits page's NIV notice, written into its template today, moves into content with it
 - The repository's licence depends on where the scripture lives: keeping it to authored content makes it possible to leave out of an open licence (spec, Legalities are parked, not forgotten)
 
+**Carried from 25a**
+
+- [ ] The coach paragraph promises only what the app does about guidance for the coach: only Section 1's brief is in the app, shown on the coach's link and beside the consent on the comparison, and nothing is sent (spec, Open content and product items, "Coach briefs (ticket 25a)")
+
 **Context**
 
 - Open before building: where homepage content lives (the pathway document, or a document of its own per deployment), and whether How it works takes its time figures from the pathway's own time estimates

@@ -317,8 +317,7 @@
         { "if": { "properties": { "type": { "const": "agreement_scale" } } }, "then": { "$ref": "#/$defs/agreement_scale" } },
         { "if": { "properties": { "type": { "const": "single_select" } } }, "then": { "$ref": "#/$defs/single_select" } },
         { "if": { "properties": { "type": { "const": "contact_list" } } }, "then": { "$ref": "#/$defs/contact_list" } },
-        { "if": { "properties": { "type": { "const": "coach_checklist" } } }, "then": { "$ref": "#/$defs/coach_checklist" } },
-        { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } },
+        { "if": { "properties": { "type": { "const": "coach_checklist" } } }, "then": { "$ref": "#/$defs/coach_checklist" } },        { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } },
         { "if": { "properties": { "type": { "const": "section_link" } } }, "then": { "$ref": "#/$defs/section_link" } },
         { "if": { "properties": { "type": { "const": "download" } } }, "then": { "$ref": "#/$defs/download" } },
         { "if": { "properties": { "type": { "const": "page_break" } } }, "then": { "$ref": "#/$defs/page_break" } }
@@ -526,6 +525,36 @@
         }
       }
     },
+    "coach_brief": {
+      "description": "The guidance for the coach's conversation with the participant about what they are shown. The participant can open it beside the consent to share it, and a coach who has accepted sees it on their link. Nothing is sent.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "purpose", "length", "questions", "watch_for", "avoid"],
+      "properties": {
+        "title": { "description": "Which conversation this is, such as 'Session 1 – Their gifts'.", "$ref": "#/$defs/text" },
+        "purpose": { "description": "What the conversation is for.", "$ref": "#/$defs/text" },
+        "length": { "description": "How long the conversation might take, such as '45–60 minutes'.", "$ref": "#/$defs/text" },
+        "questions": {
+          "description": "Questions for the coach to ask, in order.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/coach_brief_entry" }
+        },
+        "watch_for": {
+          "description": "What the coach should look out for, in order.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/coach_brief_entry" }
+        },
+        "avoid": { "description": "The one thing the coach should not do.", "$ref": "#/$defs/text" }
+      }
+    },
+    "coach_brief_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text"],
+      "properties": { "text": { "$ref": "#/$defs/text" } }
+    },
     "sort_assessment": {
       "description": "The instrument's sort: every item placed in a bucket and fine-tuned, then scored once as a result.",
       "type": "object",
@@ -534,7 +563,11 @@
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "sort_assessment" },
-        "estimate": { "$ref": "#/$defs/estimate" }
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "coach_brief": {
+          "description": "The guidance for the coach's conversation about these results and their comparison, which the coach sees once the participant shares them (ticket 25a).",
+          "$ref": "#/$defs/coach_brief"
+        }
       }
     },
     "section_link": {

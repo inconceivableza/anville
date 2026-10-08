@@ -86,6 +86,10 @@ _Avoid_: check, validation, lock. (The prior plans used "Gate" for delivery mile
 A block that shows a participant's earlier answers back to them through a named view, with an authored message for when there is nothing to show yet.
 _Avoid_: summary, snapshot, derived block.
 
+**Coach brief**:
+The authored guidance for the coach's conversation with the participant about what they share: its purpose, length, questions to ask, what to look out for and what to avoid. The participant may read it too.
+_Avoid_: mentor brief, briefing pack, session guide.
+
 ### Measurement
 
 **Instrument**:

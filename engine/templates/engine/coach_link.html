@@ -7,10 +7,14 @@
   Once accepted, the mock-up's "What happens next" says what this link will show; once the participant consents, it
   shows their results and comparison, read-only, through the same bodies as their own pages (ticket 27).
 
+  With the results comes the sort's brief, open, beneath the answer and before them, as the mock-up's "What happens
+  next" promises; it goes with them. The mock-up's "Thank you — Sam will be told" is said only on the page accepting
+  leads to; later visits open "You're Sam's coach", since the coach comes back to read the results (ticket 25a).
+
   Departures from the mock-up: "Accept and get the first session guide →" is "Accept →", and its promise to send a
-  briefing pack is gone, since there is no guide and no email yet; "What happens next" keeps the mock-up's first
-  sentence with "the first section" as "the strengths assessment" (the sort is no longer in Section 1), and promises
-  the comparison where the mock-up promised a guide (ticket 25's), on this page since nothing is sent. Accept is not held disabled until every box is ticked, nor is "n of 6 agreed" counted
+  briefing pack is gone, since there is no email yet; "What happens next" keeps the mock-up's first sentence with "the
+  first section" as "the strengths assessment", promises the comparison beside the results and the guide, and says
+  they appear on this page, since nothing is sent. Accept is not held disabled until every box is ticked, nor is "n of 6 agreed" counted
   beneath them, which would need JavaScript; the server refuses an accept short of a box and says why.
 {% endcomment %}
 {% block head_title %}{{ name }} has asked you to be their coach{% endblock head_title %}
@@ -18,15 +22,21 @@
 {% block content %}
   {% if answer == "accepted" %}
     <div class="coach-outcome coach-go">
-      <h2>Thank you — {{ name }} will be told</h2>
+      <h2>{% if just_accepted %}Thank you — {{ name }} will be told{% else %}You're {{ name }}'s coach{% endif %}</h2>
       {{ text.coach_accepted|linebreaks }}
       {% if not shared %}
         <div class="coach-next">
           <p class="coach-next-label">What happens next</p>
-          <p>{{ name }} finishes the strengths assessment and sends it to you. You'll get the results, and how others rate the same strengths. They'll appear on this page, so keep the link.</p>
+          <p>{{ name }} finishes the strengths assessment and sends it to you. You'll get the results{% if briefed %}, how others rate the same strengths, and a short guide to that conversation — what it's for, what to ask, what to watch for{% else %}, and how others rate the same strengths{% endif %}. They'll appear on this page, so keep the link.</p>
         </div>
       {% endif %}
     </div>
+    {% if brief %}
+      <section class="coach-brief coach-brief-open">
+        <h2 class="coach-brief-title"><span class="coach-brief-icon" aria-hidden="true">🧭</span> {{ brief.title }} – coach guidance</h2>
+        {% include "engine/coach_brief_body.html" %}
+      </section>
+    {% endif %}
     {% if shared %}
       <section class="coach-shared">
         <h1>{{ name }}'s results</h1>
