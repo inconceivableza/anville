@@ -104,7 +104,7 @@ runcmd:
   # k3s in server mode, with its bundled Traefik. It brings kubectl; Helm runs in the deploy workflow.
   - curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL=__K3S_CHANNEL__ sh -
 
-  # The operator runs it as sudo k9s --kubeconfig /etc/rancher/k3s/k3s.yaml, the kubeconfig being root's.
-  - /usr/local/sbin/install-k9s
+  # With the operator's k9 alias: k9s with root's kubeconfig, every namespace (sudo k9s --kubeconfig ... -A).
+  - /usr/local/sbin/install-k9s __ADMIN_USER__
 
 final_message: "__HOST__, an Anville __TIER__ host, ready after $UPTIME seconds"

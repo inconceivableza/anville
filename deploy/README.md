@@ -11,7 +11,7 @@ Two words are used as that document uses them. A **host** is one Hetzner Cloud s
 | Path | What it is |
 |---|---|
 | `infra/hcloud-create.sh` | Creates a host, with `infra/cloud-init.yaml.template` as its first boot and `infra/firewall-rules.json` in front |
-| `infra/install-k9s.sh` | Installs k9s on a host: run by its first boot, and by hand to change the version |
+| `infra/install-k9s.sh` | Installs k9s on a host, with the operator's `k9` alias: run by its first boot, and by hand to change the version |
 | `chart/anville/` | The Helm chart for one environment |
 | `chart/anville-bootstrap/` | The Let's Encrypt issuers, installed once per host |
 | `environments/<environment>/values.yaml` | What differs for that environment |
@@ -105,23 +105,24 @@ k exec -it deployment/anville -- python manage.py changepassword <username>
 k exec -it deployment/anville -- python manage.py dbshell
 ```
 
-**k9s.** A terminal view of everything on the host: pods, logs, events, a shell in a container. Run it as the operator, after `ssh <operator>@<host>`, through `sudo`, since the kubeconfig is root's alone. Name the kubeconfig, because `sudo` drops `KUBECONFIG` and root has no `~/.kube/config`; `k3s kubectl` finds it by itself, k9s does not.
+**k9s.** A terminal view of everything on the host: pods, logs, events, a shell in a container. After `ssh <operator>@<host>`, as the operator:
 
 ```sh
-sudo k9s --kubeconfig /etc/rancher/k3s/k3s.yaml -n whatever-you-do-staging   # one environment
-sudo k9s --kubeconfig /etc/rancher/k3s/k3s.yaml -A                           # every namespace
-sudo k9s --kubeconfig /etc/rancher/k3s/k3s.yaml --readonly                   # look, change nothing
+k9                              # every namespace
+k9 --readonly                   # the same, changing nothing
 ```
 
-Inside, `:ns` lists the namespaces, `:pods` the pods, `l` shows a pod's logs, `s` opens a shell, `?` lists the keys and `:q` quits. `alias k9='sudo k9s --kubeconfig /etc/rancher/k3s/k3s.yaml'` in the operator's `~/.bashrc` saves typing.
+`k9` is an alias in the operator's `~/.bashrc`, for `sudo k9s --kubeconfig /etc/rancher/k3s/k3s.yaml -A`. It runs through `sudo` since the kubeconfig is root's alone, and names the kubeconfig because `sudo` drops `KUBECONFIG` and root has no `~/.kube/config`; `k3s kubectl` finds it by itself, k9s does not.
 
-A host gets k9s on its first boot, from `infra/install-k9s.sh`. A host made before that, such as `anville-staging-01.vabl.dev`, gets it the same way, from a checkout on your own machine:
+Inside, `:ns` lists the namespaces (Enter on one narrows the view to it), `:pods` the pods, `l` shows a pod's logs, `s` opens a shell, `?` lists the keys and `:q` quits.
+
+A host gets k9s and the alias on its first boot, from `infra/install-k9s.sh`. A host made before that, such as `anville-staging-01.vabl.dev`, gets them the same way, from a checkout on your own machine:
 
 ```sh
 ssh <operator>@<host> 'sudo bash -s' < deploy/infra/install-k9s.sh
 ```
 
-It installs the pinned release after checking its checksum, and does nothing if that version is already there. Unattended upgrades do not update it: to change the version, edit the version and the two checksums at the top of the script and run it on each host the same way.
+It installs the pinned release after checking its checksum, unless that version is already there, and gives the account that ran `sudo` the alias, replacing an earlier `k9` alias rather than adding a second. Unattended upgrades do not update it: to change the version, edit the version and the two checksums at the top of the script and run it on each host the same way.
 
 **Fake email.** An environment with no `EMAIL_URL` secret delivers nothing: each message is written to the pod's log. On a staging environment it is written with the test-system disclaimer it would carry if it were sent: `[TEST]` before the subject, and the disclaimer at the top of the body. To see one, run `k exec deployment/anville -- python manage.py sendtestemail someone@example.com` and read the log. The log then holds whatever links the messages carried, which is acceptable only where the data is fake. A production environment cannot be deployed without `EMAIL_URL`.
 
@@ -198,7 +199,7 @@ Without a host, a registry push or Docker, as far as each piece allows:
 - `resolve-image-digest.sh`: run against another public image on GitHub Container Registry.
 - `assert-version.sh`: run against gunicorn serving this repository.
 - `publish-pathway.sh`: run with `kubectl` stubbed to run the pod's command here, against a throwaway database: a first publish, the same again (no change), another document, a broken one (refused, nothing published), and names that are not an environment or a pathway. `kubectl exec` carrying the document to a real pod is not yet proven.
-- `install-k9s.sh`: run with `apt-get` stubbed, through `bash -s` as above: it fetched the pinned arm64 package, checked it, and left standard input to the script; it refused a wrong checksum and a user other than root, and did nothing the second time. The amd64 package's checksum was checked by hand. The rendered cloud-init carries the script byte for byte.
+- `install-k9s.sh`: run with `apt-get` stubbed, through `bash -s` as above: it fetched the pinned arm64 package, checked it, and left standard input to the script; it refused a wrong checksum, a user other than root and an operator with no account; it added the alias once, replaced an earlier one, and did nothing the second time. The amd64 package's checksum was checked by hand. The rendered cloud-init carries the script byte for byte.
 - The backup script: run against a local SFTP server, with `pg_dump` stubbed.
 
 Not yet proven anywhere: the `Dockerfile` as a Docker build, the cloud-init on a real first boot, the deploy key's restriction in `authorized_keys`, cert-manager starting and issuing a certificate, a pod starting, a real dump, and the restore above.

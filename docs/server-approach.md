@@ -258,7 +258,7 @@ The host's tier and canonical name are parameters of the template, which sets th
 - base packages, 2 GiB swap, `vm.swappiness=10`, SSH without passwords, and unattended upgrades, which restart the host at 03:30 UTC when an update needs it;
 - UFW admitting 22, 80 and 443, with the k3s pod and service networks allowed. **6443 is not opened**;
 - k3s in server mode with its bundled Traefik and kubectl, with secrets encrypted at rest. Helm is not installed on the host: it runs in the deploy workflow, through the tunnel;
-- k9s, for the operator to look at the cluster in a terminal (`sudo k9s --kubeconfig /etc/rancher/k3s/k3s.yaml`), a pinned release checked against its checksum by `infra/install-k9s.sh`, which the template carries whole. It is not in an apt repository, so unattended upgrades leave it alone; the same script, run over SSH, installs it on an older host or changes its version.
+- k9s, for the operator to look at the cluster in a terminal, with a `k9` alias in the operator's `~/.bashrc` for `sudo k9s --kubeconfig /etc/rancher/k3s/k3s.yaml -A`: a pinned release checked against its checksum by `infra/install-k9s.sh`, which the template carries whole. It is not in an apt repository, so unattended upgrades leave it alone; the same script, run over SSH, installs it on an older host or changes its version.
 
 Nothing in the template depends on the architecture, so an ARM host remains possible: k9s is fetched for the host's.
 
