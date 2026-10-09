@@ -2,12 +2,14 @@
 and an organisation admin to sign in as, all marked as test data.
 """
 
+import re
 from io import StringIO
 from pathlib import Path
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.management import CommandError, call_command
+from django.test import Client
 
 from organisations.models import Group, Organisation, Permission
 
@@ -63,3 +65,13 @@ def test_it_creates_example_church_an_autumn_cohort_of_twelve_and_an_organisatio
     assert (cohort.organisation, cohort.name, cohort.type) == (church, "Autumn cohort", Group.Type.COHORT)
     assert cohort.memberships.count() == 12
     assert (admin.capability, admin.organisation, admin.group) == (Permission.Capability.MANAGE, church, None)
+
+
+@pytest.mark.django_db
+def test_it_prints_the_admins_email_a_password_that_signs_in_and_the_cohorts_join_link(seeded):
+    admin = Permission.objects.get().holder
+    password = re.search(r"^Password: (\S+)$", seeded, re.MULTILINE).group(1)
+
+    assert admin.email in seeded
+    assert Client().login(username=admin.email, password=password)
+    assert f"/join/{Group.objects.get().join_token}/" in seeded

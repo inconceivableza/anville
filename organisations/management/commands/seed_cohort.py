@@ -36,6 +36,12 @@ class Command(BaseCommand):
                 member = _account(f"seed-cohort-member-{number}@example.com", name)
                 Membership.objects.create(participant=member, group=cohort)
 
+        # ✨ The join route belongs to joining by link (ticket A2), so the path is written out rather than reversed.
+        self.stdout.write(
+            self.style.SUCCESS(f"Seeded {ORGANISATION} with an {COHORT} of {len(MEMBERS)} members.")
+            + f"\nAdmin: {ADMIN_EMAIL}\nPassword: {SEED_PASSWORD}\nJoin link: /join/{cohort.join_token}/"
+        )
+
 
 def _account(email, display_name):
     """✨ A fake account at a reserved example.com address, with consent recorded so it can be signed in to for a demo
