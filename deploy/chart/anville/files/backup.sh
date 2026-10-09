@@ -43,6 +43,20 @@ send() {
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 DUMP=$BACKUP_NAME-$STAMP.dump
 
+# k3s's network policy admits a new pod to the database only once it has seen the pod's address, and refuses
+# it until then, so a job that connects as it starts can be refused for its first seconds. Wait for the
+# database to answer, for up to two minutes. The URL is never printed: it holds the password.
+TRIES=0
+until pg_isready --timeout 5 --dbname "$DATABASE_URL" > /dev/null 2>&1; do
+  TRIES=$((TRIES + 1))
+  if [ "$TRIES" -ge 24 ]; then
+    echo "The database did not answer within two minutes" >&2
+    exit 1
+  fi
+  sleep 5
+done
+[ "$TRIES" -eq 0 ] || echo "The database answered after about $((TRIES * 5)) seconds"
+
 echo "Dumping to $DUMP"
 pg_dump --format=custom --no-owner --no-privileges --file "$WORK/$DUMP" --dbname "$DATABASE_URL"
 
