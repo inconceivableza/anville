@@ -172,3 +172,13 @@ def test_a_member_shows_their_display_name_sections_complete_of_their_track_and_
     assert "1 of 2 sections" in member
     assert today() in member
     assert not re.search(r"\d{1,2}:\d{2}", member)
+
+
+@pytest.mark.django_db
+def test_a_member_with_no_response_shows_as_not_started(client, django_user_model, cohort_and_admin):
+    give_consent(a_member_of(cohort_and_admin, django_user_model, "Ada"))
+
+    member = members_of(client, "Autumn cohort")["Ada"]
+
+    assert "not started" in member.lower()
+    assert " of " not in member and today() not in member

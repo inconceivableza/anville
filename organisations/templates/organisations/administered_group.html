@@ -16,7 +16,8 @@
     {# ✨ Each member's name and how far through they are; never what they answered or their email address. #}
     <ul class="members">
       {% for member in group.members %}
-        <li class="member"><span class="member-name">{{ member.name }}</span> · {{ member.complete }} of {{ member.total }} sections · last active {{ member.last_active|date:"j F Y" }}</li>
+        <li class="member"><span class="member-name">{{ member.name }}</span> ·
+          {% if member.last_active %}{{ member.complete }} of {{ member.total }} sections · last active {{ member.last_active|date:"j F Y" }}{% else %}not started{% endif %}</li>
       {% endfor %}
     </ul>
   {% endif %}
