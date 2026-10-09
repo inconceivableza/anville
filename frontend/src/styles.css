@@ -1585,6 +1585,34 @@ form + .way-on,
   margin-bottom: 8px;
 }
 
+/* ✨ The "New group" form's type: a legend set like the other labels, then the radio buttons side by side. */
+.new-group-types {
+  border: none;
+  padding: 0;
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+
+.new-group-types legend {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.new-group-types .errorlist {
+  flex-basis: 100%;
+}
+
+.name-section .new-group-types label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  margin-bottom: 0;
+}
+
 /* Account pages (sign in, sign up, sign out) */
 
 .account-page {

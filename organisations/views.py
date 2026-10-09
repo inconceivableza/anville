@@ -3,12 +3,13 @@ from urllib.parse import urlencode
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 
 from access.consent import consent_required, current_consent
 from organisations import joining
-from organisations.models import Group, Membership
-from organisations.visibility import administered
+from organisations.forms import NewGroupForm
+from organisations.models import Group, Membership, Organisation
+from organisations.visibility import administered, manages_organisation
 
 
 @require_http_methods(["GET", "POST"])
@@ -62,12 +63,39 @@ def your_organisations(request):
     a group without working through the pathway; an account with no permission is refused."""
     if not request.user.organisation_permissions.exists():
         return render(request, "organisations/not_an_admin.html", status=403)
+    return _your_organisations_page(request)
+
+
+def _your_organisations_page(request, refused=None, status=200):
+    """✨ `refused` is a "New group" form that did not validate, shown with its errors under its own organisation."""
     organisations = administered(request.user)
-    for _, groups in organisations:
+    for organisation, groups in organisations:
+        if organisation.manages:
+            mine = refused is not None and refused.instance.organisation_id == organisation.pk
+            organisation.new_group_form = refused if mine else NewGroupForm(auto_id=f"new-group-{organisation.pk}-%s")
         for group in groups:
             if group.manages:
                 group.join_link = request.build_absolute_uri(reverse("join", args=[group.join_token]))
-    return render(request, "organisations/your_organisations.html", {"organisations": organisations})
+    return render(request, "organisations/your_organisations.html", {"organisations": organisations}, status=status)
+
+
+@login_required
+@require_POST
+def new_group(request, organisation_id):
+    """✨ Creates a group in an organisation the account manages, and shows it on "Your organisations" at once, with
+    its own join link. Any other account is refused."""
+    organisation = get_object_or_404(Organisation, pk=organisation_id)
+    if not manages_organisation(request.user, organisation):
+        return render(request, "organisations/not_an_admin.html", status=403)
+    form = NewGroupForm(
+        request.POST, auto_id=f"new-group-{organisation.pk}-%s", instance=Group(organisation=organisation)
+    )
+    if not form.is_valid():
+        return _your_organisations_page(request, refused=form, status=400)
+    group = form.save()
+    response = redirect(f"{reverse('your_organisations')}#group-{group.pk}")
+    response.status_code = 303
+    return response
 
 
 @login_required

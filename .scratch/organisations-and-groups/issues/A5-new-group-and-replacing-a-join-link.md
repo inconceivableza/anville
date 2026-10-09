@@ -4,10 +4,10 @@
 
 **Blocked by:** A3 (Your organisations)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Spec:** Models; Pages; Further Notes
 
-- [ ] An organisation admin can create a group with a name and a type (cohort or team), and it appears at once with its own join link
+- [x] An organisation admin can create a group with a name and a type (cohort or team), and it appears at once with its own join link
 - [ ] A group admin is not offered, and is refused, creating a group
 - [ ] Replacing a group's join link stops the old link working and gives a new one; existing members stay in the group
