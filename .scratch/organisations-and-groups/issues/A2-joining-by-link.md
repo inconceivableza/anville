@@ -8,11 +8,11 @@
 
 **Spec:** Joining by link; Models; User Stories › Joining
 
-- [ ] A new person who opens a join link signs up without being asked for an enrolment code, consents, confirms on a page naming the organisation and group and saying what its admins see, and lands on their hub as a member
+- [x] A new person who opens a join link signs up without being asked for an enrolment code, consents, confirms on a page naming the organisation and group and saying what its admins see, and lands on their hub as a member
 - [ ] A signed-in participant who opens a join link confirms and joins; their pathway carries on where it was
 - [ ] Opening the link for a group already joined says "You're already in this group" and offers the hub; leaving the join page without joining records nothing
 - [x] An unknown or replaced link says the link no longer works and to ask whoever sent it for a new one, revealing nothing about any group
-- [ ] Signing up without a join link still needs the enrolment code, unless the deployment has turned it off
+- [x] Signing up without a join link still needs the enrolment code, unless the deployment has turned it off
 
 **Carried from B1**
 

@@ -80,6 +80,7 @@
     <form method="post" action="{% url 'consent' %}" class="consent-choices">
       {% csrf_token %}
       <input type="hidden" name="version" value="{{ version }}">
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
       <button type="submit" name="decision" value="agree" class="btn btn-primary btn-full">I agree</button>
       <button type="submit" name="decision" value="decline" class="btn btn-secondary btn-full">I do not agree</button>
     </form>
