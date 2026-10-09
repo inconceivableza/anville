@@ -13,7 +13,7 @@ from django.test import Client
 
 from access.consent import current_consent
 from engine.hub import COMPLETE, hub_for, section_by_id, track_sections
-from engine.models import Invitation, Publication, Response
+from engine.models import Invitation, ObserverResponse, Publication, Response
 from organisations.models import Group, Organisation, Permission
 
 DOCUMENT = Path(__file__).resolve().parents[2] / "pathways" / "whatever-you-do.json"
@@ -114,3 +114,22 @@ def test_members_are_spread_across_the_pathway_and_exactly_one_has_no_current_co
         assert response.observer_responses.filter(submitted_at__isnull=False).count() >= 3
         assert all(response.answers.get(block_id) for block_id in closing_ratings)
     assert sum(current_consent(member) is None for member in members) == 1
+
+
+@pytest.mark.django_db
+def test_every_account_is_at_example_com_and_every_response_is_test_data(seeded):
+    assert all(email.endswith("@example.com") for email in get_user_model().objects.values_list("email", flat=True))
+    assert Response.objects.exists() and not Response.objects.filter(is_test_data=False).exists()
+    assert ObserverResponse.objects.exists() and not ObserverResponse.objects.filter(is_test_data=False).exists()
+
+
+@pytest.mark.django_db
+def test_a_second_run_says_example_church_exists_and_adds_nothing(seeded):
+    accounts, responses = get_user_model().objects.count(), Response.objects.count()
+
+    out = seed()
+
+    assert "Example Church already exists" in out
+    assert Organisation.objects.count() == 1
+    assert Group.objects.count() == 1
+    assert (get_user_model().objects.count(), Response.objects.count()) == (accounts, responses)

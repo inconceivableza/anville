@@ -50,6 +50,9 @@ class Command(BaseCommand):
         version = Publication.current_version()
         if version is None:
             raise CommandError("No pathway is published. Load one first with load_pathway.")
+        if Organisation.objects.filter(name=ORGANISATION).exists():
+            self.stdout.write(f"{ORGANISATION} already exists, so nothing was added.")
+            return
 
         with transaction.atomic():
             church = Organisation.objects.create(name=ORGANISATION)

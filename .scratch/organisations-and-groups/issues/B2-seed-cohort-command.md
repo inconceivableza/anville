@@ -4,12 +4,12 @@
 
 **Blocked by:** A1 (Organisations, groups, membership and permissions, with can_see); B1 (Consent v2)
 
-**Status:** claimed
+**Status:** resolved
 
 **Spec:** Seed command; User Stories › Developers
 
 - [x] The command refuses to run unless debug is on, and needs a published pathway
 - [x] It creates Example Church, an Autumn cohort of twelve members and an organisation admin, and prints the admin's email and password and the cohort's join link
 - [x] Members are spread across the pathway: some not started, some part-way, some finished with self-results, observer answers through real invitations and closing ratings; one has withdrawn consent
-- [ ] Every account uses a reserved example address and every response is flagged as test data
-- [ ] Running it a second time says the organisation already exists and creates nothing
+- [x] Every account uses a reserved example address and every response is flagged as test data
+- [x] Running it a second time says the organisation already exists and creates nothing
