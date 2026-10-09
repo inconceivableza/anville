@@ -129,6 +129,9 @@ DATABASES = {
         # ✨ Seconds to keep a connection for reuse. 0, the default, closes it after each request.
         "CONN_MAX_AGE": env.int("DATABASE_CONN_MAX_AGE", default=0),
         "CONN_HEALTH_CHECKS": True,
+        # ✨ Unset, Django's own test_<name>. Two test runs at once (two checkouts of the repo, say) each name their
+        # own, so they don't share and break one test database.
+        "TEST": {"NAME": env("ANVILLE_TEST_DATABASE_NAME", default=None)},
     }
 }
 
