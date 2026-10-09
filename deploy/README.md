@@ -11,6 +11,7 @@ Two words are used as that document uses them. A **host** is one Hetzner Cloud s
 | Path | What it is |
 |---|---|
 | `infra/hcloud-create.sh` | Creates a host, with `infra/cloud-init.yaml.template` as its first boot and `infra/firewall-rules.json` in front |
+| `infra/install-k9s.sh` | Installs k9s on a host, with the operator's `k9` alias: run by its first boot, and by hand to change the version |
 | `chart/anville/` | The Helm chart for one environment |
 | `chart/anville-bootstrap/` | The Let's Encrypt issuers, installed once per host |
 | `environments/<environment>/values.yaml` | What differs for that environment |
@@ -72,9 +73,11 @@ A deploy runs migrations. It does not publish a pathway: see "Publish a pathway"
 On the host, as the operator. `k` is short for `sudo k3s kubectl -n <environment>`.
 
 ```sh
-k exec -it deployment/anville -- python manage.py createsuperuser
+k exec -it deployment/anville -- python manage.py createsuperuser --username operator --email ""
 k exec deployment/anville -- python manage.py seed_observers --help    # staging only
 ```
+
+The operator's account is given a username and no email address on purpose. Signing in to the site is by email (`ACCOUNT_LOGIN_METHODS`), so an account with no email can reach `/admin/`, where Django's own backend takes the username, and cannot reach the hub at all. The operator is then never walked into the consent flow, leaves no consent or answers among the participants' own, and `username == email` goes on meaning "this row is a participant". An email address on the account would also take that address out of use, since no participant can sign up with an address another user holds. To see what a participant sees, sign up an ordinary account. `/admin/` is served on the public hostname, so that password belongs with the environment's other secrets.
 
 Then publish the environment's pathway, as below.
 
@@ -94,6 +97,45 @@ Publishing is always this deliberate step. `load_pathway` publishes whatever fil
 k exec -i deployment/anville -c web -- sh -c 'cat > /tmp/p.json && python manage.py load_pathway /tmp/p.json' < pathways/whatever-you-do.json
 ```
 
+## Set up email
+
+An environment starts with fake email (see "Day to day"): nothing is delivered. Real email needs an SMTP provider, a sending domain that provider has validated, and two settings. The provider chosen for Anville is Mailjet (docs/server-approach.md, section 11), but nothing in the application is particular to it: any provider that offers SMTP on port 587 works the same way.
+
+### Decisions to make
+
+- **The provider account and key.** Each environment should have an API key of its own, so that it can be revoked without touching another environment and its sending can be seen apart. With Mailjet that is a subaccount per environment; check how many the plan in use allows.
+- **The sending domain.** A subdomain kept for mail alone keeps the environment's bounces and complaints from affecting a domain that carries other mail. An existing domain that already sends mail can be used instead, but it then shares its reputation, and any records it already has must be extended, not duplicated. The environment's own hostname is usually unsuitable, since it is normally a CNAME, and a name that is a CNAME can hold no other record.
+- **The address.** A no-reply address, or a mailbox someone reads, if replies are wanted.
+- **Who receives it, on staging.** Staging's accounts use reserved example domains, which receive nothing: a message to one bounces, and bounces count against the sending domain. Real email from staging should reach only the real addresses of people who know they are testing, and those addresses are then real data on staging.
+
+### What good delivery needs
+
+- **SPF, DKIM and DMARC** for the sending domain, and the domain validated in the provider. Without them, mail is likely to be filtered as spam or refused, by Gmail and Yahoo in particular. The provider says which records to create; they go wherever the sending domain's DNS is hosted.
+- **Port 587 open from the host to the provider.** Hetzner blocks outbound 25 and 465 on new accounts, and allows 587. To check from the host: `nc -vz <provider's SMTP host> 587`.
+
+### Where each choice goes
+
+| What | Where |
+|---|---|
+| The provider and its credentials | `EMAIL_URL`, a secret in the environment's GitHub Environment: `smtp+tls://<user>:<password>@<SMTP host>:587`. For Mailjet, the user and password are the API key and secret key, and the host is `in-v3.mailjet.com` |
+| The sending address | `email.from` in the environment's `values.yaml`, as an address or as `Name <address>`. A deploy refuses an environment with `EMAIL_URL` and no `email.from`, since providers refuse Django's default `webmaster@localhost` |
+| The test-system wording, on staging | `email.disclaimer` in `values.yaml`, which can be reworded but not emptied on a staging environment |
+| The domain's records | The sending domain's DNS host |
+
+### Turning it on
+
+Set `email.from`, add `EMAIL_URL` to the GitHub Environment, and deploy: the pods restart, since a secret has changed. Then send a test to a mailbox you can read:
+
+```sh
+k exec deployment/anville -- python manage.py sendtestemail <your address>
+```
+
+It should arrive from the address in `email.from`, and on staging with `[TEST]` before the subject and the disclaimer at the top of the body. The message's headers (in Gmail, Show original) should show SPF, DKIM and DMARC passing, and the provider's statistics should show it sent. A new provider account may hold its first messages until the provider has reviewed it.
+
+Password reset stays refused until ticket 28a, whether or not email is set up.
+
+To go back to fake email, delete `EMAIL_URL` from the GitHub Environment and deploy again. To stop sending at once, revoke the environment's key at the provider.
+
 ## Day to day
 
 ```sh
@@ -104,9 +146,28 @@ k exec -it deployment/anville -- python manage.py changepassword <username>
 k exec -it deployment/anville -- python manage.py dbshell
 ```
 
-**Fake email.** An environment with no `EMAIL_URL` secret delivers nothing: each message is written to the pod's log. On a staging environment it is written with the test-system disclaimer it would carry if it were sent: `[TEST]` before the subject, and the disclaimer at the top of the body. To see one, run `k exec deployment/anville -- python manage.py sendtestemail someone@example.com` and read the log. The log then holds whatever links the messages carried, which is acceptable only where the data is fake. A production environment cannot be deployed without `EMAIL_URL`.
+**k9s.** A terminal view of everything on the host: pods, logs, events, a shell in a container. After `ssh <operator>@<host>`, as the operator:
 
-**Resetting a password.** Password reset is refused until ticket 28a. Until then the operator runs `changepassword`, as above. allauth derives the username from the start of the email address; the admin shows it.
+```sh
+k9                              # every namespace
+k9 --readonly                   # the same, changing nothing
+```
+
+`k9` is an alias in the operator's `~/.bashrc`, for `sudo k9s --kubeconfig /etc/rancher/k3s/k3s.yaml -A`. It runs through `sudo` since the kubeconfig is root's alone, and names the kubeconfig because `sudo` drops `KUBECONFIG` and root has no `~/.kube/config`; `k3s kubectl` finds it by itself, k9s does not.
+
+Inside, `:ns` lists the namespaces (Enter on one narrows the view to it), `:pods` the pods, `l` shows a pod's logs, `s` opens a shell, `?` lists the keys and `:q` quits.
+
+A host gets k9s and the alias on its first boot, from `infra/install-k9s.sh`. A host made before that, such as `anville-staging-01.vabl.dev`, gets them the same way, from a checkout on your own machine:
+
+```sh
+ssh <operator>@<host> 'sudo bash -s' < deploy/infra/install-k9s.sh
+```
+
+It installs the pinned release after checking its checksum, unless that version is already there, and gives the account that ran `sudo` the alias, replacing an earlier `k9` alias rather than adding a second. Unattended upgrades do not update it: to change the version, edit the version and the two checksums at the top of the script and run it on each host the same way.
+
+**Fake email.** An environment with no `EMAIL_URL` secret delivers nothing: each message is written to the pod's log. On a staging environment it is written with the test-system disclaimer it would carry if it were sent: `[TEST]` before the subject, and the disclaimer at the top of the body. To see one, run `k exec deployment/anville -- python manage.py sendtestemail someone@example.com` and read the log. The log then holds whatever links the messages carried, which is acceptable only where the data is fake. A production environment cannot be deployed without `EMAIL_URL`. "Set up email" above turns real email on.
+
+**Resetting a password.** Password reset is refused until ticket 28a. Until then the operator runs `changepassword`, as above. A participant's username is their whole email address (ticket 37), so that is what the command takes; the admin shows it. The operator's own account is the exception: a username of its own, and no email address.
 
 **Changing a secret.** Change it in the GitHub Environment and deploy again. The pods restart only when a secret has changed. `POSTGRES_PASSWORD` is the exception: PostgreSQL reads it once, when its data is first created.
 
@@ -168,17 +229,3 @@ deploy/check.sh
 
 It needs `shellcheck` 0.11 (`pip install shellcheck-py==0.11.0.1`; versions differ in what they flag), `helm` and `yq`. It renders the chart with every environment's values, and checks that `publish-pathway.yml` offers exactly the files in `pathways/`. The build workflow runs it, with that same shellcheck, before building an image. That check deploys nothing.
 
-## What has been tested
-
-Without a host, a registry push or Docker, as far as each piece allows:
-
-- `hcloud-create.sh`: run end to end against a local stand-in for the Hetzner API, through a named context, including each refusal (no such context, `HCLOUD_TOKEN` set, a name that resolves, a name already a server's, a name that is not fully qualified or does not name its tier); the rendered cloud-init passes cloud-init's own schema check.
-- The charts: installed into a real Kubernetes API server with no node, so every object was accepted and no pod ran.
-- `deploy.sh`: run against that same API server, including each refusal (missing secrets, wrong tier, a node labelled as another host or not at all, values naming no host, a password unfit for a URL). Its cert-manager step pulled the pinned chart from quay.io and installed it there: the six definitions and three deployments were accepted. It could go no further without a node, since cert-manager's own start-up check is a job, and the issuers were refused, as they should be, while its webhook was not running.
-- `tunnel.sh`: run through a local SSH server to that API server, including a wrong host key and a wrong key.
-- `resolve-image-digest.sh`: run against another public image on GitHub Container Registry.
-- `assert-version.sh`: run against gunicorn serving this repository.
-- `publish-pathway.sh`: run with `kubectl` stubbed to run the pod's command here, against a throwaway database: a first publish, the same again (no change), another document, a broken one (refused, nothing published), and names that are not an environment or a pathway. `kubectl exec` carrying the document to a real pod is not yet proven.
-- The backup script: run against a local SFTP server, with `pg_dump` stubbed.
-
-Not yet proven anywhere: the `Dockerfile` as a Docker build, the cloud-init on a real first boot, the deploy key's restriction in `authorized_keys`, cert-manager starting and issuing a certificate, a pod starting, a real dump, and the restore above.

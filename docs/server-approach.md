@@ -27,14 +27,17 @@ deploy/
   infra/
     cloud-init.yaml.template
     hcloud-create.sh                  # firewall + server, from the template
+    install-k9s.sh                    # k9s for the operator, carried by the template
   resolve-image-digest.sh             # the four steps of a deploy, each a script
   tunnel.sh
   deploy.sh
   assert-version.sh
+  publish-pathway.sh                  # a pathway document into one environment
   check.sh                            # shellcheck and helm over all of deploy/
   README.md                           # how to do each thing
 .github/workflows/build.yml
 .github/workflows/deploy.yml
+.github/workflows/publish-pathway.yml
 ```
 
 ## 2. What carries over from LivePace, and what does not
@@ -254,7 +257,10 @@ The host's tier and canonical name are parameters of the template, which sets th
 - two accounts: `deploy` for the workflow, and a named interactive sudoer. The deploy key is restricted in `authorized_keys` to one thing, forwarding a port to the k3s API on the host: it has no shell, no sudo and cannot read the kubeconfig, a copy of which the workflow holds as a secret. Root login over SSH is disabled; Hetzner images otherwise leave root as the login;
 - base packages, 2 GiB swap, `vm.swappiness=10`, SSH without passwords, and unattended upgrades, which restart the host at 03:30 UTC when an update needs it;
 - UFW admitting 22, 80 and 443, with the k3s pod and service networks allowed. **6443 is not opened**;
-- k3s in server mode with its bundled Traefik and kubectl, with secrets encrypted at rest. Helm is not installed on the host: it runs in the deploy workflow, through the tunnel. Nothing in the template depends on the architecture, so an ARM host remains possible.
+- k3s in server mode with its bundled Traefik and kubectl, with secrets encrypted at rest. Helm is not installed on the host: it runs in the deploy workflow, through the tunnel;
+- k9s, for the operator to look at the cluster in a terminal, with a `k9` alias in the operator's `~/.bashrc` for `sudo k9s --kubeconfig /etc/rancher/k3s/k3s.yaml -A`: a pinned release checked against its checksum by `infra/install-k9s.sh`, which the template carries whole. It is not in an apt repository, so unattended upgrades leave it alone; the same script, run over SSH, installs it on an older host or changes its version.
+
+Nothing in the template depends on the architecture, so an ARM host remains possible: k9s is fetched for the host's.
 
 The outside-in check that LivePace does with a probe script is done here by step 6 of the deploy.
 
@@ -289,10 +295,10 @@ A staging environment is private in the sense ticket 26 means: an unadvertised h
 
 Initial delivery is through **Mailjet**, over SMTP, with Django's own SMTP backend. No mail runs on the host.
 
-- **Configuration is one URL.** `EMAIL_URL=smtp+tls://<api key>:<secret key>@in-v3.mailjet.com:587`, a per-environment secret, plus `DEFAULT_FROM_EMAIL` in the environment's values. Changing provider later is a change of that secret, not of the image. Port 587 is the one to use: Hetzner blocks outbound 25 and 465 on new accounts.
+- **Configuration is one URL.** `EMAIL_URL=smtp+tls://<api key>:<secret key>@in-v3.mailjet.com:587`, a per-environment secret, plus `DEFAULT_FROM_EMAIL` in the environment's values (`email.from`), which the deploy requires whenever `EMAIL_URL` is set, since the provider refuses Django's `webmaster@localhost`. Changing provider later is a change of that secret, not of the image. Port 587 is the one to use: Hetzner blocks outbound 25 and 465 on new accounts.
 - **No new dependency.** django-environ already parses the URL. A provider package such as django-anymail is only worth adding if delivery webhooks (bounces, complaints) are wanted.
 - **Unset means fake email.** Without `EMAIL_URL` the console backend is used: each message is written to the pod's log and nothing leaves the host. Password reset stays refused until ticket 28a turns it on; a deploy must not enable it merely because the secret is present.
-- **One Mailjet API key per environment**, so a staging key can be revoked without touching production and each environment's sending is visible apart. Mailjet's sub-accounts are the likely way to do this; that should be confirmed against the plan in use.
+- **One Mailjet API key per environment**, so a staging key can be revoked without touching production and each environment's sending is visible apart. Each is a Mailjet subaccount. The Free and Essential plans allow one, enough for staging; production needs a larger plan or Mailjet's support.
 - **A validated sending domain per production environment**, with SPF, DKIM and DMARC, on a subdomain used for nothing else: for *Whatever You Do*, a subdomain of `whateveryoudo.org`. Mailjet's validation records go in whichever DNS host that domain ends up with. The sizing doc's point stands: deliverability of observer invitations to consumer mailboxes is the risk, not cost.
 - **Staging goes in two stages** (below).
 - **It is another processor**, receiving participants' and observers' addresses and the text of each message. It joins Ubicloud on the open legal list before production use.
@@ -301,7 +307,9 @@ Initial delivery is through **Mailjet**, over SMTP, with Django's own SMTP backe
 
 **First, fake email.** A staging environment starts with no `EMAIL_URL`. Anything the application sends appears in the pod's log, where the operator reads it through the tunnel with `kubectl logs`. That puts links and their tokens in a log, which is acceptable only because staging holds fake data. If reading logs becomes tedious, a mail catcher such as Mailpit in the environment's namespace is the next step up, still delivering nothing.
 
-**Later, actual email with a disclaimer.** When staging needs to reach real mailboxes, it gets its own Mailjet API key, a sending address at `anville.vabl.dev` validated with records in Cloudflare, and a disclaimer on every message:
+**Later, actual email with a disclaimer.** When staging needs to reach real mailboxes, it gets its own Mailjet API key, a sending address at `mail.anville.vabl.dev` validated with records in Cloudflare, and a disclaimer on every message. The sending domain is a name of its own because `anville.vabl.dev` is a CNAME to its host, and a CNAME's name can hold no other record, the SPF record included. `deploy/README.md` gives the steps.
+
+Every message carries a disclaimer:
 
 - The disclaimer is one setting, `ANVILLE_EMAIL_DISCLAIMER`. When set, a thin email backend wrapping the configured one puts a marker in the subject (`[TEST]`) and the disclaimer text at the top of the body, text and HTML alike. It works at the backend so that it covers every message whichever code sent it, allauth's included, and no template has to remember it. This is built (`config/email.py`), and applies to fake email as well, so the marked message can be seen in the pod's log before any real sending is set up.
 - Suggested wording: "This message comes from a test system for Anville. It is not intended for production use. If you were not expecting it, please ignore it."
