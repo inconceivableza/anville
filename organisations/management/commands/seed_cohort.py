@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.urls import reverse
 
 from access.consent import current_text_version, withdraw
 from access.models import Account, Consent
@@ -67,10 +68,10 @@ class Command(BaseCommand):
                 if name == WITHDRAWN:
                     withdraw(member)
 
-        # ✨ The join route belongs to joining by link (ticket A2), so the path is written out rather than reversed.
+        join_link = reverse("join", args=[cohort.join_token])
         self.stdout.write(
             self.style.SUCCESS(f"Seeded {ORGANISATION} with an {COHORT} of {len(MEMBERS)} members.")
-            + f"\nAdmin: {ADMIN_EMAIL}\nPassword: {SEED_PASSWORD}\nJoin link: /join/{cohort.join_token}/"
+            + f"\nAdmin: {ADMIN_EMAIL}\nPassword: {SEED_PASSWORD}\nJoin link: {join_link}"
         )
 
 
