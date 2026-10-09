@@ -426,12 +426,17 @@ class ObserverResponse(models.Model):
         ]
 
     @classmethod
-    def send(cls, response, secret, assessment):
+    def send(cls, response, secret, assessment, is_test_data=False):
         """✨ Store the observer assessment sent with a claimed secret, about the participant whose response it is. It
-        counts at once. A second from the same secret raises IntegrityError from the database and changes nothing."""
+        counts at once. A second from the same secret raises IntegrityError from the database and changes nothing.
+        `is_test_data` is set only by a seeding command, never from a request."""
         with transaction.atomic():
             return cls.objects.create(
-                response=response, assessment=assessment, submitted_at=timezone.now(), sent_by=_sent_by(secret)
+                response=response,
+                assessment=assessment,
+                submitted_at=timezone.now(),
+                sent_by=_sent_by(secret),
+                is_test_data=is_test_data,
             )
 
     @classmethod

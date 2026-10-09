@@ -1,0 +1,28 @@
+{# ✨ One group on "Your organisations": its name, type and member count, its join link to copy or replace for an admin who manages it, and its members' progress. #}
+<section class="administered-group" id="group-{{ group.pk }}">
+  <h3>{{ group.name }}</h3>
+  <p class="administered-group-facts">{{ group.get_type_display }} · {{ group.member_count }} member{{ group.member_count|pluralize }}</p>
+  {% if group.join_link %}
+    <div class="name-section invitation-link">
+      <label for="join-link-{{ group.pk }}">Join link</label>
+      <div class="invitation-link-row">
+        <input type="text" id="join-link-{{ group.pk }}" value="{{ group.join_link }}" readonly>
+        {# ✨ Run by the page's script (frontend/src/main.js), as the observer links' Copy is; htmx runs no code here (ADR 0006). #}
+        <button type="button" class="btn btn-primary invitation-copy" data-copy="join-link-{{ group.pk }}">Copy</button>
+      </div>
+      <p class="replace-link"><a href="{% url 'replace_link' group.pk %}">Replace link</a></p>
+    </div>
+  {% endif %}
+  {% if group.members %}
+    {# ✨ Each member's name and how far through they are; never what they answered or their email address. #}
+    <div class="name-section group-members">
+      <p class="group-members-label">Members</p>
+      <ul class="members">
+        {% for member in group.members %}
+          <li class="member"><span class="member-name">{{ member.name }}</span> ·
+            <span class="member-status">{% if not member.consented %}hasn't consented{% elif member.last_active %}{{ member.complete }} of {{ member.total }} sections · last active {{ member.last_active|date:"j F Y" }}{% else %}not started{% endif %}</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+</section>

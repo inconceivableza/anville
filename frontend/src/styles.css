@@ -1590,6 +1590,44 @@ form + .way-on,
   margin-bottom: 8px;
 }
 
+/* ✨ The "New group" form's type: a legend set like the other labels, then the radio buttons side by side. */
+.new-group-types {
+  border: none;
+  padding: 0;
+  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+
+.new-group-types legend {
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.new-group-types .errorlist {
+  flex-basis: 100%;
+}
+
+/* ✨ "Replace link" under a group's join link: quieter than Copy, as it leads to a confirmation. */
+.name-section .replace-link {
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+
+.replace-link a {
+  color: var(--ink-light);
+}
+
+.name-section .new-group-types label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  margin-bottom: 0;
+}
+
 /* Account pages (sign in, sign up, sign out) */
 
 .account-page {
@@ -1622,6 +1660,16 @@ form + .way-on,
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* ✨ "The text has changed": set apart from the text above and close to the choices it bears on, flagged as the
+   coach checklist's stop is, with the words in the body colour so they stay easy to read on the pale red */
+.consent-changed {
+  margin: 32px 0 12px;
+  padding: 12px 14px;
+  background: var(--stop-pale);
+  border-left: 4px solid var(--red-soft);
+  font-weight: 600;
 }
 
 /* The hub's quiet way to the consent page, below everything else */
@@ -1682,6 +1730,41 @@ form + .way-on,
 /* ✨ Copy needs JavaScript, so it appears only once that has loaded; without it, the link is selected by hand. */
 .invitation-copy {
   display: none;
+}
+
+/* ✨ A group's members on "Your organisations": a card like the join link's, each name then its status, a line between */
+.group-members {
+  padding: 24px 32px;
+}
+
+.name-section .group-members-label {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.members {
+  list-style: none;
+}
+
+.member {
+  padding: 10px 0;
+}
+
+.member + .member {
+  border-top: 1px solid var(--border);
+}
+
+.member-name {
+  font-weight: 600;
+}
+
+.member-status {
+  color: var(--ink-muted);
+}
+
+.administered-group + .administered-group {
+  margin-top: 40px;
 }
 
 html[data-javascript="loaded"] .invitation-copy {

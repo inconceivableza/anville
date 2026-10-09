@@ -150,6 +150,40 @@ _Avoid_: client, product owner, prototype builder.
 The person who writes and edits a pathway. Assumed non-technical.
 _Avoid_: admin, editor, content manager.
 
+### Groups
+
+**Deployment**:
+One running Anville, with its own host, database, domain, users and pathway. Should tenancy come, it separates deployments, never organisations.
+_Avoid_: instance, tenant (for an organisation), site.
+
+**Operator**:
+Whoever runs a deployment, with access to its database and the operator's admin. Creates organisations and grants admin rights, and can read everything a deployment holds.
+_Avoid_: admin, superuser, platform owner.
+
+**Organisation**:
+A church or ministry that gathers participants into groups within a deployment and follows their progress. A participant may belong to several.
+_Avoid_: tenant, client, account.
+
+**Organisation admin**:
+A person given rights over an organisation and all its groups: to make groups, share their join links, and see their members' progress and combined results.
+_Avoid_: admin (on its own), organiser, owner, leader.
+
+**Group admin**:
+A person given the same rights over one group only.
+_Avoid_: admin (on its own), group leader, facilitator.
+
+**Group**:
+A set of participants gathered within an organisation, of one type: a **cohort**, who work through the pathway together over a season, or a **team**, who serve together. A participant may be in several groups, and keeps one response across them all.
+_Avoid_: class, course, team (for a group of any type).
+
+**Member**:
+A participant who has joined a group. Belonging to an organisation means being a member of one of its groups.
+_Avoid_: enrollee, student, user.
+
+**Join link**:
+A group's link, shared by its organisation or group admins, by which a person signs up to the deployment and joins that group in one go, or joins it if they already have an account.
+_Avoid_: invite link, invitation (the participant's link to an observer or coach), enrolment code.
+
 ### Responses
 
 **Response**:
@@ -177,7 +211,7 @@ A participant's self-result beside their observer average: each construct's two 
 _Avoid_: gap analysis, 360.
 
 **Enrolment code**:
-A shared code that admits a person to sign up to a deployment, required unless the deployment turns it off. It grants access only and never stands in for consent.
+A shared code that admits a person to sign up to a deployment, required unless the deployment turns it off or the person arrives by a join link. It grants access only and never stands in for consent.
 _Avoid_: invite code, access code, password.
 
 **Consent**:

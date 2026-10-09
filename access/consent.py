@@ -12,7 +12,7 @@ from access.models import Consent
 
 # ✨ The version of the text in templates/access/consent.html. Raise it whenever a change alters what a
 # participant agrees to (not for a typo), and everyone is asked again before they continue.
-CONSENT_TEXT_VERSION = 1
+CONSENT_TEXT_VERSION = 2
 
 
 def current_text_version():
@@ -20,15 +20,14 @@ def current_text_version():
     return CONSENT_TEXT_VERSION
 
 
+def current_consents():
+    """✨ Every consent to the current text that has not been withdrawn, whoever gave it."""
+    return Consent.objects.filter(text_version=current_text_version(), withdrawn_at__isnull=True)
+
+
 def current_consent(participant):
     """✨ The participant's consent to the current text, or None if they have not given it."""
-    return (
-        Consent.objects.filter(
-            participant=participant, text_version=current_text_version(), withdrawn_at__isnull=True
-        )
-        .order_by("-given_at")
-        .first()
-    )
+    return current_consents().filter(participant=participant).order_by("-given_at").first()
 
 
 def latest_consent(participant):

@@ -21,3 +21,5 @@ The workbook collects reflective free text, including accounts of hardship and l
 - The consent text is a versioned artefact; changing its meaning asks participants again.
 - Under-18s are excluded. If that becomes unacceptable, revisit this decision together with a Children's Code assessment.
 - Retention, deletion on withdrawal, and a data protection impact assessment remain open and are not decided here.
+
+Note, 9 Oct (B1): version 2 of the text says who sees what (the participant, their observers, a coach, group and organisation admins, the operator) and what declining keeps (the account: display name, email address, password stored hashed, and when the account signed up and last signed in). A member who withdraws, or has not agreed to the current version, stays in their groups, and those groups' admins see their display name and that they have not consented, so they know who to follow up. That name is shown without current consent; what it rests on instead is left to the legal review the spec parks, and the text says it plainly in the meantime.

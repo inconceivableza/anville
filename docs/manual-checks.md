@@ -267,3 +267,45 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - From the bookmarked link in a different browser (no cookie), the assessment can be sent too, and the page it lands on is that link's.
 - With the widget open in two tabs, sending from the second says "Your assessment has already been sent." beneath its button, not a connection error.
 - The participant's own sort widget still reads in the first person, with "See my results →".
+
+## Organisations and groups in the operator's admin (`/admin/`, as a superuser)
+
+- The index has an "Organisations and groups" section with Groups, Memberships, Organisations and Permissions, apart from "Authentication and Authorization"'s own Groups.
+- Adding an organisation shows a Permissions row under its name: typing part of an email in Holder finds the account, and saving with a capability makes the organisation and its first organisation admin in one go. The permission then lists the organisation and no group.
+- Adding a group to it, with a type of Cohort or Team, shows its join token read-only once saved, and the same Permissions rows, plus Memberships where a participant can be found by email. Adding the same participant twice is refused with a message on the form, not an error page.
+- On the Permissions list, adding one with both an organisation and a group, or neither, is refused with a message on the form.
+
+## Your groups (the hub's "Your groups", after adding the participant to two groups in the admin)
+
+- "Your groups" sits on the same line as "Your consent" at the foot of the hub, including on the empty "Nothing to begin yet" hub, and looks as quiet.
+- The page has the header, as the hub does. Each group shows its name as a heading, its organisation under it, the sentence on what its admins see, and "Leave this group". No admin's name appears anywhere.
+- "Leave this group" opens a page asking "Leave Autumn cohort?" (the group's own name), with "Leave this group" and "Stay in this group" stacked and alike in size. "Stay in this group" goes back with nothing changed; "Leave this group" comes back to "Your groups" without that group, and reloading asks nothing about resending a form.
+- Without JavaScript, leaving works the same: the confirmation is a plain form.
+- Keyboard only: Tab reaches each "Leave this group" link, then on the confirmation both choices in order.
+- Phone width: the sentence wraps and the two buttons fill the width.
+- A participant in no group sees "You're not in any groups."
+
+## Joining a group by link (`/join/<token>/`, the token from a group in the admin)
+
+- In a private window with the enrolment code on, the link leads to sign up with no "Enrolment code" field. Signing up leads to the consent text; agreeing leads to "Join Example Church, Autumn cohort?" (the group's own names) with the sentence on what its admins see, the same words as on the consent text's group line. "Join" lands on the hub, and the admin's Memberships list now shows the new account in that group.
+- In a fresh private window, `/accounts/signup/` opened without a join link still asks for the enrolment code.
+- Signed in and consented, the link shows the join page at once; "Not now, go to your pathway" leads to the hub and the Memberships list is unchanged. Opening the link again after joining says "You're already in this group" with "Go to your pathway".
+- Signed out with an existing account, following "Sign in" from the sign-up page the link led to and signing in lands on the join page, not the hub.
+- A made-up token in the link says "This link no longer works" and to ask whoever sent it for a new one, and names no group or organisation.
+- Phone width: the join page's heading, sentence and "Join" button fit without the page scrolling sideways.
+
+## Your organisations (`/organisations/`, after giving the account a permission in the admin)
+
+- With no permission, the hub's foot shows "Your consent · Your groups" only, and `/organisations/` says the page is for admins and offers the pathway, naming no organisation or group. After adding a permission, "Your organisations" joins the same line, as quiet as the others.
+- With `manage` on Example Church: the page has the header, as the hub does, and shows Example Church with each of its groups under it, each with its name, "Cohort" or "Team", its member count ("1 member", "3 members"), and its join link in a read-only field with Copy. A group in another organisation does not appear.
+- Copy puts the whole link on the clipboard and reads "Copied"; pasting it in a private window opens the join page for that group. Without JavaScript, there is no Copy button, and the link in the field can be selected and copied by hand.
+- The browser's console shows no error on loading the page or pressing Copy.
+- With `manage` on the Autumn cohort only: the page shows Example Church with the Autumn cohort alone. With `see_progress` only, the group shows its type and member count but no join link.
+- An account that has not consented reaches the page by typing `/organisations/`, and is not sent to the consent text. Opening the hub instead lands on the consent text, whose foot links "Your organisations" for an account holding a permission (and not for one without).
+- Phone width: the link field and Copy stay on one line without the page scrolling sideways.
+- With `manage` on Example Church: under its groups (or under "No groups yet.") is a "New group" form with a Name field and Type as two radio buttons, Cohort already chosen. Creating "Worship team" as a Team comes back to the page scrolled to the new group, which shows "Team", "0 members" and its own join link; reloading asks nothing about resending a form. Creating with an empty name keeps the browser on the form; with the browser's check bypassed (removing `required` in the inspector), the page comes back with a message on the Name field and nothing created.
+- With `manage` on the Autumn cohort only, or `see_progress` on Example Church, there is no "New group" form.
+- Keyboard only: Tab reaches Name, the type radios (arrow keys move between Cohort and Team) and "Create group".
+- Under each join link is "Replace link", quieter than Copy. It opens a page asking "Replace the join link for Autumn cohort?" (the group's own name), with "Replace link" and "Keep this link" stacked and alike in size. "Keep this link" goes back to the group with the same link; "Replace link" comes back to the group with a different link, the member count unchanged, and reloading asks nothing about resending a form. In a private window the old link says "This link no longer works"; the new one opens the join page.
+- With `manage` on the Autumn cohort only, typing the "Replace link" address with another group's number in it is refused.
+- Members' progress (after `seed_cohort`, signed in as the admin it prints): the Autumn cohort lists its twelve members by first name, A to Z. Ada, Ben and Cara say "not started"; Femi says "hasn't consented" and nothing else; the rest say "N of M sections · last active" with today's date and no time, the finished ones with N equal to M. No email address, answer, result or letter text appears, and the list sits in a "Members" card under the join link, each name in bold with a line between members and a clear gap before the next group, and reads well at phone width.

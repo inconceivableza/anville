@@ -28,16 +28,34 @@
     it can be this sensitive, nothing is stored until you agree.
   </p>
 
-  <h2>Who sees it</h2>
+  <h2>Who sees what</h2>
+  <p><strong>You</strong> see everything you write.</p>
   <p>
-    You do. Nothing is shared with a coach or anyone else unless you choose to share it. The people who run
-    this service can reach stored answers in order to keep it working.
+    <strong>People you ask to rate you</strong> see your first name. They never see your answers.
+  </p>
+  <p>
+    <strong>A coach</strong>, if you ask someone to be yours, sees your first name. If you then choose to share
+    your self-assessment results with them, they also see those results and how the people you asked rate you on
+    the same things, until you stop sharing or change coach. They never see the rest of your answers.
+  </p>
+  <p>
+    <strong>A group's admins</strong>, and its organisation's admins, if you choose to join a group, see your
+    first name, how far through you are and when you were last active, and the self-assessment results of the
+    whole group averaged, once at least three members have them, never yours on their own. They never see your
+    answers. If you leave the group, they no longer see anything about you through it.
+  </p>
+  <p>
+    <strong>The people who run this service</strong> can reach everything stored, in order to keep it working.
   </p>
 
   <h2>Your choice</h2>
   <p>
-    Agreeing is up to you, and your enrolment code does not agree for you. If you do not agree, nothing you
-    write is stored, and you can agree later. You can withdraw your consent at any time from this page.
+    Agreeing is up to you, and your enrolment code, if you were given one, does not agree for you. If you do
+    not agree, nothing you write in the pathway is stored, only your account: your first name and email
+    address, your password (stored scrambled, so nobody can read it), and when you signed up and last signed
+    in. You can agree later. You can withdraw your consent at
+    any time from this page. If you do, you stay in any groups you have joined, but their admins see only your
+    first name and that you have not consented.
   </p>
 
   <p>Version {{ version }} of this text.</p>
@@ -55,17 +73,21 @@
     </p>
   {% else %}
     {% if text_changed %}
-      <p class="gate-refused" role="alert">The text has changed since you opened this page. Please read it again.</p>
+      <p class="consent-changed" role="alert">The text has changed since you opened this page. Please read it again.</p>
     {% elif previous.withdrawn_at %}
       <p>You withdrew your consent on {{ previous.withdrawn_at|date:"j F Y" }}.</p>
     {% elif previous %}
-      <p class="gate-refused">The text has changed since you agreed to version {{ previous.text_version }}. Please read it again.</p>
+      <p class="consent-changed">The text has changed since you agreed to version {{ previous.text_version }}. Please read it again.</p>
     {% endif %}
     <form method="post" action="{% url 'consent' %}" class="consent-choices">
       {% csrf_token %}
       <input type="hidden" name="version" value="{{ version }}">
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
       <button type="submit" name="decision" value="agree" class="btn btn-primary btn-full">I agree</button>
       <button type="submit" name="decision" value="decline" class="btn btn-secondary btn-full">I do not agree</button>
     </form>
   {% endif %}
+
+  {# ✨ The hub needs consent and admins' pages don't, so an admin who has not consented finds the way here (spec, Shape). #}
+  {% if user.organisation_permissions.exists %}<p class="hub-consent"><a href="{% url 'your_organisations' %}">Your organisations</a></p>{% endif %}
 {% endblock content %}

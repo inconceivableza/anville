@@ -11,6 +11,11 @@ hostname: anville.vabl.dev
 enrolment:
   required: false
 
+# Where its email comes from once EMAIL_URL is set, and the disclaimer to send for a staging system.
+email:
+  disclaimer: "This message comes from a test system. It is not intended for production use, and any contents should be regarded as spurious."
+  from: "Anville (staging) <anville-staging@vabl.dev>"
+
 # Let's Encrypt's real service from the first deploy. Browsers refuse .dev over anything but trusted HTTPS,
 # so a certificate from the test issuer would give a site that cannot be opened.
 issuer: letsencrypt-prod

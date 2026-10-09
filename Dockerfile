@@ -36,6 +36,7 @@ COPY manage.py gunicorn.conf.py ./
 COPY config/ config/
 COPY access/ access/
 COPY engine/ engine/
+COPY organisations/ organisations/
 COPY pathways/ pathways/
 COPY --from=frontend /build/frontend/dist/ frontend/dist/
 

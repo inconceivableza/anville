@@ -229,6 +229,8 @@ The observer's page runs the same sort widget in observer wording. It sends the 
 
 To show the comparison without three real observers, `python manage.py seed_observers --observers 3` creates a fake participant, `seed-participant-<n>@example.com` with the password `information.` (`--password` sets another) and consent already given, with a self-assessment and self-result of their own and that many submitted test observers, their values the same on every run. Everything it creates is marked as test data on the server; it needs a published pathway with an assessment block.
 
+To build on organisations without walking twelve pathways, `python manage.py seed_cohort` creates Example Church with an Autumn cohort of twelve fake members and an admin holding `manage` on Example Church, and prints the admin's email, the password `information.` and the cohort's join link. Of the members, three have not started, five are part-way and four have finished, with self-results, closing ratings and observer answers sent through real invitations; one part-way member has withdrawn consent. Every account is at `example.com` and everything it creates is marked as test data on the server. It runs only with `DEBUG` on, needs a published pathway, and a second run says Example Church already exists and adds nothing.
+
 ## Settings for a deployed environment
 
 Everything a deployed copy needs is read from the environment, so one build serves every deployment (ADR 0002). [docs/server-approach.md](docs/server-approach.md) describes how a deployment is run. Development needs none of these: left unset, each keeps the behaviour described above.

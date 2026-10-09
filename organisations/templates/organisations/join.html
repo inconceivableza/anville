@@ -1,0 +1,13 @@
+{% extends "allauth/layouts/base.html" %}
+{# ✨ The join page: the group, its organisation, and what its admins see, before anything is recorded. #}
+{% block head_title %}Join {{ group.organisation.name }}, {{ group.name }}?{% endblock head_title %}
+
+{% block content %}
+  <h1>Join {{ group.organisation.name }}, {{ group.name }}?</h1>
+  {% include "organisations/what_admins_see.html" %}
+  <form method="post" action="{% url 'join' group.join_token %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-full">Join</button>
+  </form>
+  <p><a href="{% url 'hub' %}">Not now, go to your pathway</a></p>
+{% endblock content %}

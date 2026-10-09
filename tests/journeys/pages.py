@@ -12,6 +12,13 @@ def main_of(page):
     return re.search(r"<main.*?</main>", page, re.S).group(0)
 
 
+def text_of(page):
+    """✨ The page's words as a reader sees them: no tags, entities decoded, and every run of whitespace one space,
+    so a sentence the template wraps across lines, or that crosses a tag like <strong>, is still found whole.
+    Tags are dropped, not spaced, so "</strong>," stays joined to its comma."""
+    return " ".join(unescape(re.sub(r"<[^>]+>", "", page)).split())
+
+
 def gate_checklist(page):
     """✨ The gate's checklist beneath "Mark complete", as {message: whether it is met}."""
     items = re.findall(r'<li class="gate-item( is-met)?">.*?<span class="gate-message">(.*?)</span>', page, re.S)

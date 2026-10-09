@@ -45,4 +45,20 @@ if [ "$offered" != "$present" ]; then
   exit 1
 fi
 
+echo "== The app directories the image copies"
+# Every Django app in the repository has to reach the image: the Dockerfile copies it, and the dockerignore, which
+# admits nothing it does not name, lets it through. A new app that is in neither fails collectstatic in the build.
+unreached=""
+for apps in ../*/apps.py; do
+  [ -e "$apps" ] || continue
+  app=$(basename "$(dirname "$apps")")
+  grep -qxF "COPY $app/ $app/" ../Dockerfile || unreached="$unreached  Dockerfile: COPY $app/ $app/"$'\n'
+  grep -qxF "!$app/" ../Dockerfile.dockerignore || unreached="$unreached  Dockerfile.dockerignore: !$app/"$'\n'
+done
+if [ -n "$unreached" ]; then
+  echo "An app in the repository would not reach the image. Add:" >&2
+  printf '%s' "$unreached" >&2
+  exit 1
+fi
+
 echo "All of deploy/ checks out."

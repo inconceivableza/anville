@@ -1,0 +1,39 @@
+{% extends "engine/participant.html" %}
+{% comment %}
+  ✨ The organisations and groups an admin has rights over (ticket A3): each group's type, member count, and for one
+  the admin manages, its join link to copy and replace; for an organisation the admin manages, a "New group" form.
+{% endcomment %}
+{% block head_title %}Your organisations{% endblock head_title %}
+
+{% block content %}
+  <h1>Your organisations</h1>
+
+  {% for organisation, groups in organisations %}
+    <section class="organisation">
+      <h2>{{ organisation.name }}</h2>
+      {% for group in groups %}
+        {% include "organisations/administered_group.html" %}
+      {% empty %}
+        <p>No groups yet.</p>
+      {% endfor %}
+      {% if organisation.new_group_form %}
+        {% with form=organisation.new_group_form %}
+          {# ✨ Only for an organisation the admin manages (ticket A5). #}
+          <form method="post" action="{% url 'new_group' organisation.pk %}" class="name-section new-group">
+            {% csrf_token %}
+            <h3>New group</h3>
+            <p>{{ form.name.errors }}{{ form.name.label_tag }}{{ form.name }}</p>
+            <fieldset class="new-group-types">
+              <legend>Type</legend>
+              {{ form.type.errors }}
+              {% for choice in form.type %}
+                <label for="{{ choice.id_for_label }}">{{ choice.tag }} {{ choice.choice_label }}</label>
+              {% endfor %}
+            </fieldset>
+            <button type="submit" class="btn btn-primary">Create group</button>
+          </form>
+        {% endwith %}
+      {% endif %}
+    </section>
+  {% endfor %}
+{% endblock content %}
