@@ -36,14 +36,19 @@ def join(request, token):
     if request.method == "POST":
         Membership.objects.get_or_create(participant=request.user, group=group)
         joining.release(request.session)
-        response = redirect("hub")
-        response.status_code = 303  # ✨ the browser GETs the hub rather than repeat the POST
-        return response
+        return _see_other("hub")
     return render(request, "organisations/join.html", {"group": group})
 
 
 def _then_back_here(where, request):
     return redirect(f"{reverse(where)}?{urlencode({'next': request.path})}")
+
+
+def _see_other(to):
+    """✨ A redirect after a POST, as 303 so the browser GETs `to` rather than repeat the POST."""
+    response = redirect(to)
+    response.status_code = 303
+    return response
 
 
 @login_required
@@ -114,9 +119,7 @@ def replace_link(request, group_id):
 
 
 def _back_to_group(group):
-    response = redirect(f"{reverse('your_organisations')}#group-{group.pk}")
-    response.status_code = 303  # ✨ the browser GETs the page rather than repeat the POST
-    return response
+    return _see_other(f"{reverse('your_organisations')}#group-{group.pk}")
 
 
 @login_required
@@ -130,7 +133,5 @@ def leave_group(request, group_id):
     )
     if request.method == "POST":
         membership.delete()
-        response = redirect("your_groups")
-        response.status_code = 303
-        return response
+        return _see_other("your_groups")
     return render(request, "organisations/leave_group.html", {"group": membership.group})
