@@ -1,3 +1,5 @@
+from typing import NamedTuple
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
@@ -18,19 +20,44 @@ ORGANISATION = "Example Church"
 COHORT = "Autumn cohort"
 ADMIN_EMAIL = "seed-cohort-admin@example.com"
 SEED_PASSWORD = "information."
-FINISHED = None
-# ✨ Each member's first name, as given at sign-up, and how many of the track's sections they have completed (a
-# section's parts with it): 0 is not started, with no response at all, and FINISHED is every one. A part-way count is
-# kept short of the whole track, however few sections it has.
+
+
+class Stage(NamedTuple):
+    """✨ How far a seeded member has got through the track: `completed` of its sections (a section's parts with it),
+    or every one when `finished`."""
+
+    completed: int = 0
+    finished: bool = False
+
+    @property
+    def started(self):
+        """✨ A member who has not started has no response at all."""
+        return self.finished or self.completed > 0
+
+    def sections_completed(self, whole):
+        """✨ The sections of `whole` this stage has completed. A part-way count is kept short of the whole track,
+        however few sections it has."""
+        return whole if self.finished else whole[: min(self.completed, len(whole) - 1)]
+
+
+NOT_STARTED = Stage()
+FINISHED = Stage(finished=True)
+
+
+def part_way(completed):
+    return Stage(completed=completed)
+
+
+# ✨ Each member's first name, as given at sign-up, and how far they have got.
 MEMBERS = [
-    ("Ada", 0),
-    ("Ben", 0),
-    ("Cara", 0),
-    ("Dan", 1),
-    ("Esi", 1),
-    ("Femi", 2),
-    ("Grace", 2),
-    ("Hugo", 3),
+    ("Ada", NOT_STARTED),
+    ("Ben", NOT_STARTED),
+    ("Cara", NOT_STARTED),
+    ("Dan", part_way(1)),
+    ("Esi", part_way(1)),
+    ("Femi", part_way(2)),
+    ("Grace", part_way(2)),
+    ("Hugo", part_way(3)),
     ("Ines", FINISHED),
     ("Jon", FINISHED),
     ("Kemi", FINISHED),
@@ -60,11 +87,11 @@ class Command(BaseCommand):
             cohort = Group.objects.create(organisation=church, name=COHORT, type=Group.Type.COHORT)
             admin = _account(ADMIN_EMAIL, "Admin")
             Permission.objects.create(holder=admin, capability=Permission.Capability.MANAGE, organisation=church)
-            for number, (name, sections_done) in enumerate(MEMBERS, start=1):
+            for number, (name, stage) in enumerate(MEMBERS, start=1):
                 member = _account(f"seed-cohort-member-{number}@example.com", name)
                 Membership.objects.create(participant=member, group=cohort)
-                if sections_done != 0:
-                    _work_through(member, version, sections_done)
+                if stage.started:
+                    _work_through(member, version, stage)
                 if name == WITHDRAWN:
                     withdraw(member)
 
@@ -84,17 +111,15 @@ def _account(email, display_name):
     return account
 
 
-def _work_through(member, version, sections_done):
-    """✨ A test-data response that has answered and completed the first `sections_done` sections of the track, and
+def _work_through(member, version, stage):
+    """✨ A test-data response that has answered and completed the sections of the track `stage` has reached, and
     whose observers have answered through their own links, as real observers do."""
     document = version.document
     sections = track_sections(document)
     whole = [section for section in sections if "part_of" not in section]
-    if sections_done is not FINISHED:
-        sections_done = min(sections_done, len(whole) - 1)
     response = Response.objects.create(participant=member, version=version, is_test_data=True)
     tokens = []
-    for section in whole[:sections_done]:
+    for section in stage.sections_completed(whole):
         for answering in [section, *(part for part in sections if part.get("part_of") == section["id"])]:
             tokens += _answer(response, document, answering, member.email)
         response.refresh_from_db()
