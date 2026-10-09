@@ -1727,6 +1727,41 @@ form + .way-on,
   display: none;
 }
 
+/* ✨ A group's members on "Your organisations": a card like the join link's, each name then its status, a line between */
+.group-members {
+  padding: 24px 32px;
+}
+
+.name-section .group-members-label {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.members {
+  list-style: none;
+}
+
+.member {
+  padding: 10px 0;
+}
+
+.member + .member {
+  border-top: 1px solid var(--border);
+}
+
+.member-name {
+  font-weight: 600;
+}
+
+.member-status {
+  color: var(--ink-muted);
+}
+
+.administered-group + .administered-group {
+  margin-top: 40px;
+}
+
 html[data-javascript="loaded"] .invitation-copy {
   display: inline-flex;
 }

@@ -15,11 +15,14 @@
   {% endif %}
   {% if group.members %}
     {# ✨ Each member's name and how far through they are; never what they answered or their email address. #}
-    <ul class="members">
-      {% for member in group.members %}
-        <li class="member"><span class="member-name">{{ member.name }}</span> ·
-          {% if not member.consented %}hasn't consented{% elif member.last_active %}{{ member.complete }} of {{ member.total }} sections · last active {{ member.last_active|date:"j F Y" }}{% else %}not started{% endif %}</li>
-      {% endfor %}
-    </ul>
+    <div class="name-section group-members">
+      <p class="group-members-label">Members</p>
+      <ul class="members">
+        {% for member in group.members %}
+          <li class="member"><span class="member-name">{{ member.name }}</span> ·
+            <span class="member-status">{% if not member.consented %}hasn't consented{% elif member.last_active %}{{ member.complete }} of {{ member.total }} sections · last active {{ member.last_active|date:"j F Y" }}{% else %}not started{% endif %}</span></li>
+        {% endfor %}
+      </ul>
+    </div>
   {% endif %}
 </section>

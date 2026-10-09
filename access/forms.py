@@ -46,8 +46,8 @@ class EnrolmentCodeSignupForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # ✨ Not asked for at all when turned off from the environment, or while the visitor holds a group's join link,
-        # which admits them in its place (ADR 0012). allauth hands this form no request, so it is read from the one
-        # allauth's middleware is handling.
+        # which admits them in its place (organisations-and-groups spec). allauth hands this form no request, so it is
+        # read from the one allauth's middleware is handling.
         request = allauth_context.request
         if not settings.ANVILLE_ENROLMENT_REQUIRED or (
             request is not None and holds_a_working_join_link(request.session)
