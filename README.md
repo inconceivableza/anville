@@ -4,6 +4,13 @@ Anville is a configurable coaching-pathway engine and studio. Its first pathway 
 
 > ✨ Written with AI assistance and checked against the setup it describes.
 
+## License and Contributions
+
+The software code and content here are Copyright, although there is intention to publish them under a more permissive license in the near future.
+Contributions require a Copyright Assignment from the author.
+For any queries, please contact the project.
+See [LICENSE.md](LICENSE.md) for the interim license notice.
+
 ## Prerequisites
 
 - Python 3.13
