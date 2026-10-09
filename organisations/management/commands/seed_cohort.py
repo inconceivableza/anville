@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
+from engine.models import Publication
+
 
 # ✨ Written with AI assistance.
 class Command(BaseCommand):
@@ -9,3 +11,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if not settings.DEBUG:
             raise CommandError("seed_cohort makes fake accounts, so it runs only with DEBUG on.")
+        version = Publication.current_version()
+        if version is None:
+            raise CommandError("No pathway is published. Load one first with load_pathway.")

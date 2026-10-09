@@ -34,3 +34,13 @@ def test_it_refuses_unless_debug_is_on_and_creates_nothing(published, settings):
 
     assert not Organisation.objects.exists()
     assert not get_user_model().objects.exists()
+
+
+@pytest.mark.django_db
+def test_it_refuses_without_a_published_pathway(settings):
+    settings.DEBUG = True
+
+    with pytest.raises(CommandError, match="No pathway is published"):
+        seed()
+
+    assert not Organisation.objects.exists()

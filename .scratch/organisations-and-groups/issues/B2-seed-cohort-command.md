@@ -8,7 +8,7 @@
 
 **Spec:** Seed command; User Stories › Developers
 
-- [ ] The command refuses to run unless debug is on, and needs a published pathway
+- [x] The command refuses to run unless debug is on, and needs a published pathway
 - [ ] It creates Example Church, an Autumn cohort of twelve members and an organisation admin, and prints the admin's email and password and the cohort's join link
 - [ ] Members are spread across the pathway: some not started, some part-way, some finished with self-results, observer answers through real invitations and closing ratings; one has withdrawn consent
 - [ ] Every account uses a reserved example address and every response is flagged as test data
