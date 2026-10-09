@@ -1,4 +1,4 @@
-{# ✨ One group on "Your organisations": its name, type and member count, and its join link for an admin who manages it. #}
+{# ✨ One group on "Your organisations": its name, type and member count, and its join link to copy or replace for an admin who manages it. #}
 <section class="administered-group" id="group-{{ group.pk }}">
   <h3>{{ group.name }}</h3>
   <p class="administered-group-facts">{{ group.get_type_display }} · {{ group.member_count }} member{{ group.member_count|pluralize }}</p>
@@ -10,6 +10,7 @@
         {# ✨ Run by the page's script (frontend/src/main.js), as the observer links' Copy is; htmx runs no code here (ADR 0006). #}
         <button type="button" class="btn btn-primary invitation-copy" data-copy="join-link-{{ group.pk }}">Copy</button>
       </div>
+      <p class="replace-link"><a href="{% url 'replace_link' group.pk %}">Replace link</a></p>
     </div>
   {% endif %}
 </section>

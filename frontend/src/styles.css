@@ -1605,6 +1605,16 @@ form + .way-on,
   flex-basis: 100%;
 }
 
+/* ✨ "Replace link" under a group's join link: quieter than Copy, as it leads to a confirmation. */
+.name-section .replace-link {
+  margin: 12px 0 0;
+  font-size: 14px;
+}
+
+.replace-link a {
+  color: var(--ink-light);
+}
+
 .name-section .new-group-types label {
   display: flex;
   align-items: center;

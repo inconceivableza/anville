@@ -62,3 +62,12 @@ def manages_organisation(viewer, organisation):
     return Permission.objects.filter(
         holder=viewer, capability=Permission.Capability.MANAGE, organisation=organisation
     ).exists()
+
+
+def manages_group(viewer, group):
+    """✨ Whether `viewer` holds `manage` on `group` or its organisation, so may copy and replace its join link."""
+    return (
+        Permission.objects.filter(holder=viewer, capability=Permission.Capability.MANAGE)
+        .filter(Q(group=group) | Q(organisation=group.organisation_id))
+        .exists()
+    )

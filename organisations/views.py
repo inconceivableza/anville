@@ -1,6 +1,7 @@
 from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST
@@ -8,8 +9,8 @@ from django.views.decorators.http import require_http_methods, require_POST
 from access.consent import consent_required, current_consent
 from organisations import joining
 from organisations.forms import NewGroupForm
-from organisations.models import Group, Membership, Organisation
-from organisations.visibility import administered, manages_organisation
+from organisations.models import Group, Membership, Organisation, new_join_token
+from organisations.visibility import administered, manages_group, manages_organisation
 
 
 @require_http_methods(["GET", "POST"])
@@ -86,15 +87,33 @@ def new_group(request, organisation_id):
     its own join link. Any other account is refused."""
     organisation = get_object_or_404(Organisation, pk=organisation_id)
     if not manages_organisation(request.user, organisation):
-        return render(request, "organisations/not_an_admin.html", status=403)
+        return HttpResponseForbidden("Only an organisation's admins can create its groups.")
     form = NewGroupForm(
         request.POST, auto_id=f"new-group-{organisation.pk}-%s", instance=Group(organisation=organisation)
     )
     if not form.is_valid():
         return _your_organisations_page(request, refused=form, status=400)
-    group = form.save()
+    return _back_to_group(form.save())
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def replace_link(request, group_id):
+    """✨ Asks an admin who manages the group to confirm, then gives it a new join token, so the old link stops working
+    and the new one shows on "Your organisations". Members stay in the group. Any other account is refused."""
+    group = get_object_or_404(Group.objects.select_related("organisation"), pk=group_id)
+    if not manages_group(request.user, group):
+        return HttpResponseForbidden("Only the group's admins can replace its join link.")
+    if request.method == "POST":
+        group.join_token = new_join_token()
+        group.save(update_fields=["join_token"])
+        return _back_to_group(group)
+    return render(request, "organisations/replace_link.html", {"group": group})
+
+
+def _back_to_group(group):
     response = redirect(f"{reverse('your_organisations')}#group-{group.pk}")
-    response.status_code = 303
+    response.status_code = 303  # ✨ the browser GETs the page rather than repeat the POST
     return response
 
 
