@@ -4,7 +4,7 @@
 
 **Blocked by:** A1 (Organisations, groups, membership and permissions, with can_see); B1 (Consent v2)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Spec:** Seed command; User Stories › Developers
 
