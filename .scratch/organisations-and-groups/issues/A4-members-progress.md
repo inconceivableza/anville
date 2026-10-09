@@ -4,11 +4,11 @@
 
 **Blocked by:** A3 (Your organisations)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Spec:** Progress; `can_see`; Pages
 
-- [ ] Each member the admin may see shows their display name, sections complete out of the sections in their track, and the date (no time) they were last active
+- [x] Each member the admin may see shows their display name, sections complete out of the sections in their track, and the date (no time) they were last active
 - [ ] A member with no response shows as not started
 - [ ] A member without current consent shows "hasn't consented" and nothing else
 - [ ] No answer, result, letter or email address appears anywhere on the page

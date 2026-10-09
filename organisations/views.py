@@ -8,7 +8,7 @@ from django.views.decorators.http import require_http_methods
 from access.consent import consent_required, current_consent
 from organisations import joining
 from organisations.models import Group, Membership
-from organisations.visibility import administered
+from organisations.visibility import administered, members_seen_by
 
 
 @require_http_methods(["GET", "POST"])
@@ -58,13 +58,15 @@ def your_groups(request):
 
 @login_required
 def your_organisations(request):
-    """✨ The organisations and groups the account has rights over. Needs sign-in but not consent, so an admin can run
+    """✨ The organisations and groups the account has rights over, each group with its members' progress as
+    `members_seen_by` gives it. Needs sign-in but not consent, so an admin can run
     a group without working through the pathway; an account with no permission is refused."""
     if not request.user.organisation_permissions.exists():
         return render(request, "organisations/not_an_admin.html", status=403)
     organisations = administered(request.user)
     for _, groups in organisations:
         for group in groups:
+            group.members = members_seen_by(request.user, group)
             if group.manages:
                 group.join_link = request.build_absolute_uri(reverse("join", args=[group.join_token]))
     return render(request, "organisations/your_organisations.html", {"organisations": organisations})
