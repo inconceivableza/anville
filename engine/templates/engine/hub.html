@@ -64,6 +64,9 @@
     <p>No pathway has been published here yet. When one is, it will appear on this page.</p>
   {% endif %}
 
-  {# ✨ Where a participant reviews or withdraws their consent, and sees or leaves their groups, whatever state the pathway is in. #}
-  <p class="hub-consent"><a href="{% url 'consent' %}">Your consent</a> · <a href="{% url 'your_groups' %}">Your groups</a></p>
+  {% comment %}
+    ✨ Where a participant reviews or withdraws their consent, and sees or leaves their groups, whatever state the
+    pathway is in; and, for an account the operator has given rights over an organisation or group, its admin page.
+  {% endcomment %}
+  <p class="hub-consent"><a href="{% url 'consent' %}">Your consent</a> · <a href="{% url 'your_groups' %}">Your groups</a>{% if user.organisation_permissions.exists %} · <a href="{% url 'your_organisations' %}">Your organisations</a>{% endif %}</p>
 {% endblock content %}

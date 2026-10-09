@@ -4,7 +4,7 @@
 
 **Blocked by:** A2 (Joining by link)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Spec:** Pages; Models; User Stories › Organisation admin; User Stories › Group admin
 

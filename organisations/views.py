@@ -56,6 +56,11 @@ def your_groups(request):
 
 
 @login_required
+def your_organisations(request):
+    return render(request, "organisations/your_organisations.html", {})
+
+
+@login_required
 @consent_required
 @require_http_methods(["GET", "POST"])
 def leave_group(request, group_id):
