@@ -1,0 +1,16 @@
+{% extends "engine/participant.html" %}
+{# ✨ The confirmation before an admin replaces a group's join link (ticket A5). Nothing changes until the form is sent. #}
+{% block head_title %}Replace the join link for {{ group.name }}{% endblock head_title %}
+
+{% block content %}
+  <h1>Replace the join link for {{ group.name }}?</h1>
+  <p>
+    {{ group.name }}, in {{ group.organisation.name }}. The link you have now stops working, so anyone who hasn't
+    joined yet needs the new one. Everyone already in the group stays in it.
+  </p>
+  <form method="post" action="{% url 'replace_link' group.pk %}" class="consent-choices">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-full">Replace link</button>
+    <a class="btn btn-secondary btn-full" href="{% url 'your_organisations' %}#group-{{ group.pk }}">Keep this link</a>
+  </form>
+{% endblock content %}

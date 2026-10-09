@@ -94,7 +94,7 @@ A single function, `can_see`, answers whether one account may see a participant'
 
 ### Shape (ADR 0012)
 
-- A new Django app holds organisations, groups, memberships and permissions, and the `can_see` function. The engine and access apps do not depend on it, except where the hub links to "Your groups" and "Your organisations", and where sign-up skips the enrolment code for a held join link.
+- A new Django app holds organisations, groups, memberships and permissions, and the `can_see` function. The engine and access apps do not depend on it, except where the hub links to "Your groups" and "Your organisations", where the consent page links to "Your organisations" (the hub needs consent and admins' pages do not, so an admin who has not consented would otherwise have no way there), and where sign-up skips the enrolment code for a held join link.
 - Separation between organisations is by permission inside Anville only. No row-level security, no schema per organisation.
 
 ### Models
