@@ -1,0 +1,13 @@
+{# ✨ One group on "Your organisations": its name, type and member count, and its join link for an admin who manages it. #}
+<section class="administered-group" id="group-{{ group.pk }}">
+  <h3>{{ group.name }}</h3>
+  <p class="administered-group-facts">{{ group.get_type_display }} · {{ group.member_count }} member{{ group.member_count|pluralize }}</p>
+  {% if group.join_link %}
+    <div class="name-section invitation-link">
+      <label for="join-link-{{ group.pk }}">Join link</label>
+      <div class="invitation-link-row">
+        <input type="text" id="join-link-{{ group.pk }}" value="{{ group.join_link }}" readonly>
+      </div>
+    </div>
+  {% endif %}
+</section>

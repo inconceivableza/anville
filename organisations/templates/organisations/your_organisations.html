@@ -1,7 +1,21 @@
 {% extends "engine/participant.html" %}
-{# ✨ The organisations and groups an admin has rights over (ticket A3). #}
+{% comment %}
+  ✨ The organisations and groups an admin has rights over (ticket A3): each group's type, member count, and for one
+  the admin manages, its join link to copy.
+{% endcomment %}
 {% block head_title %}Your organisations{% endblock head_title %}
 
 {% block content %}
   <h1>Your organisations</h1>
+
+  {% for organisation, groups in organisations %}
+    <section class="organisation">
+      <h2>{{ organisation.name }}</h2>
+      {% for group in groups %}
+        {% include "organisations/administered_group.html" %}
+      {% empty %}
+        <p>No groups yet.</p>
+      {% endfor %}
+    </section>
+  {% endfor %}
 {% endblock content %}
