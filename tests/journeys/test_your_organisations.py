@@ -82,3 +82,18 @@ def test_an_organisation_admin_sees_every_group_with_its_type_member_count_and_j
     assert "Team" in text_of(groups["Worship team"]) and "0 members" in text_of(groups["Worship team"])
     assert join_link(cohort) in groups["Autumn cohort"] and join_link(team) in groups["Worship team"]
     assert "Example Church" in text_of(main_of(client.get(YOUR_ORGANISATIONS).content.decode()))
+
+
+@pytest.mark.django_db
+def test_a_group_admin_sees_only_their_group(client, django_user_model):
+    cohort = a_group("Example Church", "Autumn cohort")
+    team = a_group("Example Church", "Worship team", Group.Type.TEAM)
+    admin = an_account(client, django_user_model, "admin")
+    Permission.objects.create(holder=admin, capability=Permission.Capability.MANAGE, group=cohort)
+
+    groups = groups_on(client)
+    page = main_of(client.get(YOUR_ORGANISATIONS).content.decode())
+
+    assert set(groups) == {"Autumn cohort"}
+    assert join_link(cohort) in groups["Autumn cohort"]
+    assert "Worship team" not in page and join_link(team) not in page
