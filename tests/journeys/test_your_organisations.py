@@ -10,7 +10,7 @@ from access.models import Account
 from organisations.models import Group, Membership, Organisation, Permission
 from tests.documents import pathway_document
 from tests.journeys.pages import main_of, text_of
-from tests.journeys.test_consent import answer, give_consent, today
+from tests.journeys.test_consent import answer, give_consent, today, withdraw_consent
 from tests.journeys.test_your_groups import a_group
 
 YOUR_ORGANISATIONS = "/organisations/"
@@ -182,3 +182,19 @@ def test_a_member_with_no_response_shows_as_not_started(client, django_user_mode
 
     assert "not started" in member.lower()
     assert " of " not in member and today() not in member
+
+
+@pytest.mark.django_db
+def test_a_member_without_current_consent_shows_only_that_they_have_not_consented(
+    client, django_user_model, cohort_and_admin
+):
+    a_member_of(cohort_and_admin, django_user_model, "Kai")
+    wen = a_member_of(cohort_and_admin, django_user_model, "Wen")
+    give_consent(wen)
+    answer(wen, "baseline-bible", "7")
+    wen.post("/sections/onboarding/complete/")
+    withdraw_consent(wen)
+
+    members = members_of(client, "Autumn cohort")
+
+    assert members == {"Kai": "Kai · hasn't consented", "Wen": "Wen · hasn't consented"}
