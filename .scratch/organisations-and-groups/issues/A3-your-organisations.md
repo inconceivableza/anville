@@ -11,4 +11,4 @@
 - [x] The hub shows "Your organisations" only to an account holding a permission; an account without one is refused the page
 - [x] An organisation admin sees every group in the organisation, each with its type, member count and join link; a group admin sees only their group
 - [ ] The join link can be copied with one click, without eval in htmx (ADR 0006)
-- [ ] The page needs sign-in but not consent, so an admin who has not started the pathway can use it
+- [x] The page needs sign-in but not consent, so an admin who has not started the pathway can use it

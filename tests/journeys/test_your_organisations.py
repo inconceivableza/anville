@@ -97,3 +97,16 @@ def test_a_group_admin_sees_only_their_group(client, django_user_model):
     assert set(groups) == {"Autumn cohort"}
     assert join_link(cohort) in groups["Autumn cohort"]
     assert "Worship team" not in page and join_link(team) not in page
+
+
+@pytest.mark.django_db
+def test_an_admin_who_has_not_consented_still_gets_the_page(client, django_user_model):
+    cohort = a_group("Example Church", "Autumn cohort")
+    admin = django_user_model.objects.create_user(username="admin", email="admin@example.com")
+    Permission.objects.create(holder=admin, capability=Permission.Capability.MANAGE, organisation=cohort.organisation)
+    client.force_login(admin)
+
+    page = client.get(YOUR_ORGANISATIONS)
+
+    assert page.status_code == 200
+    assert set(groups_on(client)) == {"Autumn cohort"}
