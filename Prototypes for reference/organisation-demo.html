@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Whatever You Do — organisation demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef2ef; --surface:#ffffff; --paper:#f4f7f5; --ink:#1a2b20; --muted:#5a6b60; --faint:#7a8b80;
+  --line:#d0ddd4; --line-soft:#e3ebe5;
+  --green:#1a7a4c; --green-hi:#2e9e66; --green-pale:#e8f5ee; --on-green:#ffffff;
+  --deep:#0f5c3c; --deeper:#0a3d28; --on-deep:#ffffff; --on-deep-muted:rgba(255,255,255,.72);
+  --amber:#a8740a; --amber-pale:#fdf6e3; --rose:#b8504b; --rose-pale:#fbeeed;
+  --fresh:#d6f0e1; --shadow:0 1px 2px rgba(15,60,40,.06),0 8px 24px rgba(15,60,40,.06);
+  --serif:'Newsreader',Georgia,'Times New Roman',serif;
+  --sans:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1511; --surface:#132019; --paper:#17261e; --ink:#e4eee8; --muted:#a3b8ab; --faint:#7f9588;
+    --line:#2a3d32; --line-soft:#21332a;
+    --green:#3fb57a; --green-hi:#5cc990; --green-pale:#173327; --on-green:#07150e;
+    --deep:#0a2a1c; --deeper:#06200f;
+    --amber:#e0ae4a; --amber-pale:#2c2412; --rose:#e08782; --rose-pale:#2e1a19;
+    --fresh:#1d4632; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1511; --surface:#132019; --paper:#17261e; --ink:#e4eee8; --muted:#a3b8ab; --faint:#7f9588;
+  --line:#2a3d32; --line-soft:#21332a;
+  --green:#3fb57a; --green-hi:#5cc990; --green-pale:#173327; --on-green:#07150e;
+  --deep:#0a2a1c; --deeper:#06200f;
+  --amber:#e0ae4a; --amber-pale:#2c2412; --rose:#e08782; --rose-pale:#2e1a19;
+  --fresh:#1d4632; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*,*::before,*::after{box-sizing:inherit;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;}
+button,input,textarea,select{font:inherit;color:inherit;}
+button{cursor:pointer;}
+:focus-visible{outline:2px solid var(--green-hi);outline-offset:2px;}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+
+/* ---------- presenter bar ---------- */
+.demo{background:var(--deep);color:var(--on-deep);}
+.demo-in{max-width:1380px;margin:0 auto;padding:14px 22px 18px;}
+.demo-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.brand{font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;}
+.brand span{font-family:var(--sans);font-size:12.5px;font-weight:500;color:var(--on-deep-muted);margin-left:8px;}
+.steps{display:flex;align-items:center;gap:4px;flex:1;min-width:0;overflow-x:auto;padding:2px;}
+.step-chip{display:flex;align-items:center;gap:7px;background:transparent;border:1px solid rgba(255,255,255,.18);
+  color:var(--on-deep-muted);border-radius:999px;padding:5px 11px 5px 6px;font-size:12.5px;font-weight:500;white-space:nowrap;}
+.step-chip b{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;
+  background:rgba(255,255,255,.12);font-size:11px;font-weight:700;color:var(--on-deep);}
+.step-chip.done{color:var(--on-deep);}
+.step-chip.done b{background:var(--green-hi);color:#06200f;}
+.step-chip.on{background:var(--on-deep);color:var(--deep);border-color:var(--on-deep);}
+.step-chip.on b{background:var(--deep);color:var(--on-deep);}
+.later{font-size:11.5px;color:var(--on-deep-muted);padding:0 6px;white-space:nowrap;font-style:italic;font-family:var(--serif);}
+.ghost-btn{background:transparent;border:1px solid rgba(255,255,255,.28);color:var(--on-deep);border-radius:8px;
+  padding:6px 12px;font-size:12.5px;font-weight:600;}
+.ghost-btn:hover{background:rgba(255,255,255,.08);}
+.script{display:flex;align-items:flex-end;gap:22px;margin-top:14px;flex-wrap:wrap;}
+.script-text{flex:1;min-width:260px;}
+.script-n{font-size:12px;font-weight:600;color:var(--on-deep-muted);}
+.script-line{font-family:var(--serif);font-size:24px;line-height:1.25;letter-spacing:-.01em;margin-top:2px;max-width:62ch;}
+.script-tip{font-size:13px;color:var(--on-deep-muted);margin-top:6px;max-width:80ch;}
+.script-nav{display:flex;gap:8px;}
+.next-btn{background:var(--on-deep);color:var(--deep);border:none;border-radius:9px;padding:10px 18px;font-weight:700;font-size:14px;}
+.next-btn:disabled{opacity:.4;cursor:default;}
+.back-btn{background:transparent;border:1px solid rgba(255,255,255,.3);color:var(--on-deep);border-radius:9px;padding:10px 14px;font-weight:600;font-size:14px;}
+
+/* ---------- stage ---------- */
+.stage{max-width:1380px;margin:0 auto;padding:18px 22px 40px;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start;}
+.stage.hood-closed{grid-template-columns:minmax(0,1fr) 52px;}
+.screens{display:flex;gap:6px;margin-bottom:12px;}
+.screen-tab{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;padding:7px 14px 7px 8px;font-size:13.5px;font-weight:600;color:var(--muted);}
+.screen-tab .av{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;background:var(--paper);color:var(--muted);}
+.screen-tab.on{border-color:var(--green);color:var(--ink);box-shadow:inset 0 0 0 1px var(--green);}
+.screen-tab.on .av{background:var(--green);color:var(--on-green);}
+.screen-tab small{font-weight:500;color:var(--faint);}
+
+/* ---------- admin window ---------- */
+.window{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;
+  display:grid;grid-template-columns:210px minmax(0,1fr);min-height:640px;}
+.side{background:var(--paper);border-right:1px solid var(--line);padding:18px 12px;}
+.side-org{font-family:var(--serif);font-size:17px;font-weight:600;padding:0 8px;}
+.side-group{font-size:12.5px;color:var(--muted);padding:2px 8px 16px;border-bottom:1px solid var(--line);margin-bottom:10px;}
+.nav{display:block;width:100%;text-align:left;background:transparent;border:none;border-radius:8px;padding:8px 10px;
+  font-size:14px;font-weight:500;color:var(--muted);margin-bottom:2px;}
+.nav:hover{background:var(--surface);color:var(--ink);}
+.nav.on{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:inset 3px 0 0 var(--green);}
+.nav:disabled{opacity:.45;cursor:default;background:transparent;}
+.side-who{margin-top:22px;padding:12px 8px 0;border-top:1px solid var(--line);font-size:12px;color:var(--faint);}
+.side-who b{display:block;color:var(--ink);font-weight:600;font-size:13px;}
+.pane{padding:26px 30px 34px;min-width:0;}
+.pane h1{font-family:var(--serif);font-size:28px;font-weight:600;letter-spacing:-.015em;line-height:1.15;margin:0 0 6px;}
+.pane .lede{color:var(--muted);margin:0 0 22px;max-width:64ch;}
+.pane h2{font-family:var(--serif);font-size:20px;font-weight:600;margin:0 0 4px;letter-spacing:-.01em;}
+
+/* ---------- forms ---------- */
+.field{margin-bottom:16px;max-width:520px;}
+.field label{display:block;font-size:13.5px;font-weight:600;margin-bottom:6px;}
+.field .hint{font-size:12.5px;color:var(--faint);margin-top:5px;}
+.input,.textarea{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:14.5px;}
+.textarea{resize:vertical;line-height:1.55;}
+.input:focus,.textarea:focus{border-color:var(--green);outline:none;box-shadow:0 0 0 3px var(--green-pale);}
+.err{color:var(--rose);font-size:12.5px;margin-top:6px;}
+.radio-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;max-width:620px;}
+.radio{display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;padding:11px 12px;}
+.radio .dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;margin-top:2px;}
+.radio.on{border-color:var(--green);background:var(--green-pale);}
+.radio.on .dot{border:5px solid var(--green);}
+.radio:disabled{opacity:.5;cursor:default;}
+.radio b{display:block;font-size:13.5px;}
+.radio span{display:block;font-size:12px;color:var(--muted);line-height:1.4;margin-top:1px;}
+.btn{background:var(--green);color:var(--on-green);border:none;border-radius:9px;padding:10px 18px;font-weight:600;font-size:14px;}
+.btn:hover{filter:brightness(1.06);}
+.btn:disabled{opacity:.4;cursor:default;filter:none;}
+.btn.quiet{background:var(--surface);color:var(--ink);border:1px solid var(--line);}
+.btn.small{padding:6px 12px;font-size:13px;}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.notice{border-radius:10px;padding:13px 15px;font-size:13.5px;line-height:1.55;margin:0 0 18px;max-width:680px;}
+.notice.ok{background:var(--green-pale);border-left:3px solid var(--green);}
+.notice.warn{background:var(--amber-pale);border-left:3px solid var(--amber);}
+.notice b{font-weight:600;}
+
+/* ---------- members / progress ---------- */
+.summary{display:flex;gap:28px;margin:0 0 20px;flex-wrap:wrap;}
+.summary div{font-size:12.5px;color:var(--muted);}
+.summary strong{display:block;font-family:var(--serif);font-size:30px;font-weight:600;color:var(--ink);line-height:1.1;}
+.summary .amber strong{color:var(--amber);}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;color:var(--muted);}
+.chip.on{background:var(--ink);color:var(--surface);border-color:var(--ink);}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;}
+table.people{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px;}
+.people tr.peek-row td{background:var(--paper);padding:8px 12px 12px;}
+.people th{text-align:left;font-size:12px;font-weight:600;color:var(--faint);padding:10px 12px;border-bottom:1px solid var(--line);background:var(--paper);white-space:nowrap;}
+.people th button{background:none;border:none;padding:0;font-weight:600;color:inherit;font-size:12px;}
+.people td{padding:10px 10px;border-bottom:1px solid var(--line-soft);vertical-align:middle;}
+.people tr:last-child td{border-bottom:none;}
+.people tr.stalled td{background:color-mix(in srgb,var(--amber-pale) 70%,transparent);}
+.who{font-weight:600;}
+.name-btn{background:none;border:none;padding:0;font-weight:600;font-size:13.5px;text-align:left;white-space:nowrap;color:var(--ink);
+  text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px;}
+.name-btn:hover{text-decoration-color:var(--green);}
+.nowrap{white-space:nowrap;}
+.sub-note{display:block;font-size:11.5px;}
+.who small{display:block;font-weight:400;color:var(--faint);font-size:12px;}
+.pips{display:flex;gap:3px;}
+.pip{width:16px;height:7px;border-radius:4px;background:var(--line);}
+.pip.d{background:var(--green);}
+.pip.c{background:var(--green-hi);opacity:.5;}
+.pip.s{background:var(--amber);}
+.pip-label{font-size:11.5px;color:var(--faint);margin-top:4px;}
+.flag{display:inline-block;font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap;}
+.flag.amber{background:var(--amber-pale);color:var(--amber);border:1px solid color-mix(in srgb,var(--amber) 35%,transparent);}
+.flag.green{background:var(--green-pale);color:var(--green);}
+.flag.grey{background:var(--paper);color:var(--muted);}
+.muted{color:var(--muted);}
+.faint{color:var(--faint);}
+.coach-off{color:var(--amber);}
+.peek{margin-top:14px;border:1px dashed var(--line);border-radius:12px;padding:14px 16px;font-size:13px;max-width:680px;}
+.peek h3{font-size:14px;margin:0 0 6px;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.can,.cant{list-style:none;margin:0;padding:0;}
+.can li,.cant li{padding:4px 0 4px 22px;position:relative;font-size:13px;line-height:1.45;}
+.can li::before{content:'';position:absolute;left:2px;top:9px;width:10px;height:6px;border-left:2px solid var(--green);border-bottom:2px solid var(--green);transform:rotate(-45deg);}
+.cant li::before,.cant li::after{content:'';position:absolute;left:3px;top:11px;width:11px;height:2px;background:var(--rose);transform:rotate(45deg);}
+.cant li::after{transform:rotate(-45deg);}
+
+/* ---------- results ---------- */
+.subtabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 22px;}
+.subtab{background:none;border:none;border-bottom:2px solid transparent;padding:8px 12px;margin-bottom:-1px;font-weight:600;font-size:14px;color:var(--muted);}
+.subtab.on{color:var(--ink);border-bottom-color:var(--green);}
+.headline{font-family:var(--serif);font-size:26px;line-height:1.25;letter-spacing:-.012em;margin:0 0 6px;max-width:30ch;}
+.basis{font-size:12.5px;color:var(--faint);margin-bottom:22px;}
+.scale-h{display:flex;justify-content:space-between;align-items:baseline;margin:24px 0 8px;}
+.scale-h h2{margin:0;}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap;}
+.legend i{display:inline-block;vertical-align:-1px;margin-right:5px;}
+.lg-dot{width:8px;height:8px;border-radius:50%;background:var(--green);opacity:.55;}
+.lg-self{width:3px;height:12px;background:var(--ink);}
+.lg-obs{width:10px;height:10px;border-radius:2px;border:2px solid var(--amber);transform:rotate(45deg);}
+.gift{display:grid;grid-template-columns:170px 92px minmax(0,1fr);gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line-soft);}
+.gift:last-child{border-bottom:none;}
+.g-name b{display:block;font-size:14px;}
+.g-name span{font-size:12px;color:var(--faint);}
+.g-count{font-size:12.5px;color:var(--muted);}
+.g-count strong{font-family:var(--serif);font-size:21px;font-weight:600;color:var(--ink);margin-right:4px;}
+.g-count.heavy strong{color:var(--green);}
+.g-count.thin strong{color:var(--amber);font-size:16px;}
+.strip{position:relative;height:30px;}
+.strip::before{content:'';position:absolute;left:0;right:0;top:15px;height:1px;background:var(--line);}
+.sd{position:absolute;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--green);opacity:.5;}
+.self-m{position:absolute;top:5px;width:3px;height:20px;margin-left:-1.5px;background:var(--ink);border-radius:2px;}
+.obs-m{position:absolute;top:9px;width:11px;height:11px;margin-left:-5.5px;border:2px solid var(--amber);transform:rotate(45deg);border-radius:2px;background:var(--surface);}
+.axis{display:grid;grid-template-columns:170px 92px minmax(0,1fr);gap:14px;font-size:11px;color:var(--faint);}
+.axis div:last-child{display:flex;justify-content:space-between;}
+.insight{font-size:13px;color:var(--muted);margin:8px 0 0;max-width:70ch;}
+.question{margin-top:28px;background:var(--paper);border-radius:14px;padding:22px 24px;border:1px solid var(--line);}
+.question .q{font-family:var(--serif);font-size:24px;line-height:1.3;letter-spacing:-.01em;margin:0 0 10px;max-width:34ch;}
+.question p{margin:6px 0 0;font-size:13.5px;color:var(--muted);max-width:66ch;}
+.floor{text-align:center;padding:60px 20px;border:1px dashed var(--line);border-radius:14px;}
+.floor .big{font-family:var(--serif);font-size:44px;font-weight:600;line-height:1;}
+.floor p{color:var(--muted);max-width:46ch;margin:10px auto 0;font-size:14px;}
+
+.imp{display:grid;grid-template-columns:minmax(0,1fr) 200px 86px;gap:18px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line-soft);}
+.imp-q{font-family:var(--serif);font-size:16.5px;line-height:1.35;}
+.imp-bars{display:flex;flex-direction:column;gap:5px;}
+.ib{position:relative;height:9px;border-radius:5px;background:var(--line-soft);}
+.ib i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;}
+.ib.start i{background:var(--faint);opacity:.45;}
+.ib.end i{background:var(--green);}
+.imp-n{text-align:right;font-size:12.5px;color:var(--muted);line-height:1.35;}
+.imp-n strong{display:block;font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:600;}
+.q5{margin-top:26px;border:1.5px solid var(--line);border-radius:14px;padding:20px 22px;}
+.q5.down{border-color:var(--amber);background:var(--amber-pale);}
+.q5-tag{font-size:12px;font-weight:600;color:var(--muted);}
+.q5 .imp{border-bottom:none;padding:10px 0 4px;}
+.q5-read{font-size:13.5px;margin:8px 0 0;max-width:68ch;}
+.demo-ctl{margin-top:22px;border:1px dashed var(--faint);border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.demo-ctl b{color:var(--ink);}
+
+/* ---------- content ---------- */
+.section-card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px;}
+.section-card h3{font-size:15px;margin:0;}
+.section-card .sub{font-size:12.5px;color:var(--faint);}
+.vlist{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+.vrow{display:flex;align-items:center;gap:12px;background:var(--paper);border-radius:9px;padding:8px 10px;font-size:13px;}
+.vthumb{width:46px;height:30px;border-radius:5px;background:var(--deep);flex-shrink:0;position:relative;}
+.vthumb::after{content:'';position:absolute;left:19px;top:9px;border-left:9px solid rgba(255,255,255,.9);border-top:6px solid transparent;border-bottom:6px solid transparent;}
+.vrow .src{margin-left:auto;font-size:11.5px;color:var(--faint);white-space:nowrap;}
+.editor{margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft);}
+.preview{display:flex;gap:12px;align-items:center;border:1px solid var(--green);background:var(--green-pale);border-radius:10px;padding:10px 12px;margin:12px 0;max-width:560px;font-size:13px;}
+
+/* ---------- messages ---------- */
+.composer{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;}
+.seg button{background:var(--surface);border:none;padding:7px 13px;font-size:13px;font-weight:600;color:var(--muted);border-right:1px solid var(--line);}
+.seg button:last-child{border-right:none;}
+.seg button.on{background:var(--ink);color:var(--surface);}
+.recips{font-size:12.5px;color:var(--muted);margin-top:6px;}
+.mail{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);}
+.mail-h{background:var(--paper);padding:12px 14px;font-size:12.5px;border-bottom:1px solid var(--line);}
+.mail-h div{margin:1px 0;}
+.mail-h span{color:var(--faint);display:inline-block;width:62px;}
+.mail-b{padding:16px 16px 6px;font-size:14px;line-height:1.6;white-space:pre-wrap;}
+.mail-f{padding:10px 16px 14px;font-size:11.5px;color:var(--faint);border-top:1px solid var(--line-soft);margin-top:10px;}
+.sent{margin-top:24px;}
+.sent-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line-soft);font-size:13px;}
+
+/* ---------- phone ---------- */
+.phone-wrap{display:flex;justify-content:center;padding:6px 0 20px;}
+.phone{width:380px;max-width:100%;background:var(--surface);border:10px solid #1b231e;border-radius:42px;box-shadow:var(--shadow);overflow:hidden;min-height:700px;display:flex;flex-direction:column;}
+.p-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 10px;border-bottom:1px solid var(--line);font-size:12.5px;}
+.p-bar b{font-family:var(--serif);font-size:16px;font-weight:600;}
+.p-refresh{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;}
+.p-body{padding:20px 20px 26px;flex:1;}
+.p-body h1{font-family:var(--serif);font-size:25px;font-weight:600;line-height:1.2;letter-spacing:-.012em;margin:0 0 8px;}
+.p-body p{font-size:14px;color:var(--muted);margin:0 0 14px;}
+.p-badge{display:inline-block;font-size:12px;font-weight:600;background:var(--green-pale);color:var(--green);border-radius:999px;padding:3px 10px;margin-bottom:14px;}
+.email{border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+.email-h{background:var(--paper);padding:12px 14px;font-size:12.5px;border-bottom:1px solid var(--line);}
+.email-b{padding:16px 14px;font-size:14px;line-height:1.6;}
+.p-steps{list-style:none;margin:6px 0 18px;padding:0;}
+.p-steps li{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line-soft);font-size:14px;}
+.p-steps .n{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0;}
+.p-steps li.now .n{border-color:var(--green);color:var(--green);}
+.p-steps li.now{font-weight:600;}
+.p-steps li button{margin-left:auto;}
+.p-link{background:none;border:none;color:var(--green);font-weight:600;font-size:13.5px;padding:0;text-decoration:underline;text-underline-offset:3px;}
+.player{border-radius:12px;overflow:hidden;margin-bottom:12px;border:1px solid var(--line);}
+.player-v{aspect-ratio:16/9;background:linear-gradient(135deg,var(--deep),#173f2c);position:relative;display:flex;align-items:flex-end;padding:12px;color:#fff;}
+.player-v::after{content:'';position:absolute;left:50%;top:44%;transform:translate(-30%,-50%);border-left:20px solid rgba(255,255,255,.92);border-top:13px solid transparent;border-bottom:13px solid transparent;}
+.player-v .dur{font-size:11.5px;background:rgba(0,0,0,.45);border-radius:4px;padding:1px 6px;margin-left:auto;}
+.player-c{padding:10px 12px;font-size:13px;}
+.player-c b{display:block;font-size:13.5px;}
+.player-c span{font-size:12px;color:var(--faint);}
+.player.ours .player-v{background:linear-gradient(135deg,#3b4a41,#59665e);}
+.new-badge{display:inline-block;font-size:11px;font-weight:700;background:var(--green);color:var(--on-green);border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:1px;}
+
+/* ---------- under the hood ---------- */
+.hood{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;}
+.hood-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1;}
+.hood-h h2{font-family:var(--serif);font-size:17px;font-weight:600;margin:0;}
+.hood-h span{font-size:12px;color:var(--faint);}
+.hood-toggle{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:600;}
+.stage.hood-closed .hood-body,.stage.hood-closed .hood-h h2,.stage.hood-closed .hood-h span{display:none;}
+.stage.hood-closed .hood-h{writing-mode:vertical-rl;padding:14px 10px;border-bottom:none;}
+.hood-body{padding:4px 16px 18px;}
+.rules{margin:14px 0 4px;padding:0;list-style:none;}
+.rules li{font-size:12.5px;line-height:1.45;padding:6px 0 6px 14px;border-left:2px solid var(--green);margin-bottom:6px;color:var(--ink);}
+.rules li b{font-weight:600;}
+.hood-sec{margin-top:16px;}
+.hood-sec h3{font-size:12.5px;font-weight:600;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;}
+.hood-sec h3 span{font-weight:500;color:var(--faint);}
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+.tbl th{text-align:left;font-weight:600;color:var(--faint);padding:4px 6px;border-bottom:1px solid var(--line);white-space:nowrap;}
+.tbl td{padding:4px 6px;border-bottom:1px solid var(--line-soft);white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;}
+.tbl tr.fresh td{background:var(--fresh);}
+.tbl-more{font-size:11.5px;color:var(--faint);padding:4px 6px;}
+.tbl-empty{font-size:12px;color:var(--faint);font-style:italic;padding:2px 0;}
+.cansee select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:12.5px;margin-bottom:8px;}
+.verdict{border-radius:9px;padding:10px 12px;font-size:12.5px;line-height:1.5;}
+.verdict.yes{background:var(--green-pale);}
+.verdict.no{background:var(--rose-pale);}
+.verdict b{display:block;font-size:13px;margin-bottom:3px;}
+.trace{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;color:var(--muted);margin-top:6px;line-height:1.55;}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--surface);border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:500;opacity:0;
+  transition:opacity .2s,transform .2s;pointer-events:none;z-index:20;max-width:90vw;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media (max-width:1100px){
+  .stage,.stage.hood-closed{grid-template-columns:minmax(0,1fr);}
+  .hood{position:static;max-height:none;}
+  .stage.hood-closed .hood-h{writing-mode:horizontal-tb;}
+}
+@media (max-width:760px){
+  .demo-in{padding:12px 14px 14px;}
+  .steps{order:3;flex-basis:100%;}
+  .screen-tab small{display:none;}
+  .script-line{font-size:20px;}
+  .stage{padding:12px 12px 30px;}
+  .window{grid-template-columns:1fr;min-height:0;}
+  .side{border-right:none;border-bottom:1px solid var(--line);padding:12px;}
+  .side-group{border-bottom:none;margin-bottom:6px;padding-bottom:6px;}
+  .side nav{display:flex;gap:4px;overflow-x:auto;}
+  .nav{width:auto;white-space:nowrap;margin:0;}
+  .nav.on{box-shadow:inset 0 -2px 0 var(--green);}
+  .side-who{display:none;}
+  .pane{padding:20px 16px 26px;}
+  .composer,.two{grid-template-columns:1fr;}
+  .gift,.axis{grid-template-columns:110px 70px minmax(0,1fr);gap:8px;}
+  .imp{grid-template-columns:1fr;gap:8px;}
+  .imp-n{text-align:left;}
+  .phone{border-width:6px;border-radius:30px;min-height:0;}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+<header class="demo"><div class="demo-in" id="demobar"></div></header>
+<main class="stage" id="stage">
+  <section id="main" aria-live="polite"></section>
+  <aside class="hood" id="hood" aria-label="Under the hood"></aside>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<script>
+'use strict';
+/* =====================================================================
+   Whatever You Do — organisation demo
+   A walkthrough of the seven-step hackathon demo script. Everything is
+   in memory; reload or Reset to start again.
+   ===================================================================== */
+
+// ------------------------------------------------------------ fixtures
+const ADMIN = { id: 'rachel', name: 'Rachel Adams', first: 'Rachel', email: 'rachel@stmarys.church' };
+function resetAdmin() { ADMIN.name = 'Rachel Adams'; ADMIN.first = 'Rachel'; }
+const PASTOR_VIDEO = { url: 'https://youtu.be/Xk2mJ8nT4qA', title: 'A word from Dave, our pastor', dur: '2:04' };
+
+const STEP_NAMES = ['Gifts and talents', 'The shape of your life', 'Expressing your calling', 'Growth plan', 'Finishing'];
+const SECTIONS = [
+  { id: 's1', title: 'Section one', sub: 'How you\u2019ve been designed', dflt: 'Introduction to section one', dur: '3:12' },
+  { id: 's2', title: 'Section two', sub: 'The shape of your life', dflt: 'Reading your life back', dur: '4:05' },
+  { id: 's3', title: 'Section three', sub: 'Expressing your calling', dflt: 'From a sentence to a life', dur: '3:48' },
+  { id: 's4', title: 'Section four', sub: 'Your growth plan', dflt: 'A plan you can carry', dur: '2:56' },
+  { id: 's5', title: 'Finishing', sub: 'Closing questions and your letter', dflt: 'Writing to your future self', dur: '2:21' }
+];
+
+const COACHES = {
+  sarah: { id: 'sarah', name: 'Sarah Bennett', last: 3 },
+  mark:  { id: 'mark',  name: 'Mark Ellis',    last: 31 },
+  joy:   { id: 'joy',   name: 'Joy Fagan',     last: 6 }
+};
+
+// APEST(d) and working style. Glosses keep the labels from reading as fixed types.
+const APEST = [
+  { k: 'A', name: 'Apostle',    gloss: 'pioneering, starting things' },
+  { k: 'P', name: 'Prophet',    gloss: 'naming what is true' },
+  { k: 'E', name: 'Evangelist', gloss: 'inviting people in' },
+  { k: 'S', name: 'Shepherd',   gloss: 'care and community' },
+  { k: 'T', name: 'Teacher',    gloss: 'making things clear' },
+  { k: 'D', name: 'Deacon',     gloss: 'practical service' }
+];
+const PEP = [
+  { k: 'Po', name: 'Ponder',     gloss: 'sitting with the question' },
+  { k: 'Id', name: 'Ideate',     gloss: 'generating options' },
+  { k: 'As', name: 'Assess',     gloss: 'testing what will work' },
+  { k: 'Ra', name: 'Rally',      gloss: 'getting people moving' },
+  { k: 'Fa', name: 'Facilitate', gloss: 'drawing others out' },
+  { k: 'De', name: 'Deliver',    gloss: 'seeing it through' }
+];
+const FRIENDLY = { A: 'pioneering', P: 'prophetic voice', E: 'evangelism', S: 'care', T: 'teaching', D: 'practical service',
+  Po: 'pondering', Id: 'generating ideas', As: 'assessing', Ra: 'rallying people', Fa: 'facilitating', De: 'delivering' };
+
+const IMPACT_QS = [
+  'I have a detailed understanding of what the Bible teaches about work and calling',
+  'I have a detailed understanding of my God-given gifts, talents and limitations',
+  'I have a strong sense of God\u2019s specific call and purpose for my life',
+  'I have a clear, practical plan for how to pursue God\u2019s purpose for my life',
+  'I feel at peace with where I am in working out my purpose'
+];
+
+/* The cohort, six weeks in. done = steps completed (0-5), last = days since
+   last active, contacts = trusted contacts who have replied out of five.
+   apest/pep give each person's top two; the rest of the profile is filled
+   deterministically so every assessment sums to 100. */
+const PEOPLE = [
+  { id: 'james',  name: 'James Okafor',     done: 2, last: 2,  coach: 'sarah', contacts: 4, apest: ['T', 'S'], pep: ['Fa', 'Po'] },
+  { id: 'priya',  name: 'Priya Raman',      done: 5, last: 4,  coach: 'sarah', contacts: 5, apest: ['S', 'T'], pep: ['Fa', 'De'],
+    impact: [[4, 5, 3, 2, 5], [8, 8, 7, 9, 7]] },
+  { id: 'tom',    name: 'Tom Hartley',      done: 0, last: 19, coach: 'mark',  contacts: 2, apest: ['T', 'D'], pep: ['Po', 'As'] },
+  { id: 'hannah', name: 'Hannah Kim',       done: 5, last: 1,  coach: 'sarah', contacts: 5, apest: ['S', 'D'], pep: ['Fa', 'De'],
+    impact: [[5, 4, 4, 3, 4], [8, 7, 6, 8, 7]] },
+  { id: 'daniel', name: 'Daniel Mensah',    done: 1, last: 23, coach: 'mark',  contacts: 5, apest: ['T', 'P'], pep: ['Po', 'Id'] },
+  { id: 'grace',  name: 'Grace Whitfield',  done: 5, last: 3,  coach: 'mark',  contacts: 5, apest: ['S', 'T'], pep: ['Fa', 'Po'],
+    impact: [[6, 5, 4, 3, 6], [9, 8, 4, 8, 8]] },
+  { id: 'sam',    name: 'Sam Patel',        done: 3, last: 2,  coach: 'joy',   contacts: 5, apest: ['A', 'T'], pep: ['Id', 'Ra'] },
+  { id: 'esther', name: 'Esther Adeyemi',   done: 5, last: 6,  coach: 'joy',   contacts: 5, apest: ['T', 'S'], pep: ['Po', 'Fa'],
+    impact: [[3, 4, 3, 2, 3], [7, 7, 6, 8, 6]] },
+  { id: 'ollie',  name: 'Ollie Brennan',    done: 0, last: 16, coach: 'joy',   contacts: 1, apest: ['D', 'S'], pep: ['De', 'As'] },
+  { id: 'ruth',   name: 'Ruth Lawson',      done: 5, last: 8,  coach: 'joy',   contacts: 4, apest: ['P', 'T'], pep: ['As', 'Po'],
+    impact: [[5, 6, 5, 4, 7], [8, 6, 7, 9, 6]] },
+  { id: 'ben',    name: 'Ben Achterberg',   done: 1, last: 5,  coach: null,    contacts: 5, apest: ['S', 'E'], pep: ['Fa', 'Ra'] },
+  { id: 'chloe',  name: 'Chloe Murray',     done: 5, last: 2,  coach: 'joy',   contacts: 5, apest: ['T', 'P'], pep: ['Po', 'As'],
+    impact: [[4, 5, 4, 3, 5], [7, 8, 6, 8, 7]] }
+];
+// A version of question five that fell, for the demo toggle.
+const Q5_FELL = { priya: 4, hannah: 4, grace: 5, esther: 3, ruth: 4, chloe: 4 };
+
+const STALL_DAYS = 14;          // the progress view flags anyone quiet this long
+const COACH_QUIET_DAYS = 21;    // a coach quiet this long is flagged too
+const CONTACTS_NEEDED = 3;      // the comparison unlocks at three replies
+const FLOOR = 5;                // no aggregate renders below this many people
+const SMALL_COUNT = 2;          // counts below this show as "few"
+
+PEOPLE.forEach(function (p, i) {
+  p.first = p.name.split(' ')[0];
+  p.email = p.first.toLowerCase() + '.' + p.name.split(' ')[1].toLowerCase().replace(/[^a-z]/g, '') + '@example.org';
+  p.apestScores = profile(APEST, p.apest, i);
+  p.pepScores = profile(PEP, p.pep, i + 3);
+  // Observers tend to see more care in people than they claim for themselves.
+  if (p.contacts >= CONTACTS_NEEDED) {
+    p.apestObs = shift(p.apestScores, 'S', 4, i);
+    p.pepObs = shift(p.pepScores, 'Fa', 3, i);
+  }
+});
+
+function profile(cats, top, seed) {
+  // Varied per person so twelve people show as twelve dots, while the top two
+  // always stay clearly above the rest.
+  const out = {};
+  const t1 = 24 + (seed * 7) % 7;           // 24-30
+  const t2 = 18 + (seed * 5 + 2) % 5;       // 18-22
+  const rest = cats.filter(function (c) { return top.indexOf(c.k) < 0; });
+  const weights = [1.2, 1.05, 0.95, 0.8];   // sums to 4
+  const remaining = 100 - t1 - t2;
+  let used = 0;
+  out[top[0]] = t1; out[top[1]] = t2;
+  rest.forEach(function (c, j) {
+    const v = j === rest.length - 1 ? remaining - used : Math.round(remaining * weights[(j + seed) % 4] / 4);
+    out[c.k] = v; used += v;
+  });
+  return out;
+}
+function shift(scores, toward, amount, seed) {
+  const out = Object.assign({}, scores);
+  const keys = Object.keys(out).filter(function (k) { return k !== toward; });
+  const from = keys[seed % keys.length];
+  const n = Math.min(amount, out[from] - 4);
+  out[toward] += n; out[from] -= n;
+  return out;
+}
+
+// ---------------------------------------------------------------- state
+let S;
+function fresh() {
+  return {
+    step: 1, screen: 'admin', tab: 'setup', resultsTab: 'gifts', hoodOpen: true,
+    org: null, group: null,
+    setup: { org: 'St Mary\u2019s', name: ADMIN.name, group: 'Autumn cohort', type: 'cohort' },
+    inviteText: PEOPLE.map(function (p) { return p.email; }).join('\n'),
+    invited: false, accepted: false, consented: false,
+    p: 'none',                 // participant screen: none | inbox | consent | home | section | visible
+    pSection: 's1',
+    pSeenAt: 0,                // when James last loaded his screen
+    pPrevSeen: 0,              // the load before that, for the 'New' badge
+    editing: null,             // section id whose video editor is open
+    video: { url: PASTOR_VIDEO.url, title: PASTOR_VIDEO.title, mode: 'before', err: '' },
+    seeded: false, filter: 'all', peek: null,
+    msg: { audience: 'participants', filter: 'stalled', template: 'nudge', subject: '', body: '', touched: false },
+    q5Fell: false, cansee: 0, clock: 1,
+    db: { organisations: [], groups: [], memberships: [], permissions: [], invitations: [],
+          consents: [], content_overrides: [], messages: [] },
+    freshRows: {}
+  };
+}
+
+// --------------------------------------------------------------- the db
+// Every write goes through here so the panel can show what each step adds.
+function write(table, row, key) {
+  const t = S.db[table];
+  if (key && t.some(function (r) { return r._key === key; })) return;
+  const r = Object.assign({ _key: key || null, _at: S.clock++ }, row);
+  t.push(r);
+  (S.freshRows[table] = S.freshRows[table] || []).push(r);
+}
+function clearFresh() { S.freshRows = {}; }
+
+const ORG_ID = 'org_stmarys', GROUP_ID = 'grp_autumn';
+
+function personRef(id) { return id === ADMIN.id ? ADMIN : (PEOPLE.find(function (p) { return p.id === id; }) || COACHES[id]); }
+
+/* ---------------------------------------------------------------------
+   canSee(who, thing): the one permission function. Everything routes
+   through it. It walks permission rows plus the organisation -> group ->
+   person cascade, and returns a trace so developers can see why.
+
+   thing = { kind: 'progress' | 'aggregate' | 'reflective' | 'results',
+             type: 'group' | 'person', id }
+   --------------------------------------------------------------------- */
+function canSee(who, thing) {
+  const trace = [];
+  const perms = S.db.permissions.filter(function (r) { return r.who === who; });
+  trace.push('permission rows for ' + who + ': ' + (perms.length ? perms.map(fmtPerm).join(', ') : 'none'));
+
+  // Reflective writing is never visible to an admin, whatever their scope.
+  if (thing.kind === 'reflective') {
+    const own = perms.some(function (r) { return r.can === 'participant' && r.scope_id === thing.id; });
+    if (own) return verdict(true, 'It\u2019s their own writing.', trace);
+    const coach = perms.some(function (r) { return r.can === 'coach' && r.scope_type === 'person' && r.scope_id === thing.id; });
+    if (coach) {
+      trace.push('coach -> person ' + thing.id + ' matches');
+      return verdict(true, 'Coaches see only what the participant chooses to send them.', trace);
+    }
+    trace.push('reflective content: admin scope never applies');
+    return verdict(false, 'Reflective writing is never visible to an admin \u2014 not the timeline, the calling statement, the written answers or the letter.', trace);
+  }
+
+  if (thing.type === 'person') {
+    for (const r of perms) {
+      if (r.scope_type === 'person' && r.scope_id === thing.id && (r.can === 'participant' || r.can === 'coach')) {
+        trace.push(r.can + ' -> person ' + thing.id + ' matches');
+        return verdict(true, 'Direct relationship: ' + r.can + '.', trace);
+      }
+      if (thing.kind === 'progress' && r.can === 'admin' && r.scope_type === 'organisation') {
+        const inGroup = S.db.memberships.find(function (m) {
+          return m.person === thing.id && m.scope_type === 'group' &&
+            S.db.groups.some(function (g) { return g.id === m.scope_id && g.organisation_id === r.scope_id; });
+        });
+        if (inGroup) {
+          trace.push('admin -> organisation ' + r.scope_id);
+          trace.push('person ' + thing.id + ' is a member of group ' + inGroup.scope_id);
+          trace.push('group ' + inGroup.scope_id + ' has organisation_id ' + r.scope_id);
+          return verdict(true, 'Admin of the organisation that owns their group. Progress only.', trace);
+        }
+      }
+    }
+    return verdict(false, 'No relationship to this person.', trace);
+  }
+
+  if (thing.type === 'group') {
+    const g = S.db.groups.find(function (x) { return x.id === thing.id; });
+    for (const r of perms) {
+      if (r.can === 'admin' && g && ((r.scope_type === 'organisation' && r.scope_id === g.organisation_id) ||
+          (r.scope_type === 'group' && r.scope_id === g.id))) {
+        trace.push('admin -> ' + r.scope_type + ' ' + r.scope_id);
+        trace.push('group ' + g.id + ' has organisation_id ' + g.organisation_id);
+        if (thing.kind === 'aggregate') {
+          const n = completedAssessments();
+          trace.push('completed assessments in group: ' + n + ' (floor ' + FLOOR + ')');
+          if (n < FLOOR) return verdict(false, 'Allowed in principle, but the group is below the floor of ' + FLOOR + ', so nothing renders.', trace);
+        }
+        return verdict(true, 'One admin row on the organisation reaches every group inside it.', trace);
+      }
+    }
+    return verdict(false, 'No admin relationship to this group or its organisation.', trace);
+  }
+  return verdict(false, 'Unknown thing.', trace);
+}
+function verdict(ok, why, trace) { return { ok: ok, why: why, trace: trace }; }
+function fmtPerm(r) { return '(' + r.can + ', ' + r.scope_type + ', ' + r.scope_id + ')'; }
+
+const CANSEE_CASES = [
+  { label: 'Can Rachel see Autumn cohort\u2019s progress?', who: 'rachel', thing: { kind: 'progress', type: 'group', id: GROUP_ID } },
+  { label: 'Can Rachel see James\u2019s progress?', who: 'rachel', thing: { kind: 'progress', type: 'person', id: 'james' } },
+  { label: 'Can Rachel read James\u2019s life timeline?', who: 'rachel', thing: { kind: 'reflective', type: 'person', id: 'james' } },
+  { label: 'Can Rachel see the group\u2019s aggregate gifts?', who: 'rachel', thing: { kind: 'aggregate', type: 'group', id: GROUP_ID } },
+  { label: 'Can Sarah (coach) see James\u2019s results?', who: 'sarah', thing: { kind: 'results', type: 'person', id: 'james' } },
+  { label: 'Can Sarah see Tom\u2019s results?', who: 'sarah', thing: { kind: 'results', type: 'person', id: 'tom' } },
+  { label: 'Can James read his own timeline?', who: 'james', thing: { kind: 'reflective', type: 'person', id: 'james' } }
+];
+
+// ------------------------------------------------------------- actions
+function createOrg() {
+  clearFresh();
+  const s = S.setup;
+  ADMIN.name = s.name.trim() || 'Rachel Adams'; ADMIN.first = ADMIN.name.split(' ')[0];
+  S.org = { id: ORG_ID, name: s.org.trim() || 'St Mary\u2019s' };
+  S.group = { id: GROUP_ID, name: s.group.trim() || 'Autumn cohort', type: 'cohort' };
+  write('organisations', { id: ORG_ID, name: S.org.name }, 'org');
+  write('groups', { id: GROUP_ID, name: S.group.name, organisation_id: ORG_ID, type: 'cohort' }, 'grp');
+  write('permissions', { who: ADMIN.id, can: 'admin', scope_type: 'organisation', scope_id: ORG_ID }, 'perm-admin');
+  write('memberships', { person: ADMIN.id, kind: 'member-of', scope_type: 'organisation', scope_id: ORG_ID }, 'mem-admin');
+}
+
+function inviteEmails() {
+  return S.inviteText.split(/[\s,;]+/).map(function (e) { return e.trim(); }).filter(Boolean);
+}
+function validEmail(e) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e); }
+
+function sendInvites() {
+  clearFresh();
+  inviteEmails().filter(validEmail).forEach(function (e, i) {
+    write('invitations', { email: e, group_id: GROUP_ID, invited_by: ADMIN.id, status: 'sent' }, 'inv-' + e);
+  });
+  S.invited = true;
+  S.p = 'inbox';
+}
+
+function acceptInvite() {
+  clearFresh();
+  const inv = S.db.invitations.find(function (r) { return r.email === personRef('james').email; });
+  if (inv) { inv.status = 'accepted'; (S.freshRows.invitations = S.freshRows.invitations || []).push(inv); }
+  write('memberships', { person: 'james', kind: 'member-of', scope_type: 'organisation', scope_id: ORG_ID }, 'mem-org-james');
+  write('memberships', { person: 'james', kind: 'member-of', scope_type: 'group', scope_id: GROUP_ID }, 'mem-grp-james');
+  S.accepted = true;
+  S.p = 'consent';
+}
+
+function giveConsent() {
+  clearFresh();
+  write('consents', { person: 'james', group_id: GROUP_ID, notice_version: 'v1', accepted: 'yes' }, 'consent-james');
+  write('permissions', { who: 'james', can: 'participant', scope_type: 'person', scope_id: 'james' }, 'perm-p-james');
+  S.consented = true;
+  S.p = 'home';
+  S.pSeenAt = S.clock; S.pPrevSeen = S.clock;
+}
+
+function parseVideo(url) {
+  const u = (url || '').trim();
+  let m = u.match(/(?:youtube\.com\/watch\?[^#]*v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{6,})/);
+  if (m) return { provider: 'YouTube', id: m[1] };
+  m = u.match(/vimeo\.com\/(?:video\/)?(\d{5,})/);
+  if (m) return { provider: 'Vimeo', id: m[1] };
+  return null;
+}
+
+function saveVideo(sectionId) {
+  const v = parseVideo(S.video.url);
+  if (!v) { S.video.err = 'That doesn\u2019t look like a YouTube or Vimeo link. Copy the address from the video\u2019s Share button.'; return false; }
+  clearFresh();
+  S.db.content_overrides = S.db.content_overrides.filter(function (r) { return r.section !== sectionId; });
+  write('content_overrides', { organisation_id: ORG_ID, section: sectionId, mode: S.video.mode,
+    provider: v.provider, video_id: v.id, title: S.video.title.trim() || 'Untitled video' }, 'vid-' + sectionId);
+  S.video.err = '';
+  S.editing = null;
+  return true;
+}
+
+function seed() {
+  clearFresh();
+  PEOPLE.forEach(function (p) {
+    write('invitations', { email: p.email, group_id: GROUP_ID, invited_by: ADMIN.id, status: 'accepted' }, 'inv-' + p.email);
+    const inv = S.db.invitations.find(function (r) { return r.email === p.email; });
+    if (inv) inv.status = 'accepted';
+    write('memberships', { person: p.id, kind: 'member-of', scope_type: 'organisation', scope_id: ORG_ID }, 'mem-org-' + p.id);
+    write('memberships', { person: p.id, kind: 'member-of', scope_type: 'group', scope_id: GROUP_ID }, 'mem-grp-' + p.id);
+    write('consents', { person: p.id, group_id: GROUP_ID, notice_version: 'v1', accepted: 'yes' }, 'consent-' + p.id);
+    write('permissions', { who: p.id, can: 'participant', scope_type: 'person', scope_id: p.id }, 'perm-p-' + p.id);
+    if (p.coach) write('permissions', { who: p.coach, can: 'coach', scope_type: 'person', scope_id: p.id }, 'perm-c-' + p.id);
+    for (let i = 0; i < 5; i++) {
+      write('permissions', { who: 'contact_' + p.id + '_' + (i + 1), can: 'observer', scope_type: 'person', scope_id: p.id,
+        relationship: ['friend', 'family', 'church', 'friend', 'church'][i] }, 'perm-o-' + p.id + i);
+    }
+  });
+  S.seeded = true;
+}
+
+// ---------------------------------------------------------- derived data
+function status(p) {
+  if (p.done >= 5) return 'finished';
+  if (p.last >= STALL_DAYS) return p.done === 0 && p.contacts < CONTACTS_NEEDED ? 'waiting' : 'quiet';
+  return 'active';
+}
+function isStalled(p) { const s = status(p); return s === 'waiting' || s === 'quiet'; }
+function completedAssessments() { return S.seeded ? PEOPLE.length : 0; }
+function withObservers() { return PEOPLE.filter(function (p) { return p.apestObs; }).length; }
+
+function filteredPeople(f) {
+  return PEOPLE.filter(function (p) {
+    if (f === 'stalled') return isStalled(p);
+    if (f === 'waiting') return status(p) === 'waiting';
+    if (f === 'finished') return status(p) === 'finished';
+    if (f === 'active') return status(p) === 'active';
+    return true;
+  });
+}
+
+function giftsFor(cats, field, obsField) {
+  return cats.map(function (c) {
+    const vals = PEOPLE.map(function (p) { return p[field][c.k]; });
+    const topCount = PEOPLE.filter(function (p) { return (field === 'apestScores' ? p.apest : p.pep).indexOf(c.k) >= 0; }).length;
+    const obs = PEOPLE.filter(function (p) { return p[obsField]; });
+    const selfMean = mean(obs.map(function (p) { return p[field][c.k]; }));
+    const obsMean = mean(obs.map(function (p) { return p[obsField][c.k]; }));
+    return { c: c, vals: shuffle(vals, c.k), top: topCount, selfMean: selfMean, obsMean: obsMean };
+  });
+}
+function mean(a) { return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : 0; }
+// Deterministic shuffle so dots never line up with the member list order.
+function shuffle(a, seed) {
+  const out = a.slice(); let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  for (let i = out.length - 1; i > 0; i--) { h = (h * 1103515245 + 12345) >>> 0; const j = h % (i + 1); const t = out[i]; out[i] = out[j]; out[j] = t; }
+  return out;
+}
+
+function impactData() {
+  const fin = PEOPLE.filter(function (p) { return p.impact; });
+  return IMPACT_QS.map(function (q, i) {
+    const start = fin.map(function (p) { return p.impact[0][i]; });
+    const end = fin.map(function (p) { return i === 4 && S.q5Fell ? Q5_FELL[p.id] : p.impact[1][i]; });
+    const rose = fin.filter(function (p, j) { return end[j] > start[j]; }).length;
+    return { q: q, start: mean(start), end: mean(end), rose: rose, n: fin.length };
+  });
+}
+
+// ------------------------------------------------------------ the script
+const STEPS = [
+  { title: 'Set up', line: 'Rachel creates St Mary\u2019s and a group called Autumn cohort.',
+    tip: 'Fill in the form and press Create. Watch the three rows appear under the hood: an organisation, a group that points at it, and one admin row.',
+    ws: 'Workstream A',
+    rules: ['<b>Roles are relationships.</b> Rachel isn\u2019t an admin user; there\u2019s a row saying she admins St Mary\u2019s.',
+            '<b>organisation_id lives on the group</b>, not on the permission row. That\u2019s what makes the cascade work.',
+            '<b>Groups have a type</b> even though only <i>cohort</i> is used. Teams come later as rows, not a migration.'] },
+  { title: 'Invite', line: 'She invites twelve people. One accepts on screen and sees the consent notice \u2014 what their leader can and cannot see.',
+    tip: 'Send the invitations, then switch to James\u2019s screen. Accept, read the notice, and start.',
+    ws: 'Workstream A',
+    rules: ['<b>Nobody creates accounts by hand.</b> Paste emails or share a link.',
+            '<b>Consent comes before the course</b>, and it\u2019s a stored row, not a checkbox nobody can audit.',
+            '<b>Participants can see what admins see.</b> The link on James\u2019s home screen shows the exact row Rachel sees.'] },
+  { title: 'Video', line: 'Rachel adds her pastor\u2019s two-minute intro video for section one. The participant refreshes and sees it.',
+    tip: 'Open section one, paste the link, check the preview, save. Then switch to James and press Refresh.',
+    ws: 'Workstream D',
+    rules: ['<b>Paste a link, don\u2019t host files.</b> YouTube and Vimeo only this weekend.',
+            '<b>Replace or add.</b> Instead of ours, or before or after it, so Dave can introduce the standard teaching.',
+            '<b>Falls back to the default</b> wherever no video is set.'] },
+  { title: 'Progress', line: 'Six weeks later. Three people have stalled \u2014 and two of them are waiting on their trusted contacts.',
+    tip: 'Point out the two different kinds of stall, and that Tom and Daniel share a coach who has gone quiet. Tap a name to show what Rachel can and can\u2019t see.',
+    ws: 'Workstream B',
+    rules: ['<b>Progress, never content.</b> There is no link from this table to anyone\u2019s writing.',
+            '<b>Stalling has two causes.</b> Not logging in is a nudge to them. Waiting on contacts is a nudge to other people.',
+            '<b>Coaches go quiet too</b>, and it\u2019s often the real reason someone stalls.'] },
+  { title: 'Nudge', line: 'She messages the stalled three using the nudge template.',
+    tip: 'Everything is pre-filled: participants, stalled, nudge template. Point at the From line and the footer, then send.',
+    ws: 'Workstream E',
+    rules: ['<b>Broadcast out, replies to Rachel\u2019s own inbox.</b> No in-app messaging.',
+            '<b>Sent by a named person.</b> \u201cRachel thought you might need a hand\u201d, not \u201cyou have incomplete items\u201d.',
+            '<b>Coaches and participants are different audiences</b>, not one list with a filter.'] },
+  { title: 'Gifts', line: 'The group\u2019s gifts: heavy in some places, thin in others, with a question underneath.',
+    tip: 'Read the headline, then the question. The point is the conversation it starts, not a seating plan.',
+    ws: 'Workstream C',
+    reads: true,
+    rules: ['<b>Floor of five</b> before anything renders. Below that, a gifts map identifies people.',
+            '<b>Small counts are suppressed.</b> \u201cOne person is a pioneer\u201d in a group of twelve names them.',
+            '<b>A question, not a recommendation.</b> Ranges and spread, never type labels on people.'] },
+  { title: 'Before and after', line: 'The before-and-after scores, with question five shown separately.',
+    tip: 'Show the four, then question five on its own. Use the demo switch to show what it looks like when peace falls.',
+    ws: 'Workstream C',
+    reads: true,
+    rules: ['<b>Don\u2019t average the five into one score.</b> Four measure gain; the fifth is a check.',
+            '<b>Flag question five if it falls.</b> Clarity rising while peace falls is the failure the course exists to avoid.',
+            '<b>Same floor of five</b> applies to the finishers.'] }
+];
+
+// --------------------------------------------------------------- helpers
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function initials(n) { return n.split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2); }
+function days(n) { return n === 0 ? 'today' : n === 1 ? 'yesterday' : n + ' days ago'; }
+function plural(n, one, many) { return n + ' ' + (n === 1 ? one : (many || one + 's')); }
+
+// ------------------------------------------------------------ demo bar
+function renderBar() {
+  let chips = '';
+  STEPS.forEach(function (st, i) {
+    const n = i + 1;
+    const cls = n === S.step ? 'on' : n < S.step ? 'done' : '';
+    chips += '<button class="step-chip ' + cls + '" data-act="go" data-n="' + n + '" aria-current="' + (n === S.step ? 'step' : 'false') + '">' +
+      '<b>' + (n < S.step ? '\u2713' : n) + '</b>' + esc(st.title) + '</button>';
+    if (n === 3) chips += '<span class="later">six weeks later</span>';
+  });
+  const st = STEPS[S.step - 1];
+  return '<div class="demo-top">' +
+      '<div class="brand">Whatever You Do<span>Organisation demo</span></div>' +
+      '<nav class="steps" aria-label="Demo steps">' + chips + '</nav>' +
+      '<button class="ghost-btn" data-act="reset">Reset</button>' +
+    '</div>' +
+    '<div class="script">' +
+      '<div class="script-text">' +
+        '<div class="script-n">Step ' + S.step + ' of 7 \u00b7 ' + st.ws + '</div>' +
+        '<div class="script-line">' + esc(st.line) + '</div>' +
+        '<div class="script-tip">' + esc(st.tip) + '</div>' +
+      '</div>' +
+      '<div class="script-nav">' +
+        '<button class="back-btn" data-act="go" data-n="' + (S.step - 1) + '"' + (S.step === 1 ? ' disabled' : '') + '>Back</button>' +
+        '<button class="next-btn" data-act="go" data-n="' + (S.step + 1) + '"' + (S.step === 7 ? ' disabled' : '') + '>' +
+          (S.step === 3 ? 'Jump six weeks' : S.step === 7 ? 'End of demo' : 'Next step') + '</button>' +
+      '</div>' +
+    '</div>';
+}
+
+// --------------------------------------------------------- screen tabs
+function renderScreens() {
+  return '<div class="screens" role="tablist">' +
+    '<button class="screen-tab ' + (S.screen === 'admin' ? 'on' : '') + '" data-act="screen" data-v="admin" role="tab" aria-selected="' + (S.screen === 'admin') + '">' +
+      '<span class="av">' + esc(initials(ADMIN.name)) + '</span>' + esc(ADMIN.first) + '\u2019s screen <small>admin</small></button>' +
+    '<button class="screen-tab ' + (S.screen === 'participant' ? 'on' : '') + '" data-act="screen" data-v="participant" role="tab" aria-selected="' + (S.screen === 'participant') + '">' +
+      '<span class="av">JO</span>James\u2019s phone <small>participant</small></button>' +
+  '</div>';
+}
+
+// ------------------------------------------------------------ admin app
+function renderAdmin() {
+  const hasOrg = !!S.org;
+  const nav = [['setup', hasOrg ? 'Group settings' : 'Set up'], ['members', S.seeded ? 'Progress' : 'People'],
+               ['results', 'Results'], ['content', 'Videos'], ['messages', 'Messages']];
+  let navHtml = '';
+  nav.forEach(function (n) {
+    const dis = n[0] !== 'setup' && !hasOrg;
+    navHtml += '<button class="nav ' + (S.tab === n[0] ? 'on' : '') + '" data-act="tab" data-v="' + n[0] + '"' + (dis ? ' disabled' : '') + '>' + n[1] + '</button>';
+  });
+  return '<div class="window">' +
+    '<aside class="side">' +
+      '<div class="side-org">' + esc(hasOrg ? S.org.name : 'Whatever You Do') + '</div>' +
+      '<div class="side-group">' + esc(hasOrg ? S.group.name + ' \u00b7 ' + (S.seeded ? '12 people' : S.invited ? 'invited' : 'no one yet') : 'No group yet') + '</div>' +
+      '<nav>' + navHtml + '</nav>' +
+      '<div class="side-who"><b>' + esc(ADMIN.name) + '</b>Admin of ' + esc(hasOrg ? S.org.name : '\u2014') + '</div>' +
+    '</aside>' +
+    '<div class="pane">' + adminPane() + '</div>' +
+  '</div>';
+}
+
+function adminPane() {
+  if (S.tab === 'setup') return paneSetup();
+  if (S.tab === 'members') return S.seeded ? paneProgress() : panePeople();
+  if (S.tab === 'results') return paneResults();
+  if (S.tab === 'content') return paneContent();
+  if (S.tab === 'messages') return paneMessages();
+  return '';
+}
+
+// ---- 1. set up
+function paneSetup() {
+  if (S.org) {
+    return '<h1>' + esc(S.group.name) + '</h1>' +
+      '<p class="lede">Part of ' + esc(S.org.name) + '. As admin of ' + esc(S.org.name) + ' you can see every group inside it \u2014 their progress and combined results, never anyone\u2019s own writing.</p>' +
+      '<div class="notice ok"><b>Set up.</b> ' + esc(S.org.name) + ' and ' + esc(S.group.name) + ' are ready. Next, invite the people who\u2019ll take part.</div>' +
+      (S.invited ? '' : '<button class="btn" data-act="tab" data-v="members">Invite people</button>');
+  }
+  const s = S.setup;
+  return '<h1>Run Whatever You Do with a group</h1>' +
+    '<p class="lede">Create your organisation and a first group. You\u2019ll be able to see how people are getting on, and what the group looks like as a whole.</p>' +
+    '<div class="field"><label for="f-org">Organisation</label><input class="input" id="f-org" data-bind="setup.org" value="' + esc(s.org) + '"><div class="hint">Your church, charity or business.</div></div>' +
+    '<div class="field"><label for="f-name">Your name</label><input class="input" id="f-name" data-bind="setup.name" value="' + esc(s.name) + '"><div class="hint">People see this on invitations and messages.</div></div>' +
+    '<div class="field"><label for="f-group">Group name</label><input class="input" id="f-group" data-bind="setup.group" value="' + esc(s.group) + '"></div>' +
+    '<div class="field" style="max-width:620px"><label>Kind of group</label><div class="radio-row">' +
+      '<button class="radio on" type="button"><span class="dot"></span><span><b>Cohort</b><span>People from across the organisation taking the course together.</span></span></button>' +
+      '<button class="radio" type="button" disabled><span class="dot"></span><span><b>Team</b><span>Colleagues giving each other feedback. Coming later.</span></span></button>' +
+    '</div></div>' +
+    '<button class="btn" data-act="create">Create group</button>';
+}
+
+// ---- 2. people (before the six-week jump)
+function panePeople() {
+  if (!S.invited) {
+    const emails = inviteEmails(), good = emails.filter(validEmail), bad = emails.length - good.length;
+    return '<h1>Invite people to ' + esc(S.group.name) + '</h1>' +
+      '<p class="lede">Each person gets an email from you, and lands in ' + esc(S.group.name) + ' when they accept. Before they start, they\u2019re shown exactly what you\u2019ll be able to see.</p>' +
+      '<div class="field" style="max-width:620px"><label for="f-inv">Email addresses</label>' +
+        '<textarea class="textarea" id="f-inv" rows="9" data-bind="inviteText">' + esc(S.inviteText) + '</textarea>' +
+        '<div class="hint">One per line, or separated by commas. ' + plural(good.length, 'address', 'addresses') + ' ready.</div>' +
+        (bad ? '<div class="err">' + plural(bad, 'line doesn\u2019t', 'lines don\u2019t') + ' look like an email address and will be skipped.</div>' : '') +
+      '</div>' +
+      '<div class="row"><button class="btn" data-act="invite"' + (good.length ? '' : ' disabled') + '>Send ' + plural(good.length, 'invitation') + '</button>' +
+      '<button class="btn quiet" data-act="copylink">Copy join link instead</button></div>';
+  }
+  const joined = S.db.invitations.filter(function (r) { return r.status === 'accepted'; }).length;
+  let rows = '';
+  S.db.invitations.forEach(function (r) {
+    rows += '<tr><td class="who">' + esc(r.email) + '</td><td>' +
+      (r.status === 'accepted' ? '<span class="flag green">Joined</span>' : '<span class="flag grey">Invited</span>') + '</td></tr>';
+  });
+  return '<h1>People</h1>' +
+    '<p class="lede">' + plural(S.db.invitations.length, 'person') + ' invited, ' + joined + ' joined so far. Progress appears here once people start.</p>' +
+    (S.accepted ? '' : '<div class="notice ok"><b>Invitations sent.</b> Switch to James\u2019s phone to see one arrive.</div>') +
+    '<div class="table-wrap"><table class="people" style="min-width:0"><thead><tr><th>Email</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+}
+
+// ---- 4. progress
+function paneProgress() {
+  const all = PEOPLE.length, fin = filteredPeople('finished').length, act = filteredPeople('active').length;
+  const stalled = filteredPeople('stalled').length, waiting = filteredPeople('waiting').length;
+  const filters = [['all', 'Everyone', all], ['stalled', 'Stalled', stalled], ['waiting', 'Waiting on contacts', waiting], ['active', 'Going well', act], ['finished', 'Finished', fin]];
+  let fh = '';
+  filters.forEach(function (f) { fh += '<button class="chip ' + (S.filter === f[0] ? 'on' : '') + '" data-act="filter" data-v="' + f[0] + '">' + f[1] + ' ' + f[2] + '</button>'; });
+
+  const list = filteredPeople(S.filter).slice().sort(function (a, b) {
+    const ra = isStalled(a) ? 0 : status(a) === 'active' ? 1 : 2, rb = isStalled(b) ? 0 : status(b) === 'active' ? 1 : 2;
+    return ra - rb || b.last - a.last;
+  });
+  let rows = '';
+  list.forEach(function (p) {
+    const st = status(p);
+    let pips = '';
+    for (let i = 0; i < 5; i++) {
+      const cls = i < p.done ? 'd' : i === p.done ? (isStalled(p) ? 's' : 'c') : '';
+      pips += '<span class="pip ' + cls + '"></span>';
+    }
+    const where = p.done >= 5 ? 'Finished' : STEP_NAMES[p.done];
+    const c = p.coach ? COACHES[p.coach] : null;
+    const coachCell = c ? '<span class="nowrap' + (c.last >= COACH_QUIET_DAYS ? ' coach-off' : '') + '">' + esc(c.name) + '</span>' +
+      (c.last >= COACH_QUIET_DAYS ? '<small class="sub-note coach-off">quiet ' + c.last + ' days</small>' : '') : '<span class="faint nowrap">None yet</span>';
+    let flag = '<span class="flag grey">Going well</span>';
+    if (st === 'finished') flag = '<span class="flag green">Finished</span>';
+    if (st === 'waiting') flag = '<span class="flag amber">Waiting on contacts</span>';
+    if (st === 'quiet') flag = '<span class="flag amber">Quiet for ' + p.last + ' days</span>';
+    const contacts = p.contacts + ' of 5' + (p.contacts < CONTACTS_NEEDED ? '<small class="sub-note faint">needs ' + CONTACTS_NEEDED + '</small>' : '');
+    rows += '<tr class="' + (isStalled(p) ? 'stalled' : '') + '">' +
+      '<td><button class="name-btn" data-act="peek" data-v="' + p.id + '" aria-expanded="' + (S.peek === p.id) + '">' + esc(p.name) + '</button></td>' +
+      '<td><div class="pips" aria-label="' + p.done + ' of 5 steps done">' + pips + '</div><div class="pip-label">' + where + '</div></td>' +
+      '<td class="nowrap">' + days(p.last) + '</td>' +
+      '<td>' + coachCell + '</td>' +
+      '<td class="nowrap">' + contacts + '</td>' +
+      '<td>' + flag + '</td></tr>';
+    if (S.peek === p.id) rows += '<tr class="peek-row"><td colspan="6">' + peekHtml(p) + '</td></tr>';
+  });
+
+  return '<h1>Progress</h1>' +
+    '<p class="lede">How everyone in ' + esc(S.group.name) + ' is getting on. You see progress, not content \u2014 nobody\u2019s writing is visible from here.</p>' +
+    '<div class="summary"><div><strong>' + fin + '</strong>finished</div><div><strong>' + act + '</strong>going well</div>' +
+      '<div class="amber"><strong>' + stalled + '</strong>stalled for ' + STALL_DAYS + '+ days</div></div>' +
+    (stalled ? '<div class="notice warn"><b>' + plural(stalled, 'person has', 'people have') + ' stalled, for two different reasons.</b> ' +
+      plural(waiting, 'is', 'are').replace(/^(\d+) /, '$1 ') + ' waiting on trusted contacts who haven\u2019t replied, which needs a nudge to them. The rest haven\u2019t been in at all. Two of the three share a coach who has also gone quiet.' +
+      '<div class="row" style="margin-top:10px"><button class="btn small" data-act="nudge-stalled">Message the stalled ' + (stalled === 3 ? 'three' : stalled) + '</button></div></div>' : '') +
+    '<div class="filters">' + fh + '</div>' +
+    '<div class="table-wrap"><table class="people"><thead><tr><th>Name</th><th>Progress</th><th>Last active</th><th>Coach</th><th>Contacts</th><th>Status</th></tr></thead><tbody>' +
+      rows + '</tbody></table></div>';
+}
+
+function peekHtml(p) {
+  return '<div class="peek" style="margin:2px 0 4px;max-width:none"><h3>What you can see about ' + esc(p.first) + '</h3>' +
+    '<div class="two"><ul class="can"><li>How far through the five steps they are</li><li>When they were last active</li><li>Whether they have a coach, and whether the coach is active</li><li>How many trusted contacts have replied</li></ul>' +
+    '<ul class="cant"><li>Their answers to any question</li><li>Their life timeline</li><li>Their calling statement and growth plan</li><li>What their trusted contacts said</li><li>Their letter to themselves</li></ul></div>' +
+    '<p class="faint" style="margin:8px 0 0">' + esc(p.first) + ' can see this same list from their own home screen.</p></div>';
+}
+
+// ---- 6 & 7. results
+function paneResults() {
+  const n = completedAssessments();
+  if (n < FLOOR) {
+    return '<h1>Results</h1><p class="lede">The group\u2019s combined gifts, and how people\u2019s answers changed over the course.</p>' +
+      '<div class="floor"><div class="big">' + n + ' of ' + FLOOR + '</div><p>Results appear once at least ' + FLOOR + ' people have finished their assessment. With fewer, combined answers could identify individuals.</p></div>';
+  }
+  const tabs = '<div class="subtabs"><button class="subtab ' + (S.resultsTab === 'gifts' ? 'on' : '') + '" data-act="rtab" data-v="gifts">Gifts across the group</button>' +
+    '<button class="subtab ' + (S.resultsTab === 'impact' ? 'on' : '') + '" data-act="rtab" data-v="impact">Before and after</button></div>';
+  return '<h1>Results</h1><p class="lede">' + esc(S.group.name) + ' as a whole. Nothing here can be traced to one person.</p>' + tabs +
+    (S.resultsTab === 'gifts' ? paneGifts() : paneImpact());
+}
+
+function giftBlock(cats, field, obsField, title) {
+  const data = giftsFor(cats, field, obsField);
+  const MAX = 32;
+  let rows = '';
+  data.forEach(function (d) {
+    const thin = d.top < SMALL_COUNT, heavy = d.top >= 6;
+    const count = thin ? '<strong>few</strong>' : '<strong>' + d.top + '</strong>of 12';
+    let dots = '';
+    d.vals.forEach(function (v, i) {
+      const lift = ((i * 7) % 3 - 1) * 5;   // stagger overlapping dots
+      dots += '<span class="sd" style="left:' + (v / MAX * 100).toFixed(1) + '%;top:' + (10 + lift) + 'px"></span>';
+    });
+    dots += '<span class="self-m" style="left:' + (d.selfMean / MAX * 100).toFixed(1) + '%" title="How people see themselves"></span>';
+    dots += '<span class="obs-m" style="left:' + (d.obsMean / MAX * 100).toFixed(1) + '%" title="How others see them"></span>';
+    rows += '<div class="gift"><div class="g-name"><b>' + d.c.name + '</b><span>' + d.c.gloss + '</span></div>' +
+      '<div class="g-count ' + (heavy ? 'heavy' : thin ? 'thin' : '') + '">' + count + '</div>' +
+      '<div class="strip" aria-label="Spread of scores">' + dots + '</div></div>';
+  });
+  return { html: '<div class="scale-h"><h2>' + title + '</h2></div>' +
+      '<div class="axis"><div></div><div>strongest for</div><div><span>less</span><span>more</span></div></div>' + rows, data: data };
+}
+
+function paneGifts() {
+  const a = giftBlock(APEST, 'apestScores', 'apestObs', 'Role among people');
+  const w = giftBlock(PEP, 'pepScores', 'pepObs', 'How people work');
+  const byTop = a.data.slice().sort(function (x, y) { return y.top - x.top; });
+  const heavy = byTop.slice(0, 2).map(function (d) { return FRIENDLY[d.c.k]; });
+  const thin = byTop.slice(-2).reverse().map(function (d) { return FRIENDLY[d.c.k]; });
+  const sDiff = a.data.find(function (d) { return d.c.k === 'S'; });
+  return '<p class="headline">Heavy on ' + heavy.join(' and ') + ', thin on ' + thin.join(' and ') + '.</p>' +
+    '<div class="basis">From ' + completedAssessments() + ' assessments, ' + withObservers() + ' with feedback from people who know them. Anything held by fewer than ' + SMALL_COUNT + ' people shows as \u201cfew\u201d.</div>' +
+    '<div class="legend"><span><i class="lg-dot"></i>One person (unnamed, in no order)</span><span><i class="lg-self"></i>How people see themselves</span><span><i class="lg-obs"></i>How others see them</span></div>' +
+    a.html +
+    (sDiff && sDiff.obsMean - sDiff.selfMean >= 1.5 ? '<p class="insight">People who know this group see more care in them than they claim for themselves.</p>' : '') +
+    w.html +
+    '<div class="question"><p class="q">Who here is carrying something nobody has asked them to use?</p>' +
+      '<p>This group leans towards ' + heavy.join(' and ') + '. Is there ' + thin.join(' or ') + ' here that hasn\u2019t been given room yet?</p>' +
+      '<p>Worth taking to a leaders\u2019 meeting as a question rather than a plan. This is how people see themselves this season, not who they are.</p></div>';
+}
+
+function paneImpact() {
+  const d = impactData();
+  const W = 10;
+  function row(x, i) {
+    const delta = x.end - x.start;
+    return '<div class="imp"><div class="imp-q">' + esc(x.q) + '</div>' +
+      '<div class="imp-bars"><div class="ib start" title="First day"><i style="width:' + (x.start / W * 100) + '%"></i></div>' +
+      '<div class="ib end" title="Last day"><i style="width:' + (x.end / W * 100) + '%"></i></div></div>' +
+      '<div class="imp-n"><strong>' + (delta >= 0 ? '+' : '\u2212') + Math.abs(delta).toFixed(1) + '</strong>rose for ' + x.rose + ' of ' + x.n + '</div></div>';
+  }
+  let four = '';
+  for (let i = 0; i < 4; i++) four += row(d[i], i);
+  const q5 = d[4], down = q5.end < q5.start;
+  return '<div class="basis">From the ' + q5.n + ' people who have finished (minimum ' + FLOOR + '). Each person answered on day one and again at the end, out of 10.</div>' +
+    '<div class="legend" style="margin-bottom:6px"><span><i class="lg-dot" style="border-radius:3px;width:14px;height:6px;opacity:.45;background:var(--faint)"></i>First day</span><span><i class="lg-dot" style="border-radius:3px;width:14px;height:6px;opacity:1"></i>Last day</span></div>' +
+    four +
+    '<div class="q5 ' + (down ? 'down' : '') + '"><div class="q5-tag">Question five \u00b7 a check, not a score</div>' + row(q5, 4) +
+      '<p class="q5-read">' + (down
+        ? '<b>Clarity rose, but peace fell.</b> People are leaving with a clearer sense of calling and more anxiety about it \u2014 the opposite of the intent. Worth raising with the coaches before the next group starts.'
+        : '<b>Peace rose alongside clarity.</b> People are leaving clearer about their purpose and more settled about where they are with it, which is what the course is for.') + '</p></div>' +
+    '<div class="demo-ctl"><b>Demo only:</b> <span>show what happens if question five falls</span>' +
+      '<button class="btn small ' + (S.q5Fell ? '' : 'quiet') + '" data-act="q5">' + (S.q5Fell ? 'Show the healthy version' : 'Show question five falling') + '</button></div>';
+}
+
+// ---- 3. videos
+function overrideFor(id) { return S.db.content_overrides.find(function (r) { return r.section === id; }); }
+function videoListFor(id, sinceAt) {
+  const sec = SECTIONS.find(function (s) { return s.id === id; });
+  const ours = { title: sec.dflt, dur: sec.dur, ours: true };
+  const o = overrideFor(id);
+  // S.clock is the next id to be issued, so anything with _at >= the load time arrived after it.
+  if (!o || (sinceAt != null && o._at >= sinceAt)) return [ours];
+  const theirs = { title: o.title, dur: PASTOR_VIDEO.dur, ours: false, provider: o.provider, at: o._at };
+  if (o.mode === 'replace') return [theirs];
+  if (o.mode === 'before') return [theirs, ours];
+  return [ours, theirs];
+}
+function paneContent() {
+  let out = '<h1>Videos</h1><p class="lede">Use your own teaching alongside ours. People in ' + esc(S.org.name) + ' see your video at that point in the course; everyone else sees ours.</p>';
+  SECTIONS.forEach(function (sec) {
+    const list = videoListFor(sec.id);
+    let vl = '';
+    list.forEach(function (v) {
+      vl += '<div class="vrow"><span class="vthumb"></span><span>' + esc(v.title) + ' <span class="faint">' + v.dur + '</span></span>' +
+        '<span class="src">' + (v.ours ? 'Whatever You Do' : esc(S.org.name) + ' \u00b7 ' + v.provider) + '</span></div>';
+    });
+    const editing = S.editing === sec.id;
+    const has = !!overrideFor(sec.id);
+    let ed = '';
+    if (editing) {
+      const v = S.video, parsed = parseVideo(v.url);
+      ed = '<div class="editor">' +
+        '<div class="field" style="max-width:560px"><label for="f-url">Video link</label><input class="input" id="f-url" data-bind="video.url" value="' + esc(v.url) + '" placeholder="https://youtu.be/\u2026">' +
+          '<div class="hint">Paste the address from the Share button on YouTube or Vimeo.</div>' + (v.err ? '<div class="err">' + esc(v.err) + '</div>' : '') + '</div>' +
+        '<div class="field" style="max-width:560px"><label for="f-title">Title people will see</label><input class="input" id="f-title" data-bind="video.title" value="' + esc(v.title) + '"></div>' +
+        '<div class="field" style="max-width:620px"><label>Where it goes</label><div class="radio-row">' +
+          [['replace', 'Instead of ours', 'Only your video plays here.'], ['before', 'Before ours', 'Yours introduces the standard teaching.'], ['after', 'After ours', 'Ours first, then yours.']].map(function (m) {
+            return '<button class="radio ' + (v.mode === m[0] ? 'on' : '') + '" type="button" data-act="vmode" data-v="' + m[0] + '"><span class="dot"></span><span><b>' + m[1] + '</b><span>' + m[2] + '</span></span></button>';
+          }).join('') + '</div></div>' +
+        (parsed ? '<div class="preview"><span class="vthumb"></span><span><b>' + esc(v.title || 'Untitled video') + '</b><br><span class="faint">' + parsed.provider + ' \u00b7 ' + esc(parsed.id) + ' \u00b7 ' + PASTOR_VIDEO.dur + '</span></span></div>'
+                : '<div class="err" style="margin:4px 0 12px">No preview yet \u2014 the link isn\u2019t recognised.</div>') +
+        '<div class="row"><button class="btn" data-act="vsave" data-v="' + sec.id + '">Save video</button><button class="btn quiet" data-act="vcancel">Cancel</button></div></div>';
+    }
+    out += '<div class="section-card"><div class="row" style="justify-content:space-between"><div><h3>' + sec.title + '</h3><div class="sub">' + sec.sub + '</div></div>' +
+      (editing ? '' : '<button class="btn small ' + (has ? 'quiet' : '') + '" data-act="vedit" data-v="' + sec.id + '">' + (has ? 'Change video' : 'Add your own video') + '</button>') + '</div>' +
+      '<div class="vlist">' + vl + '</div>' + ed + '</div>';
+  });
+  return out;
+}
+
+// ---- 5. messages
+const TEMPLATES = {
+  nudge: { label: 'Nudge for people who have stalled', audience: 'participants',
+    subject: 'Picking things back up',
+    body: 'Hi {first_name},\n\nI noticed you haven\u2019t been into Whatever You Do for a little while, and wanted to check in. No pressure at all \u2014 life gets full, and this was always meant to be unhurried.\n\nIf you\u2019ve been waiting on the people you asked for feedback, you can send them a gentle reminder from your home screen. And if you\u2019ve just lost the thread, the easiest way back in is to open the next reading and give it ten minutes.\n\nIf anything\u2019s got in the way that I can help with, just reply to this \u2014 it comes straight to me.\n\n{sender_first}' },
+  coaches: { label: 'Mid-course encouragement to coaches', audience: 'coaches',
+    subject: 'Halfway \u2014 a note for coaches',
+    body: 'Hi {first_name},\n\nThank you for walking with people through this. We\u2019re about halfway, which is usually when conversations get more honest, and harder.\n\nTwo things we\u2019ve learned. Conversation two, on the timeline, is the one people most often say changed something, so give it room. And when someone asks what you\u2019d do, it\u2019s fine to turn the question back to them \u2014 your job is to help them hear themselves.\n\n{sender_first}' },
+  event: { label: 'Invitation to the closing event', audience: 'both',
+    subject: 'Marking the end of Whatever You Do',
+    body: 'Hi {first_name},\n\nWe\u2019re gathering to mark the end of the course on [date] at [place]. There\u2019ll be food, a few short stories from people who\u2019ve been through it, and time to pray for one another.\n\nCould you let me know if you\u2019re coming? [sign-up link]\n\n{sender_first}' },
+  blank: { label: 'Write your own', audience: null, subject: '', body: '' }
+};
+
+function recipients() {
+  const m = S.msg;
+  const people = S.seeded ? filteredPeople(m.filter) : [];
+  let list = [];
+  if (m.audience !== 'coaches') list = list.concat(people.map(function (p) { return { id: p.id, name: p.name, first: p.first, role: 'participant' }; }));
+  if (m.audience !== 'participants') {
+    const seen = {};
+    people.forEach(function (p) { if (p.coach && !seen[p.coach]) { seen[p.coach] = 1; const c = COACHES[p.coach]; list.push({ id: c.id, name: c.name, first: c.name.split(' ')[0], role: 'coach' }); } });
+  }
+  return list;
+}
+function applyTemplate(key) {
+  const t = TEMPLATES[key];
+  S.msg.template = key;
+  if (t.audience) S.msg.audience = t.audience;
+  S.msg.subject = t.subject; S.msg.body = t.body;
+}
+function merged(text, r) {
+  return text.replace(/\{first_name\}/g, r ? r.first : 'there').replace(/\{sender_first\}/g, ADMIN.first);
+}
+
+function paneMessages() {
+  if (!S.seeded) {
+    return '<h1>Messages</h1><p class="lede">Send a message to everyone in ' + esc(S.group.name) + ', to their coaches, or both.</p>' +
+      '<div class="floor"><div class="big" style="font-size:30px">No one has started yet</div><p>Messages go to people who have joined. Once the group is under way you can message them, or only those who have stalled.</p></div>';
+  }
+  const m = S.msg, list = recipients(), first = list[0];
+  const filters = [['all', 'Everyone'], ['stalled', 'Stalled'], ['waiting', 'Waiting on contacts'], ['active', 'Going well'], ['finished', 'Finished']];
+  const aud = [['participants', 'Participants'], ['coaches', 'Coaches'], ['both', 'Both']];
+  const nP = list.filter(function (r) { return r.role === 'participant'; }).length, nC = list.length - nP;
+  let opts = '';
+  Object.keys(TEMPLATES).forEach(function (k) { opts += '<option value="' + k + '"' + (m.template === k ? ' selected' : '') + '>' + TEMPLATES[k].label + '</option>'; });
+
+  let log = '';
+  S.db.messages.slice().reverse().forEach(function (r) {
+    log += '<div class="sent-row"><span class="flag green">Sent</span><span><b>' + esc(r.subject) + '</b><br><span class="faint">to ' + esc(r.summary) + '</span></span><span class="faint">just now</span></div>';
+  });
+
+  return '<h1>Messages</h1><p class="lede">Messages go out by email from you, and replies come straight back to your own inbox.</p>' +
+    '<div class="composer"><div>' +
+      '<div class="field"><label>Send to</label><div class="seg">' + aud.map(function (a) { return '<button class="' + (m.audience === a[0] ? 'on' : '') + '" data-act="aud" data-v="' + a[0] + '">' + a[1] + '</button>'; }).join('') + '</div></div>' +
+      '<div class="field"><label>Who in ' + esc(S.group.name) + '</label><div class="filters" style="margin:0">' +
+        filters.map(function (f) { return '<button class="chip ' + (m.filter === f[0] ? 'on' : '') + '" data-act="mfilter" data-v="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>' +
+        '<div class="recips">' + (list.length ? 'Going to ' + [nP ? plural(nP, 'participant') : '', nC ? plural(nC, 'coach', 'coaches') : ''].filter(Boolean).join(' and ') + ': ' + esc(list.map(function (r) { return r.name; }).join(', ')) : 'No one matches. Try a different group of people.') + '</div></div>' +
+      '<div class="field"><label for="f-tpl">Start from</label><select class="input" id="f-tpl" data-act="tpl">' + opts + '</select></div>' +
+      '<div class="field"><label for="f-subj">Subject</label><input class="input" id="f-subj" data-bind="msg.subject" value="' + esc(m.subject) + '"></div>' +
+      '<div class="field"><label for="f-body">Message</label><textarea class="textarea" id="f-body" rows="11" data-bind="msg.body">' + esc(m.body) + '</textarea>' +
+        '<div class="hint">{first_name} becomes each person\u2019s first name.</div></div>' +
+      '<button class="btn" data-act="send"' + (list.length && m.subject.trim() && m.body.trim() ? '' : ' disabled') + '>Send to ' + plural(list.length, 'person', 'people') + '</button>' +
+    '</div><div>' +
+      '<div class="field" style="max-width:none"><label>What ' + esc(first ? first.first : 'they') + ' will receive</label>' +
+      '<div class="mail"><div class="mail-h"><div><span>From</span>' + esc(ADMIN.name) + ' via Whatever You Do</div><div><span>Reply to</span>' + esc(ADMIN.email) + '</div><div><span>Subject</span><b>' + esc(m.subject || '(no subject)') + '</b></div></div>' +
+        '<div class="mail-b">' + esc(merged(m.body, first)) + '</div>' +
+        '<div class="mail-f">You\u2019re getting this because you\u2019re part of ' + esc(S.group.name) + ' at ' + esc(S.org.name) + '. Replies go to ' + esc(ADMIN.first) + '. Unsubscribe from group messages.</div></div></div>' +
+    '</div></div>' +
+    (log ? '<div class="sent"><h2>Sent</h2>' + log + '</div>' : '');
+}
+
+// ------------------------------------------------------- James's phone
+function jamesProgress() {
+  const p = personRef('james');
+  return S.seeded ? { done: p.done, last: p.last, coach: p.coach ? COACHES[p.coach].name : null, contacts: p.contacts }
+                  : { done: 0, last: 0, coach: null, contacts: 0 };
+}
+
+function renderPhone() {
+  let body;
+  if (!S.org || !S.invited) {
+    body = '<h1>Nothing here yet</h1><p>James hasn\u2019t been invited. Rachel needs to send the invitations first.</p>' +
+      '<button class="btn quiet" data-act="screen" data-v="admin">Back to Rachel\u2019s screen</button>';
+  } else if (S.p === 'inbox') body = phoneInbox();
+  else if (S.p === 'consent') body = phoneConsent();
+  else if (S.p === 'section') body = phoneSection();
+  else if (S.p === 'visible') body = phoneVisible();
+  else body = phoneHome();
+  const bar = S.consented
+    ? '<button class="p-refresh" data-act="refresh" aria-label="Refresh James\u2019s screen">Refresh</button>'
+    : '<span class="faint">' + (S.p === 'inbox' ? 'Inbox' : '') + '</span>';
+  return '<div class="phone-wrap"><div class="phone"><div class="p-bar"><b>Whatever You Do</b>' + bar + '</div>' +
+    '<div class="p-body">' + body + '</div></div></div>';
+}
+
+function phoneInbox() {
+  return '<div class="email"><div class="email-h"><div><b>' + esc(ADMIN.name) + '</b> via Whatever You Do</div>' +
+      '<div class="faint">Join ' + esc(S.group.name) + ' at ' + esc(S.org.name) + '</div></div>' +
+    '<div class="email-b"><p style="color:var(--ink);margin:0 0 10px">Hi James,</p>' +
+      '<p style="color:var(--ink);margin:0 0 10px">I\u2019d love you to be part of ' + esc(S.group.name) + ' \u2014 a group of us from ' + esc(S.org.name) +
+      ' working through Whatever You Do together over the next couple of months. It\u2019s a guided course for working out your God-given purpose, with a coach alongside you.</p>' +
+      '<p style="color:var(--ink);margin:0 0 16px">' + esc(ADMIN.first) + '</p>' +
+      '<button class="btn" data-act="accept" style="width:100%">Accept invitation</button>' +
+      '<p class="faint" style="font-size:12px;margin:10px 0 0">You\u2019ll see exactly what ' + esc(ADMIN.first) + ' can see before you start.</p></div></div>';
+}
+
+function seeLists(name) {
+  return '<div style="margin:14px 0 4px;font-size:13px;font-weight:600">' + esc(name) + ' can see</div>' +
+    '<ul class="can"><li>How far through the five steps you are</li><li>When you were last active</li><li>Whether you have a coach</li>' +
+      '<li>How many of the people you asked for feedback have replied</li><li>Your answers combined with at least four other people\u2019s, never with your name</li></ul>' +
+    '<div style="margin:14px 0 4px;font-size:13px;font-weight:600">' + esc(name) + ' can\u2019t see</div>' +
+    '<ul class="cant"><li>Your answers to any question</li><li>Your life timeline</li><li>Your calling statement or growth plan</li>' +
+      '<li>What the people you asked said about you</li><li>Your letter to yourself</li></ul>';
+}
+
+function phoneConsent() {
+  return '<span class="p-badge">' + esc(S.org.name) + ' \u00b7 ' + esc(S.group.name) + '</span>' +
+    '<h1>Before you start</h1>' +
+    '<p>' + esc(ADMIN.name) + ' organises this group. Here\u2019s exactly what she can and can\u2019t see.</p>' +
+    seeLists(ADMIN.first) +
+    '<p style="margin-top:14px;font-size:13px">Your coach sees only what you choose to send them.</p>' +
+    '<button class="btn" data-act="consent" style="width:100%;margin-top:6px">I understand \u2014 start the course</button>' +
+    '<p class="faint" style="font-size:12px;margin:10px 0 0;text-align:center">You can leave the group at any time.</p>';
+}
+
+function phoneHome() {
+  const pr = jamesProgress();
+  let steps = '';
+  STEP_NAMES.forEach(function (n, i) {
+    const done = i < pr.done, now = i === pr.done;
+    steps += '<li class="' + (now ? 'now' : '') + '"><span class="n">' + (done ? '\u2713' : i + 1) + '</span>' + n +
+      ((done || now) ? '<button class="btn small ' + (now ? '' : 'quiet') + '" data-act="p-open" data-v="' + SECTIONS[i].id + '">' + (now ? 'Continue' : 'Open') + '</button>' : '') + '</li>';
+  });
+  return '<span class="p-badge">' + esc(S.org.name) + ' \u00b7 ' + esc(S.group.name) + '</span>' +
+    '<h1>Hi James</h1>' +
+    '<p>' + (pr.done === 0 ? 'Start with section one whenever you\u2019re ready. It takes about half an hour.' : 'You\u2019re on section ' + (pr.done + 1) + '. Pick up where you left off.') + '</p>' +
+    '<ol class="p-steps">' + steps + '</ol>' +
+    '<button class="p-link" data-act="p-visible">What ' + esc(ADMIN.first) + ' can see about you</button>';
+}
+
+function phoneSection() {
+  const sec = SECTIONS.find(function (s) { return s.id === S.pSection; }) || SECTIONS[0];
+  const list = videoListFor(sec.id, S.pSeenAt);
+  let players = '';
+  list.forEach(function (v) {
+    const isNew = !v.ours && v.at >= S.pPrevSeen;
+    players += '<div class="player ' + (v.ours ? 'ours' : '') + '"><div class="player-v"><span class="dur">' + v.dur + '</span></div>' +
+      '<div class="player-c"><b>' + esc(v.title) + (isNew ? '<span class="new-badge">New</span>' : '') + '</b><span>' +
+      (v.ours ? 'From Whatever You Do' : 'From ' + esc(S.org.name)) + '</span></div></div>';
+  });
+  return '<button class="p-link" data-act="p-home" style="margin-bottom:14px">Back to home</button>' +
+    '<h1>' + sec.title + '</h1><p>' + sec.sub + '. Watch ' + (list.length > 1 ? 'these' : 'this') + ' first, then start the readings.</p>' + players;
+}
+
+function phoneVisible() {
+  const pr = jamesProgress();
+  let pips = '';
+  for (let i = 0; i < 5; i++) pips += '<span class="pip ' + (i < pr.done ? 'd' : i === pr.done ? 'c' : '') + '"></span>';
+  return '<button class="p-link" data-act="p-home" style="margin-bottom:14px">Back to home</button>' +
+    '<h1>What ' + esc(ADMIN.first) + ' can see about you</h1>' +
+    '<p>This is the whole of your row on her screen, exactly as she sees it.</p>' +
+    '<div class="peek" style="margin:0 0 6px"><div class="pips">' + pips + '</div>' +
+      '<div class="pip-label">' + (pr.done >= 5 ? 'Finished' : STEP_NAMES[pr.done]) + '</div>' +
+      '<div style="margin-top:10px;font-size:13px;line-height:1.7">Last active ' + days(pr.last) + '<br>Coach: ' + esc(pr.coach || 'none yet') +
+      '<br>Trusted contacts replied: ' + pr.contacts + ' of 5</div></div>' +
+    '<div style="margin-top:12px">' + seeLists(ADMIN.first).split('<div style="margin:14px 0 4px;font-size:13px;font-weight:600">' + esc(ADMIN.first) + ' can\u2019t see</div>')[1] + '</div>';
+}
+
+// ------------------------------------------------------ under the hood
+const TABLE_ORDER = ['organisations', 'groups', 'memberships', 'permissions', 'invitations', 'consents', 'content_overrides', 'messages'];
+
+function tableHtml(name, rows, max) {
+  if (!rows.length) return '<div class="tbl-empty">empty</div>';
+  const cols = Object.keys(rows[0]).filter(function (k) { return k[0] !== '_'; });
+  const freshSet = S.freshRows[name] || [];
+  const show = rows.slice(-max);
+  let h = '<div style="overflow-x:auto"><table class="tbl"><thead><tr>' + cols.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
+  show.forEach(function (r) {
+    h += '<tr class="' + (freshSet.indexOf(r) >= 0 ? 'fresh' : '') + '">' + cols.map(function (c) { return '<td title="' + esc(r[c]) + '">' + esc(r[c]) + '</td>'; }).join('') + '</tr>';
+  });
+  h += '</tbody></table></div>';
+  if (rows.length > max) h += '<div class="tbl-more">' + (rows.length - max) + ' earlier rows not shown</div>';
+  return h;
+}
+
+function renderHood() {
+  const st = STEPS[S.step - 1];
+  const freshTables = TABLE_ORDER.filter(function (t) { return (S.freshRows[t] || []).length; });
+  let wrote = '';
+  if (!freshTables.length) wrote = '<div class="tbl-empty">' + (st.reads
+    ? 'This step only reads. Nothing is written, and every number on screen passes through canSee() first.'
+    : 'Nothing written yet. Do the step and the new rows appear here.') + '</div>';
+  freshTables.forEach(function (t) {
+    const rows = S.freshRows[t];
+    wrote += '<div class="hood-sec"><h3>' + t + ' <span>+' + rows.length + '</span></h3>' + tableHtml(t, rows, 6) + '</div>';
+  });
+
+  let all = '';
+  TABLE_ORDER.forEach(function (t) {
+    all += '<div class="hood-sec"><h3>' + t + ' <span>' + plural(S.db[t].length, 'row') + '</span></h3>' + tableHtml(t, S.db[t], 4) + '</div>';
+  });
+
+  const c = CANSEE_CASES[S.cansee];
+  const v = canSee(c.who, c.thing);
+  let opts = '';
+  CANSEE_CASES.forEach(function (x, i) { opts += '<option value="' + i + '"' + (i === S.cansee ? ' selected' : '') + '>' + esc(x.label) + '</option>'; });
+
+  return '<div class="hood-h"><div><h2>Under the hood</h2><span>For the developers</span></div>' +
+      '<button class="hood-toggle" data-act="hood">' + (S.hoodOpen ? 'Hide' : 'Show the data') + '</button></div>' +
+    '<div class="hood-body">' +
+      '<ul class="rules">' + st.rules.map(function (r) { return '<li>' + r + '</li>'; }).join('') + '</ul>' +
+      '<div class="hood-sec"><h3>Rows written by the last action</h3></div>' + wrote +
+      '<div class="hood-sec cansee" style="margin-top:22px"><h3>canSee(person, thing)</h3>' +
+        '<select data-act="cansee" aria-label="Permission question">' + opts + '</select>' +
+        '<div class="verdict ' + (v.ok ? 'yes' : 'no') + '"><b>' + (v.ok ? 'Yes' : 'No') + '</b>' + esc(v.why) +
+          '<div class="trace">' + v.trace.map(esc).join('<br>') + '</div></div></div>' +
+      '<div class="hood-sec" style="margin-top:22px"><h3>All tables</h3></div>' + all +
+    '</div>';
+}
+
+// --------------------------------------------------------- step engine
+// Jumping to a step silently completes everything before it, so any step
+// can be demonstrated on its own.
+function ensureUpTo(k) {
+  if (k >= 1 && !S.org) createOrg();
+  if (k >= 2) {
+    if (!S.invited) sendInvites();
+    if (!S.accepted) acceptInvite();
+    if (!S.consented) giveConsent();
+  }
+  if (k >= 3 && !overrideFor('s1')) {
+    S.video = { url: PASTOR_VIDEO.url, title: PASTOR_VIDEO.title, mode: 'before', err: '' };
+    saveVideo('s1'); S.pSeenAt = S.clock; S.pPrevSeen = S.clock;
+  }
+  if (k >= 4 && !S.seeded) seed();
+}
+
+const CANSEE_FOR_STEP = { 1: 0, 2: 1, 3: 0, 4: 2, 5: 1, 6: 3, 7: 3 };
+function enterStep(n) {
+  S.step = n; S.peek = null; S.cansee = CANSEE_FOR_STEP[n];
+  ensureUpTo(n - 1);
+  clearFresh();
+  if (n === 1) { S.screen = 'admin'; S.tab = 'setup'; }
+  if (n === 2) { S.screen = 'admin'; S.tab = 'members'; if (S.accepted && !S.consented) S.p = 'consent'; }
+  if (n === 3) {
+    S.screen = 'admin'; S.tab = 'content';
+    if (!overrideFor('s1')) { S.editing = 's1'; S.video = { url: PASTOR_VIDEO.url, title: PASTOR_VIDEO.title, mode: 'before', err: '' }; }
+    if (S.consented) { S.p = 'section'; S.pSection = 's1'; }
+  }
+  if (n === 4) { if (!S.seeded) seed(); S.screen = 'admin'; S.tab = 'members'; S.filter = 'all'; if (S.consented) S.p = 'home'; }
+  if (n === 5) {
+    S.screen = 'admin'; S.tab = 'messages';
+    if (!S.msg.touched) { applyTemplate('nudge'); S.msg.audience = 'participants'; S.msg.filter = 'stalled'; }
+  }
+  if (n === 6) { S.screen = 'admin'; S.tab = 'results'; S.resultsTab = 'gifts'; }
+  if (n === 7) { S.screen = 'admin'; S.tab = 'results'; S.resultsTab = 'impact'; }
+}
+
+// ------------------------------------------------------------ rendering
+function render() {
+  const a = document.activeElement;
+  const id = a && a.id;
+  let sel = null;
+  try { if (id && typeof a.selectionStart === 'number') sel = [a.selectionStart, a.selectionEnd]; } catch (e) { sel = null; }
+  document.getElementById('demobar').innerHTML = renderBar();
+  document.getElementById('main').innerHTML = renderScreens() + (S.screen === 'admin' ? renderAdmin() : renderPhone());
+  document.getElementById('hood').innerHTML = renderHood();
+  document.getElementById('stage').classList.toggle('hood-closed', !S.hoodOpen);
+  if (id) {
+    const el = document.getElementById(id);
+    if (el) { el.focus(); if (sel && el.setSelectionRange) { try { el.setSelectionRange(sel[0], sel[1]); } catch (e) { /* not a text field */ } } }
+  }
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
+}
+
+function setPath(path, value) {
+  const parts = path.split('.'); let o = S;
+  for (let i = 0; i < parts.length - 1; i++) o = o[parts[i]];
+  o[parts[parts.length - 1]] = value;
+}
+
+// --------------------------------------------------------------- events
+document.addEventListener('click', function (ev) {
+  const t = ev.target.closest('[data-act]');
+  if (!t || t.disabled) return;
+  const a = t.dataset.act, v = t.dataset.v;
+
+  if (a === 'go') { const n = +t.dataset.n; if (n >= 1 && n <= 7) { enterStep(n); render(); window.scrollTo(0, 0); } return; }
+  if (a === 'reset') { resetAdmin(); S = fresh(); render(); window.scrollTo(0, 0); toast('Demo reset'); return; }
+  if (a === 'screen') { S.screen = v; render(); return; }
+  if (a === 'tab') { S.tab = v; S.peek = null; render(); return; }
+  if (a === 'hood') { S.hoodOpen = !S.hoodOpen; render(); return; }
+
+  if (a === 'create') { createOrg(); render(); toast('Created ' + S.org.name + ' and ' + S.group.name); return; }
+  if (a === 'invite') { sendInvites(); render(); toast(plural(S.db.invitations.length, 'invitation') + ' sent from ' + ADMIN.first); return; }
+  if (a === 'copylink') { toast('Join link copied. Anyone who opens it lands in ' + S.group.name + '.'); return; }
+
+  if (a === 'accept') { acceptInvite(); render(); return; }
+  if (a === 'consent') { giveConsent(); render(); toast('James has joined ' + S.group.name); return; }
+  if (a === 'p-home') { S.p = 'home'; render(); return; }
+  if (a === 'p-open') { S.p = 'section'; S.pSection = v; render(); return; }
+  if (a === 'p-visible') { S.p = 'visible'; render(); return; }
+  if (a === 'refresh') {
+    S.pPrevSeen = S.pSeenAt; S.pSeenAt = S.clock;
+    if (S.step === 3 && S.p !== 'section') { S.p = 'section'; S.pSection = 's1'; }
+    render(); toast('James\u2019s screen refreshed'); return;
+  }
+
+  if (a === 'vedit') {
+    S.editing = v;
+    const o = overrideFor(v);
+    S.video = o ? { url: o.provider === 'YouTube' ? 'https://youtu.be/' + o.video_id : 'https://vimeo.com/' + o.video_id, title: o.title, mode: o.mode, err: '' }
+                : { url: PASTOR_VIDEO.url, title: PASTOR_VIDEO.title, mode: 'before', err: '' };
+    render(); return;
+  }
+  if (a === 'vmode') { S.video.mode = v; render(); return; }
+  if (a === 'vcancel') { S.editing = null; S.video.err = ''; render(); return; }
+  if (a === 'vsave') {
+    if (saveVideo(v)) { render(); toast('Saved. People in ' + S.org.name + ' will see it next time they open ' + SECTIONS.find(function (s) { return s.id === v; }).title.toLowerCase() + '.'); }
+    else render();
+    return;
+  }
+
+  if (a === 'filter') { S.filter = v; render(); return; }
+  if (a === 'peek') { S.peek = S.peek === v ? null : v; render(); return; }
+  if (a === 'nudge-stalled') {
+    S.step = 5; S.tab = 'messages'; clearFresh();
+    applyTemplate('nudge'); S.msg.audience = 'participants'; S.msg.filter = 'stalled';
+    render(); window.scrollTo(0, 0); return;
+  }
+
+  if (a === 'aud') { S.msg.audience = v; S.msg.touched = true; render(); return; }
+  if (a === 'mfilter') { S.msg.filter = v; S.msg.touched = true; render(); return; }
+  if (a === 'send') {
+    const list = recipients();
+    clearFresh();
+    const nP = list.filter(function (r) { return r.role === 'participant'; }).length, nC = list.length - nP;
+    write('messages', { from: ADMIN.id, group_id: GROUP_ID, audience: S.msg.audience, filter: S.msg.filter,
+      recipients: list.length, subject: S.msg.subject, reply_to: ADMIN.email },
+      'msg-' + S.clock);
+    S.db.messages[S.db.messages.length - 1].summary =
+      [nP ? plural(nP, 'participant') : '', nC ? plural(nC, 'coach', 'coaches') : ''].filter(Boolean).join(' and ') + ' (' + S.msg.filter + ')';
+    S.msg.touched = true;
+    render(); toast('Sent to ' + plural(list.length, 'person', 'people') + '. Replies will go to ' + ADMIN.email + '.'); return;
+  }
+
+  if (a === 'rtab') { S.resultsTab = v; render(); return; }
+  if (a === 'q5') { S.q5Fell = !S.q5Fell; render(); return; }
+});
+
+document.addEventListener('change', function (ev) {
+  const t = ev.target;
+  if (t.dataset.act === 'tpl') { applyTemplate(t.value); S.msg.touched = true; render(); }
+  if (t.dataset.act === 'cansee') { S.cansee = +t.value; render(); }
+});
+
+document.addEventListener('input', function (ev) {
+  const t = ev.target;
+  if (!t.dataset.bind) return;
+  setPath(t.dataset.bind, t.value);
+  if (t.dataset.bind.indexOf('msg.') === 0) S.msg.touched = true;
+  if (t.dataset.bind.indexOf('video.') === 0) S.video.err = '';
+  render();
+});
+
+// ----------------------------------------------------------------- start
+S = fresh();
+render();
+
+</script>
+</body>
+</html>
