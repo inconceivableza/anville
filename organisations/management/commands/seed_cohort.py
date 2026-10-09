@@ -3,17 +3,41 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from access.consent import current_text_version
+from access.consent import current_text_version, withdraw
 from access.models import Account, Consent
-from engine.models import Publication
+from engine.document.blocks import BLOCK_TYPES, CHOICE, CONFIRMATION, CONTACTS, SCALE_POINT, SCALE_POINTS, SORT, TEXT
+from engine.document.observers import link_lifetime, minimum_observers
+from engine.document.scoring import score
+from engine.hub import block_ids_fixed_on_completion, track_sections
+from engine.models import Contact, Invitation, ObserverResponse, Publication, Response
+from engine.seeding import observer_assessment, self_assessment, stable_number
 from organisations.models import Group, Membership, Organisation, Permission
 
 ORGANISATION = "Example Church"
 COHORT = "Autumn cohort"
 ADMIN_EMAIL = "seed-cohort-admin@example.com"
 SEED_PASSWORD = "information."
-# ✨ Fictional first names, as members give them at sign-up.
-MEMBERS = ["Ada", "Ben", "Cara", "Dan", "Esi", "Femi", "Grace", "Hugo", "Ines", "Jon", "Kemi", "Liam"]
+FINISHED = None
+# ✨ Each member's first name, as given at sign-up, and how many of the track's sections they have completed (a
+# section's parts with it): 0 is not started, with no response at all, and FINISHED is every one. A part-way count is
+# kept short of the whole track, however few sections it has.
+MEMBERS = [
+    ("Ada", 0),
+    ("Ben", 0),
+    ("Cara", 0),
+    ("Dan", 1),
+    ("Esi", 1),
+    ("Femi", 2),
+    ("Grace", 2),
+    ("Hugo", 3),
+    ("Ines", FINISHED),
+    ("Jon", FINISHED),
+    ("Kemi", FINISHED),
+    ("Liam", FINISHED),
+]
+# ✨ The one member who has withdrawn consent: part-way, so their progress would otherwise be worth showing.
+WITHDRAWN = "Femi"
+SEEDED_TEXT = "A seeded answer, written for a demonstration."
 
 
 # ✨ Written with AI assistance.
@@ -32,9 +56,13 @@ class Command(BaseCommand):
             cohort = Group.objects.create(organisation=church, name=COHORT, type=Group.Type.COHORT)
             admin = _account(ADMIN_EMAIL, "Admin")
             Permission.objects.create(holder=admin, capability=Permission.Capability.MANAGE, organisation=church)
-            for number, name in enumerate(MEMBERS, start=1):
+            for number, (name, sections_done) in enumerate(MEMBERS, start=1):
                 member = _account(f"seed-cohort-member-{number}@example.com", name)
                 Membership.objects.create(participant=member, group=cohort)
+                if sections_done != 0:
+                    _work_through(member, version, sections_done)
+                if name == WITHDRAWN:
+                    withdraw(member)
 
         # ✨ The join route belongs to joining by link (ticket A2), so the path is written out rather than reversed.
         self.stdout.write(
@@ -50,3 +78,60 @@ def _account(email, display_name):
     Account.objects.create(participant=account, display_name=display_name)
     Consent.objects.create(participant=account, text_version=current_text_version())
     return account
+
+
+def _work_through(member, version, sections_done):
+    """✨ A test-data response that has answered and completed the first `sections_done` sections of the track, and
+    whose observers have answered through their own links, as real observers do."""
+    document = version.document
+    sections = track_sections(document)
+    whole = [section for section in sections if "part_of" not in section]
+    if sections_done is not FINISHED:
+        sections_done = min(sections_done, len(whole) - 1)
+    response = Response.objects.create(participant=member, version=version, is_test_data=True)
+    tokens = []
+    for section in whole[:sections_done]:
+        for answering in [section, *(part for part in sections if part.get("part_of") == section["id"])]:
+            tokens += _answer(response, document, answering, member.email)
+        response.refresh_from_db()
+        response.complete_section(section["id"], block_ids_fixed_on_completion(section, response.answers))
+    if "instrument" in document:
+        assessment = self_assessment(document, member.email)
+        for number, token in enumerate(tokens, start=1):
+            secret = Invitation.claim(token)
+            ObserverResponse.send(
+                response, secret, observer_assessment(document, assessment, number), is_test_data=True
+            )
+
+
+def _answer(response, document, section, seed):
+    """✨ Answer every block of a section that takes an answer, and return the links issued to the people it names."""
+    tokens = []
+    for block in section["blocks"]:
+        kind = BLOCK_TYPES[block["type"]].captures
+        if kind is SORT:
+            assessment = self_assessment(document, seed)
+            response.submit_sort(block["id"], assessment, score(document, assessment))
+            response.visit_comparison(block["id"])
+        elif kind is CONTACTS:
+            people = [
+                {"name": f"Observer {number}", "email": f"{seed.partition('@')[0]}-observer-{number}@example.com"}
+                for number in range(1, minimum_observers(document) + 1)
+            ]
+            for contact in response.replace_contacts(block["id"], people, Contact.Role.CONTACT):
+                tokens.append(Invitation.issue(contact, link_lifetime(document)))
+        elif kind is not None:
+            response.save_answer(block["id"], _answer_of(kind, block, stable_number(seed, block["id"])))
+    return tokens
+
+
+def _answer_of(kind, block, number):
+    if kind is TEXT:
+        return SEEDED_TEXT
+    if kind is SCALE_POINT:
+        return SCALE_POINTS[number % len(SCALE_POINTS)]
+    if kind is CHOICE:
+        return block["options"][number % len(block["options"])]["id"]
+    if kind is CONFIRMATION:
+        return True
+    raise CommandError(f"seed_cohort cannot answer a {kind.name} block yet.")
