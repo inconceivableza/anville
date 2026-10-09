@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../../LICENSE.md
+
 import hashlib
 
 from django.contrib.auth import get_user_model

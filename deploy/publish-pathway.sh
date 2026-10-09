@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../LICENSE.md
+
 # ✨ Publish a pathway document from this checkout to one environment (docs/server-approach.md, section 8).
 # The publish-pathway workflow opens the tunnel, then runs this; it holds no secret of its own.
 #

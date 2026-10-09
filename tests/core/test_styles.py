@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The look is themeable later only if colours live in one place: the stylesheet's :root variables."""
 
 import re

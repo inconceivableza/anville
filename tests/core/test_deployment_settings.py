@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ How the settings a deployed environment needs are read from the environment (docs/server-approach.md).
 
 Settings are read once, when Django starts, so each case here starts a fresh Python with the environment it describes.

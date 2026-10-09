@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ One entry per block type: what it renders, and what (if anything) it captures.
 
 Before this registry a new block type had to be found in four places at once. Adding one now means an

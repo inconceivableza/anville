@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Whether a section's gate passes, and what to say to the participant when it does not.
 
 A gate is a list of clauses drawn from the fixed set below, never an expression (ADR 0003). Every clause

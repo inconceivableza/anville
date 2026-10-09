@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see LICENSE.md
+
 """Django's command-line utility for administrative tasks."""
 
 import os

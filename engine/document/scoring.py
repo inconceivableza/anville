@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Scoring a sort answer by a named, frozen method (ADR 0003).
 
 The pathway document chooses a method by name (`measurement.scoring.method`). A method is never edited once

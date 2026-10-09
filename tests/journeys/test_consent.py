@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Consent comes before the pathway (ADR 0004): it is its own act, never the enrolment code, and it
 records the version of the text agreed to. Declining stores nothing beyond the account.
 """

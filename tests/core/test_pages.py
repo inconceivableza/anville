@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Pages within a section (ticket 33): how an author splits one, and what a participant has reached of it.
 
 A `page_break` block between blocks starts a new page. A section without one is one page, exactly as before. These

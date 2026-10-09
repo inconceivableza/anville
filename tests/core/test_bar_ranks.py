@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Colouring bars by rank: tied scores share a colour, as the prototype's PEP bars did."""
 
 from engine.results import bar_ranks

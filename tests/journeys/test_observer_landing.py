@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ An observer's landing page, and claiming the link (ADR 0005).
 
 The participant holds a copy of every link they send, so the observer claims theirs on first use: starting exchanges

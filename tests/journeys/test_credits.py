@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The credits page, which carries the copyright notice of each translation the site quotes (ticket 39).
 
 Both publishers ask for their notice on the work's copyright page, which for a website is one page every page

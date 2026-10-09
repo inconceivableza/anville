@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../LICENSE.md
+
 # ✨ Deploy one environment to the host whose k3s API kubectl can already reach (docs/server-approach.md,
 # section 8). The deploy workflow opens the tunnel, then runs this; it holds no secret of its own.
 #

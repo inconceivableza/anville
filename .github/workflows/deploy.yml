@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 # ✨ Deploy one environment (docs/server-approach.md, section 8). Run by hand: this is the only way an
 # environment changes. Promotion to production is this same workflow, run with the tag that staging tested.
 #

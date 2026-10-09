@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The demo notice (ticket 26, step 12a).
 
 A demo deployment's sign-up is open (ticket 37), so the homepage and the sign-up page say plainly that it is a demo,

@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The coach sees the results and comparison (ticket 27): once the coach has accepted, and the participant has seen
 their comparison, they may tick "Give my coach access to my results and this comparison", and the coach's link then shows their results
 and the comparison, read-only, as the participant sees them.

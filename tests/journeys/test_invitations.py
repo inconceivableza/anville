@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Observers' invitations: a link per person on the participant's contact list, which the participant copies and
 sends themselves.
 

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 # ✨ Create an Anville host on Hetzner Cloud (docs/server-approach.md, section 9).
 #
 # It makes sure the firewall and the operator's SSH key exist in the named Hetzner project, then creates one

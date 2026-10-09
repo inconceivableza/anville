@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../LICENSE.md
+
 from allauth.account.forms import LoginForm
 from django import forms
 from django.conf import settings

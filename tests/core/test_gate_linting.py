@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ A gate clause an author writes must be one the engine could actually check when the participant gets there.
 
 Both checks were carried from ticket 02, where the linter checked only that the named block existed.

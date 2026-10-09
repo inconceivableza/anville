@@ -1,4 +1,7 @@
 #!/bin/sh
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../../../LICENSE.md
+
 # ✨ Dump the environment's database and send it to the backup target over SFTP.
 #
 # From the environment:

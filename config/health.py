@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../LICENSE.md
+
 from django.conf import settings
 from django.db import DatabaseError, connection
 from django.http import JsonResponse

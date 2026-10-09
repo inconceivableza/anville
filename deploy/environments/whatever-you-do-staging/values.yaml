@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../../LICENSE.md
+
 # ✨ whatever-you-do-staging: the first environment (ticket 26). Only what differs from the chart's defaults.
 
 tier: staging

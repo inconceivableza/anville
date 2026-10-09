@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The public homepage at the site's root, copied from the prototype (ticket 32a)."""
 
 import re

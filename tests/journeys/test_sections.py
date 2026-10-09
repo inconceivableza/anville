@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Locks, gates and completion over HTTP, which is the only place they count.
 
 The prototype's locks were `display:none` on a div, so anything that navigated directly walked straight

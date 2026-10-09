@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Choosing a coach, as the content owner's mock-up has it: why the choice matters, the candidate's first name, six
 "Do you think …" questions, then an outcome that proceeds, asks for a second thought, or stops.
 

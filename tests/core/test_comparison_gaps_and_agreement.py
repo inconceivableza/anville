@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Where the participant and their observers differ most, and how far the observers agree (ADR 0005).
 
 Both rules read their numbers from the pathway document: a gap of `significant_gap` points or more is significant,
