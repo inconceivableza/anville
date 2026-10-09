@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Where a construct's share stands, in words: its band by how far it sits from an even share of its framework.
 
 The bands are the pathway document's `presentation.standing`, each from a percent of an even share, read highest first

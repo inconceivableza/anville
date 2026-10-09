@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../LICENSE.md
+
 # ✨ Turn an image tag into what a deploy pins: the digest, and the commit the image was built from
 # (docs/server-approach.md, section 8). A tag can move; a digest cannot.
 #

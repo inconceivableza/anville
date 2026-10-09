@@ -1,3 +1,6 @@
+// Copyright (C) New Community Church SE London 2026.
+// For licensing information see ../../../LICENSE.md
+
 // ✨ Regenerates prototype_scoring.json by running the prototype's own scoring code on fixed sorts.
 //
 // The item bank and computeAll() are read out of the prototype file and run as they are, so the golden

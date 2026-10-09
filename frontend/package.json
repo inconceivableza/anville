@@ -1,5 +1,6 @@
 {
   "name": "anville-frontend",
+  "license": "UNLICENSED",
   "private": true,
   "type": "module",
   "scripts": {

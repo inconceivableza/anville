@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ What the comparison makes of a self-result beside the observer average: where they differ most, whether others
 see each construct higher, lower or much the same, and how far the observers agree with each other (ADR 0005).
 

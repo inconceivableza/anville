@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The observer's assessment: the same sort, about the participant, in the third person (ADR 0005).
 
 An observer reaches it only through the link they claimed, sends it once, and never sees it again through any link.

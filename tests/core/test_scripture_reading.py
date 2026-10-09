@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The scripture reading block: authored passages, and a confirmation that opens the activity beneath it."""
 
 import pytest

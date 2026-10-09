@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The hub is derived, never authored (CONTEXT.md): status, locks, the next step and progress.
 
 These are the derivation itself, with no browser and no database. What a participant is actually allowed

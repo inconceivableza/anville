@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ A sort is scored once, when it is submitted, and the result is kept against the response's pathway version.
 
 The results page shows that stored result with the pathway version's own wording.

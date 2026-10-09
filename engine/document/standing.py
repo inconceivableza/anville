@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Where a construct's share stands, in words: its standing, by how far it sits from an even share of its framework
 (ticket 38).
 

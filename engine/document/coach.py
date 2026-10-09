@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The coach checklist's outcome rule, and what its forms send, as the content owner's mock-up sets them out.
 
 The questions, which of them are critical and why each matters are authored in the pathway document; turning

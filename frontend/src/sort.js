@@ -1,3 +1,6 @@
+// Copyright (C) New Community Church SE London 2026.
+// For licensing information see ../../LICENSE.md
+
 // ✨ The sort assessment: every item sorted into a bucket one card at a time, then fine-tuned with a slider
 // seeded by its bucket. The server hands over the items and the buckets (weakest first) as JSON beside the
 // form. The widget's only output is the form's hidden `value`, the whole sort as JSON; the server never

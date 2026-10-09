@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../LICENSE.md
+
 # ✨ Check everything under deploy/ that can be checked without a cluster: the scripts with shellcheck, and
 # both charts with helm, rendered with the defaults and with each environment's values, and the pathways the
 # publish-pathway workflow offers against pathways/. The build workflow runs this, and so can you.

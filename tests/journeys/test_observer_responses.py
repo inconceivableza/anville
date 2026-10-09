@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Observers' answers are kept as their own records, apart from who the observer is (ADR 0005), and a seeding
 command creates test observers directly, so the comparison can be shown before, or without, the questionnaire.
 

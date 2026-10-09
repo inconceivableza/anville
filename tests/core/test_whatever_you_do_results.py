@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The Whatever You Do results wording and colours, held to the prototype's buildResults().
 
 Wording is read out of the prototype file, so a word mistyped in the migration fails here. Colours are

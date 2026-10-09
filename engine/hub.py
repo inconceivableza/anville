@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../LICENSE.md
+
 """✨ The hub: the engine's view of where a participant has got to.
 
 A hub is derived from the pathway's sections and what the participant has answered and completed. None of

@@ -1,4 +1,7 @@
 #cloud-config
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 # ✨ First boot of an Anville host (docs/server-approach.md, section 9). hcloud-create.sh fills in the
 # __PLACEHOLDERS__ and passes the result to Hetzner as user data. A host is never edited by hand afterwards:
 # change this file and make a new host.

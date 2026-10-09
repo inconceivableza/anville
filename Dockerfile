@@ -1,5 +1,8 @@
 # syntax=docker/dockerfile:1
 
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see LICENSE.md
+
 # ✨ The one image every environment runs (docs/server-approach.md, section 3). It is public, so nothing may go
 # into it that the repository does not already publish: Dockerfile.dockerignore admits only what is copied
 # below. That file is named for this Dockerfile, so it does not touch the devcontainer's build of the same directory.

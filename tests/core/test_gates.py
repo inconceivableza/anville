@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Gate clauses, at the seam the spec asks for: no browser and no database.
 
 A gate is a list of clauses from a fixed set, never an expression (ADR 0003). Every clause must pass

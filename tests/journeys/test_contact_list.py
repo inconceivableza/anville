@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ A contact list: people who know the participant, a name and an email per row, kept as records of their own.
 
 The rows are people other than the participant, so they are stored as contacts (which later become observers'

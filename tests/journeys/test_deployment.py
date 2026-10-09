@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ What a deployed environment needs of the application (ticket 26, docs/server-approach.md).
 
 A deployed copy sits behind a proxy that ends TLS, and is checked from outside through /healthz. The settings that

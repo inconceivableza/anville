@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The faithful port of *Whatever You Do*, read as a participant meets it.
 
 Every other journey test builds its own small document. These read `pathways/whatever-you-do-faithful-port.json`

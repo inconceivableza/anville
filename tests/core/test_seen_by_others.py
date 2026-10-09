@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Whether others see a construct higher, lower or much the same as the participant, in words, by the document's
 significant gap (ticket 38).
 """

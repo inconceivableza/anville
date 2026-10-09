@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The participant is named by the display name they gave at sign-up, never by their email (ticket 37).
 
 An account without one, made before display names existed, is named by the part of its email before the @, taken from

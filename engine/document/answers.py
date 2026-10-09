@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Accepting or refusing one submitted answer, on the server and never trusted to the widget.
 
 What each block captures, and what a form value means for it, is decided in `blocks.py`. This module

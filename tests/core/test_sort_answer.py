@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The sort answer contract: every item placed in a bucket this pathway has, with a whole value from 0 to 100.
 
 The widget sends the answer as JSON text. The server holds it to the contract and never trusts the widget.

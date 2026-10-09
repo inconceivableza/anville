@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../../LICENSE.md
+
 # ✨ Installed once per host, after cert-manager itself, which the deploy workflow installs from its own chart
 # (docs/server-approach.md, section 5).
 

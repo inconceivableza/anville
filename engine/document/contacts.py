@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ A contact list as a form sends it: one first name and one email address per row, in order.
 
 The rows are people other than the participant, so the whole list is held to these rules before any of it is
