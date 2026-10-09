@@ -181,7 +181,7 @@ A participant who has joined a group. Belonging to an organisation means being a
 _Avoid_: enrollee, student, user.
 
 **Join link**:
-A group's link, shared by its organisers, by which a person signs up to the deployment and joins that group in one go, or joins it if they already have an account.
+A group's link, shared by its organisation or group admins, by which a person signs up to the deployment and joins that group in one go, or joins it if they already have an account.
 _Avoid_: invite link, invitation (the participant's link to an observer or coach), enrolment code.
 
 ### Responses
