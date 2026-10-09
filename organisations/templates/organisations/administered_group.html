@@ -1,4 +1,4 @@
-{# ✨ One group on "Your organisations": its name, type and member count, and its join link to copy or replace for an admin who manages it. #}
+{# ✨ One group on "Your organisations": its name, type and member count, its join link to copy or replace for an admin who manages it, and its members' progress. #}
 <section class="administered-group" id="group-{{ group.pk }}">
   <h3>{{ group.name }}</h3>
   <p class="administered-group-facts">{{ group.get_type_display }} · {{ group.member_count }} member{{ group.member_count|pluralize }}</p>
@@ -12,5 +12,14 @@
       </div>
       <p class="replace-link"><a href="{% url 'replace_link' group.pk %}">Replace link</a></p>
     </div>
+  {% endif %}
+  {% if group.members %}
+    {# ✨ Each member's name and how far through they are; never what they answered or their email address. #}
+    <ul class="members">
+      {% for member in group.members %}
+        <li class="member"><span class="member-name">{{ member.name }}</span> ·
+          {% if not member.consented %}hasn't consented{% elif member.last_active %}{{ member.complete }} of {{ member.total }} sections · last active {{ member.last_active|date:"j F Y" }}{% else %}not started{% endif %}</li>
+      {% endfor %}
+    </ul>
   {% endif %}
 </section>

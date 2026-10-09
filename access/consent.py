@@ -17,15 +17,14 @@ def current_text_version():
     return CONSENT_TEXT_VERSION
 
 
+def current_consents():
+    """✨ Every consent to the current text that has not been withdrawn, whoever gave it."""
+    return Consent.objects.filter(text_version=current_text_version(), withdrawn_at__isnull=True)
+
+
 def current_consent(participant):
     """✨ The participant's consent to the current text, or None if they have not given it."""
-    return (
-        Consent.objects.filter(
-            participant=participant, text_version=current_text_version(), withdrawn_at__isnull=True
-        )
-        .order_by("-given_at")
-        .first()
-    )
+    return current_consents().filter(participant=participant).order_by("-given_at").first()
 
 
 def latest_consent(participant):
