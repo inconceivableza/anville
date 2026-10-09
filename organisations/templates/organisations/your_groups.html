@@ -1,6 +1,15 @@
 {% extends "engine/participant.html" %}
+{# ✨ The groups a participant is in (ticket C1). Admins are not named, so nobody's details are shown to every member. #}
 {% block head_title %}Your groups{% endblock head_title %}
 
 {% block content %}
   <h1>Your groups</h1>
+
+  {% for group in groups %}
+    <section class="your-group">
+      <h2>{{ group.name }}</h2>
+      <p>{{ group.organisation.name }}</p>
+      {% include "organisations/what_admins_see.html" %}
+    </section>
+  {% endfor %}
 {% endblock content %}
