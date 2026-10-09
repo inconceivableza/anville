@@ -3,12 +3,14 @@ records the version of the text agreed to. Declining stores nothing beyond the a
 """
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.utils import dateformat, timezone
 
+from access.consent import current_text_version
 from access.models import Consent
 from engine.models import Publication, Response
 from tests.documents import pathway_document
-from tests.journeys.pages import version_on
+from tests.journeys.pages import text_of, version_on
 from tests.journeys.test_access import require_the_code, sign_up
 
 CONSENT = "/consent/"
@@ -78,6 +80,26 @@ def test_the_consent_page_offers_agreeing_and_declining_as_separate_choices(sign
     assert 'name="decision" value="agree"' in page
     assert 'name="decision" value="decline"' in page
     assert version_on(page) is not None
+
+
+@pytest.mark.django_db
+def test_the_consent_text_says_what_a_groups_admins_see_and_that_leaving_ends_it(signed_up):
+    page = text_of(signed_up.get(CONSENT).content.decode())
+
+    for promise in [
+        "your first name",
+        "how far through you are",
+        "when you were last active",
+        "the self-assessment results of the whole group averaged",
+        "never yours on their own",
+        "If you leave the group, they no longer see anything about you",
+    ]:
+        assert promise in page
+
+
+@pytest.mark.django_db
+def test_the_consent_text_is_still_marked_as_a_draft(signed_up):
+    assert "Draft wording" in signed_up.get(CONSENT).content.decode()
 
 
 @pytest.mark.django_db
@@ -222,16 +244,16 @@ def test_withdrawing_keeps_the_answers_already_stored(consented):
 
 
 @pytest.mark.django_db
-def test_a_new_version_of_the_consent_text_asks_again(consented, monkeypatch):
-    """✨ Stands in for a release that raises the version beside a changed text."""
-    monkeypatch.setattr("access.consent.CONSENT_TEXT_VERSION", 2)
+def test_a_participant_who_agreed_before_groups_were_described_is_asked_again(signed_up):
+    """✨ Version 1 said nothing of what a group's admins see (spec, Consent v2)."""
+    Consent.objects.create(participant=get_user_model().objects.get(), text_version=1)
 
-    assert consented.get("/hub/").url == CONSENT
-    page = consented.get(CONSENT).content.decode()
+    assert signed_up.get("/hub/").url == CONSENT
+    page = signed_up.get(CONSENT).content.decode()
     assert "The text has changed since you agreed to version 1. Please read it again." in page
-    assert version_on(page) == "2"
-    give_consent(consented)
-    assert "Test Pathway" in consented.get("/hub/").content.decode()
+    assert version_on(page) == str(current_text_version())
+    give_consent(signed_up)
+    assert "Test Pathway" in signed_up.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db

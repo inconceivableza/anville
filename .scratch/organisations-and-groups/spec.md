@@ -138,7 +138,8 @@ A single function, `can_see`, answers whether one account may see a participant'
 
 ### Consent v2 (ADR 0004)
 
-- Raise the consent text's version and add one paragraph: if you join a group, its admins see your name, how far through you are and when you were last active, and the group's results combined, never yours on their own; leaving the group ends that.
+- Raise the consent text's version. "Who sees it" becomes "Who sees what", one line each for the participant, their observers, a coach, group and organisation admins, and the operator, so the group line does not contradict a "nobody but you" opening. The copy says "first name" for the display name, as the sign-up form labels it. The group line: if you choose to join a group, its group admins and its organisation's admins see your display name, how far through you are and when you were last active, and the self-assessment results of the whole group averaged, once at least three members have them, never yours on their own; they never see your answers; if you leave the group, they no longer see anything about you through it.
+- "Your choice" says what declining keeps (the account: display name, email address, password stored hashed, and when the account signed up and last signed in), and that a participant who withdraws stays in their groups, whose admins then see only their display name and that they have not consented. That name is shown without current consent (ADR 0004, note of 9 Oct).
 - No real participant has consented yet, so only development and staging accounts are asked again. The text stays a marked draft.
 - Withdrawing consent keeps memberships. `can_see` returns false while consent is withdrawn.
 

@@ -13,3 +13,7 @@
 - [ ] "Leave this group" asks for confirmation, then ends the membership; the participant's answers are untouched
 - [ ] After leaving, the group's admins can no longer see the participant's progress
 - [ ] A participant in no group is told so
+
+**Carried from B1**
+
+- The sentence on what each group's admins and its organisation's admins see says what the consent text's group line says: your display name, how far through you are and when you were last active, and the whole group's self-assessment results averaged, never yours on their own; never your answers

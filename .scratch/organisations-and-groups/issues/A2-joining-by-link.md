@@ -13,3 +13,7 @@
 - [ ] Opening the link for a group already joined says "You're already in this group" and offers the hub; leaving the join page without joining records nothing
 - [ ] An unknown or replaced link says the link no longer works and to ask whoever sent it for a new one, revealing nothing about any group
 - [ ] Signing up without a join link still needs the enrolment code, unless the deployment has turned it off
+
+**Carried from B1**
+
+- The join page's sentence on what the group's admins and its organisation's admins see says what the consent text's group line says: your display name, how far through you are and when you were last active, and the whole group's self-assessment results averaged, never yours on their own; never your answers

@@ -9,7 +9,7 @@ from access.models import Consent
 
 # ✨ The version of the text in templates/access/consent.html. Raise it whenever a change alters what a
 # participant agrees to (not for a typo), and everyone is asked again before they continue.
-CONSENT_TEXT_VERSION = 1
+CONSENT_TEXT_VERSION = 2
 
 
 def current_text_version():

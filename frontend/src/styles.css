@@ -1619,6 +1619,16 @@ form + .way-on,
   gap: 12px;
 }
 
+/* ✨ "The text has changed": set apart from the text above and close to the choices it bears on, flagged as the
+   coach checklist's stop is, with the words in the body colour so they stay easy to read on the pale red */
+.consent-changed {
+  margin: 32px 0 12px;
+  padding: 12px 14px;
+  background: var(--stop-pale);
+  border-left: 4px solid var(--red-soft);
+  font-weight: 600;
+}
+
 /* The hub's quiet way to the consent page, below everything else */
 
 .hub-consent {
