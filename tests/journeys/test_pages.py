@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Pages within a section over HTTP (ticket 33): one after another with "Continue →", as the prototype's screens are.
 
 Having moved past a page is stored, since a page with nothing it needs (the coach page, a contact list left empty)

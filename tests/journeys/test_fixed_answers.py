@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Answers an author marks as fixed once their section is complete, such as a baseline measured again later.
 
 In the original prototype the baseline screen cannot be returned to after "Continue", so the first ratings

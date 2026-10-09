@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ *Whatever You Do* as the content owner now wants it, which adds a fifth rating the original prototype does not have.
 
 After the first demo the content owner asked for a fifth statement, asked at the start and again at the end, to

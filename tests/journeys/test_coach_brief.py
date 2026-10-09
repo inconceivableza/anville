@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ Section 1's coach brief (ticket 25a): the guide to the coach's first conversation with the participant, authored
 in the pathway document with the sort whose results the coach is shown. The participant can open it beside the consent
 to share those results, on their comparison, so they know what their coach has been asked to do; a coach who has

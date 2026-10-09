@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ A section that is a part of another, as the Strengths assessment is a part of Section 1 (ticket 41b).
 
 As in the original prototype, where the assessment sits inside Section 1: it is listed under that section, has no

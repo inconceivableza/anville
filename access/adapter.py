@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../LICENSE.md
+
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.utils import user_email, user_username
 from django import forms

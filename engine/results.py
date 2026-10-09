@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../LICENSE.md
+
 """✨ The results page and the comparison as the engine derives them: a stored result, dressed in its pathway
 version's wording, and on the comparison set beside the observer average.
 

@@ -1,4 +1,8 @@
 {{- /*
+Copyright (C) New Community Church SE London 2026.
+For licensing information see ../../../../LICENSE.md
+*/ -}}
+{{- /*
 ✨ Two issuers, both HTTP-01 through the host's ingress.
 
 "staging" in an issuer's name is Let's Encrypt's test service, which issues certificates no browser trusts

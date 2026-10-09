@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 import pytest
 from django.core.management import CommandError, call_command
 from django.db import DatabaseError, transaction

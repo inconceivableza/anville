@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../../LICENSE.md
+
 apiVersion: v2
 name: anville
 description: One Anville environment in one namespace. The web service, its PostgreSQL or a pointer to a managed one, its ingress and its nightly backup.

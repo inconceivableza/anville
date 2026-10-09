@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The disclaimer a test system puts on every email it sends (ticket 26, part 2).
 
 Staging starts with fake email. Once it sends actual email, to the real addresses of people who know they are testing,

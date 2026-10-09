@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The frozen scoring method, held to the prototype's own output (golden fixtures).
 
 The golden sorts were scored by the prototype's computeAll(), run by `golden/prototype_scoring.mjs`. They are

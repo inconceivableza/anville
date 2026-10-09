@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../LICENSE.md
+
 # ✨ Confirm from outside that an environment is serving the commit just deployed (docs/server-approach.md,
 # section 8). It catches a wrong DNS record, a certificate that was not issued and a pod that never became
 # ready, none of which the cluster can see for itself.

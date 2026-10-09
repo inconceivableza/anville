@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ What the pathway document says about observers: inviting them, and how many must answer (ADR 0005).
 
 Nothing here touches the database or a request.

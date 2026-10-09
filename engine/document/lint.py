@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The second validation pass: cross-references the JSON Schema cannot express.
 
 Runs only on a document that has already passed the schema, so it relies on the document's shape.

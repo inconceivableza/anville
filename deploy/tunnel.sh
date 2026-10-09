@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../LICENSE.md
+
 # ✨ Open or close the SSH tunnel to a host's k3s API (docs/server-approach.md, section 8).
 #
 # The API listens on the host and is not reachable from outside: no firewall admits 6443. The deploy

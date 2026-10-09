@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../LICENSE.md
+
 """✨ The original prototype and the faithful port of Whatever You Do, as the tests that hold one to the other read them.
 
 The prototype's construct codes are mapped to the new identifiers here and nowhere else. (Its inverted bucket

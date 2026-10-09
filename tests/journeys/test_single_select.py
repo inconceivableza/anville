@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ A single select: one choice from an authored list, saved as the chosen option's identifier."""
 
 import re

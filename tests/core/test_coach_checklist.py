@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The coach checklist's outcome rule, and what it reads from a form, at the seam the spec asks for: no browser
 and no database.
 

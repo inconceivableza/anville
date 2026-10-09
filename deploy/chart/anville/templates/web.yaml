@@ -1,4 +1,8 @@
 {{- /*
+Copyright (C) New Community Church SE London 2026.
+For licensing information see ../../../../LICENSE.md
+*/ -}}
+{{- /*
 ✨ The web service: one replica, replaced rather than rolled, with the migration run first in the same pod.
 
 With one replica and Recreate there is exactly one migrator, and a failed migration fails the deploy. A

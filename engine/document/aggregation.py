@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ What others see in a participant: their observers' sorts, each scored on its own, then averaged (ADR 0005).
 
 Only observers' sorts are passed in. The participant's own sort is never one of them, so reading the right sorts is

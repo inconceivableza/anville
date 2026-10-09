@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../../LICENSE.md
+
 # ✨ The defaults for every environment (docs/server-approach.md, section 5). An environment's own
 # deploy/environments/<environment>/values.yaml holds only what differs.
 #

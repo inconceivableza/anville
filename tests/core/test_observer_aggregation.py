@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ What others see in a participant: observers' sorts, each scored on its own, then averaged (ADR 0005).
 
 Over `sort_pathway()`'s two items, a5 (apostle, deliver) and p1 (prophet, ponder), an observer's apostle and

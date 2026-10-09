@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The header on every participant page, and the pathway sidebar it opens (ticket 41a).
 
 The header leads to the hub and lets the participant sign out; the sidebar lists the hub's own sections, from the same

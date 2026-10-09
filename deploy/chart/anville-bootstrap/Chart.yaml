@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../../LICENSE.md
+
 apiVersion: v2
 name: anville-bootstrap
 description: What an Anville host needs once, whatever environments it carries. The Let's Encrypt issuers.

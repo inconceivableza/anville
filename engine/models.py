@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../LICENSE.md
+
 import hashlib
 import secrets
 from typing import NamedTuple

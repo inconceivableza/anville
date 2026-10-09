@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The coach's link: the coach the participant chose is asked, through a link of the observer kind, to accept or
 decline the six commitments from the content owner's coach-selection mock-up.
 

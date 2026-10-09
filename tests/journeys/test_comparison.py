@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 """✨ The comparison: the participant's own result beside the mean of what their observers see (ADR 0005).
 
 Below the minimum number of observers the participant sees how many have answered and no numbers. From the minimum

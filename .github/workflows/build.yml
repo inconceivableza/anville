@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 # ✨ Tests, then the one image every environment runs (docs/server-approach.md, section 4).
 #
 # Every push is tested and has its image built. The image is pushed to GitHub Container Registry only for a

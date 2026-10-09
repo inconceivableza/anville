@@ -1,3 +1,6 @@
+# Copyright (C) New Community Church SE London 2026.
+# For licensing information see ../../LICENSE.md
+
 # ✨ Publish a pathway document to one environment (docs/server-approach.md, section 8). Run by hand: a deploy
 # never publishes one, since that would overwrite a version published another way.
 #
