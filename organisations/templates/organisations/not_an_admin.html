@@ -1,0 +1,9 @@
+{% extends "engine/participant.html" %}
+{# ✨ "Your organisations" refused to an account holding no permission (ticket A3). Names no organisation or group. #}
+{% block head_title %}Not available{% endblock head_title %}
+
+{% block content %}
+  <h1>This page is for admins</h1>
+  <p>"Your organisations" is for organisation and group admins. Your account isn't one.</p>
+  <p><a href="{% url 'hub' %}">Go to your pathway</a></p>
+{% endblock content %}

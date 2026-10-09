@@ -57,6 +57,10 @@ def your_groups(request):
 
 @login_required
 def your_organisations(request):
+    """✨ The organisations and groups the account has rights over. Needs sign-in but not consent, so an admin can run
+    a group without working through the pathway; an account with no permission is refused."""
+    if not request.user.organisation_permissions.exists():
+        return render(request, "organisations/not_an_admin.html", status=403)
     return render(request, "organisations/your_organisations.html", {})
 
 

@@ -8,6 +8,7 @@ import pytest
 from organisations.models import Group, Organisation, Permission
 from tests.journeys.pages import main_of
 from tests.journeys.test_consent import give_consent
+from tests.journeys.test_your_groups import a_group
 
 YOUR_ORGANISATIONS = "/organisations/"
 
@@ -34,3 +35,14 @@ def test_the_hub_links_your_organisations_only_for_an_account_holding_a_permissi
     Permission.objects.create(holder=person, capability=Permission.Capability.SEE_PROGRESS, organisation=church)
 
     assert re.search(rf'<a href="{YOUR_ORGANISATIONS}">Your organisations</a>', hub_foot(client))
+
+
+@pytest.mark.django_db
+def test_an_account_without_a_permission_is_refused_the_page(client, django_user_model):
+    a_group("Example Church", "Autumn cohort")
+    an_account(client, django_user_model, "participant")
+
+    page = client.get(YOUR_ORGANISATIONS)
+
+    assert page.status_code == 403
+    assert "Autumn cohort" not in page.content.decode()
