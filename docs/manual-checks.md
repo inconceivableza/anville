@@ -284,3 +284,12 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Keyboard only: Tab reaches each "Leave this group" link, then on the confirmation both choices in order.
 - Phone width: the sentence wraps and the two buttons fill the width.
 - A participant in no group sees "You're not in any groups."
+
+## Joining a group by link (`/join/<token>/`, the token from a group in the admin)
+
+- In a private window with the enrolment code on, the link leads to sign up with no "Enrolment code" field. Signing up leads to the consent text; agreeing leads to "Join Example Church, Autumn cohort?" (the group's own names) with the sentence on what its admins see, the same words as on the consent text's group line. "Join" lands on the hub, and the admin's Memberships list now shows the new account in that group.
+- In a fresh private window, `/accounts/signup/` opened without a join link still asks for the enrolment code.
+- Signed in and consented, the link shows the join page at once; "Not now, go to your pathway" leads to the hub and the Memberships list is unchanged. Opening the link again after joining says "You're already in this group" with "Go to your pathway".
+- Signed out with an existing account, following "Sign in" from the sign-up page the link led to and signing in lands on the join page, not the hub.
+- A made-up token in the link says "This link no longer works" and to ask whoever sent it for a new one, and names no group or organisation.
+- Phone width: the join page's heading, sentence and "Join" button fit without the page scrolling sideways.

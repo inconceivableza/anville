@@ -1,9 +1,11 @@
 from allauth.account.forms import LoginForm
+from allauth.core import context as allauth_context
 from django import forms
 from django.conf import settings
 
 from access.enrolment import is_valid_enrolment_code
 from access.models import DISPLAY_NAME_MAX_LENGTH, Account
+from organisations.joining import holds_a_working_join_link
 
 
 class SignInForm(LoginForm):
@@ -43,7 +45,13 @@ class EnrolmentCodeSignupForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if not settings.ANVILLE_ENROLMENT_REQUIRED:  # ✨ turned off from the environment: not asked for at all
+        # ✨ Not asked for at all when turned off from the environment, or while the visitor holds a group's join link,
+        # which admits them in its place (ADR 0012). allauth hands this form no request, so it is read from the one
+        # allauth's middleware is handling.
+        request = allauth_context.request
+        if not settings.ANVILLE_ENROLMENT_REQUIRED or (
+            request is not None and holds_a_working_join_link(request.session)
+        ):
             del self.fields["enrolment_code"]
 
     def clean_enrolment_code(self):
