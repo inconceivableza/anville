@@ -1,5 +1,18 @@
 # Whatever You Do — hackathon requirements
 
+This is for [FetchTech Build London 2026](https://faithtech.com/create-events/faithtech-london-build-2026).
+
+The overall ideas for the hackathon are in [docs/hackathon.md](docs/hackathon.md); this is a more concrete implementation-oriented plan.
+
+There's a HTML prototype in [HACKATHON_DEMO_WALKTHROUGH.html](HACKATHON_DEMO_WALKTHROUGH.html) which should open as a file in a browser to give an idea of the concepts.
+
+There's a demo version running at [anville.vabl.dev](https://anville.vabl.dev/) if you want to try on a running version before you get things working; it's running recent code (commit 
+ 5b7ce9). Feel free to create accounts and try things out.
+
+To get this running locally, follow the [README.md](README.md).
+
+It's a Django application that needs a Postgres database and stores JSON for documents.
+
 What we're building, and the rules that keep it buildable afterwards.
 
 > ✨ Adapted with AI assistance from an earlier brief, and checked against the code as partially built, `CONTEXT.md` and ADRs 0002–0013. Where this brief and the code disagree, the code and the ADRs win.
