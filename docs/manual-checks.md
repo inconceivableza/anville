@@ -301,7 +301,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Copy puts the whole link on the clipboard and reads "Copied"; pasting it in a private window opens the join page for that group. Without JavaScript, there is no Copy button, and the link in the field can be selected and copied by hand.
 - The browser's console shows no error on loading the page or pressing Copy.
 - With `manage` on the Autumn cohort only: the page shows Example Church with the Autumn cohort alone. With `see_progress` only, the group shows its type and member count but no join link.
-- An account that has not consented reaches the page by typing `/organisations/`, and is not sent to the consent text.
+- An account that has not consented reaches the page by typing `/organisations/`, and is not sent to the consent text. Opening the hub instead lands on the consent text, whose foot links "Your organisations" for an account holding a permission (and not for one without).
 - Phone width: the link field and Copy stay on one line without the page scrolling sideways.
 - With `manage` on Example Church: under its groups (or under "No groups yet.") is a "New group" form with a Name field and Type as two radio buttons, Cohort already chosen. Creating "Worship team" as a Team comes back to the page scrolled to the new group, which shows "Team", "0 members" and its own join link; reloading asks nothing about resending a form. Creating with an empty name keeps the browser on the form; with the browser's check bypassed (removing `required` in the inspector), the page comes back with a message on the Name field and nothing created.
 - With `manage` on the Autumn cohort only, or `see_progress` on Example Church, there is no "New group" form.

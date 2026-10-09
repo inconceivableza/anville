@@ -85,4 +85,7 @@
       <button type="submit" name="decision" value="decline" class="btn btn-secondary btn-full">I do not agree</button>
     </form>
   {% endif %}
+
+  {# ✨ The hub needs consent and admins' pages don't, so an admin who has not consented finds the way here (spec, Shape). #}
+  {% if user.organisation_permissions.exists %}<p class="hub-consent"><a href="{% url 'your_organisations' %}">Your organisations</a></p>{% endif %}
 {% endblock content %}
