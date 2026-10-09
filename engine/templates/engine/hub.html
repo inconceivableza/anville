@@ -64,6 +64,6 @@
     <p>No pathway has been published here yet. When one is, it will appear on this page.</p>
   {% endif %}
 
-  {# ✨ Where a participant reviews or withdraws their consent, whatever state the pathway is in. #}
-  <p class="hub-consent"><a href="{% url 'consent' %}">Your consent</a></p>
+  {# ✨ Where a participant reviews or withdraws their consent, and sees or leaves their groups, whatever state the pathway is in. #}
+  <p class="hub-consent"><a href="{% url 'consent' %}">Your consent</a> · <a href="{% url 'your_groups' %}">Your groups</a></p>
 {% endblock content %}

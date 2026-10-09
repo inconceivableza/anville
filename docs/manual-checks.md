@@ -275,6 +275,16 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Adding a group to it, with a type of Cohort or Team, shows its join token read-only once saved, and the same Permissions rows, plus Memberships where a participant can be found by email. Adding the same participant twice is refused with a message on the form, not an error page.
 - On the Permissions list, adding one with both an organisation and a group, or neither, is refused with a message on the form.
 
+## Your groups (the hub's "Your groups", after adding the participant to two groups in the admin)
+
+- "Your groups" sits on the same line as "Your consent" at the foot of the hub, including on the empty "Nothing to begin yet" hub, and looks as quiet.
+- The page has the header, as the hub does. Each group shows its name as a heading, its organisation under it, the sentence on what its admins see, and "Leave this group". No admin's name appears anywhere.
+- "Leave this group" opens a page asking "Leave Autumn cohort?" (the group's own name), with "Leave this group" and "Stay in this group" stacked and alike in size. "Stay in this group" goes back with nothing changed; "Leave this group" comes back to "Your groups" without that group, and reloading asks nothing about resending a form.
+- Without JavaScript, leaving works the same: the confirmation is a plain form.
+- Keyboard only: Tab reaches each "Leave this group" link, then on the confirmation both choices in order.
+- Phone width: the sentence wraps and the two buttons fill the width.
+- A participant in no group sees "You're not in any groups."
+
 ## Joining a group by link (`/join/<token>/`, the token from a group in the admin)
 
 - In a private window with the enrolment code on, the link leads to sign up with no "Enrolment code" field. Signing up leads to the consent text; agreeing leads to "Join Example Church, Autumn cohort?" (the group's own names) with the sentence on what its admins see, the same words as on the consent text's group line. "Join" lands on the hub, and the admin's Memberships list now shows the new account in that group.
