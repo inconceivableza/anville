@@ -4,7 +4,7 @@
 
 **Blocked by:** A3 (Your organisations)
 
-**Status:** claimed
+**Status:** resolved
 
 **Spec:** Models; Pages; Further Notes
 

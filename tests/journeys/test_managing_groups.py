@@ -78,3 +78,21 @@ def test_replacing_a_link_stops_the_old_one_and_the_new_one_works_with_members_k
     assert "This link no longer works" in text_of(client.get(old_link).content.decode())
     assert "Join Example Church, Autumn cohort?" in text_of(client.get(join_link(cohort)).content.decode())
     assert Membership.objects.filter(participant=member, group=cohort).exists()
+
+
+@pytest.mark.django_db
+def test_a_group_admin_can_replace_their_own_groups_link_but_not_anothers(client, django_user_model):
+    cohort = a_group("Example Church", "Autumn cohort")
+    team = a_group("Example Church", "Worship team", Group.Type.TEAM)
+    admin = an_account(client, django_user_model, "admin")
+    Permission.objects.create(holder=admin, capability=Permission.Capability.MANAGE, group=cohort)
+    cohort_link, team_link = join_link(cohort), join_link(team)
+
+    assert replace_link(client, "Autumn cohort").status_code == 303
+    refused = client.post(f"/groups/{team.pk}/replace-link/")
+
+    cohort.refresh_from_db()
+    team.refresh_from_db()
+    assert join_link(cohort) != cohort_link
+    assert refused.status_code == 403
+    assert join_link(team) == team_link
