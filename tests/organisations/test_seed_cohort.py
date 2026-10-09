@@ -9,7 +9,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.core.management import CommandError, call_command
 
-from organisations.models import Organisation
+from organisations.models import Group, Organisation, Permission
 
 DOCUMENT = Path(__file__).resolve().parents[2] / "pathways" / "whatever-you-do.json"
 
@@ -23,6 +23,13 @@ def seed():
 @pytest.fixture
 def published():
     call_command("load_pathway", str(DOCUMENT), stdout=StringIO())
+
+
+@pytest.fixture
+def seeded(published, settings):
+    """✨ The command's output, once it has run against the Whatever You Do pathway."""
+    settings.DEBUG = True
+    return seed()
 
 
 @pytest.mark.django_db
@@ -44,3 +51,15 @@ def test_it_refuses_without_a_published_pathway(settings):
         seed()
 
     assert not Organisation.objects.exists()
+
+
+@pytest.mark.django_db
+def test_it_creates_example_church_an_autumn_cohort_of_twelve_and_an_organisation_admin(seeded):
+    church = Organisation.objects.get()
+    cohort = Group.objects.get()
+    admin = Permission.objects.get()
+
+    assert church.name == "Example Church"
+    assert (cohort.organisation, cohort.name, cohort.type) == (church, "Autumn cohort", Group.Type.COHORT)
+    assert cohort.memberships.count() == 12
+    assert (admin.capability, admin.organisation, admin.group) == (Permission.Capability.MANAGE, church, None)
