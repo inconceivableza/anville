@@ -7,7 +7,8 @@ import pytest
 from access.models import Account
 from organisations.models import Group, Membership, Organisation, Permission
 from tests.journeys.pages import main_of, text_of
-from tests.journeys.test_consent import give_consent
+from tests.documents import pathway_document
+from tests.journeys.test_consent import answer, give_consent
 
 YOUR_GROUPS = "/groups/"
 WHAT_ADMINS_SEE = (
@@ -67,3 +68,31 @@ def test_each_group_is_listed_with_its_organisation_and_what_its_admins_see_but_
     assert "Worship team" in page and "Example Mission" in page
     assert page.count(WHAT_ADMINS_SEE) == 2
     assert "Bartholomew" not in page and "Philippa" not in page
+
+
+def hub_progress(client):
+    return re.search(r"\d+ of \d+ answered", client.get("/hub/").content.decode()).group(0)
+
+
+@pytest.mark.django_db
+def test_leaving_asks_for_confirmation_then_ends_the_membership_and_keeps_the_answers(client, participant, load_pathway):
+    load_pathway(pathway_document())
+    answer(client, "baseline-bible", "7")
+    progress_before = hub_progress(client)
+    cohort = a_group("Example Church", "Autumn cohort")
+    Membership.objects.create(participant=participant, group=cohort)
+    leave = f"/groups/{cohort.pk}/leave/"
+    assert f'href="{leave}"' in client.get(YOUR_GROUPS).content.decode()
+
+    confirmation = client.get(leave).content.decode()
+
+    assert "Autumn cohort" in text_of(main_of(confirmation))
+    assert f'<form method="post" action="{leave}"' in confirmation
+    assert "Autumn cohort" in text_of(main_of(client.get(YOUR_GROUPS).content.decode()))
+
+    left = client.post(leave)
+
+    assert left.status_code == 303 and left.url == YOUR_GROUPS
+    assert "Autumn cohort" not in text_of(main_of(client.get(YOUR_GROUPS).content.decode()))
+    assert progress_before.startswith("1 of ")
+    assert hub_progress(client) == progress_before

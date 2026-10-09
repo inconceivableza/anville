@@ -1,9 +1,9 @@
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_http_methods
 
 from access.consent import consent_required
-from organisations.models import Group
+from organisations.models import Group, Membership
 
 
 @login_required
@@ -20,5 +20,16 @@ def your_groups(request):
 
 @login_required
 @consent_required
+@require_http_methods(["GET", "POST"])
 def leave_group(request, group_id):
-    raise Http404
+    """✨ Asks the participant to confirm, then ends their membership of the group. Their answers are not touched.
+    A group they are not in is not found."""
+    membership = get_object_or_404(
+        Membership.objects.select_related("group__organisation"), participant=request.user, group_id=group_id
+    )
+    if request.method == "POST":
+        membership.delete()
+        response = redirect("your_groups")
+        response.status_code = 303
+        return response
+    return render(request, "organisations/leave_group.html", {"group": membership.group})
