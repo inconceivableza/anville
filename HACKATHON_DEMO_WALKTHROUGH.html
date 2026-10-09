@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Whatever You Do — organisation demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef2ef; --surface:#ffffff; --paper:#f4f7f5; --ink:#1a2b20; --muted:#5a6b60; --faint:#7a8b80;
+  --line:#d0ddd4; --line-soft:#e3ebe5;
+  --green:#1a7a4c; --green-hi:#2e9e66; --green-pale:#e8f5ee; --on-green:#ffffff;
+  --deep:#0f5c3c; --deeper:#0a3d28; --on-deep:#ffffff; --on-deep-muted:rgba(255,255,255,.72);
+  --amber:#a8740a; --amber-pale:#fdf6e3; --rose:#b8504b; --rose-pale:#fbeeed;
+  --fresh:#d6f0e1; --shadow:0 1px 2px rgba(15,60,40,.06),0 8px 24px rgba(15,60,40,.06);
+  --serif:'Newsreader',Georgia,'Times New Roman',serif;
+  --sans:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c1511; --surface:#132019; --paper:#17261e; --ink:#e4eee8; --muted:#a3b8ab; --faint:#7f9588;
+    --line:#2a3d32; --line-soft:#21332a;
+    --green:#3fb57a; --green-hi:#5cc990; --green-pale:#173327; --on-green:#07150e;
+    --deep:#0a2a1c; --deeper:#06200f;
+    --amber:#e0ae4a; --amber-pale:#2c2412; --rose:#e08782; --rose-pale:#2e1a19;
+    --fresh:#1d4632; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c1511; --surface:#132019; --paper:#17261e; --ink:#e4eee8; --muted:#a3b8ab; --faint:#7f9588;
+  --line:#2a3d32; --line-soft:#21332a;
+  --green:#3fb57a; --green-hi:#5cc990; --green-pale:#173327; --on-green:#07150e;
+  --deep:#0a2a1c; --deeper:#06200f;
+  --amber:#e0ae4a; --amber-pale:#2c2412; --rose:#e08782; --rose-pale:#2e1a19;
+  --fresh:#1d4632; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*,*::before,*::after{box-sizing:inherit;}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;}
+button,input,textarea,select{font:inherit;color:inherit;}
+button{cursor:pointer;}
+:focus-visible{outline:2px solid var(--green-hi);outline-offset:2px;}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+
+/* ---------- presenter bar ---------- */
+.demo{background:var(--deep);color:var(--on-deep);}
+.demo-in{max-width:1380px;margin:0 auto;padding:14px 22px 18px;}
+.demo-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.brand{font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;}
+.brand span{font-family:var(--sans);font-size:12.5px;font-weight:500;color:var(--on-deep-muted);margin-left:8px;}
+.steps{display:flex;align-items:center;gap:4px;flex:1;min-width:0;overflow-x:auto;padding:2px;}
+.step-chip{display:flex;align-items:center;gap:7px;background:transparent;border:1px solid rgba(255,255,255,.18);
+  color:var(--on-deep-muted);border-radius:999px;padding:5px 11px 5px 6px;font-size:12.5px;font-weight:500;white-space:nowrap;}
+.step-chip b{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;
+  background:rgba(255,255,255,.12);font-size:11px;font-weight:700;color:var(--on-deep);}
+.step-chip.done{color:var(--on-deep);}
+.step-chip.done b{background:var(--green-hi);color:#06200f;}
+.step-chip.on{background:var(--on-deep);color:var(--deep);border-color:var(--on-deep);}
+.step-chip.on b{background:var(--deep);color:var(--on-deep);}
+.later{font-size:11.5px;color:var(--on-deep-muted);padding:0 6px;white-space:nowrap;font-style:italic;font-family:var(--serif);}
+.ghost-btn{background:transparent;border:1px solid rgba(255,255,255,.28);color:var(--on-deep);border-radius:8px;
+  padding:6px 12px;font-size:12.5px;font-weight:600;}
+.ghost-btn:hover{background:rgba(255,255,255,.08);}
+.script{display:flex;align-items:flex-end;gap:22px;margin-top:14px;flex-wrap:wrap;}
+.script-text{flex:1;min-width:260px;}
+.script-n{font-size:12px;font-weight:600;color:var(--on-deep-muted);}
+.script-line{font-family:var(--serif);font-size:24px;line-height:1.25;letter-spacing:-.01em;margin-top:2px;max-width:62ch;}
+.script-tip{font-size:13px;color:var(--on-deep-muted);margin-top:6px;max-width:80ch;}
+.script-nav{display:flex;gap:8px;}
+.next-btn{background:var(--on-deep);color:var(--deep);border:none;border-radius:9px;padding:10px 18px;font-weight:700;font-size:14px;}
+.next-btn:disabled{opacity:.4;cursor:default;}
+.back-btn{background:transparent;border:1px solid rgba(255,255,255,.3);color:var(--on-deep);border-radius:9px;padding:10px 14px;font-weight:600;font-size:14px;}
+
+/* ---------- stage ---------- */
+.stage{max-width:1380px;margin:0 auto;padding:18px 22px 40px;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start;}
+.stage.hood-closed{grid-template-columns:minmax(0,1fr) 52px;}
+.screens{display:flex;gap:6px;margin-bottom:12px;}
+.screen-tab{display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;padding:7px 14px 7px 8px;font-size:13.5px;font-weight:600;color:var(--muted);}
+.screen-tab .av{width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;background:var(--paper);color:var(--muted);}
+.screen-tab.on{border-color:var(--green);color:var(--ink);box-shadow:inset 0 0 0 1px var(--green);}
+.screen-tab.on .av{background:var(--green);color:var(--on-green);}
+.screen-tab small{font-weight:500;color:var(--faint);}
+
+/* ---------- admin window ---------- */
+.window{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;
+  display:grid;grid-template-columns:210px minmax(0,1fr);min-height:640px;}
+.side{background:var(--paper);border-right:1px solid var(--line);padding:18px 12px;}
+.side-org{font-family:var(--serif);font-size:17px;font-weight:600;padding:0 8px;}
+.side-group{font-size:12.5px;color:var(--muted);padding:2px 8px 16px;border-bottom:1px solid var(--line);margin-bottom:10px;}
+.nav{display:block;width:100%;text-align:left;background:transparent;border:none;border-radius:8px;padding:8px 10px;
+  font-size:14px;font-weight:500;color:var(--muted);margin-bottom:2px;}
+.nav:hover{background:var(--surface);color:var(--ink);}
+.nav.on{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:inset 3px 0 0 var(--green);}
+.nav:disabled{opacity:.45;cursor:default;background:transparent;}
+.side-who{margin-top:22px;padding:12px 8px 0;border-top:1px solid var(--line);font-size:12px;color:var(--faint);}
+.side-who b{display:block;color:var(--ink);font-weight:600;font-size:13px;}
+.pane{padding:26px 30px 34px;min-width:0;}
+.pane h1{font-family:var(--serif);font-size:28px;font-weight:600;letter-spacing:-.015em;line-height:1.15;margin:0 0 6px;}
+.pane .lede{color:var(--muted);margin:0 0 22px;max-width:64ch;}
+.pane h2{font-family:var(--serif);font-size:20px;font-weight:600;margin:0 0 4px;letter-spacing:-.01em;}
+
+/* ---------- forms ---------- */
+.field{margin-bottom:16px;max-width:520px;}
+.field label{display:block;font-size:13.5px;font-weight:600;margin-bottom:6px;}
+.field .hint{font-size:12.5px;color:var(--faint);margin-top:5px;}
+.input,.textarea{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:14.5px;}
+.textarea{resize:vertical;line-height:1.55;}
+.input:focus,.textarea:focus{border-color:var(--green);outline:none;box-shadow:0 0 0 3px var(--green-pale);}
+.err{color:var(--rose);font-size:12.5px;margin-top:6px;}
+.radio-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;max-width:620px;}
+.radio{display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;padding:11px 12px;}
+.radio .dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;margin-top:2px;}
+.radio.on{border-color:var(--green);background:var(--green-pale);}
+.radio.on .dot{border:5px solid var(--green);}
+.radio:disabled{opacity:.5;cursor:default;}
+.radio b{display:block;font-size:13.5px;}
+.radio span{display:block;font-size:12px;color:var(--muted);line-height:1.4;margin-top:1px;}
+.btn{background:var(--green);color:var(--on-green);border:none;border-radius:9px;padding:10px 18px;font-weight:600;font-size:14px;}
+.btn:hover{filter:brightness(1.06);}
+.btn:disabled{opacity:.4;cursor:default;filter:none;}
+.btn.quiet{background:var(--surface);color:var(--ink);border:1px solid var(--line);}
+.btn.small{padding:6px 12px;font-size:13px;}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.notice{border-radius:10px;padding:13px 15px;font-size:13.5px;line-height:1.55;margin:0 0 18px;max-width:680px;}
+.notice.ok{background:var(--green-pale);border-left:3px solid var(--green);}
+.notice.warn{background:var(--amber-pale);border-left:3px solid var(--amber);}
+.notice b{font-weight:600;}
+
+/* ---------- members / progress ---------- */
+.summary{display:flex;gap:28px;margin:0 0 20px;flex-wrap:wrap;}
+.summary div{font-size:12.5px;color:var(--muted);}
+.summary strong{display:block;font-family:var(--serif);font-size:30px;font-weight:600;color:var(--ink);line-height:1.1;}
+.summary .amber strong{color:var(--amber);}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.chip{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;color:var(--muted);}
+.chip.on{background:var(--ink);color:var(--surface);border-color:var(--ink);}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;}
+table.people{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px;}
+.people tr.peek-row td{background:var(--paper);padding:8px 12px 12px;}
+.people th{text-align:left;font-size:12px;font-weight:600;color:var(--faint);padding:10px 12px;border-bottom:1px solid var(--line);background:var(--paper);white-space:nowrap;}
+.people th button{background:none;border:none;padding:0;font-weight:600;color:inherit;font-size:12px;}
+.people td{padding:10px 10px;border-bottom:1px solid var(--line-soft);vertical-align:middle;}
+.people tr:last-child td{border-bottom:none;}
+.people tr.stalled td{background:color-mix(in srgb,var(--amber-pale) 70%,transparent);}
+.who{font-weight:600;}
+.name-btn{background:none;border:none;padding:0;font-weight:600;font-size:13.5px;text-align:left;white-space:nowrap;color:var(--ink);
+  text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px;}
+.name-btn:hover{text-decoration-color:var(--green);}
+.nowrap{white-space:nowrap;}
+.sub-note{display:block;font-size:11.5px;}
+.who small{display:block;font-weight:400;color:var(--faint);font-size:12px;}
+.pips{display:flex;gap:3px;}
+.pip{width:16px;height:7px;border-radius:4px;background:var(--line);}
+.pip.d{background:var(--green);}
+.pip.c{background:var(--green-hi);opacity:.5;}
+.pip.s{background:var(--amber);}
+.pip-label{font-size:11.5px;color:var(--faint);margin-top:4px;}
+.flag{display:inline-block;font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap;}
+.flag.amber{background:var(--amber-pale);color:var(--amber);border:1px solid color-mix(in srgb,var(--amber) 35%,transparent);}
+.flag.green{background:var(--green-pale);color:var(--green);}
+.flag.grey{background:var(--paper);color:var(--muted);}
+.muted{color:var(--muted);}
+.faint{color:var(--faint);}
+.coach-off{color:var(--amber);}
+.peek{margin-top:14px;border:1px dashed var(--line);border-radius:12px;padding:14px 16px;font-size:13px;max-width:680px;}
+.peek h3{font-size:14px;margin:0 0 6px;}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.can,.cant{list-style:none;margin:0;padding:0;}
+.can li,.cant li{padding:4px 0 4px 22px;position:relative;font-size:13px;line-height:1.45;}
+.can li::before{content:'';position:absolute;left:2px;top:9px;width:10px;height:6px;border-left:2px solid var(--green);border-bottom:2px solid var(--green);transform:rotate(-45deg);}
+.cant li::before,.cant li::after{content:'';position:absolute;left:3px;top:11px;width:11px;height:2px;background:var(--rose);transform:rotate(45deg);}
+.cant li::after{transform:rotate(-45deg);}
+
+/* ---------- results ---------- */
+.subtabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 22px;}
+.subtab{background:none;border:none;border-bottom:2px solid transparent;padding:8px 12px;margin-bottom:-1px;font-weight:600;font-size:14px;color:var(--muted);}
+.subtab.on{color:var(--ink);border-bottom-color:var(--green);}
+.headline{font-family:var(--serif);font-size:26px;line-height:1.25;letter-spacing:-.012em;margin:0 0 6px;max-width:30ch;}
+.basis{font-size:12.5px;color:var(--faint);margin-bottom:22px;}
+.scale-h{display:flex;justify-content:space-between;align-items:baseline;margin:24px 0 8px;}
+.scale-h h2{margin:0;}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap;}
+.legend i{display:inline-block;vertical-align:-1px;margin-right:5px;}
+.lg-dot{width:8px;height:8px;border-radius:50%;background:var(--green);opacity:.55;}
+.lg-self{width:3px;height:12px;background:var(--ink);}
+.lg-obs{width:10px;height:10px;border-radius:2px;border:2px solid var(--amber);transform:rotate(45deg);}
+.gift{display:grid;grid-template-columns:170px 92px minmax(0,1fr);gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line-soft);}
+.gift:last-child{border-bottom:none;}
+.g-name b{display:block;font-size:14px;}
+.g-name span{font-size:12px;color:var(--faint);}
+.g-count{font-size:12.5px;color:var(--muted);}
+.g-count strong{font-family:var(--serif);font-size:21px;font-weight:600;color:var(--ink);margin-right:4px;}
+.g-count.heavy strong{color:var(--green);}
+.g-count.thin strong{color:var(--amber);font-size:16px;}
+.strip{position:relative;height:30px;}
+.strip::before{content:'';position:absolute;left:0;right:0;top:15px;height:1px;background:var(--line);}
+.sd{position:absolute;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:var(--green);opacity:.5;}
+.self-m{position:absolute;top:5px;width:3px;height:20px;margin-left:-1.5px;background:var(--ink);border-radius:2px;}
+.obs-m{position:absolute;top:9px;width:11px;height:11px;margin-left:-5.5px;border:2px solid var(--amber);transform:rotate(45deg);border-radius:2px;background:var(--surface);}
+.axis{display:grid;grid-template-columns:170px 92px minmax(0,1fr);gap:14px;font-size:11px;color:var(--faint);}
+.axis div:last-child{display:flex;justify-content:space-between;}
+.insight{font-size:13px;color:var(--muted);margin:8px 0 0;max-width:70ch;}
+.question{margin-top:28px;background:var(--paper);border-radius:14px;padding:22px 24px;border:1px solid var(--line);}
+.question .q{font-family:var(--serif);font-size:24px;line-height:1.3;letter-spacing:-.01em;margin:0 0 10px;max-width:34ch;}
+.question p{margin:6px 0 0;font-size:13.5px;color:var(--muted);max-width:66ch;}
+.floor{text-align:center;padding:60px 20px;border:1px dashed var(--line);border-radius:14px;}
+.floor .big{font-family:var(--serif);font-size:44px;font-weight:600;line-height:1;}
+.floor p{color:var(--muted);max-width:46ch;margin:10px auto 0;font-size:14px;}
+
+.imp{display:grid;grid-template-columns:minmax(0,1fr) 200px 86px;gap:18px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line-soft);}
+.imp-q{font-family:var(--serif);font-size:16.5px;line-height:1.35;}
+.imp-bars{display:flex;flex-direction:column;gap:5px;}
+.ib{position:relative;height:9px;border-radius:5px;background:var(--line-soft);}
+.ib i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;}
+.ib.start i{background:var(--faint);opacity:.45;}
+.ib.end i{background:var(--green);}
+.imp-n{text-align:right;font-size:12.5px;color:var(--muted);line-height:1.35;}
+.imp-n strong{display:block;font-family:var(--serif);font-size:19px;color:var(--ink);font-weight:600;}
+.q5{margin-top:26px;border:1.5px solid var(--line);border-radius:14px;padding:20px 22px;}
+.q5.down{border-color:var(--amber);background:var(--amber-pale);}
+.q5-tag{font-size:12px;font-weight:600;color:var(--muted);}
+.q5 .imp{border-bottom:none;padding:10px 0 4px;}
+.q5-read{font-size:13.5px;margin:8px 0 0;max-width:68ch;}
+.demo-ctl{margin-top:22px;border:1px dashed var(--faint);border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.demo-ctl b{color:var(--ink);}
+.state{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:1px;}
+.state.built{background:var(--green-hi);color:#06200f;}
+.state.tobuild{background:rgba(255,255,255,.16);color:var(--on-deep);border:1px dashed rgba(255,255,255,.5);}
+.proposed{border:1px dashed var(--amber);background:var(--amber-pale);border-radius:10px;padding:10px 13px;font-size:12.5px;line-height:1.5;margin:14px 0;max-width:680px;}
+.proposed b{color:var(--amber);}
+.g-std{font-size:13px;font-weight:600;}
+.g-std.lead{color:var(--green);}
+.g-std.less{color:var(--amber);}
+.gbar{position:relative;height:10px;border-radius:5px;background:var(--line-soft);}
+.gbar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--green);opacity:.75;}
+.gbar .even{position:absolute;top:-4px;width:2px;height:18px;margin-left:-1px;background:var(--ink);opacity:.5;}
+
+/* ---------- content ---------- */
+.section-card{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px;}
+.section-card h3{font-size:15px;margin:0;}
+.section-card .sub{font-size:12.5px;color:var(--faint);}
+.vlist{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+.vrow{display:flex;align-items:center;gap:12px;background:var(--paper);border-radius:9px;padding:8px 10px;font-size:13px;}
+.vthumb{width:46px;height:30px;border-radius:5px;background:var(--deep);flex-shrink:0;position:relative;}
+.vthumb::after{content:'';position:absolute;left:19px;top:9px;border-left:9px solid rgba(255,255,255,.9);border-top:6px solid transparent;border-bottom:6px solid transparent;}
+.vrow .src{margin-left:auto;font-size:11.5px;color:var(--faint);white-space:nowrap;}
+.editor{margin-top:14px;padding-top:14px;border-top:1px solid var(--line-soft);}
+.preview{display:flex;gap:12px;align-items:center;border:1px solid var(--green);background:var(--green-pale);border-radius:10px;padding:10px 12px;margin:12px 0;max-width:560px;font-size:13px;}
+
+/* ---------- messages ---------- */
+.composer{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;}
+.seg button{background:var(--surface);border:none;padding:7px 13px;font-size:13px;font-weight:600;color:var(--muted);border-right:1px solid var(--line);}
+.seg button:last-child{border-right:none;}
+.seg button.on{background:var(--ink);color:var(--surface);}
+.seg button:disabled{opacity:.4;cursor:default;}
+.recips{font-size:12.5px;color:var(--muted);margin-top:6px;}
+.mail{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface);}
+.mail-h{background:var(--paper);padding:12px 14px;font-size:12.5px;border-bottom:1px solid var(--line);}
+.mail-h div{margin:1px 0;}
+.mail-h span{color:var(--faint);display:inline-block;width:62px;}
+.mail-b{padding:16px 16px 6px;font-size:14px;line-height:1.6;white-space:pre-wrap;}
+.mail-f{padding:10px 16px 14px;font-size:11.5px;color:var(--faint);border-top:1px solid var(--line-soft);margin-top:10px;}
+.sent{margin-top:24px;}
+.sent-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line-soft);font-size:13px;}
+
+/* ---------- phone ---------- */
+.phone-wrap{display:flex;justify-content:center;padding:6px 0 20px;}
+.phone{width:380px;max-width:100%;background:var(--surface);border:10px solid #1b231e;border-radius:42px;box-shadow:var(--shadow);overflow:hidden;min-height:700px;display:flex;flex-direction:column;}
+.p-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 18px 10px;border-bottom:1px solid var(--line);font-size:12.5px;}
+.p-bar b{font-family:var(--serif);font-size:16px;font-weight:600;}
+.p-refresh{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;}
+.p-body{padding:20px 20px 26px;flex:1;}
+.p-body h1{font-family:var(--serif);font-size:25px;font-weight:600;line-height:1.2;letter-spacing:-.012em;margin:0 0 8px;}
+.p-body p{font-size:14px;color:var(--muted);margin:0 0 14px;}
+.p-badge{display:inline-block;font-size:12px;font-weight:600;background:var(--green-pale);color:var(--green);border-radius:999px;padding:3px 10px;margin-bottom:14px;}
+.email{border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+.email-h{background:var(--paper);padding:12px 14px;font-size:12.5px;border-bottom:1px solid var(--line);}
+.email-b{padding:16px 14px;font-size:14px;line-height:1.6;}
+.p-steps{list-style:none;margin:6px 0 18px;padding:0;}
+.p-steps li{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line-soft);font-size:14px;}
+.p-steps .n{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--muted);flex-shrink:0;}
+.p-steps li.now .n{border-color:var(--green);color:var(--green);}
+.p-steps li.now{font-weight:600;}
+.p-steps li button{margin-left:auto;}
+.p-link{background:none;border:none;color:var(--green);font-weight:600;font-size:13.5px;padding:0;text-decoration:underline;text-underline-offset:3px;}
+.player{border-radius:12px;overflow:hidden;margin-bottom:12px;border:1px solid var(--line);}
+.player-v{aspect-ratio:16/9;background:linear-gradient(135deg,var(--deep),#173f2c);position:relative;display:flex;align-items:flex-end;padding:12px;color:#fff;}
+.player-v::after{content:'';position:absolute;left:50%;top:44%;transform:translate(-30%,-50%);border-left:20px solid rgba(255,255,255,.92);border-top:13px solid transparent;border-bottom:13px solid transparent;}
+.player-v .dur{font-size:11.5px;background:rgba(0,0,0,.45);border-radius:4px;padding:1px 6px;margin-left:auto;}
+.player-c{padding:10px 12px;font-size:13px;}
+.player-c b{display:block;font-size:13.5px;}
+.player-c span{font-size:12px;color:var(--faint);}
+.player.ours .player-v{background:linear-gradient(135deg,#3b4a41,#59665e);}
+.new-badge{display:inline-block;font-size:11px;font-weight:700;background:var(--green);color:var(--on-green);border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:1px;}
+
+/* ---------- under the hood ---------- */
+.hood{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;}
+.hood-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1;}
+.hood-h h2{font-family:var(--serif);font-size:17px;font-weight:600;margin:0;}
+.hood-h span{font-size:12px;color:var(--faint);}
+.hood-toggle{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:600;}
+.stage.hood-closed .hood-body,.stage.hood-closed .hood-h h2,.stage.hood-closed .hood-h span{display:none;}
+.stage.hood-closed .hood-h{writing-mode:vertical-rl;padding:14px 10px;border-bottom:none;}
+.hood-body{padding:4px 16px 18px;}
+.rules{margin:14px 0 4px;padding:0;list-style:none;}
+.rules li{font-size:12.5px;line-height:1.45;padding:6px 0 6px 14px;border-left:2px solid var(--green);margin-bottom:6px;color:var(--ink);}
+.rules li b{font-weight:600;}
+.hood-sec{margin-top:16px;}
+.hood-sec h3{font-size:12.5px;font-weight:600;color:var(--muted);margin:0 0 6px;display:flex;justify-content:space-between;}
+.hood-sec h3 span{font-weight:500;color:var(--faint);}
+.tbl{width:100%;border-collapse:collapse;font-size:11.5px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+.tbl th{text-align:left;font-weight:600;color:var(--faint);padding:4px 6px;border-bottom:1px solid var(--line);white-space:nowrap;}
+.tbl td{padding:4px 6px;border-bottom:1px solid var(--line-soft);white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;}
+.tbl tr.fresh td{background:var(--fresh);}
+.tbl-more{font-size:11.5px;color:var(--faint);padding:4px 6px;}
+.tbl-empty{font-size:12px;color:var(--faint);font-style:italic;padding:2px 0;}
+.cansee select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:12.5px;margin-bottom:8px;}
+.verdict{border-radius:9px;padding:10px 12px;font-size:12.5px;line-height:1.5;}
+.verdict.yes{background:var(--green-pale);}
+.verdict.no{background:var(--rose-pale);}
+.verdict b{display:block;font-size:13px;margin-bottom:3px;}
+.trace{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;color:var(--muted);margin-top:6px;line-height:1.55;}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--surface);border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:500;opacity:0;
+  transition:opacity .2s,transform .2s;pointer-events:none;z-index:20;max-width:90vw;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media (max-width:1100px){
+  .stage,.stage.hood-closed{grid-template-columns:minmax(0,1fr);}
+  .hood{position:static;max-height:none;}
+  .stage.hood-closed .hood-h{writing-mode:horizontal-tb;}
+}
+@media (max-width:760px){
+  .demo-in{padding:12px 14px 14px;}
+  .steps{order:3;flex-basis:100%;}
+  .screen-tab small{display:none;}
+  .script-line{font-size:20px;}
+  .stage{padding:12px 12px 30px;}
+  .window{grid-template-columns:1fr;min-height:0;}
+  .side{border-right:none;border-bottom:1px solid var(--line);padding:12px;}
+  .side-group{border-bottom:none;margin-bottom:6px;padding-bottom:6px;}
+  .side nav{display:flex;gap:4px;overflow-x:auto;}
+  .nav{width:auto;white-space:nowrap;margin:0;}
+  .nav.on{box-shadow:inset 0 -2px 0 var(--green);}
+  .side-who{display:none;}
+  .pane{padding:20px 16px 26px;}
+  .composer,.two{grid-template-columns:1fr;}
+  .gift,.axis{grid-template-columns:110px 70px minmax(0,1fr);gap:8px;}
+  .imp{grid-template-columns:1fr;gap:8px;}
+  .imp-n{text-align:left;}
+  .phone{border-width:6px;border-radius:30px;min-height:0;}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+<header class="demo"><div class="demo-in" id="demobar"></div></header>
+<main class="stage" id="stage">
+  <section id="main" aria-live="polite"></section>
+  <aside class="hood" id="hood" aria-label="Under the hood"></aside>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<script>
+'use strict';
+/* =====================================================================
+   Whatever You Do — organisation demo
+   A walkthrough of the seven-step hackathon demo script in
+   HACKATHON_INSTRUCTIONS.md, checked against the code as partially built: steps 1, 2 and 4 show what is built; steps
+   3, 5, 6 and 7 show what the workstreams would add, marked "to build".
+   Table and field names match the Django models. Everything is in
+   memory; reload or Reset to start again.
+   ✨ Adapted with AI assistance from an earlier prototype.
+   ===================================================================== */
+
+// ------------------------------------------------------------ fixtures
+// Rachel is a demo persona. seed_cohort's own admin is seed-cohort-admin@example.com, display name "Admin".
+const ADMIN = { id: 'rachel', name: 'Rachel', first: 'Rachel', email: 'rachel@example.com' };
+function resetAdmin() { /* the admin's display name comes from sign-up, so there is nothing to reset */ }
+const PASTOR_VIDEO = { url: 'https://youtu.be/Xk2mJ8nT4qA', title: 'A word from Dave, our pastor', dur: '2:04' };
+
+// The track's five sections, as the hub and the progress count both see them (engine/hub.py, track_sections).
+// The Strengths assessment is a part of Section 1, complete once its gate passes.
+const STEP_NAMES = ['Before we begin', 'Section 1: How you’ve been designed', 'Strengths assessment', 'The Workbook', 'Section 5: A letter to your future self'];
+// There is no video block in the pathway document yet: "ours" below stands for one an author would add.
+const SECTIONS = [
+  { id: 'onboarding', title: 'Before we begin', sub: 'Why you\u2019re here, your coach and the people who know you', dflt: 'Welcome to Whatever You Do', dur: '3:12' },
+  { id: 'designed', title: 'Section 1', sub: 'How you\u2019ve been designed', dflt: 'Introduction to section one', dur: '4:05' },
+  { id: 'workbook', title: 'The Workbook', sub: 'Sections two to four, worked on paper', dflt: 'Before you open the Workbook', dur: '3:48' },
+  { id: 'letter', title: 'Section 5', sub: 'A letter to your future self', dflt: 'Writing to your future self', dur: '2:21' }
+];
+
+// APEST(d) and the Professional Energy Profile (PEP): the pathway document's two frameworks.
+// Glosses keep the labels from reading as fixed types.
+const APEST = [
+  { k: 'A', name: 'Apostle',    gloss: 'pioneering, starting things' },
+  { k: 'P', name: 'Prophet',    gloss: 'naming what is true' },
+  { k: 'E', name: 'Evangelist', gloss: 'inviting people in' },
+  { k: 'S', name: 'Shepherd',   gloss: 'care and community' },
+  { k: 'T', name: 'Teacher',    gloss: 'making things clear' },
+  { k: 'D', name: 'Deacon',     gloss: 'practical service' }
+];
+const PEP = [
+  { k: 'Po', name: 'Ponder',     gloss: 'sitting with the question' },
+  { k: 'Id', name: 'Ideate',     gloss: 'generating options' },
+  { k: 'As', name: 'Assess',     gloss: 'testing what will work' },
+  { k: 'Ra', name: 'Rally',      gloss: 'getting people moving' },
+  { k: 'Fa', name: 'Facilitate', gloss: 'drawing others out' },
+  { k: 'De', name: 'Deliver',    gloss: 'seeing it through' }
+];
+const FRIENDLY = { A: 'pioneering', P: 'prophetic voice', E: 'evangelism', S: 'care', T: 'teaching', D: 'practical service',
+  Po: 'pondering', Id: 'generating ideas', As: 'assessing', Ra: 'rallying people', Fa: 'facilitating', De: 'delivering' };
+
+const IMPACT_QS = [
+  'I have a detailed understanding of what the Bible teaches about ‘work’ and ‘calling’',
+  'I have a detailed understanding of what my God-given talents/gifts and limitations are',
+  'I have a strong sense of what God\u2019s specific \u2018call\u2019 and purpose is for my life',
+  'I have a clear, practical plan for how to pursue God\u2019s purpose for my life, in terms of \u2018work\u2019 / \u2018calling\u2019',
+  'I am at peace with God\u2019s plan for my life'
+];
+
+/* The cohort six weeks in, as seed_cohort makes it: the same twelve first
+   names and the same spread (three not started, five part-way, four
+   finished), with Femi part-way and consent withdrawn. Ada is the one who
+   joins on screen. done = sections complete out of the track's five,
+   last = days since their response was last updated. apest/pep give the
+   top two of each self-result (from Section 1's Strengths assessment on);
+   the rest is filled deterministically so each framework sums to 100.
+   impact = the five closing ratings, 1-10, from Before we begin and
+   Section 5. seed_cohort's own self-results are generated, so they will not
+   show this shape until the seed is tuned. */
+const PEOPLE = [
+  { id: 'ada',   name: 'Ada',   done: 0, last: null, consented: true },
+  { id: 'ben',   name: 'Ben',   done: 0, last: null, consented: true },
+  { id: 'cara',  name: 'Cara',  done: 0, last: null, consented: true },
+  { id: 'dan',   name: 'Dan',   done: 1, last: 9,    consented: true },
+  { id: 'esi',   name: 'Esi',   done: 1, last: 27,   consented: true },
+  { id: 'femi',  name: 'Femi',  done: 3, last: 15,   consented: false, apest: ['A', 'E'], pep: ['Id', 'Ra'] },
+  { id: 'grace', name: 'Grace', done: 3, last: 4,    consented: true, apest: ['T', 'S'], pep: ['Fa', 'Po'] },
+  { id: 'hugo',  name: 'Hugo',  done: 4, last: 12,   consented: true, apest: ['S', 'T'], pep: ['Fa', 'De'] },
+  { id: 'ines',  name: 'Ines',  done: 5, last: 2,    consented: true, apest: ['T', 'P'], pep: ['Po', 'As'],
+    impact: [[4, 5, 3, 2, 5], [8, 8, 7, 9, 7]] },
+  { id: 'jon',   name: 'Jon',   done: 5, last: 6,    consented: true, apest: ['S', 'D'], pep: ['De', 'Fa'],
+    impact: [[5, 4, 4, 3, 4], [8, 7, 6, 8, 7]] },
+  { id: 'kemi',  name: 'Kemi',  done: 5, last: 3,    consented: true, apest: ['T', 'S'], pep: ['Po', 'Fa'],
+    impact: [[3, 4, 3, 2, 3], [7, 7, 6, 8, 6]] },
+  { id: 'liam',  name: 'Liam',  done: 5, last: 1,    consented: true, apest: ['P', 'T'], pep: ['As', 'Po'],
+    impact: [[5, 6, 5, 4, 7], [8, 6, 7, 9, 6]] }
+];
+// A version of question five that fell, for the demo toggle.
+const Q5_FELL = { ines: 4, jon: 4, kemi: 3, liam: 4 };
+
+const FLOOR = 3;                // ADR 0013: no group number renders below three members with a self-result
+const DEMO_TODAY = new Date(2026, 10, 20);   // "six weeks later"
+// The pathway document's standings: a construct's share against an even share of its framework (100 = even).
+const STANDINGS = [[125, 'Leading'], [105, 'Strong'], [85, 'Present']];
+const BELOW = 'Less used';
+
+PEOPLE.forEach(function (p, i) {
+  p.first = p.name;
+  if (p.apest) {
+    p.apestScores = profile(APEST, p.apest, i);
+    p.pepScores = profile(PEP, p.pep, i + 3);
+  }
+});
+
+function profile(cats, top, seed) {
+  // Varied per person, while the top two always stay clearly above the rest.
+  const out = {};
+  const t1 = 24 + (seed * 7) % 7;           // 24-30
+  const t2 = 18 + (seed * 5 + 2) % 5;       // 18-22
+  const rest = cats.filter(function (c) { return top.indexOf(c.k) < 0; });
+  const weights = [1.2, 1.05, 0.95, 0.8];   // sums to 4
+  const remaining = 100 - t1 - t2;
+  let used = 0;
+  out[top[0]] = t1; out[top[1]] = t2;
+  rest.forEach(function (c, j) {
+    const v = j === rest.length - 1 ? remaining - used : Math.round(remaining * weights[(j + seed) % 4] / 4);
+    out[c.k] = v; used += v;
+  });
+  return out;
+}
+
+// ---------------------------------------------------------------- state
+let S;
+function fresh() {
+  const s = {
+    step: 1, screen: 'admin', tab: 'setup', resultsTab: 'gifts', hoodOpen: true,
+    org: { id: ORG_ID, name: 'Example Church' }, group: null,
+    setup: { group: 'Autumn cohort', type: 'cohort' },
+    signup: { name: 'Ada', email: 'ada@example.com' },
+    invited: false, signedUp: false, consented: false, joined: false,
+    p: 'none',                 // participant screen: none | message | signup | consent | join | home | section | visible
+    pSection: 'designed',
+    pSeenAt: 0,                // when Ada's screen last loaded
+    pPrevSeen: 0,              // the load before that, for the 'New' badge
+    editing: null,             // section id whose video editor is open
+    video: { url: PASTOR_VIDEO.url, title: PASTOR_VIDEO.title, mode: 'before', err: '' },
+    seeded: false, filter: 'all', peek: null,
+    msg: { audience: 'participants', filter: 'notstarted', template: 'nudge', subject: '', body: '', touched: false },
+    q5Fell: false, cansee: 0, clock: 1,
+    db: { organisations_organisation: [], organisations_permission: [], organisations_group: [], access_account: [],
+          access_consent: [], organisations_membership: [], organisation_video: [], group_message: [] },
+    freshRows: {}
+  };
+  // Before the demo starts, the operator has made Example Church in Django admin and given Rachel `manage` on it,
+  // in one form (the permission is inline on the organisation).
+  s.db.organisations_organisation.push({ _key: 'org', _at: 0, id: ORG_ID, name: 'Example Church' });
+  s.db.organisations_permission.push({ _key: 'perm-admin', _at: 0, holder: ADMIN.id, capability: 'manage', organisation_id: ORG_ID, group_id: null });
+  return s;
+}
+
+// --------------------------------------------------------------- the db
+// Every write goes through here so the panel can show what each step adds.
+function write(table, row, key) {
+  const t = S.db[table];
+  if (key && t.some(function (r) { return r._key === key; })) return;
+  const r = Object.assign({ _key: key || null, _at: S.clock++ }, row);
+  t.push(r);
+  (S.freshRows[table] = S.freshRows[table] || []).push(r);
+}
+function clearFresh() { S.freshRows = {}; }
+
+const ORG_ID = 1, GROUP_ID = 1;
+
+function personRef(id) { return id === ADMIN.id ? ADMIN : PEOPLE.find(function (p) { return p.id === id; }); }
+
+/* ---------------------------------------------------------------------
+   can_see(viewer, participant, what): the one permission function, as in
+   organisations/visibility.py. True only when all of these hold:
+   - what is 'progress' (anything else is false, whatever the permissions);
+   - the participant holds current consent;
+   - the participant is a member of a group on which the viewer holds
+     `manage` or `see_progress`, on the group itself or on its organisation.
+   Pages use its companion, members_seen_by(viewer, group), which applies
+   the same rule to a whole group. Group results (ADR 0013) are not built
+   yet and will need their own rule. Returns a trace so developers can see why.
+   --------------------------------------------------------------------- */
+function canSee(viewer, participant, what) {
+  const trace = [];
+  if (what !== 'progress') {
+    trace.push('what = \'' + what + '\', not \'progress\'');
+    return verdict(false, 'can_see answers only for progress. Answers, results, the letter and email are refused whatever permissions exist; new work adds a new `what` with its own rule and its own consent sentence.', trace);
+  }
+  trace.push('what = \'progress\'');
+  const p = personRef(participant);
+  const consent = S.db.access_consent.filter(function (r) { return r.participant === participant; }).pop();
+  if (!consent || consent.withdrawn_at) {
+    trace.push('current consent for ' + participant + ': ' + (consent ? 'withdrawn' : 'none'));
+    return verdict(false, 'No current consent. Admins see only ' + (p ? p.first + '’s' : 'their') + ' display name and “hasn’t consented”.', trace);
+  }
+  trace.push('current consent for ' + participant + ': version ' + consent.text_version);
+  const perms = S.db.organisations_permission.filter(function (r) { return r.holder === viewer && (r.capability === 'manage' || r.capability === 'see_progress'); });
+  trace.push('permissions held by ' + viewer + ': ' + (perms.length ? perms.map(fmtPerm).join(', ') : 'none'));
+  const memberships = S.db.organisations_membership.filter(function (m) { return m.participant === participant; });
+  for (const m of memberships) {
+    const g = S.db.organisations_group.find(function (x) { return x.id === m.group_id; });
+    const r = perms.find(function (x) { return x.group_id === g.id || x.organisation_id === g.organisation_id; });
+    if (r) {
+      trace.push(participant + ' is a member of group ' + g.id);
+      trace.push(r.organisation_id ? 'group ' + g.id + ' has organisation_id ' + g.organisation_id + ', and the permission names it' : 'the permission names group ' + g.id);
+      return verdict(true, 'Progress only: display name, sections complete out of the track’s, and the date last active.', trace);
+    }
+  }
+  trace.push(memberships.length ? 'no permission reaches any of ' + participant + '’s groups' : participant + ' is in no group');
+  return verdict(false, 'No permission reaches a group they are in.', trace);
+}
+function verdict(ok, why, trace) { return { ok: ok, why: why, trace: trace }; }
+function fmtPerm(r) { return '(' + r.capability + ', ' + (r.organisation_id ? 'organisation ' + r.organisation_id : 'group ' + r.group_id) + ')'; }
+
+const CANSEE_CASES = [
+  { label: 'can_see(Rachel, Ada, progress)', viewer: 'rachel', participant: 'ada', what: 'progress' },
+  { label: 'can_see(Rachel, Femi, progress), consent withdrawn', viewer: 'rachel', participant: 'femi', what: 'progress' },
+  { label: 'can_see(Rachel, Ada, letter)', viewer: 'rachel', participant: 'ada', what: 'letter' },
+  { label: 'can_see(Rachel, Ada, results)', viewer: 'rachel', participant: 'ada', what: 'results' },
+  { label: 'can_see(Ada, Kemi, progress)', viewer: 'ada', participant: 'kemi', what: 'progress' },
+  { label: 'Can Ada’s coach see her results?', coach: true }
+];
+function caseVerdict(c) {
+  if (!c.coach) return canSee(c.viewer, c.participant, c.what);
+  return verdict(false, 'Not through can_see: a coach has no account, so holds no permission (ADR 0012). The coach sees Ada’s results and comparison through their own link, only after accepting and only while Ada shares them (ADR 0011).',
+    ['coaches and observers are contacts on Ada’s response, with links, not accounts']);
+}
+
+// ------------------------------------------------------------- actions
+const JOIN_TOKEN = 'k3Vq9xR2\u2026';     // 32 random bytes, stored as it is so the link can be copied again
+const JOIN_LINK = '/join/' + JOIN_TOKEN + '/';
+
+// "New group" on Your organisations, offered only to an account holding `manage` on the organisation.
+function createGroup() {
+  clearFresh();
+  const s = S.setup;
+  S.group = { id: GROUP_ID, name: s.group.trim() || 'Autumn cohort', type: s.type };
+  write('organisations_group', { id: GROUP_ID, organisation_id: ORG_ID, name: S.group.name, type: s.type, join_token: JOIN_TOKEN }, 'grp');
+}
+
+// Copying the join link records nothing. Rachel sends it by whatever means she already uses.
+function shareLink() {
+  S.invited = true;
+  S.p = 'message';
+}
+
+// Opening the link holds the token in the session. Sign-up then drops the enrolment code.
+function signUp() {
+  clearFresh();
+  write('access_account', { participant: 'ada', display_name: S.signup.name.trim() || 'Ada' }, 'acct-ada');
+  S.signedUp = true;
+  S.p = 'consent';
+}
+
+// Consent is one row per participant per version of the text, not per group.
+function giveConsent() {
+  clearFresh();
+  write('access_consent', { participant: 'ada', text_version: 2, given_at: 'today', withdrawn_at: null }, 'consent-ada');
+  S.consented = true;
+  S.p = 'join';
+}
+
+// "Join" on the join page. Leaving the page without joining records nothing.
+function joinGroup() {
+  clearFresh();
+  write('organisations_membership', { participant: 'ada', group_id: GROUP_ID, joined_at: 'today' }, 'mem-ada');
+  S.joined = true;
+  S.p = 'home';
+  S.pSeenAt = S.clock; S.pPrevSeen = S.clock;
+}
+
+function parseVideo(url) {
+  const u = (url || '').trim();
+  let m = u.match(/(?:youtube\.com\/watch\?[^#]*v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{6,})/);
+  if (m) return { provider: 'YouTube', id: m[1] };
+  m = u.match(/vimeo\.com\/(?:video\/)?(\d{5,})/);
+  if (m) return { provider: 'Vimeo', id: m[1] };
+  return null;
+}
+
+function saveVideo(sectionId) {
+  const v = parseVideo(S.video.url);
+  if (!v) { S.video.err = 'That doesn\u2019t look like a YouTube or Vimeo link. Copy the address from the video\u2019s Share button.'; return false; }
+  clearFresh();
+  S.db.organisation_video = S.db.organisation_video.filter(function (r) { return r.section !== sectionId; });
+  write('organisation_video', { organisation_id: ORG_ID, section: sectionId, mode: S.video.mode,
+    provider: v.provider, video_id: v.id, title: S.video.title.trim() || 'Untitled video' }, 'vid-' + sectionId);
+  S.video.err = '';
+  S.editing = null;
+  return true;
+}
+
+// What `python manage.py seed_cohort` leaves for the other eleven: an account with a display name, consent to the
+// current text (Femi's then withdrawn), a membership, and a test-data response worked part-way or to the end.
+function seed() {
+  clearFresh();
+  PEOPLE.forEach(function (p) {
+    if (p.id === 'ada') return;
+    write('access_account', { participant: p.id, display_name: p.name }, 'acct-' + p.id);
+    write('access_consent', { participant: p.id, text_version: 2, given_at: 'seeded', withdrawn_at: p.consented ? null : 'seeded' }, 'consent-' + p.id);
+    write('organisations_membership', { participant: p.id, group_id: GROUP_ID, joined_at: 'seeded' }, 'mem-' + p.id);
+  });
+  S.seeded = true;
+}
+
+// ---------------------------------------------------------- derived data
+// What members_seen_by gives an admin: name, then progress or "hasn't consented". No stall flag (spec: the Workbook
+// is worked on paper, so a quiet fortnight may be someone at work in it).
+function status(p) {
+  if (!p.consented) return 'noconsent';
+  if (p.done >= 5) return 'finished';
+  if (p.done === 0) return 'notstarted';
+  return 'underway';
+}
+// ADR 0013: only consenting members with a self-result count, and never one of them on their own.
+function withSelfResults() { return S.seeded ? PEOPLE.filter(function (p) { return p.consented && p.apestScores; }) : []; }
+
+function filteredPeople(f) {
+  return PEOPLE.filter(function (p) { return f === 'all' || status(p) === f; });
+}
+
+function standing(index) {
+  for (const s of STANDINGS) if (index >= s[0]) return s[1];
+  return BELOW;
+}
+// Each construct's average share across the group, as an index against an even share of its framework.
+function giftsFor(cats, field) {
+  const ps = withSelfResults();
+  return cats.map(function (c) {
+    const index = mean(ps.map(function (p) { return p[field][c.k]; })) * cats.length;
+    return { c: c, index: index, standing: standing(index) };
+  });
+}
+function mean(a) { return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : 0; }
+
+// Closing ratings: the five agreement scales in Before we begin (bl-*) and again in Section 5 (pl-*), 1-10.
+function impactData() {
+  const fin = PEOPLE.filter(function (p) { return p.consented && p.impact; });
+  return IMPACT_QS.map(function (q, i) {
+    const start = fin.map(function (p) { return p.impact[0][i]; });
+    const end = fin.map(function (p) { return i === 4 && S.q5Fell ? Q5_FELL[p.id] : p.impact[1][i]; });
+    return { q: q, start: mean(start), end: mean(end), n: fin.length };
+  });
+}
+
+// ------------------------------------------------------------ the script
+const STEPS = [
+  { title: 'Set up', line: 'Rachel creates a group called Autumn cohort in Example Church.',
+    tip: 'The operator has already made Example Church in Django admin and given Rachel manage on it (both rows are under the hood). Press Create group: one row appears, a group that points at its organisation.',
+    ws: 'Workstream A', built: true,
+    rules: ['<b>Rights are rows, not user types.</b> Rachel isn\u2019t an admin user; a <code>Permission</code> row gives her <i>manage</i> on Example Church. Only the operator grants them.',
+            '<b>organisation_id lives on the group</b>, not on the permission. One permission on the organisation reaches every group in it, including later ones.',
+            '<b>Groups have a type</b>, cohort or team, as a label only. Nothing behaves differently yet.'] },
+  { title: 'Join link', line: 'She shares the group\u2019s join link. Ada opens it, signs up, reads who sees what, agrees, and joins.',
+    tip: 'Copy the join link, then switch to Ada\u2019s phone. Open the link, sign up (no enrolment code), agree, then Join.',
+    ws: 'Workstream A', built: true,
+    rules: ['<b>Nobody creates accounts by hand.</b> One link per group, sent however Rachel already sends things. Replacing it stops the old one; members stay.',
+            '<b>Consent comes before joining</b>, and it\u2019s a stored row against the version of the text, not a checkbox nobody can audit.',
+            '<b>The join page says what admins see</b>, in the same sentence as the consent text and \u201cYour groups\u201d.'] },
+  { title: 'Video', line: 'Rachel adds her pastor\u2019s two-minute intro video for Section 1. Ada refreshes and sees it.',
+    tip: 'Open Section 1, paste the link, check the preview, save. Then switch to Ada and press Refresh.',
+    ws: 'Workstream D', built: false,
+    rules: ['<b>No video block exists yet.</b> An author adds one to the pathway document first (ADR 0003); that is \u201cours\u201d.',
+            '<b>Needs an ADR.</b> ADR 0012 says organisation admins don\u2019t author. And a member of two organisations needs a rule for whose video they see.',
+            '<b>Paste a link, don\u2019t host files.</b> Instead of ours, or before or after it; falls back to ours wherever none is set.'] },
+  { title: 'Progress', line: 'Six weeks later. Three people haven\u2019t started, and one has withdrawn consent and shows only her name.',
+    tip: 'This is "Your organisations" as built, with seed_cohort\u2019s twelve. Tap a name to show what Rachel can and can\u2019t see.',
+    ws: 'Workstream B', built: true,
+    rules: ['<b>Progress, never content.</b> Display name, sections complete out of five, and the date last active. No answers, results or email.',
+            '<b>No stall flag.</b> The Workbook is worked on paper, so a quiet fortnight may be someone at work in it.',
+            '<b>Anything more is a new <code>what</code>.</b> Coach status or observers answered each need their own rule in can_see and a consent sentence.'] },
+  { title: 'Nudge', line: 'She messages the three who haven\u2019t started, using the nudge template.',
+    tip: 'Everything is pre-filled: participants, not started, nudge template. Point at the From line and the footer, then send.',
+    ws: 'Workstream E', built: false,
+    rules: ['<b>Needs a consent sentence first.</b> Admins don\u2019t see members\u2019 email; sending to them is a new use of it. And no email provider is chosen yet.',
+            '<b>Sent by a named person, replies to their own inbox.</b> \u201cRachel thought you might need a hand\u201d, not \u201cyou have incomplete items\u201d.',
+            '<b>Coaches have no accounts.</b> Their email is a contact on the participant\u2019s response, so reaching them is a decision of its own.'] },
+  { title: 'Gifts', line: 'The group\u2019s gifts: heavy in some places, thin in others, with a question underneath.',
+    tip: 'Read the headline, then the question. The point is the conversation it starts, not a seating plan.',
+    ws: 'Workstream C', built: false,
+    reads: true,
+    rules: ['<b>Self-results only, averaged</b> (ADR 0013). Observers\u2019 answers are left out: their notice doesn\u2019t cover group admins.',
+            '<b>Floor of three</b> members with a self-result before any number renders, as for the observer average. Never one person\u2019s result.',
+            '<b>Standings, never percents.</b> And a question, not a recommendation.'] },
+  { title: 'Before and after', line: 'The before-and-after ratings, with question five shown separately.',
+    tip: 'Show the four, then question five on its own. Use the demo switch to show what it looks like when peace falls.',
+    ws: 'Workstream C', built: false,
+    reads: true,
+    rules: ['<b>Not covered by consent yet.</b> Consent v2 promises combined self-assessment results only. This needs its own sentence and an ADR like 0013.',
+            '<b>Don\u2019t average the five into one score.</b> Four measure gain; the fifth is a check. Flag it if it falls.',
+            '<b>Same floor of three</b>, counted among consenting members who have finished.'] }
+];
+
+// --------------------------------------------------------------- helpers
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function initials(n) { return n.split(' ').map(function (w) { return w[0]; }).join('').slice(0, 2); }
+// The admin pages show the date last active, with no time (spec, Progress).
+function days(n) {
+  const d = new Date(DEMO_TODAY.getTime() - n * 86400000);
+  return d.getDate() + ' ' + d.toLocaleString('en-GB', { month: 'long' }) + ' ' + d.getFullYear();
+}
+function plural(n, one, many) { return n + ' ' + (n === 1 ? one : (many || one + 's')); }
+
+// ------------------------------------------------------------ demo bar
+function renderBar() {
+  let chips = '';
+  STEPS.forEach(function (st, i) {
+    const n = i + 1;
+    const cls = n === S.step ? 'on' : n < S.step ? 'done' : '';
+    chips += '<button class="step-chip ' + cls + '" data-act="go" data-n="' + n + '" aria-current="' + (n === S.step ? 'step' : 'false') + '">' +
+      '<b>' + (n < S.step ? '\u2713' : n) + '</b>' + esc(st.title) + '</button>';
+    if (n === 3) chips += '<span class="later">six weeks later</span>';
+  });
+  const st = STEPS[S.step - 1];
+  return '<div class="demo-top">' +
+      '<div class="brand">Whatever You Do<span>Organisation demo</span></div>' +
+      '<nav class="steps" aria-label="Demo steps">' + chips + '</nav>' +
+      '<button class="ghost-btn" data-act="reset">Reset</button>' +
+    '</div>' +
+    '<div class="script">' +
+      '<div class="script-text">' +
+        '<div class="script-n">Step ' + S.step + ' of 7 \u00b7 ' + st.ws +
+          (st.built ? '<span class="state built">Partially built</span>' : '<span class="state tobuild">To build</span>') + '</div>' +
+        '<div class="script-line">' + esc(st.line) + '</div>' +
+        '<div class="script-tip">' + esc(st.tip) + '</div>' +
+      '</div>' +
+      '<div class="script-nav">' +
+        '<button class="back-btn" data-act="go" data-n="' + (S.step - 1) + '"' + (S.step === 1 ? ' disabled' : '') + '>Back</button>' +
+        '<button class="next-btn" data-act="go" data-n="' + (S.step + 1) + '"' + (S.step === 7 ? ' disabled' : '') + '>' +
+          (S.step === 3 ? 'Jump six weeks' : S.step === 7 ? 'End of demo' : 'Next step') + '</button>' +
+      '</div>' +
+    '</div>';
+}
+
+// --------------------------------------------------------- screen tabs
+function renderScreens() {
+  return '<div class="screens" role="tablist">' +
+    '<button class="screen-tab ' + (S.screen === 'admin' ? 'on' : '') + '" data-act="screen" data-v="admin" role="tab" aria-selected="' + (S.screen === 'admin') + '">' +
+      '<span class="av">' + esc(initials(ADMIN.name)) + '</span>' + esc(ADMIN.first) + '\u2019s screen <small>admin</small></button>' +
+    '<button class="screen-tab ' + (S.screen === 'participant' ? 'on' : '') + '" data-act="screen" data-v="participant" role="tab" aria-selected="' + (S.screen === 'participant') + '">' +
+      '<span class="av">A</span>Ada\u2019s phone <small>participant</small></button>' +
+  '</div>';
+}
+
+// ------------------------------------------------------------ admin app
+// Built today, everything for Rachel is on one page, "Your organisations": the first two tabs. The rest are to build.
+function memberCount() { return S.db.organisations_membership.length; }
+function renderAdmin() {
+  const hasGroup = !!S.group;
+  const nav = [['setup', 'Your organisations', true], ['members', 'Members', true],
+               ['results', 'Results', false], ['content', 'Videos', false], ['messages', 'Messages', false]];
+  let navHtml = '';
+  nav.forEach(function (n) {
+    const dis = n[0] !== 'setup' && !hasGroup;
+    navHtml += '<button class="nav ' + (S.tab === n[0] ? 'on' : '') + '" data-act="tab" data-v="' + n[0] + '"' + (dis ? ' disabled' : '') + '>' + n[1] +
+      (n[2] ? '' : ' <small class="faint">to build</small>') + '</button>';
+  });
+  return '<div class="window">' +
+    '<aside class="side">' +
+      '<div class="side-org">' + esc(S.org.name) + '</div>' +
+      '<div class="side-group">' + esc(hasGroup ? S.group.name + ' \u00b7 ' + plural(memberCount(), 'member') : 'No groups yet') + '</div>' +
+      '<nav>' + navHtml + '</nav>' +
+      '<div class="side-who"><b>' + esc(ADMIN.name) + '</b><i>manage</i> on ' + esc(S.org.name) + '</div>' +
+    '</aside>' +
+    '<div class="pane">' + adminPane() + '</div>' +
+  '</div>';
+}
+
+function adminPane() {
+  if (S.tab === 'setup') return paneSetup();
+  if (S.tab === 'members') return S.seeded ? paneProgress() : panePeople();
+  if (S.tab === 'results') return paneResults();
+  if (S.tab === 'content') return paneContent();
+  if (S.tab === 'messages') return paneMessages();
+  return '';
+}
+
+// ---- 1. set up
+function paneSetup() {
+  if (S.group) {
+    return '<h1>Your organisations</h1><h2>' + esc(S.org.name) + '</h2>' +
+      '<p class="lede">' + esc(S.group.name) + ' \u00b7 ' + (S.group.type === 'team' ? 'Team' : 'Cohort') + ' \u00b7 ' + plural(memberCount(), 'member') +
+        '. With <i>manage</i> on ' + esc(S.org.name) + ' you see every group in it: its members\u2019 progress, and later its combined results, never anyone\u2019s answers.</p>' +
+      '<div class="notice ok"><b>Created.</b> ' + esc(S.group.name) + ' has its own join link. Next, share it with the people who\u2019ll take part.</div>' +
+      (S.invited ? '' : '<button class="btn" data-act="tab" data-v="members">Share the join link</button>');
+  }
+  const s = S.setup;
+  const types = [['cohort', 'Cohort', 'People working through the pathway together over a season.'], ['team', 'Team', 'People who serve together. A label only for now.']];
+  return '<h1>Your organisations</h1><h2>' + esc(S.org.name) + '</h2>' +
+    '<p class="lede">No groups yet. The operator made ' + esc(S.org.name) + ' and gave you <i>manage</i> on it, so you can create its groups.</p>' +
+    '<div class="field"><label for="f-group">Name</label><input class="input" id="f-group" data-bind="setup.group" value="' + esc(s.group) + '"></div>' +
+    '<div class="field" style="max-width:620px"><label>Type</label><div class="radio-row">' +
+      types.map(function (t) {
+        return '<button class="radio ' + (s.type === t[0] ? 'on' : '') + '" type="button" data-act="gtype" data-v="' + t[0] + '"><span class="dot"></span><span><b>' + t[1] + '</b><span>' + t[2] + '</span></span></button>';
+      }).join('') +
+    '</div></div>' +
+    '<button class="btn" data-act="create">Create group</button>';
+}
+
+// ---- 2. the group on "Your organisations" (before the six-week jump)
+function panePeople() {
+  const members = S.joined ? '<div class="table-wrap"><table class="people" style="min-width:0"><thead><tr><th>Member</th><th>Progress</th></tr></thead><tbody>' +
+      '<tr><td class="who">Ada</td><td>not started</td></tr></tbody></table></div>' : '<p class="muted">No members yet.</p>';
+  return '<h1>' + esc(S.group.name) + '</h1>' +
+    '<p class="lede">' + (S.group.type === 'team' ? 'Team' : 'Cohort') + ' \u00b7 ' + plural(memberCount(), 'member') +
+      '. Anyone who opens the join link can sign up and join, without the enrolment code. Before they join, they\u2019re told what you\u2019ll be able to see.</p>' +
+    '<div class="field" style="max-width:620px"><label for="f-link">Join link</label>' +
+      '<div class="row"><input class="input" id="f-link" readonly value="https://anville.example' + esc(JOIN_LINK) + '" style="flex:1;min-width:0">' +
+      '<button class="btn" data-act="copylink">Copy</button></div>' +
+      '<div class="hint"><button class="p-link" data-act="replacelink" style="font-size:12.5px">Replace link</button> if it has travelled further than you meant. Members stay in the group.</div></div>' +
+    (S.invited && !S.joined ? '<div class="notice ok"><b>Link copied.</b> Send it however you usually would. Switch to Ada\u2019s phone to see her open it.</div>' : '') +
+    '<h2 style="margin-top:22px">Members</h2>' + members;
+}
+
+// ---- 4. progress
+function paneProgress() {
+  const count = function (f) { return filteredPeople(f).length; };
+  const notStarted = count('notstarted');
+  // The filter chips are Workstream B's; the list itself, sorted by name, is what "Your organisations" shows today.
+  const filters = [['all', 'Everyone', PEOPLE.length], ['notstarted', 'Not started', notStarted], ['underway', 'Under way', count('underway')],
+                   ['finished', 'Finished', count('finished')], ['noconsent', 'Hasn\u2019t consented', count('noconsent')]];
+  let fh = '';
+  filters.forEach(function (f) { fh += '<button class="chip ' + (S.filter === f[0] ? 'on' : '') + '" data-act="filter" data-v="' + f[0] + '">' + f[1] + ' ' + f[2] + '</button>'; });
+
+  let rows = '';
+  filteredPeople(S.filter).forEach(function (p) {
+    const st = status(p);
+    let progress, last;
+    if (st === 'noconsent') { progress = '<span class="faint">hasn\u2019t consented</span>'; last = ''; }
+    else if (st === 'notstarted') { progress = '<span class="faint">not started</span>'; last = ''; }
+    else {
+      let pips = '';
+      for (let i = 0; i < 5; i++) pips += '<span class="pip ' + (i < p.done ? 'd' : '') + '"></span>';
+      progress = '<div class="pips" aria-label="' + p.done + ' of 5 sections">' + pips + '</div><div class="pip-label">' + p.done + ' of 5 sections</div>';
+      last = days(p.last);
+    }
+    rows += '<tr>' +
+      '<td><button class="name-btn" data-act="peek" data-v="' + p.id + '" aria-expanded="' + (S.peek === p.id) + '">' + esc(p.name) + '</button></td>' +
+      '<td>' + progress + '</td>' +
+      '<td class="nowrap">' + last + '</td></tr>';
+    if (S.peek === p.id) rows += '<tr class="peek-row"><td colspan="3">' + peekHtml(p) + '</td></tr>';
+  });
+
+  return '<h1>Members</h1>' +
+    '<p class="lede">How everyone in ' + esc(S.group.name) + ' is getting on. You see progress, not content \u2014 nobody\u2019s answers are visible from here.</p>' +
+    '<div class="summary"><div><strong>' + count('finished') + '</strong>finished</div><div><strong>' + count('underway') + '</strong>under way</div>' +
+      '<div class="amber"><strong>' + notStarted + '</strong>not started</div><div><strong>' + count('noconsent') + '</strong>hasn\u2019t consented</div></div>' +
+    (notStarted ? '<div class="notice warn"><b>' + plural(notStarted, 'person hasn\u2019t', 'people haven\u2019t') + ' started.</b> ' +
+      'Someone part-way may be at work in the Workbook on paper, so nothing here calls them stalled.' +
+      '<div class="row" style="margin-top:10px"><button class="btn small" data-act="nudge-notstarted">Message the ' + (notStarted === 3 ? 'three' : notStarted) + ' who haven\u2019t started</button> <small class="faint">Workstream E</small></div></div>' : '') +
+    '<div class="filters">' + fh + '</div>' +
+    '<div class="table-wrap"><table class="people" style="min-width:0"><thead><tr><th>Name</th><th>Progress</th><th>Last active</th></tr></thead><tbody>' +
+      rows + '</tbody></table></div>' +
+    '<div class="proposed"><b>Workstream B could add</b> whether a coach has accepted, and how many observers have answered (a count, never who). ' +
+      'Each is a new <code>what</code> in can_see, with its own rule and its own consent sentence. Coaches have no account, so \u201ccoach last active\u201d isn\u2019t known.</div>';
+}
+
+function peekHtml(p) {
+  if (!p.consented) {
+    return '<div class="peek" style="margin:2px 0 4px;max-width:none"><h3>What you can see about ' + esc(p.first) + '</h3>' +
+      '<p style="margin:0">Only ' + esc(p.first) + '\u2019s display name and that she hasn\u2019t consented. She withdrew consent, so she stays in the group, but can_see says no until she agrees again.</p></div>';
+  }
+  return '<div class="peek" style="margin:2px 0 4px;max-width:none"><h3>What you can see about ' + esc(p.first) + '</h3>' +
+    '<div class="two"><ul class="can"><li>Display name</li><li>How many of the five sections are complete</li><li>The date last active</li><li>The group\u2019s averaged self-assessment results, once three members have them (to build)</li></ul>' +
+    '<ul class="cant"><li>Answers to any question</li><li>Results on their own, or the comparison with observers</li><li>Coach or observers</li><li>The letter to a future self</li><li>Email address</li></ul></div>' +
+    '<p class="faint" style="margin:8px 0 0">' + esc(p.first) + ' reads the same promise on the consent page, the join page and \u201cYour groups\u201d.</p></div>';
+}
+
+// ---- 6 & 7. results
+function paneResults() {
+  const gifts = S.resultsTab === 'gifts';
+  const n = gifts ? withSelfResults().length : impactData()[0].n;
+  const tabs = '<div class="subtabs"><button class="subtab ' + (gifts ? 'on' : '') + '" data-act="rtab" data-v="gifts">Gifts across the group</button>' +
+    '<button class="subtab ' + (gifts ? '' : 'on') + '" data-act="rtab" data-v="impact">Before and after</button></div>';
+  const head = '<h1>Results</h1><p class="lede">' + esc(S.group.name) + ' as a whole, averaged. Never one person\u2019s result.</p>' + tabs;
+  if (n < FLOOR) {
+    return head + '<div class="floor"><div class="big">' + n + ' of ' + FLOOR + '</div><p>' +
+      (gifts ? 'Results appear once at least ' + FLOOR + ' members have a self-assessment result.' : 'Ratings appear once at least ' + FLOOR + ' members have finished.') +
+      ' With fewer, an average could identify someone.</p></div>';
+  }
+  return head + (gifts ? paneGifts() : paneImpact());
+}
+
+function giftBlock(cats, field, title) {
+  const data = giftsFor(cats, field);
+  const MAX = 180;   // index at the right-hand end of the bar; 100 is an even share
+  let rows = '';
+  data.forEach(function (d) {
+    const cls = d.standing === 'Leading' ? 'lead' : d.standing === BELOW ? 'less' : '';
+    rows += '<div class="gift"><div class="g-name"><b>' + d.c.name + '</b><span>' + d.c.gloss + '</span></div>' +
+      '<div class="g-std ' + cls + '">' + d.standing + '</div>' +
+      '<div class="gbar" aria-label="' + d.standing + '"><i style="width:' + Math.min(100, d.index / MAX * 100).toFixed(1) + '%"></i>' +
+        '<span class="even" style="left:' + (100 / MAX * 100).toFixed(1) + '%" title="An even share"></span></div></div>';
+  });
+  return { html: '<div class="scale-h"><h2>' + title + '</h2></div>' +
+      '<div class="axis"><div></div><div>standing</div><div><span>less</span><span>more</span></div></div>' + rows, data: data };
+}
+
+function paneGifts() {
+  const a = giftBlock(APEST, 'apestScores', 'APEST(d)');
+  const w = giftBlock(PEP, 'pepScores', 'Professional Energy Profile (PEP)');
+  const byIndex = a.data.slice().sort(function (x, y) { return y.index - x.index; });
+  const heavy = byIndex.slice(0, 2).map(function (d) { return FRIENDLY[d.c.k]; });
+  const thin = byIndex.slice(-2).reverse().map(function (d) { return FRIENDLY[d.c.k]; });
+  return '<p class="headline">Heavy on ' + heavy.join(' and ') + ', thin on ' + thin.join(' and ') + '.</p>' +
+    '<div class="basis">The self-results of ' + plural(withSelfResults().length, 'member') + ', averaged (ADR 0013). Members without current consent are left out, and so are observers\u2019 answers. Each construct shows its standing against an even share; the line marks an even share.</div>' +
+    a.html +
+    w.html +
+    '<div class="question"><p class="q">Who here is carrying something nobody has asked them to use?</p>' +
+      '<p>This group leans towards ' + heavy.join(' and ') + '. Is there ' + thin.join(' or ') + ' here that hasn\u2019t been given room yet?</p>' +
+      '<p>Worth taking to a leaders\u2019 meeting as a question rather than a plan. This is how people see themselves this season, not who they are.</p></div>';
+}
+
+function paneImpact() {
+  const d = impactData();
+  const W = 10;
+  function row(x, i) {
+    const delta = x.end - x.start;
+    return '<div class="imp"><div class="imp-q">' + esc(x.q) + '</div>' +
+      '<div class="imp-bars"><div class="ib start" title="First day"><i style="width:' + (x.start / W * 100) + '%"></i></div>' +
+      '<div class="ib end" title="Last day"><i style="width:' + (x.end / W * 100) + '%"></i></div></div>' +
+      '<div class="imp-n"><strong>' + (delta >= 0 ? '+' : '\u2212') + Math.abs(delta).toFixed(1) + '</strong>' + x.start.toFixed(1) + ' to ' + x.end.toFixed(1) + '</div></div>';
+  }
+  let four = '';
+  for (let i = 0; i < 4; i++) four += row(d[i], i);
+  const q5 = d[4], down = q5.end < q5.start;
+  return '<div class="proposed" style="margin-top:0"><b>Not covered by consent yet.</b> Consent v2 says admins see the group\u2019s averaged self-assessment results, nothing about these ratings. Building this needs a consent sentence, a raised text version and an ADR, as group results had in ADR 0013.</div>' +
+    '<div class="basis">Averaged over the ' + q5.n + ' consenting members who have finished (minimum ' + FLOOR + '). Each answered in Before we begin and again in Section 5, from 1 to 10.</div>' +
+    '<div class="legend" style="margin-bottom:6px"><span><i class="lg-dot" style="border-radius:3px;width:14px;height:6px;opacity:.45;background:var(--faint)"></i>First day</span><span><i class="lg-dot" style="border-radius:3px;width:14px;height:6px;opacity:1"></i>Last day</span></div>' +
+    four +
+    '<div class="q5 ' + (down ? 'down' : '') + '"><div class="q5-tag">Question five \u00b7 a check, not a score</div>' + row(q5, 4) +
+      '<p class="q5-read">' + (down
+        ? '<b>Clarity rose, but peace fell.</b> People are leaving with a clearer sense of calling and more anxiety about it \u2014 the opposite of the intent. Worth raising with the coaches before the next group starts.'
+        : '<b>Peace rose alongside clarity.</b> People are leaving clearer about their purpose and more settled about where they are with it, which is what the course is for.') + '</p></div>' +
+    '<div class="demo-ctl"><b>Demo only:</b> <span>show what happens if question five falls</span>' +
+      '<button class="btn small ' + (S.q5Fell ? '' : 'quiet') + '" data-act="q5">' + (S.q5Fell ? 'Show the healthy version' : 'Show question five falling') + '</button></div>';
+}
+
+// ---- 3. videos
+function overrideFor(id) { return S.db.organisation_video.find(function (r) { return r.section === id; }); }
+function videoListFor(id, sinceAt) {
+  const sec = SECTIONS.find(function (s) { return s.id === id; });
+  const ours = { title: sec.dflt, dur: sec.dur, ours: true };
+  const o = overrideFor(id);
+  // S.clock is the next id to be issued, so anything with _at >= the load time arrived after it.
+  if (!o || (sinceAt != null && o._at >= sinceAt)) return [ours];
+  const theirs = { title: o.title, dur: PASTOR_VIDEO.dur, ours: false, provider: o.provider, at: o._at };
+  if (o.mode === 'replace') return [theirs];
+  if (o.mode === 'before') return [theirs, ours];
+  return [ours, theirs];
+}
+function paneContent() {
+  let out = '<h1>Videos</h1><p class="lede">Use your own teaching alongside ours. People in ' + esc(S.org.name) + ' see your video at that point in the course; everyone else sees ours.</p>' +
+    '<div class="proposed"><b>Two decisions first.</b> The pathway document has no video block yet, so an author adds one per section and that is “ours” (ADR 0003). ' +
+      'ADR 0012 says organisation admins don’t author, so letting them set a video needs an ADR; it also needs a rule for a member of two organisations.</div>';
+  SECTIONS.forEach(function (sec) {
+    const list = videoListFor(sec.id);
+    let vl = '';
+    list.forEach(function (v) {
+      vl += '<div class="vrow"><span class="vthumb"></span><span>' + esc(v.title) + ' <span class="faint">' + v.dur + '</span></span>' +
+        '<span class="src">' + (v.ours ? 'Whatever You Do' : esc(S.org.name) + ' \u00b7 ' + v.provider) + '</span></div>';
+    });
+    const editing = S.editing === sec.id;
+    const has = !!overrideFor(sec.id);
+    let ed = '';
+    if (editing) {
+      const v = S.video, parsed = parseVideo(v.url);
+      ed = '<div class="editor">' +
+        '<div class="field" style="max-width:560px"><label for="f-url">Video link</label><input class="input" id="f-url" data-bind="video.url" value="' + esc(v.url) + '" placeholder="https://youtu.be/\u2026">' +
+          '<div class="hint">Paste the address from the Share button on YouTube or Vimeo.</div>' + (v.err ? '<div class="err">' + esc(v.err) + '</div>' : '') + '</div>' +
+        '<div class="field" style="max-width:560px"><label for="f-title">Title people will see</label><input class="input" id="f-title" data-bind="video.title" value="' + esc(v.title) + '"></div>' +
+        '<div class="field" style="max-width:620px"><label>Where it goes</label><div class="radio-row">' +
+          [['replace', 'Instead of ours', 'Only your video plays here.'], ['before', 'Before ours', 'Yours introduces the standard teaching.'], ['after', 'After ours', 'Ours first, then yours.']].map(function (m) {
+            return '<button class="radio ' + (v.mode === m[0] ? 'on' : '') + '" type="button" data-act="vmode" data-v="' + m[0] + '"><span class="dot"></span><span><b>' + m[1] + '</b><span>' + m[2] + '</span></span></button>';
+          }).join('') + '</div></div>' +
+        (parsed ? '<div class="preview"><span class="vthumb"></span><span><b>' + esc(v.title || 'Untitled video') + '</b><br><span class="faint">' + parsed.provider + ' \u00b7 ' + esc(parsed.id) + ' \u00b7 ' + PASTOR_VIDEO.dur + '</span></span></div>'
+                : '<div class="err" style="margin:4px 0 12px">No preview yet \u2014 the link isn\u2019t recognised.</div>') +
+        '<div class="row"><button class="btn" data-act="vsave" data-v="' + sec.id + '">Save video</button><button class="btn quiet" data-act="vcancel">Cancel</button></div></div>';
+    }
+    out += '<div class="section-card"><div class="row" style="justify-content:space-between"><div><h3>' + sec.title + '</h3><div class="sub">' + sec.sub + '</div></div>' +
+      (editing ? '' : '<button class="btn small ' + (has ? 'quiet' : '') + '" data-act="vedit" data-v="' + sec.id + '">' + (has ? 'Change video' : 'Add your own video') + '</button>') + '</div>' +
+      '<div class="vlist">' + vl + '</div>' + ed + '</div>';
+  });
+  return out;
+}
+
+// ---- 5. messages
+const TEMPLATES = {
+  nudge: { label: 'Nudge for people who haven\u2019t started', audience: 'participants',
+    subject: 'Whenever you\u2019re ready',
+    body: 'Hi {first_name},\n\nI noticed you haven\u2019t made a start on Whatever You Do yet, and wanted to check in. No pressure at all \u2014 life gets full, and this was always meant to be unhurried.\n\nThe easiest way in is \u201cBefore we begin\u201d: a few questions about where you are now, and choosing a coach and the people who know you best. Give it twenty minutes.\n\nIf anything\u2019s got in the way that I can help with, just reply to this \u2014 it comes straight to me.\n\n{sender_first}' },
+  coaches: { label: 'Mid-course encouragement to coaches (needs a decision)', audience: 'coaches',
+    subject: 'Halfway \u2014 a note for coaches',
+    body: 'Hi {first_name},\n\nThank you for walking with people through this. We\u2019re about halfway, which is usually when conversations get more honest, and harder.\n\nTwo things we\u2019ve learned. The conversation about the life timeline, in the Workbook, is the one people most often say changed something, so give it room. And when someone asks what you\u2019d do, it\u2019s fine to turn the question back to them \u2014 your job is to help them hear themselves.\n\n{sender_first}' },
+  event: { label: 'Invitation to the closing event', audience: 'both',
+    subject: 'Marking the end of Whatever You Do',
+    body: 'Hi {first_name},\n\nWe\u2019re gathering to mark the end of the course on [date] at [place]. There\u2019ll be food, a few short stories from people who\u2019ve been through it, and time to pray for one another.\n\nCould you let me know if you\u2019re coming? [sign-up link]\n\n{sender_first}' },
+  blank: { label: 'Write your own', audience: null, subject: '', body: '' }
+};
+
+// Participants only: coaches have no accounts, and a member without current consent is not written to.
+function recipients() {
+  const people = S.seeded ? filteredPeople(S.msg.filter) : [];
+  return people.filter(function (p) { return p.consented; }).map(function (p) { return { id: p.id, name: p.name, first: p.first, role: 'participant' }; });
+}
+function applyTemplate(key) {
+  const t = TEMPLATES[key];
+  S.msg.template = key;
+  S.msg.audience = 'participants';
+  S.msg.subject = t.subject; S.msg.body = t.body;
+}
+function merged(text, r) {
+  return text.replace(/\{first_name\}/g, r ? r.first : 'there').replace(/\{sender_first\}/g, ADMIN.first);
+}
+
+function paneMessages() {
+  if (!S.seeded) {
+    return '<h1>Messages</h1><p class="lede">Send a message to everyone in ' + esc(S.group.name) + ', to their coaches, or both.</p>' +
+      '<div class="floor"><div class="big" style="font-size:30px">No one has started yet</div><p>Messages go to people who have joined. Once the group is under way you can message them, or only those who haven’t started.</p></div>';
+  }
+  const m = S.msg, list = recipients(), first = list[0];
+  const filters = [['all', 'Everyone'], ['notstarted', 'Not started'], ['underway', 'Under way'], ['finished', 'Finished']];
+  const aud = [['participants', 'Participants', true], ['coaches', 'Coaches', false], ['both', 'Both', false]];
+  let opts = '';
+  Object.keys(TEMPLATES).forEach(function (k) { opts += '<option value="' + k + '"' + (m.template === k ? ' selected' : '') + (k === 'coaches' ? ' disabled' : '') + '>' + TEMPLATES[k].label + '</option>'; });
+
+  let log = '';
+  S.db.group_message.slice().reverse().forEach(function (r) {
+    log += '<div class="sent-row"><span class="flag green">Sent</span><span><b>' + esc(r.subject) + '</b><br><span class="faint">to ' + esc(r.summary) + '</span></span><span class="faint">just now</span></div>';
+  });
+
+  return '<h1>Messages</h1><p class="lede">Messages go out by email from you, and replies come straight back to your own inbox.</p>' +
+    '<div class="proposed" style="margin-top:0"><b>Decisions first.</b> Admins don’t see members’ email today; writing to them is a new use of it, so it needs a consent sentence. No email provider is chosen. Coaches have no account, so they’re greyed out here.</div>' +
+    '<div class="composer"><div>' +
+      '<div class="field"><label>Send to</label><div class="seg">' + aud.map(function (a) { return '<button class="' + (m.audience === a[0] ? 'on' : '') + '" data-act="aud" data-v="' + a[0] + '"' + (a[2] ? '' : ' disabled title="Coaches have no account yet"') + '>' + a[1] + '</button>'; }).join('') + '</div></div>' +
+      '<div class="field"><label>Who in ' + esc(S.group.name) + '</label><div class="filters" style="margin:0">' +
+        filters.map(function (f) { return '<button class="chip ' + (m.filter === f[0] ? 'on' : '') + '" data-act="mfilter" data-v="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>' +
+        '<div class="recips">' + (list.length ? 'Going to ' + plural(list.length, 'participant') + ': ' + esc(list.map(function (r) { return r.name; }).join(', ')) : 'No one matches. Try a different group of people.') + '</div></div>' +
+      '<div class="field"><label for="f-tpl">Start from</label><select class="input" id="f-tpl" data-act="tpl">' + opts + '</select></div>' +
+      '<div class="field"><label for="f-subj">Subject</label><input class="input" id="f-subj" data-bind="msg.subject" value="' + esc(m.subject) + '"></div>' +
+      '<div class="field"><label for="f-body">Message</label><textarea class="textarea" id="f-body" rows="11" data-bind="msg.body">' + esc(m.body) + '</textarea>' +
+        '<div class="hint">{first_name} becomes each person\u2019s first name.</div></div>' +
+      '<button class="btn" data-act="send"' + (list.length && m.subject.trim() && m.body.trim() ? '' : ' disabled') + '>Send to ' + plural(list.length, 'person', 'people') + '</button>' +
+    '</div><div>' +
+      '<div class="field" style="max-width:none"><label>What ' + esc(first ? first.first : 'they') + ' will receive</label>' +
+      '<div class="mail"><div class="mail-h"><div><span>From</span>' + esc(ADMIN.name) + ' via Whatever You Do</div><div><span>Reply to</span>' + esc(ADMIN.email) + '</div><div><span>Subject</span><b>' + esc(m.subject || '(no subject)') + '</b></div></div>' +
+        '<div class="mail-b">' + esc(merged(m.body, first)) + '</div>' +
+        '<div class="mail-f">You\u2019re getting this because you\u2019re part of ' + esc(S.group.name) + ' at ' + esc(S.org.name) + '. Replies go to ' + esc(ADMIN.first) + '. Unsubscribe from group messages.</div></div></div>' +
+    '</div></div>' +
+    (log ? '<div class="sent"><h2>Sent</h2>' + log + '</div>' : '');
+}
+
+// --------------------------------------------------------- Ada's phone
+// Ada is one of seed_cohort's three not started, so six weeks on she is still at the start.
+function adaProgress() { return { done: 0, last: null }; }
+
+function renderPhone() {
+  let body;
+  if (!S.group || !S.invited) {
+    body = '<h1>Nothing here yet</h1><p>Ada hasn\u2019t been sent the join link. Rachel needs to create the group and copy its link first.</p>' +
+      '<button class="btn quiet" data-act="screen" data-v="admin">Back to Rachel\u2019s screen</button>';
+  } else if (S.p === 'message') body = phoneMessage();
+  else if (S.p === 'signup') body = phoneSignup();
+  else if (S.p === 'consent') body = phoneConsent();
+  else if (S.p === 'join') body = phoneJoin();
+  else if (S.p === 'section') body = phoneSection();
+  else if (S.p === 'visible') body = phoneVisible();
+  else body = phoneHome();
+  const bar = S.joined
+    ? '<button class="p-refresh" data-act="refresh" aria-label="Refresh Ada\u2019s screen">Refresh</button>'
+    : '<span class="faint">' + (S.p === 'message' ? 'Messages' : '') + '</span>';
+  return '<div class="phone-wrap"><div class="phone"><div class="p-bar"><b>Whatever You Do</b>' + bar + '</div>' +
+    '<div class="p-body">' + body + '</div></div></div>';
+}
+
+// The join link travels however Rachel already sends things; Anville sends no email yet.
+function phoneMessage() {
+  return '<div class="email"><div class="email-h"><div><b>' + esc(ADMIN.name) + '</b></div>' +
+      '<div class="faint">A message, sent the way Rachel usually sends them</div></div>' +
+    '<div class="email-b"><p style="color:var(--ink);margin:0 0 10px">Hi Ada,</p>' +
+      '<p style="color:var(--ink);margin:0 0 10px">I\u2019d love you to be part of ' + esc(S.group.name) + ' \u2014 a group of us from ' + esc(S.org.name) +
+      ' working through Whatever You Do together over the next couple of months. It\u2019s a guided course for working out your God-given purpose, with a coach alongside you.</p>' +
+      '<p style="color:var(--ink);margin:0 0 16px">' + esc(ADMIN.first) + '</p>' +
+      '<button class="btn" data-act="openlink" style="width:100%">Open the join link</button>' +
+      '<p class="faint" style="font-size:12px;margin:10px 0 0">You\u2019ll see what ' + esc(S.org.name) + '\u2019s admins can see before you join.</p></div></div>';
+}
+
+// allauth's sign-up form. With a valid join token in the session, the enrolment code is not asked for.
+function phoneSignup() {
+  return '<h1>Sign up</h1>' +
+    '<div class="field"><label for="f-su-name">First name</label><input class="input" id="f-su-name" data-bind="signup.name" value="' + esc(S.signup.name) + '"></div>' +
+    '<div class="field"><label for="f-su-email">Email</label><input class="input" id="f-su-email" data-bind="signup.email" value="' + esc(S.signup.email) + '"></div>' +
+    '<div class="field"><label for="f-su-pw">Password</label><input class="input" id="f-su-pw" type="password" value="information."></div>' +
+    '<p class="faint" style="font-size:12px">No enrolment code: you came by a join link.</p>' +
+    '<button class="btn" data-act="signup" style="width:100%">Sign up</button>';
+}
+
+// The group line of consent v2 (access/consent.html), word for word. The join page and "Your groups" use it too.
+const WHAT_ADMINS_SEE = 'Its admins, and its organisation\u2019s admins, see your first name, how far through you are and when you were last active, and the self-assessment results of the whole group averaged, once at least three members have them, never yours on their own. They never see your answers. If you leave the group, they no longer see anything about you through it.';
+
+// "Before you begin": the consent page, abridged to its "Who sees what".
+function phoneConsent() {
+  const line = function (who, what) { return '<p style="font-size:13px;margin:0 0 8px"><b style="color:var(--ink)">' + who + '</b> ' + what + '</p>'; };
+  return '<h1>Before you begin</h1>' +
+    '<div style="font-size:13px;font-weight:600;margin:4px 0 8px">Who sees what</div>' +
+    line('You', 'see everything you write.') +
+    line('People you ask to rate you', 'see your first name. They never see your answers.') +
+    line('A coach,', 'if you ask someone to be yours, sees your first name. If you then choose to share your self-assessment results with them, they also see those results and how the people you asked rate you on the same things.') +
+    line('A group\u2019s admins,', 'and its organisation\u2019s admins, if you choose to join a group, see your first name, how far through you are and when you were last active, and the self-assessment results of the whole group averaged, once at least three members have them, never yours on their own. They never see your answers.') +
+    line('The people who run this service', 'can reach everything stored, in order to keep it working.') +
+    '<button class="btn" data-act="consent" style="width:100%;margin-top:6px">I agree</button>' +
+    '<p class="faint" style="font-size:12px;margin:10px 0 0;text-align:center">Version 2 of this text. You can withdraw at any time.</p>';
+}
+
+// The join page: names the organisation and group before anything is recorded.
+function phoneJoin() {
+  return '<h1>Join ' + esc(S.org.name) + ', ' + esc(S.group.name) + '?</h1>' +
+    '<p>' + WHAT_ADMINS_SEE + '</p>' +
+    '<button class="btn" data-act="join" style="width:100%">Join</button>' +
+    '<p style="margin:12px 0 0;text-align:center"><span class="p-link">Not now, go to your pathway</span></p>';
+}
+
+// The hub. The Strengths assessment is listed under Section 1, as a part of it.
+const HUB_SECTION = ['onboarding', 'designed', 'designed', 'workbook', 'letter'];
+function phoneHome() {
+  const pr = adaProgress();
+  let steps = '';
+  STEP_NAMES.forEach(function (n, i) {
+    const done = i < pr.done, now = i === pr.done;
+    steps += '<li class="' + (now ? 'now' : '') + '"' + (i === 2 ? ' style="padding-left:22px"' : '') + '><span class="n">' + (done ? '\u2713' : i + 1) + '</span>' + n +
+      ((done || now) ? '<button class="btn small ' + (now ? '' : 'quiet') + '" data-act="p-open" data-v="' + HUB_SECTION[i] + '">' + (now ? 'Start' : 'Open') + '</button>' : '') + '</li>';
+  });
+  return '<h1>Hi Ada</h1>' +
+    '<p>' + (pr.done === 0 ? 'Start with \u201cBefore we begin\u201d whenever you\u2019re ready.' : 'Pick up where you left off.') + '</p>' +
+    '<ol class="p-steps">' + steps + '</ol>' +
+    '<p style="font-size:13px"><span class="p-link">Your consent</span> \u00b7 <button class="p-link" data-act="p-visible">Your groups</button></p>';
+}
+
+function phoneSection() {
+  const sec = SECTIONS.find(function (s) { return s.id === S.pSection; }) || SECTIONS[0];
+  const list = videoListFor(sec.id, S.pSeenAt);
+  let players = '';
+  list.forEach(function (v) {
+    const isNew = !v.ours && v.at >= S.pPrevSeen;
+    players += '<div class="player ' + (v.ours ? 'ours' : '') + '"><div class="player-v"><span class="dur">' + v.dur + '</span></div>' +
+      '<div class="player-c"><b>' + esc(v.title) + (isNew ? '<span class="new-badge">New</span>' : '') + '</b><span>' +
+      (v.ours ? 'From Whatever You Do' : 'From ' + esc(S.org.name)) + '</span></div></div>';
+  });
+  return '<button class="p-link" data-act="p-home" style="margin-bottom:14px">Back to home</button>' +
+    '<h1>' + sec.title + '</h1><p>' + sec.sub + '. Watch ' + (list.length > 1 ? 'these' : 'this') + ' first, then start the readings.</p>' + players;
+}
+
+// "Your groups": each group, its organisation, the consent text's sentence, and leaving. Admins are not named.
+function phoneVisible() {
+  const pr = adaProgress();
+  return '<button class="p-link" data-act="p-home" style="margin-bottom:14px">Back to your pathway</button>' +
+    '<h1>Your groups</h1>' +
+    '<h2 style="font-family:var(--serif);font-size:19px;margin:0">' + esc(S.group.name) + '</h2>' +
+    '<p style="margin:2px 0 8px">' + esc(S.org.name) + '</p>' +
+    '<p>' + WHAT_ADMINS_SEE + '</p>' +
+    '<p><span class="p-link">Leave this group</span></p>' +
+    '<div class="proposed"><b>Proposed:</b> your row, exactly as admins see it.' +
+      '<div style="margin-top:6px;color:var(--ink)">Ada \u00b7 ' + (pr.done ? pr.done + ' of 5 sections \u00b7 last active ' + days(pr.last) : 'not started') + '</div></div>';
+}
+
+// ------------------------------------------------------ under the hood
+// Django's table names. The last two don't exist: they are one guess at what Workstreams D and E would add.
+const TABLE_ORDER = ['organisations_organisation', 'organisations_permission', 'organisations_group', 'access_account', 'access_consent',
+                     'organisations_membership', 'organisation_video', 'group_message'];
+const PROPOSED_TABLES = ['organisation_video', 'group_message'];
+function tableTitle(t) { return t + (PROPOSED_TABLES.indexOf(t) >= 0 ? ' <span>(proposed)</span>' : ''); }
+
+function tableHtml(name, rows, max) {
+  if (!rows.length) return '<div class="tbl-empty">empty</div>';
+  const cols = Object.keys(rows[0]).filter(function (k) { return k[0] !== '_'; });
+  const freshSet = S.freshRows[name] || [];
+  const show = rows.slice(-max);
+  let h = '<div style="overflow-x:auto"><table class="tbl"><thead><tr>' + cols.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
+  show.forEach(function (r) {
+    h += '<tr class="' + (freshSet.indexOf(r) >= 0 ? 'fresh' : '') + '">' + cols.map(function (c) { return '<td title="' + esc(r[c]) + '">' + esc(r[c]) + '</td>'; }).join('') + '</tr>';
+  });
+  h += '</tbody></table></div>';
+  if (rows.length > max) h += '<div class="tbl-more">' + (rows.length - max) + ' earlier rows not shown</div>';
+  return h;
+}
+
+function renderHood() {
+  const st = STEPS[S.step - 1];
+  const freshTables = TABLE_ORDER.filter(function (t) { return (S.freshRows[t] || []).length; });
+  let wrote = '';
+  if (!freshTables.length) wrote = '<div class="tbl-empty">' + (st.reads
+    ? 'This step only reads. Nothing is written. It reads members’ self-results (engine_result) and closing ratings (engine_response.answers), never one person’s on its own.'
+    : 'Nothing written yet. Do the step and the new rows appear here.') + '</div>';
+  freshTables.forEach(function (t) {
+    const rows = S.freshRows[t];
+    wrote += '<div class="hood-sec"><h3>' + tableTitle(t) + ' <span>+' + rows.length + '</span></h3>' + tableHtml(t, rows, 6) + '</div>';
+  });
+
+  let all = '';
+  TABLE_ORDER.forEach(function (t) {
+    all += '<div class="hood-sec"><h3>' + tableTitle(t) + ' <span>' + plural(S.db[t].length, 'row') + '</span></h3>' + tableHtml(t, S.db[t], 4) + '</div>';
+  });
+
+  const c = CANSEE_CASES[S.cansee];
+  const v = caseVerdict(c);
+  let opts = '';
+  CANSEE_CASES.forEach(function (x, i) { opts += '<option value="' + i + '"' + (i === S.cansee ? ' selected' : '') + '>' + esc(x.label) + '</option>'; });
+
+  return '<div class="hood-h"><div><h2>Under the hood</h2><span>For the developers</span></div>' +
+      '<button class="hood-toggle" data-act="hood">' + (S.hoodOpen ? 'Hide' : 'Show the data') + '</button></div>' +
+    '<div class="hood-body">' +
+      '<ul class="rules">' + st.rules.map(function (r) { return '<li>' + r + '</li>'; }).join('') + '</ul>' +
+      '<div class="hood-sec"><h3>Rows written by the last action</h3></div>' + wrote +
+      '<div class="hood-sec cansee" style="margin-top:22px"><h3>can_see(viewer, participant, what)</h3>' +
+        '<select data-act="cansee" aria-label="Permission question">' + opts + '</select>' +
+        '<div class="verdict ' + (v.ok ? 'yes' : 'no') + '"><b>' + (v.ok ? 'Yes' : 'No') + '</b>' + esc(v.why) +
+          '<div class="trace">' + v.trace.map(esc).join('<br>') + '</div></div></div>' +
+      '<div class="hood-sec" style="margin-top:22px"><h3>All tables</h3></div>' + all +
+    '</div>';
+}
+
+// --------------------------------------------------------- step engine
+// Jumping to a step silently completes everything before it, so any step
+// can be demonstrated on its own.
+function ensureUpTo(k) {
+  if (k >= 1 && !S.group) createGroup();
+  if (k >= 2) {
+    if (!S.invited) shareLink();
+    if (!S.signedUp) signUp();
+    if (!S.consented) giveConsent();
+    if (!S.joined) joinGroup();
+  }
+  if (k >= 3 && !overrideFor('designed')) {
+    S.video = { url: PASTOR_VIDEO.url, title: PASTOR_VIDEO.title, mode: 'before', err: '' };
+    saveVideo('designed'); S.pSeenAt = S.clock; S.pPrevSeen = S.clock;
+  }
+  if (k >= 4 && !S.seeded) seed();
+}
+
+const CANSEE_FOR_STEP = { 1: 0, 2: 0, 3: 2, 4: 1, 5: 0, 6: 3, 7: 3 };
+function enterStep(n) {
+  S.step = n; S.peek = null; S.cansee = CANSEE_FOR_STEP[n];
+  ensureUpTo(n - 1);
+  clearFresh();
+  if (n === 1) { S.screen = 'admin'; S.tab = 'setup'; }
+  if (n === 2) { S.screen = 'admin'; S.tab = 'members'; }
+  if (n === 3) {
+    S.screen = 'admin'; S.tab = 'content';
+    if (!overrideFor('designed')) { S.editing = 'designed'; S.video = { url: PASTOR_VIDEO.url, title: PASTOR_VIDEO.title, mode: 'before', err: '' }; }
+    if (S.joined) { S.p = 'section'; S.pSection = 'designed'; }
+  }
+  if (n === 4) { if (!S.seeded) seed(); S.screen = 'admin'; S.tab = 'members'; S.filter = 'all'; if (S.joined) S.p = 'home'; }
+  if (n === 5) {
+    S.screen = 'admin'; S.tab = 'messages';
+    if (!S.msg.touched) { applyTemplate('nudge'); S.msg.filter = 'notstarted'; }
+  }
+  if (n === 6) { S.screen = 'admin'; S.tab = 'results'; S.resultsTab = 'gifts'; }
+  if (n === 7) { S.screen = 'admin'; S.tab = 'results'; S.resultsTab = 'impact'; }
+}
+
+// ------------------------------------------------------------ rendering
+function render() {
+  const a = document.activeElement;
+  const id = a && a.id;
+  let sel = null;
+  try { if (id && typeof a.selectionStart === 'number') sel = [a.selectionStart, a.selectionEnd]; } catch (e) { sel = null; }
+  document.getElementById('demobar').innerHTML = renderBar();
+  document.getElementById('main').innerHTML = renderScreens() + (S.screen === 'admin' ? renderAdmin() : renderPhone());
+  document.getElementById('hood').innerHTML = renderHood();
+  document.getElementById('stage').classList.toggle('hood-closed', !S.hoodOpen);
+  if (id) {
+    const el = document.getElementById(id);
+    if (el) { el.focus(); if (sel && el.setSelectionRange) { try { el.setSelectionRange(sel[0], sel[1]); } catch (e) { /* not a text field */ } } }
+  }
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
+}
+
+function setPath(path, value) {
+  const parts = path.split('.'); let o = S;
+  for (let i = 0; i < parts.length - 1; i++) o = o[parts[i]];
+  o[parts[parts.length - 1]] = value;
+}
+
+// --------------------------------------------------------------- events
+document.addEventListener('click', function (ev) {
+  const t = ev.target.closest('[data-act]');
+  if (!t || t.disabled) return;
+  const a = t.dataset.act, v = t.dataset.v;
+
+  if (a === 'go') { const n = +t.dataset.n; if (n >= 1 && n <= 7) { enterStep(n); render(); window.scrollTo(0, 0); } return; }
+  if (a === 'reset') { resetAdmin(); S = fresh(); render(); window.scrollTo(0, 0); toast('Demo reset'); return; }
+  if (a === 'screen') { S.screen = v; render(); return; }
+  if (a === 'tab') { S.tab = v; S.peek = null; render(); return; }
+  if (a === 'hood') { S.hoodOpen = !S.hoodOpen; render(); return; }
+
+  if (a === 'gtype') { S.setup.type = v; render(); return; }
+  if (a === 'create') { createGroup(); render(); toast('Created ' + S.group.name + ' in ' + S.org.name); return; }
+  if (a === 'copylink') { shareLink(); render(); toast('Join link copied. Anyone who opens it can sign up and join ' + S.group.name + '.'); return; }
+  if (a === 'replacelink') { toast('Replacing gives the group a new token: the old link stops working, and members stay.'); return; }
+
+  if (a === 'openlink') { S.p = 'signup'; render(); return; }
+  if (a === 'signup') { signUp(); render(); return; }
+  if (a === 'consent') { giveConsent(); render(); return; }
+  if (a === 'join') { joinGroup(); render(); toast('Ada has joined ' + S.group.name); return; }
+  if (a === 'p-home') { S.p = 'home'; render(); return; }
+  if (a === 'p-open') { S.p = 'section'; S.pSection = v; render(); return; }
+  if (a === 'p-visible') { S.p = 'visible'; render(); return; }
+  if (a === 'refresh') {
+    S.pPrevSeen = S.pSeenAt; S.pSeenAt = S.clock;
+    if (S.step === 3 && S.p !== 'section') { S.p = 'section'; S.pSection = 'designed'; }
+    render(); toast('Ada\u2019s screen refreshed'); return;
+  }
+
+  if (a === 'vedit') {
+    S.editing = v;
+    const o = overrideFor(v);
+    S.video = o ? { url: o.provider === 'YouTube' ? 'https://youtu.be/' + o.video_id : 'https://vimeo.com/' + o.video_id, title: o.title, mode: o.mode, err: '' }
+                : { url: PASTOR_VIDEO.url, title: PASTOR_VIDEO.title, mode: 'before', err: '' };
+    render(); return;
+  }
+  if (a === 'vmode') { S.video.mode = v; render(); return; }
+  if (a === 'vcancel') { S.editing = null; S.video.err = ''; render(); return; }
+  if (a === 'vsave') {
+    if (saveVideo(v)) { render(); toast('Saved. People in ' + S.org.name + ' will see it next time they open ' + SECTIONS.find(function (s) { return s.id === v; }).title.toLowerCase() + '.'); }
+    else render();
+    return;
+  }
+
+  if (a === 'filter') { S.filter = v; render(); return; }
+  if (a === 'peek') { S.peek = S.peek === v ? null : v; render(); return; }
+  if (a === 'nudge-notstarted') {
+    S.step = 5; S.tab = 'messages'; clearFresh();
+    applyTemplate('nudge'); S.msg.filter = 'notstarted';
+    render(); window.scrollTo(0, 0); return;
+  }
+
+  if (a === 'aud') { S.msg.audience = v; S.msg.touched = true; render(); return; }
+  if (a === 'mfilter') { S.msg.filter = v; S.msg.touched = true; render(); return; }
+  if (a === 'send') {
+    const list = recipients();
+    clearFresh();
+    write('group_message', { sender: ADMIN.id, group_id: GROUP_ID, audience: S.msg.audience, filter: S.msg.filter,
+      recipients: list.length, subject: S.msg.subject, reply_to: ADMIN.email },
+      'msg-' + S.clock);
+    S.db.group_message[S.db.group_message.length - 1].summary = plural(list.length, 'participant') + ' (' + S.msg.filter + ')';
+    S.msg.touched = true;
+    render(); toast('Sent to ' + plural(list.length, 'person', 'people') + '. Replies will go to ' + ADMIN.email + '.'); return;
+  }
+
+  if (a === 'rtab') { S.resultsTab = v; render(); return; }
+  if (a === 'q5') { S.q5Fell = !S.q5Fell; render(); return; }
+});
+
+document.addEventListener('change', function (ev) {
+  const t = ev.target;
+  if (t.dataset.act === 'tpl') { applyTemplate(t.value); S.msg.touched = true; render(); }
+  if (t.dataset.act === 'cansee') { S.cansee = +t.value; render(); }
+});
+
+document.addEventListener('input', function (ev) {
+  const t = ev.target;
+  if (!t.dataset.bind) return;
+  setPath(t.dataset.bind, t.value);
+  if (t.dataset.bind.indexOf('msg.') === 0) S.msg.touched = true;
+  if (t.dataset.bind.indexOf('video.') === 0) S.video.err = '';
+  render();
+});
+
+// ----------------------------------------------------------------- start
+S = fresh();
+render();
+
+</script>
+</body>
+</html>
