@@ -4,7 +4,7 @@
 
 **Blocked by:** A1 (Organisations, groups, membership and permissions, with can_see)
 
-**Status:** claimed
+**Status:** resolved
 
 **Spec:** Pages; User Stories › Your groups
 
@@ -12,7 +12,7 @@
 - [x] Admins' names are not shown
 - [x] "Leave this group" asks for confirmation, then ends the membership; the participant's answers are untouched
 - [x] After leaving, the group's admins can no longer see the participant's progress
-- [ ] A participant in no group is told so
+- [x] A participant in no group is told so
 
 **Carried from B1**
 

@@ -111,3 +111,10 @@ def test_after_leaving_the_groups_admin_can_no_longer_see_the_participants_progr
     client.post(f"/groups/{cohort.pk}/leave/")
 
     assert can_see(admin, participant, PROGRESS) is False
+
+
+@pytest.mark.django_db
+def test_a_participant_in_no_group_is_told_so(client, participant):
+    page = text_of(main_of(client.get(YOUR_GROUPS).content.decode()))
+
+    assert "You're not in any groups." in page

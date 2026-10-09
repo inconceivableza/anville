@@ -12,5 +12,7 @@
       {% include "organisations/what_admins_see.html" %}
       <p><a href="{% url 'leave_group' group.pk %}">Leave this group</a></p>
     </section>
+  {% empty %}
+    <p>You're not in any groups.</p>
   {% endfor %}
 {% endblock content %}
