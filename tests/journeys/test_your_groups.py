@@ -6,6 +6,7 @@ import pytest
 
 from access.models import Account
 from organisations.models import Group, Membership, Organisation, Permission
+from organisations.visibility import PROGRESS, can_see
 from tests.journeys.pages import main_of, text_of
 from tests.documents import pathway_document
 from tests.journeys.test_consent import answer, give_consent
@@ -96,3 +97,17 @@ def test_leaving_asks_for_confirmation_then_ends_the_membership_and_keeps_the_an
     assert "Autumn cohort" not in text_of(main_of(client.get(YOUR_GROUPS).content.decode()))
     assert progress_before.startswith("1 of ")
     assert hub_progress(client) == progress_before
+
+
+@pytest.mark.django_db
+def test_after_leaving_the_groups_admin_can_no_longer_see_the_participants_progress(
+    client, participant, django_user_model
+):
+    cohort = a_group("Example Church", "Autumn cohort")
+    Membership.objects.create(participant=participant, group=cohort)
+    admin = an_admin_of(cohort, django_user_model, "Bartholomew")
+    assert can_see(admin, participant, PROGRESS) is True
+
+    client.post(f"/groups/{cohort.pk}/leave/")
+
+    assert can_see(admin, participant, PROGRESS) is False
