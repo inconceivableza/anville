@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "engine",
+    "organisations",
     "django_vite",
 ]
 

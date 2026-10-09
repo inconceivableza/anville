@@ -267,3 +267,10 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - From the bookmarked link in a different browser (no cookie), the assessment can be sent too, and the page it lands on is that link's.
 - With the widget open in two tabs, sending from the second says "Your assessment has already been sent." beneath its button, not a connection error.
 - The participant's own sort widget still reads in the first person, with "See my results →".
+
+## Organisations and groups in the operator's admin (`/admin/`, as a superuser)
+
+- The index has an "Organisations and groups" section with Groups, Memberships, Organisations and Permissions, apart from "Authentication and Authorization"'s own Groups.
+- Adding an organisation shows a Permissions row under its name: typing part of an email in Holder finds the account, and saving with a capability makes the organisation and its first organisation admin in one go. The permission then lists the organisation and no group.
+- Adding a group to it, with a type of Cohort or Team, shows its join token read-only once saved, and the same Permissions rows, plus Memberships where a participant can be found by email. Adding the same participant twice is refused with a message on the form, not an error page.
+- On the Permissions list, adding one with both an organisation and a group, or neither, is refused with a message on the form.
