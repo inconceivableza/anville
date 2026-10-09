@@ -1,0 +1,16 @@
+{% extends "engine/participant.html" %}
+{# ✨ The confirmation before a participant leaves a group (ticket C1). Nothing changes until the form is sent. #}
+{% block head_title %}Leave {{ group.name }}{% endblock head_title %}
+
+{% block content %}
+  <h1>Leave {{ group.name }}?</h1>
+  <p>
+    {{ group.name }}, in {{ group.organisation.name }}. If you leave, its admins and its organisation's admins
+    no longer see anything about you through it. Your answers stay as they are.
+  </p>
+  <form method="post" action="{% url 'leave_group' group.pk %}" class="consent-choices">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-full">Leave this group</button>
+    <a class="btn btn-secondary btn-full" href="{% url 'your_groups' %}">Stay in this group</a>
+  </form>
+{% endblock content %}
