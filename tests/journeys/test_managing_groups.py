@@ -33,3 +33,19 @@ def test_an_organisation_admin_creates_a_team_that_appears_at_once_with_its_own_
     assert set(groups) == {"Autumn cohort", "Worship team"}
     assert "Team" in groups["Worship team"]
     assert join_link(team) in groups["Worship team"] and team.join_token != cohort.join_token
+
+
+@pytest.mark.django_db
+def test_a_group_admin_is_not_offered_and_is_refused_a_new_group(client, django_user_model):
+    cohort = a_group("Example Church", "Autumn cohort")
+    admin = an_account(client, django_user_model, "admin")
+    Permission.objects.create(holder=admin, capability=Permission.Capability.MANAGE, group=cohort)
+
+    assert new_group_form(client) is None
+
+    refused = client.post(
+        f"/organisations/{cohort.organisation.pk}/groups/new/", {"name": "Worship team", "type": "team"}
+    )
+
+    assert refused.status_code == 403
+    assert not Group.objects.filter(name="Worship team").exists()
