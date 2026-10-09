@@ -31,7 +31,9 @@ printf '%s\n' "$BACKUP_KNOWN_HOSTS" > "$WORK/known_hosts"
 
 send() {
   # Reads sftp commands from standard input. The host key must match: a dump is never sent to a stranger.
-  sftp -q -b - \
+  # LogLevel=ERROR, not -q, which would hide why a connection failed: a refused key or an unknown host key.
+  sftp -b - \
+    -o LogLevel=ERROR \
     -i "$WORK/key" \
     -o IdentitiesOnly=yes \
     -o BatchMode=yes \

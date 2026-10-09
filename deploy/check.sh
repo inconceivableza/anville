@@ -15,6 +15,14 @@ DIGEST=sha256:0000000000000000000000000000000000000000000000000000000000000000
 
 echo "== Scripts"
 shellcheck ./*.sh infra/*.sh chart/anville/files/*.sh
+# The workflows and the README run these by name, and a checkout takes each file's mode from git. The chart's
+# own scripts are exempt: they reach a pod through a ConfigMap and are run with sh.
+not_executable=$(git ls-files --stage -- ./*.sh infra/*.sh | awk '$1 != "100755" { print $4 }')
+if [ -n "$not_executable" ]; then
+  echo "Not executable in git, so a workflow cannot run them: $not_executable" >&2
+  echo "Fix with: git update-index --chmod=+x <file>" >&2
+  exit 1
+fi
 
 echo "== anville-bootstrap"
 helm lint --quiet chart/anville-bootstrap
