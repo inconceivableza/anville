@@ -4,7 +4,6 @@ from typing import NamedTuple
 from django.db.models import Count, Exists, OuterRef, Q
 
 from access.consent import current_consents
-from access.models import name_shown_for
 from engine.hub import complete_sections, track_sections
 from engine.models import Response
 from organisations.models import Group, Membership, Organisation, Permission
@@ -63,15 +62,25 @@ def members_seen_by(viewer, group):
     members = [
         _progress(membership, responses.get(membership.participant_id))
         if membership.consented
-        else MemberProgress(name_shown_for(membership.participant), consented=False)
+        else MemberProgress(_name_of(membership.participant), consented=False)
         for membership in memberships
     ]
     return sorted(members, key=lambda member: member.name.casefold())
 
 
+# ✨ Shown for a member with no display name, such as an account made with `createsuperuser`.
+WITHOUT_DISPLAY_NAME = "A member with no display name"
+
+
+def _name_of(participant):
+    """✨ A member's display name, or `WITHOUT_DISPLAY_NAME`: never any part of their email, which admins do not see."""
+    account = getattr(participant, "account", None)
+    return account.display_name if account else WITHOUT_DISPLAY_NAME
+
+
 def _progress(membership, response):
     """✨ How far a consenting member is through their track, counted as the hub counts complete sections."""
-    name = name_shown_for(membership.participant)
+    name = _name_of(membership.participant)
     if response is None:
         return MemberProgress(name, consented=True)
     sections = track_sections(response.version.document)

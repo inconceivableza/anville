@@ -208,6 +208,18 @@ def test_a_member_without_current_consent_shows_only_that_they_have_not_consente
 
 
 @pytest.mark.django_db
+def test_a_member_with_no_display_name_shows_no_part_of_their_email(client, django_user_model, cohort_and_admin):
+    """✨ An account made with `createsuperuser` has no display name."""
+    member = django_user_model.objects.create_user(username="privatename", email="privatename@example.com")
+    Membership.objects.create(participant=member, group=cohort_and_admin)
+
+    page = main_of(client.get(YOUR_ORGANISATIONS).content.decode())
+
+    assert len(members_of(client, "Autumn cohort")) == 1
+    assert "privatename" not in page
+
+
+@pytest.mark.django_db
 def test_no_answer_result_letter_or_email_address_appears_even_for_a_finished_member(client, settings):
     """✨ `seed_cohort`'s finished members have written answers and a letter, a self-result and observers' answers."""
     call_command("load_pathway", str(WHATEVER_YOU_DO), stdout=StringIO())
