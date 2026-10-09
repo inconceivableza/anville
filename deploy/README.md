@@ -48,9 +48,19 @@ The host's tier is fixed when it is created, and its first label must name it. A
 ## Add an environment
 
 1. Copy an existing directory of `environments/` to `environments/<deployment>-<tier>/` and edit its `values.yaml`: the tier, the host (its canonical name), the hostname.
-2. Create a GitHub Environment of the same name, holding what `secrets.example.yaml` lists. Generate each secret afresh. Give a production environment a required reviewer.
+2. Create a GitHub Environment of the same name, holding what `secrets.example.yaml` lists. Generate each secret afresh. Give a production environment a required reviewer. Set a secret of more than one line (a private key, a known-hosts list) from its file, so its line breaks survive: `gh secret set BACKUP_SSH_KEY --env <environment> < <file>`. Pasted into the web form, a key can lose them, and is then unreadable (`error in libcrypto`).
 3. Point the hostname at the host: a CNAME to the host's canonical name, or an A record with its address where the hostname is a zone's apex and the DNS provider cannot flatten a CNAME (Cloudflare can). In Cloudflare, DNS-only, not proxied. No AAAA record: a host serves over IPv4 only for now. The record must resolve before the first deploy, or no certificate can be issued.
-4. For the backup, create a Storage Box sub-account for this environment alone and give it the public half of `BACKUP_SSH_KEY`.
+4. For the backup, a Storage Box sub-account for this environment alone, so that its key can reach only this environment's dumps:
+   1. In the Hetzner Console, the Storage Box's sub-accounts: create one whose home directory is named after the environment, with **SSH support** on and a password. Its user and host are `<box>-sub<N>` and `<box>-sub<N>.your-storagebox.de`. With SSH support off, every login is refused as `Permission denied ()`, with nothing in the brackets.
+   2. Make a key pair for the backup alone, and install its public half with Hetzner's own command, which asks for the sub-account's password once:
+
+      ```sh
+      ssh-keygen -t ed25519 -N "" -C "<environment> backup" -f ~/.ssh/<environment>-backup
+      cat ~/.ssh/<environment>-backup.pub | ssh -p 23 <box>-sub<N>@<box>-sub<N>.your-storagebox.de install-ssh-key
+      ```
+
+   3. Check that the key alone gets in: `sftp -P 23 -i ~/.ssh/<environment>-backup -o IdentitiesOnly=yes <box>-sub<N>@<box>-sub<N>.your-storagebox.de <<< ls`.
+   4. Set `BACKUP_TARGET` to `sftp://<box>-sub<N>@<box>-sub<N>.your-storagebox.de:23/`, `BACKUP_SSH_KEY` from the private key file, and `BACKUP_KNOWN_HOSTS` from `ssh-keyscan -p 23 <box>-sub<N>.your-storagebox.de`, scanned by the sub-account's own host name.
 5. Deploy.
 
 Removing one is deleting its namespace, its directory and its GitHub Environment.
