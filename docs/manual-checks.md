@@ -274,3 +274,12 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Adding an organisation shows a Permissions row under its name: typing part of an email in Holder finds the account, and saving with a capability makes the organisation and its first organisation admin in one go. The permission then lists the organisation and no group.
 - Adding a group to it, with a type of Cohort or Team, shows its join token read-only once saved, and the same Permissions rows, plus Memberships where a participant can be found by email. Adding the same participant twice is refused with a message on the form, not an error page.
 - On the Permissions list, adding one with both an organisation and a group, or neither, is refused with a message on the form.
+
+## Joining a group by link (`/join/<token>/`, the token from a group in the admin)
+
+- In a private window with the enrolment code on, the link leads to sign up with no "Enrolment code" field. Signing up leads to the consent text; agreeing leads to "Join Example Church, Autumn cohort?" (the group's own names) with the sentence on what its admins see, the same words as on the consent text's group line. "Join" lands on the hub, and the admin's Memberships list now shows the new account in that group.
+- In a fresh private window, `/accounts/signup/` opened without a join link still asks for the enrolment code.
+- Signed in and consented, the link shows the join page at once; "Not now, go to your pathway" leads to the hub and the Memberships list is unchanged. Opening the link again after joining says "You're already in this group" with "Go to your pathway".
+- Signed out with an existing account, following "Sign in" from the sign-up page the link led to and signing in lands on the join page, not the hub.
+- A made-up token in the link says "This link no longer works" and to ask whoever sent it for a new one, and names no group or organisation.
+- Phone width: the join page's heading, sentence and "Join" button fit without the page scrolling sideways.

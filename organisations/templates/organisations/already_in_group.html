@@ -1,0 +1,8 @@
+{% extends "allauth/layouts/base.html" %}
+{# ✨ A join link opened by someone already in its group. Opening it again changes nothing. #}
+{% block head_title %}You're already in this group{% endblock head_title %}
+
+{% block content %}
+  <h1>You're already in this group</h1>
+  <a class="btn btn-primary btn-full" href="{% url 'hub' %}">Go to your pathway</a>
+{% endblock content %}

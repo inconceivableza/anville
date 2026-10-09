@@ -16,7 +16,7 @@ def join(request, token):
 
     Otherwise the link is held in the session, so sign-up drops the enrolment code, and the visitor is sent to sign
     up, then to consent, each told to come back here. The page names the group and what its admins see; only "Join"
-    records anything, and it leads to the hub.
+    records anything, and it leads to the hub. A member opening the link again is told so and offered the hub.
     """
     group = Group.objects.filter(join_token=token).select_related("organisation").first()
     if group is None:
@@ -26,6 +26,9 @@ def join(request, token):
         return _then_back_here("account_signup", request)
     if current_consent(request.user) is None:
         return _then_back_here("consent", request)
+    if Membership.objects.filter(participant=request.user, group=group).exists():
+        joining.release(request.session)
+        return render(request, "organisations/already_in_group.html")
     if request.method == "POST":
         Membership.objects.get_or_create(participant=request.user, group=group)
         joining.release(request.session)
