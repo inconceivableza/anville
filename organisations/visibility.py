@@ -12,6 +12,12 @@ from organisations.models import Group, Membership, Organisation, Permission
 PROGRESS = "progress"
 
 
+def _on_group_or_its_organisation(group, organisation):
+    """✨ Permissions that reach a group: those on `group` itself or on `organisation`, the one it belongs to. Either
+    may be an `OuterRef`, so the same rule serves a subquery and a single group."""
+    return Q(group=group) | Q(organisation=organisation)
+
+
 def _memberships_seen_by(viewer):
     """✨ `can_see`'s rule, as one query that both it and `members_seen_by` read: the memberships of groups on which
     `viewer` holds a permission that sees progress, on the group or on its organisation. Each carries `consented`,
@@ -20,7 +26,7 @@ def _memberships_seen_by(viewer):
         # ✨ Named rather than left out, so a capability added later sees no progress until it is listed here.
         holder=viewer,
         capability__in=[Permission.Capability.MANAGE, Permission.Capability.SEE_PROGRESS],
-    ).filter(Q(group=OuterRef("group")) | Q(organisation=OuterRef("group__organisation")))
+    ).filter(_on_group_or_its_organisation(OuterRef("group"), OuterRef("group__organisation")))
     return Membership.objects.filter(Exists(sees_progress)).annotate(
         consented=Exists(current_consents().filter(participant=OuterRef("participant")))
     )
@@ -101,7 +107,7 @@ def administered(viewer):
     Each group carries `member_count`, and `manages`, whether the viewer holds `manage` on it or its organisation,
     which is what copying and replacing its join link need."""
     held = Permission.objects.filter(holder=viewer)
-    on_group = held.filter(Q(group=OuterRef("pk")) | Q(organisation=OuterRef("organisation")))
+    on_group = held.filter(_on_group_or_its_organisation(OuterRef("pk"), OuterRef("organisation")))
     groups = (
         Group.objects.filter(Exists(on_group))
         .annotate(
@@ -135,6 +141,6 @@ def manages_group(viewer, group):
     """✨ Whether `viewer` holds `manage` on `group` or its organisation, so may copy and replace its join link."""
     return (
         Permission.objects.filter(holder=viewer, capability=Permission.Capability.MANAGE)
-        .filter(Q(group=group) | Q(organisation=group.organisation_id))
+        .filter(_on_group_or_its_organisation(group, group.organisation_id))
         .exists()
     )
