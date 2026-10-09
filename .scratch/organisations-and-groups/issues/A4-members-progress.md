@@ -4,12 +4,12 @@
 
 **Blocked by:** A3 (Your organisations)
 
-**Status:** claimed
+**Status:** resolved
 
 **Spec:** Progress; `can_see`; Pages
 
 - [x] Each member the admin may see shows their display name, sections complete out of the sections in their track, and the date (no time) they were last active
 - [x] A member with no response shows as not started
 - [x] A member without current consent shows "hasn't consented" and nothing else
-- [ ] No answer, result, letter or email address appears anywhere on the page
-- [ ] The list is built from one query for the group that applies the same rule as `can_see`, not by asking member by member
+- [x] No answer, result, letter or email address appears anywhere on the page
+- [x] The list is built from one query for the group that applies the same rule as `can_see`, not by asking member by member

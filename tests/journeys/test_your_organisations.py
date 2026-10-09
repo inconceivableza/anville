@@ -2,11 +2,17 @@
 member count and join link to copy."""
 
 import re
+from io import StringIO
+from pathlib import Path
 
 import pytest
+from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.test import Client
 
 from access.models import Account
+from engine.models import Publication
+from organisations.management.commands.seed_cohort import ADMIN_EMAIL, SEEDED_TEXT
 from organisations.models import Group, Membership, Organisation, Permission
 from tests.documents import pathway_document
 from tests.journeys.pages import main_of, text_of
@@ -14,6 +20,7 @@ from tests.journeys.test_consent import answer, give_consent, today, withdraw_co
 from tests.journeys.test_your_groups import a_group
 
 YOUR_ORGANISATIONS = "/organisations/"
+WHATEVER_YOU_DO = Path(__file__).resolve().parents[2] / "pathways" / "whatever-you-do.json"
 
 
 def an_account(client, django_user_model, username):
@@ -198,3 +205,23 @@ def test_a_member_without_current_consent_shows_only_that_they_have_not_consente
     members = members_of(client, "Autumn cohort")
 
     assert members == {"Kai": "Kai · hasn't consented", "Wen": "Wen · hasn't consented"}
+
+
+@pytest.mark.django_db
+def test_no_answer_result_letter_or_email_address_appears_even_for_a_finished_member(client, settings):
+    """✨ `seed_cohort`'s finished members have written answers and a letter, a self-result and observers' answers."""
+    call_command("load_pathway", str(WHATEVER_YOU_DO), stdout=StringIO())
+    settings.DEBUG = True
+    call_command("seed_cohort", stdout=StringIO())
+    client.force_login(get_user_model().objects.get(email=ADMIN_EMAIL))
+    document = Publication.current_version().document
+    frameworks = document["measurement"]["frameworks"]
+    results = [construct["label"] for framework in frameworks for construct in framework["constructs"]]
+    labels = [bucket["label"] for bucket in document["instrument"]["buckets"]]
+    placements = [label if isinstance(label, str) else label["participant"] for label in labels]
+
+    page = text_of(main_of(client.get(YOUR_ORGANISATIONS).content.decode()))
+
+    assert re.fullmatch(r"Ines · (\d+) of \1 sections · last active .+", members_of(client, "Autumn cohort")["Ines"])
+    assert SEEDED_TEXT not in page and "@" not in page
+    assert not [label for label in results + placements if label in page]

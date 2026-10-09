@@ -303,3 +303,4 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - With `manage` on the Autumn cohort only: the page shows Example Church with the Autumn cohort alone. With `see_progress` only, the group shows its type and member count but no join link.
 - An account that has not consented reaches the page by typing `/organisations/`, and is not sent to the consent text.
 - Phone width: the link field and Copy stay on one line without the page scrolling sideways.
+- Members' progress (after `seed_cohort`, signed in as the admin it prints): the Autumn cohort lists its twelve members by first name, A to Z. Ada, Ben and Cara say "not started"; Femi says "hasn't consented" and nothing else; the rest say "N of M sections · last active" with today's date and no time, the finished ones with N equal to M. No email address, answer, result or letter text appears, and the list reads well at phone width.
