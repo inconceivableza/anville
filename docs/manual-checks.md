@@ -293,3 +293,13 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Signed out with an existing account, following "Sign in" from the sign-up page the link led to and signing in lands on the join page, not the hub.
 - A made-up token in the link says "This link no longer works" and to ask whoever sent it for a new one, and names no group or organisation.
 - Phone width: the join page's heading, sentence and "Join" button fit without the page scrolling sideways.
+
+## Your organisations (`/organisations/`, after giving the account a permission in the admin)
+
+- With no permission, the hub's foot shows "Your consent · Your groups" only, and `/organisations/` says the page is for admins and offers the pathway, naming no organisation or group. After adding a permission, "Your organisations" joins the same line, as quiet as the others.
+- With `manage` on Example Church: the page has the header, as the hub does, and shows Example Church with each of its groups under it, each with its name, "Cohort" or "Team", its member count ("1 member", "3 members"), and its join link in a read-only field with Copy. A group in another organisation does not appear.
+- Copy puts the whole link on the clipboard and reads "Copied"; pasting it in a private window opens the join page for that group. Without JavaScript, there is no Copy button, and the link in the field can be selected and copied by hand.
+- The browser's console shows no error on loading the page or pressing Copy.
+- With `manage` on the Autumn cohort only: the page shows Example Church with the Autumn cohort alone. With `see_progress` only, the group shows its type and member count but no join link.
+- An account that has not consented reaches the page by typing `/organisations/`, and is not sent to the consent text.
+- Phone width: the link field and Copy stay on one line without the page scrolling sideways.

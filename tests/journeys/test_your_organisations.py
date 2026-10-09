@@ -110,3 +110,20 @@ def test_an_admin_who_has_not_consented_still_gets_the_page(client, django_user_
 
     assert page.status_code == 200
     assert set(groups_on(client)) == {"Autumn cohort"}
+
+
+@pytest.mark.django_db
+def test_the_join_link_has_a_copy_button_run_by_the_pages_script_not_by_htmx(client, django_user_model):
+    """✨ The clipboard itself is a manual check; here, that the button names the field holding the link, and that
+    nothing on the page asks htmx to run code (ADR 0006)."""
+    cohort = a_group("Example Church", "Autumn cohort")
+    admin = an_account(client, django_user_model, "admin")
+    Permission.objects.create(holder=admin, capability=Permission.Capability.MANAGE, group=cohort)
+
+    section = groups_on(client)["Autumn cohort"]
+    page = client.get(YOUR_ORGANISATIONS).content.decode()
+
+    copies = re.search(r'<button type="button"[^>]*data-copy="([^"]+)"[^>]*>Copy</button>', section).group(1)
+    field = re.search(rf'<input[^>]*id="{copies}"[^>]*>', section).group(0)
+    assert f'value="{join_link(cohort)}"' in field and "readonly" in field
+    assert "hx-on" not in page and "eval" not in page

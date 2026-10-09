@@ -144,8 +144,8 @@ document.addEventListener("htmx:afterSettle", (event) => {
   heading.focus({ preventScroll: true });
 });
 
-// ✨ Copy an issued observer link, as the prototype's Copy button does. Without JavaScript the field is still there
-// to select and copy by hand.
+// ✨ Copy an issued observer or coach link, as the prototype's Copy button does, or a group's join link. Without
+// JavaScript the field is still there to select and copy by hand.
 document.addEventListener("click", async (event) => {
   const button = event.target.closest("[data-copy]");
   if (!button) return;

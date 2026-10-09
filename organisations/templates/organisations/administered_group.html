@@ -7,6 +7,8 @@
       <label for="join-link-{{ group.pk }}">Join link</label>
       <div class="invitation-link-row">
         <input type="text" id="join-link-{{ group.pk }}" value="{{ group.join_link }}" readonly>
+        {# ✨ Run by the page's script (frontend/src/main.js), as the observer links' Copy is; htmx runs no code here (ADR 0006). #}
+        <button type="button" class="btn btn-primary invitation-copy" data-copy="join-link-{{ group.pk }}">Copy</button>
       </div>
     </div>
   {% endif %}
