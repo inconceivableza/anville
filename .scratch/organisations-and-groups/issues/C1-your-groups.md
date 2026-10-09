@@ -4,7 +4,7 @@
 
 **Blocked by:** A1 (Organisations, groups, membership and permissions, with can_see)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Spec:** Pages; User Stories › Your groups
 

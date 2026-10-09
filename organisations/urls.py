@@ -1,3 +1,10 @@
 """✨ Routes for organisations and groups: joining by link, a participant's groups, and admins' pages."""
 
-urlpatterns = []
+from django.urls import path
+
+from organisations.views import leave_group, your_groups
+
+urlpatterns = [
+    path("groups/", your_groups, name="your_groups"),
+    path("groups/<int:group_id>/leave/", leave_group, name="leave_group"),
+]
