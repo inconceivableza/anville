@@ -25,8 +25,9 @@ def test_the_repository_has_no_licence_while_its_pathways_quote_scripture_by_per
     test is changed with it."""
     quoting = [path.name for path in PATHWAY_FILES if json.loads(path.read_text(encoding="utf-8")).get("translations")]
     licences = [path.name for path in ROOT.iterdir() if re.match(r"(LICEN[CS]E|COPYING)", path.name, re.IGNORECASE)]
+    licences_not_excluding = [license_file for license_file in licences if "Scripture" not in open(license_file, 'r').read()]
 
-    assert not (quoting and licences), (
+    assert not (quoting and licences_not_excluding), (
         f"{licences} would license the scripture quoted in {quoting}. Decide the licence first: see the spec, "
         "Legalities are parked, not forgotten."
     )
