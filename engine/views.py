@@ -144,6 +144,9 @@ def hub(request):
             "hub": hub,
             "coach": _coach_of(state.response),
             "coach_page": _coach_page_of(state.version.document, hub),
+            "voices": _hub_voices(state.response),
+            "baseline": _hub_baseline(state.version.document, state),
+            "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
 
@@ -676,6 +679,32 @@ def _coach_of(response):
         "can_see": accepted is not None,
         "shared": accepted is not None and accepted.results_shared_at is not None,
     }
+
+
+def _hub_voices(response):
+    """✨ The trusted-voices card on the hub: how many people the participant has invited, how many have replied,
+    their names, and the most they can invite."""
+    if response is None:
+        return {"invited": 0, "replied": 0, "names": [], "max": MAX_CONTACTS}
+    contacts = response.contacts.filter(role=Contact.Role.CONTACT).select_related("invitation").order_by("position")
+    names = [contact.name for contact in contacts]
+    replied = sum(1 for contact in contacts if contact.live_invitation() and contact.live_invitation().claimed_at)
+    return {"invited": len(names), "replied": replied, "names": names, "max": MAX_CONTACTS}
+
+
+def _hub_baseline(document, state):
+    """✨ The "Where you started" card on the hub: the participant's own scores on the sort, the top constructs by
+    percent, or None before they have a result."""
+    scored = _scored_block(document)
+    if scored is None:
+        return None
+    result = Result.objects.filter(response=state.response, block_id=scored["id"]).first()
+    if result is None:
+        return None
+    shown = results_page(document, result.scores, state.answers.get(scored["id"], {}), name_shown_for(state.response.participant))
+    bars = [bar for framework in shown["frameworks"] for bar in framework["bars"]]
+    bars.sort(key=lambda bar: bar["percent"], reverse=True)
+    return [{"label": bar["label"], "percent": bar["percent"]} for bar in bars[:4]]
 
 
 @login_required

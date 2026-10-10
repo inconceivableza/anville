@@ -368,129 +368,315 @@ h2 {
 /* The hub: the next-step banner, progress, and the section list with its status chips. All of it is
    derived by the engine, so none of these rules are ever driven by authored content. */
 
-.next-step {
-  background: var(--gold-pale);
-  border: 1px solid var(--gold-light);
-  border-radius: var(--radius);
-  padding: var(--space-lg) var(--space-lg);
-  margin-bottom: 20px;
+/* ---------- HUB ---------- */
+.wrap {
+  max-width: 1180px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 48px);
 }
 
-.next-step-label {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--gold);
-  margin-bottom: 4px;
+.hub {
+  background: var(--cream);
+  border-radius: var(--radius-xl);
+  margin: calc(-1 * var(--space-xl)) calc(-1 * var(--space-2xl)) 0;
+  padding: var(--space-xl) var(--space-2xl) var(--space-4xl);
 }
 
-.next-step-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  font-weight: 600;
-  margin-bottom: 16px;
-}
-
-.progress {
-  font-size: var(--text-sm);
-  color: var(--ink-muted);
-  margin-bottom: 20px;
-}
-
-.hub-sections {
-  list-style: none;
-}
-
-.hub-section {
+.hub-head {
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: end;
+  gap: var(--space-lg);
+  padding: var(--space-lg) 0 var(--space-xl);
+}
+
+.hub-head h1 {
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 300;
+}
+
+.hub-head h1 i {
+  font-family: var(--font-script);
+  font-style: normal;
+  font-size: 1.15em;
+}
+
+.hub-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .hub-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.next {
+  min-height: 200px;
+  color: var(--on-dark);
+  display: grid;
+  align-content: end;
+  padding: clamp(22px, 4vw, 36px);
+  border-radius: var(--radius-md);
+  background: var(--hero-bg);
+}
+
+.next::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(29, 20, 19, 0.85), rgba(29, 20, 19, 0.15));
+}
+
+.next > *:not(img) {
+  position: relative;
+  z-index: 2;
+}
+
+.next h2 {
+  font-size: clamp(32px, 3.6vw, 44px);
+  font-weight: 300;
+  margin: var(--space-sm) 0 var(--space-sm);
+}
+
+.next p {
+  color: var(--on-dark-2);
+  max-width: 46ch;
+  margin-bottom: var(--space-lg);
+}
+
+.slist {
+  margin-top: var(--space-md);
+  display: grid;
+}
+
+.srow {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: var(--space-md);
   align-items: center;
-  gap: var(--space-sm);
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-lg) var(--space-lg);
-  margin-bottom: 12px;
+  padding: var(--space-lg) var(--space-2xs);
+  border-top: 1px solid var(--cream-2);
 }
 
-.hub-section.is-next {
-  border-color: var(--gold);
-  box-shadow: 0 2px 8px var(--shadow);
+.srow .n {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--muted);
 }
 
-.hub-section-title {
-  font-family: var(--font-heading);
+.srow h3 {
   font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--ink);
 }
 
-a.hub-section-title:hover {
+.srow h3 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.srow h3 a:hover {
   color: var(--gold);
 }
 
-.hub-section-note {
-  flex-basis: 100%;
+.srow p {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
 }
 
-/* ✨ A part of a section (the Strengths assessment within Section 1), on a line of its own within that section's card,
+.srow.locked h3 {
+  color: var(--muted);
+}
+
+.srow.locked h3 a {
+  color: var(--muted);
+}
+
+.srow-note {
+  margin-top: var(--space-2xs);
+}
+
+/* ✨ A part of a section (the Strengths assessment within Section 1), on a line of its own within that section's entry,
    indented and quieter than a section of its own (ticket 41b) */
 .hub-parts {
-  flex-basis: 100%;
   list-style: none;
-  padding-left: 24px;
+  margin-top: var(--space-sm);
+  padding-left: var(--space-lg);
 }
 
-.hub-parts .hub-section {
-  padding: var(--space-sm) var(--space-md);
-  margin-bottom: 0;
-  background: var(--cream);
+.hub-parts .srow {
+  padding: var(--space-sm) var(--space-2xs);
 }
 
-.hub-parts .hub-section-title {
+.hub-parts .srow h3 {
   font-size: var(--text-md);
 }
 
-/* An authored "About 15 minutes": beside a hub entry's title, under a section's heading, above an activity */
-
-.time-estimate {
-  font-size: var(--text-sm);
-  color: var(--ink-muted);
-}
-
-p.time-estimate {
-  margin-bottom: 16px;
-}
-
-/* On the hub, at the right-hand end of the title's line, so the estimates line up down the page whatever the
-   titles' lengths; on a phone, a line of its own under the title (see the 600px breakpoint) */
-.hub-section .time-estimate {
-  margin-left: auto;
-}
-
-.status-chip {
-  flex-shrink: 0;
+.tag {
+  font-family: var(--font-mono);
   font-size: var(--text-xs);
-  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
   padding: var(--space-2xs) var(--space-sm);
   border-radius: var(--radius-pill-shape);
-  background: var(--cream);
-  color: var(--ink-muted);
+  background: var(--cream-2);
+  color: var(--muted);
+  white-space: nowrap;
 }
 
-.status-in-progress {
-  background: var(--gold-pale);
-  color: var(--gold);
+.tag.go {
+  background: var(--green);
+  color: var(--green-ink);
 }
 
-.status-complete {
-  background: var(--gold);
-  color: var(--white);
+.side {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.card {
+  background: var(--paper);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.card.dark {
+  background: var(--brown);
+  color: var(--on-dark);
+}
+
+.card.dark p {
+  color: var(--on-dark-2);
+}
+
+.card h3 {
+  font-size: var(--text-lg);
+}
+
+.card p {
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.card .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.meter {
+  display: grid;
+  gap: var(--space-2xs);
+  font-size: 12.5px;
+}
+
+.meter .lbl {
+  display: flex;
+  justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+}
+
+.meter .tr {
+  height: 3px;
+  background: rgba(255, 240, 220, 0.15);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.meter .tr i {
+  display: block;
+  height: 100%;
+  background: var(--green);
+  transition: width 0.5s;
+}
+
+.names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.names li {
+  font-size: 12.5px;
+  padding: var(--space-2xs) var(--space-sm);
+  border-radius: var(--radius-pill-shape);
+  background: rgba(255, 240, 220, 0.12);
+}
+
+.base {
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.base .b {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px 18px;
+  gap: var(--space-sm);
+  align-items: center;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.base .tr {
+  height: 3px;
+  background: var(--cream-2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.base .tr i {
+  display: block;
+  height: 100%;
+  background: var(--brown-3);
+}
+
+.base b {
+  text-align: right;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The hub's own nav, replacing the old sidebar header (ticket 41a) */
+.nav.light {
+  position: relative;
+  color: var(--ink);
+  display: flex;
+  justify-content: space-between;
+}
+
+.nav.light .mark {
+  color: var(--ink);
+}
+
+.linkbtn {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 13.5px;
+}
+
+.linkbtn:hover {
+  color: var(--ink);
+}
+
+/* The hub breaks out of the 720px container; on a phone it fills the width */
+@media (max-width: 720px) {
+  .hub {
+    margin: calc(-1 * var(--space-xl)) 0 0;
+    border-radius: 0;
+  }
 }
 
 /* A section page: the way back, and the completion the participant chooses */
