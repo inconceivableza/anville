@@ -16,27 +16,32 @@
  */
 
 @import "@fontsource-variable/newsreader/opsz.css";
-@import "@fontsource-variable/instrument-sans";
+@import "@fontsource-variable/inter";
+@import "@fontsource/pinyon-script";
+@import "@fontsource/ibm-plex-mono";
 
 :root {
   color-scheme: light;
-  --gold: #1a7a4c;
-  --gold-dark: #156941;
-  --gold-light: #2e9e66;
-  --gold-pale: #e8f5ee;
-  --gold-glow: rgba(26, 122, 76, 0.2);
-  --focus-ring: rgba(26, 122, 76, 0.15);
-  --ink: #1a2b20;
-  --ink-light: #4a5b50;
-  --ink-muted: #5a6b60;
-  --cream: #f4f7f5;
-  --white: #ffffff;
-  --sage: #5cb37a;
-  --sage-light: #e8f5ee;
+  /* ✨ Whatever You Do palette. The variable names are Anville's (so "--gold" is the lime accent) to keep
+     the rules below portable; only their values changed. New names from the reference HTML are added as
+     aliases where it uses them. */
+  --gold: #a6cf72;
+  --gold-dark: #2f5a2b;
+  --gold-light: #b8dd8a;
+  --gold-pale: #eef5df;
+  --gold-glow: rgba(166, 207, 114, 0.2);
+  --focus-ring: rgba(166, 207, 114, 0.15);
+  --ink: #1c1714;
+  --ink-light: #3d2d27;
+  --ink-muted: #6c625a;
+  --cream: #f2f0e3;
+  --white: #f8f7ef;
+  --sage: #7a9e5a;
+  --sage-light: #eef5df;
   --red-soft: #c25b56;
   --blue-soft: #4a6fa5;
-  --border: #d0ddd4;
-  --shadow: rgba(15, 92, 60, 0.06);
+  --border: #ddd8c4;
+  --shadow: rgba(29, 20, 19, 0.06);
   /* ✨ A drop-down still waiting for a choice: the prototype's amber "needs-choice" highlight. */
   --needs-choice-border: #e0b850;
   --needs-choice-bg: #fdf8ec;
@@ -48,11 +53,11 @@
   --warn-pale: #fdf6e3;
   --stop-pale: #fbeeed;
   --flag-bg: rgba(255, 255, 255, 0.65);
-  --distinction-rule: rgba(26, 122, 76, 0.18);
+  --distinction-rule: rgba(166, 207, 114, 0.18);
   /* Results: the tones a pathway names for its constructs, and the colours of bars ranked strongest first. */
   --tone-violet: #7b68ee;
   --tone-rose: #c25b56;
-  --tone-green: #1a7a4c;
+  --tone-green: #a6cf72;
   --tone-moss: #5b7a5e;
   --tone-blue: #4a6fa5;
   --tone-brown: #8b7355;
@@ -71,36 +76,36 @@
   --bucket-1: #c25b56;
   --bucket-1-pale: #f5e8e8;
   --bucket-2: #5a8b6a;
-  --bucket-2-pale: #e8f5ee;
+  --bucket-2-pale: #eef5df;
   --bucket-3: #5a6b60;
-  --bucket-3-pale: #f4f7f5;
+  --bucket-3-pale: #f2f0e3;
   --bucket-4: #4a6fa5;
   --bucket-4-pale: #e8eef5;
-  --bucket-5: #5cb37a;
-  --bucket-5-pale: #e8f0e8;
-  /* ✨ The homepage, as the prototypes colour it: the dark green of its menu and coach panel, its footer, the hero
+  --bucket-5: #7a9e5a;
+  --bucket-5-pale: #eef5df;
+  /* ✨ The homepage, as the prototypes colour it: the dark brown of its menu and coach panel, its footer, the hero
      behind the video, and the mockups' tones in the newer "How it works". */
-  --deep: #0f5c3c;
-  --deep-menu: rgba(15, 92, 60, 0.97);
-  --footer: #0a3d28;
-  --hero-bg: #2a2a2a;
+  --deep: #1d1413;
+  --deep-menu: rgba(29, 20, 19, 0.97);
+  --footer: #1d1413;
+  --hero-bg: #2a1d17;
   --hero-shade: rgba(0, 0, 0, 0.35);
   --menu-shade: rgba(0, 0, 0, 0.3);
-  --on-dark: #ffffff;
-  --on-dark-85: rgba(255, 255, 255, 0.85);
-  --on-dark-82: rgba(255, 255, 255, 0.82);
-  --on-dark-70: rgba(255, 255, 255, 0.7);
-  --on-dark-60: rgba(255, 255, 255, 0.6);
-  --on-dark-55: rgba(255, 255, 255, 0.55);
-  --on-dark-35: rgba(255, 255, 255, 0.35);
-  --on-dark-18: rgba(255, 255, 255, 0.18);
-  --on-dark-14: rgba(255, 255, 255, 0.14);
-  --on-dark-12: rgba(255, 255, 255, 0.12);
-  --on-dark-10: rgba(255, 255, 255, 0.1);
-  --on-dark-07: rgba(255, 255, 255, 0.07);
-  --stat-bar: rgba(26, 122, 76, 0.13);
-  --shot-shadow: rgba(15, 92, 60, 0.07);
-  --ink-faint: #7a8b80;
+  --on-dark: #f2ece2;
+  --on-dark-85: rgba(242, 236, 226, 0.85);
+  --on-dark-82: rgba(242, 236, 226, 0.82);
+  --on-dark-70: rgba(242, 236, 226, 0.7);
+  --on-dark-60: rgba(242, 236, 226, 0.6);
+  --on-dark-55: rgba(242, 236, 226, 0.55);
+  --on-dark-35: rgba(242, 236, 226, 0.35);
+  --on-dark-18: rgba(242, 236, 226, 0.18);
+  --on-dark-14: rgba(242, 236, 226, 0.14);
+  --on-dark-12: rgba(242, 236, 226, 0.12);
+  --on-dark-10: rgba(242, 236, 226, 0.1);
+  --on-dark-07: rgba(242, 236, 226, 0.07);
+  --stat-bar: rgba(166, 207, 114, 0.13);
+  --shot-shadow: rgba(29, 20, 19, 0.07);
+  --ink-faint: #8a7f72;
   --mock-blue: #4a7fb5;
   --mock-blue-pale: #eaf1f8;
   --mock-plum: #7b5ea7;
@@ -110,7 +115,21 @@
   --mock-moss: #5b8c5a;
   --radius: 16px;
   --font-heading: "Newsreader Variable", Georgia, serif;
-  --font-body: "Instrument Sans Variable", system-ui, sans-serif;
+  --font-body: "Inter Variable", system-ui, sans-serif;
+  --font-script: "Pinyon Script", "Snell Roundhand", "Apple Chancery", cursive;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* ✨ Aliases from the reference HTML, so its rules can be dropped in verbatim. */
+  --paper: #f8f7ef;
+  --brown: #1d1413;
+  --brown-2: #2b1f1c;
+  --brown-3: #3d2d27;
+  --cream-2: #e8e4d3;
+  --muted: #6c625a;
+  --green: #a6cf72;
+  --green-ink: #1d2a10;
+  --green-deep: #2f5a2b;
+  --on-dark-2: #c9bdb0;
 
   /* Spacing scale (base 4px). */
   --space-2xs: 0.25rem;   /* 4px */
