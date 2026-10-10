@@ -414,11 +414,13 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   }
 
   const angle = 360 / cards.length;
+  const cardInterval = 7000;
   let radius = 0;
   let rotation = 0;
   let drag;
   let pausedByUser = false;
   let interactionPaused = false;
+  let lastFrame;
   let transitionUntil = 0;
   let transitionTimer;
   const toggle = stage.querySelector("[data-ring-toggle]");
@@ -436,8 +438,10 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
     ring.style.transform = `rotateY(${rotation}deg)`;
   };
   const tick = (now) => {
+    const elapsed = lastFrame === undefined ? 0 : Math.min(now - lastFrame, 64);
+    lastFrame = now;
     if (!pausedByUser && !interactionPaused && !drag && now >= transitionUntil) {
-      rotation -= 0.035;
+      rotation -= angle * elapsed / cardInterval;
       draw();
     }
     requestAnimationFrame(tick);
