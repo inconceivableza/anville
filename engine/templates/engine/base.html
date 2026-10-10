@@ -13,6 +13,12 @@
     {% vite_asset 'src/main.js' %}
   </head>
   <body>
+    <svg aria-hidden="true">
+      <symbol id="mark" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="16" cy="16" r="4"/><ellipse cx="16" cy="8" rx="3.4" ry="5.5"/><ellipse cx="16" cy="24" rx="3.4" ry="5.5"/><ellipse cx="8" cy="16" rx="5.5" ry="3.4"/><ellipse cx="24" cy="16" rx="5.5" ry="3.4"/><ellipse cx="10.3" cy="10.3" rx="3" ry="5" transform="rotate(-45 10.3 10.3)"/><ellipse cx="21.7" cy="21.7" rx="3" ry="5" transform="rotate(-45 21.7 21.7)"/><ellipse cx="21.7" cy="10.3" rx="3" ry="5" transform="rotate(45 21.7 10.3)"/><ellipse cx="10.3" cy="21.7" rx="3" ry="5" transform="rotate(45 10.3 21.7)"/></g></symbol>
+      <symbol id="arrow" viewBox="0 0 12 12"><path d="M3 9L9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.4"/></symbol>
+      <symbol id="leaf" viewBox="0 0 24 24"><path d="M5 19C5 10 11 5 20 4c0 9-5 15-14 15z" fill="currentColor" opacity=".9"/><path d="M5 19c3-5 7-9 11-11" fill="none" stroke="#1d1413" stroke-width="1.2" stroke-linecap="round" opacity=".55"/></symbol>
+      <symbol id="tick" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1"/><path d="M5 8.2l2 2 4-4.4" fill="none" stroke="currentColor" stroke-width="1.3"/></symbol>
+    </svg>
     {% block body %}
       {% block header %}{% endblock header %}
       <main class="container">

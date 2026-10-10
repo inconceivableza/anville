@@ -10,57 +10,71 @@
 
 {% block content %}
   {% if hub %}
-    <h1>{{ title }}</h1>
-
-    {% if hub.next_step %}
-      <div class="next-step">
-        <p class="next-step-label">Your next step</p>
-        <p class="next-step-title">{{ hub.next_step.title }}</p>
-        <a class="btn btn-primary" href="{% page_url hub.next_step.id hub.next_step.page %}">
-          {% if hub.next_step.status == 'in-progress' %}Carry on{% else %}Begin{% endif %}
-        </a>
+    <div class="hub">
+      <div class="wrap">
+        <div class="hub-head">
+          <div style="display:grid;gap:10px"><h1>Welcome, <i>{{ name }}</i></h1></div>
+          <span class="label" style="color:var(--muted)">Progress: {{ hub.answered }} of {{ hub.total }} items answered</span>
+        </div>
+        <div class="hub-grid">
+          <div>
+            {% if hub.next_step %}
+              <div class="panel next">
+                <h2>{{ hub.next_step.title }}</h2>
+                <p>{% if hub.next_step.status == 'in-progress' %}Carry on where you left off.{% else %}This is the next thing waiting for you.{% endif %}</p>
+                <a class="pill" href="{% page_url hub.next_step.id hub.next_step.page %}">
+                  {% if hub.next_step.status == 'in-progress' %}Carry on{% else %}Begin{% endif %}
+                  <span class="ar"><svg width="10" height="10"><use href="#arrow"/></svg></span>
+                </a>
+              </div>
+            {% else %}
+              <div class="panel next">
+                <h2>Nothing is waiting for you right now.</h2>
+                <p>You've completed everything that's open. Check back soon.</p>
+              </div>
+            {% endif %}
+            <div class="slist">
+              {% for entry in hub.outline %}
+                {% include "engine/hub_section.html" with section=entry.section parts=entry.parts number=entry.number %}
+              {% endfor %}
+            </div>
+          </div>
+          <aside class="side">
+            <div class="card dark">
+              <div class="row"><h3>Five trusted voices</h3><span class="tag">{% if voices.invited == 0 %}Not started{% else %}{{ voices.replied }} replied{% endif %}</span></div>
+              <p>Invite people who know you well. Their anonymous answers sit beside your own in Section 1.</p>
+              <div class="meter"><div class="lbl"><span>Invited</span><span>{{ voices.invited }} / {{ voices.max }}</span></div><div class="tr"><i style="width:{% widthratio voices.invited voices.max 100 %}%"></i></div></div>
+              <div class="meter"><div class="lbl"><span>Replied</span><span>{{ voices.replied }} / {{ voices.max }}</span></div><div class="tr"><i style="width:{% widthratio voices.replied voices.max 100 %}%"></i></div></div>
+              <a class="pill" href="{% url 'invitations' %}">Manage <span class="ar"><svg width="10" height="10"><use href="#arrow"/></svg></span></a>
+              {% if voices.names %}
+                <ul class="names">{% for name in voices.names %}<li>{{ name }}</li>{% endfor %}</ul>
+              {% endif %}
+            </div>
+            <div class="card">
+              <div class="row"><h3>Walk with a mentor</h3><span class="tag">Optional</span></div>
+              <p>When you're ready, ask someone to walk this with you. We'll send them a short briefing pack.</p>
+              {% if coach %}
+                <a class="pill ghost" href="{{ coach.coach_page }}">{% if coach.answer == "accepted" %}{{ coach.name }} is your coach{% elif coach.answer == "declined" %}{{ coach.name }} isn't able to be your coach{% elif coach.answer == "waiting" %}Waiting for {{ coach.name }} to answer{% else %}You've chosen {{ coach.name }}: send {{ coach.name }} a link{% endif %}</a>
+                {% if coach.shared %}<p>{{ coach.name }} can see your results and comparison.</p>{% endif %}
+              {% elif coach_page %}
+                <a class="pill ghost" href="{{ coach_page }}">Invite a mentor</a>
+              {% endif %}
+            </div>
+            {% if baseline %}
+              <div class="card">
+                <div class="row"><h3>Where you started</h3><span class="tag">Baseline</span></div>
+                <div class="base">
+                  {% for item in baseline %}
+                    <div class="b"><span>{{ item.label }}</span><div class="tr"><i style="width:{{ item.percent }}%"></i></div><b>{{ item.percent }}%</b></div>
+                  {% endfor %}
+                </div>
+                <p>We'll ask these again at the end, so you can see how far you've come.</p>
+              </div>
+            {% endif %}
+          </aside>
+        </div>
       </div>
-    {% else %}
-      <div class="next-step">
-        <p class="next-step-label">Your next step</p>
-        <p class="next-step-title">Nothing is waiting for you right now.</p>
-      </div>
-    {% endif %}
-
-    {% if hub.total %}
-      <p class="progress">{{ hub.answered }} of {{ hub.total }} answered</p>
-    {% endif %}
-
-    {# ✨ A part of a section, such as the Strengths assessment, is listed within that section's entry (ticket 41b). #}
-    <ol class="hub-sections">
-      {% for entry in hub.outline %}
-        {% include "engine/hub_section.html" with section=entry.section parts=entry.parts %}
-      {% endfor %}
-    </ol>
-
-    {# ✨ The prototype reaches its invite screen from a "Trusted Contacts · Manage →" card; the counts on it are ticket 14's. #}
-    <p class="hub-consent"><a href="{% url 'invitations' %}">Invite others to assess you →</a></p>
-    {% comment %}
-      ✨ The way to the coach page, where the coach's answer is (ticket 27). Until a coach is chosen, the original
-      prototype's "Your Mentor" card, saying "coach"; after, a pointer saying their answer in the coach page's own words,
-      and while they can see the results and comparison, a line saying so, so the participant always knows what they
-      are sharing.
-    {% endcomment %}
-    {% if coach %}
-      <p class="hub-consent">
-        <a href="{{ coach.coach_page }}">{% if coach.answer == "accepted" %}{{ coach.name }} is your coach{% elif coach.answer == "declined" %}{{ coach.name }} isn't able to be your coach{% elif coach.answer == "waiting" %}Waiting for {{ coach.name }} to answer{% else %}You've chosen {{ coach.name }}: send {{ coach.name }} a link{% endif %} →</a>
-        {% if coach.shared %}<br>{{ coach.name }} can see your results and comparison.{% endif %}
-      </p>
-    {% elif coach_page %}
-      <a class="contacts-status-card" href="{{ coach_page }}">
-        <span class="contacts-status-header">
-          <span class="contacts-status-icon" aria-hidden="true">🧭</span>
-          <span class="contacts-status-title">Your Coach</span>
-          <span class="contacts-status-manage">Add →</span>
-        </span>
-        <span class="contacts-status-text">You haven't added a coach yet. Walking through this with someone makes all the difference – add them whenever you're ready.</span>
-      </a>
-    {% endif %}
+    </div>
   {% else %}
     <h1>Nothing to begin yet</h1>
     <p>No pathway has been published here yet. When one is, it will appear on this page.</p>

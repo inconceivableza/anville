@@ -2,22 +2,24 @@
 {# For licensing information see ../../../LICENSE.md #}
 {% load section_pages %}
 {# ✨ One section's entry on the hub, with any `parts` of it listed within it (ticket 41b). A part is given no parts. #}
-<li class="hub-section{% if section.is_next %} is-next{% endif %}">
-  <span class="status-chip status-{{ section.status }}">{{ section.label }}</span>
-  {% if section.is_locked %}
-    <span class="hub-section-title">{{ section.title }}</span>
-  {% else %}
-    <a class="hub-section-title" href="{% page_url section.id section.page %}">{{ section.title }}</a>
-  {% endif %}
-  {% if section.estimate %}<span class="time-estimate">{{ section.estimate }}</span>{% endif %}
-  {% if section.is_locked %}
-    <span class="hub-section-note">{{ section.lock_note }}</span>
-  {% endif %}
-  {% if parts %}
-    <ol class="hub-parts">
-      {% for part in parts %}
-        {% include "engine/hub_section.html" with section=part parts=None %}
-      {% endfor %}
-    </ol>
-  {% endif %}
+<li class="hub-section srow{% if section.part_of %} hub-part{% endif %}{% if section.is_locked %} locked{% endif %}{% if section.is_next %} go{% endif %}">
+  {% if number %}<span class="n">{{ number|stringformat:"02d" }}</span>{% endif %}
+  <div class="srow-body">
+    {% if section.is_locked %}
+      <h3>{{ section.title }}</h3>
+    {% else %}
+      <h3><a href="{% page_url section.id section.page %}">{{ section.title }}</a></h3>
+    {% endif %}
+    {% if section.part_of %}<span class="row-kind">Activity</span>{% endif %}
+    {% if section.estimate %}<p>{{ section.estimate }}</p>{% endif %}
+    {% if section.is_locked and section.lock_note %}<p class="srow-note">{{ section.lock_note }}</p>{% endif %}
+    {% if parts %}
+      <ol class="hub-parts">
+        {% for part in parts %}
+          {% include "engine/hub_section.html" with section=part parts=None number="" %}
+        {% endfor %}
+      </ol>
+    {% endif %}
+  </div>
+  <span class="tag{% if section.is_next %} go{% endif %}">{{ section.label }}</span>
 </li>

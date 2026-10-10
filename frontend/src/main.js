@@ -19,6 +19,15 @@ htmx.config.responseHandling = [
 window.htmx = htmx;
 document.documentElement.dataset.javascript = "loaded";
 
+// ✨ The onboarding sliders update their visible value without owning the form state or submission.
+document.addEventListener("input", (event) => {
+  const slider = event.target.closest("[data-onboarding-slider]");
+  if (!slider) return;
+  const output = document.querySelector(`output[for="${CSS.escape(slider.id)}"]`);
+  if (output) output.value = slider.value;
+  slider.setAttribute("aria-valuetext", `${slider.value} out of 10`);
+});
+
 // ✨ Keep the autosave status honest without flicker. "Saved" disappears as soon as the participant changes
 // their answer, because it no longer describes what is on screen. A quick save then shows "Saved" again
 // directly; "Saving…" appears only when a save is slow; a failure without a reason from the server says so.
@@ -162,19 +171,375 @@ document.addEventListener("click", async (event) => {
   }
 });
 
-// ✨ The homepage's menu is a <details>, so it opens without JavaScript; with it, following a link closes the menu.
-document.addEventListener("click", (event) => {
-  const menu = event.target.closest("[data-closes-on-link]");
-  if (!menu || !event.target.closest("a")) return;
-  menu.open = false;
-});
-
 // ✨ The homepage's forest moves only for those who have not asked their device for less motion. It is started here
 // rather than by `autoplay`, which would play before this check could stop it; everyone else, and anyone without
 // JavaScript, sees the still frame.
 if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   document.querySelectorAll("video[data-plays-unless-reduced-motion]").forEach((video) => {
     video.play().catch(() => {}); // ✨ a browser that refuses keeps the still frame
+  });
+}
+
+// ✨ Homepage: "Whatever You Do" landing view interactions.
+// Each block is self-contained and no-ops when its section is absent, so the
+// same bundle serves every page. Motion is skipped for reduced-motion users.
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// --- Landing CTA: a brief page transition before Django takes over navigation ---
+if (document.querySelector("main.page") && !reducedMotion) {
+  let navigating = false;
+  document.addEventListener("click", (event) => {
+    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const link = event.target.closest("a.pill[href]");
+    if (!link || link.target || link.hasAttribute("download")) return;
+    const destination = new URL(link.href, window.location.href);
+    if (destination.origin !== window.location.origin || !["/accounts/signup/", "/hub/"].includes(destination.pathname)) return;
+    if (typeof Element.prototype.animate !== "function") return;
+
+    event.preventDefault();
+    if (navigating) return;
+    navigating = true;
+    const wipe = document.createElement("div");
+    wipe.setAttribute("aria-hidden", "true");
+    Object.assign(wipe.style, {
+      position: "fixed",
+      inset: "0",
+      zIndex: "9999",
+      pointerEvents: "none",
+      background: "var(--green-deep)",
+      clipPath: `circle(0 at ${event.clientX}px ${event.clientY}px)`,
+    });
+    document.body.append(wipe);
+    const animation = wipe.animate(
+      { clipPath: [`circle(0 at ${event.clientX}px ${event.clientY}px)`, `circle(150vmax at ${event.clientX}px ${event.clientY}px)`] },
+      { duration: 500, easing: "cubic-bezier(.7,0,.3,1)", fill: "forwards" },
+    );
+    animation.onfinish = () => window.location.assign(destination.href);
+  });
+}
+
+// --- Assessment tabs: auto-advancing, pausable, keyboard-navigable ---
+(() => {
+  const bar = document.getElementById("aTabs");
+  const text = document.getElementById("aText");
+  const imgs = document.getElementById("aImgs");
+  const section = document.getElementById("journey");
+  if (!bar || !text) return;
+  const T = [
+    ["Discover your gifts", "Reflect on your strengths through a guided assessment and scripture.", ["Sort 36 statements about yourself", "Explore gifts described in Romans 12 and 1 Corinthians 12", "Write a summary in your workbook"], "Your gifts and strengths"],
+    ["Hear from people who know you", "Invite trusted people to share their perspective, then compare it with your own.", ["Add at least two people, or return to invitations later", "Compare their perspective with your own", "Reflect on where your views align or differ"], "Your strengths alongside trusted perspectives"],
+    ["Make sense of your story", "Use the workbook to reflect on your life, work and the moments that have shaped you.", ["Work through guided prompts at your own pace", "Notice themes in your experience", "Connect your story with what matters to you"], "Your story and reflections"],
+    ["Explore a sense of calling", "Draw together your gifts, experience and reflections as you consider possible directions.", ["Put your sense of calling into words", "Consider possible directions", "Identify practical next steps"], "A calling statement and directions to explore"],
+    ["Return to what you discovered", "Write a letter to your future self and revisit your reflections later.", ["Capture what matters to you now", "Record the steps you want to take", "Revisit your letter in the future"], "A letter to your future self"],
+  ];
+  const DUR = 7000;
+  let i = 0, timer, start, remain = DUR;
+  const pauseReasons = new Set();
+  bar.innerHTML = T.map((t, j) => `<button class="tab" role="tab" id="atab${j}" aria-controls="aText" aria-selected="${j === 0}"><span class="n">0${j + 1}</span><b>${t[0]}</b><span class="bar"><i></i></span></button>`).join("");
+  if (imgs) imgs.innerHTML = T.map((t, j) => `<div class="tp-anim" data-i="${j}"></div>`).join("");
+  const tabs = [...bar.children];
+  const pics = imgs ? [...imgs.children] : [];
+  bar.style.setProperty("--dur", DUR + "ms");
+  const render = () => {
+    const t = T[i];
+    text.innerHTML = `<div class="tp-anim"><span class="n">STEP 0${i + 1}</span><h3>${t[0]}</h3><p>${t[1]}</p></div><ul class="tp-anim">${t[2].map((x) => `<li><svg><use href="#leaf"/></svg>${x}</li>`).join("")}</ul><div class="out"><span>In your workbook</span><b>${t[3]}</b></div>`;
+    text.setAttribute("aria-labelledby", "atab" + i);
+    tabs.forEach((b, j) => {
+      b.setAttribute("aria-selected", j === i);
+      b.classList.toggle("done", j < i);
+      const bi = b.querySelector(".bar i");
+      if (bi) {
+        bi.style.animation = "none";
+        void bi.offsetWidth;
+        bi.style.animation = "";
+      }
+    });
+    pics.forEach((im, j) => im.classList.toggle("on", j === i));
+    if (bar.scrollWidth > bar.clientWidth) {
+      bar.scrollTo({
+        left: Math.max(0, tabs[i].offsetLeft - bar.offsetLeft - 16),
+        behavior: reducedMotion ? "auto" : "smooth",
+      });
+    }
+  };
+  const go = (n) => {
+    i = (n + T.length) % T.length;
+    render();
+    remain = DUR;
+    schedule();
+  };
+  const schedule = () => {
+    clearTimeout(timer);
+    if (reducedMotion || pauseReasons.size) return;
+    start = Date.now();
+    timer = setTimeout(() => go(i + 1), remain);
+  };
+  const pause = (reason) => {
+    if (pauseReasons.has(reason)) return;
+    if (!pauseReasons.size) {
+      clearTimeout(timer);
+      remain = Math.max(0, remain - (Date.now() - start));
+    }
+    pauseReasons.add(reason);
+    section?.classList.add("paused");
+  };
+  const resume = (reason) => {
+    pauseReasons.delete(reason);
+    if (!pauseReasons.size) {
+      section?.classList.remove("paused");
+      schedule();
+    }
+  };
+  tabs.forEach((b, j) => b.addEventListener("click", () => go(j)));
+  const prev = document.getElementById("aPrev");
+  const next = document.getElementById("aNext");
+  if (prev) prev.addEventListener("click", () => go(i - 1));
+  if (next) next.addEventListener("click", () => go(i + 1));
+  bar.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight") { go(i + 1); tabs[i].focus(); }
+    if (e.key === "ArrowLeft") { go(i - 1); tabs[i].focus(); }
+  });
+  if (section) {
+    section.addEventListener("focusin", () => pause("focus"));
+    section.addEventListener("focusout", (event) => {
+      if (section.contains(event.relatedTarget)) return;
+      resume("focus");
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) pause("visibility");
+      else resume("visibility");
+    });
+  }
+  if (reducedMotion) bar.style.setProperty("--dur", "0s");
+  render();
+  schedule();
+})();
+
+// --- Scroll reveal: word-by-word opacity ---
+for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
+  const wrap = (node) => {
+    if (node.nodeType === 3) {
+      const frag = document.createDocumentFragment();
+      node.textContent.split(/(\s+)/).forEach((token) => {
+        if (!token) return;
+        if (/^\s+$/.test(token)) frag.appendChild(document.createTextNode(token));
+        else {
+          const span = document.createElement("span");
+          span.className = "w";
+          span.textContent = token;
+          frag.appendChild(span);
+        }
+      });
+      node.replaceWith(frag);
+    } else if (node.nodeType === 1 && node.tagName === "EM") {
+      node.classList.add("w");
+    } else {
+      [...node.childNodes].forEach(wrap);
+    }
+  };
+  [...el.childNodes].forEach(wrap);
+  const words = [...el.querySelectorAll(".w")];
+  if (reducedMotion) {
+    words.forEach((w) => w.classList.add("on"));
+    continue;
+  }
+  const update = () => {
+    const r = el.getBoundingClientRect();
+    const vh = innerHeight;
+    const p = Math.min(1, Math.max(0, (vh * 0.85 - r.top) / (r.height + vh * 0.35)));
+    const n = Math.round(p * words.length);
+    words.forEach((w, i) => w.classList.toggle("on", i < n));
+  };
+  addEventListener("scroll", update, { passive: true });
+  addEventListener("resize", update);
+  update();
+}
+
+// --- Calling ring: adapt the existing Meet cards without adding sample people or images ---
+(() => {
+  if (reducedMotion) return;
+  let stage = document.getElementById("ringStage");
+  const ring = document.getElementById("ring") ?? document.querySelector(".meet-cards");
+  if (!ring) return;
+  const cards = [...ring.children];
+  if (cards.length < 2) return;
+
+  if (!stage) {
+    stage = document.createElement("div");
+    stage.id = "ringStage";
+    stage.className = "ring-stage";
+    stage.setAttribute("role", "region");
+    stage.setAttribute("aria-roledescription", "carousel");
+    stage.setAttribute("aria-label", "People in different callings and stages of life");
+    ring.before(stage);
+    ring.classList.add("ring");
+    stage.append(ring);
+    const controls = document.createElement("div");
+    controls.className = "ring-controls";
+    controls.innerHTML = '<button type="button" class="ring-control" data-ring-step="-1" aria-label="Previous calling">←</button><button type="button" class="ring-control" data-ring-toggle aria-label="Pause carousel">Pause</button><button type="button" class="ring-control" data-ring-step="1" aria-label="Next calling">→</button>';
+    stage.append(controls);
+  }
+
+  const angle = 360 / cards.length;
+  const cardInterval = 7000;
+  let radius = 0;
+  let rotation = 0;
+  let drag;
+  let pausedByUser = false;
+  let interactionPaused = false;
+  let lastFrame;
+  let transitionUntil = 0;
+  let transitionTimer;
+  const toggle = stage.querySelector("[data-ring-toggle]");
+  const layout = () => {
+    const width = stage.clientWidth;
+    const cardWidth = Math.min(280, Math.max(220, width * 0.55));
+    radius = (cardWidth + Math.max(16, width * 0.025)) * cards.length / (2 * Math.PI);
+    stage.style.height = `${Math.max(360, Math.min(500, cardWidth * 1.35))}px`;
+    cards.forEach((card, index) => {
+      card.style.width = `${cardWidth}px`;
+      card.style.transform = `translate(-50%, -50%) rotateY(${index * angle}deg) translateZ(${radius}px)`;
+    });
+  };
+  const draw = () => {
+    ring.style.transform = `rotateY(${rotation}deg)`;
+  };
+  const tick = (now) => {
+    const elapsed = lastFrame === undefined ? 0 : Math.min(now - lastFrame, 64);
+    lastFrame = now;
+    if (!pausedByUser && !interactionPaused && !drag && now >= transitionUntil) {
+      rotation -= angle * elapsed / cardInterval;
+      draw();
+    }
+    requestAnimationFrame(tick);
+  };
+  stage.addEventListener("pointerdown", (event) => {
+    if (event.target.closest("button")) return;
+    drag = { x: event.clientX, rotation };
+    stage.setPointerCapture(event.pointerId);
+  });
+  stage.addEventListener("pointermove", (event) => {
+    if (!drag) return;
+    rotation = drag.rotation + (event.clientX - drag.x) * 0.08;
+    draw();
+  });
+  const stopDrag = () => { drag = undefined; };
+  stage.addEventListener("pointerup", stopDrag);
+  stage.addEventListener("pointercancel", stopDrag);
+  stage.addEventListener("pointerenter", () => { interactionPaused = true; });
+  stage.addEventListener("pointerleave", () => { interactionPaused = false; });
+  stage.addEventListener("focusin", () => { interactionPaused = true; });
+  stage.addEventListener("focusout", (event) => {
+    if (!stage.contains(event.relatedTarget)) interactionPaused = false;
+  });
+  stage.querySelectorAll("[data-ring-step]").forEach((button) => {
+    button.addEventListener("click", () => {
+      rotation += Number(button.dataset.ringStep) * angle;
+      transitionUntil = performance.now() + 700;
+      ring.style.transition = "transform 700ms cubic-bezier(.2,.7,.2,1)";
+      draw();
+      clearTimeout(transitionTimer);
+      transitionTimer = window.setTimeout(() => { ring.style.transition = "none"; }, 750);
+    });
+  });
+  toggle?.addEventListener("click", () => {
+    pausedByUser = !pausedByUser;
+    toggle.textContent = pausedByUser ? "Resume" : "Pause";
+    toggle.setAttribute("aria-label", pausedByUser ? "Resume carousel" : "Pause carousel");
+  });
+  window.addEventListener("resize", layout);
+  layout();
+  draw();
+  requestAnimationFrame(tick);
+})();
+
+// --- Count up only real values supplied by the page; never manufacture impact figures ---
+(() => {
+  const stats = [...document.querySelectorAll(".stat[data-v]")];
+  if (!stats.length) return;
+  const show = (stat, animate) => {
+    const target = Number(stat.dataset.v);
+    const value = stat.querySelector(".num b");
+    const bar = stat.querySelector(".bar i");
+    if (!Number.isFinite(target) || !value) return;
+    if (bar) bar.style.width = `${Math.max(0, Math.min(100, target))}%`;
+    if (!animate) {
+      value.textContent = String(target);
+      return;
+    }
+    const started = performance.now();
+    const frame = (now) => {
+      const progress = Math.min(1, (now - started) / 1600);
+      value.textContent = String(Math.round(target * (1 - (1 - progress) ** 3)));
+      if (progress < 1) requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  };
+  if (reducedMotion || !("IntersectionObserver" in window)) {
+    stats.forEach((stat) => show(stat, false));
+    return;
+  }
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      show(entry.target, true);
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: 0.4 });
+  stats.forEach((stat) => observer.observe(stat));
+})();
+
+// --- Real partner marks only; omit the carousel when no partners are supplied ---
+(() => {
+  const row = document.getElementById("logoRow");
+  if (!row) return;
+  const partners = [...row.children];
+  if (!partners.length) {
+    row.closest(".logos")?.remove();
+    return;
+  }
+  partners.forEach((partner) => partner.classList.add("in"));
+  if (reducedMotion || partners.length <= 5) return;
+
+  let page = 0;
+  const pageCount = Math.ceil(partners.length / 5);
+  const showPage = () => {
+    partners.forEach((partner, index) => {
+      const visible = Math.floor(index / 5) === page;
+      partner.hidden = !visible;
+      partner.classList.toggle("in", visible);
+      partner.classList.toggle("out", !visible);
+    });
+  };
+  showPage();
+  window.setInterval(() => {
+    page = (page + 1) % pageCount;
+    showPage();
+  }, 5000);
+})();
+
+// --- Magnetic buttons (fine pointers only) ---
+if (window.matchMedia("(hover: hover) and (pointer: fine)").matches && !reducedMotion) {
+  document.addEventListener("pointermove", (e) => {
+    const b = e.target.closest && e.target.closest(".pill");
+    if (b) {
+      const r = b.getBoundingClientRect();
+      const dx = (e.clientX - (r.left + r.width / 2)) / r.width;
+      const dy = (e.clientY - (r.top + r.height / 2)) / r.height;
+      b.style.transition = "transform .25s cubic-bezier(.2,.7,.2,1), filter .2s";
+      b.style.transform = `translate(${(dx * 10).toFixed(1)}px,${(dy * 8).toFixed(1)}px)`;
+      const a = b.querySelector(".ar");
+      if (a) a.style.translate = `${(dx * 5).toFixed(1)}px ${(dy * 4).toFixed(1)}px`;
+    }
+  }, { passive: true });
+  document.addEventListener("pointerout", (e) => {
+    const b = e.target.closest && e.target.closest(".pill");
+    if (b && !b.contains(e.relatedTarget)) {
+      b.style.transition = "transform .5s cubic-bezier(.2,.7,.2,1), filter .2s";
+      b.style.transform = "";
+      const a = b.querySelector(".ar");
+      if (a) a.style.translate = "";
+    }
   });
 }
 

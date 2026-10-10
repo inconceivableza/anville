@@ -650,7 +650,7 @@ def test_progress_counts_what_the_participant_does_and_not_the_prose_or_the_link
 
     # ✨ the reason, four ratings and the contact list; Section 1's reading and reflection; the sort; the calling
     # reading and statement; the letter and four more
-    assert "0 of 16 answered" in page
+    assert "0 of 16 items answered" in page
 
 
 @pytest.mark.django_db
