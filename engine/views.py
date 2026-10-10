@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.humanize.templatetags.humanize import apnumber
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -16,7 +16,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_POST
 
 from access.consent import consent_required
-from access.models import name_shown_for
+from access.models import Account, name_shown_for
 from engine.document import (
     BLOCK_TYPES,
     LONG_TEXT_MAX_LENGTH,
@@ -135,6 +135,9 @@ def hub(request):
         return render(request, "engine/hub.html", {})
     if not any(section["blocks"] for section in state.sections):
         return render(request, "engine/hub.html", {})  # ✨ no content is the empty state, never a fallback
+    account = getattr(request.user, "account", None)
+    if account is not None and not account.onboarding_completed and _onboarding_content(state.version.document):
+        return redirect("onboarding")
     hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
     return render(
         request,
@@ -223,12 +226,152 @@ def start(request):
     """✨ Where agreeing to consent leads. A participant with nothing saved goes straight to their first step,
     as the prototype goes from its account screen into onboarding; anyone who has begun goes to the hub."""
     state = _participant(request.user)
+    account = getattr(request.user, "account", None)
+    if account is not None and not account.onboarding_completed and state.version and _onboarding_content(state.version.document):
+        return redirect("onboarding")
     if state.response is not None or state.version is None:
         return redirect("hub")
     next_step = hub_for(state.sections, state.answers, state.completed).next_step
     if next_step is None or not any(section["blocks"] for section in state.sections):
         return redirect("hub")  # ✨ the hub's empty state says there is nothing to begin
     return redirect("section", next_step.id)
+
+
+@login_required
+@consent_required
+def onboarding(request):
+    """✨ The new participant's four presentational steps, with reason and baseline saved as pathway answers."""
+    account = getattr(request.user, "account", None)
+    if account is None or account.onboarding_completed:
+        return redirect("hub")
+
+    state = _participant(request.user)
+    if state.version is None:
+        return redirect("hub")
+
+    onboarding_content = _onboarding_content(state.version.document)
+    if onboarding_content is None:
+        return redirect("hub")
+    onboarding_section, reason_block, baseline_blocks = onboarding_content
+
+    reason_text = authored_text(reason_block, "participant")
+    reason_text["answer"] = state.answers.get(reason_block["id"])
+    baseline = [
+        {
+            "id": block["id"],
+            "text": authored_text(block, "participant"),
+            "value": state.answers.get(block["id"]),
+        }
+        for block in baseline_blocks
+    ]
+    step = _onboarding_step(account, baseline)
+    requested_step = request.POST.get("step") if request.method == "POST" else request.GET.get("step")
+    try:
+        requested_step = int(requested_step) if requested_step is not None else step
+    except (TypeError, ValueError):
+        requested_step = step
+    requested_step = max(0, min(requested_step, step))
+
+    error = None
+    status = 200
+    if request.method == "POST" and request.POST.get("action") == "back":
+        return _see_other(f"{reverse('onboarding')}?step={max(0, requested_step - 1)}")
+    if request.method == "POST" and request.POST.get("action") == "continue":
+        if requested_step == 0:
+            try:
+                answer = answer_from_form(state.version.document, reason_block, request.POST.get(reason_block["id"]))
+                if not _is_open(state, onboarding_section, reason_block):
+                    raise AnswerRefused("This step is not open yet.")
+                with transaction.atomic():
+                    response = state.stored_response(request.user)
+                    if not response.save_answer(reason_block["id"], answer):
+                        raise AnswerRefused("This answer is fixed and can no longer be changed.")
+                    account.reason = answer
+                    account.save(update_fields=["reason"])
+                return _see_other(f"{reverse('onboarding')}?step=1")
+            except AnswerRefused as refused:
+                error = str(refused)
+                status = 400
+        elif requested_step == 1:
+            try:
+                answers = []
+                for block in baseline_blocks:
+                    if not _is_open(state, onboarding_section, block):
+                        raise AnswerRefused("This step is not open yet.")
+                    if block["id"] in state.fixed:
+                        raise AnswerRefused("A baseline answer is fixed and can no longer be changed.")
+                    answers.append(
+                        (block["id"], answer_from_form(state.version.document, block, request.POST.get(block["id"])))
+                    )
+                with transaction.atomic():
+                    response = state.stored_response(request.user)
+                    if not all(response.save_answer(block_id, value) for block_id, value in answers):
+                        raise AnswerRefused("A baseline answer is fixed and can no longer be changed.")
+                return _see_other(f"{reverse('onboarding')}?step=2")
+            except AnswerRefused as refused:
+                error = str(refused)
+                status = 400
+        elif requested_step == 2:
+            selected_path = request.POST.get("path")
+            if selected_path not in {choice[0] for choice in Account._meta.get_field("path").choices}:
+                error = "Choose how you'd like to work."
+                status = 400
+            else:
+                account.path = selected_path
+                account.save(update_fields=["path"])
+                return _see_other(f"{reverse('onboarding')}?step=3")
+        elif requested_step == 3:
+            account.remind = request.POST.get("remind") == "on"
+            account.onboarding_completed = True
+            account.save(update_fields=["remind", "onboarding_completed"])
+            return _see_other("hub")
+
+    if request.method == "POST" and status == 400:
+        if requested_step == 0:
+            reason_text["answer"] = request.POST.get(reason_block["id"], "")
+        elif requested_step == 1:
+            for question in baseline:
+                question["value"] = request.POST.get(question["id"], "")
+
+    return render(
+        request,
+        "engine/onboarding.html",
+        {
+            "step": requested_step,
+            "reason": reason_text,
+            "baseline": baseline,
+            "selected_path": request.POST.get("path", account.path),
+            "remind": request.POST.get("remind") == "on" if request.method == "POST" else account.remind,
+            "display_name": account.display_name,
+            "email": request.user.email,
+            "error": error,
+        },
+        status=status,
+    )
+
+
+def _onboarding_step(account, baseline):
+    """✨ The furthest onboarding step whose prerequisites have been saved."""
+    if not account.reason:
+        return 0
+    if any(question["value"] is None for question in baseline):
+        return 1
+    if not account.path:
+        return 2
+    return 3
+
+
+def _onboarding_content(document):
+    """✨ The authored reason and baseline blocks that make this pathway eligible for the four-step introduction."""
+    for section in document["content"]["sections"]:
+        reason = next(
+            (block for block in section["blocks"] if block["id"] == "reason" and block["type"] == "single_select"),
+            None,
+        )
+        scales = [block for block in section["blocks"] if block["type"] == "agreement_scale"]
+        if reason and scales:
+            return section, reason, scales
+    return None
 
 
 @login_required

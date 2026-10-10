@@ -18,6 +18,15 @@ class Account(models.Model):
 
     participant = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="account")
     display_name = models.CharField(max_length=DISPLAY_NAME_MAX_LENGTH)
+    reason = models.CharField(max_length=64, blank=True, default="")
+    path = models.CharField(
+        max_length=16,
+        choices=(("online", "Guided online"), ("paper", "Paper workbook")),
+        blank=True,
+        default="",
+    )
+    remind = models.BooleanField(default=False)
+    onboarding_completed = models.BooleanField(default=True)
 
     def __str__(self):
         return self.display_name

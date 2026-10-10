@@ -66,4 +66,8 @@ class EnrolmentCodeSignupForm(forms.Form):
     def signup(self, request, user):
         # ✨ Called by allauth once the user is saved (the ACCOUNT_SIGNUP_FORM_CLASS contract). The enrolment code
         # grants access only, and the age confirmation admits an adult; neither is stored. The display name is.
-        Account.objects.create(participant=user, display_name=self.cleaned_data["display_name"])
+        Account.objects.create(
+            participant=user,
+            display_name=self.cleaned_data["display_name"],
+            onboarding_completed=False,
+        )

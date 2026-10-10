@@ -19,6 +19,15 @@ htmx.config.responseHandling = [
 window.htmx = htmx;
 document.documentElement.dataset.javascript = "loaded";
 
+// ✨ The onboarding sliders update their visible value without owning the form state or submission.
+document.addEventListener("input", (event) => {
+  const slider = event.target.closest("[data-onboarding-slider]");
+  if (!slider) return;
+  const output = document.querySelector(`output[for="${CSS.escape(slider.id)}"]`);
+  if (output) output.value = slider.value;
+  slider.setAttribute("aria-valuetext", `${slider.value} out of 10`);
+});
+
 // ✨ Keep the autosave status honest without flicker. "Saved" disappears as soon as the participant changes
 // their answer, because it no longer describes what is on screen. A quick save then shows "Saved" again
 // directly; "Saving…" appears only when a save is slow; a failure without a reason from the server says so.

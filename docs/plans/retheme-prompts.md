@@ -175,27 +175,30 @@ The reference design is `docs/plans/retheme_index.html` (946 lines, 84 KB). It i
 
 **Files to touch:**
 - `engine/views.py` (new view)
-- `engine/urls.py` (new route)
-- `engine/models.py` (new fields: `reason`, `path`, `remind`)
+- `config/urls.py` (new route; routes are configured centrally)
+- `access/models.py` (new account fields: `reason`, `path`, `remind`, and onboarding completion)
+- `access/forms.py` and `access/migrations/` (mark new accounts for onboarding and preserve existing accounts)
 - `engine/templates/engine/onboarding.html` (new template)
 - `frontend/src/styles.css` (the `.ob-*`, `.scale`, `.sl`, `.opts`, `.field` rules)
-- `frontend/src/main.js` (wizard interactions)
+- `frontend/src/main.js` (slider value enhancement only; Django owns wizard state)
 
 **Prompt:**
 
-> Add a 4-step onboarding wizard as a real Django flow, matching the "Whatever You Do" onboarding view in the reference HTML. The wizard is a new template + view, not a JS state machine.
+> Add a 4-step onboarding wizard as a real Django flow, matching the "Whatever You Do" onboarding view in the reference HTML. Keep the existing signup and consent sequence first; show the wizard to new accounts after consent. The wizard is a new template + view, not a JS state machine.
 >
 > The 4 steps:
-> 1. **Reason** — single-select options → persist to a new `Participant.reason` field.
-> 2. **Baseline** — 4 × 10-point sliders → these are the `agreement_scale` block type, persisted as `Response`s. The slider UI (`.scale`/`.sl`/`.slider`) is a new CSS component.
-> 3. **Path** — online vs paper → a `Participant.path` field.
-> 4. **Save** — name/email/reminder → the existing allauth enrolment fields.
+> 1. **Reason** — use the authored `single_select` block with ID `reason`; persist its validated answer to the account and the pathway `Response`.
+> 2. **Baseline** — show all five authored `agreement_scale` blocks in the reason's section as 10-point sliders, and persist them as pathway `Response` answers. Do not duplicate or hardcode the statements. The slider UI (`.scale`/`.sl`/`.slider`) is a new CSS component.
+> 3. **Path** — online vs paper → persist the choice to the account.
+> 4. **Save** — show the name/email already captured during signup and save the reminder preference to the account. Make clear that reminder emails are not sent yet.
 >
 > The wizard's `chrome()` (step label, progress bar, scripture quote) is presentational and ports directly.
 >
 > **Acceptance criteria:**
+> - New participants reach the wizard after signup and consent; existing accounts are not sent through it.
 > - The wizard renders as a 4-step flow with a progress bar and scripture quote.
-> - Each step persists its data to the database (reason, baseline scores, path, name/email).
+> - Reason and all five authored baseline scores are saved using existing pathway validation and `Response` storage; path and reminder preference are saved to the account.
+> - Signup name and email are displayed without asking the participant to enter them twice.
 > - The baseline sliders use the `agreement_scale` block type.
 > - The wizard respects `prefers-reduced-motion`.
 > - `npm run build` succeeds and the wizard renders without console errors.
