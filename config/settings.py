@@ -175,7 +175,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-STATICFILES_DIRS = [BASE_DIR / "frontend" / "dist"]
+STATICFILES_DIRS = [BASE_DIR / "frontend" / "dist", BASE_DIR / "frontend" / "img"]
 
 # ✨ Where collectstatic gathers everything for WhiteNoise to serve, so a deployed environment needs no
 # second web server. Development never needs it: with DJANGO_DEBUG on, files are found where they are.

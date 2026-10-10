@@ -226,11 +226,11 @@ if (document.querySelector("main.page") && !reducedMotion) {
   const section = document.getElementById("journey");
   if (!bar || !text) return;
   const T = [
-    ["Gifts & talents", "Discover how you’ve been designed, through your eyes and those who know you.", ["36-statement strengths sort", "Romans 12 and 1 Corinthians 12", "Your results beside your friends’"], "Your strengths, as you and others see them"],
-    ["The shape of your life", "Map your story and spot the moments you felt most alive.", ["An interactive life timeline", "Prompts for each chapter", "Reflection questions"], "A life timeline"],
-    ["Putting your calling into words", "Put what you’ve learned into a short calling statement.", ["Draft a calling statement", "Explore possible directions", "Write up your best options"], "A calling statement and options"],
-    ["Walking it out in obedience", "Turn what you’ve found into practical next steps.", ["Skills and experience to grow", "A step-by-step roadmap", "Check-ins with your mentor"], "A roadmap for the year ahead"],
-    ["Letter to your future self", "Capture what you’ve heard, to read again when it matters.", ["A guided letter", "Sent back to you later", "Your baseline answers revisited"], "A letter, sent back to you later"],
+    ["Discover your gifts", "Reflect on your strengths through a guided assessment and scripture.", ["Sort 36 statements about yourself", "Explore gifts described in Romans 12 and 1 Corinthians 12", "Write a summary in your workbook"], "Your gifts and strengths"],
+    ["Hear from people who know you", "Invite trusted people to share their perspective, then compare it with your own.", ["Add at least two people, or return to invitations later", "Compare their perspective with your own", "Reflect on where your views align or differ"], "Your strengths alongside trusted perspectives"],
+    ["Make sense of your story", "Use the workbook to reflect on your life, work and the moments that have shaped you.", ["Work through guided prompts at your own pace", "Notice themes in your experience", "Connect your story with what matters to you"], "Your story and reflections"],
+    ["Explore a sense of calling", "Draw together your gifts, experience and reflections as you consider possible directions.", ["Put your sense of calling into words", "Consider possible directions", "Identify practical next steps"], "A calling statement and directions to explore"],
+    ["Return to what you discovered", "Write a letter to your future self and revisit your reflections later.", ["Capture what matters to you now", "Record the steps you want to take", "Revisit your letter in the future"], "A letter to your future self"],
   ];
   const DUR = 7000;
   let i = 0, timer, start, remain = DUR;
@@ -242,7 +242,7 @@ if (document.querySelector("main.page") && !reducedMotion) {
   bar.style.setProperty("--dur", DUR + "ms");
   const render = () => {
     const t = T[i];
-    text.innerHTML = `<div class="tp-anim"><span class="n">SECTION 0${i + 1}</span><h3>${t[0]}</h3><p>${t[1]}</p></div><ul class="tp-anim">${t[2].map((x) => `<li><svg><use href="#leaf"/></svg>${x}</li>`).join("")}</ul>`;
+    text.innerHTML = `<div class="tp-anim"><span class="n">STEP 0${i + 1}</span><h3>${t[0]}</h3><p>${t[1]}</p></div><ul class="tp-anim">${t[2].map((x) => `<li><svg><use href="#leaf"/></svg>${x}</li>`).join("")}</ul><div class="out"><span>In your workbook</span><b>${t[3]}</b></div>`;
     text.setAttribute("aria-labelledby", "atab" + i);
     tabs.forEach((b, j) => {
       b.setAttribute("aria-selected", j === i);
@@ -313,37 +313,6 @@ if (document.querySelector("main.page") && !reducedMotion) {
   if (reducedMotion) bar.style.setProperty("--dur", "0s");
   render();
   schedule();
-})();
-
-// --- How it works: sticky scrollytelling ---
-(() => {
-  const steps = [...document.querySelectorAll(".how-step")];
-  const panels = [...document.querySelectorAll(".how-bg-panel")];
-  const dots = [...document.querySelectorAll("#howDots i")];
-  if (!steps.length) return;
-  let cur = 0;
-  const set = (i) => {
-    if (i === cur) return;
-    cur = i;
-    panels.forEach((p, j) => p.classList.toggle("on", j === i));
-    dots.forEach((d, j) => d.classList.toggle("on", j === i));
-    steps.forEach((st, j) => st.classList.toggle("on", j === i));
-  };
-  const update = () => {
-    const mid = innerHeight / 2;
-    let best = 0, bestDist = 1e9;
-    steps.forEach((st, j) => {
-      const r = st.getBoundingClientRect();
-      const d = Math.abs(r.top + r.height / 2 - mid);
-      if (d < bestDist) { bestDist = d; best = j; }
-    });
-    set(best);
-  };
-  if (!reducedMotion) {
-    addEventListener("scroll", update, { passive: true });
-    addEventListener("resize", update);
-  }
-  update();
 })();
 
 // --- Scroll reveal: word-by-word opacity ---

@@ -20,6 +20,30 @@
 @import "@fontsource/pinyon-script";
 @import "@fontsource/ibm-plex-mono";
 
+@font-face {
+  font-family: "Switzer";
+  src: url("../fonts/switzer-400.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Switzer";
+  src: url("../fonts/switzer-500.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Switzer";
+  src: url("../fonts/switzer-600.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
   /* ✨ Whatever You Do palette. The variable names are Anville's (so "--gold" is the lime accent) to keep
@@ -730,11 +754,6 @@ main.container:has(> .ob) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .how-bg-panel,
-  .how-dots i,
-  .how-ill,
-  .how-row,
-  .ill-float,
   .tab .bar i,
   .tp-anim,
   #aImgs .tp-anim,
@@ -748,16 +767,7 @@ main.container:has(> .ob) {
     scroll-behavior: auto !important;
   }
 
-  .how-bg-panel,
-  .how-ill,
-  .how-row {
-    transform: none;
-  }
 
-  .how-ill,
-  .how-row {
-    opacity: 1;
-  }
 
   .tab[aria-selected="true"] .bar i {
     width: 100%;
@@ -3465,7 +3475,7 @@ body > svg[aria-hidden="true"] {
   place-items: center;
   text-align: center;
   color: var(--on-dark);
-  background: var(--hero-bg);
+  background: var(--hero-bg) url("../img/hero-poster.jpg") center 60% / cover;
 }
 
 .hero > video {
@@ -3492,13 +3502,41 @@ body > svg[aria-hidden="true"] {
   gap: 30px;
   justify-items: center;
   padding: 140px 20px 140px;
-  max-width: 980px;
+  max-width: 1240px;
 }
 
 .hero h1 {
-  font-size: clamp(48px, 7.6vw, 112px);
+  font-size: clamp(40px, 6.2vw, 96px);
   font-weight: 300;
-  line-height: 1.02;
+  line-height: 1.04;
+  max-width: 18ch;
+  text-wrap: balance;
+}
+
+.page:has(.hero) {
+  --font-body: "Switzer", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Switzer", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-body);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+  font-family: var(--font-heading);
+  font-size: 21px;
+  white-space: nowrap;
+}
+
+.brand .mark {
+  width: 30px;
+  height: 30px;
+}
+
+.hero .logos:has(.logo-row:empty) {
+  display: none;
 }
 
 .hero-summary {
@@ -3683,254 +3721,6 @@ body > svg[aria-hidden="true"] {
   width: 30px;
   height: 30px;
   color: var(--ink);
-}
-
-/* ---------- HOW IT WORKS (sticky scrollytelling) ---------- */
-.how {
-  position: relative;
-  background: var(--hero-bg);
-  color: var(--on-dark);
-  overflow: clip;
-}
-
-.how-bg {
-  position: sticky;
-  top: 0;
-  height: calc(100vh - 20px);
-  min-height: 560px;
-  overflow: hidden;
-}
-
-.how-bg-panel {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transform: scale(1.06);
-  transition: opacity 1s ease, transform 6s ease;
-}
-
-.how-bg-panel:nth-child(1) {
-  background: radial-gradient(120% 90% at 20% 20%, #3a2a20 0%, #2a1d17 55%, #1d1413 100%);
-}
-
-.how-bg-panel:nth-child(2) {
-  background: radial-gradient(120% 90% at 80% 20%, #2f5a2b 0%, #27432a 55%, #1d1413 100%);
-}
-
-.how-bg-panel:nth-child(3) {
-  background: radial-gradient(120% 90% at 50% 80%, #3d2d27 0%, #2a1d17 55%, #1d1413 100%);
-}
-
-.how-bg-panel.on {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.how-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(29, 20, 19, 0.72) 0%, rgba(29, 20, 19, 0.45) 50%, rgba(29, 20, 19, 0.6) 100%);
-}
-
-.how-in {
-  position: relative;
-  z-index: 2;
-  margin-top: calc(-1 * max(560px, 100vh - 20px));
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: clamp(24px, 5vw, 80px);
-  padding-inline: clamp(20px, 5vw, 72px);
-}
-
-.how-head {
-  position: sticky;
-  top: 0;
-  height: max(560px, calc(100vh - 20px));
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 22px;
-  max-width: 520px;
-  padding-block: clamp(36px, 6vw, 72px) clamp(28px, 4vw, 48px);
-}
-
-.how-head h2 {
-  font-size: clamp(38px, 4.8vw, 66px);
-  font-weight: 300;
-  line-height: 1.04;
-}
-
-.how-head p {
-  color: var(--on-dark-2);
-  font-size: 16px;
-  max-width: 40ch;
-}
-
-.how-cta {
-  margin-top: auto;
-  z-index: 3;
-}
-
-.how-cta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-}
-
-.how-cta .pill {
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-}
-
-.how-cta .pill.ghost {
-  color: var(--on-dark);
-  box-shadow: inset 0 0 0 1px rgba(242, 236, 226, 0.55);
-  background: rgba(29, 20, 19, 0.25);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-.how-dots {
-  display: flex;
-  gap: 8px;
-}
-
-.how-dots i {
-  width: 28px;
-  height: 3px;
-  border-radius: 3px;
-  background: rgba(242, 236, 226, 0.25);
-  transition: background 0.4s;
-}
-
-.how-dots i.on {
-  background: var(--green);
-}
-
-.how-steps {
-  display: grid;
-  padding-block: calc(50vh - 160px);
-}
-
-.how-step {
-  min-height: 85vh;
-  display: grid;
-  align-content: center;
-}
-
-.how-ill {
-  background: #fbf9f2;
-  border-radius: var(--radius-md);
-  max-width: 560px;
-  aspect-ratio: 5 / 3;
-  margin-bottom: 22px;
-  overflow: hidden;
-  opacity: 0.4;
-  transform: translateY(14px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-  box-shadow: 0 20px 40px -24px rgba(0, 0, 0, 0.6);
-}
-
-.how-ill svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.how-step.on .how-ill {
-  opacity: 1;
-  transform: none;
-}
-
-.ill-float {
-  animation: illfloat 3.2s ease-in-out infinite;
-}
-
-@keyframes illfloat {
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
-.how-row {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 16px;
-  padding: 26px 0;
-  border-top: 1px solid rgba(242, 236, 226, 0.28);
-  max-width: 560px;
-  opacity: 0.4;
-  transform: translateY(14px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-}
-
-.how-step.on .how-row {
-  opacity: 1;
-  transform: none;
-}
-
-.how-row .n {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  color: var(--green);
-  padding-top: 10px;
-}
-
-.how-row h3 {
-  font-size: clamp(30px, 3vw, 44px);
-  font-weight: 300;
-  margin-bottom: 14px;
-}
-
-.how-row ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: var(--space-sm);
-}
-
-.how-row li {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  color: var(--on-dark-2);
-  font-size: 15.5px;
-}
-
-.how-row li svg {
-  width: 16px;
-  height: 16px;
-  flex: none;
-  color: var(--green);
-  margin-top: 3px;
-}
-
-@media (max-width: 860px) {
-  .how-cta {
-    margin-top: 8px;
-  }
-
-  .how-in {
-    grid-template-columns: 1fr;
-  }
-
-  .how-head {
-    position: relative;
-    height: auto;
-    padding-top: 72px;
-  }
-
-  .how-steps {
-    padding-block: 24px 72px;
-  }
-
-  .how-step {
-    min-height: 70vh;
-  }
 }
 
 /* ---------- ASSESSMENT TABS ---------- */
@@ -4174,7 +3964,7 @@ body > svg[aria-hidden="true"] {
 #aImgs .tp-anim[data-i="0"] {
   background-image:
     linear-gradient(120deg, rgb(47 90 43 / 12%), rgb(29 20 19 / 30%)),
-    url("../img/potter.jpg");
+    url("../img/notebook.jpg");
   background-position: center;
   background-size: cover;
 }
@@ -4182,7 +3972,7 @@ body > svg[aria-hidden="true"] {
 #aImgs .tp-anim[data-i="1"] {
   background-image:
     linear-gradient(120deg, rgb(47 90 43 / 10%), rgb(29 20 19 / 30%)),
-    url("../img/field-walk.jpg");
+    url("../img/friends.jpg");
   background-position: center;
   background-size: cover;
 }
@@ -4190,7 +3980,7 @@ body > svg[aria-hidden="true"] {
 #aImgs .tp-anim[data-i="2"] {
   background-image:
     linear-gradient(120deg, rgb(47 90 43 / 10%), rgb(29 20 19 / 35%)),
-    url("../img/bible.jpg");
+    url("../img/field-walk.jpg");
   background-position: center;
   background-size: cover;
 }
@@ -4198,7 +3988,7 @@ body > svg[aria-hidden="true"] {
 #aImgs .tp-anim[data-i="3"] {
   background-image:
     linear-gradient(120deg, rgb(47 90 43 / 10%), rgb(29 20 19 / 28%)),
-    url("../img/hills.jpg");
+    url("../img/potter.jpg");
   background-position: center;
   background-size: cover;
 }
@@ -4206,7 +3996,7 @@ body > svg[aria-hidden="true"] {
 #aImgs .tp-anim[data-i="4"] {
   background-image:
     linear-gradient(120deg, rgb(47 90 43 / 10%), rgb(29 20 19 / 28%)),
-    url("../img/facing-sun.jpg");
+    url("../img/hills.jpg");
   background-position: center;
   background-size: cover;
 }
@@ -4751,4 +4541,354 @@ body > svg[aria-hidden="true"] {
 
 .hp-footer-links a {
   color: inherit;
+}
+
+/* ---------- TARGET HOMEPAGE PHOTO TREATMENT ---------- */
+.atabs {
+  background: var(--brown);
+  color: var(--on-dark);
+}
+
+.atabs .in {
+  max-width: 1180px;
+}
+
+.atabs .top > div {
+  display: grid;
+  gap: 12px;
+}
+
+.atabs .top .label,
+.story-copy .label,
+.support-copy .label {
+  color: var(--green);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.atabs .top h2 {
+  color: var(--on-dark);
+}
+
+.atabs .top p {
+  max-width: 54ch;
+  color: var(--on-dark-2);
+  font-size: 16px;
+}
+
+.atabs .top .pill.ghost {
+  color: var(--on-dark);
+}
+
+.atabs .tab {
+  color: var(--on-dark-2);
+}
+
+.atabs .tab .bar {
+  background: rgb(242 236 226 / 22%);
+}
+
+.atabs .tab .bar i {
+  background: rgb(166 207 114 / 45%);
+}
+
+.atabs .tab[aria-selected="true"] {
+  color: var(--ink);
+}
+
+.atabs .tab[aria-selected="true"] .bar {
+  background: var(--cream-2);
+}
+
+.atabs .tabpanel {
+  min-height: clamp(360px, 38vw, 500px);
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.3fr);
+}
+
+.atabs .tp-text {
+  align-content: center;
+  gap: clamp(24px, 3vw, 40px);
+  padding: clamp(24px, 3.4vw, 48px);
+  background: rgb(29 20 19 / 78%);
+  box-shadow: inset 0 0 0 1px rgb(255 240 220 / 14%);
+}
+
+.atabs .tp-text h3 {
+  margin-top: 10px;
+}
+
+.atabs .tp-text p {
+  max-width: 42ch;
+  font-size: clamp(16px, 1.3vw, 19px);
+}
+
+.atabs .tp-img {
+  min-height: 300px;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 48px -24px rgb(0 0 0 / 55%);
+}
+
+.journey-coach {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-lg) var(--space-xl);
+  border: 1px solid rgb(242 236 226 / 18%);
+  border-radius: var(--radius-lg);
+  color: var(--on-dark-2);
+}
+
+.journey-coach > svg {
+  width: 26px;
+  height: 26px;
+  color: var(--green);
+}
+
+.journey-coach p {
+  max-width: 62ch;
+}
+
+.journey-coach b {
+  color: var(--on-dark);
+  font-weight: 600;
+}
+
+.journey-coach .pill.ghost {
+  color: var(--on-dark);
+  white-space: nowrap;
+}
+
+.churches {
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 0;
+  align-items: stretch;
+  margin: clamp(10px, 1.5vw, 20px);
+}
+
+.churches .ch-img {
+  min-height: 520px;
+  padding: 0;
+  background:
+    linear-gradient(180deg, rgb(29 20 19 / 5%), rgb(29 20 19 / 18%)),
+    url("../img/friends.jpg") center / cover;
+}
+
+.churches .ch-copy {
+  display: grid;
+  align-content: center;
+  gap: var(--space-md);
+  padding: clamp(28px, 5vw, 68px);
+}
+
+.churches .tagline {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.churches h2 {
+  max-width: 19ch;
+  font-size: clamp(32px, 4vw, 54px);
+  font-weight: 400;
+  line-height: 1.08;
+}
+
+.churches p,
+.churches .ch-points span {
+  color: var(--muted);
+}
+
+.churches p {
+  max-width: 54ch;
+  font-size: 16px;
+}
+
+.churches .ch-points {
+  display: grid;
+  gap: var(--space-md);
+  margin: var(--space-sm) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.churches .ch-points li {
+  display: grid;
+  gap: 3px;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--cream-2);
+}
+
+.churches .ch-points b {
+  font-weight: 600;
+}
+
+.churches .ch-cta {
+  padding: 0;
+}
+
+.connect .post-art {
+  background-position: center;
+  background-size: cover;
+}
+
+.connect .post-art-1 {
+  background-image: url("../img/wind.jpg");
+}
+
+.connect .post-art-2 {
+  background-image: url("../img/friends.jpg");
+}
+
+.connect .post-art-3 {
+  background-image: url("../img/bible.jpg");
+}
+
+.story-sec {
+  min-height: clamp(520px, 62vw, 760px);
+  display: grid;
+  place-items: center;
+  padding: clamp(56px, 9vw, 112px) clamp(20px, 5vw, 72px);
+  color: var(--on-dark);
+  background: var(--brown);
+}
+
+.story-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgb(29 20 19 / 78%), rgb(29 20 19 / 45%)),
+    url("../img/hero.jpg") center 55% / cover;
+  transform: scale(1.01);
+}
+
+.story-copy {
+  position: relative;
+  display: grid;
+  gap: var(--space-lg);
+  width: min(980px, 100%);
+}
+
+.story-copy blockquote {
+  max-width: 28ch;
+  font-family: var(--font-heading);
+  font-size: clamp(26px, 4vw, 52px);
+  font-weight: 300;
+  line-height: 1.24;
+}
+
+.story-copy figcaption {
+  color: var(--on-dark-2);
+}
+
+.support {
+  display: grid;
+  place-items: center;
+  padding: clamp(72px, 10vw, 128px) clamp(20px, 5vw, 72px);
+  color: var(--on-dark);
+  background:
+    linear-gradient(120deg, rgb(29 20 19 / 86%), rgb(29 20 19 / 70%)),
+    url("../img/hills.jpg") center / cover;
+}
+
+.support-copy {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-lg);
+  width: min(800px, 100%);
+}
+
+.support-copy h2 {
+  max-width: 17ch;
+  font-size: clamp(36px, 5vw, 62px);
+  font-weight: 400;
+}
+
+.support-copy p {
+  max-width: 56ch;
+  color: var(--on-dark-2);
+  font-size: 17px;
+}
+
+.ring-stage .mc {
+  position: relative;
+  overflow: hidden;
+  padding-top: 170px;
+  background: rgb(29 20 19 / 78%);
+  box-shadow: inset 0 0 0 1px rgb(255 240 220 / 20%);
+}
+
+.ring-stage .mc::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 156px;
+  content: "";
+  background-position: center;
+  background-size: cover;
+  -webkit-mask-image: linear-gradient(#000 76%, transparent);
+  mask-image: linear-gradient(#000 76%, transparent);
+}
+
+.ring-stage .mc:nth-child(1)::before {
+  background-image: url("../img/callings/teacher.jpg");
+}
+
+.ring-stage .mc:nth-child(2)::before {
+  background-image: url("../img/carpenter.jpg");
+}
+
+.ring-stage .mc:nth-child(3)::before {
+  background-image: url("../img/callings/parent.jpg");
+}
+
+.ring-stage .mc:nth-child(4)::before {
+  background-image: url("../img/callings/pastor.jpg");
+}
+
+.ring-stage .mc:nth-child(5)::before {
+  background-image: url("../img/callings/student.jpg");
+}
+
+@media (max-width: 860px) {
+  .atabs .tabpanel {
+    grid-template-columns: 1fr;
+  }
+
+  .atabs .tp-img {
+    min-height: 260px;
+    order: -1;
+  }
+
+  .churches {
+    grid-template-columns: 1fr;
+  }
+
+  .churches .ch-img {
+    min-height: 300px;
+  }
+
+  .journey-coach {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .journey-coach .pill {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 560px) {
+  .journey-coach {
+    padding: var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .story-copy blockquote {
+    font-size: clamp(24px, 7vw, 36px);
+  }
 }
