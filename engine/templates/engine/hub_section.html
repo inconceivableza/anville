@@ -2,7 +2,7 @@
 {# For licensing information see ../../../LICENSE.md #}
 {% load section_pages %}
 {# ✨ One section's entry on the hub, with any `parts` of it listed within it (ticket 41b). A part is given no parts. #}
-<li class="hub-section srow{% if section.is_locked %} locked{% endif %}{% if section.is_next %} go{% endif %}">
+<li class="hub-section srow{% if section.part_of %} hub-part{% endif %}{% if section.is_locked %} locked{% endif %}{% if section.is_next %} go{% endif %}">
   {% if number %}<span class="n">{{ number|stringformat:"02d" }}</span>{% endif %}
   <div class="srow-body">
     {% if section.is_locked %}
@@ -10,12 +10,13 @@
     {% else %}
       <h3><a href="{% page_url section.id section.page %}">{{ section.title }}</a></h3>
     {% endif %}
+    {% if section.part_of %}<span class="row-kind">Activity</span>{% endif %}
     {% if section.estimate %}<p>{{ section.estimate }}</p>{% endif %}
     {% if section.is_locked and section.lock_note %}<p class="srow-note">{{ section.lock_note }}</p>{% endif %}
     {% if parts %}
       <ol class="hub-parts">
         {% for part in parts %}
-          {% include "engine/hub_section.html" with section=part parts=None %}
+          {% include "engine/hub_section.html" with section=part parts=None number="" %}
         {% endfor %}
       </ol>
     {% endif %}

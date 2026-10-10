@@ -9,6 +9,7 @@ cannot accidentally leave one out. Nothing here touches the database or a reques
 serves the hub page, the guard on a section page and the re-check when a section is completed.
 """
 
+import re
 from typing import NamedTuple
 
 from engine.document.blocks import BLOCK_TYPES, page_count, page_of, pages_of
@@ -55,6 +56,7 @@ class OutlineEntry(NamedTuple):
 
     section: SectionState
     parts: tuple
+    number: int | None
 
 
 class Hub(NamedTuple):
@@ -70,10 +72,20 @@ class Hub(NamedTuple):
         A part of a section outside the track is listed on its own."""
         listed = {state.id for state in self.sections if state.part_of is None}
         return [
-            OutlineEntry(state, tuple(part for part in self.sections if part.part_of == state.id))
+            OutlineEntry(
+                state,
+                tuple(part for part in self.sections if part.part_of == state.id),
+                _outline_number(state.title),
+            )
             for state in self.sections
             if state.part_of not in listed
         ]
+
+
+def _outline_number(title):
+    """✨ Use the authored course section number, not the row's position in the hub."""
+    match = re.match(r"^Section\s+(\d+):", title)
+    return int(match.group(1)) if match else None
 
 
 def track_sections(document):

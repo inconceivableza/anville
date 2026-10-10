@@ -14,7 +14,7 @@
       <div class="wrap">
         <div class="hub-head">
           <div style="display:grid;gap:10px"><h1>Welcome, <i>{{ name }}</i></h1></div>
-          <span class="label" style="color:var(--muted)">{{ hub.answered }} of {{ hub.total }} sections complete</span>
+          <span class="label" style="color:var(--muted)">Progress: {{ hub.answered }} of {{ hub.total }} items answered</span>
         </div>
         <div class="hub-grid">
           <div>
@@ -35,7 +35,7 @@
             {% endif %}
             <div class="slist">
               {% for entry in hub.outline %}
-                {% include "engine/hub_section.html" with section=entry.section parts=entry.parts number=forloop.counter %}
+                {% include "engine/hub_section.html" with section=entry.section parts=entry.parts number=entry.number %}
               {% endfor %}
             </div>
           </div>

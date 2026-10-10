@@ -44,6 +44,37 @@ def test_a_signed_in_participant_gets_the_homepage_and_begin_leads_to_the_hub(cl
 
 
 @pytest.mark.django_db
+def test_the_homepage_explains_the_workbook_and_adult_eligibility_up_front(client):
+    page = client.get("/").content.decode()
+
+    assert "A guided workbook for discerning your calling" in page
+    assert "For adults aged 18 and over." in page
+
+
+@pytest.mark.django_db
+def test_homepage_actions_use_consistent_labels_and_do_not_point_to_placeholders(client):
+    page = client.get("/").content.decode()
+
+    assert page.count("Begin your journey") == 4
+    assert 'href="#"' not in page
+    assert '<a class="post"' not in page
+    assert "Subscribe" not in page
+    fragments = set(re.findall(r'href="#([^"]*)"', page))
+    targets = set(re.findall(r'\bid="([^"]+)"', page))
+    assert fragments <= targets
+
+
+@pytest.mark.django_db
+def test_homepage_does_not_present_impact_percentages_without_context(client):
+    page = client.get("/").content.decode()
+
+    assert "Space to reflect on what matters" in page
+    assert "71%" not in page
+    assert "86%" not in page
+    assert "100%" not in page
+
+
+@pytest.mark.django_db
 def test_nothing_on_the_homepage_loads_from_another_site(client):
     page = client.get("/").content.decode()
     video = video_tag(page)

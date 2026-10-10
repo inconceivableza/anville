@@ -185,40 +185,6 @@ if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
 // same bundle serves every page. Motion is skipped for reduced-motion users.
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// --- Impact stats: count up and fill the bar once the stat scrolls into view ---
-(() => {
-  const stats = [...document.querySelectorAll(".stat")];
-  if (!stats.length) return;
-  const fill = (stat) => {
-    const value = +stat.dataset.v;
-    const num = stat.querySelector("b");
-    const bar = stat.querySelector(".bar i");
-    if (bar) bar.style.width = value + "%";
-    if (reducedMotion) {
-      if (num) num.textContent = value;
-      return;
-    }
-    const start = performance.now();
-    const step = (t) => {
-      const k = Math.min(1, (t - start) / 1600);
-      const eased = 1 - Math.pow(1 - k, 3);
-      if (num) num.textContent = Math.round(value * eased);
-      if (k < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  };
-  const io = new IntersectionObserver(
-    (entries) => entries.forEach((e) => {
-      if (e.isIntersecting) {
-        fill(e.target);
-        io.unobserve(e.target);
-      }
-    }),
-    { threshold: 0.4 }
-  );
-  stats.forEach((stat) => io.observe(stat));
-})();
-
 // --- Assessment tabs: auto-advancing, pausable, keyboard-navigable ---
 (() => {
   const bar = document.getElementById("aTabs");
@@ -326,7 +292,7 @@ const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matc
 })();
 
 // --- Scroll reveal: word-by-word opacity ---
-document.querySelectorAll("#reveal, [data-reveal]").forEach((el) => {
+for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   const wrap = (node) => {
     if (node.nodeType === 3) {
       const frag = document.createDocumentFragment();
@@ -351,7 +317,7 @@ document.querySelectorAll("#reveal, [data-reveal]").forEach((el) => {
   const words = [...el.querySelectorAll(".w")];
   if (reducedMotion) {
     words.forEach((w) => w.classList.add("on"));
-    return;
+    continue;
   }
   const update = () => {
     const r = el.getBoundingClientRect();
@@ -363,7 +329,7 @@ document.querySelectorAll("#reveal, [data-reveal]").forEach((el) => {
   addEventListener("scroll", update, { passive: true });
   addEventListener("resize", update);
   update();
-})();
+}
 
 // --- Hero logo carousel (placeholder partner marks) ---
 (() => {
@@ -397,26 +363,6 @@ document.querySelectorAll("#reveal, [data-reveal]").forEach((el) => {
       setTimeout(() => { set = (set + 1) % 2; render(); }, 5 * 50 + 850);
     }, 4500);
   }
-})();
-
-// --- Newsletter form (demo) ---
-(() => {
-  const form = document.getElementById("newsForm");
-  if (!form) return;
-  const input = document.getElementById("newsEmail");
-  const msg = document.getElementById("newsMsg");
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    if (!/^\S+@\S+\.\S+$/.test(input.value.trim())) {
-      input.setAttribute("aria-invalid", "true");
-      msg.textContent = "Please enter a valid email address.";
-      input.focus();
-      return;
-    }
-    input.removeAttribute("aria-invalid");
-    form.hidden = true;
-    msg.textContent = "Thanks, you’re subscribed. Look out for our next note.";
-  });
 })();
 
 // --- Magnetic buttons (fine pointers only) ---
