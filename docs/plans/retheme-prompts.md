@@ -211,24 +211,25 @@ The reference design is `docs/plans/retheme_index.html` (946 lines, 84 KB). It i
 
 **Files to touch:**
 - `frontend/src/main.js`
+- `frontend/src/styles.css` (reduced-motion rules and the adapted calling-card carousel)
 
 **Prompt:**
 
-> Port the presentational interactions from the reference HTML into `frontend/src/main.js`. Each must be guarded by `prefers-reduced-motion` (the reference already does this). Keep the existing htmx autosave, contact-row, coach-checklist, and copy-link logic untouched.
+> Port the presentational interactions from the reference HTML into `frontend/src/main.js`. Each must respect `prefers-reduced-motion` (the reference already does this). Keep the existing htmx autosave, contact-row, coach-checklist, and copy-link logic untouched.
 >
 > Port these:
-> - **Wipe transition** — only for the landing→onboarding CTA; drop the SPA view-switching.
-> - **Ring carousel** (`#ringStage`) — the "Meet" section.
+> - **Wipe transition** — only for the homepage CTA into Django signup or the hub; drop SPA view-switching.
+> - **Ring carousel** — adapt existing `.meet-cards` content when the reference's `#ringStage` markup is absent. Do not invent people or image assets.
 > - **Word-by-word scroll reveal** (`#reveal`, `[data-reveal]`).
 > - **Auto-advancing assessment tabs** (`#aTabs`).
 > - **Sticky scrollytelling** (`#howSteps`).
-> - **Count-up stats** (`.stat`).
+> - **Count-up stats** (`.stat`) only when real numeric values are supplied; do not invent impact figures.
 > - **Magnetic buttons** (`.pill`).
-> - **Logo carousel** (`#logoRow`).
+> - **Logo carousel** (`#logoRow`) only for real partner marks; do not add placeholder organizations.
 >
 > **Acceptance criteria:**
 > - Each interaction works on its page.
-> - Each respects `prefers-reduced-motion`.
+> - Motion-heavy interactions and related CSS respect `prefers-reduced-motion`.
 > - Existing htmx autosave, contact-row, coach-checklist, and copy-link logic still work.
 > - `npm run build` succeeds and the pages render without console errors.
 

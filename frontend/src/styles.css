@@ -729,6 +729,41 @@ main.container:has(> .ob) {
   margin-bottom: 16px;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .how-bg-panel,
+  .how-dots i,
+  .how-ill,
+  .how-row,
+  .ill-float,
+  .tab .bar i,
+  .tp-anim,
+  #aImgs .tp-anim,
+  .reveal .w,
+  [data-reveal] .w,
+  .lg,
+  .pill,
+  .pill .ar {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+
+  .how-bg-panel,
+  .how-ill,
+  .how-row {
+    transform: none;
+  }
+
+  .how-ill,
+  .how-row {
+    opacity: 1;
+  }
+
+  .tab[aria-selected="true"] .bar i {
+    width: 100%;
+  }
+}
+
 h1 {
   font-family: var(--font-heading);
   font-size: var(--text-2xl);
@@ -4552,6 +4587,55 @@ body > svg[aria-hidden="true"] {
   gap: 12px;
   margin-top: 40px;
   padding-inline: clamp(16px, 4vw, 48px);
+}
+
+.ring-stage {
+  position: relative;
+  width: 100%;
+  margin: 28px auto 0;
+  overflow: hidden;
+  perspective: 1100px;
+  touch-action: pan-y;
+}
+
+.meet-cards.ring {
+  position: absolute;
+  inset: 0;
+  display: block;
+  margin: 0;
+  padding: 0;
+  transform-style: preserve-3d;
+}
+
+.ring-stage .mc {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-height: 200px;
+  backface-visibility: hidden;
+  text-align: center;
+}
+
+.ring-controls {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.ring-control {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--space-md);
+  border: 1px solid rgba(242, 236, 226, 0.35);
+  border-radius: var(--radius-pill-shape);
+  background: var(--brown);
+  color: var(--on-dark);
+  cursor: pointer;
 }
 
 .mc {
