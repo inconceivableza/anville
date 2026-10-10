@@ -300,8 +300,6 @@ if (document.querySelector("main.page") && !reducedMotion) {
     if (e.key === "ArrowLeft") { go(i - 1); tabs[i].focus(); }
   });
   if (section) {
-    section.addEventListener("mouseenter", () => pause("pointer"));
-    section.addEventListener("mouseleave", () => resume("pointer"));
     section.addEventListener("focusin", () => pause("focus"));
     section.addEventListener("focusout", (event) => {
       if (section.contains(event.relatedTarget)) return;

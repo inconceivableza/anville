@@ -4172,23 +4172,43 @@ body > svg[aria-hidden="true"] {
 }
 
 #aImgs .tp-anim[data-i="0"] {
-  background: radial-gradient(120% 100% at 30% 30%, #a6cf72 0%, #7a9e5a 55%, #2f5a2b 100%);
+  background-image:
+    linear-gradient(120deg, rgb(47 90 43 / 12%), rgb(29 20 19 / 30%)),
+    url("../img/potter.jpg");
+  background-position: center;
+  background-size: cover;
 }
 
 #aImgs .tp-anim[data-i="1"] {
-  background: radial-gradient(120% 100% at 70% 30%, #e8e4d3 0%, #d8d0bb 55%, #b8ae9c 100%);
+  background-image:
+    linear-gradient(120deg, rgb(47 90 43 / 10%), rgb(29 20 19 / 30%)),
+    url("../img/field-walk.jpg");
+  background-position: center;
+  background-size: cover;
 }
 
 #aImgs .tp-anim[data-i="2"] {
-  background: radial-gradient(120% 100% at 30% 70%, #3d2d27 0%, #2b1f1c 55%, #1d1413 100%);
+  background-image:
+    linear-gradient(120deg, rgb(47 90 43 / 10%), rgb(29 20 19 / 35%)),
+    url("../img/bible.jpg");
+  background-position: center;
+  background-size: cover;
 }
 
 #aImgs .tp-anim[data-i="3"] {
-  background: radial-gradient(120% 100% at 70% 70%, #f2f0e3 0%, #e8e4d3 55%, #c9bdb0 100%);
+  background-image:
+    linear-gradient(120deg, rgb(47 90 43 / 10%), rgb(29 20 19 / 28%)),
+    url("../img/hills.jpg");
+  background-position: center;
+  background-size: cover;
 }
 
 #aImgs .tp-anim[data-i="4"] {
-  background: radial-gradient(120% 100% at 50% 50%, #2f5a2b 0%, #27432a 55%, #1d1413 100%);
+  background-image:
+    linear-gradient(120deg, rgb(47 90 43 / 10%), rgb(29 20 19 / 28%)),
+    url("../img/facing-sun.jpg");
+  background-position: center;
+  background-size: cover;
 }
 
 @keyframes tpin {
