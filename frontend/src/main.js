@@ -162,19 +162,276 @@ document.addEventListener("click", async (event) => {
   }
 });
 
-// ✨ The homepage's menu is a <details>, so it opens without JavaScript; with it, following a link closes the menu.
-document.addEventListener("click", (event) => {
-  const menu = event.target.closest("[data-closes-on-link]");
-  if (!menu || !event.target.closest("a")) return;
-  menu.open = false;
-});
-
 // ✨ The homepage's forest moves only for those who have not asked their device for less motion. It is started here
 // rather than by `autoplay`, which would play before this check could stop it; everyone else, and anyone without
 // JavaScript, sees the still frame.
 if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
   document.querySelectorAll("video[data-plays-unless-reduced-motion]").forEach((video) => {
     video.play().catch(() => {}); // ✨ a browser that refuses keeps the still frame
+  });
+}
+
+// ✨ Homepage: "Whatever You Do" landing view interactions.
+// Each block is self-contained and no-ops when its section is absent, so the
+// same bundle serves every page. Motion is skipped for reduced-motion users.
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// --- Impact stats: count up and fill the bar once the stat scrolls into view ---
+(() => {
+  const stats = [...document.querySelectorAll(".stat")];
+  if (!stats.length) return;
+  const fill = (stat) => {
+    const value = +stat.dataset.v;
+    const num = stat.querySelector("b");
+    const bar = stat.querySelector(".bar i");
+    if (bar) bar.style.width = value + "%";
+    if (reducedMotion) {
+      if (num) num.textContent = value;
+      return;
+    }
+    const start = performance.now();
+    const step = (t) => {
+      const k = Math.min(1, (t - start) / 1600);
+      const eased = 1 - Math.pow(1 - k, 3);
+      if (num) num.textContent = Math.round(value * eased);
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+  const io = new IntersectionObserver(
+    (entries) => entries.forEach((e) => {
+      if (e.isIntersecting) {
+        fill(e.target);
+        io.unobserve(e.target);
+      }
+    }),
+    { threshold: 0.4 }
+  );
+  stats.forEach((stat) => io.observe(stat));
+})();
+
+// --- Assessment tabs: auto-advancing, pausable, keyboard-navigable ---
+(() => {
+  const bar = document.getElementById("aTabs");
+  const text = document.getElementById("aText");
+  const imgs = document.getElementById("aImgs");
+  const section = document.getElementById("journey");
+  if (!bar || !text) return;
+  const T = [
+    ["Gifts & talents", "Discover how you’ve been designed, through your eyes and those who know you.", ["36-statement strengths sort", "Romans 12 and 1 Corinthians 12", "Your results beside your friends’"], "Your strengths, as you and others see them"],
+    ["The shape of your life", "Map your story and spot the moments you felt most alive.", ["An interactive life timeline", "Prompts for each chapter", "Reflection questions"], "A life timeline"],
+    ["Putting your calling into words", "Put what you’ve learned into a short calling statement.", ["Draft a calling statement", "Explore possible directions", "Write up your best options"], "A calling statement and options"],
+    ["Walking it out in obedience", "Turn what you’ve found into practical next steps.", ["Skills and experience to grow", "A step-by-step roadmap", "Check-ins with your mentor"], "A roadmap for the year ahead"],
+    ["Letter to your future self", "Capture what you’ve heard, to read again when it matters.", ["A guided letter", "Sent back to you later", "Your baseline answers revisited"], "A letter, sent back to you later"],
+  ];
+  const DUR = 7000;
+  let i = 0, timer, start, remain = DUR, paused = false;
+  bar.innerHTML = T.map((t, j) => `<button class="tab" role="tab" id="atab${j}" aria-controls="aText" aria-selected="${j === 0}"><span class="n">0${j + 1}</span><b>${t[0]}</b><span class="bar"><i></i></span></button>`).join("");
+  if (imgs) imgs.innerHTML = T.map((t, j) => `<div class="tp-anim" data-i="${j}"></div>`).join("");
+  const tabs = [...bar.children];
+  const pics = imgs ? [...imgs.children] : [];
+  bar.style.setProperty("--dur", DUR + "ms");
+  const render = () => {
+    const t = T[i];
+    text.innerHTML = `<div class="tp-anim"><span class="n">SECTION 0${i + 1}</span><h3>${t[0]}</h3><p>${t[1]}</p></div><ul class="tp-anim">${t[2].map((x) => `<li><svg><use href="#leaf"/></svg>${x}</li>`).join("")}</ul>`;
+    text.setAttribute("aria-labelledby", "atab" + i);
+    tabs.forEach((b, j) => {
+      b.setAttribute("aria-selected", j === i);
+      b.classList.toggle("done", j < i);
+      const bi = b.querySelector(".bar i");
+      if (bi) {
+        bi.style.animation = "none";
+        void bi.offsetWidth;
+        bi.style.animation = "";
+      }
+    });
+    pics.forEach((im, j) => im.classList.toggle("on", j === i));
+    if (bar.scrollWidth > bar.clientWidth) bar.scrollTo({ left: Math.max(0, tabs[i].offsetLeft - bar.offsetLeft - 16), behavior: "smooth" });
+  };
+  const go = (n) => {
+    i = (n + T.length) % T.length;
+    render();
+    remain = DUR;
+    schedule();
+  };
+  const schedule = () => {
+    clearTimeout(timer);
+    if (reducedMotion || paused) return;
+    start = Date.now();
+    timer = setTimeout(() => go(i + 1), remain);
+  };
+  tabs.forEach((b, j) => b.addEventListener("click", () => go(j)));
+  const prev = document.getElementById("aPrev");
+  const next = document.getElementById("aNext");
+  if (prev) prev.addEventListener("click", () => go(i - 1));
+  if (next) next.addEventListener("click", () => go(i + 1));
+  bar.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight") { go(i + 1); tabs[i].focus(); }
+    if (e.key === "ArrowLeft") { go(i - 1); tabs[i].focus(); }
+  });
+  if (section) {
+    section.addEventListener("mouseenter", () => {
+      paused = true;
+      section.classList.add("paused");
+      clearTimeout(timer);
+      remain -= Date.now() - start;
+    });
+    section.addEventListener("mouseleave", () => {
+      paused = false;
+      section.classList.remove("paused");
+      schedule();
+    });
+  }
+  if (reducedMotion) bar.style.setProperty("--dur", "0s");
+  render();
+  schedule();
+})();
+
+// --- How it works: sticky scrollytelling ---
+(() => {
+  const steps = [...document.querySelectorAll(".how-step")];
+  const panels = [...document.querySelectorAll(".how-bg-panel")];
+  const dots = [...document.querySelectorAll("#howDots i")];
+  if (!steps.length) return;
+  let cur = 0;
+  const set = (i) => {
+    if (i === cur) return;
+    cur = i;
+    panels.forEach((p, j) => p.classList.toggle("on", j === i));
+    dots.forEach((d, j) => d.classList.toggle("on", j === i));
+    steps.forEach((st, j) => st.classList.toggle("on", j === i));
+  };
+  const update = () => {
+    const mid = innerHeight / 2;
+    let best = 0, bestDist = 1e9;
+    steps.forEach((st, j) => {
+      const r = st.getBoundingClientRect();
+      const d = Math.abs(r.top + r.height / 2 - mid);
+      if (d < bestDist) { bestDist = d; best = j; }
+    });
+    set(best);
+  };
+  addEventListener("scroll", update, { passive: true });
+  addEventListener("resize", update);
+  update();
+})();
+
+// --- Scroll reveal: word-by-word opacity ---
+document.querySelectorAll("#reveal, [data-reveal]").forEach((el) => {
+  const wrap = (node) => {
+    if (node.nodeType === 3) {
+      const frag = document.createDocumentFragment();
+      node.textContent.split(/(\s+)/).forEach((token) => {
+        if (!token) return;
+        if (/^\s+$/.test(token)) frag.appendChild(document.createTextNode(token));
+        else {
+          const span = document.createElement("span");
+          span.className = "w";
+          span.textContent = token;
+          frag.appendChild(span);
+        }
+      });
+      node.replaceWith(frag);
+    } else if (node.nodeType === 1 && node.tagName === "EM") {
+      node.classList.add("w");
+    } else {
+      [...node.childNodes].forEach(wrap);
+    }
+  };
+  [...el.childNodes].forEach(wrap);
+  const words = [...el.querySelectorAll(".w")];
+  if (reducedMotion) {
+    words.forEach((w) => w.classList.add("on"));
+    return;
+  }
+  const update = () => {
+    const r = el.getBoundingClientRect();
+    const vh = innerHeight;
+    const p = Math.min(1, Math.max(0, (vh * 0.85 - r.top) / (r.height + vh * 0.35)));
+    const n = Math.round(p * words.length);
+    words.forEach((w, i) => w.classList.toggle("on", i < n));
+  };
+  addEventListener("scroll", update, { passive: true });
+  addEventListener("resize", update);
+  update();
+})();
+
+// --- Hero logo carousel (placeholder partner marks) ---
+(() => {
+  const row = document.getElementById("logoRow");
+  if (!row) return;
+  const G = {
+    circle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5" fill="currentColor"/></svg>',
+    cross: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="10" y="2" width="4" height="20" rx="1"/><rect x="4" y="7" width="16" height="4" rx="1"/></svg>',
+    flame: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-4-1-6 1-9z"/></svg>',
+    vine: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22V9M12 13c-4 0-6-2-6-6 4 0 6 2 6 6zM12 9c0-4 2-6 6-6 0 4-2 6-6 6z"/></svg>',
+    arch: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22V11a8 8 0 0 1 16 0v11M9 22v-7a3 3 0 0 1 6 0v7"/></svg>',
+    wave: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 9c3-3 5 3 8 0s5 3 8 0 3-1 4-1M2 15c3-3 5 3 8 0s5 3 8 0 3-1 4-1"/></svg>',
+    lamp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3h8l2 5H6zM7 8h10v9a5 5 0 0 1-10 0z"/><path d="M12 12v4"/></svg>',
+    sheaf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22V6M12 10l-5-5M12 10l5-5M12 15l-6-4M12 15l6-4"/></svg>',
+    stone: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 20 8 4h8l5 16z" opacity=".35"/><path d="M3 20 8 4l4 16z"/></svg>',
+    oak: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="9" r="7"/><rect x="11" y="14" width="2" height="8"/></svg>',
+  };
+  const L = [
+    ["circle", "f-serif", "St Brendan’s"], ["cross", "f-caps", "Hope City"], ["flame", "f-light", "kinship"], ["arch", "f-serif", "Northfield Chapel"], ["vine", "f-ital", "The Vine"],
+    ["wave", "f-caps", "Riverside"], ["lamp", "f-mono", "Lantern Trust"], ["sheaf", "f-serif", "Harvest Church"], ["stone", "f-caps", "Cornerstone"], ["oak", "f-light", "ember&oak"],
+  ];
+  let set = 0;
+  const render = () => {
+    row.innerHTML = L.slice(set * 5, set * 5 + 5).map(([g, f, n]) => `<span class="lg ${f}">${G[g]}<span>${n}</span></span>`).join("");
+    [...row.children].forEach((el, i) => setTimeout(() => el.classList.add("in"), reducedMotion ? 0 : 100 + i * 70));
+  };
+  render();
+  if (!reducedMotion) {
+    setInterval(() => {
+      [...row.children].forEach((el, i) => setTimeout(() => { el.classList.remove("in"); el.classList.add("out"); }, i * 50));
+      setTimeout(() => { set = (set + 1) % 2; render(); }, 5 * 50 + 850);
+    }, 4500);
+  }
+})();
+
+// --- Newsletter form (demo) ---
+(() => {
+  const form = document.getElementById("newsForm");
+  if (!form) return;
+  const input = document.getElementById("newsEmail");
+  const msg = document.getElementById("newsMsg");
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!/^\S+@\S+\.\S+$/.test(input.value.trim())) {
+      input.setAttribute("aria-invalid", "true");
+      msg.textContent = "Please enter a valid email address.";
+      input.focus();
+      return;
+    }
+    input.removeAttribute("aria-invalid");
+    form.hidden = true;
+    msg.textContent = "Thanks, you’re subscribed. Look out for our next note.";
+  });
+})();
+
+// --- Magnetic buttons (fine pointers only) ---
+if (window.matchMedia("(hover: hover) and (pointer: fine)").matches && !reducedMotion) {
+  document.addEventListener("pointermove", (e) => {
+    const b = e.target.closest && e.target.closest(".pill");
+    if (b) {
+      const r = b.getBoundingClientRect();
+      const dx = (e.clientX - (r.left + r.width / 2)) / r.width;
+      const dy = (e.clientY - (r.top + r.height / 2)) / r.height;
+      b.style.transition = "transform .25s cubic-bezier(.2,.7,.2,1), filter .2s";
+      b.style.transform = `translate(${(dx * 10).toFixed(1)}px,${(dy * 8).toFixed(1)}px)`;
+      const a = b.querySelector(".ar");
+      if (a) a.style.translate = `${(dx * 5).toFixed(1)}px ${(dy * 4).toFixed(1)}px`;
+    }
+  }, { passive: true });
+  document.addEventListener("pointerout", (e) => {
+    const b = e.target.closest && e.target.closest(".pill");
+    if (b && !b.contains(e.relatedTarget)) {
+      b.style.transition = "transform .5s cubic-bezier(.2,.7,.2,1), filter .2s";
+      b.style.transform = "";
+      const a = b.querySelector(".ar");
+      if (a) a.style.translate = "";
+    }
   });
 }
 

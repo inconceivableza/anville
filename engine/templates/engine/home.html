@@ -7,274 +7,265 @@
 {% block head_title %}Whatever You Do{% endblock head_title %}
 
 {% block body %}
-  <details class="hp-nav" data-closes-on-link>
-    <summary class="hp-nav-toggle" aria-label="Menu"><span></span><span></span><span></span></summary>
-    <nav class="hp-nav-menu" aria-label="Homepage">
-      <a href="#hp-about">About</a>
-      <a href="#hp-method">How it works</a>
-      <a href="#hp-impact">Impact</a>
-    </nav>
-  </details>
+  <svg aria-hidden="true">
+    <symbol id="mark" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="16" cy="16" r="4"/><ellipse cx="16" cy="8" rx="3.4" ry="5.5"/><ellipse cx="16" cy="24" rx="3.4" ry="5.5"/><ellipse cx="8" cy="16" rx="5.5" ry="3.4"/><ellipse cx="24" cy="16" rx="5.5" ry="3.4"/><ellipse cx="10.3" cy="10.3" rx="3" ry="5" transform="rotate(-45 10.3 10.3)"/><ellipse cx="21.7" cy="21.7" rx="3" ry="5" transform="rotate(-45 21.7 21.7)"/><ellipse cx="21.7" cy="10.3" rx="3" ry="5" transform="rotate(45 21.7 10.3)"/><ellipse cx="10.3" cy="21.7" rx="3" ry="5" transform="rotate(45 10.3 21.7)"/></g></symbol>
+    <symbol id="arrow" viewBox="0 0 12 12"><path d="M3 9L9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.4"/></symbol>
+    <symbol id="leaf" viewBox="0 0 24 24"><path d="M5 19C5 10 11 5 20 4c0 9-5 15-14 15z" fill="currentColor" opacity=".9"/><path d="M5 19c3-5 7-9 11-11" fill="none" stroke="#1d1413" stroke-width="1.2" stroke-linecap="round" opacity=".55"/></symbol>
+    <symbol id="tick" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1"/><path d="M5 8.2l2 2 4-4.4" fill="none" stroke="currentColor" stroke-width="1.3"/></symbol>
+  </svg>
 
-  <main class="hp">
-    <div class="hp-hero">
-      <video class="hp-hero-video" muted loop playsinline preload="auto" poster="{% static 'hero-poster.jpg' %}" aria-hidden="true" data-plays-unless-reduced-motion>
+  <main class="page">
+
+    <!-- =================== HERO =================== -->
+    <header class="panel hero" id="top">
+      <video id="heroVid" autoplay muted loop playsinline preload="auto" poster="{% static 'hero-poster.jpg' %}" aria-hidden="true" data-plays-unless-reduced-motion>
         <source src="{% static 'hero.mp4' %}" type="video/mp4">
       </video>
-      <div class="hp-hero-overlay"></div>
-      <div class="hp-hero-inner">
-        <p class="hp-eyebrow hp-hero-eyebrow">Whatever you do</p>
-        <h1 class="hp-headline">What is<br>your purpose?</h1>
-        <p class="hp-tagline">Ancient wisdom for discerning your calling.</p>
-        <div class="hp-btn-row">
-          <a class="btn btn-primary hp-begin" href="{{ begin }}">Begin →</a>
+      <nav class="nav" aria-label="Main">
+        <div class="l"><a href="#top">Home</a><a href="#how">How it works</a><a href="#journey">The assessment</a></div>
+        <a href="#top" aria-label="Whatever You Do home"><svg class="mark"><use href="#mark"/></svg></a>
+        <div class="r"><a href="#impact">Impact</a><a href="#mentor">Mentors</a><a href="{{ begin }}">Begin</a></div>
+      </nav>
+      <div class="hero-copy">
+        <h1>Discover the work you were made for.</h1>
+        <div class="hero-cta">
+          <a class="pill" href="{{ begin }}">Begin your journey <span class="ar"><svg><use href="#arrow"/></svg></span></a>
+          <a class="pill ghost" href="#mentor">For mentors</a>
         </div>
         {% include "access/demo_notice.html" %}
       </div>
-    </div>
+      <div class="logos" aria-label="Churches and organisations using Whatever You Do">
+        <div class="logo-row" id="logoRow"></div>
+      </div>
+    </header>
 
-    <section class="hp-section hp-section-white" id="hp-about">
-      <div class="hp-section-inner hp-about">
-        <h2 class="hp-eyebrow">About</h2>
-        <p class="hp-about-lead">We believe everyone is designed for a purpose – and that discovering it shouldn't be left to chance.</p>
-        <p class="hp-about-text">Whatever You Do is a pathway for discerning your calling – drawing on scripture, a strengths assessment, feedback from people who know you, and the wisdom of a mentor.</p>
-        <p class="hp-about-text">We help release individuals and churches to see everyday work as ministry, and to make a kingdom impact wherever God has placed them.</p>
+    <!-- =================== MISSION =================== -->
+    <section class="panel mission" id="mission">
+      <div class="in">
+        <p class="reveal" id="reveal">Whatever You Do is a pathway for discerning your calling, drawing on scripture, a strengths assessment, feedback from trusted peers, and a mentor to help you unpack your gifting.</p>
+        <div class="sign"><svg><use href="#mark"/></svg><span>A calling workbook for every season of life</span></div>
       </div>
     </section>
 
-    <section class="hp-section hiw" id="hp-method">
-      <div class="hp-section-inner">
-        <p class="hp-eyebrow">How it works</p>
-        <h2 class="hiw-title">Four steps, a few hours, and someone walking it with you</h2>
-        <p class="hiw-lede">The steps below describe the Whatever You Do course. As an organisation we're about vocational discipleship more broadly — but this is the thing you can start today.</p>
-
-        <div class="hiw-commit">
-          <div class="hiw-commit-top">
-            <div class="hiw-commit-fig">
-              <div class="hiw-commit-num">3–4<span> hours</span></div>
-              <div class="hiw-commit-lab">of your own time, in sittings of twenty minutes or so</div>
-            </div>
-            <div class="hiw-commit-fig">
-              <div class="hiw-commit-num">6–8<span> weeks</span></div>
-              <div class="hiw-commit-lab">from start to finish, at an unhurried pace</div>
-            </div>
-            <div class="hiw-commit-fig">
-              <div class="hiw-commit-num">3<span> conversations</span></div>
-              <div class="hiw-commit-lab">with a coach of your choosing, about an hour each</div>
-            </div>
-          </div>
-          <div class="hiw-commit-break">
-            <div class="hiw-cbit"><b>30 min</b> Strengths assessment</div>
-            <div class="hiw-cbit"><b>20 min</b> Written questions</div>
-            <div class="hiw-cbit"><b>40 min</b> Your life timeline</div>
-            <div class="hiw-cbit"><b>50 min</b> Putting it into words</div>
-            <div class="hiw-cbit"><b>40 min</b> Building your plan</div>
-          </div>
-          <p class="hiw-commit-note"><b>The calendar time is longer than the working time, deliberately.</b>
-            You're waiting on people — for your contacts to answer, for your coach to find an hour — and the
-            thinking needs a few nights to settle. Nothing expires, and you can stop wherever you like and pick it up later.</p>
-        </div>
-
-        <div class="hiw-steps">
-          <div class="hiw-step">
-            <div class="hiw-step-copy">
-              <div class="hiw-step-num">STEP ONE</div>
-              <h3>Find out what other people see</h3>
-              <p>Sort 36 cards to map your gifts, then answer six questions in your own words. Five people who know you well answer the same questions about you.</p>
-              <p>Most people find the gap between the two lists is the most useful thing they take away.</p>
-              <div class="hiw-step-time"><span aria-hidden="true">🕘</span> <span><b>30 minutes</b>, plus a week or so for people to reply</span></div>
-            </div>
-            <div class="hiw-step-vis">
-              <div class="hiw-shot" aria-hidden="true">
-                <div class="hiw-shot-bar"><i></i><i></i><i></i></div>
-                <div class="hiw-m-title">YOU AND THEM</div>
-                <div class="hiw-m-row"><span class="hiw-m-name">Teacher</span>
-                  <span class="hiw-m-track"><span class="hiw-m-fill hiw-you hp-w-78"></span></span>
-                  <span class="hiw-m-pct">24%</span></div>
-                <div class="hiw-m-row"><span class="hiw-m-name"></span>
-                  <span class="hiw-m-track"><span class="hiw-m-fill hiw-them hp-w-92"></span></span>
-                  <span class="hiw-m-pct">29%</span></div>
-                <div class="hiw-m-row hiw-m-row-gap"><span class="hiw-m-name">Shepherd</span>
-                  <span class="hiw-m-track"><span class="hiw-m-fill hiw-you hp-w-38"></span></span>
-                  <span class="hiw-m-pct">12%</span></div>
-                <div class="hiw-m-row"><span class="hiw-m-name"></span>
-                  <span class="hiw-m-track"><span class="hiw-m-fill hiw-them hp-w-62"></span></span>
-                  <span class="hiw-m-pct">19%</span></div>
-                <div class="hiw-m-key">
-                  <span><i class="hiw-you"></i>You</span>
-                  <span><i class="hiw-them"></i>Them</span>
-                </div>
-                <div class="hiw-m-chips">
-                  <span class="hiw-m-chip">patient ×4</span>
-                  <span class="hiw-m-chip">generous ×3</span>
-                  <span class="hiw-m-chip">steady ×2</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="hiw-step hiw-step-later">
-            <div class="hiw-step-copy">
-              <div class="hiw-step-num">STEP TWO</div>
-              <h3>Read your own life back</h3>
-              <p>Lay your life out in chapters, then mark what happened in each: the doors that opened, the ones that shut, the people who shaped you, and the work that bore fruit.</p>
-              <p>Seen together rather than separately, the threads tend to show themselves.</p>
-              <div class="hiw-step-time"><span aria-hidden="true">🕘</span> <span><b>40 minutes</b>, and worth doing in two sittings</span></div>
-            </div>
-            <div class="hiw-step-vis">
-              <p class="hiw-later-label">In the workbook</p>
-              <div class="hiw-shot" aria-hidden="true">
-                <div class="hiw-shot-bar"><i></i><i></i><i></i></div>
-                <div class="hiw-m-title">YOUR TIMELINE</div>
-                <div class="hiw-m-tl">
-                  <div class="hiw-m-ch"><span class="hiw-m-node"></span>
-                    <div class="hiw-m-ch-lab">School</div>
-                    <div class="hiw-m-dots"><span class="hiw-m-dot hiw-rose"></span>
-                      <span class="hiw-m-dot hiw-sand"></span></div></div>
-                  <div class="hiw-m-ch"><span class="hiw-m-node"></span>
-                    <div class="hiw-m-ch-lab">University</div>
-                    <div class="hiw-m-dots"><span class="hiw-m-dot hiw-blue"></span>
-                      <span class="hiw-m-dot hiw-plum"></span>
-                      <span class="hiw-m-dot hiw-rose"></span></div></div>
-                  <div class="hiw-m-ch"><span class="hiw-m-node"></span>
-                    <div class="hiw-m-ch-lab">First job</div>
-                    <div class="hiw-m-dots"><span class="hiw-m-dot hiw-moss"></span>
-                      <span class="hiw-m-dot hiw-plum"></span>
-                      <span class="hiw-m-dot hiw-blue"></span></div></div>
-                  <div class="hiw-m-ch hiw-m-ch-last"><span class="hiw-m-node hiw-m-node-now"></span>
-                    <div class="hiw-m-ch-lab">Now</div>
-                    <div class="hiw-m-dots"><span class="hiw-m-dot hiw-moss"></span>
-                      <span class="hiw-m-dot hiw-sand"></span></div></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="hiw-step hiw-step-later">
-            <div class="hiw-step-copy">
-              <div class="hiw-step-num">STEP THREE</div>
-              <h3>Put it into words, then open it back up</h3>
-              <p>Narrow everything down to a single sentence you'd actually stand behind. Then deliberately widen again — the same calling could be lived out in far more ways than the two or three you've already thought of.</p>
-              <div class="hiw-step-time"><span aria-hidden="true">🕘</span> <span><b>50 minutes</b> across the two parts</span></div>
-            </div>
-            <div class="hiw-step-vis">
-              <p class="hiw-later-label">In the workbook</p>
-              <div class="hiw-shot" aria-hidden="true">
-                <div class="hiw-shot-bar"><i></i><i></i><i></i></div>
-                <div class="hiw-m-title">YOUR CALLING</div>
-                <div class="hiw-m-sent">God seems to have designed me to
-                  <span class="hiw-m-slot">make hard things clear</span> among
-                  <span class="hiw-m-slot">people starting out</span>, so that
-                  <span class="hiw-m-slot">they see their work truly</span>.</div>
-                <div class="hiw-m-ideas">
-                  <span class="hiw-m-idea hiw-idea-blue">Inside a college</span>
-                  <span class="hiw-m-idea hiw-idea-plum">Build the tool</span>
-                  <span class="hiw-m-idea hiw-idea-gold">Train others</span>
-                  <span class="hiw-m-idea hiw-idea-blue">One person a year</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="hiw-step hiw-step-later">
-            <div class="hiw-step-copy">
-              <div class="hiw-step-num">STEP FOUR</div>
-              <h3>Leave with something you'll actually do</h3>
-              <p>Turn all of it into specific actions — steps of faith, skills to grow, character, people to learn from — and place them across the next eighteen months.</p>
-              <p>You finish with a plan on one page, not a feeling that fades by Thursday.</p>
-              <div class="hiw-step-time"><span aria-hidden="true">🕘</span> <span><b>40 minutes</b></span></div>
-            </div>
-            <div class="hiw-step-vis">
-              <p class="hiw-later-label">In the workbook</p>
-              <div class="hiw-shot" aria-hidden="true">
-                <div class="hiw-shot-bar"><i></i><i></i><i></i></div>
-                <div class="hiw-m-title">YOUR ROADMAP</div>
-                <div class="hiw-m-q">
-                  <div class="hiw-m-qc"><div class="hiw-m-ql">Q3</div>
-                    <div class="hiw-m-card">Ask Sarah to coach me</div>
-                    <div class="hiw-m-card hiw-card-moss">Weekly silence</div></div>
-                  <div class="hiw-m-qc"><div class="hiw-m-ql">Q4</div>
-                    <div class="hiw-m-card hiw-card-plum">Volunteer at college</div></div>
-                  <div class="hiw-m-qc"><div class="hiw-m-ql">Q1</div>
-                    <div class="hiw-m-card hiw-card-blue">Speaking course</div>
-                    <div class="hiw-m-card">Shadow a trainer</div></div>
-                  <div class="hiw-m-qc"><div class="hiw-m-ql">Q2</div>
-                    <div class="hiw-m-card hiw-card-sand">Run first session</div></div>
-                </div>
-              </div>
+    <!-- =================== HOW IT WORKS =================== -->
+    <section class="panel how" id="how">
+      <div class="how-bg" aria-hidden="true">
+        <div class="how-bg-panel on"></div>
+        <div class="how-bg-panel"></div>
+        <div class="how-bg-panel"></div>
+      </div>
+      <div class="how-in">
+        <div class="how-head">
+          <h2>How it works</h2>
+          <p>Three simple steps, taken at your own pace, to help you see how God has shaped you and where that might lead.</p>
+          <div class="how-dots" id="howDots"><i class="on"></i><i></i><i></i></div>
+          <div class="how-cta">
+            <div class="how-cta-row">
+              <a class="pill" href="{{ begin }}">Begin your journey <span class="ar"><svg><use href="#arrow"/></svg></span></a>
+              <a class="pill ghost" href="#churches">Use this with my organisation</a>
             </div>
           </div>
         </div>
+        <div class="how-steps" id="howSteps">
+          <div class="how-step on" data-i="0">
+            <div class="how-ill">
+              <svg viewBox="0 0 400 240" role="img" aria-label="Illustration: sorting a statement card into one of five buckets">
+                <rect x="24" y="30" width="352" height="4" rx="2" fill="#efeadb"/>
+                <rect x="24" y="30" width="196" height="4" rx="2" fill="#2f5a2b"/>
+                <g class="ill-float">
+                  <rect x="120" y="56" width="160" height="62" rx="10" fill="#fff" stroke="#d8d0bb" stroke-width="1.2"/>
+                  <rect x="140" y="76" width="120" height="7" rx="3.5" fill="#2b1f1c" opacity=".75"/>
+                  <rect x="156" y="92" width="88" height="7" rx="3.5" fill="#2b1f1c" opacity=".35"/>
+                </g>
+                <path d="M282 100 C 330 108, 346 124, 352 142" fill="none" stroke="#2f5a2b" stroke-width="1.5" stroke-dasharray="3 4"/>
+                <path d="M346 137 L352 146 L357 136" fill="none" stroke="#2f5a2b" stroke-width="1.5"/>
+                <rect x="24" y="150" width="64" height="66" rx="9" fill="#fff" stroke="#d8d0bb" stroke-width="1.2"/>
+                <rect x="36" y="204" width="40" height="7" rx="3.5" fill="#efeadb" stroke="#d8d0bb" stroke-width="0.8"/>
+                <rect x="96" y="150" width="64" height="66" rx="9" fill="#fff" stroke="#d8d0bb" stroke-width="1.2"/>
+                <rect x="108" y="204" width="40" height="7" rx="3.5" fill="#efeadb" stroke="#d8d0bb" stroke-width="0.8"/>
+                <rect x="108" y="193" width="40" height="7" rx="3.5" fill="#efeadb" stroke="#d8d0bb" stroke-width="0.8"/>
+                <rect x="168" y="150" width="64" height="66" rx="9" fill="#fff" stroke="#d8d0bb" stroke-width="1.2"/>
+                <rect x="180" y="204" width="40" height="7" rx="3.5" fill="#efeadb" stroke="#d8d0bb" stroke-width="0.8"/>
+                <rect x="180" y="193" width="40" height="7" rx="3.5" fill="#efeadb" stroke="#d8d0bb" stroke-width="0.8"/>
+                <rect x="180" y="182" width="40" height="7" rx="3.5" fill="#efeadb" stroke="#d8d0bb" stroke-width="0.8"/>
+                <rect x="240" y="150" width="64" height="66" rx="9" fill="#fff" stroke="#d8d0bb" stroke-width="1.2"/>
+                <rect x="252" y="204" width="40" height="7" rx="3.5" fill="#efeadb" stroke="#d8d0bb" stroke-width="0.8"/>
+                <rect x="252" y="193" width="40" height="7" rx="3.5" fill="#efeadb" stroke="#d8d0bb" stroke-width="0.8"/>
+                <rect x="252" y="182" width="40" height="7" rx="3.5" fill="#efeadb" stroke="#d8d0bb" stroke-width="0.8"/>
+                <rect x="252" y="171" width="40" height="7" rx="3.5" fill="#efeadb" stroke="#d8d0bb" stroke-width="0.8"/>
+                <rect x="312" y="150" width="64" height="66" rx="9" fill="#eef5e2" stroke="#2f5a2b" stroke-width="1.2"/>
+                <rect x="324" y="204" width="40" height="7" rx="3.5" fill="#a6cf72" stroke="#2f5a2b" stroke-width="0.8"/>
+                <rect x="324" y="193" width="40" height="7" rx="3.5" fill="#a6cf72" stroke="#2f5a2b" stroke-width="0.8"/>
+                <rect x="324" y="182" width="40" height="7" rx="3.5" fill="#a6cf72" stroke="#2f5a2b" stroke-width="0.8"/>
+              </svg>
+            </div>
+            <div class="how-row"><span class="n">01</span><div><h3>Take the assessment</h3><ul><li><svg><use href="#tick"/></svg>Sort 36 statements about yourself</li><li><svg><use href="#tick"/></svg>From “Definitely not me” to “Real strength”</li><li><svg><use href="#tick"/></svg>About ten minutes, online</li></ul></div></div>
+          </div>
+          <div class="how-step" data-i="1">
+            <div class="how-ill">
+              <svg viewBox="0 0 400 240" role="img" aria-label="Illustration: you at the centre with five trusted friends, three of whom have replied">
+                <line x1="200" y1="118" x2="200" y2="38" stroke="#d8d0bb" stroke-width="1.3" stroke-dasharray="3 4"/>
+                <line x1="200" y1="118" x2="314" y2="93" stroke="#d8d0bb" stroke-width="1.3" stroke-dasharray="3 4"/>
+                <line x1="200" y1="118" x2="270" y2="183" stroke="#d8d0bb" stroke-width="1.3" stroke-dasharray="3 4"/>
+                <line x1="200" y1="118" x2="130" y2="183" stroke="#d8d0bb" stroke-width="1.3" stroke-dasharray="3 4"/>
+                <line x1="200" y1="118" x2="86" y2="93" stroke="#d8d0bb" stroke-width="1.3" stroke-dasharray="3 4"/>
+                <circle cx="200" cy="118" r="31" fill="#2b1f1c"/>
+                <circle cx="200" cy="110" r="9" fill="#f2ece2"/>
+                <path d="M185 135 q15 -19 30 0" fill="#f2ece2"/>
+                <g><circle cx="200" cy="38" r="21" fill="#fff" stroke="#d8d0bb" stroke-width="1.2"/><circle cx="200" cy="33" r="6.5" fill="#efeadb" stroke="#2b1f1c" stroke-width="1.1"/><path d="M189 51 q11 -14 22 0" fill="#efeadb" stroke="#2b1f1c" stroke-width="1.1"/><circle cx="215" cy="23" r="7" fill="#a6cf72" stroke="#2f5a2b" stroke-width="1"/><path d="M211.8 23 l2.2 2.2 l4 -4.4" fill="none" stroke="#2f5a2b" stroke-width="1.4"/></g>
+                <g><circle cx="314" cy="93" r="21" fill="#fff" stroke="#d8d0bb" stroke-width="1.2"/><circle cx="314" cy="88" r="6.5" fill="#efeadb" stroke="#2b1f1c" stroke-width="1.1"/><path d="M303 106 q11 -14 22 0" fill="#efeadb" stroke="#2b1f1c" stroke-width="1.1"/><circle cx="329" cy="78" r="7" fill="#a6cf72" stroke="#2f5a2b" stroke-width="1"/><path d="M325.9 78 l2.2 2.2 l4 -4.4" fill="none" stroke="#2f5a2b" stroke-width="1.4"/></g>
+                <g><circle cx="270" cy="183" r="21" fill="#fff" stroke="#d8d0bb" stroke-width="1.2"/><circle cx="270" cy="178" r="6.5" fill="#efeadb" stroke="#2b1f1c" stroke-width="1.1"/><path d="M259 196 q11 -14 22 0" fill="#efeadb" stroke="#2b1f1c" stroke-width="1.1"/><circle cx="285" cy="168" r="7" fill="#a6cf72" stroke="#2f5a2b" stroke-width="1"/><path d="M282.3 168 l2.2 2.2 l4 -4.4" fill="none" stroke="#2f5a2b" stroke-width="1.4"/></g>
+                <g><circle cx="130" cy="183" r="21" fill="#fff" stroke="#d8d0bb" stroke-width="1.2"/><circle cx="130" cy="178" r="6.5" fill="#efeadb" stroke="#2b1f1c" stroke-width="1.1"/><path d="M119 196 q11 -14 22 0" fill="#efeadb" stroke="#2b1f1c" stroke-width="1.1"/><circle cx="145" cy="168" r="7" fill="#fff" stroke="#d8d0bb" stroke-width="1"/><path d="M145 164.2 v3.5 l2.5 1.5" fill="none" stroke="#b8ae9c" stroke-width="1.2"/></g>
+                <g><circle cx="86" cy="93" r="21" fill="#fff" stroke="#d8d0bb" stroke-width="1.2"/><circle cx="86" cy="88" r="6.5" fill="#efeadb" stroke="#2b1f1c" stroke-width="1.1"/><path d="M75 106 q11 -14 22 0" fill="#efeadb" stroke="#2b1f1c" stroke-width="1.1"/><circle cx="101" cy="78" r="7" fill="#fff" stroke="#d8d0bb" stroke-width="1"/><path d="M101 74.2 v3.5 l2.5 1.5" fill="none" stroke="#b8ae9c" stroke-width="1.2"/></g>
+              </svg>
+            </div>
+            <div class="how-row"><span class="n">02</span><div><h3>Get feedback from people who know you</h3><ul><li><svg><use href="#tick"/></svg>Five trusted friends or colleagues</li><li><svg><use href="#tick"/></svg>They answer the same questions about you</li><li><svg><use href="#tick"/></svg>You compare the two lists</li></ul></div></div>
+          </div>
+          <div class="how-step" data-i="2" id="mentor">
+            <div class="how-ill">
+              <svg viewBox="0 0 400 240" role="img" aria-label="Illustration: you and a mentor talking over coffee">
+                <rect x="40" y="26" width="128" height="50" rx="12" fill="#fff" stroke="#d8d0bb" stroke-width="1.2"/>
+                <path d="M96 76 l8 12 l6 -12" fill="#fff" stroke="#d8d0bb" stroke-width="1.2"/>
+                <rect x="96" y="74" width="16" height="4" fill="#fff"/>
+                <rect x="58" y="42" width="92" height="6" rx="3" fill="#2b1f1c" opacity=".7"/>
+                <rect x="58" y="55" width="60" height="6" rx="3" fill="#2b1f1c" opacity=".3"/>
+                <rect x="236" y="38" width="124" height="38" rx="12" fill="#a6cf72" stroke="#2f5a2b" stroke-width="1.1"/>
+                <path d="M292 76 l8 12 l6 -12" fill="#a6cf72" stroke="#2f5a2b" stroke-width="1.1"/>
+                <rect x="292" y="74" width="16" height="4" fill="#a6cf72"/>
+                <circle cx="284" cy="57" r="3.2" fill="#2f5a2b"/>
+                <circle cx="298" cy="57" r="3.2" fill="#2f5a2b"/>
+                <circle cx="312" cy="57" r="3.2" fill="#2f5a2b"/>
+                <circle cx="120" cy="122" r="17" fill="#efeadb" stroke="#2b1f1c" stroke-width="1.3"/>
+                <path d="M84 186 q36 -52 72 0" fill="#efeadb" stroke="#2b1f1c" stroke-width="1.3"/>
+                <circle cx="292" cy="122" r="17" fill="#efeadb" stroke="#2b1f1c" stroke-width="1.3"/>
+                <path d="M256 186 q36 -52 72 0" fill="#efeadb" stroke="#2b1f1c" stroke-width="1.3"/>
+                <rect x="56" y="184" width="300" height="8" rx="4" fill="#2b1f1c"/>
+                <path d="M176 166 h18 v18 h-18 z" fill="#fff" stroke="#2b1f1c" stroke-width="1.2"/>
+                <path d="M194 170 q8 0 8 6 q0 5 -8 5" fill="none" stroke="#2b1f1c" stroke-width="1.2"/>
+                <path d="M214 166 h18 v18 h-18 z" fill="#fff" stroke="#2b1f1c" stroke-width="1.2"/>
+                <path d="M232 170 q8 0 8 6 q0 5 -8 5" fill="none" stroke="#2b1f1c" stroke-width="1.2"/>
+                <path d="M183 160 q-3 -6 1 -11 M222 160 q-3 -6 1 -11" fill="none" stroke="#b8ae9c" stroke-width="1"/>
+                <circle cx="170" cy="214" r="4" fill="#2f5a2b"/>
+                <circle cx="200" cy="214" r="4" fill="#d8d0bb"/>
+                <circle cx="230" cy="214" r="4" fill="#d8d0bb"/>
+              </svg>
+            </div>
+            <div class="how-row"><span class="n">03</span><div><h3>Process it with a mentor</h3><ul><li><svg><use href="#tick"/></svg>A pastor, colleague or wise friend</li><li><svg><use href="#tick"/></svg>Two or three conversations to make sense of it all</li><li><svg><use href="#tick"/></svg>We send them a short briefing pack</li></ul></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-        <div class="hiw-thread">
+    <!-- =================== ASSESSMENT TABS =================== -->
+    <section class="panel atabs" id="journey" aria-label="How the assessment works">
+      <div class="in">
+        <div class="top">
+          <h2>How the assessment works</h2>
+          <a class="pill ghost" href="{{ begin }}">Start the assessment <svg aria-hidden="true"><use href="#arrow"/></svg></a>
+        </div>
+        <div class="tabrow">
+          <div class="tabbar" role="tablist" id="aTabs"></div>
+          <div class="tabnav"><button type="button" id="aPrev" aria-label="Previous section">←</button><button type="button" id="aNext" aria-label="Next section">→</button></div>
+        </div>
+        <div class="tabpanel" id="aPanel">
+          <div class="tp-text" id="aText" role="tabpanel"></div>
+          <div class="tp-img" id="aImgs" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================== IMPACT =================== -->
+    <section class="panel impact" id="impact">
+      <div class="impact-bg" aria-hidden="true"></div>
+      <div class="in">
+        <div class="imp-head">
+          <h2>The difference it makes</h2>
+          <p>We ask participants the same questions on the first and last day of the course.</p>
+        </div>
+        <div class="stats">
+          <div class="stat" data-v="71"><span class="num"><b>71</b>%</span><span class="bar"><i></i></span><p>had a more detailed understanding of their God-given gifts, talents and limitations</p></div>
+          <div class="stat" data-v="86"><span class="num"><b>86</b>%</span><span class="bar"><i></i></span><p>had a more detailed understanding of what the Bible teaches about work and calling</p></div>
+          <div class="stat" data-v="100"><span class="num"><b>100</b>%</span><span class="bar"><i></i></span><p>had a clearer practical plan for how to pursue God’s purpose for their life</p></div>
+        </div>
+        <figure class="imp-quote">
+          <blockquote data-reveal>“My son got saved just a couple of years ago in his late teens, and was really struggling to know what work direction to take. His grades from school weren’t great, and he had lots of different interests – the choices weren’t obvious at all. We spent a weekend together and each mealtime I took him through some of the Whatever You Do questions. Now, he’s gearing up to be part of a team going church planting, and is really enjoying his electrician’s apprenticeship – he traces the decision to do the latter right back to the calling conversations we had together that weekend.”</blockquote>
+          <figcaption>Parent of a participant, 2025</figcaption>
+        </figure>
+        <aside class="churches" id="churches">
+          <div class="churches-art" aria-hidden="true"></div>
           <div>
-            <div class="hiw-step-num">THROUGHOUT</div>
-            <h3>Someone walking it with you</h3>
-            <p>Not a step so much as the thread running through all four. You choose a coach at the start — someone who'll ask good questions rather than tell you what to do — and we send them what they need before each conversation.</p>
-            <p>You can start without one, but almost nobody finishes well alone.</p>
-            <div class="hiw-step-time"><span aria-hidden="true">🕘</span> <span><b>3 conversations</b>, roughly an hour each</span></div>
+            <span class="tagline">For churches</span>
+            <h3>Releasing and equipping your members for kingdom impact – in church and at work.</h3>
+            <p>Most church members spend 95% of their week outside the church building, and Whatever You Do equips them to see that everyday work as ministry.</p>
           </div>
-          <div class="hiw-t-shot" aria-hidden="true">
-            <div class="hiw-t-line"><span class="hiw-t-tick">✓</span><span>I'll ask questions rather than give answers</span></div>
-            <div class="hiw-t-line"><span class="hiw-t-tick">✓</span><span>I'll hold my own hopes for them loosely</span></div>
-            <div class="hiw-t-line"><span class="hiw-t-tick">✓</span><span>I'll make time for a few unhurried conversations</span></div>
-            <div class="hiw-t-line hiw-t-line-faint"><span class="hiw-t-tick"></span><span>What your coach agrees to before they start</span></div>
-          </div>
-        </div>
+          <a class="pill" href="#">Find out more <span class="ar"><svg><use href="#arrow"/></svg></span></a>
+        </aside>
+      </div>
+    </section>
 
-        <div class="hiw-close">
-          <p>Your first sitting is twenty minutes, and you'll know something about yourself you didn't this morning.</p>
-          <a class="btn btn-primary hp-begin" href="{{ begin }}">Begin →</a>
-          <div class="hiw-close-sub">Free. No card. Stop and resume whenever you like.</div>
+    <!-- =================== CONNECT =================== -->
+    <section class="panel connect" id="connect">
+      <div class="cn-head">
+        <h2>From our writing</h2>
+        <a class="pill ghost" href="#connect">Read more <span class="ar"><svg><use href="#arrow"/></svg></span></a>
+      </div>
+      <div class="posts">
+        <a class="post" href="#connect"><div class="post-art post-art-1" aria-hidden="true"></div><h3>Why “follow your passion” is terrible career advice</h3><p>The modern obsession with passion overlooks something ancient wisdom understood well: mastery precedes meaning.</p></a>
+        <a class="post" href="#connect"><div class="post-art post-art-2" aria-hidden="true"></div><h3>The gap between how you see yourself and how others see you</h3><p>Most people overestimate some gifts and underestimate others. The comparison is where the real insight lives.</p></a>
+        <a class="post" href="#connect"><div class="post-art post-art-3" aria-hidden="true"></div><h3>What the early church actually believed about work</h3><p>The sacred-secular divide is a modern invention. The first Christians had a radically different view.</p></a>
+      </div>
+      <div class="cn-row">
+        <div class="cn-card news">
+          <svg class="ic"><use href="#leaf"/></svg>
+          <h3>Stay in touch</h3>
+          <p>Thoughtful writing on vocation, faith and work, delivered occasionally.</p>
+          <form id="newsForm" novalidate>
+            <label class="sr" for="newsEmail">Email address</label>
+            <input id="newsEmail" type="email" placeholder="Your email" autocomplete="email" required>
+            <button class="pill" type="submit">Subscribe</button>
+          </form>
+          <small id="newsMsg" aria-live="polite"></small>
+        </div>
+        <div class="cn-card contact">
+          <svg class="ic"><use href="#mark"/></svg>
+          <h3>Get in touch</h3>
+          <p>We’d love to hear from you, whether you’re an individual, a church leader, or just curious.</p>
+          <span class="mail">hello@whateveryoudo.org</span>
+        </div>
+        <div class="cn-card give">
+          <svg class="ic"><use href="#tick"/></svg>
+          <h3>Support our work</h3>
+          <p>Whatever You Do is free for participants. Every donation helps us develop the course, train mentors and reach churches and people who couldn’t otherwise access it.</p>
+          <a class="pill" href="#connect">Make a donation <span class="ar"><svg><use href="#arrow"/></svg></span></a>
         </div>
       </div>
     </section>
 
-    <section class="hp-section hp-section-white" id="hp-impact">
-      <div class="hp-section-inner hp-centred">
-        <h2 class="hp-eyebrow">Impact</h2>
-        <p class="hp-impact-lead">We ask participants the same questions on the first and last day of the course.</p>
-
-        <div class="hp-stats">
-          <div class="hp-stat">
-            <div class="hp-stat-fig">71<span>%</span></div>
-            <div class="hp-stat-body">
-              <div class="hp-stat-text">had a more detailed understanding of their God-given gifts, talents and limitations</div>
-              <div class="hp-stat-bar"><div class="hp-stat-fill hp-w-71"></div></div>
-            </div>
-          </div>
-          <div class="hp-stat">
-            <div class="hp-stat-fig">86<span>%</span></div>
-            <div class="hp-stat-body">
-              <div class="hp-stat-text">had a more detailed understanding of what the Bible teaches about work and calling</div>
-              <div class="hp-stat-bar"><div class="hp-stat-fill hp-w-86"></div></div>
-            </div>
-          </div>
-          <div class="hp-stat hp-stat-hero">
-            <div class="hp-stat-fig">100<span>%</span></div>
-            <div class="hp-stat-body">
-              <div class="hp-stat-text">had a clearer practical plan for how to pursue God's purpose for their life</div>
-              <div class="hp-stat-bar"><div class="hp-stat-fill hp-w-100"></div></div>
-            </div>
-          </div>
-        </div>
-
-        <blockquote class="hp-impact-quote">
-          <p>"My son got saved just a couple of years ago in his late teens, and was really struggling to know what work direction to take. His grades from school weren't great, and he had lots of different interests – the choices weren't obvious at all. We spent a weekend together and each mealtime I took him through some of the Whatever You Do questions. Now, he's gearing up to be part of a team going church planting, and is really enjoying his electrician's apprenticeship – he traces the decision to do the latter right back to the calling conversations we had together that weekend."</p>
-          <footer class="hp-impact-attr">Parent of a participant, 2025</footer>
-        </blockquote>
+    <!-- =================== MEET =================== -->
+    <section class="panel meet" id="about">
+      <h2>Everyone has a calling. Do you know yours?</h2>
+      <div class="meet-cards">
+        <div class="mc"><span class="mc-ic"><svg><use href="#mark"/></svg></span><h3>Teacher</h3><p>Seeing the classroom as a place of formation.</p></div>
+        <div class="mc"><span class="mc-ic"><svg><use href="#leaf"/></svg></span><h3>Electrician</h3><p>Finding meaning in the work of your hands.</p></div>
+        <div class="mc"><span class="mc-ic"><svg><use href="#tick"/></svg></span><h3>Parent</h3><p>Passing on a sense of purpose to the next generation.</p></div>
+        <div class="mc"><span class="mc-ic"><svg><use href="#mark"/></svg></span><h3>Church planter</h3><p>Building a community that sees work as ministry.</p></div>
+        <div class="mc"><span class="mc-ic"><svg><use href="#leaf"/></svg></span><h3>Student</h3><p>Discerning direction before the decisions are made.</p></div>
       </div>
+      <a class="pill" href="{{ begin }}">Start the workbook <span class="ar"><svg><use href="#arrow"/></svg></span></a>
     </section>
-  </main>
 
-  <footer class="hp-footer">
-    <div class="hp-footer-inner">
-      <p class="hp-footer-verse">"Whatever you do, work at it with all your heart, as working for the Lord."</p>
-      <p class="hp-footer-ref">Colossians 3:23 (NIV)</p>
+    <!-- =================== FOOTER =================== -->
+    <footer class="panel hp-footer">
+      <div class="cols">
+        <div><b>Whatever You Do</b><span>A guided calling workbook</span></div>
+        <div><b>Explore</b><a href="#how">How it works</a><a href="#journey">The assessment</a><a href="#impact">Impact</a><a href="#connect">Writing</a></div>
+        <div><b>For churches</b><a href="#churches">Run it in a group</a><a href="#mentor">For mentors</a><a href="#connect">Donate</a></div>
+        <div><b>Note</b><span>“Whatever you do, work at it with all your heart, as working for the Lord.”<br>Colossians 3:23 (NIV)</span></div>
+      </div>
       <div class="hp-footer-links">
         <span>© 2026 Whatever You Do</span>
         <a href="{% url 'credits' %}">Credits</a>
       </div>
-    </div>
-  </footer>
+    </footer>
+  </main>
 {% endblock body %}
