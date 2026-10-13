@@ -2,7 +2,7 @@
 
 **What to build:** Around their observer assessment (ticket 15a), the observer says how they know the participant, finishes with a thank-you, and can withdraw through their claimed link, which deletes their answers.
 
-**Blocked by:** 15a (The observer's assessment)
+**Blocked by:** A2-13d (Removing a contact)
 
 **Status:** ready-for-agent
 

@@ -1,17 +1,21 @@
 # 28a: Password reset
 
-**What to build:** A participant who has forgotten their password resets it by email. The spec leaves this out of this milestone. Until then, sign-in offers no password reset (ticket 03 hid the link and refuses the reset pages, because they crashed without a mail server) and the operator resets a password with `manage.py changepassword`. Google sign-in, split from the same ticket 28, is 28b.
+**What to build:** A participant who has forgotten their password resets it by email. Until now sign-in has offered no reset, and the operator has reset passwords by hand, because there was no email to send. Staging now sends email, so the reset comes back there. Google sign-in, split from the same ticket 28, is 28b.
 
-**Blocked by:** 26 (Staging deployment), for email delivery on staging; for real participants, a decision outside this plan: an email provider, with a processor agreement
+**Blocked by:** None (can start immediately)
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
-**Sprint:** 2b (12–16 Oct), on staging's temporary email
+**Sprint:** 2b (12–16 Oct), on staging's email
 
-**Parent:** whatever-you-do-milestone-1 spec (Out of Scope: "Account-level features beyond sign-up and login: password reset, Google sign-in and a production identity provider"). After milestone 1; not in the cut order
+**Spec:** Participants, access and consent (ADR 0004); Out of Scope; Legalities are parked, not forgotten
 
-- [ ] An email provider is chosen and a processor agreement is in place (spec Further Notes, "Legalities are parked, not forgotten")
-- [ ] Email delivery is configured from the environment, as every other setting is (ADR 0002)
-- [ ] Sign-in offers "Forgot your password?" again and the reset pages are reachable; remove the override that hides the link (`access/templates/account/password_reset_help_text.html`) and the refusal in `config/urls.py`
-- [ ] The reset email never reveals whether an address has an account
-- [ ] Replace the temporary journey test that asserts reset is neither offered nor reachable with tests of the working flow
+- [ ] Sign-in offers "Forgot your password?" again, and the reset pages can be reached
+- [ ] A participant who asks for a reset is emailed a link, sets a new password through it, and signs in with that password
+- [ ] Asking for a reset never reveals whether an address has an account
+- [ ] On staging, the reset email carries the test-system disclaimer, as every other message does
+- [ ] The temporary journey test that asserts reset is neither offered nor reachable gives way to tests of the working flow
+
+**Context**
+
+- Real participants need a production email provider with a processor agreement first. That is not this ticket: it belongs with the production environment

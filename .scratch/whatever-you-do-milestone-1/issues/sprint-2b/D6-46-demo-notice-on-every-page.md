@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** 2a (ends 8 Oct) if it fits, since observers and coaches meet staging at FaithTech; otherwise 2b
+**Sprint:** 2b (12–16 Oct)
 
 **Spec:** Testing Decisions ("Fake data uses reserved example domains"); ticket 26
 

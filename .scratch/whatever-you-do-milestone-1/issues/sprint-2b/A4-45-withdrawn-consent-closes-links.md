@@ -2,7 +2,7 @@
 
 **What to build:** While a participant's consent is withdrawn, the links they gave out stop working: an observer can neither open, claim nor send through theirs, and the coach's link shows nothing, the results and comparison included. Today withdrawing only closes the pathway to the participant. An observer can still claim a link and send an assessment, which stores new data about someone who has withdrawn, and a coach whom the participant had let see their results still sees them (checked on 6 Oct).
 
-**Blocked by:** None (can start immediately)
+**Blocked by:** A3-15b (Observer relationship and withdrawal)
 
 **Status:** ready-for-agent
 
