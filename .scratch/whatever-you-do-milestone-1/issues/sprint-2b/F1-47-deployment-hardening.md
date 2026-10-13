@@ -1,4 +1,4 @@
-# 44: Deployment hardening from Django's checklist
+# 47: Deployment hardening from Django's checklist
 
 **What to build:** Changes found by going through Django's deployment checklist (https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/) against the staging set-up of ticket 26. `manage.py check --deploy` with staging's settings reports only the two HSTS warnings (see Context). These are the checklist's points that the check does not catch.
 
