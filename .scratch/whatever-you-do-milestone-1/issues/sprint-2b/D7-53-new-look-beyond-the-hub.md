@@ -15,12 +15,14 @@
 - [ ] The homepage, keeping the words the hackathon took from the prototype, v3's where its earlier copy differs, and with nothing on it that is not yet true (a newsletter, donations, a contact address that does not exist)
 - [ ] Construct colours stay as they are, every page is readable at phone width, and no page is left in the old look
 
+**Carried from 48**
+
+- [ ] One set of button rules: D1-48 shaped `.btn` like the prototype's pill in the stylesheet alone; each page's markup moves to `.pill` and `.pill.ghost`
+- [ ] One name per colour: the stylesheet keeps Anville's names beside the prototype's for the same values (`--gold` and `--green-deep`, `--white` and `--paper`, `--deep`, `--footer` and `--brown`, `--ink-muted` and `--muted`)
+- [ ] Class names from the prototype that say nothing (`.n`, `.ar`, `.l`, `.r`, `.lbl`, `.tr`, `.b`, `.go`) get names that do
+- [ ] The homepage's tests pin its copy ("Begin your journey" three times, its taglines), which `CODING_STANDARDS.md` rules out; once its words are settled they test behaviour instead: where each "Begin" leads, that nothing points at a placeholder
+- Whether pages beyond the prototype's three take its deep brown frame, as D2-49 gives the hub, is this ticket's call
+
 **Context**
 
 - Split into 53a (the participant's pages) and 53b (the rest) if it outgrows one sitting
-- Left from ticket 48's review, for the pages this visits:
-  - **Buttons:** D1-48 shaped `.btn` like the prototype's pill in the stylesheet alone. Each page's markup moves to `.pill` and `.pill.ghost`, so one set of button rules remains
-  - **Colour names:** the stylesheet keeps Anville's names beside the prototype's for the same values (`--gold` and `--green-deep`, `--white` and `--paper`, `--deep`, `--footer` and `--brown`, `--ink-muted` and `--muted`). Settle on one name each
-  - **Class names** from the prototype that say nothing (`.n`, `.ar`, `.l`, `.r`, `.lbl`, `.tr`, `.b`, `.go`) get names that do
-  - **Tests of wording:** the homepage's tests pin its copy ("Begin your journey" three times, its taglines), which `CODING_STANDARDS.md` rules out. When the homepage's words are settled, they test behaviour instead: where each "Begin" leads, that nothing points at a placeholder
-  - **Dark pages:** whether pages beyond the prototype's three take its deep brown frame, as D2-49 gives the hub
