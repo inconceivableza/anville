@@ -3,7 +3,7 @@
 ## Overview
 
 Running on macos host eochaid
-Going through deploy/README.md and .scratch/whatever-you-do-milestone-1/issues/26-staging-deployment.md human steps in parallel
+Going through deploy/README.md and .scratch/whatever-you-do-milestone-1/issues/sprint-2a/26-staging-deployment.md human steps in parallel
 
 From the 26-staging-deployment git branch
 Starting with commit a7b90b94f6 - docs: say why each environment has its own PostgreSQL, and what sharing one would take

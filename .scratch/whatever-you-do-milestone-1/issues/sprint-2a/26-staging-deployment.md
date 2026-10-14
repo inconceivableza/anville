@@ -1,6 +1,6 @@
 # 26: Staging deployment
 
-**What to build:** A private staging instance for the 9 Oct demo and the content owner's own use, at `https://anville.vabl.dev`: Hetzner in an EU region, holding fake data only. It is the first environment, `whatever-you-do-staging`, of the approach in [docs/server-approach.md](../../../docs/server-approach.md), which this ticket follows and does not repeat. Needs a human for account and access steps (the wizard skill fits).
+**What to build:** A private staging instance for the 9 Oct demo and the content owner's own use, at `https://anville.vabl.dev`: Hetzner in an EU region, holding fake data only. It is the first environment, `whatever-you-do-staging`, of the approach in [docs/server-approach.md](../../../../docs/server-approach.md), which this ticket follows and does not repeat. Needs a human for account and access steps (the wizard skill fits).
 
 **Blocked by:** 05 (Slice 1 content: baseline and calling-statement section)
 
@@ -64,7 +64,13 @@ In order. Section numbers are those of docs/server-approach.md, where the detail
 
 Steps 1 to 3, 6, 9, 10, 12 and 12a have no dependency on the human steps and can be done first, or alongside them.
 
-**Progress.** Steps 1, 2, 3, 6, 9, 10, 12, 12a and 18 are built, on the branch `26-staging-deployment`, and 12a too. The items carried from 37 and 32a are met in the repository: `whatever-you-do-staging` turns the enrolment code off, and the image builds the frontend, the homepage's video included, before gathering the static files. None has met a real host, registry or Docker build yet: [deploy/README.md](../../../deploy/README.md) lists what each was tested against and what only the human steps can prove, and says how to do each of them. Every remaining step is a human one, then the runbook (17).
+**Progress.** Steps 1, 2, 3, 6, 9, 10, 12, 12a and 18 are built, on the branch `26-staging-deployment`, and 12a too. The items carried from 37 and 32a are met in the repository: `whatever-you-do-staging` turns the enrolment code off, and the image builds the frontend, the homepage's video included, before gathering the static files. None has met a real host, registry or Docker build yet: [deploy/README.md](../../../../deploy/README.md) lists what each was tested against and what only the human steps can prove, and says how to do each of them. Every remaining step is a human one, then the runbook (17).
+
+**Progress, 13 Oct.** The human steps have since been run on the staging host, and `deploy/environments/runbook.md` records them: the host, DNS, the first deploy, the pathway published, the operator's account, and actual email set up and tested (steps 4 to 14, 19 and 20). The criteria above have not been ticked against it yet. The runbook does not record these, so they are still to do:
+
+- [ ] The backup's Storage Box sub-account, its password, and its key in the environment's secrets (the runbook lists them as still needed)
+- [ ] A restore tried once into a scratch namespace (step 15)
+- [ ] The smoke test's checks that the observer cookie is marked Secure, and that neither Traefik nor gunicorn logs request paths (step 16)
 
 **Part 2: actual email, with a disclaimer**
 

@@ -348,7 +348,7 @@ k3s is more machinery than one Django service strictly needs. It is kept because
 
 ## 14. Order of work
 
-The steps for the first environment, `whatever-you-do-staging`, are in ticket 26 (`.scratch/whatever-you-do-milestone-1/issues/26-staging-deployment.md`), and are not repeated here.
+The steps for the first environment, `whatever-you-do-staging`, are in ticket 26 (`.scratch/whatever-you-do-milestone-1/issues/sprint-2a/26-staging-deployment.md`), and are not repeated here.
 
 Later, each when needed: `anville-production-01` and the production environment; the choice between levels B and C; actual email on staging, with its disclaimer; a lasting email set-up for production; automatic staging deploys; a second environment on `anville-staging-01`.
 

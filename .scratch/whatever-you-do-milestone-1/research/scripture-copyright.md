@@ -2,7 +2,7 @@
 
 > ✨ Researched and drafted with AI assistance.
 
-Research for ticket 39 (`issues/39-scripture-copyright-notices.md`). Pages were fetched on 7 October 2026. Where a primary page could not be reached, this note says so, and the claim is marked **unverified**.
+Research for ticket 39 (`issues/sprint-2a/39-scripture-copyright-notices.md`). Pages were fetched on 7 October 2026. Where a primary page could not be reached, this note says so, and the claim is marked **unverified**.
 
 ## Bottom line for ticket 39
 

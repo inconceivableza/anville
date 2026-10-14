@@ -2,11 +2,11 @@
 
 **What to build:** A participant takes someone off their contact list with a button, on the invitations page and in the list itself, instead of clearing both fields of their row by hand. Removing someone stops their link, and they are told so first.
 
-**Blocked by:** 13a (Issuing observer invitations)
+**Blocked by:** None (can start immediately)
 
 **Status:** ready-for-agent
 
-**Sprint:** 3 or later
+**Sprint:** 2b (12–16 Oct)
 
 **Spec:** Observers (ADR 0005); Testing Decisions
 
