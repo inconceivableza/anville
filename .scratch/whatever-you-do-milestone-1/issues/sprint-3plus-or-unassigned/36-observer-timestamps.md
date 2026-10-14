@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** wontfix
 
-**Sprint:** 2b (12–16 Oct); before any real participant data
+**Sprint:** none. Dropped from 2b on 14 Oct: the operator may link an observer to their answers (ADR 0014), and the participant never sees either time, so there is nothing for this ticket to protect
 
 **Spec:** Observers (ADR 0005); Testing Decisions
 

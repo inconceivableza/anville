@@ -2,7 +2,7 @@
 
 **What to build:** The two hub side cards say where things stand, and each leads to one place where the participant adds a person and gets their link in the same act, so nobody misses the step of making links.
 
-**Blocked by:** D3-50 (Before we begin as a wizard); A1-36 (Observer timestamps)
+**Blocked by:** D3-50 (Before we begin as a wizard)
 
 **Status:** ready-for-agent
 

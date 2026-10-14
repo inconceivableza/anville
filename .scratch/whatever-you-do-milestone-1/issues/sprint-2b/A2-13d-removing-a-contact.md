@@ -2,7 +2,7 @@
 
 **What to build:** A participant takes someone off their contact list with a button, on the invitations page and in the list itself, instead of clearing both fields of their row by hand. Removing someone stops their link, and they are told so first.
 
-**Blocked by:** A1-36 (Observer timestamps)
+**Blocked by:** None (can start immediately)
 
 **Status:** ready-for-agent
 
