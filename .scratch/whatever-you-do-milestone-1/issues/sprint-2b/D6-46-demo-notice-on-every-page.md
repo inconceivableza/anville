@@ -2,7 +2,7 @@
 
 **What to build:** On a demo deployment every page says it is a demo. Ticket 26's notice (step 12a) is shown in full on the homepage and the account pages (sign up, sign in, consent). This adds the full notice to the hub and to the pages observers and coaches land on from their links, since they arrive without seeing the homepage and enter data too, and a smaller, less conspicuous one on every other page.
 
-**Blocked by:** D2-49 (Hub width and second column), which rebuilds the hub; builds on ticket 26's step 12a
+**Blocked by:** D5-52 (Workbook and Section 1 gates); builds on ticket 26's step 12a
 
 **Status:** ready-for-agent
 

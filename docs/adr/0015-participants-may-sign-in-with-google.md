@@ -4,7 +4,7 @@ status: accepted
 
 # Participants may sign in with Google
 
-A participant may sign in with their Google account, alongside email and password, and Google then handles that sign-in under its own terms. It is the first place a participant's identity passes through a third party, and it is acceptable because the participant chooses it each time: email and password stays, so nobody has to use Google to take part. Anville asks Google only for `openid`, the email address and the basic profile, and Anville's privacy notice names Google for anyone who uses the button.
+A participant may sign in with their Google account, alongside email and password, and Google then handles that sign-in under its own terms. It is the first place a participant's identity passes through a third party, and it is acceptable because the participant chooses it each time: email and password stays, so nobody has to use Google to take part. Anville asks Google only for `openid`, the email address and the basic profile, and Anville's privacy notice, once written, names Google for anyone who uses the button.
 
 > ✨ Drafted with AI assistance.
 

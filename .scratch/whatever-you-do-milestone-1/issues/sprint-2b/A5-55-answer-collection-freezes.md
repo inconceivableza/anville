@@ -2,7 +2,7 @@
 
 **What to build:** Once a participant looks at a comparison showing standings, their observers' answer collection freezes: no more observer assessments are accepted, so the results stop changing under them, and they are told so before they look. Withdrawal still wins: an observer who withdraws afterwards has their answers removed.
 
-**Blocked by:** A4-45 (Withdrawn consent closes links)
+**Blocked by:** A4-45 (Withdrawn consent closes observers' and the coach's links)
 
 **Status:** ready-for-agent
 

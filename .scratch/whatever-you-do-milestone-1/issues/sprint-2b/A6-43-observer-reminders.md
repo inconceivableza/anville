@@ -19,7 +19,6 @@
 **Context**
 
 - Weekly, ending when the link expires, with no separate deadline (developer's call, 14 Oct)
-
-- The button leads to a page with a press rather than making the link on opening, because mail filters open every address in a message. ADR 0009 records the button as the one way an observer gets a fresh link without the participant
+- The button leads to a page with a press rather than making the link on opening, because mail filters open every address in a message. It is the one way an observer gets a fresh link without the participant
 - Email on staging comes from a temporary domain (ticket 26); real observers need the production email provider and its processor agreement first
 - The participant shares each link themselves; the system sends no invitation email. A reminder is the first message an observer gets from it

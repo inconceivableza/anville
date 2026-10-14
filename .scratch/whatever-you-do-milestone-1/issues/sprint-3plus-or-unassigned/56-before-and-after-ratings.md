@@ -17,4 +17,4 @@
 
 **To settle before this is ready**
 
-- Where it is shown: at the end of Section 5, in the closing, or on the hub. The hackathon's "Where you started" card showed the wrong ratings and was removed (D2-49)
+- Where it is shown: at the end of Section 5, in the closing, or on the hub. The hackathon branch's "Where you started" card showed the strengths baseline rather than these ratings, and goes (D2-49)

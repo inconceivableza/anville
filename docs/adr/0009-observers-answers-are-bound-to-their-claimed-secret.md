@@ -20,5 +20,5 @@ Partly superseded: keeping the operator from linking an observer to their answer
 
 - Each claim sends one observer assessment: the hash is unique, so a second send with the same secret is refused, however close together the two arrive.
 - A reissued link is a new claim with a new secret, so its observer can send again and both count. This is ADR 0007's accepted cost.
-- An observer who loses their own link cannot be traced to their answers, by anyone, including the deployment's operator. How to withdraw once the link has stopped working stays open (spec, Open content and product items); whatever is chosen has to start from the observer's secret.
+- No longer holds (ADR 0014): an observer who loses their own link cannot be traced to their answers, by anyone, including the deployment's operator. How to withdraw once the link has stopped working stays open (spec, Open content and product items); whatever is chosen has to start from the observer's secret.
 - Seeded test observers claimed nothing, so their answers are bound to no one.
