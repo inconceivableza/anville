@@ -19,6 +19,7 @@
 
 **Context**
 
+- Worked on the `hackathon-ui` branch with the rest of chain D, whose base template and hub differ from `main`'s
 - Emails need nothing more: on staging every message already carries the `[TEST]` subject marker and the test-system disclaimer (`ANVILLE_EMAIL_DISCLAIMER`, ticket 26 step 18), fake email included
 - The account layout (`access/templates/allauth/layouts/base.html`) already shows the full notice on every account page, the consent pages included, so it needs no change
 - The smaller notice's wording may be a fixed short form, or the same `ANVILLE_DEMO_NOTICE` text set smaller; if it needs its own setting, the chart sets it beside `ANVILLE_DEMO_NOTICE` for staging environments only

@@ -1,6 +1,6 @@
 # 49: Hub width and second column
 
-**What to build:** The hub takes the final prototype's layout: wide, with the next step and the sections on the left and hub side cards beside them, so sections no longer wrap in a thin column. Which sections are side cards, what the next step says and which photos appear all come from the pathway document.
+**What to build:** The hub takes the final prototype's layout: wide, with the next step and the sections on the left and hub side cards beside them, so sections no longer wrap in a thin column. The `hackathon-ui` branch has the layout, but writes its side cards and its next step in the template, and shows a "Where you started" card; this moves all of it into the pathway document, so which sections are side cards, what the next step says and which photos appear are authored there.
 
 **Blocked by:** D1-48 (FaithTech look and final tweaks)
 
@@ -14,7 +14,7 @@
 - [ ] A section the pathway document marks as a hub side card is drawn as a card in the second column, from its title, its authored sentence and its status, and is not listed with the other sections. Nothing on a card is written in a template
 - [ ] The next step shows the section's title and time estimate, or the heading and sentence the section carries for when it is the next step, over the section's photo if it has one
 - [ ] Photos are pathway content: files beside the document, named by a section, each with its credit. A setting in the document lists the credits on the credits page, on for now
-- [ ] The header counts sections complete ("2 of 5 sections complete") in place of answers. There is no "Where you started" card
+- [ ] The header counts sections complete ("2 of 5 sections complete") in place of answers. The "Where you started" card goes: it showed the strengths baseline, and the before-and-after ratings are ticket 56
 
 **Context**
 

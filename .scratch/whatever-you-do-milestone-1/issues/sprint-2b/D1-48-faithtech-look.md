@@ -1,6 +1,6 @@
 # 48: FaithTech look and final tweaks
 
-**What to build:** The whole app takes the look of the content owner's final hackathon prototype: cream panels on deep brown, one green accent, pill buttons, Switzer for text and Newsreader for headings. The look is changed once, in the shared styles, so every page moves together; the layouts of particular pages are the tickets after this one.
+**What to build:** The `hackathon-ui` branch already carries most of the content owner's final hackathon prototype's look: cream panels on deep brown, one green accent, pill buttons, Switzer for text and Newsreader for headings. This ticket makes the branch sound to build on: up to date with `main`, its tests back on in the build and passing, and its look checked against the prototype. Chain D is worked on this branch, which merges into `main` at the end of D8-54.
 
 **Blocked by:** None (can start immediately)
 
@@ -8,16 +8,16 @@
 
 **Sprint:** 2b (12–16 Oct)
 
-**Spec:** Operating and demonstrating; Delivery and hosting; Legalities are parked, not forgotten
+**Spec:** Sprints; Operating and demonstrating; Delivery and hosting; Legalities are parked, not forgotten
 
+- [ ] The branch takes in `main`, and the commit that turned the tests off in the build is reverted, so the build runs them again
+- [ ] The tests pass on the branch. Where the new look changed a page's words or markup on purpose, its test changes with it; no other test changes
 - [ ] Colours, type, buttons, panels and the header follow the prototype, each defined once and used by every page
-- [ ] Both fonts are served from the deployment's own files: no page requests anything from Google or any other outside host
-- [ ] The construct colours on results and the comparison are unchanged
-- [ ] Body text and buttons meet WCAG AA contrast, at desktop and phone width
-- [ ] Nothing but the look changes: the journey tests pass untouched
+- [ ] No page requests a font, or anything else, from Google or another outside host
+- [ ] The construct colours on results and the comparison are unchanged, and body text and buttons meet WCAG AA contrast at desktop and phone width
 
 **Context**
 
 - Prototype reference: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3-nc-copy-copy.zip` (`index.html`), the canonical look. v1 and v2 are superseded. It has three screens only: the homepage, the wizard and the hub
-- The `hackathon-ui` branch is a reference for flow only. Nothing is merged or copied from it
-- The prototype loads Newsreader from Google Fonts, which sends every visitor's address to Google; check both fonts' licences allow serving them ourselves
+- The branch's commit "Temporarily disable pytest blocking build" says it should not reach `main` until reverted
+- The branch bundles its fonts through npm packages, so they are served from the deployment's own files already; check their licences allow it
