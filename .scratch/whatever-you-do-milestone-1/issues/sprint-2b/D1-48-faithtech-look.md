@@ -1,20 +1,22 @@
 # 48: FaithTech look and final tweaks
 
-**What to build:** The `hackathon-ui` branch already carries most of the content owner's final hackathon prototype's look: cream panels on deep brown, one green accent, pill buttons, Switzer for text and Newsreader for headings. This ticket makes the branch sound to build on: up to date with `main`, its tests back on in the build and passing, and its look checked against the prototype. It then merges into `main`, and the rest of chain D is worked on `main`.
+**What to build:** The `hackathon-ui` branch already carries most of the content owner's final hackathon prototype's look: cream panels on deep brown, one green accent, pill buttons, Newsreader for headings (and Instrument Sans for text, in place of its Switzer). This ticket makes the branch sound to build on: up to date with `main`, its tests back on in the build and passing, and its look checked against the prototype. It then merges into `main`, and the rest of chain D is worked on `main`.
 
 **Blocked by:** None (can start immediately)
 
-**Status:** claimed
+**Status:** resolved
+
+**Handed over:** one set of button rules and one name per colour, carried to D7-53
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** Sprints; Operating and demonstrating; Delivery and hosting; Legalities are parked, not forgotten
 
-- [ ] The branch takes in `main`, and the commit that turned the tests off in the build is reverted, so the build runs them again
-- [ ] The tests pass, and the branch merges into `main`. Where the new look changed a page's words or markup on purpose, its test changes with it; no other test changes
-- [ ] Colours, type, buttons, panels and the header follow the prototype, each defined once and used by every page. Every page sets headings in Newsreader, as the prototype does, and text in Instrument Sans in place of its Switzer, and no other font is loaded
-- [ ] No page requests a font, or anything else, from Google or another outside host
-- [ ] The construct colours on results and the comparison are unchanged, and body text and buttons meet WCAG AA contrast at desktop and phone width
+- [x] The branch takes in `main`, and the commit that turned the tests off in the build is reverted, so the build runs them again
+- [x] The tests pass, and the branch merges into `main`. Where the new look changed a page's words or markup on purpose, its test changes with it; no other test changes
+- [ ] Colours, type, buttons, panels and the header follow the prototype, each defined once and used by every page. Every page sets headings in Newsreader, as the prototype does, and text in Instrument Sans in place of its Switzer, and no other font is loaded (buttons look as the prototype's everywhere, but `.btn` and `.pill` remain two sets of rules, and some colours have two names: carried to D7-53)
+- [x] No page requests a font, or anything else, from Google or another outside host
+- [x] The construct colours on results and the comparison are unchanged, and body text and buttons meet WCAG AA contrast at desktop and phone width
 
 **Context**
 
