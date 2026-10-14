@@ -10,7 +10,7 @@
 
 **Spec:** Hub, progress and gates; Engine: sections, tracks, gates, progress; The pathway document and versions
 
-- [ ] The hub is laid out as the prototype's: its width, its two columns in its proportions, one column at phone width, and section rows that do not wrap
+- [ ] The hub is laid out as the prototype's: its width, its two columns in its proportions, one column at phone width, and section rows that do not wrap, each beside its section's number as the document authors it ("01", "02–04"), or none where it has none
 - [ ] A section the pathway document marks as a hub side card is drawn as a card in the second column, from its title, its authored sentence and its status, and is not listed with the other sections. Nothing on a card is written in a template
 - [ ] The next step shows the section's title and time estimate, or the heading and sentence the section carries for when it is the next step, over the section's photo if it has one
 - [ ] Photos are pathway content: files beside the document, named by a section, each with its credit. A setting in the document lists the credits on the credits page, on for now
@@ -20,4 +20,5 @@
 
 - Prototype reference: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`, the hub view
 - The hub's photos are the prototype's grass (the next step) and, for D3-50, the figure facing the sun (the wizard). Both are from Unsplash, whose licence needs no attribution; the credits are shown anyway, behind the setting
+- The branch reads a section's number out of its title ("Section 1: …") and renamed the Workbook "Sections 2–4: The Workbook" so the hub would show where it falls. Both go: the number is authored (Section 1 "01", the Workbook "02–04", Section 5 "05"; Before we begin and the Strengths assessment, a part, none), the Workbook is "The Workbook" again, and the test the branch added for the longer title changes with it
 - New fields go into the schema and its linter. The faithful port takes none of them, and the drift test sets them aside
