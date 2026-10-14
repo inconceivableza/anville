@@ -1,24 +1,20 @@
 # 28b: Google sign-in
 
-**What to build:** A participant may sign in with Google instead of a password, alongside email and password. The spec leaves this out of this milestone. Split from ticket 28; password reset is 28a.
+**What to build:** A participant may sign up and sign in with their Google account, alongside email and password, in any environment given a Google client. Split from ticket 28; password reset is 28a.
 
 **Blocked by:** C1-28a (Password reset); and a Google OAuth client for the environment, which an operator creates by hand ("Setting up the Google project" below)
 
-**Status:** needs-triage
+**Status:** ready-for-agent
 
 **Sprint:** 2b (12–16 Oct)
 
-**Parent:** whatever-you-do-milestone-1 spec (Out of Scope: "Account-level features beyond sign-up and login: password reset, Google sign-in and a production identity provider"). After milestone 1; not in the cut order
+**Spec:** Participants, access and consent (ADR 0004); Out of Scope; Legalities are parked, not forgotten
 
-- [ ] Decide, and record in an ADR, whether Google may process participants' sign-in data. The same GDPR concern kept fonts off Google's servers (ticket 03), and this is the first place a participant's identity would pass through a third party. Who owns the Cloud project does not change the question: whoever owns it, Google processes the identity under its own terms, and Anville's privacy notice would have to name it
-- [ ] If it may, sign-in with Google is added through allauth's social accounts, alongside email and password, without changing the enrolment code setting (ticket 37) or the consent step (ADR 0004)
-- [ ] The client ID and secret are read from the environment, and the Google button appears only when both are set, as `EMAIL_URL` turns real email on (`config/settings.py`). An environment with no client is unchanged, so one environment may offer Google sign-in while another does not
-- [ ] `deploy/README.md` gains a "Set up Google sign-in" section beside "Set up email", holding the steps below, and `secrets.example.yaml` lists the pair as optional
-
-**Carried from 08**
-
-- [ ] Google sign-up asks for the 18+ confirmation, and for the enrolment code when the deployment turns it on (ticket 37). Both are fields of the sign-up form (`access/forms.py`), and allauth's social sign-up form is built on that same class, but by default allauth skips the form altogether (`SOCIALACCOUNT_AUTO_SIGNUP = True`). Turn that off, or otherwise make social sign-up show the form, and add journey tests that a Google sign-up without the code or the confirmation gets no account
-- The consent step holds for a Google account either way: it guards the engine's views (`access/consent.py`), not sign-up
+- [ ] A participant can sign up and sign in with Google, alongside email and password
+- [ ] The Google button appears only in an environment given both a client ID and a secret; an environment without them is unchanged, so one may offer Google sign-in while another does not
+- [ ] Signing up through Google still asks for the 18+ confirmation, and for the enrolment code where the deployment asks for one (ticket 37); a Google sign-up without either gets no account
+- [ ] A Google account passes the consent step before any answer is stored, as any other account does (ADR 0004)
+- [ ] The deployment instructions say how to set up Google sign-in for an environment, beside how to set up email, holding the steps below, and list the client pair among the environment's optional secrets
 
 **Setting up the Google project**
 
@@ -50,6 +46,10 @@ Repeat steps 6 and 7 for each new environment. One client could carry every envi
 
 **Context**
 
+- Google may process participants' sign-in data, by their own choice each time (ADR 0015)
+- Through allauth's social accounts. Its social sign-up form is built on the sign-up form's own class (`access/forms.py`), which holds the 18+ confirmation and the enrolment code, but by default allauth skips the form altogether (`SOCIALACCOUNT_AUTO_SIGNUP = True`): turn that off, or otherwise make social sign-up show it
+- The consent step guards the engine's views (`access/consent.py`), not sign-up, so it holds for a Google account either way
+- The button follows the pattern by which `EMAIL_URL` turns real email on (`config/settings.py`). The instructions go in `deploy/README.md` beside "Set up email", and the pair in `secrets.example.yaml`
 - Participants need their own Google account to use the button. Nobody is shut out by that, since email and password stays alongside it
 - The authorised domains on the Branding page have to be verified in Search Console by the account that owns the project, before the app can be published. Doing that for `vabl.dev` once covers every environment under it
 - A domain verification and a brand verification are different things. The first is needed to publish; the second only if a logo is set, which step 3 avoids
