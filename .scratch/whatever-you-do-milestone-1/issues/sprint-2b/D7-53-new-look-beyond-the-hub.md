@@ -18,3 +18,9 @@
 **Context**
 
 - Split into 53a (the participant's pages) and 53b (the rest) if it outgrows one sitting
+- Left from ticket 48's review, for the pages this visits:
+  - **Buttons:** D1-48 shaped `.btn` like the prototype's pill in the stylesheet alone. Each page's markup moves to `.pill` and `.pill.ghost`, so one set of button rules remains
+  - **Colour names:** the stylesheet keeps Anville's names beside the prototype's for the same values (`--gold` and `--green-deep`, `--white` and `--paper`, `--deep`, `--footer` and `--brown`, `--ink-muted` and `--muted`). Settle on one name each
+  - **Class names** from the prototype that say nothing (`.n`, `.ar`, `.l`, `.r`, `.lbl`, `.tr`, `.b`, `.go`) get names that do
+  - **Tests of wording:** the homepage's tests pin its copy ("Begin your journey" three times, its taglines), which `CODING_STANDARDS.md` rules out. When the homepage's words are settled, they test behaviour instead: where each "Begin" leads, that nothing points at a placeholder
+  - **Dark pages:** whether pages beyond the prototype's three take its deep brown frame, as D2-49 gives the hub

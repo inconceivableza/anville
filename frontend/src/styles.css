@@ -21,10 +21,10 @@
 
 :root {
   color-scheme: light;
-  /* ✨ Whatever You Do palette. The variable names are Anville's (so "--gold" is the lime accent) to keep
-     the rules below portable; only their values changed. New names from the reference HTML are added as
-     aliases where it uses them. */
-  --gold: #a6cf72;
+  /* ✨ Whatever You Do palette. The variable names are Anville's to keep the rules below portable; only their values
+     changed. New names from the reference HTML are added as aliases where it uses them. "--gold" is the prototype's
+     deep green, which text can be read in; its lime accent is "--green", for fills and for the dark panels. */
+  --gold: #2f5a2b;
   --gold-dark: #2f5a2b;
   --gold-light: #b8dd8a;
   --gold-pale: #eef5df;
@@ -67,6 +67,11 @@
   --rank-4: #ff9800;
   --rank-5: #e53935;
   --rank-6: #b71c1c;
+  /* ✨ The participant's own marks on the comparison, in the original prototype's green (ticket 48). */
+  --comparison-you: #1a7a4c;
+  /* ✨ Error and warning text, darker than the red and amber they go with, so it reads at WCAG AA on the cream. */
+  --red-text: #a3423d;
+  --warn-text: #7f5c07;
   /* ✨ The comparison's gap badges, as the prototype coloured them: others rate higher green, you rate higher red. */
   --gap-others-higher: #3a7a3a;
   --gap-others-higher-pale: #e8f0e8;
@@ -190,6 +195,7 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+  --radius-panel: 22px;   /* the prototype's panels and hub */
   --radius-pill-shape: 999px;
   --radius-round-shape: 50%;
 }
@@ -670,7 +676,7 @@ main.container:has(> .ob) {
 
 .ob-error {
   margin-bottom: var(--space-md);
-  color: var(--red-soft);
+  color: var(--red-text);
 }
 
 @media (max-width: 900px) {
@@ -787,7 +793,7 @@ main.container:has(> .ob) {
 h1 {
   font-family: var(--font-heading);
   font-size: var(--text-2xl);
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.5px;
   margin-bottom: 24px;
 }
@@ -795,7 +801,7 @@ h1 {
 h2 {
   font-family: var(--font-heading);
   font-size: var(--text-2xl);
-  font-weight: 600;
+  font-weight: 400;
   letter-spacing: -0.3px;
   margin-bottom: 16px;
 }
@@ -812,8 +818,8 @@ h2 {
   margin-top: 12px;
 }
 
-/* The hub: the next-step banner, progress, and the section list with its status chips. All of it is
-   derived by the engine, so none of these rules are ever driven by authored content. */
+/* The hub: progress, the next-step panel, the section rows with their tags, and the side cards. The engine derives
+   what each shows, so none of these rules are ever driven by authored content. */
 
 /* ---------- HUB ---------- */
 .wrap {
@@ -824,7 +830,7 @@ h2 {
 
 .hub {
   background: var(--cream);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-panel);
   margin: calc(-1 * var(--space-xl)) calc(-1 * var(--space-2xl)) 0;
   padding: var(--space-xl) var(--space-2xl) var(--space-4xl);
 }
@@ -1014,7 +1020,7 @@ h2 {
 
 .card {
   background: var(--paper);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   padding: var(--space-lg);
   display: grid;
   gap: var(--space-sm);
@@ -1255,25 +1261,26 @@ form + .way-on,
 
 .gate-refused {
   font-size: var(--text-sm);
-  color: var(--red-soft);
+  color: var(--red-text);
   margin-top: 16px;
 }
 
 /* Buttons */
 
+/* ✨ Shaped as the prototype's pill (ticket 48); a page's own markup moves to .pill with ticket 53 */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
-  padding: var(--space-md) var(--space-xl);
+  padding: var(--space-sm) var(--space-lg);
   border: none;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-pill-shape);
   font-family: var(--font-body);
-  font-size: var(--text-md);
+  font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: filter 0.2s, background 0.2s;
 }
 
 /* ✨ As the prototype's pill: dark green text on the light green, which light text on it would not pass for contrast */
@@ -1296,11 +1303,11 @@ form + .way-on,
   width: 100%;
 }
 
+/* ✨ As the prototype's ghost pill: a ring in the text's colour */
 .btn-secondary {
   background: var(--white);
   color: var(--ink);
-  border: 1px solid var(--border);
-  font-weight: 500;
+  box-shadow: inset 0 0 0 1px currentColor;
 }
 
 .btn-secondary:hover {
@@ -1308,8 +1315,8 @@ form + .way-on,
 }
 
 .btn-sm {
-  padding: var(--space-sm) var(--space-lg);
-  font-size: var(--text-sm);
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--text-xs);
 }
 
 .btn:focus-visible {
@@ -1553,7 +1560,7 @@ form + .way-on,
 }
 
 .coach-refusal {
-  color: var(--red-soft);
+  color: var(--red-text);
   font-size: var(--text-sm);
   margin: 0 0 var(--space-sm);
 }
@@ -1645,13 +1652,13 @@ form + .way-on,
 .coach-maybe input:checked + span {
   border-color: var(--warn);
   background: var(--warn-pale);
-  color: var(--warn);
+  color: var(--warn-text);
 }
 
 .coach-no input:checked + span {
   border-color: var(--red-soft);
   background: var(--stop-pale);
-  color: var(--red-soft);
+  color: var(--red-text);
 }
 
 .coach-buttons {
@@ -1832,57 +1839,8 @@ form + .way-on,
 }
 
 .coach-brief-avoid strong {
-  color: var(--red-soft);
+  color: var(--red-text);
   margin-bottom: 2px;
-}
-
-/* ✨ The hub's "Your Coach · Add →" card, as the original prototype's "Your Mentor" card draws it (ticket 27) */
-.contacts-status-card {
-  display: block;
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: var(--space-md) var(--space-lg);
-  margin: var(--space-md) 0 var(--space-sm);
-  color: inherit;
-  text-decoration: none;
-  transition: all 0.15s;
-}
-
-.contacts-status-card:hover,
-.contacts-status-card:focus-visible {
-  border-color: var(--gold);
-  box-shadow: 0 4px 16px var(--shadow);
-}
-
-.contacts-status-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: 4px;
-}
-
-.contacts-status-icon {
-  font-size: var(--text-lg);
-}
-
-.contacts-status-title {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.contacts-status-manage {
-  font-size: var(--text-xs);
-  color: var(--gold);
-  margin-left: auto;
-}
-
-.contacts-status-text {
-  display: block;
-  font-size: var(--text-sm);
-  color: var(--ink-muted);
-  line-height: 1.5;
 }
 
 /* ✨ The coach's own page: each commitment a box to tick, as the mock-up's coach half draws it */
@@ -2072,7 +2030,7 @@ form + .way-on,
 }
 
 .demo-notice strong {
-  color: var(--warn);
+  color: var(--warn-text);
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -2309,7 +2267,7 @@ form + .way-on,
 
 .name-section .errorlist {
   list-style: none;
-  color: var(--red-soft);
+  color: var(--red-text);
   font-size: var(--text-sm);
   margin-bottom: 8px;
 }
@@ -2512,7 +2470,7 @@ html[data-javascript="loaded"] .invitation-copy {
 }
 
 .save-refused {
-  color: var(--red-soft);
+  color: var(--red-text);
 }
 
 .length-left {
@@ -2670,8 +2628,8 @@ html[data-javascript="loaded"] .invitation-copy {
 
 /* ✨ The comparison's two colours: the participant's and the observers', on the axis and in the words (ticket 38). */
 .comparison-you {
-  color: var(--gold);
-  fill: var(--gold);
+  color: var(--comparison-you);
+  fill: var(--comparison-you);
 }
 
 .comparison-others {
@@ -3391,7 +3349,7 @@ body > svg[aria-hidden="true"] {
 }
 
 .panel {
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-panel);
   overflow: hidden;
   position: relative;
 }
@@ -4148,9 +4106,10 @@ body > svg[aria-hidden="true"] {
 
 .churches {
   display: grid;
-  grid-template-columns: clamp(160px, 18vw, 220px) minmax(0, 1fr) auto;
-  gap: clamp(18px, 3vw, 36px);
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 0;
   align-items: stretch;
+  margin: clamp(10px, 1.5vw, 20px);
   background: var(--cream);
   color: var(--ink);
   border-radius: var(--radius-md);
@@ -4684,13 +4643,6 @@ body > svg[aria-hidden="true"] {
 .journey-coach .pill.ghost {
   color: var(--on-dark);
   white-space: nowrap;
-}
-
-.churches {
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
-  gap: 0;
-  align-items: stretch;
-  margin: clamp(10px, 1.5vw, 20px);
 }
 
 .churches .ch-img {

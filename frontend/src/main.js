@@ -171,10 +171,13 @@ document.addEventListener("click", async (event) => {
   }
 });
 
+// ✨ Whether the visitor has asked their device for less motion; every movement below is skipped if so.
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 // ✨ The homepage's forest moves only for those who have not asked their device for less motion. It is started here
 // rather than by `autoplay`, which would play before this check could stop it; everyone else, and anyone without
 // JavaScript, sees the still frame.
-if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+if (!reducedMotion) {
   document.querySelectorAll("video[data-plays-unless-reduced-motion]").forEach((video) => {
     video.play().catch(() => {}); // ✨ a browser that refuses keeps the still frame
   });
@@ -182,18 +185,17 @@ if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
 
 // ✨ Homepage: "Whatever You Do" landing view interactions.
 // Each block is self-contained and no-ops when its section is absent, so the
-// same bundle serves every page. Motion is skipped for reduced-motion users.
-const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+// same bundle serves every page.
 
-// --- Landing CTA: a brief page transition before Django takes over navigation ---
+// --- Landing CTA: a brief page transition before Django takes over navigation, on the links marked for it ---
 if (document.querySelector("main.page") && !reducedMotion) {
   let navigating = false;
   document.addEventListener("click", (event) => {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    const link = event.target.closest("a.pill[href]");
+    const link = event.target.closest("a[data-page-wipe][href]");
     if (!link || link.target || link.hasAttribute("download")) return;
     const destination = new URL(link.href, window.location.href);
-    if (destination.origin !== window.location.origin || !["/accounts/signup/", "/hub/"].includes(destination.pathname)) return;
+    if (destination.origin !== window.location.origin) return;
     if (typeof Element.prototype.animate !== "function") return;
 
     event.preventDefault();
@@ -225,36 +227,36 @@ if (document.querySelector("main.page") && !reducedMotion) {
   const imgs = document.getElementById("aImgs");
   const section = document.getElementById("journey");
   if (!bar || !text) return;
-  const T = [
-    ["Discover your gifts", "Reflect on your strengths through a guided assessment and scripture.", ["Sort 36 statements about yourself", "Explore gifts described in Romans 12 and 1 Corinthians 12", "Write a summary in your workbook"], "Your gifts and strengths"],
-    ["Hear from people who know you", "Invite trusted people to share their perspective, then compare it with your own.", ["Add at least two people, or return to invitations later", "Compare their perspective with your own", "Reflect on where your views align or differ"], "Your strengths alongside trusted perspectives"],
-    ["Make sense of your story", "Use the workbook to reflect on your life, work and the moments that have shaped you.", ["Work through guided prompts at your own pace", "Notice themes in your experience", "Connect your story with what matters to you"], "Your story and reflections"],
-    ["Explore a sense of calling", "Draw together your gifts, experience and reflections as you consider possible directions.", ["Put your sense of calling into words", "Consider possible directions", "Identify practical next steps"], "A calling statement and directions to explore"],
-    ["Return to what you discovered", "Write a letter to your future self and revisit your reflections later.", ["Capture what matters to you now", "Record the steps you want to take", "Revisit your letter in the future"], "A letter to your future self"],
+  const steps = [
+    { title: "Discover your gifts", summary: "Reflect on your strengths through a guided assessment and scripture.", activities: ["Sort 36 statements about yourself", "Explore gifts described in Romans 12 and 1 Corinthians 12", "Write a summary in your workbook"], outcome: "Your gifts and strengths" },
+    { title: "Hear from people who know you", summary: "Invite trusted people to share their perspective, then compare it with your own.", activities: ["Add at least two people, or return to invitations later", "Compare their perspective with your own", "Reflect on where your views align or differ"], outcome: "Your strengths alongside trusted perspectives" },
+    { title: "Make sense of your story", summary: "Use the workbook to reflect on your life, work and the moments that have shaped you.", activities: ["Work through guided prompts at your own pace", "Notice themes in your experience", "Connect your story with what matters to you"], outcome: "Your story and reflections" },
+    { title: "Explore a sense of calling", summary: "Draw together your gifts, experience and reflections as you consider possible directions.", activities: ["Put your sense of calling into words", "Consider possible directions", "Identify practical next steps"], outcome: "A calling statement and directions to explore" },
+    { title: "Return to what you discovered", summary: "Write a letter to your future self and revisit your reflections later.", activities: ["Capture what matters to you now", "Record the steps you want to take", "Revisit your letter in the future"], outcome: "A letter to your future self" },
   ];
-  const DUR = 7000;
-  let i = 0, timer, start, remain = DUR;
+  const STEP_MS = 7000; // ✨ how long each step shows before the next
+  let i = 0, timer, start, remain = STEP_MS;
   const pauseReasons = new Set();
-  bar.innerHTML = T.map((t, j) => `<button class="tab" role="tab" id="atab${j}" aria-controls="aText" aria-selected="${j === 0}"><span class="n">0${j + 1}</span><b>${t[0]}</b><span class="bar"><i></i></span></button>`).join("");
-  if (imgs) imgs.innerHTML = T.map((t, j) => `<div class="tp-anim" data-i="${j}"></div>`).join("");
+  bar.innerHTML = steps.map((step, j) => `<button class="tab" role="tab" id="atab${j}" aria-controls="aText" aria-selected="${j === 0}"><span class="n">0${j + 1}</span><b>${step.title}</b><span class="bar"><i></i></span></button>`).join("");
+  if (imgs) imgs.innerHTML = steps.map((_, j) => `<div class="tp-anim" data-i="${j}"></div>`).join("");
   const tabs = [...bar.children];
   const pics = imgs ? [...imgs.children] : [];
-  bar.style.setProperty("--dur", DUR + "ms");
+  bar.style.setProperty("--dur", STEP_MS + "ms");
   const render = () => {
-    const t = T[i];
-    text.innerHTML = `<div class="tp-anim"><span class="n">STEP 0${i + 1}</span><h3>${t[0]}</h3><p>${t[1]}</p></div><ul class="tp-anim">${t[2].map((x) => `<li><svg><use href="#leaf"/></svg>${x}</li>`).join("")}</ul><div class="out"><span>In your workbook</span><b>${t[3]}</b></div>`;
+    const step = steps[i];
+    text.innerHTML = `<div class="tp-anim"><span class="n">STEP 0${i + 1}</span><h3>${step.title}</h3><p>${step.summary}</p></div><ul class="tp-anim">${step.activities.map((activity) => `<li><svg><use href="#leaf"/></svg>${activity}</li>`).join("")}</ul><div class="out"><span>In your workbook</span><b>${step.outcome}</b></div>`;
     text.setAttribute("aria-labelledby", "atab" + i);
-    tabs.forEach((b, j) => {
-      b.setAttribute("aria-selected", j === i);
-      b.classList.toggle("done", j < i);
-      const bi = b.querySelector(".bar i");
-      if (bi) {
-        bi.style.animation = "none";
-        void bi.offsetWidth;
-        bi.style.animation = "";
+    tabs.forEach((tab, j) => {
+      tab.setAttribute("aria-selected", j === i);
+      tab.classList.toggle("done", j < i);
+      const fill = tab.querySelector(".bar i");
+      if (fill) {
+        fill.style.animation = "none";
+        void fill.offsetWidth;
+        fill.style.animation = "";
       }
     });
-    pics.forEach((im, j) => im.classList.toggle("on", j === i));
+    pics.forEach((pic, j) => pic.classList.toggle("on", j === i));
     if (bar.scrollWidth > bar.clientWidth) {
       bar.scrollTo({
         left: Math.max(0, tabs[i].offsetLeft - bar.offsetLeft - 16),
@@ -263,9 +265,9 @@ if (document.querySelector("main.page") && !reducedMotion) {
     }
   };
   const go = (n) => {
-    i = (n + T.length) % T.length;
+    i = (n + steps.length) % steps.length;
     render();
-    remain = DUR;
+    remain = STEP_MS;
     schedule();
   };
   const schedule = () => {
@@ -290,7 +292,7 @@ if (document.querySelector("main.page") && !reducedMotion) {
       schedule();
     }
   };
-  tabs.forEach((b, j) => b.addEventListener("click", () => go(j)));
+  tabs.forEach((tab, j) => tab.addEventListener("click", () => go(j)));
   const prev = document.getElementById("aPrev");
   const next = document.getElementById("aNext");
   if (prev) prev.addEventListener("click", () => go(i - 1));
@@ -453,42 +455,6 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   requestAnimationFrame(tick);
 })();
 
-// --- Count up only real values supplied by the page; never manufacture impact figures ---
-(() => {
-  const stats = [...document.querySelectorAll(".stat[data-v]")];
-  if (!stats.length) return;
-  const show = (stat, animate) => {
-    const target = Number(stat.dataset.v);
-    const value = stat.querySelector(".num b");
-    const bar = stat.querySelector(".bar i");
-    if (!Number.isFinite(target) || !value) return;
-    if (bar) bar.style.width = `${Math.max(0, Math.min(100, target))}%`;
-    if (!animate) {
-      value.textContent = String(target);
-      return;
-    }
-    const started = performance.now();
-    const frame = (now) => {
-      const progress = Math.min(1, (now - started) / 1600);
-      value.textContent = String(Math.round(target * (1 - (1 - progress) ** 3)));
-      if (progress < 1) requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
-  };
-  if (reducedMotion || !("IntersectionObserver" in window)) {
-    stats.forEach((stat) => show(stat, false));
-    return;
-  }
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      show(entry.target, true);
-      observer.unobserve(entry.target);
-    });
-  }, { threshold: 0.4 });
-  stats.forEach((stat) => observer.observe(stat));
-})();
-
 // --- Real partner marks only; omit the carousel when no partners are supplied ---
 (() => {
   const row = document.getElementById("logoRow");
@@ -520,25 +486,25 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
 
 // --- Magnetic buttons (fine pointers only) ---
 if (window.matchMedia("(hover: hover) and (pointer: fine)").matches && !reducedMotion) {
-  document.addEventListener("pointermove", (e) => {
-    const b = e.target.closest && e.target.closest(".pill");
-    if (b) {
-      const r = b.getBoundingClientRect();
-      const dx = (e.clientX - (r.left + r.width / 2)) / r.width;
-      const dy = (e.clientY - (r.top + r.height / 2)) / r.height;
-      b.style.transition = "transform .25s cubic-bezier(.2,.7,.2,1), filter .2s";
-      b.style.transform = `translate(${(dx * 10).toFixed(1)}px,${(dy * 8).toFixed(1)}px)`;
-      const a = b.querySelector(".ar");
-      if (a) a.style.translate = `${(dx * 5).toFixed(1)}px ${(dy * 4).toFixed(1)}px`;
+  document.addEventListener("pointermove", (event) => {
+    const button = event.target.closest && event.target.closest(".pill");
+    if (button) {
+      const box = button.getBoundingClientRect();
+      const dx = (event.clientX - (box.left + box.width / 2)) / box.width;
+      const dy = (event.clientY - (box.top + box.height / 2)) / box.height;
+      button.style.transition = "transform .25s cubic-bezier(.2,.7,.2,1), filter .2s";
+      button.style.transform = `translate(${(dx * 10).toFixed(1)}px,${(dy * 8).toFixed(1)}px)`;
+      const arrow = button.querySelector(".ar");
+      if (arrow) arrow.style.translate = `${(dx * 5).toFixed(1)}px ${(dy * 4).toFixed(1)}px`;
     }
   }, { passive: true });
-  document.addEventListener("pointerout", (e) => {
-    const b = e.target.closest && e.target.closest(".pill");
-    if (b && !b.contains(e.relatedTarget)) {
-      b.style.transition = "transform .5s cubic-bezier(.2,.7,.2,1), filter .2s";
-      b.style.transform = "";
-      const a = b.querySelector(".ar");
-      if (a) a.style.translate = "";
+  document.addEventListener("pointerout", (event) => {
+    const button = event.target.closest && event.target.closest(".pill");
+    if (button && !button.contains(event.relatedTarget)) {
+      button.style.transition = "transform .5s cubic-bezier(.2,.7,.2,1), filter .2s";
+      button.style.transform = "";
+      const arrow = button.querySelector(".ar");
+      if (arrow) arrow.style.translate = "";
     }
   });
 }

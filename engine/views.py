@@ -832,7 +832,8 @@ def _hub_voices(response):
         return {"invited": 0, "replied": 0, "names": [], "max": MAX_CONTACTS}
     contacts = response.contacts.filter(role=Contact.Role.CONTACT).select_related("invitation").order_by("position")
     names = [contact.name for contact in contacts]
-    replied = sum(1 for contact in contacts if contact.live_invitation() and contact.live_invitation().claimed_at)
+    live = [contact.live_invitation() for contact in contacts]
+    replied = sum(1 for invitation in live if invitation and invitation.claimed_at)
     return {"invited": len(names), "replied": replied, "names": names, "max": MAX_CONTACTS}
 
 

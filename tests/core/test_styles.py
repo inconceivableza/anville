@@ -94,10 +94,43 @@ def _contrast(foreground, background):
 def test_body_text_and_buttons_meet_wcag_aa_contrast():
     css = STYLESHEET.read_text()
     colours = _root_colours(css)
-    pairs = {selector: _rule_colours(css, selector) for selector in ("body", ".btn-primary", ".btn-secondary")}
+    selectors = ("body", ".btn-primary", ".btn-secondary", ".bl-btn:has(input:checked)")
+    pairs = {selector: _rule_colours(css, selector) for selector in selectors}
     pairs["muted text on the page"] = ("--ink-muted", "--cream")
     pairs["text on the dark panels"] = ("--on-dark", "--deep")
 
     ratios = {name: round(_contrast(colours[text], colours[background]), 2) for name, (text, background) in pairs.items()}
 
     assert {name: ratio for name, ratio in ratios.items() if ratio < 4.5} == {}
+
+
+# ✨ Colours made to be read on the dark panels, and the results' and comparison's colours, which the prototype fixes
+# and ticket 48 keeps unchanged; every other text colour is read on the page's cream.
+ON_DARK = re.compile(r"--(on-dark[\w-]*|cream[\w-]*|snow|white|paper|green)$")
+FIXED_BY_THE_RESULTS = re.compile(r"--(tone-[\w-]+|rank-\d|comparison-[\w-]+|blue-soft)$")
+
+
+def test_every_text_colour_set_without_its_own_background_is_readable_on_the_page():
+    css = re.sub(r"/\*.*?\*/", "", STYLESHEET.read_text(), flags=re.S)
+    colours = _root_colours(css)
+    rules = re.findall(r"([^{}]+)\{([^{}]*)\}", re.sub(r":root\s*\{[^}]*\}", "", css, count=1))
+
+    unreadable = {}
+    for selector, declarations in rules:
+        text = re.search(r"(?<![-\w])color\s*:\s*var\((--[\w-]+)\)", declarations)
+        if not text or "background" in declarations or ON_DARK.search(text.group(1)):
+            continue
+        if FIXED_BY_THE_RESULTS.search(text.group(1)) or text.group(1) not in colours:
+            continue
+        ratio = _contrast(colours[text.group(1)], colours["--cream"])
+        if ratio < 4.5:
+            unreadable[" ".join(selector.split())] = (text.group(1), round(ratio, 2))
+
+    assert unreadable == {}
+
+
+def test_the_comparison_shows_the_participant_in_the_original_prototypes_green():
+    css = STYLESHEET.read_text()
+    text = re.search(r"(?m)^\.comparison-you\s*\{\s*color\s*:\s*var\((--[\w-]+)\)", css).group(1)
+
+    assert _root_colours(css)[text] == "#1a7a4c"
