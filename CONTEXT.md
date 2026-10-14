@@ -71,16 +71,28 @@ One of the parts an author may split a section into, reached by the participant 
 _Avoid_: screen, step, sub-section.
 
 **Hub**:
-The engine-derived overview of a participant's track: its sections, their status and locks, and the next step. Never authored.
+The engine-derived overview of a participant's track: its sections, their status, which are locked, and the next step. A section may carry its own heading and sentence, which the hub shows in place of the section's title while that section is the next step; nothing else in it is authored.
 _Avoid_: dashboard, home, menu.
 
-**Lock**:
-The state of a section whose required sections are not yet complete. Locks come from section order; gates come from a section's own requirements.
-_Avoid_: gate, padlock, block.
+**Next step**:
+The one section the hub points the participant at, the first neither complete nor locked, shown with its title and time estimate, or with the heading and sentence the section carries for when it is the next step.
+_Avoid_: spotlight, banner, call to action.
+
+**Hub side card**:
+A section the hub shows as a card beside its list of sections (below it on a phone) rather than in the list, such as Walk with a coach. It is complete once its gate passes, with nothing to press.
+_Avoid_: hub card, side section, right column, sidebar (the pathway's list beside a page).
+
+**Wizard**:
+A section a participant completes before first seeing the hub, shown page by page without the hub or the sidebar, and afterwards listed in the hub as any other section.
+_Avoid_: opening section, onboarding (one section's identifier), steps.
+
+**Locked section**:
+A section whose required sections are not yet complete, so it cannot be opened. Being locked comes from section order; gates come from a section's own requirements.
+_Avoid_: lock (as a noun), gate, padlock, block.
 
 **Gate**:
 A predicate that must pass before a participant may complete a section, together with the authored copy explaining which clause failed.
-_Avoid_: check, validation, lock. (The prior plans used "Gate" for delivery milestones; in this repo a milestone is a *milestone*.)
+_Avoid_: check, validation, locked section. (The prior plans used "Gate" for delivery milestones; in this repo a milestone is a *milestone*.)
 
 **Recap**:
 A block that shows a participant's earlier answers back to them through a named view, with an authored message for when there is nothing to show yet.
@@ -209,6 +221,10 @@ _Avoid_: aggregate, observers' result, others' profile.
 **Comparison**:
 A participant's self-result beside their observer average: each construct's two standings, and whether others see it higher, lower or much the same.
 _Avoid_: gap analysis, 360.
+
+**Answer collection**:
+The period in which a participant's observers may send their observer assessments. It **freezes** when the participant first views a comparison showing standings, after which no observer assessment is accepted, and unfreezes if withdrawals leave fewer than the minimum number of observers.
+_Avoid_: collection (on its own), answer window, lock, closing.
 
 **Enrolment code**:
 A shared code that admits a person to sign up to a deployment, required unless the deployment turns it off or the person arrives by a join link. It grants access only and never stands in for consent.
