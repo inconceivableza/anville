@@ -17,30 +17,7 @@
 
 @import "@fontsource-variable/newsreader/opsz.css";
 @import "@fontsource-variable/newsreader/opsz-italic.css";
-
-@font-face {
-  font-family: "Switzer";
-  src: url("../fonts/Switzer-Regular.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Switzer";
-  src: url("../fonts/Switzer-Medium.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Switzer";
-  src: url("../fonts/Switzer-Semibold.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-}
+@import "@fontsource-variable/instrument-sans/wght.css";
 
 :root {
   color-scheme: light;
@@ -137,12 +114,13 @@
   --mock-sand: #b8860b;
   --mock-moss: #5b8c5a;
   --radius: 16px;
-  /* ✨ The final prototype's two typefaces and no others (ticket 48): Newsreader for headings, and for what the
-     prototype calls its script and mono, which it also sets in its two; Switzer for text. */
+  /* ✨ Two typefaces and no others (ticket 48): the final prototype's Newsreader for headings, and for what it calls
+     its script; for text, and its mono, Instrument Sans in place of its Switzer, whose licence keeps it out of a public
+     repository or image. Both are openly licensed and served from the deployment's own files. */
   --font-heading: "Newsreader Variable", Georgia, "Times New Roman", serif;
-  --font-body: "Switzer", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Instrument Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-script: "Newsreader Variable", Georgia, "Times New Roman", serif;
-  --font-mono: "Switzer", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Instrument Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* ✨ Aliases from the reference HTML, so its rules can be dropped in verbatim. */
   --paper: #f8f7ef;

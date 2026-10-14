@@ -35,8 +35,6 @@ dist/
 build/
 .vite/
 /staticfiles/
-# Switzer's licence lets us serve it but not publish it in a repository: fetched by the build (ticket 48)
-/frontend/fonts/
 
 # Local databases and exports
 *.sqlite3

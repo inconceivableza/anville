@@ -42,8 +42,10 @@ def test_fonts_are_self_hosted_never_fetched_from_google():
         assert "fonts.gstatic.com" not in text, source.name
 
 
-# ✨ The final prototype's two typefaces (ticket 48). A stack may fall back to system fonts after its first family.
-PROTOTYPE_FAMILIES = {"Switzer", "Newsreader", "Newsreader Variable"}
+# ✨ The final prototype's headings typeface and, for text, Instrument Sans in place of its Switzer, whose licence keeps
+# it out of a public repository or image (ticket 48). A stack may fall back to system fonts after its first family.
+PROTOTYPE_FAMILIES = {"Instrument Sans Variable", "Newsreader Variable"}
+FONT_PACKAGES = ("@fontsource-variable/newsreader/", "@fontsource-variable/instrument-sans/")
 
 
 def _first_family(stack):
@@ -56,7 +58,8 @@ def test_only_the_prototypes_two_typefaces_are_loaded_or_named_and_each_font_var
     variables = re.findall(r"(--font-[\w-]+)\s*:\s*([^;]+);", css)
     literal_stacks = [stack for stack in re.findall(r"font-family\s*:\s*([^;]+);", css) if "var(" not in stack]
 
-    assert [name for name in imports if "newsreader" not in name] == []
+    assert [name for name in imports if not name.startswith(FONT_PACKAGES)] == []
+    assert "@font-face" not in css  # ✨ every font comes from its package; none is committed
     assert [stack for _, stack in variables if _first_family(stack) not in PROTOTYPE_FAMILIES] == []
     assert [stack for stack in literal_stacks if _first_family(stack) not in PROTOTYPE_FAMILIES] == []
     names = [name for name, _ in variables]
