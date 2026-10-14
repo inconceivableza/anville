@@ -255,6 +255,7 @@ def onboarding(request):
     onboarding_section, reason_block, baseline_blocks = onboarding_content
 
     reason_text = authored_text(reason_block, "participant")
+    reason_text["id"] = reason_block["id"]
     reason_text["answer"] = state.answers.get(reason_block["id"])
     baseline = [
         {
