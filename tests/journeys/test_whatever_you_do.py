@@ -613,5 +613,6 @@ def test_the_letter_opens_once_the_participant_has_finished_the_workbook(partici
 def test_sections_2_to_4_are_neither_on_the_hub_nor_reachable(participant):
     """✨ Their content stays in the faithful port; here they are done on paper, in the Workbook. The hub lists only the
     track's sections, so a section that cannot be reached is not on it either."""
+    assert "Sections 2–4: The Workbook" in participant.get("/hub/").content.decode()
     for section_id in ("shape", "calling", "growth"):
         assert participant.get(f"/sections/{section_id}/").status_code == 404

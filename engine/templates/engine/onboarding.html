@@ -1,0 +1,112 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/base.html" %}
+{% block head_title %}Your workbook | {{ step|add:1 }} of 4{% endblock head_title %}
+
+{% block content %}
+  <div class="ob">
+    <aside class="ob-photo" aria-label="A scripture reflection">
+      <div class="ob-photo-art" aria-hidden="true"><svg><use href="#leaf"/></svg></div>
+      <blockquote class="q">
+        “For we are his workmanship, created in Christ Jesus unto good works.”
+        <cite class="label">Ephesians 2:10</cite>
+      </blockquote>
+      <span class="sc">{% if step == 0 %}Begin{% elif step == 1 %}Reflect{% elif step == 2 %}Choose{% else %}Save{% endif %}</span>
+    </aside>
+    <section class="ob-form">
+      <header class="ob-top">
+        <a class="linkbtn" href="{% url 'home' %}">Exit</a>
+        <div class="prog" aria-live="polite">
+          <span class="label">Step {{ step|add:1 }} of 4 · {% if step == 0 %}About you{% elif step == 1 %}Baseline{% elif step == 2 %}Your path{% else %}Save{% endif %}</span>
+          <span class="bar" aria-hidden="true">{% for n in "1234" %}<i{% if forloop.counter0 <= step %} class="on"{% endif %}></i>{% endfor %}</span>
+        </div>
+        <svg class="ob-mark" aria-hidden="true"><use href="#mark"/></svg>
+      </header>
+
+      <div class="ob-main">
+        {% if error %}<p class="ob-error" role="alert">{{ error }}</p>{% endif %}
+        <form method="post" class="step">
+          {% csrf_token %}
+          <input type="hidden" name="step" value="{{ step }}">
+          <input type="hidden" name="action" value="continue">
+
+          {% if step == 0 %}
+            <div class="step-intro">
+              <h1>What’s bringing you here?</h1>
+              <p class="why">There’s no wrong answer. It shapes the examples and readings you’ll see.</p>
+            </div>
+            <fieldset class="opts">
+              <legend class="visually-hidden">{{ reason.prompt }}</legend>
+              {% for option in reason.options %}
+                <label class="opt">
+                  <input type="radio" name="{{ reason.id }}" value="{{ option.id }}"{% if reason.answer == option.id %} checked{% endif %} required>
+                  <span><b>{{ option.label }}</b></span>
+                </label>
+              {% endfor %}
+            </fieldset>
+          {% elif step == 1 %}
+            <div class="step-intro">
+              <h1>Where are you coming from?</h1>
+              <p class="why">Not a test. We’ll ask again at the end so you can see how far you’ve travelled.</p>
+            </div>
+            <div class="baseline-questions">
+              {% for question in baseline %}
+                <div class="scale">
+                  <label for="scale-{{ question.id }}">{{ question.text.prompt }}</label>
+                  <div class="sl">
+                    <input id="scale-{{ question.id }}" type="range" name="{{ question.id }}" min="1" max="10" step="1" value="{{ question.value|default:5 }}" data-onboarding-slider required aria-valuetext="{% if question.value %}{{ question.value }} out of 10{% else %}5 out of 10{% endif %}">
+                    <output for="scale-{{ question.id }}" data-slider-output>{% if question.value %}{{ question.value }}{% else %}5{% endif %}</output>
+                  </div>
+                  <div class="ends"><span>{{ question.text.min_label }}</span><span>{{ question.text.max_label }}</span></div>
+                </div>
+              {% endfor %}
+            </div>
+          {% elif step == 2 %}
+            <div class="step-intro">
+              <h1>How would you like to work?</h1>
+              <p class="why">Both cover the same ground. You can change this later.</p>
+            </div>
+            <fieldset class="opts path-options">
+              <legend class="visually-hidden">Choose a path</legend>
+              <label class="opt">
+                <input type="radio" name="path" value="online"{% if selected_path == "online" %} checked{% endif %} required>
+                <span><b>Guided online</b><small>Step by step here, saved as you go</small></span>
+              </label>
+              <label class="opt">
+                <input type="radio" name="path" value="paper"{% if selected_path == "paper" %} checked{% endif %} required>
+                <span><b>Paper workbook</b><small>Print and write by hand; the assessment stays online</small></span>
+              </label>
+            </fieldset>
+          {% else %}
+            <div class="step-intro">
+              <h1>Save your progress.</h1>
+              <p class="why">Your workbook is linked to the account you’ve already created.</p>
+            </div>
+            <div class="field">
+              <span>First name</span>
+              <strong>{{ display_name }}</strong>
+            </div>
+            <div class="field">
+              <span>Email</span>
+              <strong>{{ email }}</strong>
+            </div>
+            <label class="check">
+              <input type="checkbox" name="remind"{% if remind %} checked{% endif %}>
+              I’d welcome a gentle reminder if I haven’t visited in two weeks.
+            </label>
+            <p class="aside">This saves your preference; reminder emails are not sent yet.</p>
+          {% endif %}
+
+          <div class="step-foot">
+            {% if step > 0 %}
+              <button class="linkbtn" type="submit" name="action" value="back" formnovalidate>Back</button>
+            {% else %}
+              <span></span>
+            {% endif %}
+            <button class="pill" type="submit">{% if step == 3 %}Open my workbook{% else %}Continue{% endif %} <span class="ar"><svg width="10" height="10"><use href="#arrow"/></svg></span></button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+{% endblock content %}
