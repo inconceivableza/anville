@@ -2,7 +2,7 @@
 
 **What to build:** The two hub side cards say where things stand, and each leads to one place where the participant adds a person and gets their link in the same act, so nobody misses the step of making links.
 
-**Blocked by:** D3-50 (Before we begin as a wizard)
+**Blocked by:** D3-50 (Before we begin as a wizard); A5-55 (Answer collection freezes once results are viewed)
 
 **Status:** ready-for-agent
 
@@ -20,5 +20,5 @@
 
 - Wording agreed for the trusted voices card (copy, open to change): "Not started"; "2 more needed", with "You'll see how others see you once 3 people have answered."; "Waiting for answers"; once answer collection freezes (A5-55), "Complete", with "You've seen your results, so no more answers are added."
 - The coach card's sentence says only what is true: the system sends the coach nothing, so not the prototype's "We'll send them a short briefing pack"
-- Prototype reference: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3-nc-copy-copy.zip`, the hub's two cards. Its name box on the card itself is not kept: links are made on the section's page
-- On the `hackathon-ui` branch the trusted voices card counts a claimed link as a reply, and its coach card says "Invite a mentor". Answered counts assessments sent, and the glossary says coach
+- Prototype reference: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`, the hub's two cards. Its name box on the card itself is not kept: links are made on the section's page
+- As merged from the `hackathon-ui` branch in D1-48, the trusted voices card counts a claimed link as a reply, and its coach card says "Invite a mentor". Answered counts assessments sent, and the glossary says coach

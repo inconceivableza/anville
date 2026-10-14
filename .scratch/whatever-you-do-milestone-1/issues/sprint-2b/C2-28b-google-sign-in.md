@@ -2,7 +2,7 @@
 
 **What to build:** A participant may sign up and sign in with their Google account, alongside email and password, in any environment given a Google client. Split from ticket 28; password reset is 28a.
 
-**Blocked by:** C1-28a (Password reset); and a Google OAuth client for the environment, which an operator creates by hand ("Setting up the Google project" below)
+**Blocked by:** C1-28a (Password reset)
 
 **Status:** ready-for-agent
 
@@ -46,6 +46,7 @@ Repeat steps 6 and 7 for each new environment. One client could carry every envi
 
 **Context**
 
+- Trying it on staging needs a Google OAuth client for the environment, which an operator creates by hand ("Setting up the Google project" above). The code and its tests do not wait on it
 - Google may process participants' sign-in data, by their own choice each time (ADR 0015)
 - Through allauth's social accounts. Its social sign-up form is built on the sign-up form's own class (`access/forms.py`), which holds the 18+ confirmation and the enrolment code, but by default allauth skips the form altogether (`SOCIALACCOUNT_AUTO_SIGNUP = True`): turn that off, or otherwise make social sign-up show it
 - The consent step guards the engine's views (`access/consent.py`), not sign-up, so it holds for a Google account either way

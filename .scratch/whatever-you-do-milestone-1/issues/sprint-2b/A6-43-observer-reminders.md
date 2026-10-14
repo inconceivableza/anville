@@ -4,7 +4,7 @@
 
 **Blocked by:** A5-55 (Answer collection freezes once results are viewed)
 
-**Status:** ready-for-agent
+**Status:** needs-info
 
 **Sprint:** 2b (12–16 Oct)
 
@@ -15,6 +15,14 @@
 - [ ] Reminders stop on revoke, reissue or removal, and when the participant withdraws consent
 - [ ] The email names the participant, says how to ask not to be reminded, and carries a button to a page that makes a fresh link when pressed and takes the observer into the assessment. The old link stops working only then. The button's address is signed, names the invitation without being a way in, and is refused once the observer has sent, once the link expires or changes, and once collection freezes
 - [ ] Nothing in a reminder or its absence tells the participant who has answered
+
+**Open, to settle before building** (then likely split into 43a, whom and when, the weekly job and opting out, and 43b, the fresh-link page)
+
+- What records that an observer has sent: answers are found by a hash of the claimed secret, which cannot be joined to an invitation (ADR 0009), so something new is stored. Whether it carries over to a reissued link, or an observer who has sent is nudged to answer twice (ADR 0007)
+- Whether reminders start again for a reissued link
+- What runs the weekly job: nothing in the chart schedules jobs yet
+- What asking not to be reminded stores
+- The observers' privacy notice saying they will be emailed
 
 **Context**
 

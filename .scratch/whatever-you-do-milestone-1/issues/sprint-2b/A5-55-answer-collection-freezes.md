@@ -12,8 +12,8 @@
 
 - [ ] With at least the minimum number of answers in, "Compare with how others see you" first shows a confirmation: how many of the people invited have answered, and that once they look no more answers are added. When everyone invited has answered it still shows, more mildly, saying they can no longer add anyone. Below the minimum the press shows the explanation as today and freezes nothing
 - [ ] Once frozen, an observer's page says no more answers are being taken and accepts none, and the participant can no longer add people or issue or reissue observers' links, with the page saying why. The coach's link is untouched
-- [ ] An observer who withdraws after the freeze has their answers deleted and the comparison worked out again without them. If that leaves fewer than the minimum, collection unfreezes: links that still work can send again, and the participant may invite someone new
-- [ ] The observers' privacy notice says they can withdraw at any time and their answers will be removed, and that once the participant has looked at the combined results no new answers are added
+- [ ] An observer who withdraws after the freeze has their answers deleted and the comparison worked out again without them. If that leaves fewer than the minimum, collection unfreezes: links that still work can send again, and the participant may invite someone new. The next press with the minimum in freezes it again, after the same confirmation
+- [ ] The observers' privacy notice says they can withdraw at any time and their answers will be removed: through their link while it works, and after that by asking the people who run the service. It says that once the participant has looked at the combined results no new answers are added. In place of "kept apart from your answers", it says the participant never sees which answers are whose, and the people who run the service can (ADR 0014)
 - [ ] An ADR records the freeze: what triggers it, what it refuses, that it unfreezes below the minimum, and that withdrawal always wins over a frozen comparison
 
 **Context**

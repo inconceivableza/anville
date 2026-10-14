@@ -1,5 +1,5 @@
 ---
-status: accepted, partly superseded by ADR-0014
+status: accepted, partly superseded by ADR 0014
 ---
 
 # Observers' answers are bound to the secret they claimed

@@ -2,7 +2,7 @@
 
 **What to build:** An observer who has placed all 36 cards can send their assessment straight away, without working through the fine-tuning sliders, while one who wants to fine-tune still can.
 
-**Blocked by:** None (15a is resolved)
+**Blocked by:** None (can start immediately)
 
 **Status:** ready-for-agent
 

@@ -223,7 +223,7 @@ A participant's self-result beside their observer average: each construct's two 
 _Avoid_: gap analysis, 360.
 
 **Answer collection**:
-The period in which a participant's observers may send their observer assessments. It **freezes** when the participant first views a comparison showing standings, after which no observer assessment is accepted, and unfreezes if withdrawals leave fewer than the minimum number of observers.
+The period in which a participant's observers may send their observer assessments. It **freezes** when the participant first asks to see a comparison with at least the minimum number of observers' answers in (pressing the button, not loading the page), after which no observer assessment is accepted, and unfreezes if withdrawals leave fewer than the minimum number of observers, until the next such press.
 _Avoid_: collection (on its own), answer window, lock, closing.
 
 **Enrolment code**:

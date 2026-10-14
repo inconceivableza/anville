@@ -1,6 +1,6 @@
 # 49: Hub width and second column
 
-**What to build:** The hub takes the final prototype's layout: wide, with the next step and the sections on the left and hub side cards beside them, so sections no longer wrap in a thin column. The `hackathon-ui` branch has the layout, but writes its side cards and its next step in the template, and shows a "Where you started" card; this moves all of it into the pathway document, so which sections are side cards, what the next step says and which photos appear are authored there.
+**What to build:** The hub takes the final prototype's layout: wide, with the next step and the sections on the left and hub side cards beside them, so sections no longer wrap in a thin column. The hub merged from the `hackathon-ui` branch in D1-48 has the layout, but writes its side cards and its next step in the template, and shows a "Where you started" card; this moves all of it into the pathway document, so which sections are side cards, what the next step says and which photos appear are authored there.
 
 **Blocked by:** D1-48 (FaithTech look and final tweaks)
 
@@ -18,6 +18,6 @@
 
 **Context**
 
-- Prototype reference: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3-nc-copy-copy.zip`, the hub view
+- Prototype reference: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`, the hub view
 - The hub's photos are the prototype's grass (the next step) and, for D3-50, the figure facing the sun (the wizard). Both are from Unsplash, whose licence needs no attribution; the credits are shown anyway, behind the setting
 - New fields go into the schema and its linter. The faithful port takes none of them, and the drift test sets them aside

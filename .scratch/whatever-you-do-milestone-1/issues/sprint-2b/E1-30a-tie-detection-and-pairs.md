@@ -10,7 +10,7 @@
 
 **Spec:** The instrument and scoring; The pathway document and versions
 
-- [ ] A framework is tied when one or more other constructs are within a threshold of its leader (4 points by default), and at most the top four enter the tie-break. The threshold, the cluster size and the question budget (10 by default) are set in the pathway document
+- [ ] A framework is tied when one or more other constructs are within a threshold of its leader (4 percentage points of the rounded percents by default), and at most the top four enter the tie-break. The threshold, the cluster size and the question budget (10 by default) are set in the pathway document
 - [ ] Only a participant tied on exactly one framework gets pairs. One tied on both is a generalist and gets none; one tied on neither gets none
 - [ ] Pairs are always within the tied framework, never across APEST(d) and PEP. Pairs among the top-ranked constructs survive trimming to the budget first, and a second round with different statements may fill what is left of it
 - [ ] Three statements per construct, 36 in all, are authored content in the pathway document, taken from the content owner's prototype and separate from the 36 sort items
@@ -19,4 +19,4 @@
 **Context**
 
 - Prototype reference: `tiebreaker-prototype-v2.html` in Prototypes for reference, the content owner's prototype and the reference for behaviour and statements. Its handling of two tied frameworks (a shared budget, alternating questions) is not built, since a participant tied on both is told they are a generalist
-- The faithful port takes the statements too, or the drift test sets them aside
+- The faithful port does not take the statements, since the tie-break is not in the original prototype; the drift test sets them aside

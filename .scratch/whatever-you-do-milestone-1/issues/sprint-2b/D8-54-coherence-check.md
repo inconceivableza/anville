@@ -1,6 +1,6 @@
 # 54: Coherence check
 
-**What to build:** A walk through the whole app on staging, by a person, to check it feels like one coherent thing after this sprint's changes, fixing what is small and ticketing what is not. Once it passes, the `hackathon-ui` branch merges into `main`.
+**What to build:** A walk through the whole app on staging, by a person, to check it feels like one coherent thing after this sprint's changes, fixing what is small and ticketing what is not.
 
 **Blocked by:** D7-53 (New look for card sorting and beyond)
 
@@ -13,4 +13,7 @@
 - [ ] The participant's journey from the homepage and sign-up to the Workbook, the observer's from their link to a sent assessment, and the coach's from their link to seeing the comparison, each walked at desktop and phone width
 - [ ] Small fixes found on the walk go in under this ticket; anything larger becomes a ticket of its own
 - [ ] The walk is recorded in the manual checks
-- [ ] The branch takes in `main` once more, its tests pass, and it merges into `main`
+
+**Context**
+
+- Walked by a person, not an agent: `/implement-spec` pointed at this folder stops before it
