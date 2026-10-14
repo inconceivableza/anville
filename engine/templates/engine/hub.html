@@ -13,13 +13,14 @@
     <div class="hub">
       <div class="wrap">
         <div class="hub-head">
-          <div style="display:grid;gap:10px"><h1>Welcome, <i>{{ name }}</i></h1></div>
-          <span class="label" style="color:var(--muted)">Progress: {{ hub.answered }} of {{ hub.total }} items answered</span>
+          <h1>Welcome, <i>{{ name }}</i></h1>
+          <span class="label hub-progress">{{ hub.answered }} of {{ hub.total }} answered</span>
         </div>
         <div class="hub-grid">
           <div>
             {% if hub.next_step %}
               <div class="panel next">
+                <p class="label">Your next step</p>
                 <h2>{{ hub.next_step.title }}</h2>
                 <p>{% if hub.next_step.status == 'in-progress' %}Carry on where you left off.{% else %}This is the next thing waiting for you.{% endif %}</p>
                 <a class="pill" href="{% page_url hub.next_step.id hub.next_step.page %}">
@@ -33,18 +34,18 @@
                 <p>You've completed everything that's open. Check back soon.</p>
               </div>
             {% endif %}
-            <div class="slist">
+            <ol class="slist">
               {% for entry in hub.outline %}
                 {% include "engine/hub_section.html" with section=entry.section parts=entry.parts number=entry.number %}
               {% endfor %}
-            </div>
+            </ol>
           </div>
           <aside class="side">
             <div class="card dark">
               <div class="row"><h3>Five trusted voices</h3><span class="tag">{% if voices.invited == 0 %}Not started{% else %}{{ voices.replied }} replied{% endif %}</span></div>
               <p>Invite people who know you well. Their anonymous answers sit beside your own in Section 1.</p>
-              <div class="meter"><div class="lbl"><span>Invited</span><span>{{ voices.invited }} / {{ voices.max }}</span></div><div class="tr"><i style="width:{% widthratio voices.invited voices.max 100 %}%"></i></div></div>
-              <div class="meter"><div class="lbl"><span>Replied</span><span>{{ voices.replied }} / {{ voices.max }}</span></div><div class="tr"><i style="width:{% widthratio voices.replied voices.max 100 %}%"></i></div></div>
+              <div class="meter"><div class="lbl"><span>Invited</span><span>{{ voices.invited }} / {{ voices.max }}</span></div><progress class="tr" max="{{ voices.max }}" value="{{ voices.invited }}" aria-hidden="true"></progress></div>
+              <div class="meter"><div class="lbl"><span>Replied</span><span>{{ voices.replied }} / {{ voices.max }}</span></div><progress class="tr" max="{{ voices.max }}" value="{{ voices.replied }}" aria-hidden="true"></progress></div>
               <a class="pill" href="{% url 'invitations' %}">Manage <span class="ar"><svg width="10" height="10"><use href="#arrow"/></svg></span></a>
               {% if voices.names %}
                 <ul class="names">{% for name in voices.names %}<li>{{ name }}</li>{% endfor %}</ul>
@@ -65,7 +66,7 @@
                 <div class="row"><h3>Where you started</h3><span class="tag">Baseline</span></div>
                 <div class="base">
                   {% for item in baseline %}
-                    <div class="b"><span>{{ item.label }}</span><div class="tr"><i style="width:{{ item.percent }}%"></i></div><b>{{ item.percent }}%</b></div>
+                    <div class="b"><span>{{ item.label }}</span><progress class="tr" max="100" value="{{ item.percent }}" aria-hidden="true"></progress><b>{{ item.percent }}%</b></div>
                   {% endfor %}
                 </div>
                 <p>We'll ask these again at the end, so you can see how far you've come.</p>

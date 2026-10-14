@@ -11,9 +11,10 @@
   (ANVILLE_SIDEBAR), leaving the rest of the header.
 {% endcomment %}
 {% participant_nav as nav %}
-<nav class="nav light" aria-label="Workbook">
+<header class="site-header">
+<div class="nav light">
   <div class="l">
-    <a class="site-header-title" href="{% url 'hub' %}" aria-current="page">{{ nav.title|default:"Anville" }}</a>
+    <a class="site-header-title" href="{% url 'hub' %}">{{ nav.title|default:"Anville" }}</a>
   </div>
   <div class="r">
     {% if nav.sidebar %}
@@ -38,4 +39,5 @@
       <button type="submit" class="btn btn-secondary btn-sm">Sign out</button>
     </form>
   </div>
-</nav>
+</div>
+</header>

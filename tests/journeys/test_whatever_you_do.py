@@ -149,7 +149,7 @@ def test_the_letter_cannot_be_sent_without_the_fifth_after_rating(participant):
 @pytest.mark.django_db
 def test_progress_counts_the_two_new_ratings(participant):
     # ✨ The faithful port's 16 and two more, less Section 3's reading and statement, which went with it (ticket 40).
-    assert "0 of 16 items answered" in participant.get("/hub/").content.decode()
+    assert "0 of 16 answered" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db

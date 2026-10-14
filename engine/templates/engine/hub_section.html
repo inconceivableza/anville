@@ -6,9 +6,9 @@
   {% if number %}<span class="n">{{ number|stringformat:"02d" }}</span>{% endif %}
   <div class="srow-body">
     {% if section.is_locked %}
-      <h3>{{ section.title }}</h3>
+      <h3 class="hub-section-title">{{ section.title }}</h3>
     {% else %}
-      <h3><a href="{% page_url section.id section.page %}">{{ section.title }}</a></h3>
+      <h3><a class="hub-section-title" href="{% page_url section.id section.page %}">{{ section.title }}</a></h3>
     {% endif %}
     {% if section.part_of %}<span class="row-kind">Activity</span>{% endif %}
     {% if section.estimate %}<p>{{ section.estimate }}</p>{% endif %}

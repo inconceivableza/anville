@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 2b (12–16 Oct)
 
@@ -21,5 +21,6 @@
 - Prototype reference: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`, the canonical look, fonts included. v1 and v2 are superseded. It has three screens only: the homepage, the wizard and the hub. Its images are the branch's `frontend/img`
 - The branch was built from `docs/plans/target-design.html`, an earlier copy of v3. Where they differ, v3 wins: the homepage's pillars and tabs, its marquee of callings, and its heading "Everyone has a purpose"
 - The branch's commit "Temporarily disable pytest blocking build" says it should not reach `main` until reverted
-- The branch serves its fonts from the deployment's own files already: Switzer as woff2 files committed in `frontend/fonts`, and Newsreader through an npm package. But it uses Switzer only on the homepage (`.page:has(.hero)`); every other page has Inter for text, Pinyon Script for script and IBM Plex Mono. The prototype has none of the three: its sans and mono are Switzer, its serif and script Newsreader. Drop their packages, and check Switzer's licence allows serving it ourselves
+- The branch serves its fonts from the deployment's own files already: Switzer as woff2 files committed in `frontend/fonts`, and Newsreader through an npm package. But it uses Switzer only on the homepage (`.page:has(.hero)`); every other page has Inter for text, Pinyon Script for script and IBM Plex Mono. The prototype has none of the three: its sans and mono are Switzer, its serif and script Newsreader. Drop their packages
+- Switzer's licence (ITF Free Font License, section 02) lets us serve it from our own site, but not make the files available through a repository or public server, and the repository is public. So the files are never committed: the build fetches the three weights it uses from Fontshare's kit, unchanged (no conversion or subsetting, which section 02 also forbids), into an ignored `frontend/fonts/` (developer's call, 15 Oct). The branch's committed copies, which did not match the kit, are removed
 - Staging runs the branch until this merge, the onboarding migration included; from the merge on it is deployed from `main`

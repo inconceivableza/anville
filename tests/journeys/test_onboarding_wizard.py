@@ -13,6 +13,8 @@ from tests.journeys.test_consent import give_consent
 def onboarding_pathway():
     document = pathway_document()
     onboarding = document["content"]["sections"][0]
+    # ✨ In place of the test pathway's one opening rating, so the five below are the section's only scales.
+    onboarding["blocks"] = [block for block in onboarding["blocks"] if block["type"] != "agreement_scale"]
     onboarding["blocks"].insert(
         0,
         {
@@ -85,9 +87,11 @@ def test_the_reason_and_all_five_authored_scales_are_saved_as_pathway_answers(ne
     assert [
         response.answers[f"bl-{name}"] for name in ("bible", "gifts", "call", "plan", "peace")
     ] == [2, 4, 6, 8, 10]
-    page = new_participant.get(baseline.url).content.decode()
+    # ✨ Going back to the ratings shows them as saved.
+    page = new_participant.get("/onboarding/?step=1").content.decode()
     assert "Baseline statement peace" in page
     assert 'type="range"' in page
+    assert 'value="10"' in page
 
 
 @pytest.mark.django_db

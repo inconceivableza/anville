@@ -55,7 +55,7 @@ def test_the_homepage_explains_the_workbook_and_adult_eligibility_up_front(clien
 def test_homepage_actions_use_consistent_labels_and_do_not_point_to_placeholders(client):
     page = client.get("/").content.decode()
 
-    assert page.count("Begin your journey") == 4
+    assert page.count("Begin your journey") == 3  # ✨ the final prototype's three
     assert 'href="#"' not in page
     assert '<a class="post"' not in page
     assert "Subscribe" not in page

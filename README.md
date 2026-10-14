@@ -53,6 +53,8 @@ Password reset is switched off until email delivery exists (ticket 28a), so sign
 
 After changing anything in `frontend/src/`, run `npm run build` again in `frontend/`.
 
+The first build downloads the Switzer font from Fontshare into `frontend/fonts/`, which git ignores: its licence (the ITF Free Font License) lets the site serve it but not a public repository hold it. Never commit those files.
+
 ## Running in a devcontainer
 
 The setup above assumes you are on the machine running Docker. Inside a devcontainer you usually are not: there is no Docker client, so `docker compose up -d` stays a host command, and a Postgres published on the host's loopback is not reachable from the container. The devcontainer image also has to provide Python 3.13 itself, and the frontend build still has to be run somewhere.

@@ -16,13 +16,11 @@
  */
 
 @import "@fontsource-variable/newsreader/opsz.css";
-@import "@fontsource-variable/inter";
-@import "@fontsource/pinyon-script";
-@import "@fontsource/ibm-plex-mono";
+@import "@fontsource-variable/newsreader/opsz-italic.css";
 
 @font-face {
   font-family: "Switzer";
-  src: url("../fonts/switzer-400.woff2") format("woff2");
+  src: url("../fonts/Switzer-Regular.woff2") format("woff2");
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -30,7 +28,7 @@
 
 @font-face {
   font-family: "Switzer";
-  src: url("../fonts/switzer-500.woff2") format("woff2");
+  src: url("../fonts/Switzer-Medium.woff2") format("woff2");
   font-style: normal;
   font-weight: 500;
   font-display: swap;
@@ -38,7 +36,7 @@
 
 @font-face {
   font-family: "Switzer";
-  src: url("../fonts/switzer-600.woff2") format("woff2");
+  src: url("../fonts/Switzer-Semibold.woff2") format("woff2");
   font-style: normal;
   font-weight: 600;
   font-display: swap;
@@ -78,10 +76,11 @@
   --stop-pale: #fbeeed;
   --flag-bg: rgba(255, 255, 255, 0.65);
   --distinction-rule: rgba(166, 207, 114, 0.18);
-  /* Results: the tones a pathway names for its constructs, and the colours of bars ranked strongest first. */
+  /* Results: the tones a pathway names for its constructs, and the colours of bars ranked strongest first. These are
+     the original prototype's, not the new look's (ticket 48). */
   --tone-violet: #7b68ee;
   --tone-rose: #c25b56;
-  --tone-green: #a6cf72;
+  --tone-green: #1a7a4c;
   --tone-moss: #5b7a5e;
   --tone-blue: #4a6fa5;
   --tone-brown: #8b7355;
@@ -138,10 +137,12 @@
   --mock-sand: #b8860b;
   --mock-moss: #5b8c5a;
   --radius: 16px;
-  --font-heading: "Newsreader Variable", Georgia, serif;
-  --font-body: "Inter Variable", system-ui, sans-serif;
-  --font-script: "Pinyon Script", "Snell Roundhand", "Apple Chancery", cursive;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* ✨ The final prototype's two typefaces and no others (ticket 48): Newsreader for headings, and for what the
+     prototype calls its script and mono, which it also sets in its two; Switzer for text. */
+  --font-heading: "Newsreader Variable", Georgia, "Times New Roman", serif;
+  --font-body: "Switzer", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-script: "Newsreader Variable", Georgia, "Times New Roman", serif;
+  --font-mono: "Switzer", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* ✨ Aliases from the reference HTML, so its rules can be dropped in verbatim. */
   --paper: #f8f7ef;
@@ -154,6 +155,37 @@
   --green-ink: #1d2a10;
   --green-deep: #2f5a2b;
   --on-dark-2: #c9bdb0;
+
+  /* ✨ The new look's tints and shades, named by their colour and opacity. */
+  --brown-05: rgba(29, 20, 19, 0.05);
+  --brown-15: rgba(29, 20, 19, 0.15);
+  --brown-18: rgba(29, 20, 19, 0.18);
+  --brown-25: rgba(29, 20, 19, 0.25);
+  --brown-28: rgba(29, 20, 19, 0.28);
+  --brown-30: rgba(29, 20, 19, 0.3);
+  --brown-35: rgba(29, 20, 19, 0.35);
+  --brown-45: rgba(29, 20, 19, 0.45);
+  --brown-55: rgba(29, 20, 19, 0.55);
+  --brown-70: rgba(29, 20, 19, 0.7);
+  --brown-78: rgba(29, 20, 19, 0.78);
+  --brown-85: rgba(29, 20, 19, 0.85);
+  --brown-86: rgba(29, 20, 19, 0.86);
+  --on-dark-22: rgba(242, 236, 226, 0.22);
+  --warm-12: rgba(255, 240, 220, 0.12);
+  --warm-14: rgba(255, 240, 220, 0.14);
+  --warm-16: rgba(255, 240, 220, 0.16);
+  --warm-20: rgba(255, 240, 220, 0.2);
+  --warm-pale-08: rgba(255, 245, 230, 0.08);
+  --track-on-dark: rgba(255, 240, 220, 0.15);
+  --green-45: rgba(166, 207, 114, 0.45);
+  --green-deep-10: rgba(47, 90, 43, 0.1);
+  --green-deep-12: rgba(47, 90, 43, 0.12);
+  --green-forest: #27432a;
+  --white-40: rgba(255, 255, 255, 0.4);
+  --snow: #ffffff;
+  --black-45: rgba(0, 0, 0, 0.45);
+  --black-55: rgba(0, 0, 0, 0.55);
+  --mask-solid: #000000;
 
   /* Spacing scale (base 4px). */
   --space-2xs: 0.25rem;   /* 4px */
@@ -212,15 +244,15 @@ body {
   padding: var(--space-xl) var(--space-2xl) var(--space-4xl);
 }
 
-/* ✨ The header of every participant page (ticket 41a): the pathway's name, the sidebar's button and "Sign out". */
+/* ✨ The header of every participant page (ticket 41a): the pathway's name, the sidebar's button and "Sign out". The
+   page's banner landmark; its look is the new nav's within it (ticket 48). */
 .site-header {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-lg);
-  background: var(--white);
-  border-bottom: 1px solid var(--border);
+}
+
+/* ✨ The leaf icon's vein, set here so no template holds a raw colour */
+.leaf-vein {
+  stroke: var(--brown);
 }
 
 .site-header-title {
@@ -833,10 +865,15 @@ h2 {
   font-weight: 300;
 }
 
+.hub-progress {
+  color: var(--muted);
+}
+
+/* ✨ As the prototype sets the name: Newsreader's italic */
 .hub-head h1 i {
-  font-family: var(--font-script);
-  font-style: normal;
-  font-size: 1.15em;
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-size: 1em;
 }
 
 .hub-grid {
@@ -866,7 +903,7 @@ h2 {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(0deg, rgba(29, 20, 19, 0.85), rgba(29, 20, 19, 0.15));
+  background: linear-gradient(0deg, var(--brown-85), var(--brown-15));
 }
 
 .next > *:not(img) {
@@ -888,6 +925,8 @@ h2 {
 
 .slist {
   margin-top: var(--space-md);
+  padding: 0;
+  list-style: none;
   display: grid;
 }
 
@@ -1040,18 +1079,29 @@ h2 {
   font-variant-numeric: tabular-nums;
 }
 
-.meter .tr {
+/* ✨ The meters and baseline bars are <progress> elements, so their fill needs no inline width */
+.meter .tr,
+.base .tr {
+  appearance: none;
+  display: block;
+  width: 100%;
   height: 3px;
-  background: rgba(255, 240, 220, 0.15);
+  border: none;
   border-radius: 3px;
   overflow: hidden;
+  background: var(--track-on-dark);
 }
 
-.meter .tr i {
-  display: block;
-  height: 100%;
+.meter .tr::-webkit-progress-bar {
+  background: var(--track-on-dark);
+}
+
+.meter .tr::-webkit-progress-value {
   background: var(--green);
-  transition: width 0.5s;
+}
+
+.meter .tr::-moz-progress-bar {
+  background: var(--green);
 }
 
 .names {
@@ -1067,7 +1117,7 @@ h2 {
   font-size: 12.5px;
   padding: var(--space-2xs) var(--space-sm);
   border-radius: var(--radius-pill-shape);
-  background: rgba(255, 240, 220, 0.12);
+  background: var(--warm-12);
 }
 
 .base {
@@ -1084,16 +1134,16 @@ h2 {
   color: var(--muted);
 }
 
-.base .tr {
-  height: 3px;
+.base .tr,
+.base .tr::-webkit-progress-bar {
   background: var(--cream-2);
-  border-radius: 3px;
-  overflow: hidden;
 }
 
-.base .tr i {
-  display: block;
-  height: 100%;
+.base .tr::-webkit-progress-value {
+  background: var(--brown-3);
+}
+
+.base .tr::-moz-progress-bar {
   background: var(--brown-3);
 }
 
@@ -1248,13 +1298,14 @@ form + .way-on,
   transition: all 0.2s;
 }
 
+/* ✨ As the prototype's pill: dark green text on the light green, which light text on it would not pass for contrast */
 .btn-primary {
-  background: var(--gold);
-  color: var(--white);
+  background: var(--green);
+  color: var(--green-ink);
 }
 
 .btn-primary:hover {
-  background: var(--gold-dark);
+  filter: brightness(1.06);
 }
 
 .btn-primary:disabled {
@@ -3395,7 +3446,7 @@ body > svg[aria-hidden="true"] {
   border-radius: var(--radius-round-shape);
   display: grid;
   place-items: center;
-  background: rgba(255, 255, 255, 0.4);
+  background: var(--white-40);
   transition: transform 0.25s, translate 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
@@ -3492,7 +3543,7 @@ body > svg[aria-hidden="true"] {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(29, 20, 19, 0.55) 0%, rgba(29, 20, 19, 0.25) 40%, rgba(29, 20, 19, 0.55) 100%);
+  background: linear-gradient(180deg, var(--brown-55) 0%, var(--brown-25) 40%, var(--brown-55) 100%);
 }
 
 .hero-copy {
@@ -3513,11 +3564,6 @@ body > svg[aria-hidden="true"] {
   text-wrap: balance;
 }
 
-.page:has(.hero) {
-  --font-body: "Switzer", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Switzer", ui-sans-serif, system-ui, sans-serif;
-  font-family: var(--font-body);
-}
 
 .brand {
   display: inline-flex;
@@ -3544,7 +3590,7 @@ body > svg[aria-hidden="true"] {
   color: var(--on-dark);
   font-size: clamp(16px, 1.5vw, 21px);
   line-height: 1.5;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 1px 8px var(--black-45);
 }
 
 .hero-cta {
@@ -3556,9 +3602,9 @@ body > svg[aria-hidden="true"] {
 
 .hero .pill.ghost {
   color: var(--on-dark);
-  box-shadow: inset 0 0 0 1px rgba(242, 236, 226, 0.55);
+  box-shadow: inset 0 0 0 1px var(--on-dark-55);
   backdrop-filter: blur(6px);
-  background: rgba(29, 20, 19, 0.15);
+  background: var(--brown-15);
 }
 
 .logos {
@@ -3587,7 +3633,7 @@ body > svg[aria-hidden="true"] {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #fff;
+  color: var(--snow);
   white-space: nowrap;
   opacity: 0;
   transform: translateY(14px);
@@ -3924,7 +3970,7 @@ body > svg[aria-hidden="true"] {
 }
 
 .tp-text .out {
-  border-top: 1px solid rgba(255, 240, 220, 0.14);
+  border-top: 1px solid var(--warm-14);
   padding-top: 18px;
   font-size: 14px;
   color: var(--on-dark-2);
@@ -3963,7 +4009,7 @@ body > svg[aria-hidden="true"] {
 
 #aImgs .tp-anim[data-i="0"] {
   background-image:
-    linear-gradient(120deg, rgb(47 90 43 / 12%), rgb(29 20 19 / 30%)),
+    linear-gradient(120deg, var(--green-deep-12), var(--brown-30)),
     url("../img/notebook.jpg");
   background-position: center;
   background-size: cover;
@@ -3971,7 +4017,7 @@ body > svg[aria-hidden="true"] {
 
 #aImgs .tp-anim[data-i="1"] {
   background-image:
-    linear-gradient(120deg, rgb(47 90 43 / 10%), rgb(29 20 19 / 30%)),
+    linear-gradient(120deg, var(--green-deep-10), var(--brown-30)),
     url("../img/friends.jpg");
   background-position: center;
   background-size: cover;
@@ -3979,7 +4025,7 @@ body > svg[aria-hidden="true"] {
 
 #aImgs .tp-anim[data-i="2"] {
   background-image:
-    linear-gradient(120deg, rgb(47 90 43 / 10%), rgb(29 20 19 / 35%)),
+    linear-gradient(120deg, var(--green-deep-10), var(--brown-35)),
     url("../img/field-walk.jpg");
   background-position: center;
   background-size: cover;
@@ -3987,7 +4033,7 @@ body > svg[aria-hidden="true"] {
 
 #aImgs .tp-anim[data-i="3"] {
   background-image:
-    linear-gradient(120deg, rgb(47 90 43 / 10%), rgb(29 20 19 / 28%)),
+    linear-gradient(120deg, var(--green-deep-10), var(--brown-28)),
     url("../img/potter.jpg");
   background-position: center;
   background-size: cover;
@@ -3995,7 +4041,7 @@ body > svg[aria-hidden="true"] {
 
 #aImgs .tp-anim[data-i="4"] {
   background-image:
-    linear-gradient(120deg, rgb(47 90 43 / 10%), rgb(29 20 19 / 28%)),
+    linear-gradient(120deg, var(--green-deep-10), var(--brown-28)),
     url("../img/hills.jpg");
   background-position: center;
   background-size: cover;
@@ -4044,7 +4090,7 @@ body > svg[aria-hidden="true"] {
   object-fit: cover;
   opacity: 0.16;
   filter: blur(6px);
-  background: radial-gradient(120% 100% at 50% 0%, #3d2d27 0%, #2a1d17 55%, #1d1413 100%);
+  background: radial-gradient(120% 100% at 50% 0%, var(--brown-3) 0%, var(--hero-bg) 55%, var(--brown) 100%);
 }
 
 .impact .in {
@@ -4102,7 +4148,7 @@ body > svg[aria-hidden="true"] {
 
 .imp-quote {
   margin: 0;
-  border-top: 1px solid rgba(242, 236, 226, 0.18);
+  border-top: 1px solid var(--on-dark-18);
   padding-top: clamp(32px, 5vw, 56px);
   display: grid;
   gap: 20px;
@@ -4378,7 +4424,7 @@ body > svg[aria-hidden="true"] {
 
 /* ---------- MEET ---------- */
 .meet {
-  background: #27432a;
+  background: var(--green-forest);
   color: var(--on-dark);
   text-align: center;
   overflow: hidden;
@@ -4441,7 +4487,7 @@ body > svg[aria-hidden="true"] {
   min-width: 44px;
   min-height: 44px;
   padding: 0 var(--space-md);
-  border: 1px solid rgba(242, 236, 226, 0.35);
+  border: 1px solid var(--on-dark-35);
   border-radius: var(--radius-pill-shape);
   background: var(--brown);
   color: var(--on-dark);
@@ -4449,8 +4495,8 @@ body > svg[aria-hidden="true"] {
 }
 
 .mc {
-  background: rgba(255, 245, 230, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(255, 240, 220, 0.16);
+  background: var(--warm-pale-08);
+  box-shadow: inset 0 0 0 1px var(--warm-16);
   border-radius: var(--radius-sm);
   padding: 22px 16px 20px;
   display: grid;
@@ -4588,11 +4634,11 @@ body > svg[aria-hidden="true"] {
 }
 
 .atabs .tab .bar {
-  background: rgb(242 236 226 / 22%);
+  background: var(--on-dark-22);
 }
 
 .atabs .tab .bar i {
-  background: rgb(166 207 114 / 45%);
+  background: var(--green-45);
 }
 
 .atabs .tab[aria-selected="true"] {
@@ -4612,8 +4658,8 @@ body > svg[aria-hidden="true"] {
   align-content: center;
   gap: clamp(24px, 3vw, 40px);
   padding: clamp(24px, 3.4vw, 48px);
-  background: rgb(29 20 19 / 78%);
-  box-shadow: inset 0 0 0 1px rgb(255 240 220 / 14%);
+  background: var(--brown-78);
+  box-shadow: inset 0 0 0 1px var(--warm-14);
 }
 
 .atabs .tp-text h3 {
@@ -4628,7 +4674,7 @@ body > svg[aria-hidden="true"] {
 .atabs .tp-img {
   min-height: 300px;
   border-radius: var(--radius-lg);
-  box-shadow: 0 24px 48px -24px rgb(0 0 0 / 55%);
+  box-shadow: 0 24px 48px -24px var(--black-55);
 }
 
 .journey-coach {
@@ -4637,7 +4683,7 @@ body > svg[aria-hidden="true"] {
   align-items: center;
   gap: var(--space-lg);
   padding: var(--space-lg) var(--space-xl);
-  border: 1px solid rgb(242 236 226 / 18%);
+  border: 1px solid var(--on-dark-18);
   border-radius: var(--radius-lg);
   color: var(--on-dark-2);
 }
@@ -4673,7 +4719,7 @@ body > svg[aria-hidden="true"] {
   min-height: 520px;
   padding: 0;
   background:
-    linear-gradient(180deg, rgb(29 20 19 / 5%), rgb(29 20 19 / 18%)),
+    linear-gradient(180deg, var(--brown-05), var(--brown-18)),
     url("../img/friends.jpg") center / cover;
 }
 
@@ -4762,7 +4808,7 @@ body > svg[aria-hidden="true"] {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgb(29 20 19 / 78%), rgb(29 20 19 / 45%)),
+    linear-gradient(90deg, var(--brown-78), var(--brown-45)),
     url("../img/hero.jpg") center 55% / cover;
   transform: scale(1.01);
 }
@@ -4792,7 +4838,7 @@ body > svg[aria-hidden="true"] {
   padding: clamp(72px, 10vw, 128px) clamp(20px, 5vw, 72px);
   color: var(--on-dark);
   background:
-    linear-gradient(120deg, rgb(29 20 19 / 86%), rgb(29 20 19 / 70%)),
+    linear-gradient(120deg, var(--brown-86), var(--brown-70)),
     url("../img/hills.jpg") center / cover;
 }
 
@@ -4819,8 +4865,8 @@ body > svg[aria-hidden="true"] {
   position: relative;
   overflow: hidden;
   padding-top: 170px;
-  background: rgb(29 20 19 / 78%);
-  box-shadow: inset 0 0 0 1px rgb(255 240 220 / 20%);
+  background: var(--brown-78);
+  box-shadow: inset 0 0 0 1px var(--warm-20);
 }
 
 .ring-stage .mc::before {
@@ -4830,8 +4876,8 @@ body > svg[aria-hidden="true"] {
   content: "";
   background-position: center;
   background-size: cover;
-  -webkit-mask-image: linear-gradient(#000 76%, transparent);
-  mask-image: linear-gradient(#000 76%, transparent);
+  -webkit-mask-image: linear-gradient(var(--mask-solid) 76%, transparent);
+  mask-image: linear-gradient(var(--mask-solid) 76%, transparent);
 }
 
 .ring-stage .mc:nth-child(1)::before {
