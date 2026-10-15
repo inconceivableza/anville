@@ -18,4 +18,4 @@
 **Context**
 
 - Walked by a person, not an agent: `/implement-spec` pointed at this folder stops before it
-- Blocked by the last ticket of each chain that changes a page someone sees. Observer reminders (B3-43) are emails and wait on decisions, so the walk does not wait for them
+- Blocked by the last ticket of each chain that changes a page someone sees. Observer reminders (B3-43a, B4-43b) are emails and a page reached only from one, so the walk does not wait for them

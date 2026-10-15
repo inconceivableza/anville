@@ -150,6 +150,10 @@ _Avoid_: trusted contact, respondent, rater, referee.
 A participant's revocable, expiring grant to one named person to act as an observer, or to their coach to accept or decline the coach's commitments, carried by a link unique to that person. Each kind of link works only for its own. Once accepted, a coach's link also shows the participant's results and comparison while the participant consents.
 _Avoid_: invite link, survey link, access code.
 
+**Reminder**:
+The system's weekly email to an observer who has not sent, while their invitation's link works and answer collection is open, until they send or ask to stop. The only message the system sends an observer; the participant shares every link themselves.
+_Avoid_: nudge, chaser, invitation email, notification.
+
 **Coach**:
 A person the participant names to walk alongside them, who draws out the participant's own conclusions rather than passing on their own experience, and who receives only what the participant chooses to share.
 _Avoid_: mentor, guide, supervisor.

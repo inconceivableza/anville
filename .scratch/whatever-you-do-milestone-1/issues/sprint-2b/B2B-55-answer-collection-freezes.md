@@ -22,4 +22,4 @@
 - This settles the spec's "closing collection" item, and most of "batched release": a participant can no longer send one more link and see exactly what that person added
 - The card's frozen wording, agreed with the rest of its wording in A4A-51a (copy, open to change): "Complete", with "You've seen your results, so no more answers are added."
 - Where a participant has withdrawn consent and collection is frozen, an observer's link gets B2A-45's refusal, never the frozen page, which would tell its holder something about the participant. Whichever of 45 and 55 lands second makes it so
-- Reminders end when collection freezes and start again if it unfreezes (B3-43)
+- Reminders end when collection freezes and start again if it unfreezes (B3-43a)

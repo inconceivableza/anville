@@ -16,7 +16,7 @@ An observer's sent answers stay when the participant revokes or reissues their l
 
 ## Consequences
 
-- Someone can be counted twice: a reissued link is a fresh token, and the person may answer again through it. This is the accepted cost, since any guard against it would reveal who answered.
+- Someone can be counted twice: a reissued link is a fresh token, and the person may answer again through it. This is the accepted cost, since any guard against it would reveal who answered. Reminders never ask a person who has sent to answer again (ADR 0016).
 - Whatever binds an observer's answers to their invitation must not delete them with it. Today reissuing, revoking and removing a contact each delete the invitation record, so a cascading key would break this decision.
 - Sent answers are deleted only when the observer withdraws, or with the participant's response (they are personal data about the participant).
 - Once the link is revoked, reissued or removed, the observer's claimed link stops working, so they can no longer withdraw through it. This is the same open question as withdrawing after the link expires (spec, Open content and product items).
