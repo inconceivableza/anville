@@ -2,7 +2,7 @@
 
 **What to build:** Section 1 can be completed on the participant's own work, without viewing the comparison. The Workbook opens once Section 1 is complete and a coach and three people have links, never waiting for any observer to answer.
 
-**Blocked by:** D4-51 (Trusted voices and coach cards)
+**Blocked by:** A4A-51a (Trusted voices card and page); A4B-51b (Coach card)
 
 **Status:** ready-for-agent
 
@@ -19,4 +19,4 @@
 
 - This reverses Section 1's gate as ticket 16c built it. The clause for a visited comparison stays available to authors
 - The faithful port keeps the original prototype's gates
-- Why the side cards stay complete: links expire after 30 days, and once answer collection freezes (A5-55) none can be reissued, so a completion worked out afresh from working links would lock the Workbook for good a month in
+- Why the side cards stay complete: links expire after 30 days, and once answer collection freezes (B2B-55) none of the observers' links can be reissued, so a completion worked out afresh from working links would lock the Workbook for good a month in

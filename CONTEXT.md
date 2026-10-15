@@ -79,7 +79,7 @@ The one section the hub points the participant at, the first neither complete no
 _Avoid_: spotlight, banner, call to action.
 
 **Hub side card**:
-A section the hub shows as a card beside its list of sections (below it on a phone) rather than in the list, such as Walk with a coach. It is complete once its gate passes, with nothing to press.
+A section the hub shows as a card beside its list of sections (below it on a phone) rather than in the list, such as Walk with a coach. It is complete from the first time its gate passes, with nothing to press, and stays complete if its gate later fails.
 _Avoid_: hub card, side section, right column, sidebar (the pathway's list beside a page).
 
 **Wizard**:

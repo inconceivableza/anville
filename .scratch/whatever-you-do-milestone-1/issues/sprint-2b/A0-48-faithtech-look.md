@@ -6,7 +6,7 @@
 
 **Status:** resolved
 
-**Handed over:** one set of button rules and one name per colour, carried to D7-53
+**Handed over:** one set of button rules and one name per colour, carried to C1A-53a
 
 **Sprint:** 2b (12–16 Oct)
 
@@ -14,7 +14,7 @@
 
 - [x] The branch takes in `main`, and the commit that turned the tests off in the build is reverted, so the build runs them again
 - [x] The tests pass, and the branch merges into `main`. Where the new look changed a page's words or markup on purpose, its test changes with it; no other test changes
-- [ ] Colours, type, buttons, panels and the header follow the prototype, each defined once and used by every page. Every page sets headings in Newsreader, as the prototype does, and text in Instrument Sans in place of its Switzer, and no other font is loaded (buttons look as the prototype's everywhere, but `.btn` and `.pill` remain two sets of rules, and some colours have two names: carried to D7-53)
+- [ ] Colours, type, buttons, panels and the header follow the prototype, each defined once and used by every page. Every page sets headings in Newsreader, as the prototype does, and text in Instrument Sans in place of its Switzer, and no other font is loaded (buttons look as the prototype's everywhere, but `.btn` and `.pill` remain two sets of rules, and some colours have two names: carried to C1A-53a)
 - [x] No page requests a font, or anything else, from Google or another outside host
 - [x] The construct colours on results and the comparison are unchanged, and body text and buttons meet WCAG AA contrast at desktop and phone width
 

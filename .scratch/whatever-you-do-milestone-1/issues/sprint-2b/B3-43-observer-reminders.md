@@ -2,7 +2,7 @@
 
 **What to build:** Observers who have not yet sent their assessment are reminded by email, because the participant cannot tell who has answered and so cannot chase anyone. A reminder lets an observer who lost their link get a fresh one.
 
-**Blocked by:** A5-55 (Answer collection freezes once results are viewed)
+**Blocked by:** B2B-55 (Answer collection freezes once results are viewed)
 
 **Status:** needs-info
 

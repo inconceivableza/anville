@@ -1,8 +1,8 @@
 # 50: Before we begin as a wizard
 
-**What to build:** A new participant goes straight into Before we begin, shown as a wizard of two pages, what brings them and then the five opening ratings, and lands on the hub when it is done. As merged from the `hackathon-ui` branch in D1-48, the wizard is a page of its own with four steps, keeping what it learns on the account; this makes the wizard the section itself, read from the pathway document. The coach and contacts pages leave Before we begin, to become the two hub side cards Walk with a coach and Five trusted voices.
+**What to build:** A new participant goes straight into Before we begin, shown as a wizard of two pages, what brings them and then the five opening ratings, and lands on the hub when it is done. As merged from the `hackathon-ui` branch in A0-48, the wizard is a page of its own with four steps, keeping what it learns on the account; this makes the wizard the section itself, read from the pathway document. The coach and contacts pages leave Before we begin, to become the two hub side cards Walk with a coach and Five trusted voices.
 
-**Blocked by:** D2-49 (Hub width and second column)
+**Blocked by:** A2-49b (Next step wording and photos)
 
 **Status:** ready-for-agent
 

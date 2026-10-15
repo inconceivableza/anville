@@ -2,7 +2,7 @@
 
 **What to build:** The rest of the changes from Django's deployment checklist (https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/) against the staging set-up of ticket 26. Split from ticket 47 on 14 Oct; 47a holds the admin's sign-in, error pages and the shared cache.
 
-**Blocked by:** F1-47a (Deployment hardening: the admin's sign-in, error pages and a shared cache)
+**Blocked by:** None (can start immediately)
 
 **Status:** ready-for-agent
 
@@ -20,5 +20,5 @@
 
 - Sending address: `SERVER_EMAIL`, by default `root@localhost`, which providers refuse. Read it from the environment like `DEFAULT_FROM_EMAIL`, defaulting to it, and set it in the chart from the same `email.from`. Nothing sends such messages while `ADMINS` is unset
 - Key rotation: `SECRET_KEY_FALLBACKS` from `DJANGO_SECRET_KEY_FALLBACKS` (comma-separated, empty by default), passed by the chart from an optional secret. The steps in `deploy/README.md`: move the old key to the fallbacks, deploy, and remove it once sessions signed with it have expired, two weeks by default; with the checklist's warning to remove old keys promptly
-- Sessions are stored in the database and nothing removes the expired ones, so they accumulate, each tied to an account. A nightly CronJob in the chart runs `manage.py clearsessions`. With 47a's database cache, cached database sessions (`cached_db`) are worth considering too, as the checklist suggests
+- Sessions are stored in the database and nothing removes the expired ones, so they accumulate, each tied to an account. A nightly CronJob in the chart runs `manage.py clearsessions`. Once 47a's database cache is in, cached database sessions (`cached_db`) are worth considering too, as the checklist suggests
 - The docs are `deploy/README.md`, the README's "Settings for a deployed environment" and `docs/server-approach.md`, sections 3, 5 and 11
