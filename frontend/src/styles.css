@@ -131,6 +131,8 @@
   --green-ink: #1d2a10;
   --green-deep: #2f5a2b;
   --on-dark-2: #c9bdb0;
+  /* ✨ v3's slider's ticks (fix-2). */
+  --scale-tick: #cfc7b1;
 
   /* ✨ The new look's tints and shades, named by their colour and opacity. */
   --brown-05: rgba(29, 20, 19, 0.05);
@@ -2224,6 +2226,150 @@ form + .way-on,
 .bl-btn:has(input:disabled):not(:has(input:checked)):hover {
   border-color: var(--border);
   color: var(--muted);
+}
+
+/* ✨ The slider in place of the buttons, ported from v3's `.sl` (fix-2): a rail with a tick per point, filled up to the
+   thumb, the value beside it in the heading face. Until a point is chosen the thumb is hidden and the value is a
+   dash. Without JavaScript the buttons above are offered instead. */
+.scale-slider {
+  --t: 22px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+html:not([data-javascript="loaded"]) .scale-slider {
+  display: none;
+}
+
+.scale-val {
+  order: 1;
+  font-family: var(--font-heading);
+  font-size: 30px;
+  line-height: 1;
+  min-width: 1.4em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* ✨ v3's paler shade fails contrast on the paper, so muted text, as a placeholder is. */
+.scale-val.unset {
+  color: var(--muted);
+}
+
+.sl {
+  position: relative;
+  flex: 1;
+  padding-top: 4px;
+}
+
+.sl input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: var(--t);
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+}
+
+.sl input:disabled {
+  cursor: default;
+}
+
+.sl .rail {
+  position: absolute;
+  left: calc(var(--t) / 2);
+  right: calc(var(--t) / 2);
+  top: calc(4px + var(--t) / 2 - 1.5px);
+  height: 3px;
+  border-radius: 3px;
+  background: var(--cream-2);
+}
+
+.sl .fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: calc(var(--fill, 0) * 100%);
+  border-radius: 3px;
+  background: var(--brown);
+}
+
+.sl .ticks {
+  position: absolute;
+  left: calc(var(--t) / 2 - 3px);
+  right: calc(var(--t) / 2 - 3px);
+  top: calc(4px + var(--t) / 2 - 3px);
+  display: flex;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.sl .tk {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--scale-tick);
+}
+
+.sl input::-webkit-slider-runnable-track {
+  height: var(--t);
+  background: transparent;
+}
+
+.sl input::-moz-range-track {
+  height: var(--t);
+  background: transparent;
+}
+
+.sl input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: var(--t);
+  height: var(--t);
+  border-radius: 50%;
+  background: var(--brown);
+  border: 3px solid var(--cream);
+  box-shadow: 0 0 0 1px var(--brown);
+}
+
+.sl input::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--brown);
+  border: 3px solid var(--cream);
+  box-shadow: 0 0 0 1px var(--brown);
+}
+
+.sl input.unset::-webkit-slider-thumb {
+  opacity: 0;
+}
+
+.sl input.unset::-moz-range-thumb {
+  opacity: 0;
+}
+
+.sl input:focus-visible {
+  outline: none;
+}
+
+.sl input.unset:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 4px;
+  border-radius: 999px;
+}
+
+.sl input:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 1px var(--brown), 0 0 0 5px var(--green);
+}
+
+.sl input:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 1px var(--brown), 0 0 0 5px var(--green);
 }
 
 .fixed-note {

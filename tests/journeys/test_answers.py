@@ -228,6 +228,29 @@ def test_an_agreement_scale_shows_its_prompt_and_both_anchor_labels(signed_in):
     assert "Strongly agree" in page
 
 
+def _slider(page, block_id):
+    return re.search(rf'<input type="range"[^>]*id="answer-{block_id}"[^>]*>', page).group()
+
+
+@pytest.mark.django_db
+def test_an_agreement_scale_is_a_slider_from_one_to_ten_described_by_its_anchors(signed_in):
+    """✨ Fix-2: v3's slider in place of the ten buttons, which stay only for browsers without JavaScript."""
+    slider = _slider(shown(signed_in, ONBOARDING), "baseline-bible")
+
+    assert ' min="1"' in slider and ' max="10"' in slider and ' step="1"' in slider
+    assert 'aria-describedby="anchor-baseline-bible-min anchor-baseline-bible-max"' in slider
+
+
+@pytest.mark.django_db
+def test_an_unanswered_slider_looks_unanswered_and_sends_nothing_until_it_is_moved(signed_in):
+    """✨ A range always has a value, so until moved it has no name for a form to send, and its thumb is hidden."""
+    slider = _slider(shown(signed_in, ONBOARDING), "baseline-bible")
+
+    assert "unset" in slider
+    assert " name=" not in slider and " value=" not in slider
+    assert "baseline-bible" not in Response.objects.get().answers
+
+
 @pytest.mark.django_db
 def test_a_participant_cannot_answer_a_block_that_exists_only_in_a_later_version(signed_in, load_pathway):
     answer(signed_in, "statement", "Started on the first version.")
