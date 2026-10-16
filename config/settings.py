@@ -63,6 +63,8 @@ INSTALLED_APPS = [
     "access",  # ✨ before allauth, so its templates override allauth's layout
     "allauth",
     "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
     "engine",
     "organisations",
     "django_vite",
@@ -101,6 +103,13 @@ ANVILLE_DEMO_NOTICE = env("ANVILLE_DEMO_NOTICE", default="")
 # ✨ The pathway sidebar the header opens on every participant page (ticket 41a). Off leaves the header, its link to
 # the hub and "Sign out".
 ANVILLE_SIDEBAR = env.bool("ANVILLE_SIDEBAR", default=True)
+# ✨ Google sign-in (ticket 28b), offered only when the environment gives both halves of its OAuth client
+# (deploy/README.md, "Set up Google sign-in"). The adapter reads the pair; no client is kept in the database.
+ANVILLE_GOOGLE_CLIENT_ID = env("ANVILLE_GOOGLE_CLIENT_ID", default="")
+ANVILLE_GOOGLE_CLIENT_SECRET = env("ANVILLE_GOOGLE_CLIENT_SECRET", default="")
+SOCIALACCOUNT_ADAPTER = "access.adapter.SocialAccountAdapter"
+# ✨ A Google sign-up goes through the sign-up form, for the 18+ confirmation and the enrolment code.
+SOCIALACCOUNT_AUTO_SIGNUP = False
 
 ROOT_URLCONF = "config.urls"
 

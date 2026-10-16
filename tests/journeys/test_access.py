@@ -2,8 +2,13 @@
 # For licensing information see ../../LICENSE.md
 
 import re
+import time
+from unittest.mock import patch
+from urllib.parse import parse_qs, urlparse
 
+import jwt
 import pytest
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from django.contrib.auth import get_user
 
 from tests.journeys.pages import loads_the_built_stylesheet
@@ -248,3 +253,61 @@ def test_two_participants_may_share_a_display_name(client, settings, django_user
 
     assert get_user(client).email == "another.sam@example.com"
     assert django_user_model.objects.count() == 2
+
+
+# Google sign-in (ticket 28b). Google's side is faked at the one call that leaves Anville: exchanging the code it
+# hands back for the participant's details.
+
+GOOGLE_CLIENT_ID = "anville-test.apps.googleusercontent.com"
+GOOGLE_LOGIN = "/accounts/google/login/"
+GOOGLE_CALLBACK = "/accounts/google/login/callback/"
+
+
+def give_google_a_client(settings, *, client_id=GOOGLE_CLIENT_ID, secret="test-secret"):
+    settings.ANVILLE_GOOGLE_CLIENT_ID = client_id
+    settings.ANVILLE_GOOGLE_CLIENT_SECRET = secret
+
+
+def offers_google(page):
+    return f'action="{GOOGLE_LOGIN}' in page
+
+
+def come_back_from_google(client, *, email="sam.google@example.com"):
+    """✨ Press the Google button, then return to the callback as Google would, with the participant's details in a
+    token Anville fetched itself (so, as allauth allows, its signature is not checked)."""
+    to_google = client.post(GOOGLE_LOGIN)
+    state = parse_qs(urlparse(to_google.url).query)["state"][0]
+    claims = {
+        "iss": "https://accounts.google.com",
+        "aud": GOOGLE_CLIENT_ID,
+        "sub": "google-user-1",
+        "email": email,
+        "email_verified": True,
+        "given_name": "Sam",
+        "exp": int(time.time()) + 600,
+        "iat": int(time.time()),
+    }
+    token = {"access_token": "access", "id_token": jwt.encode(claims, "a key Anville never checks, long enough", algorithm="HS256")}
+    with patch.object(OAuth2Client, "get_access_token", return_value=token):
+        return client.get(GOOGLE_CALLBACK, {"code": "from-google", "state": state})
+
+
+def finish_google_sign_up(client, *, enrolment_code="GRACE-2026", is_adult=True):
+    form = {"display_name": "Sam", "email": "sam.google@example.com", "enrolment_code": enrolment_code}
+    return client.post("/accounts/3rdparty/signup/", {**form, "is_adult": "on"} if is_adult else form)
+
+
+@pytest.mark.django_db
+def test_with_the_client_pair_set_google_is_offered_and_a_google_sign_up_makes_an_account(client, settings):
+    require_the_code(settings)
+    give_google_a_client(settings)
+
+    assert offers_google(client.get("/accounts/login/").content.decode())
+    assert offers_google(client.get("/accounts/signup/").content.decode())
+    come_back_from_google(client)
+    finish_google_sign_up(client)
+
+    participant = get_user(client)
+    assert participant.is_authenticated
+    assert participant.email == "sam.google@example.com"
+    assert participant.account.display_name == "Sam"
