@@ -107,11 +107,12 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 ## Back to the hub and Section 1 (ticket 41b)
 
 - Completing onboarding, and later Section 1, lands on the hub with the next step's card highlighted.
-- Before Section 1's reading is confirmed, the Strengths assessment shows "Locked" and is not a link, on the hub and in "Your pathway", and the hub says "Opens from Section 1: How you've been designed, once you've read the passages."; typing `/sections/strengths/` lands on the hub. Once the reading is confirmed, it opens.
+- Before Section 1's reading is confirmed, the Strengths assessment shows "Locked" and is not a link, on the hub and in "Your pathway", and the hub says "Opens from How you've been designed, once you've read the passages."; typing `/sections/strengths/` lands on the hub. Once the reading is confirmed, it opens.
 - On the hub, the Strengths assessment sits inside Section 1's card, indented and quieter, on a line of its own; in "Your pathway" it is indented under Section 1. Both read well at phone width.
 - A screen reader announces the Strengths assessment as a list nested within Section 1's entry.
-- The Strengths assessment's page starts with "← Back to Section 1: How you've been designed" and has no "Mark complete", before or after the sort. Once the sort is in, its chip reads "Complete" on the hub, in the sidebar and on Section 1's card.
-- The results page's "← Back to Section 1: …" and the comparison's closing "← Return to Section 1: How you've been designed" both land on Section 1.
+- The Strengths assessment's page starts with "← Back to How you've been designed" and has no "Mark complete", before or after the sort. Once the sort is in, its chip reads "Complete" on the hub, in the sidebar and on Section 1's card.
+- The results page's "← Back to How you've been designed" and the comparison's closing "← Return to How you've been designed" both land on Section 1.
+- On the hub, Section 1 and Section 5 read "How you've been designed" and "A letter to your future self", with no "Section 1: " or "Section 5: " before them, beside their "01" and "05".
 - On Section 1, with the coach's or the observers' links not yet sent, those two requirements beneath "Mark complete" are links, to the coach page and the invitations page; once met, each is ticked and plain.
 
 ## Autosaved answers (long text, 1–10 scale, single select)
