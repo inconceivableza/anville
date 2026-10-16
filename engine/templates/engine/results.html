@@ -10,6 +10,11 @@
   <p class="back-to-hub"><a href="{{ section.back.href }}">← Back to {{ section.back.title }}</a></p>
   <h1>{{ results.title }}</h1>
 
+  {% comment %}✨ A participant tied on both frameworks is told they are a generalist (ticket 30a), set off as a hint is. It speaks to them, so only their own page shows it, not their coach's link.{% endcomment %}
+  {% if results.generalist %}
+    <div class="hint-box"><strong>{{ results.generalist.heading }}</strong>{{ results.generalist.text }}</div>
+  {% endif %}
+
   {% include "engine/results_body.html" %}
 
   {% comment %}✨ A form, not a link: pressing it is the visit Section 1 waits on, and a browser never loads a POST ahead of time.{% endcomment %}
