@@ -13,8 +13,11 @@ import pytest
 from django.test import Client
 from django.utils import timezone
 
+from access.consent import current_text_version
+from access.models import Consent
 from engine.models import Invitation, ObserverAssessments, ObserverResponse, Response
 from tests.documents import complete_sort, sort_pathway
+from tests.journeys.test_consent import give_consent, withdraw_consent
 from tests.journeys.test_contact_list import JO, PRIYA, save_contacts
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_invitations import (  # noqa: F401  (observer is a fixture, used by name)
@@ -284,6 +287,68 @@ def test_after_sending_the_claimed_link_offers_only_the_thanks_and_a_way_to_with
     withdraw_at = "/observe/withdraw/" if through == "cookie" else f"{own_link}withdraw/"
     assert f'href="{withdraw_at}"' in page
     assert "<form" not in page and "<select" not in page and "Not built yet" not in page
+
+
+# While the participant's consent is withdrawn (ticket 45)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("through", ["cookie", "own link"])
+def test_while_the_participant_has_withdrawn_no_assessment_is_sent_or_stored(participant, observer, through):  # noqa: F811
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    withdraw_consent(participant)
+
+    refused = send(observer, complete_sort()) if through == "cookie" else send(Client(), complete_sort(), own_link)
+
+    assert refused.status_code == 404
+    assert observer_assessments().assessments == []
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("through", ["cookie", "own link"])
+def test_while_the_participant_has_withdrawn_an_observer_can_still_withdraw_their_answers(
+    participant, observer, through  # noqa: F811
+):
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+    withdraw_consent(participant)
+
+    opened = observer.get("/observe/withdraw/" if through == "cookie" else f"{own_link}withdraw/")
+    withdrawn = withdraw(observer) if through == "cookie" else withdraw(Client(), own_link)
+
+    assert opened.status_code == 200
+    assert withdrawn.status_code == 200
+    assert observer_assessments().assessments == []
+
+
+@pytest.mark.django_db
+def test_consenting_again_opens_every_observers_link_as_it_was(participant, observer):  # noqa: F811
+    unclaimed = issue_link(participant, "Priya")
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+    expiries = list(Invitation.objects.order_by("pk").values_list("expires_at", flat=True))
+    withdraw_consent(participant)
+
+    give_consent(participant)
+
+    assert Client().get(unclaimed).status_code == 200
+    assert Client().get(own_link).status_code == 200
+    assert the_observers_page(observer).status_code == 200
+    assert observer_assessments().assessments == [complete_sort()]
+    assert list(Invitation.objects.order_by("pk").values_list("expires_at", flat=True)) == expiries
+
+
+@pytest.mark.django_db
+def test_consent_merely_out_of_date_keeps_every_observers_link_working(participant, observer):  # noqa: F811
+    """✨ The consent text changed and the participant has not agreed again: they are asked, but nobody is cut off."""
+    link = issue_link(participant, "Jo")
+    Consent.objects.update(text_version=current_text_version() - 1)
+
+    claim(observer, link)
+    sent = send(observer, complete_sort())
+
+    assert sent.status_code < 400
+    assert observer_assessments().assessments == [complete_sort()]
 
 
 # The observer's wording

@@ -10,7 +10,7 @@
 
 **Spec:** Participants, access and consent (ADR 0004); Observers (ADR 0005); Implementation Decisions › Coach; Legalities are parked, not forgotten
 
-- [ ] While the participant has withdrawn, an observer's link and an observer's own link, by address or by cookie, get the one refusal a wrong, expired or revoked link gets, naming nobody: no landing page, no claim, no assessment sent. An observer can still withdraw their own answers through their claimed link
+- [x] While the participant has withdrawn, an observer's link and an observer's own link, by address or by cookie, get the one refusal a wrong, expired or revoked link gets, naming nobody: no landing page, no claim, no assessment sent. An observer can still withdraw their own answers through their claimed link
 - [ ] While the participant has withdrawn, the coach's link gets the same refusal: no commitments to accept or decline, and no results or comparison, whatever the participant had ticked
 - [ ] Giving consent again opens the links again, as they were: an unexpired link that was not revoked works, a claim made before still holds, answers already sent still count, and the coach still sees what the participant had shared. Withdrawing changes no link's expiry
 - [ ] Only a withdrawal closes the links: a participant whose consent is merely out of date, because the consent text changed and they have not yet agreed again, keeps them working
