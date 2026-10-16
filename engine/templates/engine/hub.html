@@ -19,15 +19,23 @@
         <div class="hub-grid">
           <div>
             {% if hub.next_step %}
-              <div class="panel next">
-                <p class="label">Your next step</p>
-                <h2>{{ hub.next_step.title }}</h2>
-                <p>{% if hub.next_step.status == 'in-progress' %}Carry on where you left off.{% else %}This is the next thing waiting for you.{% endif %}</p>
-                <a class="pill" data-magnetic href="{% page_url hub.next_step.id hub.next_step.page %}">
-                  {% if hub.next_step.status == 'in-progress' %}Carry on{% else %}Begin{% endif %}
-                  <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span>
-                </a>
-              </div>
+              {# ✨ What it says is the document's: the section's own heading and sentence, or its title and estimate (ticket 49b). #}
+              {% with step=hub.next_step %}
+                <section class="panel next">
+                  <p class="label">Your next step</p>
+                  {% if step.next_step %}
+                    <h2>{{ step.next_step.heading }}</h2>
+                    <p>{{ step.next_step.sentence }}</p>
+                  {% else %}
+                    <h2>{{ step.title }}</h2>
+                    {% if step.estimate %}<p>{{ step.estimate }}</p>{% endif %}
+                  {% endif %}
+                  <a class="pill" data-magnetic href="{% page_url step.id step.page %}">
+                    {% if step.status == 'in-progress' %}Carry on{% else %}Begin{% endif %}
+                    <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span>
+                  </a>
+                </section>
+              {% endwith %}
             {% else %}
               <div class="panel next">
                 <h2>Nothing is waiting for you right now.</h2>

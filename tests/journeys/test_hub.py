@@ -210,6 +210,34 @@ def test_the_header_counts_sections_complete_not_answers(signed_in_client, load_
     assert "answered" not in page
 
 
+def next_step(page):
+    """✨ The hub's next-step panel."""
+    return re.search(r'<section class="panel next.*?</section>', page, re.S).group()
+
+
+@pytest.mark.django_db
+def test_the_next_step_shows_the_sections_own_heading_and_sentence_or_else_its_title_and_estimate(
+    signed_in_client, load_pathway
+):
+    """✨ Nothing in the next step is written in a template: what it says is the document's (ticket 49b)."""
+    document = pathway_document()
+    onboarding, calling = document["content"]["sections"][:2]
+    onboarding["estimate"] = "About 1 minute"
+    calling["next_step"] = {"heading": "Start with your calling.", "sentence": "Write a sentence or two about it."}
+    load_pathway(document)
+
+    panel = next_step(signed_in_client.get("/hub/").content.decode())
+    assert "Before we begin" in panel
+    assert "About 1 minute" in panel
+
+    signed_in_client.post("/sections/onboarding/complete/")
+
+    panel = next_step(signed_in_client.get("/hub/").content.decode())
+    assert "Start with your calling." in panel
+    assert "Write a sentence or two about it." in panel
+    assert "Putting your calling into words" not in panel
+
+
 @pytest.mark.django_db
 def test_authored_text_is_shown_escaped_and_unaltered(signed_in_client, load_pathway):
     document = pathway_document()

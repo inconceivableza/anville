@@ -4,7 +4,7 @@
 
 **Blocked by:** A1-49a (Hub layout and side cards)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 2b (12–16 Oct)
 

@@ -368,6 +368,16 @@
             "sentence": { "$ref": "#/$defs/text" }
           }
         },
+        "next_step": {
+          "description": "What the hub's next step says while this section is the next step, in place of the section's title and time estimate, such as 'Start with your gifts.' and a sentence on what it asks.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["heading", "sentence"],
+          "properties": {
+            "heading": { "$ref": "#/$defs/text" },
+            "sentence": { "$ref": "#/$defs/text" }
+          }
+        },
         "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } },
         "gate": { "$ref": "#/$defs/gate" },
         "complete_label": {
