@@ -84,6 +84,31 @@
         "privacy_notice": {
           "description": "What an observer is told before any question: who asked, what is stored, what the participant will and will not see, and how to withdraw. Paragraphs are separated by a blank line. {name} is replaced with the participant's name. The engine's own draft when left out.",
           "$ref": "#/$defs/text"
+        },
+        "relationship": {
+          "description": "How the observer knows the participant, asked with the observer assessment and stored with it, never used to slice or filter results. Not asked when left out.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["question", "choices"],
+          "properties": {
+            "question": {
+              "description": "The question's label. {name} is replaced with the participant's name.",
+              "$ref": "#/$defs/text"
+            },
+            "choices": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "label"],
+                "properties": {
+                  "id": { "$ref": "#/$defs/identifier" },
+                  "label": { "$ref": "#/$defs/text" }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -237,6 +262,11 @@
             "sort_heading": { "$ref": "#/$defs/text" },
             "sort_instruction": { "$ref": "#/$defs/text" },
             "all_sorted": { "$ref": "#/$defs/text" },
+            "send_or_fine_tune": {
+              "description": "Shown to observers only, once every card is placed, beside sending now and fine-tuning first.",
+              "$ref": "#/$defs/text"
+            },
+            "fine_tune_label": { "$ref": "#/$defs/text" },
             "fine_tune_heading": { "$ref": "#/$defs/text" },
             "fine_tune_intro": { "$ref": "#/$defs/text" },
             "slider_min": { "$ref": "#/$defs/text" },

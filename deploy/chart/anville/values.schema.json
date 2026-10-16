@@ -61,6 +61,12 @@
         "schedule": { "type": "string" },
         "keep": { "type": "integer", "minimum": 1 }
       }
+    },
+    "sessions": {
+      "type": "object",
+      "properties": {
+        "schedule": { "type": "string" }
+      }
     }
   }
 }

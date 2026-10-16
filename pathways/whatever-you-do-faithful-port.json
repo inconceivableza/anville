@@ -420,7 +420,18 @@
     "scoring": { "method": "compositional_share" }
   },
   "observers": {
-    "privacy_notice": "[Draft: this notice must be written properly before anyone real takes part.]\n\n{name} has asked you to help them see their strengths as others see them. You'll sort some strengths into buckets and adjust the intensity of each. Takes about 10–15 minutes.\n\nWhat we keep: your answers, and how you know {name}. You don't give your name: we know who this link was sent to because {name} added you to their list, and that is kept apart from your answers.\n\nWhat {name} sees of your answers: nothing until enough people have answered. Then, the average of everyone's answers, and each person's answers without their name, lowest first, as a word such as \"Strong\" and a dot on a line. Your name is never shown with your answers.\n\nIf you change your mind, you can withdraw while this link works, and your answers will be deleted."
+    "privacy_notice": "[Draft: this notice must be written properly before anyone real takes part.]\n\n{name} has asked you to help them see their strengths as others see them. You'll sort some strengths into buckets and adjust the intensity of each. Takes about 10–15 minutes.\n\nWhat we keep: your answers, and how you know {name}. You don't give your name: we know who this link was sent to because {name} added you to their list, and that is kept apart from your answers.\n\nWhat {name} sees of your answers: nothing until enough people have answered. Then, the average of everyone's answers, and each person's answers without their name, lowest first, as a word such as \"Strong\" and a dot on a line. Your name is never shown with your answers.\n\nIf you change your mind, you can withdraw while this link works, and your answers will be deleted.",
+    "relationship": {
+      "question": "Your relationship to {name}",
+      "choices": [
+        { "id": "family", "label": "Family member" },
+        { "id": "friend", "label": "Close friend" },
+        { "id": "colleague", "label": "Colleague / work contact" },
+        { "id": "church", "label": "Church family / leader" },
+        { "id": "mentor", "label": "Mentor / teacher" },
+        { "id": "other", "label": "Other" }
+      ]
+    }
   },
   "presentation": {
     "results_title": "{name}, here’s your profile",
@@ -501,6 +512,8 @@
       "sort_heading": { "participant": "Sort your strengths", "observer": "Sort {name}'s strengths" },
       "sort_instruction": { "participant": "Choose the bucket that fits best", "observer": "Choose the bucket that fits {name} best" },
       "all_sorted": "All {count} sorted!",
+      "send_or_fine_tune": "You can send your assessment now, or fine-tune how strong each one is in {name} first.",
+      "fine_tune_label": "Continue to fine-tuning →",
       "fine_tune_heading": { "participant": "How strong is each one?", "observer": "How strong is each one in {name}?" },
       "fine_tune_intro": "Grouped by how you sorted them. Adjust the sliders to fine-tune.",
       "slider_min": { "participant": "Not me", "observer": "Not {name}" },
