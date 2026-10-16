@@ -9,7 +9,10 @@
 {% endcomment %}
 {% block head_title %}You've been invited{% endblock head_title %}
 
+{% block demo_notice %}{% endblock demo_notice %}
+
 {% block content %}
+  {% include "access/demo_notice.html" %}
   <div class="section-header">
     <h2>You've been invited</h2>
   </div>
