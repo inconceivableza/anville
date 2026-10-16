@@ -4,17 +4,17 @@
 
 **Blocked by:** A1-49a (Hub layout and side cards)
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** Hub, progress and gates; The pathway document and versions
 
-- [ ] The next step shows the section's title and time estimate, or the heading and sentence the section carries for when it is the next step
-- [ ] The next step is drawn over the section's photo where it has one, and reads as well without one where it has none
-- [ ] Photos are pathway content: files beside the document, named by a section. Each photo's credit is one of three: required by its licence, a courtesy its licence does not ask for, or marked by the author as needing none (public domain, or the author's own)
-- [ ] The credits page always lists required credits, lists courtesy credits only while a setting in the document is on (on for now), and lists nothing for a photo marked as needing none. The linter refuses a photo that says none of the three
-- [ ] Nothing in the next step is written in a template
+- [x] The next step shows the section's title and time estimate, or the heading and sentence the section carries for when it is the next step
+- [x] The next step is drawn over the section's photo where it has one, and reads as well without one where it has none
+- [x] Photos are pathway content: files beside the document, named by a section. Each photo's credit is one of three: required by its licence, a courtesy its licence does not ask for, or marked by the author as needing none (public domain, or the author's own)
+- [x] The credits page always lists required credits, lists courtesy credits only while a setting in the document is on (on for now), and lists nothing for a photo marked as needing none. The linter refuses a photo that says none of the three
+- [x] Nothing in the next step is written in a template
 
 **Context**
 
