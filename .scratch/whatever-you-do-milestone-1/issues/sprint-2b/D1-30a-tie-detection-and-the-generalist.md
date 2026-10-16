@@ -10,7 +10,7 @@
 
 **Spec:** The instrument and scoring; The instrument and results; The pathway document and versions; Open content and product items
 
-- [ ] A framework is tied when one or more other constructs are within a threshold of its leader (4 percentage points of the rounded percents by default), and at most the top four enter the tie-break. The threshold and the cluster size are set in the pathway document
+- [x] A framework is tied when one or more other constructs are within a threshold of its leader (4 percentage points of the rounded percents by default), and at most the top four enter the tie-break. The threshold and the cluster size are set in the pathway document
 - [x] A participant tied on exactly one framework is marked for the tie-break. One tied on both is a generalist, and one tied on neither has nothing to break
 - [ ] A participant tied on both frameworks sees, on their results, that they are a generalist, in wording authored in the pathway document
 - [ ] Observers are never marked: the tie detection runs on the participant's own sort alone

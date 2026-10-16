@@ -4,7 +4,11 @@
 """✨ Whether a participant's sort leaves a framework's leaders too close to call (ticket 30a): from a stored result and
 the pathway document alone, with no request or database."""
 
+import pytest
+
+from engine.document import validate
 from engine.document.tie_break import tie_break
+from tests.documents import sort_pathway
 
 APEST = ["apostle", "prophet", "evangelist", "shepherd", "teacher", "deacon"]
 PEP = ["ponder", "ideate", "assess", "rally", "facilitate", "deliver"]
@@ -87,3 +91,32 @@ def test_a_pathway_without_a_tie_break_never_marks_anyone():
     flat = result([17, 17, 16, 17, 16, 17], [17, 16, 17, 17, 16, 17])
 
     assert tie_break(without, flat) == {"tied": {}, "outcome": None}
+
+
+def with_a_tie_break(**settings):
+    """✨ The test pathway with a tie-break and the generalist's wording."""
+    pathway = sort_pathway()
+    pathway["measurement"]["tie_break"] = settings
+    pathway["presentation"]["generalist"] = {"heading": "A generalist", "text": "Too close to call on both."}
+    return pathway
+
+
+def test_a_pathway_may_set_the_threshold_and_cluster_size_and_word_the_generalist():
+    assert validate(with_a_tie_break(threshold=3, cluster=2)) == []
+
+
+@pytest.mark.parametrize(
+    "setting, value",
+    [("threshold", -1), ("threshold", 2.5), ("threshold", 101), ("cluster", 1), ("cluster", "4")],
+)
+def test_a_threshold_or_cluster_size_that_could_not_work_is_refused_where_it_is(setting, value):
+    problems = validate(with_a_tie_break(**{setting: value}))
+
+    assert [problem.path for problem in problems] == [f"/measurement/tie_break/{setting}"]
+
+
+def test_a_tie_break_without_the_generalists_wording_is_refused():
+    pathway = with_a_tie_break()
+    del pathway["presentation"]["generalist"]
+
+    assert [problem.path for problem in validate(pathway)] == ["/measurement/tie_break"]

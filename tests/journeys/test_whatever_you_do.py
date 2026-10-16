@@ -400,6 +400,14 @@ def without_estimates(document):
     return document
 
 
+def without_the_tie_break(document):
+    """✨ The tie-break is not in the original prototype, so the faithful port takes neither its settings nor the
+    generalist's wording (ticket 30a)."""
+    document["measurement"].pop("tie_break", None)
+    document["presentation"].pop("generalist", None)
+    return document
+
+
 def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else():
     """✨ The fifth rating is added to the faithful port here and the result compared whole, so a change made to
     one document and not the other fails, and so does a slip in the fifth rating itself (its place, its anchors,
@@ -423,7 +431,7 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     two_contacts_for_now(expected)
     the_workbook_in_place_of_sections_2_to_4(expected)
 
-    assert without_the_coach_step(without_estimates(the_pathway())) == expected
+    assert without_the_tie_break(without_the_coach_step(without_estimates(the_pathway()))) == expected
 
 
 def the_workbook_in_place_of_sections_2_to_4(document):

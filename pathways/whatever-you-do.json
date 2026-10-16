@@ -486,7 +486,8 @@
         ]
       }
     ],
-    "scoring": { "method": "compositional_share" }
+    "scoring": { "method": "compositional_share" },
+    "tie_break": { "threshold": 4, "cluster": 4 }
   },
   "observers": {
     "privacy_notice": "[Draft: this notice must be written properly before anyone real takes part.]\n\n{name} has asked you to help them see their strengths as others see them. You'll sort some strengths into buckets and adjust the intensity of each. Takes about 10–15 minutes.\n\nWhat we keep: your answers, and how you know {name}. You don't give your name: we know who this link was sent to because {name} added you to their list, and that is kept apart from your answers.\n\nWhat {name} sees of your answers: nothing until enough people have answered. Then, the average of everyone's answers, and each person's answers without their name, lowest first, as a word such as \"Strong\" and a dot on a line. {name} may also choose to show this to a trusted third party. Your name is never shown with your answers.\n\nIf you change your mind, you can withdraw while this link works, and your answers will be deleted."
@@ -522,6 +523,10 @@
       { "construct": "deliver", "tone": "brown", "persona": "The Doer", "description": "Rolling up sleeves and pushing the work over the finish line" }
     ],
     "disclaimer": "Important: This is a free, rapid, directional tool, designed to give you a useful starting point for reflection and conversation. It is not backed by extensive psychometric datasets or rigorous validation (yet). Please treat these results as indicative, not definitive.",
+    "generalist": {
+      "heading": "You’re a generalist",
+      "text": "Your top results are too close to call in both profiles, so neither has one clear leader. That is itself a finding: you draw on several of these strengths in much the same measure."
+    },
     "standing": {
       "bands": [
         { "at_least": 125, "label": "Leading" },
