@@ -109,6 +109,15 @@ def test_saving_the_coach_makes_their_link_in_the_same_act_and_shows_it_the_emai
     assert link_shown(shown(signed_in_client, ONBOARDING)) is None  # ✨ shown once: only its hash is kept
 
 
+@pytest.mark.django_db
+def test_a_coach_kept_without_an_email_address_is_a_valid_contact(signed_in_client, load_pathway):  # noqa: F811
+    """✨ The coach's email is optional (ticket 51b), so the model's own validation must allow it blank (fix-2)."""
+    load_pathway(with_a_coach_and_contacts())
+    choose(signed_in_client, email="")
+
+    Contact.objects.get(role=Contact.Role.COACH).full_clean()
+
+
 def with_a_coach_card():
     """✨ The test pathway with Whatever You Do's coach checklist in a section of its own after onboarding, which the hub
     draws as a side card, as Whatever You Do's Walk with a coach is (ticket 50)."""

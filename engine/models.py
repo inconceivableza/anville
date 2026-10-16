@@ -277,7 +277,7 @@ class Contact(models.Model):
     role = models.CharField(max_length=16, choices=Role.choices)
     position = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=150)
-    email = models.EmailField(max_length=254)
+    email = models.EmailField(max_length=254, blank=True)  # ✨ a coach's is optional (ticket 51b); an observer's never is
     # ✨ When this person first sent an observer assessment, and when they asked for no more reminders (ADR 0016). Kept
     # here, not on the invitation, so both survive a reissue; nothing clears either, a withdrawal or an edit included,
     # and both go with the contact. The participant never sees them.
