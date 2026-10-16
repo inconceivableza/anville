@@ -16,6 +16,11 @@
 - [ ] Each pair shows one statement for each of its two constructs, in random left-right order, with a quiet label naming the framework, and "Neither fits — skip"
 - [ ] The answers are stored beside the sort's stored result, which is kept as it is. A participant who leaves part-way comes back to the next unanswered pair, and once every pair is answered or skipped goes on to their results
 
+**Carried from 30a**
+
+- 30a's tie detection gives, from the stored result and the document, each tied framework's constructs that enter the tie-break (leader first, at most the cluster size) and whether the participant is marked, a generalist or neither. Nothing about it is stored
+- The threshold and cluster size are the document's tie-break settings, beside which the budget belongs. The drift test already sets those settings and the generalist's wording aside, so the statements can be set aside in the same place
+
 **Context**
 
 - Prototype reference: `tiebreaker-prototype-v2.html` in Prototypes for reference, for the pair screen and the statements
