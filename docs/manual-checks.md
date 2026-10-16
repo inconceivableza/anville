@@ -78,7 +78,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 ## Consent
 
 - After signing up, and at a first sign-in, the consent page comes before the hub.
-- Agreeing as a new participant opens onboarding, with the reason drop-down first, not the hub. "Back to the hub" still reaches the hub.
+- Agreeing as a new participant opens onboarding, with the reason drop-down first, not the hub (in Whatever You Do, as the wizard, with no way to the hub until it is done).
 - "I agree" and "I do not agree" are stacked with a gap between them and look like equal choices: neither is hidden, greyed out or smaller.
 - "I do not agree" says nothing will be stored, and "Read the text again" goes back to the page.
 - Without JavaScript, both buttons work: the page is a plain form.
@@ -106,10 +106,17 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - The page is deep brown, and the hub, header included, is cream with rounded corners, inset a thin brown border from every edge. "Credits" sits below it on the brown, easy to read.
 - On a wide screen the hub is about as wide as the prototype's: the next step and the sections in a wide left column, and the coach and trusted voices cards in a narrower right one, in the prototype's proportions. No section's title wraps that would fit on one line in the prototype.
 - Section 1 shows "01", the Workbook "02–04" and Section 5 "05", each in small grey type to the left of the title; Before we begin shows no number, and its title lines up with the others. The Workbook is called "The Workbook". The Strengths assessment, within Section 1, shows no number.
-- The header says "0 of 5 sections complete" for a new participant, and counts up as sections, and the Strengths assessment, are completed. There is no "Where you started" card, even once the sort is in.
+- The header says "1 of 7 sections complete" once Before we begin is done, and counts up as sections, and the Strengths assessment, are completed. There is no "Where you started" card, even once the sort is in.
 - "Your consent · Your groups" sits below the hub, lined up with its left edge.
 - Phone width: one column, the cards below the sections; the brown border still shows, and nothing scrolls sideways.
-- A section the pathway marks as a side card (none until ticket 50 makes Walk with a coach and Five trusted voices so) shows in the right column as a card with its title, its sentence and its status, and not in the list; its title leads to it unless it is locked.
+- Walk with a coach and Five trusted voices, side cards since ticket 50, show in the right column as cards with their title, sentence and status, and not in the list or "Your pathway"; each title leads to its page. Until tickets 51a and 51b, the hub's own "Five trusted voices" and "Walk with a mentor" cards show beside them.
+
+## Before we begin as a wizard (ticket 50; load the pathway again first, then sign up as someone new)
+
+- After consent, Before we begin opens as the wizard, beside the photo of the figure facing the sun (as the prototype's onboarding view): no header, no "Your pathway", no link to the hub; "Step 1 of 2" with two bars at the top. Page 1 is the reason alone; "Continue →" leads to page 2, the five ratings, with "← Previous page" beside the way on.
+- Going to `/hub/` part-way lands on the page reached. The last "Continue →" lands on the hub, Before we begin listed as complete, and the hub never sends you back. Its entry opens it as an ordinary section page, header and sidebar included, the ratings fixed.
+- `/credits/` lists "Photograph of a figure facing the sun from Unsplash.".
+- Phone width: the photo sits above the page, the ratings fit without scrolling sideways.
 
 ## The hub's next step and its photo (load the pathway again first; ticket 49b)
 
@@ -139,9 +146,9 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Ghost text (Section 1's reflection, the letter): it shows in grey in the empty box, is readable against the background, and disappears as you type. A screen reader names the box by its prompt, not by the ghost text.
 - The reason in onboarding: it looks like the prototype's account-screen drop-down (a small dark caret at the right, not the browser's arrow), and is amber while "Select..." is showing, turning white once a reason is chosen, with or without JavaScript. The drop-down shows "Select..." until a reason is chosen, and choosing one shows "Saved" with no button press. Going back to "Select..." shows "Saved", turns the drop-down amber again, and unticks "Choose what's bringing you to the course" beneath the button; a reload still shows "Select...". Keyboard only: Tab reaches it, and the arrow keys change it (each change saves). It fills the card's width at phone width.
 
-## The contact list (onboarding's "Who knows you best?")
+## The contact list ("Who knows you best?")
 
-- It sits on onboarding's last page, reached by "Continue →" from the baseline ratings' page (and, in Whatever You Do, the coach page): a numbered row per person, "First name" narrower than "Email address", two rows in Whatever You Do (five in the faithful port), with "+ Add another person" full width beneath.
+- In Whatever You Do it is the Five trusted voices side card's page (in the faithful port, onboarding's last page, reached by "Continue →" from the ratings): a numbered row per person, "First name" narrower than "Email address", two rows in Whatever You Do (five in the faithful port), with "+ Add another person" full width beneath.
 - Typing a name and email and leaving the field shows "Saved"; a reload shows them again. Moving from a new row's name to its email shows "Not saved. Add both a name and an email address in row N." until the email is typed and left, then "Saved".
 - A bad address (`jo`, `jo@`, `jo@example`) shows "Not saved. Check the email address in row N.", and that email box turns red. The next save that goes through clears the red. A half-filled row marks its empty field the same way.
 - "+ Add another person" adds an empty numbered row without reloading, and the cursor goes into its name. At 50 rows it is disabled.
@@ -207,13 +214,13 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 ## Pages within a section (onboarding)
 
-- Onboarding plays as three pages in Whatever You Do (the reason and the five ratings; "Walking with a coach"; "Who knows you best?") and two in the faithful port (no coach page). Each page is headed by the section's title, with "Page 1 of 3" (or "of 2") quietly beneath it. A section of one page, such as Section 1, says nothing of pages.
-- Every page but the last ends in "Continue →" (the full width on the first page), disabled until that page's own requirements are met, which are listed beneath it as the gate's are. The coach page lists none, and its way on is never disabled: a secondary "I'll sort this later →" until a coach is kept, then "Continue with Sam →". The last page ends in onboarding's own "Continue →", which completes it.
+- Onboarding plays as two pages: in Whatever You Do, the wizard's (the reason; the five ratings), and in the faithful port, the reason and four ratings, then "Who knows you best?". In the faithful port each page is headed by the section's title, with "Page 1 of 2" quietly beneath it. A section of one page, such as Section 1, says nothing of pages.
+- Every page but the last ends in "Continue →" (the full width on the first page), disabled until that page's own requirements are met, which are listed beneath it as the gate's are. The last page ends in onboarding's own "Continue →", which completes it.
 - "Continue →" goes to the next page, at its top. Pressing it on a page with a requirement unmet (re-enable the button in DevTools) comes back with "This page is not finished yet." beneath it.
 - "← Previous page", a secondary button, sits on the left of the way on, level with it, as "Back" sits beside "Continue →" in the coach checklist; the way on takes the rest of the row, and the checklist sits beneath both. It is on every page but the first and goes to the page before, with its answers as left, landing at that page's "Continue →" rather than its top. The first page has none. On a page whose way on is not offered yet (behind an unconfirmed reading), it sits on its own.
 - On the coach page, each checklist screen ("Continue →" to "About Sam", then on to the outcome, "Back", "Choose someone else"): if the top of the checklist had scrolled out of view, the new screen opens at its heading, not part way down; if it was in view, nothing moves. Keyboard focus is on the new screen's heading, so Tab goes on from there. The same screen sent back stays put, focus included: "Continue →" on "About Sam" with an answer missing shows its refusal beside the button, still in view; so do "Get a link for Sam", "Reissue link" and "Revoke link".
 - Going back and clearing the reason, then going forward again: the last page's checklist also lists "Choose what's bringing you to the course…" unticked, and completing is refused with it.
-- Typing `/sections/onboarding/pages/3/` before reaching it lands on the page reached. The hub's "Carry on" and onboarding's entry lead to the page reached, not the first. Once onboarding is complete, its hub entry and its sidebar entry open it at page 1, and "← Back to the hub" at the top of every page goes to the hub.
+- Typing `/sections/onboarding/pages/2/` before reaching it lands on the page reached. The hub's "Carry on" and onboarding's entry lead to the page reached, not the first. Once onboarding is complete, its hub entry and its sidebar entry open it at page 1, and "← Back to the hub" at the top of every page goes to the hub.
 - Refreshing any page keeps you on it. (A refused "Continue →" is the exception, as a refused completion is: the browser offers to send the form again.)
 - Without JavaScript: "Continue →" and "← Previous page" both work, and the coach checklist's buttons come back to the coach page, not the first.
 - Keyboard only: after the page's fields, Tab reaches "← Previous page", then "Continue →".

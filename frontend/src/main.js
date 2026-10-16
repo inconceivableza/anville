@@ -19,15 +19,6 @@ htmx.config.responseHandling = [
 window.htmx = htmx;
 document.documentElement.dataset.javascript = "loaded";
 
-// ✨ The onboarding sliders update their visible value without owning the form state or submission.
-document.addEventListener("input", (event) => {
-  const slider = event.target.closest("[data-onboarding-slider]");
-  if (!slider) return;
-  const output = document.querySelector(`output[for="${CSS.escape(slider.id)}"]`);
-  if (output) output.value = slider.value;
-  slider.setAttribute("aria-valuetext", `${slider.value} out of 10`);
-});
-
 // ✨ Keep the autosave status honest without flicker. "Saved" disappears as soon as the participant changes
 // their answer, because it no longer describes what is on screen. A quick save then shows "Saved" again
 // directly; "Saving…" appears only when a save is slow; a failure without a reason from the server says so.
@@ -485,7 +476,7 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
 })();
 
 // --- Magnetic buttons (fine pointers only) ---
-// ✨ Only a pill marked data-magnetic follows the pointer: the homepage's, the hub's and the onboarding wizard's.
+// ✨ Only a pill marked data-magnetic follows the pointer: the homepage's and the hub's.
 if (window.matchMedia("(hover: hover) and (pointer: fine)").matches && !reducedMotion) {
   document.addEventListener("pointermove", (event) => {
     const button = event.target.closest && event.target.closest("[data-magnetic]");

@@ -403,6 +403,16 @@ main.container:has(> .ob) {
   z-index: 1;
 }
 
+/* ✨ The wizard's section photo fills the panel beneath its shade, as the prototype's does (ticket 50). */
+.ob-photo > img {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .ob-photo-art {
   position: absolute;
   inset: 0;
@@ -507,170 +517,10 @@ main.container:has(> .ob) {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.step-intro {
-  display: grid;
-  gap: var(--space-sm);
-}
-
 .step h1 {
   margin: 0;
   font-size: clamp(36px, 4.6vw, 56px);
   font-weight: 300;
-}
-
-.step .why {
-  max-width: 50ch;
-  color: var(--muted);
-  font-size: var(--text-md);
-}
-
-.opts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-xs);
-  border: 0;
-}
-
-.opt {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
-  border-radius: var(--radius-md);
-  background: var(--paper);
-  box-shadow: inset 0 0 0 1px var(--cream-2);
-  cursor: pointer;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
-}
-
-.opt:has(input:checked) {
-  background: var(--brown);
-  box-shadow: none;
-  color: var(--on-dark);
-}
-
-.opt input {
-  margin-top: 5px;
-  accent-color: var(--green);
-}
-
-.opt b {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  font-weight: 400;
-}
-
-.opt small {
-  display: block;
-  margin-top: var(--space-2xs);
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.opt:has(input:checked) small {
-  color: var(--on-dark-2);
-}
-
-.path-options .opt {
-  min-height: 108px;
-  align-content: center;
-}
-
-.baseline-questions {
-  display: grid;
-}
-
-.scale {
-  display: grid;
-  gap: var(--space-sm);
-  padding: var(--space-lg) 0;
-  border-top: 1px solid var(--cream-2);
-}
-
-.scale > label {
-  font-family: var(--font-heading);
-  font-size: clamp(20px, 2vw, 26px);
-  line-height: 1.2;
-  text-wrap: pretty;
-}
-
-.sl {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 2ch;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.sl input[type="range"] {
-  width: 100%;
-  accent-color: var(--green-deep);
-  cursor: pointer;
-}
-
-.sl output {
-  color: var(--ink);
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.ends {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-md);
-  color: var(--muted);
-  font-size: var(--text-xs);
-}
-
-.field {
-  display: grid;
-  gap: var(--space-xs);
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.field strong {
-  color: var(--ink);
-  font-size: var(--text-md);
-  font-weight: 500;
-}
-
-.check {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
-  color: var(--ink-light);
-}
-
-.check input {
-  width: 17px;
-  height: 17px;
-  flex: 0 0 auto;
-  margin-top: 3px;
-  accent-color: var(--green-deep);
-}
-
-.aside {
-  padding-left: var(--space-md);
-  border-left: 2px solid var(--green);
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.step-foot {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-md);
-  padding-top: var(--space-xs);
-}
-
-.ob-error {
-  margin-bottom: var(--space-md);
-  color: var(--red-text);
 }
 
 @media (max-width: 900px) {
@@ -734,10 +584,6 @@ main.container:has(> .ob) {
   .ob-main {
     padding: var(--space-lg) var(--space-md) var(--space-xl);
   }
-
-  .opts {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -745,8 +591,7 @@ main.container:has(> .ob) {
     animation: none;
   }
 
-  .prog .bar i,
-  .opt {
+  .prog .bar i {
     transition: none;
   }
 }

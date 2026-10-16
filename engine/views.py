@@ -9,7 +9,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.humanize.templatetags.humanize import apnumber
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -17,7 +17,7 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods, require_POST
 
 from access.consent import consent_required
-from access.models import Account, name_shown_for
+from access.models import name_shown_for
 from engine.document import (
     BLOCK_TYPES,
     LONG_TEXT_MAX_LENGTH,
@@ -142,9 +142,9 @@ def hub(request):
         return render(request, "engine/hub.html", {})
     if not any(section["blocks"] for section in state.sections):
         return render(request, "engine/hub.html", {})  # ✨ no content is the empty state, never a fallback
-    account = getattr(request.user, "account", None)
-    if account is not None and not account.onboarding_completed and _onboarding_content(state.version.document):
-        return redirect("onboarding")
+    wizard = _wizard_due(state)
+    if wizard is not None:
+        return redirect(wizard)
     hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
     return render(
         request,
@@ -152,7 +152,7 @@ def hub(request):
         {
             "title": text_for(state.version.document["title"], "participant"),
             "hub": hub,
-            "photo": _photo_of(state.version.document, hub.next_step),
+            "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
             "coach": _coach_of(state.response),
             "coach_page": _coach_page_of(state.version.document, hub),
             "voices": _hub_voices(state.response),
@@ -161,12 +161,38 @@ def hub(request):
     )
 
 
-def _photo_of(document, section):
-    """✨ The address of the photo the document names for this section, or None for no section or one without a photo
-    (ticket 49b)."""
-    if section is None or section.id not in document.get("photos", {}):
+def _photo_of(document, section_id):
+    """✨ The address of the photo the document names for the section by this identifier, or None for no section or one
+    without a photo (ticket 49b)."""
+    if section_id not in document.get("photos", {}):
         return None
-    return reverse("photo", args=[section.id])
+    return reverse("photo", args=[section_id])
+
+
+def _wizard_due(state):
+    """✨ Where a participant is taken in place of the hub (ticket 50): the page they have reached of the first section
+    the document marks as a wizard that they have not completed and can open, or None."""
+    for section in state.sections:
+        if _shows_as_wizard(state, section):
+            reached = state.reached(section)
+            if reached is not None:
+                return page_url(section["id"], reached)
+    return None
+
+
+def _shows_as_wizard(state, section):
+    """✨ Whether a section's pages are drawn as its wizard, without the hub's links or the sidebar: until it is
+    complete. Once complete it is reread as any other section."""
+    return bool(section.get("wizard")) and section["id"] not in state.completed
+
+
+def _section_shown(request, state, section, shown, status=200):
+    """✨ A page of a section as `_section_page` gives it, drawn as its wizard while it is one."""
+    if _shows_as_wizard(state, section):
+        steps = range(1, shown["page"]["count"] + 1)
+        shown = {**shown, "photo": _photo_of(state.version.document, section["id"]), "steps": steps}
+        return render(request, "engine/wizard.html", shown, status=status)
+    return render(request, "engine/section.html", shown, status=status)
 
 
 def _coach_page_of(document, hub):
@@ -241,153 +267,12 @@ def start(request):
     """✨ Where agreeing to consent leads. A participant with nothing saved goes straight to their first step,
     as the prototype goes from its account screen into onboarding; anyone who has begun goes to the hub."""
     state = _participant(request.user)
-    account = getattr(request.user, "account", None)
-    if account is not None and not account.onboarding_completed and state.version and _onboarding_content(state.version.document):
-        return redirect("onboarding")
     if state.response is not None or state.version is None:
         return redirect("hub")
     next_step = hub_for(state.sections, state.answers, state.completed).next_step
     if next_step is None or not any(section["blocks"] for section in state.sections):
         return redirect("hub")  # ✨ the hub's empty state says there is nothing to begin
     return redirect("section", next_step.id)
-
-
-@login_required
-@consent_required
-def onboarding(request):
-    """✨ The new participant's four presentational steps, with reason and baseline saved as pathway answers."""
-    account = getattr(request.user, "account", None)
-    if account is None or account.onboarding_completed:
-        return redirect("hub")
-
-    state = _participant(request.user)
-    if state.version is None:
-        return redirect("hub")
-
-    onboarding_content = _onboarding_content(state.version.document)
-    if onboarding_content is None:
-        return redirect("hub")
-    onboarding_section, reason_block, baseline_blocks = onboarding_content
-
-    reason_text = authored_text(reason_block, "participant")
-    reason_text["id"] = reason_block["id"]
-    reason_text["answer"] = state.answers.get(reason_block["id"])
-    baseline = [
-        {
-            "id": block["id"],
-            "text": authored_text(block, "participant"),
-            "value": state.answers.get(block["id"]),
-        }
-        for block in baseline_blocks
-    ]
-    step = _onboarding_step(account, baseline)
-    requested_step = request.POST.get("step") if request.method == "POST" else request.GET.get("step")
-    try:
-        requested_step = int(requested_step) if requested_step is not None else step
-    except (TypeError, ValueError):
-        requested_step = step
-    requested_step = max(0, min(requested_step, step))
-
-    error = None
-    status = 200
-    if request.method == "POST" and request.POST.get("action") == "back":
-        return _see_other(f"{reverse('onboarding')}?step={max(0, requested_step - 1)}")
-    if request.method == "POST" and request.POST.get("action") == "continue":
-        if requested_step == 0:
-            try:
-                answer = answer_from_form(state.version.document, reason_block, request.POST.get(reason_block["id"]))
-                if not _is_open(state, onboarding_section, reason_block):
-                    raise AnswerRefused("This step is not open yet.")
-                with transaction.atomic():
-                    response = state.stored_response(request.user)
-                    if not response.save_answer(reason_block["id"], answer):
-                        raise AnswerRefused("This answer is fixed and can no longer be changed.")
-                    account.reason = answer
-                    account.save(update_fields=["reason"])
-                return _see_other(f"{reverse('onboarding')}?step=1")
-            except AnswerRefused as refused:
-                error = str(refused)
-                status = 400
-        elif requested_step == 1:
-            try:
-                answers = []
-                for block in baseline_blocks:
-                    if not _is_open(state, onboarding_section, block):
-                        raise AnswerRefused("This step is not open yet.")
-                    if block["id"] in state.fixed:
-                        raise AnswerRefused("A baseline answer is fixed and can no longer be changed.")
-                    answers.append(
-                        (block["id"], answer_from_form(state.version.document, block, request.POST.get(block["id"])))
-                    )
-                with transaction.atomic():
-                    response = state.stored_response(request.user)
-                    if not all(response.save_answer(block_id, value) for block_id, value in answers):
-                        raise AnswerRefused("A baseline answer is fixed and can no longer be changed.")
-                return _see_other(f"{reverse('onboarding')}?step=2")
-            except AnswerRefused as refused:
-                error = str(refused)
-                status = 400
-        elif requested_step == 2:
-            selected_path = request.POST.get("path")
-            if selected_path not in {choice[0] for choice in Account._meta.get_field("path").choices}:
-                error = "Choose how you'd like to work."
-                status = 400
-            else:
-                account.path = selected_path
-                account.save(update_fields=["path"])
-                return _see_other(f"{reverse('onboarding')}?step=3")
-        elif requested_step == 3:
-            account.remind = request.POST.get("remind") == "on"
-            account.onboarding_completed = True
-            account.save(update_fields=["remind", "onboarding_completed"])
-            return _see_other("hub")
-
-    if request.method == "POST" and status == 400:
-        if requested_step == 0:
-            reason_text["answer"] = request.POST.get(reason_block["id"], "")
-        elif requested_step == 1:
-            for question in baseline:
-                question["value"] = request.POST.get(question["id"], "")
-
-    return render(
-        request,
-        "engine/onboarding.html",
-        {
-            "step": requested_step,
-            "reason": reason_text,
-            "baseline": baseline,
-            "selected_path": request.POST.get("path", account.path),
-            "remind": request.POST.get("remind") == "on" if request.method == "POST" else account.remind,
-            "display_name": account.display_name,
-            "email": request.user.email,
-            "error": error,
-        },
-        status=status,
-    )
-
-
-def _onboarding_step(account, baseline):
-    """✨ The furthest onboarding step whose prerequisites have been saved."""
-    if not account.reason:
-        return 0
-    if any(question["value"] is None for question in baseline):
-        return 1
-    if not account.path:
-        return 2
-    return 3
-
-
-def _onboarding_content(document):
-    """✨ The authored reason and baseline blocks that make this pathway eligible for the four-step introduction."""
-    for section in document["content"]["sections"]:
-        reason = next(
-            (block for block in section["blocks"] if block["id"] == "reason" and block["type"] == "single_select"),
-            None,
-        )
-        scales = [block for block in section["blocks"] if block["type"] == "agreement_scale"]
-        if reason and scales:
-            return section, reason, scales
-    return None
 
 
 @login_required
@@ -408,8 +293,8 @@ def section(request, section_id, page=1):
     # section's later pages sit under that path too when the checklist is on its first.
     holds_checklist = any(block["type"] == "coach_checklist" for block in pages_of(section)[page - 1])
     issued = _issued_link(request) if holds_checklist else None
-    shown = render(
-        request, "engine/section.html", _section_page(state, section, page, _asked_rows(request.GET), issued=issued)
+    shown = _section_shown(
+        request, state, section, _section_page(state, section, page, _asked_rows(request.GET), issued=issued)
     )
     if issued is not None:
         shown["Cache-Control"] = "no-store"
@@ -435,7 +320,7 @@ def move_past_page(request, section_id, page):
         return _see_other(page_url(section_id, reached))
     shown = _section_page(state, section, page)
     if not shown["offers_way_on"] or shown["unmet"]:
-        return render(request, "engine/section.html", {**shown, "refused": True}, status=400)
+        return _section_shown(request, state, section, {**shown, "refused": True}, status=400)
 
     state.stored_response(request.user).move_past_page(section_id, page)
     return _see_other(page_url(section_id, page + 1))
@@ -460,7 +345,7 @@ def complete_section(request, section_id):
         return _see_other(page_url(section_id, reached))
     if unmet(section, state.answers):
         shown = _section_page(state, section, last)
-        return render(request, "engine/section.html", {**shown, "refused": True}, status=400)
+        return _section_shown(request, state, section, {**shown, "refused": True}, status=400)
 
     fixed_block_ids = block_ids_fixed_on_completion(section, state.answers)
     state.stored_response(request.user).complete_section(section_id, fixed_block_ids=fixed_block_ids)
@@ -1345,8 +1230,7 @@ def _invitations_page(request, issued=None, refused=None, status=200):
 
 def _contact_lists_to_edit(state, query, refused):
     """✨ The pathway's contact lists the participant can change here, as their template needs them: those they have
-    reached, so one skipped in onboarding can be filled in now, and not fixed by a completion. A list whose save was
-    refused shows as typed, with why."""
+    reached, and not fixed by a completion. A list whose save was refused shows as typed, with why."""
     if state.version is None:
         return []
     document = state.version.document

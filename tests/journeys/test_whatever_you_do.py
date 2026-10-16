@@ -58,8 +58,11 @@ SLOTS = (*PROTOTYPE_SLOTS, "peace")
 # ✨ Two people rather than the prototype's five, for now, so the pathway can be tried without inventing five
 # (the developer's call, 2026-09-29).
 ADD_TWO = "Add at least 2 people, or leave the list empty to do this later."
-COACH_PAGE = "/sections/onboarding/pages/2/"
-CONTACTS_PAGE = "/sections/onboarding/pages/3/"
+# ✨ Before we begin's coach and contacts pages became the hub side cards Walk with a coach and Five trusted voices
+# (ticket 50).
+COACH_PAGE = "/sections/walk-with-a-coach/"
+CONTACTS_PAGE = "/sections/trusted-voices/"
+RATINGS_PAGE = "/sections/onboarding/pages/2/"
 
 
 def the_pathway():
@@ -77,13 +80,17 @@ def answer_all_five(client, prefix="bl"):
         answer(client, f"{prefix}-{slot}", "7")
 
 
-def answer_onboarding(client):
-    """✨ Everything onboarding requires: the reason for taking the course and all five ratings, then on past the
-    coach page to the page of the people who know the participant best, where onboarding is completed."""
+def to_the_ratings(client):
+    """✨ The reason for taking the course, then on to Before we begin's second page, the five ratings."""
     answer(client, "reason", "exploring")
-    answer_all_five(client)
     move_past(client, 1)
-    move_past(client, 2)
+    return client
+
+
+def answer_onboarding(client):
+    """✨ Everything Before we begin requires: the reason, then all five ratings, on the page it is completed from."""
+    to_the_ratings(client)
+    answer_all_five(client)
 
 
 def through_to_the_letter(client):
@@ -95,7 +102,7 @@ def through_to_the_letter(client):
 
 @pytest.mark.django_db
 def test_the_fifth_statement_is_asked_after_the_original_prototypes_four(participant):
-    page = participant.get("/sections/onboarding/").content.decode()
+    page = to_the_ratings(participant).get(RATINGS_PAGE).content.decode()
 
     for statement in BASELINE_STATEMENTS.values():
         assert escape(statement) in page
@@ -105,14 +112,15 @@ def test_the_fifth_statement_is_asked_after_the_original_prototypes_four(partici
 
 @pytest.mark.django_db
 def test_all_five_ratings_are_needed_before_the_participant_may_continue(participant):
+    to_the_ratings(participant)
     for slot in PROTOTYPE_SLOTS:
         answer(participant, f"bl-{slot}", "5")
 
-    refused = move_past(participant, 1)
+    refused = complete(participant, "onboarding")
 
     assert refused.status_code == 400
     assert refused.content.decode().count(ANSWER_ALL_FIVE) == 1
-    assert "onboarding" not in Response.objects.get().moved_past_by_section()
+    assert "onboarding" not in Response.objects.get().completed_sections
 
 
 @pytest.mark.django_db
@@ -148,26 +156,33 @@ def test_the_letter_cannot_be_sent_without_the_fifth_after_rating(participant):
 
 @pytest.mark.django_db
 def test_progress_counts_the_pathways_sections(participant):
-    """✨ Before we begin, Section 1 with the Strengths assessment within it, the Workbook and the letter (ticket 49a)."""
-    assert "0 of 5 sections complete" in participant.get("/hub/").content.decode()
+    """✨ Before we begin, Section 1 with the Strengths assessment within it, the Workbook, the letter (ticket 49a),
+    and the side cards Walk with a coach and Five trusted voices (ticket 50). The hub opens once Before we begin is
+    done."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+
+    assert "1 of 7 sections complete" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db
-def test_once_anyone_is_added_onboarding_needs_only_two_for_now(participant):
+def test_once_anyone_is_added_five_trusted_voices_needs_only_two_for_now(participant):
     answer_onboarding(participant)
+    complete(participant, "onboarding")
     add_people(participant, 1)
 
-    refused = complete(participant, "onboarding")
+    refused = complete(participant, "trusted-voices")
 
     assert refused.status_code == 400
     assert ADD_TWO in refused.content.decode()
     add_people(participant, 2)
-    assert complete(participant, "onboarding").status_code == 303
+    assert complete(participant, "trusted-voices").status_code == 303
 
 
 @pytest.mark.django_db
 def test_the_contact_list_opens_with_two_rows_and_says_two_are_needed(participant):
     answer_onboarding(participant)
+    complete(participant, "onboarding")
 
     page = participant.get(CONTACTS_PAGE).content.decode()
 
@@ -256,7 +271,12 @@ def the_mock_ups_questions():
 
 
 def the_coach_step(document):
-    return next(block for block in document["content"]["sections"][0]["blocks"] if block["type"] == "coach_checklist")
+    return next(
+        block
+        for section in document["content"]["sections"]
+        for block in section["blocks"]
+        if block["type"] == "coach_checklist"
+    )
 
 
 def test_the_coach_step_asks_the_mock_ups_six_questions_word_for_word():
@@ -268,60 +288,29 @@ def test_the_coach_step_asks_the_mock_ups_six_questions_word_for_word():
     assert [question["id"] for question in questions if question["critical"]] == ["faith", "objectivity", "coaching"]
 
 
-def test_the_coach_page_comes_between_the_starting_ratings_and_the_contact_list():
-    """✨ As the original prototype goes from its baseline screen to its mentor screen, then to its contacts."""
-    assert onboarding_pages(the_pathway()) == [
-        ["reason", "baseline-intro", "bl-bible", "bl-gifts", "bl-call", "bl-plan", "bl-peace"],
-        ["coach"],
-        ["contacts-intro", "contacts"],
+def test_before_we_begin_is_a_wizard_of_the_reason_then_the_ratings_and_the_coach_and_contacts_are_side_cards():
+    """✨ The hackathon's wizard asked the reason, then the ratings; the original prototype's mentor and contacts
+    screens became the hub side cards Walk with a coach and Five trusted voices (ticket 50)."""
+    document = the_pathway()
+    side_cards = {
+        section["id"]: [block["id"] for block in section["blocks"]]
+        for section in document["content"]["sections"]
+        if "side_card" in section
+    }
+
+    assert document["content"]["sections"][0]["wizard"] is True
+    assert onboarding_pages(document) == [
+        ["reason"],
+        ["baseline-intro", "bl-bible", "bl-gifts", "bl-call", "bl-plan", "bl-peace"],
     ]
+    assert side_cards == {"walk-with-a-coach": ["coach"], "trusted-voices": ["contacts-intro", "contacts"]}
 
 
 def to_the_coach_page(client):
-    """✨ The reason and the five ratings, then on to the coach page."""
-    answer(client, "reason", "exploring")
-    answer_all_five(client)
-    move_past(client, 1)
+    """✨ Before we begin done, which opens Walk with a coach."""
+    answer_onboarding(client)
+    complete(client, "onboarding")
     return client
-
-
-@pytest.mark.django_db
-def test_the_coach_page_needs_nothing_to_go_on_from(participant):
-    page = to_the_coach_page(participant).get(COACH_PAGE).content.decode()
-
-    assert "Walking with a coach" in page
-    assert f'<button type="submit" class="pill ghost full">{escape(SORT_LATER)}</button>' in page
-    assert move_past(participant, 2).url == CONTACTS_PAGE
-
-
-SORT_LATER = "I'll sort this later →"  # ✨ the original prototype's way past its mentor screen without a mentor
-CONTINUE_WITH_SAM = '<button type="submit" class="pill full">Continue with Sam →</button>'
-
-
-@pytest.mark.django_db
-def test_the_coach_page_goes_on_with_the_coach_once_chosen_and_says_sort_later_once_removed(participant):
-    to_the_coach_page(participant)
-
-    saved = choose(participant).content.decode()
-    reloaded = participant.get(COACH_PAGE).content.decode()
-    removed = participant.post("/coach/coach/", {"step": "remove"}, HTTP_HX_REQUEST="true").content.decode()
-
-    assert CONTINUE_WITH_SAM in saved  # ✨ sent with the checklist, so the button changes without a reload
-    assert '<div id="completion" class="completion" hx-swap-oob="true">' in saved
-    assert CONTINUE_WITH_SAM in reloaded
-    assert f'<button type="submit" class="pill ghost full">{escape(SORT_LATER)}</button>' in removed
-
-
-@pytest.mark.django_db
-def test_choosing_again_the_way_on_still_names_the_coach_kept_not_a_second_continue(participant):
-    """✨ The checklist's own "Continue →" sits above the page's way on, so the two must read apart."""
-    to_the_coach_page(participant)
-    choose(participant)
-
-    choosing_again = participant.post("/coach/coach/", {"step": "restart"}).content.decode()
-
-    assert CONTINUE_WITH_SAM in choosing_again
-    assert choosing_again.count(">Continue →</button>") == 1  # ✨ the checklist's own, to its questions
 
 
 @pytest.mark.django_db
@@ -361,7 +350,6 @@ def test_a_chosen_coach_is_kept_on_the_coach_page_and_apart_from_the_contacts(pa
 
     assert saved.url == f"{COACH_PAGE}#block-coach"
     assert "You've chosen Sam" in participant.get(COACH_PAGE).content.decode()
-    move_past(participant, 2)
     assert "sam@example.com" not in participant.get(CONTACTS_PAGE).content.decode()
 
 
@@ -435,8 +423,26 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     the_workbook_in_place_of_sections_2_to_4(expected)
 
     assert without_the_next_step_and_photos(
-        without_numbers(without_the_tie_break(without_the_coach_step(without_estimates(the_pathway()))))
+        without_numbers(
+            without_the_tie_break(without_the_coach_step(without_estimates(without_the_wizard(the_pathway()))))
+        )
     ) == (without_numbers(expected))
+
+
+def without_the_wizard(document):
+    """✨ Before we begin is a wizard of two pages here, the reason and then the ratings, and its coach and contacts
+    pages became the hub side cards Walk with a coach and Five trusted voices (ticket 50). The faithful port keeps the
+    original prototype's one section, so the contacts and their gate clause go back into it on a page of their own,
+    and the coach goes, as without the coach step."""
+    sections = document["content"]["sections"]
+    onboarding = sections[0]
+    del onboarding["wizard"]
+    onboarding["blocks"] = [block for block in onboarding["blocks"] if block["id"] != "to-ratings"]
+    voices = next(section for section in sections if section["id"] == "trusted-voices")
+    onboarding["blocks"] += [{"id": "to-contacts", "type": "page_break"}, *voices["blocks"]]
+    onboarding["gate"]["clauses"] += voices["gate"]["clauses"]
+    sections[:] = [section for section in sections if "side_card" not in section]
+    return document
 
 
 def without_the_next_step_and_photos(document):
@@ -645,6 +651,7 @@ def test_the_letter_opens_once_the_participant_has_finished_the_workbook(partici
 def test_sections_2_to_4_are_neither_on_the_hub_nor_reachable(participant):
     """✨ Their content stays in the faithful port; here they are done on paper, in the Workbook. The hub lists only the
     track's sections, so a section that cannot be reached is not on it either."""
+    to_the_coach_page(participant)  # ✨ Before we begin done, so the hub opens
     assert "The Workbook" in participant.get("/hub/").content.decode()
     for section_id in ("shape", "calling", "growth"):
         assert participant.get(f"/sections/{section_id}/").status_code == 404

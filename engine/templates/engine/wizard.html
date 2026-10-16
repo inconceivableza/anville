@@ -1,0 +1,45 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/base.html" %}
+{% comment %}
+  ✨ A section the pathway document marks as a wizard (ticket 50), while it is not yet complete: one page of it, its
+  blocks and its way on as on any section page, beside the section's photo, without the hub's links or the sidebar.
+  Completing it leads to the hub, and from then on it is reread as any other section.
+{% endcomment %}
+{% block head_title %}{{ section.title }} | {{ page.number }} of {{ page.count }}{% endblock head_title %}
+
+{% block content %}
+  <div class="ob">
+    <aside class="ob-photo" aria-label="A scripture reflection">
+      {% if photo %}
+        <img src="{{ photo }}" alt="">
+      {% else %}
+        <div class="ob-photo-art" aria-hidden="true"><svg><use href="#leaf"/></svg></div>
+      {% endif %}
+      <blockquote class="q">
+        “For we are his workmanship, created in Christ Jesus unto good works.”
+        <cite class="label">Ephesians 2:10</cite>
+      </blockquote>
+    </aside>
+    <section class="ob-form">
+      <header class="ob-top">
+        <a class="linkbtn" href="{% url 'home' %}">Exit</a>
+        <div class="prog" aria-live="polite">
+          <span class="label">Step {{ page.number }} of {{ page.count }}</span>
+          <span class="bar" aria-hidden="true">{% for step in steps %}<i{% if step <= page.number %} class="on"{% endif %}></i>{% endfor %}</span>
+        </div>
+        <svg class="ob-mark" aria-hidden="true"><use href="#mark"/></svg>
+      </header>
+
+      <div class="ob-main">
+        <div class="step">
+          <h1>{{ section.title }}</h1>
+          {% for block in section.blocks %}
+            {% include block.template %}
+          {% endfor %}
+          {% include "engine/completion.html" %}
+        </div>
+      </div>
+    </section>
+  </div>
+{% endblock content %}

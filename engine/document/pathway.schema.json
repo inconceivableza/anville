@@ -431,6 +431,10 @@
             "sentence": { "$ref": "#/$defs/text" }
           }
         },
+        "wizard": {
+          "description": "Take a participant who has not completed this section to it in place of the hub, shown page by page without the hub's links or the sidebar, beside the section's photo, as Before we begin is. Once complete it is listed in the hub as any other section.",
+          "const": true
+        },
         "next_step": {
           "description": "What the hub's next step says while this section is the next step, in place of the section's title and time estimate, such as 'Start with your gifts.' and a sentence on what it asks.",
           "type": "object",

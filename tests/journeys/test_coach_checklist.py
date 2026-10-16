@@ -32,8 +32,12 @@ ALL_YES = {question_id: "yes" for question_id in QUESTION_IDS}
 
 def the_coach_checklist():
     document = json.loads(WHATEVER_YOU_DO.read_text(encoding="utf-8"))
-    onboarding = document["content"]["sections"][0]
-    return next(block for block in onboarding["blocks"] if block["type"] == "coach_checklist")
+    return next(
+        block
+        for section in document["content"]["sections"]
+        for block in section["blocks"]
+        if block["type"] == "coach_checklist"
+    )
 
 
 def with_a_coach_checklist():
