@@ -75,7 +75,8 @@ from engine.hub import (
 )
 from engine.document.observers import link_lifetime, privacy_notice, relationship_from_form, relationship_question
 from engine.models import Contact, Invitation, ObserverResponse, PathwayVersion, Publication, Response, Result
-from engine.results import comparison_page, results_page
+from engine.document.tie_break import pair_plan
+from engine.results import comparison_page, pair_page, results_page
 
 
 class ParticipantState(NamedTuple):
@@ -518,11 +519,15 @@ def save_answer(request, block_id):
         contact_ids = contact_id_per_row(value, saved_ids, rows_posted(names, emails))
         return _saved(request, saved, section, block_id, contact_ids)
     if block_type.scored:
+        scores = score(state.version.document, value)
         try:
-            participant_response.submit_sort(block_id, value, score(state.version.document, value))
+            participant_response.submit_sort(block_id, value, scores)
         except IntegrityError:
             refusal = "Your results are already in. Retaking the sort is not offered yet."
             return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
+        # ✨ A sort too close to call on one framework leads to the tie-break's pairs first (ticket 30b).
+        if pair_plan(state.version.document, scores):
+            return _go_to(request, reverse("tie_break", args=[block_id]))
         return _to_results(request, block_id)
     if not participant_response.save_answer(block_id, value):
         return _refuse_fixed(request)  # ✨ a completion fixed it after the check above, and the UPDATE saw that
@@ -729,8 +734,46 @@ def results(request, block_id):
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
+    if _pairs_left(state.version.document, result):
+        return redirect("tie_break", block_id)
     shown = results_page(state.version.document, result.scores, state.answers[block_id], name_shown_for(request.user))
     return render(request, "engine/results.html", {"results": shown, "section": section, "block_id": block_id})
+
+
+@login_required
+@consent_required
+@require_http_methods(["GET", "POST"])
+def tie_break(request, block_id):
+    """✨ The tie-break's next unanswered pair (ticket 30b), for a participant whose own sort left one framework too close
+    to call; anyone else, or one who has answered or skipped every pair, goes on to their results. Answering stores the
+    choice beside the sort's result and comes back here for the next. Only the participant's own result is read, so an
+    observer's sort never leads here."""
+    state, result, section = _own_result(request.user, block_id)
+    if result is None:
+        return redirect(page_url(section["id"], section["page"]))
+    plan = pair_plan(state.version.document, result.scores)
+    if request.method == "POST":
+        try:
+            place = int(request.POST.get("pair", ""))
+        except ValueError:
+            place = -1
+        chosen = request.POST.get("chosen") or None
+        if not 0 <= place < len(plan) or (chosen is not None and chosen not in plan[place]["constructs"]):
+            refusal = "That is not one of this pair’s answers."
+            return render(request, "engine/save_status.html", {"refusal": refusal}, status=400)
+        # ✨ A pair already answered (a form sent twice, or from a stale tab) stores nothing; either way the next is shown.
+        result.answer_pair(place, plan[place], chosen)
+        return _see_other("tie_break", block_id)
+    place = len(result.tie_break_answers)
+    if place >= len(plan):
+        return redirect("results", block_id)
+    shown = pair_page(state.version.document, plan, place)
+    return render(request, "engine/tie_break.html", {"pair": shown, "block_id": block_id})
+
+
+def _pairs_left(document, result):
+    """✨ Whether the participant still has tie-break pairs to answer or skip before their results (ticket 30b)."""
+    return len(result.tie_break_answers) < len(pair_plan(document, result.scores))
 
 
 @login_required

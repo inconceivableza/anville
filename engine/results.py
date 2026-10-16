@@ -9,6 +9,8 @@ recomputed, and are shown only as words and places on an axis (ticket 38); the w
 the same pathway version the result was scored against.
 """
 
+import random
+
 from engine.document.comparison import agreement, comparison_settings, largest_gaps, seen_by_others
 from engine.document.observers import minimum_observers
 from engine.document.scoring import percents_by_construct
@@ -91,6 +93,32 @@ def _generalist(document, scores, presentation, role):
         return None
     wording = presentation["generalist"]
     return {"heading": text_for(wording["heading"], role), "text": text_for(wording["text"], role)}
+
+
+def pair_page(document, plan, place):
+    """✨ What the tie-break's pair screen shows of the pair at `place` in the plan (ticket 30b): the document's question
+    and skip, a quiet label naming the pair's framework (its own label where the document gives none), one statement
+    for each of its two constructs in a random left-right order, as the prototype flips them, and how far through the
+    participant is. Each option carries its construct, which is what the form sends back."""
+    wording = document["presentation"]["tie_break"]
+    pair = plan[place]
+    frameworks = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
+    label = wording.get("frameworks", {}).get(pair["framework"], frameworks[pair["framework"]]["label"])
+    options = [
+        {"construct": construct, "text": text_for(statement, "participant")}
+        for construct, statement in zip(pair["constructs"], pair["statements"])
+    ]
+    random.shuffle(options)
+    return {
+        "place": place,
+        "number": place + 1,
+        "count": len(plan),
+        "steps": [index < place for index in range(len(plan))],
+        "framework": text_for(label, "participant"),
+        "question": text_for(wording["question"], "participant"),
+        "skip": text_for(wording["skip"], "participant"),
+        "options": options,
+    }
 
 
 def comparison_page(document, scores, sort, observer_average):

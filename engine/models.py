@@ -381,12 +381,30 @@ class Result(models.Model):
     response = models.ForeignKey(Response, on_delete=models.CASCADE, related_name="results")
     block_id = models.CharField(max_length=64)
     scores = models.JSONField()
+    # ✨ The participant's answers to the tie-break's pairs (ticket 30b), in the order asked, each
+    # `{"framework", "constructs": [a, b], "round", "chosen"}`, `chosen` None for a skip. Kept beside the scores, which
+    # they never change.
+    tie_break_answers = models.JSONField(default=list)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["response", "block_id"], name="one_result_per_sort_per_response"),
         ]
+
+    def answer_pair(self, place, pair, chosen):
+        """✨ Store the answer to the tie-break's pair at `place` in the plan, `chosen` one of its constructs or None to
+        skip. Only the next unanswered pair takes one, checked under a lock, so a form sent twice or from a stale tab
+        stores nothing. Returns whether it was stored."""
+        with transaction.atomic():
+            locked = Result.objects.select_for_update().get(pk=self.pk)
+            if len(locked.tie_break_answers) != place:
+                return False
+            answer = {key: pair[key] for key in ("framework", "constructs", "round")}
+            locked.tie_break_answers = [*locked.tie_break_answers, {**answer, "chosen": chosen}]
+            locked.save(update_fields=["tie_break_answers"])
+        self.tie_break_answers = locked.tie_break_answers
+        return True
 
 
 class ObserverAssessments(NamedTuple):

@@ -270,6 +270,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Phone width: each row's line still spans the width, the standing stays on one line beside the name, and no dot is cut off at either end.
 - A screen reader reads each construct's name, persona and standing, and passes over the drawing.
 - The generalist (Whatever You Do, a fresh participant): sorting every card into the same bucket and sending without moving a slider leaves both profiles level, and the results page opens with a hint box under the title, "You’re a generalist" in small capitals above its sentence, before the APEST(d) profile. A participant whose sort has clear leaders sees no such box, and neither does their coach's link. At phone width the box fits without the page scrolling sideways.
+- The tie-break's pairs (Whatever You Do, a fresh participant): sort so that two APEST(d) roles come out level and PEP has a clear leader; sending leads to "Which is more true of you?" with a quiet label above it, two statement cards and "Neither fits — skip". Leave after one pair and open the results from the hub: you return to the next pair. After the last you reach your results. At phone width the cards stack full width without sideways scrolling.
 
 ## The comparison (the results page's "Compare with how others see you →")
 

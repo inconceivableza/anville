@@ -15,6 +15,12 @@
 - [ ] The results page shows the re-weighted result, and how the tie-break changed it
 - [ ] The comparison sets the participant's re-weighted result beside the observers', so it agrees with their results page. Observers have no tie-break, so theirs are their sorts as sent
 
+**Carried from 30b**
+
+- The answers are stored on the sort's result, in the order asked, each with its framework, its two constructs, its round and the construct chosen (empty for a skip); the plan itself is worked out afresh from the result and the document, never stored
+- While pairs are left, the results page leads to the next one; the comparison and the hub's "Where you started" still read the sort's result as sent, which this ticket's re-weighting replaces
+- The prototype's re-weighting (`rescore`) reads only the tied framework's answers; a skip counts as an appearance for both constructs and a win for neither
+
 **Context**
 
 - Prototype reference: `tiebreaker-prototype-v2.html` in Prototypes for reference, for the re-weighting and the balanced outcome
