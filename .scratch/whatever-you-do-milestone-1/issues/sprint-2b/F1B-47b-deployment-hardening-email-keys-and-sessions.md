@@ -12,7 +12,7 @@
 
 - [x] **A real environment names its sending address.** Done: `whatever-you-do-staging` sends from `noreply@mail.anville.vabl.dev`, and the deploy refuses an environment that has real email but no sending address
 - [x] **Django's own messages have a sending address too,** taken from the environment and defaulting to the one above, so a provider is never handed an address it will refuse
-- [ ] **The secret key can be rotated** without signing everyone out or breaking signed cookies such as the one that shows a link just issued: old keys stay valid as fallbacks until removed, and the deployment instructions give the steps
+- [x] **The secret key can be rotated** without signing everyone out or breaking signed cookies such as the one that shows a link just issued: old keys stay valid as fallbacks until removed, and the deployment instructions give the steps
 - [ ] **Expired sessions are cleared every night,** in the application's image, beside the backup and outside its hour
 - [ ] The deployment instructions, the README's settings for a deployed environment and the server approach describe whatever is added
 

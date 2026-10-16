@@ -84,6 +84,12 @@ from the variable before it, so the password must be safe inside a URL: letters,
     secretKeyRef:
       name: {{ .Values.secretName }}
       key: DJANGO_SECRET_KEY
+- name: DJANGO_SECRET_KEY_FALLBACKS
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.secretName }}
+      key: DJANGO_SECRET_KEY_FALLBACKS
+      optional: true
 - name: ANVILLE_ENROLMENT_REQUIRED
   value: {{ .Values.enrolment.required | quote }}
 {{- if .Values.enrolment.required }}

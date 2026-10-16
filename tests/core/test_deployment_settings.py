@@ -90,6 +90,14 @@ def test_trusted_origins_are_a_list_from_the_environment():
     assert settings["CSRF_TRUSTED_ORIGINS"] == ["https://a.example", "https://b.example"]
 
 
+def test_old_secret_keys_are_a_list_from_the_environment_and_none_by_default():
+    assert settings_with({}, "SECRET_KEY_FALLBACKS")["SECRET_KEY_FALLBACKS"] == []
+    assert settings_with({"DJANGO_SECRET_KEY_FALLBACKS": ""}, "SECRET_KEY_FALLBACKS")["SECRET_KEY_FALLBACKS"] == []
+    assert settings_with({"DJANGO_SECRET_KEY_FALLBACKS": "older-key,oldest-key"}, "SECRET_KEY_FALLBACKS") == {
+        "SECRET_KEY_FALLBACKS": ["older-key", "oldest-key"]
+    }
+
+
 def test_with_no_email_url_email_is_fake():
     settings = settings_with({}, "EMAIL_BACKEND", "DEFAULT_FROM_EMAIL")
 

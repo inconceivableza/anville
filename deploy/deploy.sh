@@ -17,7 +17,8 @@
 #
 # From the environment, as deploy/environments/<environment>/secrets.example.yaml describes:
 #   DJANGO_SECRET_KEY
-#   ANVILLE_ENROLMENT_CODE                              when enrolment.required
+#   DJANGO_SECRET_KEY_FALLBACKS                         optional; only while a key is being rotated out
+#   ANVILLE_ENROLMENT_CODE                             when enrolment.required
 #   POSTGRES_PASSWORD                                   when postgres.enabled
 #   DATABASE_URL                                        when not
 #   BACKUP_TARGET, BACKUP_SSH_KEY, BACKUP_KNOWN_HOSTS   when backup.enabled
@@ -114,8 +115,9 @@ SECRETS=$(mktemp -d)
 trap 'rm -r "$SECRETS"' EXIT
 (
   umask 077
-  for name in "${NEEDED[@]}" EMAIL_URL; do
-    # One file for each secret that has a value. EMAIL_URL is left out when absent, which means fake email.
+  for name in "${NEEDED[@]}" EMAIL_URL DJANGO_SECRET_KEY_FALLBACKS; do
+    # One file for each secret that has a value. EMAIL_URL is left out when absent, which means fake email;
+    # DJANGO_SECRET_KEY_FALLBACKS when no old key is being kept.
     [ -z "${!name:-}" ] || printf '%s' "${!name}" > "$SECRETS/$name"
   done
 )

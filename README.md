@@ -239,6 +239,7 @@ Everything a deployed copy needs is read from the environment, so one build serv
 | `DJANGO_HTTPS` | No forwarded header is trusted and plain HTTP is served | `true` behind a proxy that ends TLS: its `X-Forwarded-Proto` is trusted, plain HTTP is redirected to HTTPS, and the session, CSRF and observer cookies are marked Secure. Never set it without such a proxy in front, or anyone can claim to be on HTTPS |
 | `DJANGO_HSTS_SECONDS` | No `Strict-Transport-Security` header | How long browsers should refuse plain HTTP. Only read when `DJANGO_HTTPS` is on |
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | None | Further origins allowed to post forms, comma-separated. Not needed when the proxy passes the `Host` header on |
+| `DJANGO_SECRET_KEY_FALLBACKS` | Only `DJANGO_SECRET_KEY` is accepted | Old keys being rotated out, comma-separated: what they signed (sessions, signed cookies) is still accepted, but nothing new is signed with them. [deploy/README.md](deploy/README.md) gives the steps |
 | `DATABASE_CONN_MAX_AGE` | A database connection per request | Seconds to keep a connection for reuse |
 | `EMAIL_URL` | Email is fake: each message is printed in the server's output and nothing is delivered | The provider, as `smtp+tls://key:secret@host:587` |
 | `DEFAULT_FROM_EMAIL` | `webmaster@localhost` | The address messages come from |
