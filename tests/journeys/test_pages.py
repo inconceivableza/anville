@@ -18,7 +18,7 @@ from engine.models import Response
 from tests.documents import pathway_document, scripture_reading, sort_pathway, translated
 from tests.journeys.pages import gate_checklist, main_of, version_on
 from tests.journeys.test_coach_checklist import step, the_coach_checklist
-from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
+from tests.journeys.test_hub import hub_entry, signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_navigation import section_in, sidebar_of
 
 FIRST = "/sections/onboarding/"
@@ -576,5 +576,6 @@ def test_a_paged_sections_estimate_is_said_once_for_the_whole_section(signed_in_
     document["content"]["sections"][0]["estimate"] = "About 3 minutes"
     load_pathway(document)
 
-    assert shown(signed_in_client, "/hub/").count("About 3 minutes") == 1
+    # ✨ in the section's entry; the next step says it too, while the section is next (ticket 49b)
+    assert hub_entry(shown(signed_in_client, "/hub/"), "Before we begin").count("About 3 minutes") == 1
     assert "Whole section: About 3 minutes" in shown(signed_in_client)

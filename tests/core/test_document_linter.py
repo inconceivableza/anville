@@ -302,3 +302,39 @@ def test_a_section_with_parts_cannot_be_a_side_card():
             message="Section 'calling' has parts, which are listed within it, so it cannot be a hub side card.",
         )
     ]
+
+
+# ✨ Photos and their credits (ticket 49b)
+
+
+def with_a_photo(section_id="calling", credit=None):
+    document = pathway_document()
+    credit = credit if credit is not None else {"kind": "courtesy", "text": "Photograph of grass from Unsplash."}
+    document["photos"] = {section_id: {"file": "grass.jpg", "credit": credit}}
+    return document
+
+
+def test_a_photo_named_for_a_section_that_does_not_exist_is_reported():
+    assert validate(with_a_photo("nowhere")) == [
+        Problem(path="/photos/nowhere", message="There is no section 'nowhere' in this pathway.")
+    ]
+
+
+@pytest.mark.parametrize(
+    "credit",
+    [
+        {"kind": "maybe", "text": "Photograph from Unsplash."},
+        {"text": "Photograph from Unsplash."},
+        {"kind": "courtesy"},  # ✨ a credit to list needs its wording
+        {"kind": "required"},
+    ],
+)
+def test_a_photo_whose_credit_is_not_required_courtesy_or_marked_as_needing_none_is_reported(credit):
+    problems = validate(with_a_photo(credit=credit))
+
+    assert problems
+    assert all(problem.path.startswith("/photos/calling/credit") for problem in problems)
+
+
+def test_a_photo_marked_as_needing_no_credit_is_accepted():
+    assert validate(with_a_photo(credit={"kind": "none"})) == []

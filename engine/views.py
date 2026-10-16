@@ -2,6 +2,7 @@
 # For licensing information see ../LICENSE.md
 
 import json
+import mimetypes
 from typing import NamedTuple
 
 from django.conf import settings
@@ -74,6 +75,7 @@ from engine.hub import (
     track_sections,
 )
 from engine.document.observers import link_lifetime, privacy_notice, relationship_from_form, relationship_question
+from engine.document.photos import credits_listed
 from engine.models import Contact, Invitation, ObserverResponse, PathwayVersion, Publication, Response, Result
 from engine.document.tie_break import pair_plan, reweigh
 from engine.results import comparison_page, pair_page, results_page
@@ -121,10 +123,14 @@ def home(request):
 
 def credits_page(request):
     """✨ The copyright notice of each translation the published pathway quotes, open to anyone, since the public
-    homepage quotes scripture too. The publishers ask for their notices on the work's copyright page (ticket 39)."""
+    homepage quotes scripture too. The publishers ask for their notices on the work's copyright page (ticket 39). After
+    them, the credits of the pathway's photos that the document lists (ticket 49b)."""
     version = Publication.current_version()
     translations = version.document.get("translations", {}) if version else {}
-    return render(request, "engine/credits.html", {"translations": translations.values()})
+    photo_credits = credits_listed(version.document) if version else []
+    return render(
+        request, "engine/credits.html", {"translations": translations.values(), "photo_credits": photo_credits}
+    )
 
 
 @login_required
@@ -146,12 +152,21 @@ def hub(request):
         {
             "title": text_for(state.version.document["title"], "participant"),
             "hub": hub,
+            "photo": _photo_of(state.version.document, hub.next_step),
             "coach": _coach_of(state.response),
             "coach_page": _coach_page_of(state.version.document, hub),
             "voices": _hub_voices(state.response),
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
+
+
+def _photo_of(document, section):
+    """✨ The address of the photo the document names for this section, or None for no section or one without a photo
+    (ticket 49b)."""
+    if section is None or section.id not in document.get("photos", {}):
+        return None
+    return reverse("photo", args=[section.id])
 
 
 def _coach_page_of(document, hub):
@@ -937,6 +952,22 @@ def download(request, block_id):
     if not path.is_file():
         raise Http404("This pathway's file is not here.")
     return FileResponse(path.open("rb"), content_type="application/pdf", filename=block["file"])
+
+
+@login_required
+@consent_required
+def photo(request, section_id):
+    """✨ The photo the published pathway names for a section, a file beside the document (ticket 49b). Only a file the
+    document names as a photo is served, and the schema keeps its name to letters, digits and hyphens, so it cannot
+    leave the folder."""
+    state = _participant(request.user)
+    named = state.version.document.get("photos", {}).get(section_id) if state.version else None
+    if named is None:
+        raise Http404("This pathway has no photo for that section.")
+    path = settings.PATHWAY_FILES_DIR / named["file"]
+    if not path.is_file():
+        raise Http404("This pathway's photo is not here.")
+    return FileResponse(path.open("rb"), content_type=mimetypes.guess_type(path.name)[0])
 
 
 @login_required

@@ -111,6 +111,12 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Phone width: one column, the cards below the sections; the brown border still shows, and nothing scrolls sideways.
 - A section the pathway marks as a side card (none until ticket 50 makes Walk with a coach and Five trusted voices so) shows in the right column as a card with its title, its sentence and its status, and not in the list; its title leads to it unless it is locked.
 
+## The hub's next step and its photo (load the pathway again first; ticket 49b)
+
+- Once Section 1 is next: "Start with your gifts." and "Take the ten-minute strengths assessment and read three short passages on gifts.", over the grass photo, shaded so the words read clearly, the panel taller, as the prototype's. "Begin" leads into Section 1.
+- `/credits/` lists "Photograph of grass from Unsplash." under "Photographs", after the scripture notices.
+- Phone width: the photo fills the panel without stretching, and the words stay readable.
+
 ## Back to the hub and Section 1 (ticket 41b)
 
 - Completing onboarding, and later Section 1, lands on the hub with the next step's card highlighted.

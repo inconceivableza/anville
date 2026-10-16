@@ -21,6 +21,11 @@
 - A section gets `"side_card": {"sentence": …}` to be drawn as a card; the hub's own Five trusted voices and Walk with a mentor cards, written in the template, stay until 51a and 51b, so once these sections are side cards both show at once until then
 - A side card can still be the hub's next step, the first section neither complete nor locked, so where the side cards sit in the document decides whether one is; and the sidebar lists no side card, since it shares the hub's list
 
+**Carried from 49b**
+
+- [ ] The wizard's photo, the figure facing the sun, goes beside the document as the grass did (`pathways/files`), named in the document's `photos` for Before we begin, with a courtesy credit (Unsplash); the photo view serves it at the section's address (`photo`, by section id)
+- The hub's next step draws the photo of whichever section it points at, so Before we begin's photo shows there too while it is next, until the wizard keeps it off the hub
+
 **Context**
 
 - Prototype reference: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`, the onboarding view, for layout only; its four steps are not the content

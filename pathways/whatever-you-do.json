@@ -8,6 +8,13 @@
     }
   },
   "translation": "ESV",
+  "photos": {
+    "designed": {
+      "file": "grass.jpg",
+      "credit": { "kind": "courtesy", "text": "Photograph of grass from Unsplash." }
+    }
+  },
+  "show_courtesy_credits": true,
   "content": {
     "sections": [
       {
@@ -192,6 +199,10 @@
         "title": "How you've been designed",
         "number": "01",
         "requires": ["onboarding"],
+        "next_step": {
+          "heading": "Start with your gifts.",
+          "sentence": "Take the ten-minute strengths assessment and read three short passages on gifts."
+        },
         "blocks": [
           {
             "id": "gifts-question",

@@ -29,13 +29,21 @@ LABELS = {
 }
 
 
+class NextStepWording(NamedTuple):
+    """✨ What the hub's next step says for a section that carries its own wording for it (ticket 49b)."""
+
+    heading: str
+    sentence: str
+
+
 class SectionState(NamedTuple):
     """✨ One section as the hub sees it. `is_next` marks the one section the hub points the participant at.
     `estimate` is the authored time it takes, or None once the section has been begun. `page` is the page of it
     the participant has reached, or the first once it is complete, which is where the hub leads. `part_of` is the
     section it is a part of, if any. `lock_note` says, while it is locked, what opens it. `number` is the authored number
     the hub shows beside it, if any, and `side_card` the authored sentence of a section the hub draws as a side card, or
-    None for one it lists (ticket 49a)."""
+    None for one it lists (ticket 49a). `next_step` is the authored heading and sentence the hub's next step shows while
+    this section is the next step, or None for a section without them (ticket 49b)."""
 
     id: str
     title: str
@@ -48,6 +56,7 @@ class SectionState(NamedTuple):
     lock_note: str | None = None
     number: str | None = None
     side_card: str | None = None
+    next_step: NextStepWording | None = None
 
     @property
     def is_locked(self):
@@ -258,7 +267,16 @@ def _state(section, answers, completed, role, moved_past, sections):
         lock_note=_lock_note(section, completed, answers, sections, moved_past, role) if status == LOCKED else None,
         number=section.get("number"),
         side_card=text_for(section["side_card"]["sentence"], role) if "side_card" in section else None,
+        next_step=_next_step_wording(section, role),
     )
+
+
+def _next_step_wording(section, role):
+    """✨ The heading and sentence the section carries for when it is the next step, or None."""
+    if "next_step" not in section:
+        return None
+    wording = section["next_step"]
+    return NextStepWording(text_for(wording["heading"], role), text_for(wording["sentence"], role))
 
 
 def _estimate(section, status, role):

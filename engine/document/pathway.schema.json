@@ -31,6 +31,43 @@
       "description": "The translation a passage is from when it names none of its own: one of 'translations'.",
       "type": "string"
     },
+    "photos": {
+      "description": "The pathway's photos, keyed by the section each is shown with, such as the hub's next step over a section's photo. Each is a file in the pathways/files folder, with its credit.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "credit"],
+        "properties": {
+          "file": {
+            "description": "The photo's name in the pathways/files folder, such as 'grass.jpg'.",
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*\\.(jpg|jpeg|png|webp)$"
+          },
+          "credit": {
+            "description": "Who the photo is credited to. 'required' when its licence requires a credit, 'courtesy' when its licence does not ask for one, as Unsplash's does not, and 'none' when the author marks it as needing none (public domain, or the author's own). The credits page lists required credits always, courtesy ones while 'show_courtesy_credits' is on, and nothing for 'none'.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind"],
+            "properties": {
+              "kind": { "enum": ["required", "courtesy", "none"] },
+              "text": {
+                "description": "The credit as the credits page lists it, such as 'Photograph by … on Unsplash.'",
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "if": { "required": ["kind"], "properties": { "kind": { "enum": ["required", "courtesy"] } } },
+            "then": { "required": ["text"] }
+          }
+        }
+      }
+    },
+    "show_courtesy_credits": {
+      "description": "Whether the credits page lists photos' courtesy credits, those their licence does not ask for. It never hides a credit a licence requires.",
+      "type": "boolean",
+      "default": false
+    },
     "content": {
       "type": "object",
       "additionalProperties": false,
@@ -411,6 +448,16 @@
           "additionalProperties": false,
           "required": ["sentence"],
           "properties": {
+            "sentence": { "$ref": "#/$defs/text" }
+          }
+        },
+        "next_step": {
+          "description": "What the hub's next step says while this section is the next step, in place of the section's title and time estimate, such as 'Start with your gifts.' and a sentence on what it asks.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["heading", "sentence"],
+          "properties": {
+            "heading": { "$ref": "#/$defs/text" },
             "sentence": { "$ref": "#/$defs/text" }
           }
         },
