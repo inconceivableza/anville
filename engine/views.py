@@ -925,15 +925,25 @@ def contacts(request, block_id):
     if added is None:
         return _person_refused(request, state, block, AnswerRefused(LIST_FULL))
     person, token = added
-    return _back_with_issued(request, person, _link_of(request, person, token))
+    link = _link_of(request, person, token)
+    if _is_htmx(request):
+        # ✨ In place of the row they were typed into, and once every row is filled, the next empty one after them.
+        state = _participant(request.user)
+        rows = _contact_rows(block, state.answers, {"contact": person.pk, "link": link})
+        added_row = _as_typed_in(request, block, next(row for row in rows if row["contact_id"] == person.pk))
+        held = len(state.answers.get(block_id) or [])
+        grown = rows_of(block, held) > rows_of(block, held - 1)
+        return _rows_sent_back(request, state, block, [added_row, *rows[-1:]] if grown else [added_row])
+    return _back_with_issued(request, person, link)
 
 
 @login_required
 @consent_required
 @require_POST
 def contact(request, block_id, contact_id):
-    """✨ Change one person's name or email address, and theirs alone (ticket 51a). Their link keeps working. Another
-    participant's contact, or one from another list, is a 404 that says nothing of whether it exists."""
+    """✨ Change one person's name or email address, and theirs alone (ticket 51a), as the row saves on a change with
+    JavaScript, or by its Save button without (fix-2). Their link keeps working. Another participant's contact, or one
+    from another list, is a 404 that says nothing of whether it exists."""
     state, block, person = _listed_person(request, block_id, contact_id)
     shut = _list_shut(request, state, block)
     if shut is not None:
@@ -943,6 +953,9 @@ def contact(request, block_id, contact_id):
     except AnswerRefused as refused:
         return _person_refused(request, state, block, refused, contact_id=person.pk)
     Contact.objects.filter(pk=person.pk).update(**changed)
+    if _is_htmx(request):
+        state = _participant(request.user)
+        return _rows_sent_back(request, state, block, [_listed_row(state, block, person.pk, saved=True)])
     return _see_other(_listed_at(person))
 
 
@@ -951,7 +964,9 @@ def contact(request, block_id, contact_id):
 def contact_removal(request, block_id, contact_id):
     """✨ Take one person off a contact list (ticket 13d), deleting them and their link; anything already sent through
     it stays (ADR 0007). Someone whose link still works is removed only once the participant has confirmed, having been
-    told it will stop; opening this address, or pressing Remove for them, only asks. Then back to the list."""
+    told it will stop; opening this address, or pressing Remove for them, only asks. Then back to the list, or with
+    JavaScript, their row alone: asking in it, then gone, an empty row in its place while the list still shows as many
+    (fix-2)."""
     state, block, person = _listed_person(request, block_id, contact_id)
     shut = _list_shut(request, state, block)
     if shut is not None:
@@ -959,10 +974,20 @@ def contact_removal(request, block_id, contact_id):
     confirmed = request.method == "POST" and (
         request.POST.get("confirmed") == "yes" or person.live_invitation() is None
     )
+    is_htmx = request.method == "POST" and _is_htmx(request)
+    if not confirmed and is_htmx:
+        return _rows_sent_back(request, state, block, [_listed_row(state, block, person.pk, confirming=True)])
     if not confirmed:
         context = {"person": person, "back": _listed_at(person), "has_live_link": person.live_invitation() is not None}
         return render(request, "engine/contact_removal.html", context)
+    number = _listed_row(state, block, person.pk)["number"] if is_htmx else None
     person.delete()  # ✨ their invitation goes with them
+    if is_htmx:
+        state = _participant(request.user)
+        held = len(state.answers.get(block_id) or [])
+        if rows_of(block, held) < rows_of(block, held + 1):
+            return _rows_sent_back(request, state, block, [])
+        return _rows_sent_back(request, state, block, [_empty_row(block, number)])
     return _see_other(_block_address(state.version.document, block_id))
 
 
@@ -990,8 +1015,6 @@ def _list_shut(request, state, block):
 def _person_refused(request, state, block, refused, contact_id=None):
     """✨ The list's page again, saying why one person was not saved, with what was typed in their row (or, for someone
     new, the first empty one) and the field at fault marked, so nothing typed is lost."""
-    section = section_of(state.version.document, block["id"])
-    shown = _section_page(state, section, page_of(section, block["id"]))
     typed = {
         "contact_id": contact_id,
         "name": request.POST.get("name", ""),
@@ -999,11 +1022,69 @@ def _person_refused(request, state, block, refused, contact_id=None):
         "refusal": str(refused),
         "invalid": refused.field,
     }
+    if _is_htmx(request):
+        # ✨ Their row alone, as typed, where they typed it (fix-2).
+        rows = _contact_rows(block, state.answers, typed=typed)
+        row = next((row for row in rows if row["contact_id"] == contact_id), None) or _empty_row(block, 0)
+        row = _as_typed_in(request, block, {**row, **{key: typed[key] for key in typed if key != "contact_id"}})
+        return _rows_sent_back(request, state, block, [row], status=400)
+    section = section_of(state.version.document, block["id"])
+    shown = _section_page(state, section, page_of(section, block["id"]))
     on_page = next(shown_block for shown_block in shown["section"]["blocks"] if shown_block["id"] == block["id"])
     on_page["rows"] = _contact_rows(block, state.answers, typed=typed)
     if not any(row.get("refusal") for row in on_page["rows"]):
         on_page["refusal"] = typed["refusal"]
     return _section_shown(request, state, section, shown, status=400)
+
+
+def _is_htmx(request):
+    return request.headers.get("HX-Request") == "true"
+
+
+def _rows_sent_back(request, state, block, rows, status=200):
+    """✨ Rows of a contact list alone, as one of its buttons sends them back with JavaScript, to take that row's place
+    (fix-2): never the page, so typing not yet saved in another row is kept. Never cached, since a row may hold a link
+    just issued."""
+    shown_block = {
+        "id": block["id"],
+        "is_fixed": block["id"] in state.fixed,
+        "frozen": RESULTS_SEEN if _frozen(state.response) else None,
+    }
+    context = {"rows": rows, "block": shown_block, "pathway": {"version_id": state.version.pk}}
+    sent = render(request, "engine/contact_rows.html", context, status=status)
+    sent["Cache-Control"] = "no-store"
+    return sent
+
+
+def _listed_row(state, block, contact_id, issued=None, **marks):
+    """✨ One person's row as the list shows it, with `issued`, their link just issued, and any `marks` (saved, or asking
+    before they are removed)."""
+    issued_for = {"contact": contact_id, "link": issued} if issued else None
+    row = next(row for row in _contact_rows(block, state.answers, issued_for) if row["contact_id"] == contact_id)
+    return {**row, **marks}
+
+
+def _empty_row(block, number):
+    """✨ An empty row of a contact list, for the next person, at its place."""
+    return {
+        "number": number,
+        "is_needed": number <= needed(block),
+        "contact_id": None,
+        "name": "",
+        "email": "",
+        "invitation": None,
+        "issued": None,
+    }
+
+
+def _as_typed_in(request, block, row):
+    """✨ A row sent back for someone new, numbered as the empty row they were typed into, which it replaces: the list's
+    page numbers them in order once it is next drawn."""
+    posted = request.POST.get("row", "")
+    if not posted.isdigit():
+        return row
+    number = int(posted)
+    return {**row, "number": number, "is_needed": number <= needed(block)}
 
 
 @login_required
@@ -1023,7 +1104,10 @@ def issue_invitation(request, contact_id):
     contact = _own_contact_or_404(request.user, contact_id)
     if contact.role == Contact.Role.CONTACT and _frozen(contact.response):
         return _refuse_frozen(request)
-    return _back_with_issued(request, contact, _issue_link(request, contact))
+    link = _issue_link(request, contact)
+    if contact.role == Contact.Role.CONTACT and _is_htmx(request):
+        return _person_row_sent_back(request, contact, issued=link)  # ✨ with the link in it (fix-2)
+    return _back_with_issued(request, contact, link)
 
 
 def _frozen(response):
@@ -1088,7 +1172,16 @@ def revoke_invitation(request, contact_id):
     does nothing. The page comes back at that person."""
     contact = _own_contact_or_404(request.user, contact_id)
     Invitation.objects.filter(contact=contact).delete()
+    if contact.role == Contact.Role.CONTACT and _is_htmx(request):
+        return _person_row_sent_back(request, contact)  # ✨ fix-2
     return _see_other(_listed_at(contact))
+
+
+def _person_row_sent_back(request, contact, issued=None):
+    """✨ An observer's row of their contact list alone, as it now stands, with `issued`, their link just issued."""
+    state = _participant(request.user)
+    block = _block_of_type(state.version, contact.block_id, "contact_list")
+    return _rows_sent_back(request, state, block, [_listed_row(state, block, contact.pk, issued=issued)])
 
 
 def _listed_at(contact):

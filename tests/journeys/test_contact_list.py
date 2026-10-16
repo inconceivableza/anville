@@ -98,20 +98,26 @@ def rows_shown(page):
     ]
 
 
-def add_person(client, person, section=ONBOARDING, page=None):
-    """✨ Add one person as the participant does, in the list's first empty row, on the page given or as it is now."""
+def add_person(client, person, section=ONBOARDING, page=None, htmx=False):
+    """✨ Add one person as the participant does, in the list's first empty row, on the page given or as it is now;
+    `htmx` as the page's JavaScript sends it."""
     action, fields = next(
         form for form in forms_of(page or shown(client, section)) if "name" in form[1] and not form[1]["name"]
     )
     name, email = person
-    return client.post(action, {**fields, "name": name, "email": email})
+    return client.post(action, {**fields, "name": name, "email": email}, **(HTMX if htmx else {}))
 
 
-def save_person(client, name, changed, section=ONBOARDING, page=None):
-    """✨ Change the named person's row and save it, on the page given (one left open, say) or as it is now."""
+def save_person(client, name, changed, section=ONBOARDING, page=None, htmx=False):
+    """✨ Change the named person's row and save it, on the page given (one left open, say) or as it is now; `htmx` as
+    the row's autosave sends it."""
     action, fields = next(form for form in forms_of(page or shown(client, section)) if form[1].get("name") == name)
     new_name, new_email = changed
-    return client.post(action, {**fields, "name": new_name, "email": new_email})
+    return client.post(action, {**fields, "name": new_name, "email": new_email}, **(HTMX if htmx else {}))
+
+
+# ✨ What htmx adds to every request it sends.
+HTMX = {"HTTP_HX_REQUEST": "true"}
 
 
 def save_contacts(client, *rows, section=ONBOARDING):
@@ -287,6 +293,90 @@ def test_another_participants_contact_cannot_be_changed(participant):
 
     assert save_person(someone_else, "Jo", PRIYA, page=left_open).status_code == 404
     assert stored() == [JO]
+
+
+# Saving as it changes, a row at a time (fix-2)
+
+
+def row_of(page, name):
+    """✨ The named person's row on a page."""
+    rows = re.findall(r'<li class="contact-row".*?</li>', page, re.S)
+    return next(row for row in rows if f'value="{name}"' in row)
+
+
+def rows_sent_back(response):
+    """✨ The rows a response holds, by who is in them (None for an empty row), asserting it holds nothing else."""
+    body = response.content.decode()
+    assert "<html" not in body and 'id="block-contacts"' not in body, "the whole page came back, not a row"
+    rows = re.findall(r'<li class="contact-row".*?</li>', body, re.S)
+    assert body.count("<li") == len(rows)
+    return [re.search(r'name="name"[^>]*value="([^"]*)"', row).group(1) or None for row in rows]
+
+
+@pytest.mark.django_db
+def test_a_change_to_someone_listed_is_saved_as_it_changes_with_no_save_button_to_press(participant):
+    add_person(participant, JO)
+    row = row_of(shown(participant, ONBOARDING), "Jo")
+
+    assert re.search(r'<form class="contact-person"[^>]*hx-trigger="change\b', row)
+    assert all("save-fallback" in button for button in re.findall(r"<button[^>]*>\s*Save\s*</button>", row))
+    saved = save_person(participant, "Jo", ("Joanne", "joanne@example.com"), htmx=True)
+
+    assert saved.status_code == 200
+    assert stored() == [("Joanne", "joanne@example.com")]
+
+
+@pytest.mark.django_db
+def test_an_invalid_email_is_refused_in_that_row_alone_and_changes_nothing(participant):
+    save_contacts(participant, JO, PRIYA)
+
+    refused = save_person(participant, "Jo", ("Jo", "jo@"), htmx=True)
+
+    assert refused.status_code == 400
+    assert "Check the email address." in refused.content.decode()
+    assert rows_sent_back(refused) == ["Jo"]
+    assert stored() == [JO, PRIYA]
+
+
+@pytest.mark.django_db
+def test_a_new_row_stores_nobody_until_get_link_is_pressed(participant):
+    page = shown(participant, ONBOARDING)
+    empty = re.findall(r'<li class="contact-row".*?</li>', page, re.S)[0]
+
+    assert "hx-trigger" not in empty
+    assert re.search(r"<button[^>]*>\s*Get link\s*</button>", empty)
+    assert stored() == []
+    assert add_person(participant, JO, page=page, htmx=True).status_code == 200
+    assert stored() == [JO]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("action", ["save", "get link", "reissue", "revoke", "remove"])
+def test_each_action_with_javascript_sends_back_its_own_row_alone(participant, action):
+    """✨ So typing not yet saved in any other row is never lost (fix-2)."""
+    save_contacts(participant, JO, PRIYA)
+
+    if action == "save":
+        sent = save_person(participant, "Jo", ("Joanne", "jo@example.com"), htmx=True)
+        assert rows_sent_back(sent) == ["Joanne"]
+    elif action == "get link":
+        sent = add_person(participant, CHRIS, htmx=True)
+        assert rows_sent_back(sent)[0] == "Chris"
+        assert set(rows_sent_back(sent)[1:]) <= {None}  # ✨ and the next empty row, now that every row is filled
+        assert link_shown(sent.content.decode())
+    elif action in ("reissue", "revoke"):
+        path = r"/invitations/\d+/issue/" if action == "reissue" else r"/invitations/\d+/revoke/"
+        sent = participant.post(action_in_row(participant, "Jo", path), **HTMX)
+        assert rows_sent_back(sent) == ["Jo"]
+    else:
+        asked = participant.post(removal_action(participant, "Jo"), **HTMX)
+        assert rows_sent_back(asked) == ["Jo"]
+        assert stored() == [JO, PRIYA]
+        action_to_confirm, fields = confirmation_of(asked.content.decode())
+        sent = participant.post(action_to_confirm, fields, **HTMX)
+        assert stored() == [PRIYA]
+        assert rows_sent_back(sent) in ([], [None])
+    assert sent.status_code == 200
 
 
 # Taking someone off the list (ticket 13d)

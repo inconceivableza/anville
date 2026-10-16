@@ -1293,14 +1293,52 @@ form + .way-on,
 
 .contact-person {
   display: flex;
+  flex-wrap: wrap;
   flex: 1 0 100%;
   gap: var(--space-xs);
   align-items: center;
 }
 
+/* ✨ Under the fields, on a line of its own, so a refusal never squeezes them (fix-2). */
 .contact-person .save-status {
   flex: 1 0 100%;
   margin: 0;
+}
+
+.contact-person .save-status:empty {
+  display: none;
+}
+
+/* ✨ A link just issued, or asking before someone is removed: a modal once JavaScript has loaded, and without it, open
+   in the row, under the person (fix-2). */
+.contact-dialog {
+  max-width: min(520px, calc(100vw - 2 * var(--space-md)));
+  padding: var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.contact-dialog::backdrop {
+  background: var(--hero-shade);
+}
+
+.contact-dialog:not(:modal) {
+  position: static;
+  flex: 1 0 100%;
+  order: 1;
+  max-width: none;
+  margin: var(--space-xs) 0 0;
+}
+
+.contact-dialog h3 {
+  margin: 0 0 var(--space-xs);
+}
+
+.contact-dialog form {
+  display: inline-block;
+  margin: var(--space-sm) var(--space-xs) 0 0;
 }
 
 .contact-need {
@@ -1326,11 +1364,11 @@ form + .way-on,
 }
 
 .contact-name {
-  flex: 2;
+  flex: 2 1 0;
 }
 
 .contact-email {
-  flex: 3;
+  flex: 3 1 0;
 }
 
 .contact-field input {

@@ -443,7 +443,7 @@ def test_once_frozen_the_participant_can_neither_add_people_nor_issue_or_reissue
     assert added.status_code == 403 and issued.status_code == 403 and reissued.status_code == 403
     assert Contact.objects.count() == contacts_before
     assert set(Invitation.objects.values_list("token_hash", flat=True)) == links_before
-    assert "Add and get their link" not in page and "issue/" not in page
+    assert "Get link" not in page and "issue/" not in page
     revoked = participant.post(invitation_action(participant, "Sam", "revoke"))
     assert revoked.status_code == 303
     assert not Invitation.objects.filter(contact__name="Sam").exists()

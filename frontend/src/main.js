@@ -115,6 +115,15 @@ document.addEventListener("click", async (event) => {
   }
 });
 
+// ✨ A dialog in a contact list's row (a link just issued, or asking before someone is removed) shows open in the row
+// without JavaScript; once it has loaded, as a modal, on the page and in each row htmx sends back (fix-2).
+htmx.onLoad((content) => {
+  content.querySelectorAll("dialog[data-shows-modal][open]").forEach((dialog) => {
+    dialog.close();
+    dialog.showModal();
+  });
+});
+
 // ✨ Whether the visitor has asked their device for less motion; every movement below is skipped if so.
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
