@@ -112,6 +112,8 @@ jobs:
           BACKUP_SSH_KEY: ${{ secrets.BACKUP_SSH_KEY }}
           BACKUP_KNOWN_HOSTS: ${{ secrets.BACKUP_KNOWN_HOSTS }}
           EMAIL_URL: ${{ secrets.EMAIL_URL }}
+          ANVILLE_GOOGLE_CLIENT_ID: ${{ secrets.ANVILLE_GOOGLE_CLIENT_ID }}
+          ANVILLE_GOOGLE_CLIENT_SECRET: ${{ secrets.ANVILLE_GOOGLE_CLIENT_SECRET }}
           ACME_EMAIL: ${{ vars.ACME_EMAIL }}
         run: deploy/deploy.sh "$ENVIRONMENT" "$DIGEST"
 

@@ -97,6 +97,18 @@ from the variable before it, so the password must be safe inside a URL: letters,
       name: {{ .Values.secretName }}
       key: EMAIL_URL
       optional: true
+- name: ANVILLE_GOOGLE_CLIENT_ID
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.secretName }}
+      key: ANVILLE_GOOGLE_CLIENT_ID
+      optional: true
+- name: ANVILLE_GOOGLE_CLIENT_SECRET
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.secretName }}
+      key: ANVILLE_GOOGLE_CLIENT_SECRET
+      optional: true
 {{ include "anville.databaseEnv" . | trim }}
 {{- end }}
 

@@ -50,6 +50,15 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - "First name" comes first, with "e.g. Ed" as its placeholder, and the browser offers nothing saved for it.
 - With `ANVILLE_ENROLMENT_REQUIRED=false` there is no enrolment code field; with it left out, the field sits after the email.
 
+## Google sign-in (ticket 28b; needs a development OAuth client, `deploy/README.md`, "Set up Google sign-in", step 8)
+
+- With neither `ANVILLE_GOOGLE_CLIENT_ID` nor `ANVILLE_GOOGLE_CLIENT_SECRET` in `.env`, or only one, sign in and sign up look exactly as before: no "or", no Google button.
+- With both set and `runserver` restarted, sign in and sign up each end with "or" and an outlined "Continue with Google" across the form's width, at a wide screen and at phone width.
+- Pressing it goes straight to Google's account chooser, with no Anville page asking again first. Cancelling there comes back to an Anville page, not an error.
+- A Google account new to Anville comes back to a sign-up form with its email filled in, asking for the first name, the enrolment code (where asked for) and "I am 18 or over", and no password. Leaving the box unticked stops the form as on the email sign-up.
+- Once signed up, the hub sends it to the consent page first. Signing out and pressing "Continue with Google" again signs straight in to the hub.
+- An address that already has an email-and-password account is refused on that form, and no second account is made.
+
 ## Consent
 
 - After signing up, and at a first sign-in, the consent page comes before the hub.
