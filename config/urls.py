@@ -48,6 +48,7 @@ from engine.views import (
     start,
     start_observing,
     visit_comparison,
+    withdrawal,
 )
 
 urlpatterns = [
@@ -72,9 +73,11 @@ urlpatterns = [
     path("observe/", observer, name="observer"),
     # ✨ Ahead of the link's own route, which would otherwise take "assessment" for a token.
     path("observe/assessment/", send_assessment, name="send_assessment"),
+    path("observe/withdraw/", withdrawal, name="withdrawal"),
     path("observe/<str:token>/", observe, name="observe"),
     path("observe/<str:token>/start/", start_observing, name="start_observing"),
     path("observe/<str:token>/assessment/", send_assessment, name="send_assessment_by_link"),
+    path("observe/<str:token>/withdraw/", withdrawal, name="withdrawal_by_link"),
     # ✨ The coach's link (ticket 13c), apart from the observers', so neither kind of link works at the other's address.
     path("coaching/<str:token>/", coaching, name="coaching"),
     path("coaching/<str:token>/answer/", answer_coaching, name="answer_coaching"),

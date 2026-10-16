@@ -166,6 +166,32 @@ def test_nothing_kept_with_a_sent_assessment_ties_it_to_the_contact_or_their_lin
     assert [field for field, value in kept.items() if str(value) in ties] == []
 
 
+# Withdrawing (ticket 15b)
+
+
+def withdraw(client, link=None):
+    """✨ Withdraw as the observer's page does: through a link if given, else by the observer cookie."""
+    return client.post(f"{link}withdraw/" if link else "/observe/withdraw/")
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("through", ["cookie", "own link"])
+def test_withdrawing_through_the_claimed_link_deletes_that_observers_answers_and_nobody_elses(
+    participant, observer, through  # noqa: F811
+):
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+    someone_else = Client()
+    claim(someone_else, issue_link(participant, "Priya"))
+    kept = complete_sort(a5={"bucket": "strength", "value": 73})
+    send(someone_else, kept)
+
+    withdrawn = withdraw(observer) if through == "cookie" else withdraw(Client(), own_link)
+
+    assert withdrawn.status_code == 200
+    assert observer_assessments().assessments == [kept]
+
+
 # The observer's wording
 
 

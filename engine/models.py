@@ -445,6 +445,25 @@ class ObserverResponse(models.Model):
         return cls.objects.filter(sent_by=_sent_by(secret)).exists()
 
     @classmethod
+    def withdraw(cls, secret):
+        """✨ Delete whatever the observer sent with their claimed secret, found by its hash alone, and end the claim, so
+        their own link stops working and asks nothing again; False, changing nothing, if the secret claims no live link.
+
+        The participant's copy of the link stays used up, as it was, so nothing they can see changes. Ending the claim
+        and deleting happen together or not at all.
+        """
+        if not secret:
+            return False
+        with transaction.atomic():
+            ended = Invitation.objects.filter(secret_hash=_hash_of(secret), expires_at__gt=timezone.now()).update(
+                secret_hash=None
+            )
+            if not ended:
+                return False
+            cls.objects.filter(sent_by=_sent_by(secret)).delete()
+        return True
+
+    @classmethod
     def assessments_for(cls, response):
         """✨ The submitted observer assessments of one participant's response, and whether every one is test data.
 
