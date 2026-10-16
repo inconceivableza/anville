@@ -4,17 +4,17 @@
 
 **Blocked by:** A1-49a (Hub layout and side cards)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** Testing Decisions; Operating and demonstrating
 
-- [ ] The full notice, as the homepage shows it, on the hub, the observer's landing page and the coach's page
-- [ ] Every other page shows a smaller notice instead: a thin strip or a short line, plainly visible but not competing with the page's content. It says at least that this is a demo and to use made-up details. No page shows both
-- [ ] Both are shown only when the deployment's demo notice is set, and neither when it is not. A production environment never sets it
-- [ ] A new page gets the smaller notice without anyone remembering it: it is part of the shared page layout, which the pages with the full notice override
-- [ ] The manual checks say the smaller notice is readable, at phone width too, and covers nothing the page needs
+- [x] The full notice, as the homepage shows it, on the hub, the observer's landing page and the coach's page
+- [x] Every other page shows a smaller notice instead: a thin strip or a short line, plainly visible but not competing with the page's content. It says at least that this is a demo and to use made-up details. No page shows both
+- [x] Both are shown only when the deployment's demo notice is set, and neither when it is not. A production environment never sets it
+- [x] A new page gets the smaller notice without anyone remembering it: it is part of the shared page layout, which the pages with the full notice override
+- [x] The manual checks say the smaller notice is readable, at phone width too, and covers nothing the page needs
 
 **Context**
 

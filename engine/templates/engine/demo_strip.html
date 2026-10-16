@@ -1,0 +1,10 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ The smaller demo notice (ticket 46): a thin strip atop every engine page that does not show the full one
+  (access/demo_notice.html). Shown only when the deployment sets ANVILLE_DEMO_NOTICE; a production deployment never
+  does. Its wording is fixed, so it stays short whatever the full notice says.
+{% endcomment %}
+{% if demo_notice %}
+  <p class="demo-strip" role="note"><strong>Demo</strong> Use made-up details, not your own.</p>
+{% endif %}

@@ -21,7 +21,10 @@
 {% endcomment %}
 {% block head_title %}{{ name }} has asked you to be their coach{% endblock head_title %}
 
+{% block demo_notice %}{% endblock demo_notice %}
+
 {% block content %}
+  {% include "access/demo_notice.html" %}
   {% if answer == "accepted" %}
     <div class="coach-outcome coach-go">
       <h2>{% if just_accepted %}Thank you — {{ name }} will be told{% else %}You're {{ name }}'s coach{% endif %}</h2>
