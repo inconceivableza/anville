@@ -145,6 +145,71 @@ def test_a_hub_entry_drops_its_estimate_once_the_section_is_started(signed_in_cl
     assert "About 1 minute" not in hub_entry(signed_in_client.get("/hub/").content.decode(), "Before we begin")
 
 
+def side_card(page, title):
+    """✨ The hub's side card for one section, found by its title."""
+    cards = re.findall(r'<section class="card hub-side-card.*?</section>', page, re.S)
+    return next(card for card in cards if title in card)
+
+
+def with_a_side_card(document):
+    """✨ The test pathway with a section after onboarding that the hub draws as a side card (ticket 49a)."""
+    document["content"]["sections"].append(
+        {
+            "id": "voices",
+            "title": "Five trusted voices",
+            "requires": ["onboarding"],
+            "side_card": {"sentence": "Invite people who know you well."},
+            "blocks": [{"id": "voices-note", "type": "long_text", "prompt": "Who comes to mind?"}],
+        }
+    )
+    return document
+
+
+@pytest.mark.django_db
+def test_a_side_card_section_is_drawn_as_a_card_and_not_listed_with_the_sections(signed_in_client, load_pathway):
+    load_pathway(with_a_side_card(pathway_document()))
+
+    page = signed_in_client.get("/hub/").content.decode()
+
+    card = side_card(page, "Five trusted voices")
+    assert "Invite people who know you well." in card
+    assert "Locked" in card
+    listed = re.findall(r'<li class="hub-section.*?</li>', page, re.S)
+    assert listed and not any("Five trusted voices" in entry for entry in listed)
+
+    signed_in_client.post("/sections/onboarding/complete/")
+
+    assert "Not started" in side_card(signed_in_client.get("/hub/").content.decode(), "Five trusted voices")
+
+
+@pytest.mark.django_db
+def test_section_numbers_are_the_documents_and_none_shows_where_none_is_authored(signed_in_client, load_pathway):
+    document = pathway_document()
+    document["content"]["sections"][0]["title"] = "Section 1: Before we begin"
+    document["content"]["sections"][1]["number"] = "02–04"
+    load_pathway(document)
+
+    page = signed_in_client.get("/hub/").content.decode()
+
+    assert '<span class="srow-number">02–04</span>' in hub_entry(page, "Putting your calling into words")
+    assert "srow-number" not in hub_entry(page, "Before we begin")
+
+
+@pytest.mark.django_db
+def test_the_header_counts_sections_complete_not_answers(signed_in_client, load_pathway):
+    load_pathway(with_a_side_card(pathway_document()))
+    version = version_on(signed_in_client.get("/sections/onboarding/").content.decode())
+    signed_in_client.post("/answers/baseline-bible/", {"value": "5", "version": version})
+
+    assert "0 of 3 sections complete" in signed_in_client.get("/hub/").content.decode()
+
+    signed_in_client.post("/sections/onboarding/complete/")
+    page = signed_in_client.get("/hub/").content.decode()
+
+    assert "1 of 3 sections complete" in page
+    assert "answered" not in page
+
+
 @pytest.mark.django_db
 def test_authored_text_is_shown_escaped_and_unaltered(signed_in_client, load_pathway):
     document = pathway_document()

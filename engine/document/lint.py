@@ -20,6 +20,7 @@ def lint(document):
         *_duplicate_options(document),
         *_missing_sections(document, section_ids),
         *_impossible_parts(document, section_ids),
+        *_unshowable_side_cards_and_numbers(document),
         *_unknown_linked_sections(document, section_ids),
         *_links_holding_their_own_section(document),
         *_empty_pages(document),
@@ -112,6 +113,28 @@ def _impossible_parts(document, section_ids):
                 path,
                 "A part of a section needs a gate: it is complete once its gate passes, so without one it would be "
                 "complete before it is begun.",
+            )
+
+
+def _unshowable_side_cards_and_numbers(document):
+    """✨ A hub side card or a number the hub could not show (ticket 49a). A part is listed within its section, so it
+    shows no number and is drawn as no card; a section with parts lists them within it, which a card has no room for."""
+    sections = document["content"]["sections"]
+    with_parts = {section["part_of"] for section in sections if "part_of" in section}
+    for s, section in enumerate(sections):
+        path = f"/content/sections/{s}"
+        if "part_of" in section and "number" in section:
+            yield Problem(f"{path}/number", "A part of a section is listed within it, so it shows no number of its own.")
+        if "side_card" not in section:
+            continue
+        if "part_of" in section:
+            yield Problem(
+                f"{path}/side_card", "A part of a section is listed within it, so it cannot be a hub side card."
+            )
+        elif section["id"] in with_parts:
+            yield Problem(
+                f"{path}/side_card",
+                f"Section '{section['id']}' has parts, which are listed within it, so it cannot be a hub side card.",
             )
 
 

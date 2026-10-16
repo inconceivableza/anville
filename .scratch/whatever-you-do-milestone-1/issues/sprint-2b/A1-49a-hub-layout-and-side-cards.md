@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 2b (12–16 Oct)
 
@@ -12,8 +12,8 @@
 
 - [ ] The hub is laid out as the prototype's: its width, its two columns in its proportions, one column at phone width, and section rows that do not wrap, each beside its section's number as the document authors it ("01", "02–04"), or none where it has none
 - [ ] The hub is framed as the prototype's: the cream hub inset within the deep brown page
-- [ ] A section the pathway document marks as a hub side card is drawn as a card in the second column, from its title, its authored sentence and its status, and is not listed with the other sections. Nothing on a card is written in a template
-- [ ] The header counts sections complete ("2 of 5 sections complete") in place of answers. The "Where you started" card goes: it showed the strengths baseline, and the before-and-after ratings are ticket 56
+- [x] A section the pathway document marks as a hub side card is drawn as a card in the second column, from its title, its authored sentence and its status, and is not listed with the other sections. Nothing on a card is written in a template
+- [x] The header counts sections complete ("2 of 5 sections complete") in place of answers. The "Where you started" card goes: it showed the strengths baseline, and the before-and-after ratings are ticket 56
 
 **Context**
 

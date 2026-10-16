@@ -253,3 +253,52 @@ def test_a_section_that_is_a_part_of_no_section_it_can_be_is_reported(parts, mes
         document["content"]["sections"][index]["part_of"] = part_of
 
     assert validate(document) == [Problem(path="/content/sections/2/part_of", message=message)]
+
+
+# ✨ Hub side cards and section numbers (ticket 49a)
+
+
+def test_a_section_number_that_is_not_a_number_or_a_range_of_them_is_reported_at_its_path():
+    document = pathway_document()
+    document["content"]["sections"][1]["number"] = "Section 2"
+
+    assert [problem.path for problem in validate(document)] == ["/content/sections/1/number"]
+
+
+def test_a_side_card_without_its_sentence_is_reported_at_its_path():
+    document = pathway_document()
+    document["content"]["sections"][1]["side_card"] = {}
+
+    assert [problem.path for problem in validate(document)] == ["/content/sections/1/side_card"]
+
+
+def test_a_part_of_a_section_cannot_be_a_side_card_nor_carry_a_number():
+    """✨ A part is listed within its section, so it is drawn as no card and shows no number of its own."""
+    document = sort_pathway()
+    strengths = document["content"]["sections"][2]
+    strengths.update(part_of="calling", number="03", side_card={"sentence": "Sort the statements."})
+
+    assert validate(document) == [
+        Problem(
+            path="/content/sections/2/number",
+            message="A part of a section is listed within it, so it shows no number of its own.",
+        ),
+        Problem(
+            path="/content/sections/2/side_card",
+            message="A part of a section is listed within it, so it cannot be a hub side card.",
+        ),
+    ]
+
+
+def test_a_section_with_parts_cannot_be_a_side_card():
+    """✨ Its parts are listed within it, which a card has no room for, so they would be on the hub nowhere."""
+    document = sort_pathway()
+    document["content"]["sections"][2]["part_of"] = "calling"
+    document["content"]["sections"][1]["side_card"] = {"sentence": "Write your statement."}
+
+    assert validate(document) == [
+        Problem(
+            path="/content/sections/1/side_card",
+            message="Section 'calling' has parts, which are listed within it, so it cannot be a hub side card.",
+        )
+    ]

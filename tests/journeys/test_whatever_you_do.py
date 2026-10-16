@@ -147,9 +147,9 @@ def test_the_letter_cannot_be_sent_without_the_fifth_after_rating(participant):
 
 
 @pytest.mark.django_db
-def test_progress_counts_the_two_new_ratings(participant):
-    # ✨ The faithful port's 16 and two more, less Section 3's reading and statement, which went with it (ticket 40).
-    assert "0 of 16 answered" in participant.get("/hub/").content.decode()
+def test_progress_counts_the_pathways_sections(participant):
+    """✨ Before we begin, Section 1 with the Strengths assessment within it, the Workbook and the letter (ticket 49a)."""
+    assert "0 of 5 sections complete" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db
@@ -404,7 +404,8 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     """✨ The fifth rating is added to the faithful port here and the result compared whole, so a change made to
     one document and not the other fails, and so does a slip in the fifth rating itself (its place, its anchors,
     its gate clause, or a message still saying four). The minimum-length messages are reworded the same way,
-    the time estimates, checked above, are set aside, and so is the Workbook in place of Sections 2–4."""
+    the time estimates, checked above, and the hub's section numbers are set aside, and so is the Workbook in place of
+    Sections 2–4."""
     expected = the_faithful_port()
     for section in expected["content"]["sections"]:
         for clause in section.get("gate", {}).get("clauses", []):
@@ -423,7 +424,14 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     two_contacts_for_now(expected)
     the_workbook_in_place_of_sections_2_to_4(expected)
 
-    assert without_the_coach_step(without_estimates(the_pathway())) == expected
+    assert without_numbers(without_the_coach_step(without_estimates(the_pathway()))) == without_numbers(expected)
+
+
+def without_numbers(document):
+    """✨ The hub's section numbers are this pathway's alone (ticket 49a): the faithful port takes none."""
+    for section in document["content"]["sections"]:
+        section.pop("number", None)
+    return document
 
 
 def the_workbook_in_place_of_sections_2_to_4(document):
@@ -613,6 +621,6 @@ def test_the_letter_opens_once_the_participant_has_finished_the_workbook(partici
 def test_sections_2_to_4_are_neither_on_the_hub_nor_reachable(participant):
     """✨ Their content stays in the faithful port; here they are done on paper, in the Workbook. The hub lists only the
     track's sections, so a section that cannot be reached is not on it either."""
-    assert "Sections 2–4: The Workbook" in participant.get("/hub/").content.decode()
+    assert "The Workbook" in participant.get("/hub/").content.decode()
     for section_id in ("shape", "calling", "growth"):
         assert participant.get(f"/sections/{section_id}/").status_code == 404
