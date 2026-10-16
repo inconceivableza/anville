@@ -645,12 +645,9 @@ def test_the_sections_with_no_activity_yet_still_say_what_they_are_for(participa
 
 
 @pytest.mark.django_db
-def test_progress_counts_what_the_participant_does_and_not_the_prose_or_the_link(participant):
-    page = participant.get("/hub/").content.decode()
-
-    # ✨ the reason, four ratings and the contact list; Section 1's reading and reflection; the sort; the calling
-    # reading and statement; the letter and four more
-    assert "0 of 16 answered" in page
+def test_progress_counts_the_pathways_sections(participant):
+    """✨ Before we begin, Sections 1 to 5, and the Strengths assessment within Section 1 (ticket 49a)."""
+    assert "0 of 7 sections complete" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db

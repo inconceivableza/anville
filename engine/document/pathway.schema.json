@@ -62,6 +62,24 @@
           "additionalProperties": false,
           "required": ["method"],
           "properties": { "method": { "enum": ["compositional_share"] } }
+        },
+        "tie_break": {
+          "description": "When a participant's own sort leaves a framework's leaders too close to call (ticket 30a). A framework is tied when another construct's rounded percent is within threshold points of its leader's; at most cluster constructs, leader first, enter the tie-break. Tied on exactly one framework, the participant is marked for the tie-break; on both, they are told they are a generalist, in presentation.generalist's wording. With no tie_break, nobody is marked.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "threshold": {
+              "description": "How many percentage points behind its leader a construct may be and still tie with it. 4 when left out.",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "cluster": {
+              "description": "How many of a tied framework's top constructs, at most, enter the tie-break. 4 when left out.",
+              "type": "integer",
+              "minimum": 2
+            }
+          }
         }
       }
     },
@@ -159,6 +177,16 @@
           "$ref": "#/$defs/text"
         },
         "disclaimer": { "$ref": "#/$defs/text" },
+        "generalist": {
+          "description": "What the results page tells a participant tied on both frameworks (measurement.tie_break): that they are a generalist. Needed whenever the pathway has a tie-break.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["heading", "text"],
+          "properties": {
+            "heading": { "$ref": "#/$defs/text" },
+            "text": { "$ref": "#/$defs/text" }
+          }
+        },
         "standing": {
           "description": "Where a construct's share stands, in words, on the results page and the comparison, by how far it sits from an even share of its framework (an even share is 100 divided among the framework's constructs). A share takes the highest band whose at_least, a percent of an even share, it reaches, in whatever order the bands are written; below them all it takes the below label. Placeholders (Leading 125, Strong 105, Present 85, Less used) when left out.",
           "type": "object",
@@ -326,6 +354,20 @@
           "$ref": "#/$defs/identifier"
         },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "number": {
+          "description": "The section's number as the hub shows it beside the section, such as '01', or '02–04' for a section standing in for three. Without one, the hub shows none.",
+          "type": "string",
+          "pattern": "^[0-9]+(–[0-9]+)?$"
+        },
+        "side_card": {
+          "description": "Draw this section as a card beside the hub's list of sections, below it on a phone, rather than in the list, as Walk with a coach is. The card shows the section's title, this sentence and its status.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sentence"],
+          "properties": {
+            "sentence": { "$ref": "#/$defs/text" }
+          }
+        },
         "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } },
         "gate": { "$ref": "#/$defs/gate" },
         "complete_label": {

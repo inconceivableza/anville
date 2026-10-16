@@ -44,7 +44,8 @@ spec:
         - name: migrate
           image: {{ include "anville.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          command: ["python", "manage.py", "migrate", "--noinput"]
+          # ✨ Then the cache's table, which migrations do not make; createcachetable leaves one that exists alone.
+          command: ["sh", "-c", "python manage.py migrate --noinput && python manage.py createcachetable"]
           env:
             {{- include "anville.djangoEnv" . | nindent 12 }}
           securityContext:

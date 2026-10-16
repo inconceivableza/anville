@@ -4,16 +4,16 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct); before any real participant data
 
 **Spec:** Implementation Decisions; Delivery and hosting
 
-- [ ] **The admin's sign-in is rate-limited** as sign-in is: repeated wrong passwords at the admin are refused as they are at sign-in
-- [ ] **Error pages are Anville's own,** in the site's style, for not found, server error, forbidden and bad request, in place of Django's bare pages. The server error page needs no context and no database, since it is shown when something has failed. Each says nothing of the request, and nothing that names a link's token
-- [ ] **The cache is shared by every worker,** so sign-in and sign-up limits count across all of them, without a new service. Development and tests may keep a per-process cache
-- [ ] The deployment instructions, the README's settings for a deployed environment and the server approach describe whatever is added
+- [x] **The admin's sign-in is rate-limited** as sign-in is: repeated wrong passwords at the admin are refused as they are at sign-in
+- [x] **Error pages are Anville's own,** in the site's style, for not found, server error, forbidden and bad request, in place of Django's bare pages. The server error page needs no context and no database, since it is shown when something has failed. Each says nothing of the request, and nothing that names a link's token
+- [x] **The cache is shared by every worker,** so sign-in and sign-up limits count across all of them, without a new service. Development and tests may keep a per-process cache
+- [x] The deployment instructions, the README's settings for a deployed environment and the server approach describe whatever is added
 
 **Context**
 

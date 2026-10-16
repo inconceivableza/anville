@@ -4,17 +4,17 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** Participants, access and consent (ADR 0004); Out of Scope; Legalities are parked, not forgotten
 
-- [ ] A participant can sign up and sign in with Google, alongside email and password
-- [ ] The Google button appears only in an environment given both a client ID and a secret; an environment without them is unchanged, so one may offer Google sign-in while another does not
-- [ ] Signing up through Google still asks for the 18+ confirmation, and for the enrolment code where the deployment asks for one (ticket 37); a Google sign-up without either gets no account
-- [ ] A Google account passes the consent step before any answer is stored, as any other account does (ADR 0004)
-- [ ] The deployment instructions' "Set up Google sign-in", already written, matches what is built: the setting names, where the client pair goes, and the line saying it arrives with this ticket goes. The client pair is listed among the environment's optional secrets
+- [x] A participant can sign up and sign in with Google, alongside email and password
+- [x] The Google button appears only in an environment given both a client ID and a secret; an environment without them is unchanged, so one may offer Google sign-in while another does not
+- [x] Signing up through Google still asks for the 18+ confirmation, and for the enrolment code where the deployment asks for one (ticket 37); a Google sign-up without either gets no account
+- [x] A Google account passes the consent step before any answer is stored, as any other account does (ADR 0004)
+- [x] The deployment instructions' "Set up Google sign-in", already written, matches what is built: the setting names, where the client pair goes, and the line saying it arrives with this ticket goes. The client pair is listed among the environment's optional secrets
 
 **Context**
 

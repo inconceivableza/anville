@@ -67,6 +67,10 @@ from the variable before it, so the password must be safe inside a URL: letters,
   value: {{ .Values.web.connMaxAge | quote }}
 - name: WEB_CONCURRENCY
   value: {{ .Values.web.workers | quote }}
+{{- /* ✨ Shared by every gunicorn worker, so allauth's sign-in limits count across them. The migrate init container
+makes the table; files/backup.sh leaves its rows out of the dump. */}}
+- name: CACHE_URL
+  value: dbcache://anville_cache
 {{- with .Values.email.from }}
 - name: DEFAULT_FROM_EMAIL
   value: {{ . | quote }}
@@ -104,6 +108,18 @@ from the variable before it, so the password must be safe inside a URL: letters,
     secretKeyRef:
       name: {{ .Values.secretName }}
       key: EMAIL_URL
+      optional: true
+- name: ANVILLE_GOOGLE_CLIENT_ID
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.secretName }}
+      key: ANVILLE_GOOGLE_CLIENT_ID
+      optional: true
+- name: ANVILLE_GOOGLE_CLIENT_SECRET
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.secretName }}
+      key: ANVILLE_GOOGLE_CLIENT_SECRET
       optional: true
 {{ include "anville.databaseEnv" . | trim }}
 {{- end }}

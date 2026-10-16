@@ -16,6 +16,11 @@
 - [ ] Walk with a coach and Five trusted voices are hub side card sections, holding the coach checklist and the contact list as they work today. Answers already given in them are kept
 - [ ] Once complete, Before we begin is listed in the hub and can be reread, with its ratings fixed. A participant who had completed it before this change is not sent through the wizard again, and one part-way through it lands on the wizard page they had reached
 
+**Carried from 49a**
+
+- A section gets `"side_card": {"sentence": …}` to be drawn as a card; the hub's own Five trusted voices and Walk with a mentor cards, written in the template, stay until 51a and 51b, so once these sections are side cards both show at once until then
+- A side card can still be the hub's next step, the first section neither complete nor locked, so where the side cards sit in the document decides whether one is; and the sidebar lists no side card, since it shares the hub's list
+
 **Context**
 
 - Prototype reference: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`, the onboarding view, for layout only; its four steps are not the content

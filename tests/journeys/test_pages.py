@@ -567,18 +567,7 @@ def test_before_a_sort_is_in_the_results_page_leads_to_the_page_the_sort_is_on(
     assert (response.status_code, response.url) == (302, "/sections/strengths/pages/2/")
 
 
-# Progress and estimates are the section's, whatever its pages
-
-
-@pytest.mark.django_db
-def test_progress_counts_a_sections_blocks_wherever_they_sit(participant):
-    """✨ The rating and "why" on the first page, the story on the second, and the calling statement."""
-    assert "0 of 4 answered" in shown(participant, "/hub/")
-
-    through_to(participant, 2)
-    save(participant, "story", "It began in a small town.")
-
-    assert "2 of 4 answered" in shown(participant, "/hub/")
+# Estimates are the section's, whatever its pages
 
 
 @pytest.mark.django_db

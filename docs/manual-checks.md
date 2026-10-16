@@ -50,6 +50,15 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - "First name" comes first, with "e.g. Ed" as its placeholder, and the browser offers nothing saved for it.
 - With `ANVILLE_ENROLMENT_REQUIRED=false` there is no enrolment code field; with it left out, the field sits after the email.
 
+## Google sign-in (ticket 28b; needs a development OAuth client, `deploy/README.md`, "Set up Google sign-in", step 8)
+
+- With neither `ANVILLE_GOOGLE_CLIENT_ID` nor `ANVILLE_GOOGLE_CLIENT_SECRET` in `.env`, or only one, sign in and sign up look exactly as before: no "or", no Google button.
+- With both set and `runserver` restarted, sign in and sign up each end with "or" and an outlined "Continue with Google" across the form's width, at a wide screen and at phone width.
+- Pressing it goes straight to Google's account chooser, with no Anville page asking again first. Cancelling there comes back to an Anville page, not an error.
+- A Google account new to Anville comes back to a sign-up form with its email filled in, asking for the first name, the enrolment code (where asked for) and "I am 18 or over", and no password. Leaving the box unticked stops the form as on the email sign-up.
+- Once signed up, the hub sends it to the consent page first. Signing out and pressing "Continue with Google" again signs straight in to the hub.
+- An address that already has an email-and-password account is refused on that form, and no second account is made.
+
 ## Password reset (sign in's "Forgot your password?")
 
 - Sign in shows "Forgot your password?" under the password field, and it opens the reset page, styled like sign in, with the demo notice when that is set.
@@ -84,6 +93,16 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - "Sign out" lands on the homepage, signed out.
 - The footer's "Credits" shows the header while signed in, and the plain page once signed out.
 - With `ANVILLE_SIDEBAR=false` in `.env` and the server restarted, "Your pathway" is gone; the pathway's name and "Sign out" remain.
+
+## The hub's layout (the hub, beside the prototype's: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html#hub`)
+
+- The page is deep brown, and the hub, header included, is cream with rounded corners, inset a thin brown border from every edge. "Credits" sits below it on the brown, easy to read.
+- On a wide screen the hub is about as wide as the prototype's: the next step and the sections in a wide left column, and the coach and trusted voices cards in a narrower right one, in the prototype's proportions. No section's title wraps that would fit on one line in the prototype.
+- Section 1 shows "01", the Workbook "02–04" and Section 5 "05", each in small grey type to the left of the title; Before we begin shows no number, and its title lines up with the others. The Workbook is called "The Workbook". The Strengths assessment, within Section 1, shows no number.
+- The header says "0 of 5 sections complete" for a new participant, and counts up as sections, and the Strengths assessment, are completed. There is no "Where you started" card, even once the sort is in.
+- "Your consent · Your groups" sits below the hub, lined up with its left edge.
+- Phone width: one column, the cards below the sections; the brown border still shows, and nothing scrolls sideways.
+- A section the pathway marks as a side card (none until ticket 50 makes Walk with a coach and Five trusted voices so) shows in the right column as a card with its title, its sentence and its status, and not in the list; its title leads to it unless it is locked.
 
 ## Back to the hub and Section 1 (ticket 41b)
 
@@ -251,6 +270,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - PEP dots that tie share a colour.
 - Phone width: each row's line still spans the width, the standing stays on one line beside the name, and no dot is cut off at either end.
 - A screen reader reads each construct's name, persona and standing, and passes over the drawing.
+- The generalist (Whatever You Do, a fresh participant): sorting every card into the same bucket and sending without moving a slider leaves both profiles level, and the results page opens with a hint box under the title, "You’re a generalist" in small capitals above its sentence, before the APEST(d) profile. A participant whose sort has clear leaders sees no such box, and neither does their coach's link. At phone width the box fits without the page scrolling sideways.
 
 ## The comparison (the results page's "Compare with how others see you →")
 
@@ -319,6 +339,16 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Signed out with an existing account, following "Sign in" from the sign-up page the link led to and signing in lands on the join page, not the hub.
 - A made-up token in the link says "This link no longer works" and to ask whoever sent it for a new one, and names no group or organisation.
 - Phone width: the join page's heading, sentence and "Join" button fit without the page scrolling sideways.
+
+## Error pages (with `DJANGO_DEBUG` off, as a deployment runs)
+
+Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `python manage.py runserver`, after `python manage.py collectstatic --noinput`, since WhiteNoise then serves the styles from `staticfiles/`.
+
+- `/observe/made-up-token/nothing-here/` shows "Page not found" in the site's styles, with the footer's Credits link and a "Go to the homepage" pill that leads there. Neither the address nor "made-up-token" appears anywhere on the page.
+- Open a page with a form (sign in), delete the `csrftoken` cookie in the browser's developer tools, then send the form: "This page was out of date", with the same layout.
+- At `/admin/`, five wrong passwords for the operator's username bring "Too many failed login attempts. Try again later." under the form, and the right password is then refused too, for five minutes.
+- Phone width: each page's heading, sentence and pill fit without the page scrolling sideways.
+- The server error and bad request pages are drawn the same way; the tests render them, since neither is easy to cause by hand.
 
 ## Your organisations (`/organisations/`, after giving the account a permission in the admin)
 

@@ -148,7 +148,6 @@ def hub(request):
             "coach": _coach_of(state.response),
             "coach_page": _coach_page_of(state.version.document, hub),
             "voices": _hub_voices(state.response),
-            "baseline": _hub_baseline(state.version.document, state),
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
@@ -835,21 +834,6 @@ def _hub_voices(response):
     live = [contact.live_invitation() for contact in contacts]
     replied = sum(1 for invitation in live if invitation and invitation.claimed_at)
     return {"invited": len(names), "replied": replied, "names": names, "max": MAX_CONTACTS}
-
-
-def _hub_baseline(document, state):
-    """✨ The "Where you started" card on the hub: the participant's own scores on the sort, the top constructs by
-    percent, or None before they have a result."""
-    scored = _scored_block(document)
-    if scored is None:
-        return None
-    result = Result.objects.filter(response=state.response, block_id=scored["id"]).first()
-    if result is None:
-        return None
-    shown = results_page(document, result.scores, state.answers.get(scored["id"], {}), name_shown_for(state.response.participant))
-    bars = [bar for framework in shown["frameworks"] for bar in framework["bars"]]
-    bars.sort(key=lambda bar: bar["percent"], reverse=True)
-    return [{"label": bar["label"], "percent": bar["percent"]} for bar in bars[:4]]
 
 
 @login_required

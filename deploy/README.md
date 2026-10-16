@@ -76,7 +76,7 @@ gh workflow run deploy.yml -f environment=whatever-you-do-staging -f tag=latest
 
 `tag` may be a commit, a `v*` tag or `latest`. The workflow resolves it to a digest, opens the tunnel, checks the host's tier, applies the environment's secrets, installs cert-manager and the issuers if the host lacks them, installs or upgrades the environment, and then asks `https://<hostname>/healthz` which commit is answering. It fails if that is not the commit it deployed.
 
-A deploy runs migrations. It does not publish a pathway: see "Publish a pathway" below.
+A deploy runs migrations, then `createcachetable` for the cache the workers share. It does not publish a pathway: see "Publish a pathway" below.
 
 ## After the first deploy
 
@@ -87,7 +87,7 @@ k exec -it deployment/anville -- python manage.py createsuperuser --username ope
 k exec deployment/anville -- python manage.py seed_observers --help    # staging only
 ```
 
-The operator's account is given a username and no email address on purpose. Signing in to the site is by email (`ACCOUNT_LOGIN_METHODS`), so an account with no email can reach `/admin/`, where Django's own backend takes the username, and cannot reach the hub at all. The operator is then never walked into the consent flow, leaves no consent or answers among the participants' own, and `username == email` goes on meaning "this row is a participant". An email address on the account would also take that address out of use, since no participant can sign up with an address another user holds. To see what a participant sees, sign up an ordinary account. `/admin/` is served on the public hostname, so that password belongs with the environment's other secrets.
+The operator's account is given a username and no email address on purpose. Signing in to the site is by email (`ACCOUNT_LOGIN_METHODS`), so an account with no email can reach `/admin/`, where Django's own backend takes the username, and cannot reach the hub at all. The operator is then never walked into the consent flow, leaves no consent or answers among the participants' own, and `username == email` goes on meaning "this row is a participant". An email address on the account would also take that address out of use, since no participant can sign up with an address another user holds. To see what a participant sees, sign up an ordinary account. `/admin/` is served on the public hostname, so that password belongs with the environment's other secrets. Its sign-in refuses repeated wrong passwords as the site's does, so after five for one account the right one is refused too, for five minutes.
 
 Then publish the environment's pathway, as below.
 
@@ -148,8 +148,6 @@ To go back to fake email, delete `EMAIL_URL` from the GitHub Environment and dep
 
 ## Set up Google sign-in
 
-Google sign-in arrives with ticket 28b; until then an environment shows no Google button, whatever it is given. The steps below can be taken beforehand.
-
 An environment offers Google sign-in only when it is given a Google OAuth client. Without one, sign-in is by email and password alone, as before.
 
 ### The Google project
@@ -177,7 +175,7 @@ The authorised domains on the Branding page have to be verified in Search Consol
 
 | What | Where |
 |---|---|
-| The client ID and secret | `ANVILLE_GOOGLE_CLIENT_ID` and `ANVILLE_GOOGLE_CLIENT_SECRET`, secrets in the environment's GitHub Environment, listed as optional in its `secrets.example.yaml` (ticket 28b adds them). Both absent, there is no Google button; both present, there is |
+| The client ID and secret | `ANVILLE_GOOGLE_CLIENT_ID` and `ANVILLE_GOOGLE_CLIENT_SECRET`, secrets in the environment's GitHub Environment, listed as optional in its `secrets.example.yaml`. Both present, there is a Google button on sign in and sign up; either absent, there is none, and the Google pages are not found. A change takes effect at the next deploy |
 | The redirect URI | The client itself, in the Cloud Console, from the environment's `hostname` in `values.yaml`. A hostname that changes needs the client changed to match |
 | The app name, the support email and the links | The project's Branding page, once for every environment that shares the project |
 | Who may sign in before the app is published | The project's Audience page, as test users |

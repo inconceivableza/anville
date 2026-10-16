@@ -72,7 +72,10 @@ def test_each_group_is_listed_with_its_organisation_and_what_its_admins_see_but_
 
 
 def hub_progress(client):
-    return re.search(r"\d+ of \d+ answered", client.get("/hub/").content.decode()).group(0)
+    """✨ Before we begin's status on the hub, which an answer kept keeps in progress."""
+    page = client.get("/hub/").content.decode()
+    entry = r'<li class="hub-section.*?Before we begin.*?<span class="tag[^"]*">([^<]*)</span>'
+    return re.search(entry, page, re.S).group(1)
 
 
 @pytest.mark.django_db
@@ -95,7 +98,7 @@ def test_leaving_asks_for_confirmation_then_ends_the_membership_and_keeps_the_an
 
     assert left.status_code == 303 and left.url == YOUR_GROUPS
     assert "Autumn cohort" not in text_of(main_of(client.get(YOUR_GROUPS).content.decode()))
-    assert progress_before.startswith("1 of ")
+    assert progress_before == "In progress"
     assert hub_progress(client) == progress_before
 
 
