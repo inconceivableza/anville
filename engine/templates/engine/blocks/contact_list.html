@@ -69,6 +69,13 @@
               <button type="submit" class="pill ghost small">Revoke link</button>
             </form>
           {% endif %}
+          {% if not block.is_fixed %}
+            {# ✨ A plain form, with or without JavaScript: while their link works, the page it leads to asks first. #}
+            <form method="post" action="{% url 'contact_removal' block.id row.contact_id %}">
+              {% csrf_token %}
+              <button type="submit" class="pill ghost small">Remove</button>
+            </form>
+          {% endif %}
         {% endif %}
       </li>
     {% endfor %}

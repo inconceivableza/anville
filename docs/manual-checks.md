@@ -319,6 +319,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - The observer's landing (a link opened in a private window): the notice's paragraphs, then "I'm answering for …" naming the participant, with nothing asked before it. Pressing it shows "Bookmark this link, it's yours" with Copy, as on the invitations page; reloading, or Back then Forward, does not bring the link back.
 - After starting, the link as sent says "This link has already been used", in that window and in another; the bookmarked link, and `/observe/` in the same window, still reach "Answering for …". In a different browser, the bookmarked link reaches it too, but `/observe/` there says "This link does not work" (only starting sets the cookie). Reissuing from the invitations page stops them all.
 - Signed in as the participant in the same browser, opening and starting their own link changes nothing on their hub or sections.
+- Each listed person has "Remove", quieter than "Add and get their link". For someone whose link works it opens "Remove Jo?", saying the link will stop, with "Remove Jo" and "Keep Jo" stacked and alike in size; "Keep Jo" goes back to Jo's row with nothing changed. "Remove Jo" comes back to the list without Jo, the others unchanged, and Jo's link in a private window says "This link does not work". After revoking someone's link, "Remove" takes them off at once. Same with JavaScript off; at phone width the row's buttons wrap without the page scrolling sideways.
 
 ## The observer's assessment (after starting from a link, in a private window)
 
