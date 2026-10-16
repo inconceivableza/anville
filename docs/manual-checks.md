@@ -333,6 +333,15 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Sending before fine-tuning (load the pathway again first): on "All 36 sorted!", under the bucket counts, "You can send your assessment now, or fine-tune how strong each one is in … first." and, side by side, "Send my assessment →" as the filled pill and "Continue to fine-tuning →" as the outlined one, with no slider to scroll past. Pressing send shows the thanks; the comparison (once three have answered) treats it as a sort sent with every slider untouched. Continuing still leads to the sliders and their "Send my assessment →". Undo still works from that screen. Keyboard: Tab reaches both buttons. Phone width: the two buttons stack, each whole, with no sideways scroll.
 - The participant's own "All 36 sorted!" shows only "Continue to fine-tuning →", as before, with no send button and no sentence about sending.
 
+## Answer collection freezes (after `migrate`; three observers answered, at least one more person invited)
+
+- On the results page, "Compare with how others see you →" opens "Before you look": "3 of the 4 people you invited have answered…" and the same button again. "← Back to results" changes nothing; pressing the button opens the comparison. With everyone invited answered (or after `seed_observers`), it reads "Everyone you invited has answered. Once you look, you can't add anyone else." Below three answered, the press goes straight to "Not enough answers yet", as before.
+- Once looked: the hub's Five trusted voices card reads "Complete" with "You've seen your results, so no more answers are added." The list's page says the same and why, has no empty row and no "Issue link" or "Reissue link"; names can still be saved, and "Revoke link" still works. The coach page still issues and reissues the coach's link.
+- In a private window, an unanswered person's link shows the notice then "No more answers are being taken." with no button; their own link, if they had started, shows the same in place of the sort.
+- An observer who answered withdraws: with two left, the comparison is "Not enough answers yet" again, the list offers its empty row and links again, and the next press asks again.
+- The notice (load the pathway again first) ends with withdrawing at any time, through the link or by asking the people who run the service, and says no new answers are added once the participant has looked.
+- Phone width: "Before you look" and the frozen notes fit with no sideways scroll.
+
 ## Organisations and groups in the operator's admin (`/admin/`, as a superuser)
 
 - The index has an "Organisations and groups" section with Groups, Memberships, Organisations and Permissions, apart from "Authentication and Authorization"'s own Groups.

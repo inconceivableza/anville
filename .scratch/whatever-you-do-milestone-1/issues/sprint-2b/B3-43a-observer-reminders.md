@@ -16,6 +16,11 @@
 - [ ] The email's stop link, and its `List-Unsubscribe` headers with one-click POST, stop this participant's reminders to that person. The link's page stops them only when its button is pressed, never on opening, and works while the contact exists, whatever has happened to the link. The stop is kept on the contact, through a reissue and an edit, and nothing the participant does undoes it
 - [ ] Nothing in a reminder, a stop or their absence reaches the participant: their pages are unchanged
 
+**Carried from 55**
+
+- Collection is frozen while the participant's response holds a freeze time, set by the confirmed press and cleared by a withdrawal that leaves fewer than the minimum. An unfreeze keeps no time of its own, so an overdue reminder after one is found from the link's own weekly clock
+- The observers' privacy notice, in both documents, now ends with withdrawing at any time and that no new answers are added once the participant has looked; the reminders sentence goes beside them
+
 **Context**
 
 - ADR 0016 records whom to remind, the marks on the contact and the stop; the spec's Observers and Delivery and hosting hold the rest (developer's calls, 15 Oct)

@@ -24,7 +24,9 @@ DEFAULT_PRIVACY_NOTICE = (
     "[Draft notice: this pathway has not written its own privacy notice yet.]"
     "\n\n"
     "{name} has asked you to answer some questions about them. Your answers are kept, and your name is never shown "
-    "to {name} with them. You can withdraw while this link works, and your answers will be deleted."
+    "to {name} with them. Once {name} has looked at the combined results, no new answers are added. You can withdraw "
+    "at any time, and your answers will be removed: through this link while it works, and after that by asking the "
+    "people who run the service."
 )
 
 

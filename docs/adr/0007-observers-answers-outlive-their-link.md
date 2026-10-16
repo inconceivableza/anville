@@ -1,8 +1,10 @@
 ---
-status: accepted
+status: accepted, amended by ADR 0017
 ---
 
 # Observers' answers outlive their link
+
+Amended: an observer's link cannot be reissued while answer collection is frozen (ADR 0017). Revoking always works, and the rest stands.
 
 An observer's sent answers stay when the participant revokes or reissues their link, or takes them off the contact list, and revoking and reissuing always work, whether or not anyone has answered. The participant holds a copy of every link and sees how many observers have answered and, once there are enough, the observer average. If revoking deleted the answers, they could note the averages, revoke one person's link, and read that person's observer assessment from the difference: the comparison ADR 0005 guards against.
 
