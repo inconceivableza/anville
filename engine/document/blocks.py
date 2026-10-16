@@ -280,6 +280,8 @@ BLOCK_TYPES = {
             text_lists=(("questions", ("question", "note", "why", "coach_note", "coach_why", "commitment")),),
         ),
         BlockType("sort_assessment", captures=SORT, scored=True, widget=_sort_widget),
+        # ✨ Its `sort`'s results in full, drawn as the results page draws them, once there are any (ticket 57).
+        BlockType("sort_results"),
         BlockType("section_link", text_fields=("body", "button_label")),
         BlockType("download", text_fields=("body", "button_label")),
         # ✨ Never shown: it splits its section into pages (`pages_of`), and may word the way on from the page it ends.

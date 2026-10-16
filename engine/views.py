@@ -651,10 +651,20 @@ def results(request, block_id):
         return redirect(page_url(section["id"], section["page"]))
     if _pairs_left(state.version.document, result):
         return redirect("tie_break", block_id)
+    drawn = _results_drawn(state, result, block_id)
+    return render(request, "engine/results.html", {"drawn": drawn, "results": drawn["results"], "section": section})
+
+
+def _results_drawn(state, result, block_id):
+    """✨ The participant's own results for a sort as both its results page and a `sort_results` block draw them
+    (`engine/own_results.html`), or None while there are none to show: before the sort is in, or while tie-break pairs
+    are left (ticket 57). Like the results page, it stores the re-weighted result the first time it is shown."""
     document = state.version.document
+    if result is None or _pairs_left(document, result):
+        return None
     scores = _scores_shown_storing_reweighted(document, result)
-    shown = results_page(document, scores, state.answers[block_id], name_shown_for(request.user))
-    return render(request, "engine/results.html", {"results": shown, "section": section, "block_id": block_id})
+    name = name_shown_for(state.response.participant)
+    return {"results": results_page(document, scores, state.answers[block_id], name), "block_id": block_id}
 
 
 @login_required
@@ -1707,7 +1717,16 @@ def _section_page(state, section, page=1, issued=None):
             "is_side_card": "side_card" in section,
             "reopens": _reopens(section),
             "blocks": [
-                _block_for_participant(version.document, block, answers, fixed, states, issued, _frozen(state.response))
+                _block_for_participant(
+                    version.document,
+                    block,
+                    answers,
+                    fixed,
+                    states,
+                    issued,
+                    _frozen(state.response),
+                    drawn=_sort_results_drawn(state, block),
+                )
                 for block in blocks
             ],
         },
@@ -1797,11 +1816,19 @@ def _published_version(posted):
     return PathwayVersion.objects.filter(pk=int(posted), publications__isnull=False).distinct().first()
 
 
-def _block_for_participant(document, block, answers, fixed, states, issued=None, frozen=False):
+def _sort_results_drawn(state, block):
+    """✨ For a `sort_results` block, its sort's results as `_results_drawn` gives them, or None; None for any other."""
+    if block["type"] != "sort_results":
+        return None
+    result = Result.objects.filter(response=state.response, block_id=block["sort"]).first()
+    return _results_drawn(state, result, block["sort"])
+
+
+def _block_for_participant(document, block, answers, fixed, states, issued=None, frozen=False, drawn=None):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
     identifier; a link to a section outside the participant's track has no state and shows nothing. `issued` is a
     link just issued, a coach's or an observer's. While answer collection is `frozen`, a contact list says why it adds
-    nobody (ticket 55)."""
+    nobody (ticket 55). `drawn` is a `sort_results` block's results, from `_sort_results_drawn`."""
     widget = BLOCK_TYPES[block["type"]].widget
     text = authored_text(block, "participant")
     if block["type"] == "scripture_reading":
@@ -1822,6 +1849,7 @@ def _block_for_participant(document, block, answers, fixed, states, issued=None,
         "widget": widget(document, "participant", "") if widget else None,  # ✨ the participant's wording names no one
         "link": states.get(block["section"]) if block["type"] == "section_link" else None,
         "frozen": RESULTS_SEEN if frozen and block["type"] == "contact_list" else None,
+        "drawn": drawn,
     }
 
 

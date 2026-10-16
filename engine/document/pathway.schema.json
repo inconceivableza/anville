@@ -501,7 +501,7 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "section_link", "download", "page_break"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "section_link", "download", "page_break"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
@@ -511,6 +511,7 @@
         { "if": { "properties": { "type": { "const": "single_select" } } }, "then": { "$ref": "#/$defs/single_select" } },
         { "if": { "properties": { "type": { "const": "contact_list" } } }, "then": { "$ref": "#/$defs/contact_list" } },
         { "if": { "properties": { "type": { "const": "coach_checklist" } } }, "then": { "$ref": "#/$defs/coach_checklist" } },        { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } },
+        { "if": { "properties": { "type": { "const": "sort_results" } } }, "then": { "$ref": "#/$defs/sort_results" } },
         { "if": { "properties": { "type": { "const": "section_link" } } }, "then": { "$ref": "#/$defs/section_link" } },
         { "if": { "properties": { "type": { "const": "download" } } }, "then": { "$ref": "#/$defs/download" } },
         { "if": { "properties": { "type": { "const": "page_break" } } }, "then": { "$ref": "#/$defs/page_break" } }
@@ -792,6 +793,21 @@
           "description": "Hold the rest of this section shut until the linked section's gate passes, as a scripture reading does until it is confirmed.",
           "type": "boolean",
           "default": false
+        }
+      }
+    },
+    "sort_results": {
+      "description": "A sort's results, shown in full as its results page shows them, once the participant has them; before then, nothing.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "sort"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "sort_results" },
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "sort": {
+          "description": "The identifier of the sort whose results these are.",
+          "$ref": "#/$defs/identifier"
         }
       }
     },

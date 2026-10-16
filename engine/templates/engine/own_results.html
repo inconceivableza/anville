@@ -1,0 +1,21 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ A participant's own results, from `drawn`, as both their results page and a `sort_results` block in a section draw
+  them (ticket 57): the generalist's hint, the results themselves with the tie-break's wording, and the way on to the
+  comparison.
+{% endcomment %}
+<div class="own-results">
+  {% comment %}✨ A participant tied on both frameworks is told they are a generalist (ticket 30a), set off as a hint is. It speaks to them, so only their own results show it, not their coach's link.{% endcomment %}
+  {% if drawn.results.generalist %}
+    <div class="hint-box"><strong>{{ drawn.results.generalist.heading }}</strong>{{ drawn.results.generalist.text }}</div>
+  {% endif %}
+
+  {% include "engine/results_body.html" with results=drawn.results own_page=True %}
+
+  {% comment %}✨ A form, not a link: pressing it is the visit Section 1 waits on, and a browser never loads a POST ahead of time.{% endcomment %}
+  <form class="results-next" method="post" action="{% url 'visit_comparison' drawn.block_id %}">
+    {% csrf_token %}
+    <button type="submit" class="pill">Compare with how others see you →</button>
+  </form>
+</div>

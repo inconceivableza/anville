@@ -1,0 +1,11 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../../LICENSE.md #}
+{% comment %}
+  ✨ A sort's results in full, drawn as its results page draws them (ticket 57). Before the participant has them, or
+  while tie-break pairs are left, nothing is shown.
+{% endcomment %}
+{% if block.drawn %}
+  <div id="block-{{ block.id }}" class="sort-results">
+    {% include "engine/own_results.html" with drawn=block.drawn %}
+  </div>
+{% endif %}
