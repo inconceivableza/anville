@@ -570,6 +570,8 @@
       "sort_heading": { "participant": "Sort your strengths", "observer": "Sort {name}'s strengths" },
       "sort_instruction": { "participant": "Choose the bucket that fits best", "observer": "Choose the bucket that fits {name} best" },
       "all_sorted": "All {count} sorted!",
+      "send_or_fine_tune": "You can send your assessment now, or fine-tune how strong each one is in {name} first.",
+      "fine_tune_label": "Continue to fine-tuning →",
       "fine_tune_heading": { "participant": "How strong is each one?", "observer": "How strong is each one in {name}?" },
       "fine_tune_intro": "Grouped by how you sorted them. Adjust the sliders to fine-tune.",
       "slider_min": { "participant": "Not me", "observer": "Not {name}" },

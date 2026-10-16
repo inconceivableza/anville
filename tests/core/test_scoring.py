@@ -11,6 +11,7 @@ import json
 
 import pytest
 
+from engine.document.blocks import left_at_seeds
 from engine.document.scoring import score
 from tests.prototype import APEST, PEP, ROOT, whatever_you_do
 
@@ -45,6 +46,22 @@ def ranked_constructs(constructs):
 @pytest.mark.parametrize("golden", GOLDEN, ids=lambda golden: golden["name"])
 def test_a_sort_scores_exactly_as_the_prototype_scored_it(golden):
     result = score(whatever_you_do(), sort_answer(golden))
+
+    assert result == {
+        "method": "compositional_share",
+        "frameworks": [
+            {"framework": "apest", "constructs": ranked_constructs(golden["prototype"]["apest"])},
+            {"framework": "pep", "constructs": ranked_constructs(golden["prototype"]["pep"])},
+        ],
+    }
+
+
+def test_an_observers_sort_sent_without_fine_tuning_scores_exactly_as_one_with_the_sliders_left_at_their_seeds():
+    """✨ The golden sort's sliders were left at their seeds; sent with no values at all, it scores the same."""
+    (golden,) = (golden for golden in GOLDEN if golden["name"] == "sorted-and-left-at-seeds")
+    placed_only = {item: {"bucket": placement["bucket"]} for item, placement in sort_answer(golden).items()}
+
+    result = score(whatever_you_do(), left_at_seeds(whatever_you_do(), placed_only))
 
     assert result == {
         "method": "compositional_share",
