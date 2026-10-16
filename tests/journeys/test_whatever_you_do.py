@@ -89,9 +89,11 @@ def answer_onboarding(client):
 
 
 def through_to_the_letter(client):
-    """✨ Section 1 done with everyone invited, then the Workbook finished, which is what opens the letter."""
-    through_to_the_workbook(client)
-    complete(client, "workbook")
+    """✨ Section 1 done with everyone invited, then Sections 2, 3 and 4 finished in turn, which is what opens the
+    letter."""
+    through_to_section_2(client)
+    for section_id in ON_PAPER:
+        complete(client, section_id)
     return client
 
 
@@ -151,13 +153,13 @@ def test_the_letter_cannot_be_sent_without_the_fifth_after_rating(participant):
 
 @pytest.mark.django_db
 def test_progress_counts_the_pathways_sections(participant):
-    """✨ Before we begin, Section 1 with the Strengths assessment within it, the Workbook, the letter (ticket 49a),
-    and the side cards Walk with a coach and Five trusted voices (ticket 50). The hub opens once Before we begin is
-    done."""
+    """✨ Before we begin, Section 1 with the Strengths assessment within it, Sections 2, 3 and 4 (ticket 58), the
+    letter (ticket 49a), and the side cards Walk with a coach and Five trusted voices (ticket 50). The hub opens once
+    Before we begin is done."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
 
-    assert "1 of 7 sections complete" in participant.get("/hub/").content.decode()
+    assert "1 of 9 sections complete" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db
@@ -168,15 +170,15 @@ def test_walk_with_a_coach_completes_once_the_coach_has_a_link_and_five_trusted_
     person theirs (ticket 51a)."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
-    assert "1 of 7 sections complete" in participant.get("/hub/").content.decode()
+    assert "1 of 9 sections complete" in participant.get("/hub/").content.decode()
 
     choose(participant)
-    assert "2 of 7 sections complete" in participant.get("/hub/").content.decode()
+    assert "2 of 9 sections complete" in participant.get("/hub/").content.decode()
 
     add_people(participant, 2)
-    assert "2 of 7 sections complete" in participant.get("/hub/").content.decode()
+    assert "2 of 9 sections complete" in participant.get("/hub/").content.decode()
     add_people(participant, 3)
-    assert "3 of 7 sections complete" in participant.get("/hub/").content.decode()
+    assert "3 of 9 sections complete" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db
@@ -223,7 +225,9 @@ def test_every_section_but_section_1_says_how_long_it_takes():
     assert [section["id"] for section in sections if section.get("estimate")] == [
         "onboarding",
         "strengths",
-        "workbook",
+        "shape",
+        "calling",
+        "growth",
         "letter",
     ]
     assert not any("?" in section.get("estimate", "") for section in sections)
@@ -404,7 +408,7 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     one document and not the other fails, and so does a slip in the fifth rating itself (its place, its anchors,
     its gate clause, or a message still saying four). The minimum-length messages are reworded the same way,
     the time estimates, checked above, the hub's section numbers, next-step wording and photos and Section 1's results
-    are set aside, and so is the Workbook in place of Sections 2–4."""
+    are set aside, and so are the downloads in place of Sections 2–4's own blocks."""
     expected = the_faithful_port()
     for section in expected["content"]["sections"]:
         for clause in section.get("gate", {}).get("clauses", []):
@@ -421,7 +425,7 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
         plan_clause = next(index for index, clause in enumerate(clauses) if clause.get("block") == f"{prefix}-plan")
         clauses.insert(plan_clause + 1, {"type": "has_answer", "block": f"{prefix}-peace", "message": ANSWER_ALL_FIVE})
     three_people_each_with_their_link(expected)
-    the_workbook_in_place_of_sections_2_to_4(expected)
+    a_download_in_place_of_each_of_sections_2_to_4(expected)
 
     assert without_the_next_step_and_photos(
         without_numbers(
@@ -466,22 +470,23 @@ def without_numbers(document):
     return document
 
 
-def the_workbook_in_place_of_sections_2_to_4(document):
-    """✨ Sections 2–4 are done on paper here, so this pathway leaves them out, keeping them in the faithful port, and
-    offers the content owner's workbook in their place (ticket 40). The Workbook is new content with nothing in the
-    faithful port to compare it with, so it is taken as it is; the tests above say what it does. Section 1 is completed
-    on the participant's own work, without the comparison visited (ticket 52); the Workbook opens once it and both side
-    cards are complete, and the letter waits for the Workbook."""
+def a_download_in_place_of_each_of_sections_2_to_4(document):
+    """✨ Sections 2–4 are done on paper here, each from its part of the content owner's workbook, so this pathway keeps
+    the faithful port's sections, their ids, titles and order, and offers a PDF in each in place of its in-app blocks
+    (ticket 58). What each holds and requires is new, with nothing in the faithful port to compare it with, so it is
+    taken as it is; the tests below say what it does. Section 1 is completed on the participant's own work, without the
+    comparison visited (ticket 52); Section 2 opens once it and both side cards are complete, each section after it
+    once the one before is finished, and the letter waits for Section 4."""
     sections = document["content"]["sections"]
-    sections[:] = [section for section in sections if section["id"] not in ("shape", "calling", "growth")]
-    workbook = next(s for s in without_estimates(the_pathway())["content"]["sections"] if s["id"] == "workbook")
-    strengths = next(index for index, section in enumerate(sections) if section["id"] == "strengths")
-    sections.insert(strengths + 1, workbook)
+    ours = {section["id"]: section for section in without_estimates(the_pathway())["content"]["sections"]}
+    for index, section in enumerate(sections):
+        if section["id"] in ON_PAPER:
+            sections[index] = {**ours[section["id"]], "title": section["title"]}
     designed = next(section for section in sections if section["id"] == "designed")
     designed["gate"]["clauses"] = [
         clause for clause in designed["gate"]["clauses"] if clause["message"] != VIEW_THE_COMPARISON
     ]
-    next(section for section in sections if section["id"] == "letter")["requires"] = ["workbook"]
+    next(section for section in sections if section["id"] == "letter")["requires"] = ["growth"]
 
 
 def three_people_each_with_their_link(document):
@@ -504,10 +509,14 @@ def three_people_each_with_their_link(document):
     ]
 
 
-# The Workbook, in place of Sections 2–4 (ticket 40)
+# Sections 2–4, each a part of the workbook to download (tickets 40 and 58)
 
-WORKBOOK_PDF = "/downloads/workbook-pdf/"
-WORKBOOK = "/sections/workbook/"
+# ✨ The sections done on paper, in order, each with its title on the hub, its number and its download's address.
+ON_PAPER = ("shape", "calling", "growth")
+TITLES = {"shape": "The shape of your life", "calling": "Putting your calling into words", "growth": "Growth plan"}
+NUMBERS = {"shape": "02", "calling": "03", "growth": "04"}
+PDFS = {section_id: f"/downloads/{section_id}-pdf/" for section_id in ON_PAPER}
+SECTION_2 = "/sections/shape/"
 
 
 def through_section_1(client):
@@ -527,8 +536,8 @@ def invite_everyone(client):
     add_people(client, 3)
 
 
-def through_to_the_workbook(client):
-    """✨ Section 1 completed, and a coach and three people given links, which opens the Workbook."""
+def through_to_section_2(client):
+    """✨ Section 1 completed, and a coach and three people given links, which opens Section 2."""
     through_section_1(client)
     assert complete(client, "designed").status_code == 303
     invite_everyone(client)
@@ -546,78 +555,97 @@ def test_section_1_completes_without_the_comparison_visited_and_without_any_link
 
 
 @pytest.mark.django_db
-def test_the_workbook_stays_locked_until_section_1_and_both_cards_are_complete_and_names_those_still_open(
+def test_section_2_stays_locked_until_section_1_and_both_cards_are_complete_and_names_those_still_open(
     participant,
 ):
     client = through_section_1(participant)
     complete(client, "designed")
-    assert client.get(WORKBOOK).status_code == 302
+    assert client.get(SECTION_2).status_code == 302
     assert escape("Opens once you've finished Walk with a coach and Five trusted voices.") in hub_entry(
-        client.get("/hub/").content.decode(), "The Workbook"
+        client.get("/hub/").content.decode(), TITLES["shape"]
     )
 
     choose(client)
-    assert client.get(WORKBOOK).status_code == 302
+    assert client.get(SECTION_2).status_code == 302
     assert escape("Opens once you've finished Five trusted voices.") in hub_entry(
-        client.get("/hub/").content.decode(), "The Workbook"
+        client.get("/hub/").content.decode(), TITLES["shape"]
     )
 
     add_people(client, 3)
-    assert client.get(WORKBOOK).status_code == 200
+    assert client.get(SECTION_2).status_code == 200
 
 
 @pytest.mark.django_db
-def test_the_workbook_waits_for_section_1_even_once_both_cards_are_complete(participant):
+def test_section_2_waits_for_section_1_even_once_both_cards_are_complete(participant):
     answer_onboarding(participant)
     complete(participant, "onboarding")
     invite_everyone(participant)
 
-    assert participant.get(WORKBOOK).status_code == 302
+    assert participant.get(SECTION_2).status_code == 302
     assert escape("Opens once you've finished How you've been designed.") in hub_entry(
-        participant.get("/hub/").content.decode(), "The Workbook"
+        participant.get("/hub/").content.decode(), TITLES["shape"]
     )
 
 
 @pytest.mark.django_db
-def test_everything_that_opens_the_workbook_is_done_with_no_observer_answers_at_all(participant):
-    """✨ Nothing a participant must do to reach the Workbook waits on an observer (ticket 52)."""
-    client = through_to_the_workbook(participant)
+def test_everything_that_opens_section_2_is_done_with_no_observer_answers_at_all(participant):
+    """✨ Nothing a participant must do to reach Section 2 waits on an observer (ticket 52)."""
+    client = through_to_section_2(participant)
 
-    assert client.get(WORKBOOK).status_code == 200
+    assert client.get(SECTION_2).status_code == 200
     assert not ObserverResponse.objects.exists()
 
 
 @pytest.mark.django_db
-def test_the_workbook_pdf_is_refused_until_the_workbook_is_reached_then_served_from_its_page(participant):
+def test_the_hub_lists_sections_2_to_4_with_their_numbers_where_the_workbook_was(participant):
+    """✨ The faithful port's titles, numbered "02" to "04", between Section 1 and the letter (ticket 58)."""
+    page = to_the_coach_page(participant).get("/hub/").content.decode()  # ✨ Before we begin done, so the hub opens
+
+    for section_id in ON_PAPER:
+        assert f'<span class="srow-number">{NUMBERS[section_id]}</span>' in hub_entry(page, TITLES[section_id])
+    titles = [escape("How you've been designed"), *TITLES.values(), "A letter to your future self"]
+    assert [page.index(title) for title in titles] == sorted(page.index(title) for title in titles)
+    assert "The Workbook" not in page
+    assert participant.get("/sections/workbook/").status_code == 404
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("section_id", ON_PAPER)
+def test_each_sections_pdf_is_refused_until_it_is_reached_then_served_from_its_page(participant, section_id):
+    """✨ Each just short of its section, then with the section reached: Section 2 by everyone invited, the others by
+    the section before finished."""
     client = through_section_1(participant)
     complete(client, "designed")
-    assert client.get(WORKBOOK_PDF).status_code == 403
+    before = ON_PAPER[: ON_PAPER.index(section_id)]
+    if before:
+        invite_everyone(client)
+        for earlier in before[:-1]:
+            complete(client, earlier)
+    assert client.get(PDFS[section_id]).status_code == 403
 
-    invite_everyone(client)
+    if before:
+        complete(client, before[-1])
+    else:
+        invite_everyone(client)
 
-    assert f'href="{WORKBOOK_PDF}"' in client.get("/sections/workbook/").content.decode()
-    served = client.get(WORKBOOK_PDF)
+    assert f'href="{PDFS[section_id]}"' in client.get(f"/sections/{section_id}/").content.decode()
+    served = client.get(PDFS[section_id])
     assert served.status_code == 200
     assert served["Content-Type"] == "application/pdf"
     assert b"".join(served.streaming_content).startswith(b"%PDF")
 
 
 @pytest.mark.django_db
-def test_the_letter_opens_once_the_participant_has_finished_the_workbook(participant):
-    """✨ In place of after Section 3. The Workbook has no gate: the participant says when they are done."""
-    client = through_to_the_workbook(participant)
-    assert client.get("/sections/letter/").status_code == 302
+def test_sections_3_and_4_and_the_letter_each_open_once_the_one_before_is_finished(participant):
+    """✨ In place of the letter after the whole workbook (ticket 58). None of Sections 2–4 has a gate: the participant
+    says when each is done, with its own button, and the hub counts it."""
+    client = through_to_section_2(participant)
+    in_order = [*ON_PAPER, "letter"]
 
-    assert complete(client, "workbook").status_code == 303
-
-    assert client.get("/sections/letter/").status_code == 200
-
-
-@pytest.mark.django_db
-def test_sections_2_to_4_are_neither_on_the_hub_nor_reachable(participant):
-    """✨ Their content stays in the faithful port; here they are done on paper, in the Workbook. The hub lists only the
-    track's sections, so a section that cannot be reached is not on it either."""
-    to_the_coach_page(participant)  # ✨ Before we begin done, so the hub opens
-    assert "The Workbook" in participant.get("/hub/").content.decode()
-    for section_id in ("shape", "calling", "growth"):
-        assert participant.get(f"/sections/{section_id}/").status_code == 404
+    for finished, following in zip(in_order, in_order[1:]):
+        assert client.get(f"/sections/{following}/").status_code == 302
+        done_before = set(Response.objects.get().completed_sections)
+        assert complete(client, finished).status_code == 303
+        assert set(Response.objects.get().completed_sections) - done_before == {finished}
+        assert client.get(f"/sections/{following}/").status_code == 200
+    assert "8 of 9 sections complete" in client.get("/hub/").content.decode()

@@ -105,8 +105,8 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 - The page is deep brown, and the hub, header included, is cream with rounded corners, inset a thin brown border from every edge. "Credits" sits below it on the brown, easy to read.
 - On a wide screen the hub is about as wide as the prototype's: the next step and the sections in a wide left column, and the coach and trusted voices cards in a narrower right one, in the prototype's proportions. No section's title wraps that would fit on one line in the prototype.
-- Section 1 shows "01", the Workbook "02–04" and Section 5 "05", each in small grey type to the left of the title; Before we begin shows no number, and its title lines up with the others. The Workbook is called "The Workbook". The Strengths assessment, within Section 1, shows no number.
-- The header says "1 of 7 sections complete" once Before we begin is done, and counts up as sections, and the Strengths assessment, are completed. There is no "Where you started" card, even once the sort is in.
+- Section 1 shows "01", Sections 2–4 "02", "03" and "04", and Section 5 "05", each in small grey type to the left of the title; Before we begin shows no number, and its title lines up with the others. The Strengths assessment, within Section 1, shows no number.
+- The header says "1 of 9 sections complete" once Before we begin is done, and counts up as sections, and the Strengths assessment, are completed. There is no "Where you started" card, even once the sort is in.
 - "Your consent · Your groups" sits below the hub, lined up with its left edge.
 - Phone width: one column, the cards below the sections; the brown border still shows, and nothing scrolls sideways.
 - Walk with a coach and Five trusted voices, side cards since ticket 50, show in the right column as cards with their title, sentence and status, and not in the list or "Your pathway"; each title leads to its page. The old "Walk with a mentor" card is gone (ticket 51b), and so is the hub's own "Five trusted voices" card (ticket 51a).
@@ -250,15 +250,17 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Screen reader: Tab to the button. It is a link styled as a button, since it goes to another page, so VoiceOver reads "Open Strengths Assessment, right arrow, link" and tells you how to follow it. Control-Option-Right arrow then reads the status.
 - Phone width: the card's text and button wrap, and the status chip stays a small pill the width of its words rather than stretching across the card.
 
-## The Workbook (after Section 1, with a coach's link and three people's links made)
+## Sections 2–4 on paper (after Section 1, with a coach's link and three people's links made)
 
-- The hub lists onboarding, Section 1, the Strengths assessment, the Workbook and Section 5, and nothing of Sections 2–4.
+- The hub lists onboarding, Section 1, the Strengths assessment, "The shape of your life", "Putting your calling into words", "Growth plan" and Section 5, and no "The Workbook".
 - Section 1 completes with the sort in and the reflection written, without visiting the comparison and with nobody invited; its checklist lists only the assessment and the reflections.
-- With Section 1 complete and nobody invited, the Workbook's entry says "Opens once you've finished Walk with a coach and Five trusted voices."; once the coach is saved, "Opens once you've finished Five trusted voices."; once three people are added, it opens. Done the other way round (both cards first), it says "Opens once you've finished How you've been designed."
+- With Section 1 complete and nobody invited, Section 2's entry says "Opens once you've finished Walk with a coach and Five trusted voices."; once the coach is saved, "Opens once you've finished Five trusted voices."; once three people are added, it opens. Done the other way round (both cards first), it says "Opens once you've finished How you've been designed."
 - Walk with a coach's and Five trusted voices' pages have no "Mark complete" and no "Mark as not complete". Until complete, each lists what it waits on ("Choose a coach and send them their link.", "Add at least 3 people.") as plain text, not a link; once complete, nothing below the list. The header's count goes up as each completes.
-- Five trusted voices stays "Complete" after revoking one person's link (and the Workbook stays open). Phone width: the Workbook's lock note wraps within its entry.
-- "Download the workbook (PDF)" opens the PDF in the browser's own viewer, not a blank page or a download of an HTML error, and saving it from there keeps the name `whatever-you-do-workbook.pdf`. The page's last paragraph says the workbook is a draft.
-- Keyboard only: Tab reaches the button and Enter opens the PDF; Tab then reaches "I've finished the workbook".
+- Five trusted voices stays "Complete" after revoking one person's link (and Section 2 stays open). Phone width: Section 2's lock note wraps within its entry.
+- While Section 2 is the next step, the hub's next step shows its title and "About 30–40 minutes". Section 3's entry says "Opens once you've finished The shape of your life.", and Section 4's "Opens once you've finished Putting your calling into words.".
+- In each of Sections 2, 3 and 4, "Download Section 2 (PDF)" (3, 4) opens that section's PDF in the browser's own viewer, not a blank page or a download of an HTML error, and saving it keeps the name `whatever-you-do-workbook-section-2.pdf` (3, 4). Its text reads plainly, with no mention of a draft.
+- "I've finished Section 2" leads to the hub with Section 3 open as the next step; the same for 3 and then 4, after which Section 5 opens.
+- Keyboard only: Tab reaches the button and Enter opens the PDF; Tab then reaches "I've finished Section 2".
 - Phone width: the button wraps rather than running off the screen, and the PDF opens in the phone's viewer.
 
 ## Scripture and the credits page (Section 1's reading, the homepage, `/credits/`)

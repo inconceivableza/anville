@@ -76,8 +76,8 @@ def test_a_parts_page_and_its_results_lead_back_to_the_section_it_is_a_part_of(s
 
 @pytest.mark.django_db
 def test_the_comparison_ends_with_a_way_back_to_the_section_its_sort_is_a_part_of(signed_in):
-    """✨ The prototype's "Return to workbook →", naming the section, since "the Workbook" is now a section of its own.
-    Its wording and arrow are a hand check."""
+    """✨ The prototype's "Return to workbook →", naming the section it returns to, since the workbook is now the PDFs of
+    Sections 2–4. Its wording and arrow are a hand check."""
     submit_sort(signed_in, complete_sort())
 
     page = main_of(signed_in.get(f"/results/{SORT}/comparison/").content.decode())

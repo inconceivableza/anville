@@ -126,21 +126,21 @@ python manage.py load_pathway pathways/whatever-you-do.json
 
 `pathways/whatever-you-do.json` is *Whatever You Do* itself, as far as it has been authored:
 five baseline ratings, Section 1 with its scripture and reflection, the Strengths assessment (the sort and
-its results, in a section of its own so the offline track can share it), the Workbook and the letter.
-Sections 2–4 are done on paper, in the content owner's workbook, which the Workbook section offers as a PDF once
-Section 1 is complete and the side cards Walk with a coach and Five trusted voices are too: a coach has a link, and
-three people have links. Nothing on the way waits for anyone to answer.
+its results, in a section of its own so the offline track can share it), Sections 2–4 and the letter.
+Sections 2–4 are done on paper, each in its part of the content owner's workbook, which the section offers as a PDF.
+Section 2 opens once Section 1 is complete and the side cards Walk with a coach and Five trusted voices are too: a
+coach has a link, and three people have links. Sections 3 and 4, and then the letter, each open once the participant
+says they have finished the section before. Nothing on the way waits for anyone to answer.
 `pathways/example.json` is a smaller file for trying the loader out.
 
-The workbook PDF is `pathways/files/whatever-you-do-workbook.pdf`, served only to a participant who has reached the
-Workbook. For now it is the content owner's draft, saved from the Word file in `Prototypes for reference/`, and the
-Workbook page says so; replace it, under the same name, with the finished PDF when it arrives, and take the draft
-sentence out of the Workbook's text.
+The sections' PDFs are `pathways/files/whatever-you-do-workbook-section-2.pdf`, `-section-3.pdf` and
+`-section-4.pdf`, each served only to a participant who has reached its section. They are saved from the content
+owner's Word files in `Prototypes for reference/`; replace each, under the same name, when a new version arrives.
 
 `pathways/whatever-you-do-faithful-port.json` is the faithful port: the same pathway as the original
-prototype has it, without the content owner's later changes (so far, the fifth baseline rating, the coach page and the
-Workbook in place of Sections 2–4, which the faithful port keeps; it also asks for five contacts where *Whatever You
-Do* asks for two for now).
+prototype has it, without the content owner's later changes (so far, the fifth baseline rating, the coach page and a
+PDF in place of each of Sections 2–4's own blocks, which the faithful port keeps; it also asks for five contacts where
+*Whatever You Do* asks for three).
 Both documents grow together, and a test fails if they differ in anything else, so the finished
 pathway can be compared with the original prototype's. Load it the same way to see the original prototype's
 version. Both are titled *Whatever You Do*, so loading one publishes it in place of the other: load
@@ -183,7 +183,7 @@ A `section_link` block leads to another section, named by `section`, with an opt
 
 A section with `part_of` naming another section is a part of it, as *Whatever You Do*'s Strengths assessment is a part of Section 1, where the original prototype keeps it. The hub and the sidebar list a part within its section's entry. A part has no completion of its own: it is complete once its gate passes, worked out from the answers rather than stored, so the hub, locks and links count it as complete as soon as the sort is in, and a completion posted for it is refused. A part opens only once the participant reaches its section's link to it, so the Strengths assessment waits until Section 1's reading is confirmed; one whose section has no link to it opens with that section, and one whose section is outside the track by its own `requires`. Its page's "← Back", its results page and the end of its comparison lead to the section it is a part of. The linter refuses a `part_of` naming no section, the section itself, or a section that is itself a part, and a part with no gate, which would be complete before it was begun.
 
-A section's `number`, such as `"01"`, or `"02–04"` for *Whatever You Do*'s Workbook, which stands in for three sections, is shown beside it in the hub's list; without one, none is. A section with a `side_card`, holding its `sentence`, is drawn as a card beside the hub's list, below it on a phone, with its title, that sentence and its status, and is not in the list or the sidebar. The hub's header counts the track's sections complete, parts and side cards among them. Like a part, a side card has no completion of its own: it is complete once it is open and its gate passes, as *Whatever You Do*'s are once the coach has a link and once three people have links (`links_issued`). Unlike a part's, that completion is stored the first time it is seen, so it stays complete when the links later expire or are revoked or people are taken off the list, and never locks again what it opened; completing or reopening one by hand is refused. A locked section's entry on the hub names the sections it still waits for: "Opens once you've finished Walk with a coach and Five trusted voices." The linter refuses a number or a side card on a part, and a side card on a section with parts.
+A section's `number`, such as `"01"`, is shown beside it in the hub's list; without one, none is. A section with a `side_card`, holding its `sentence`, is drawn as a card beside the hub's list, below it on a phone, with its title, that sentence and its status, and is not in the list or the sidebar. The hub's header counts the track's sections complete, parts and side cards among them. Like a part, a side card has no completion of its own: it is complete once it is open and its gate passes, as *Whatever You Do*'s are once the coach has a link and once three people have links (`links_issued`). Unlike a part's, that completion is stored the first time it is seen, so it stays complete when the links later expire or are revoked or people are taken off the list, and never locks again what it opened; completing or reopening one by hand is refused. A locked section's entry on the hub names the sections it still waits for: "Opens once you've finished Walk with a coach and Five trusted voices." The linter refuses a number or a side card on a part, and a side card on a section with parts.
 
 A section with `"wizard": true`, as *Whatever You Do*'s Before we begin is, is where the hub sends a participant who has not completed it, at the page they have reached. Until it is complete its pages are drawn without the header, the sidebar or any link to the hub, beside the section's photo; completing it leads to the hub, which from then on lists it, and it is reread as any other section. *Whatever You Do*'s has two pages, the reason and then the five opening ratings; its coach and contacts are the side cards Walk with a coach and Five trusted voices, last in the document so neither becomes the next step.
 

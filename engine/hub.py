@@ -248,7 +248,7 @@ def _lock_note(section, completed, answers, sections, moved_past, role):
 
 
 def _sections_still_open(section, completed, sections, role):
-    """✨ The lock note naming, by title, the sections a section requires that are not yet complete, as the Workbook
+    """✨ The lock note naming, by title, the sections a section requires that are not yet complete, as Section 2
     names Walk with a coach and Five trusted voices (ticket 52). A required section outside the track is not named."""
     titles = [
         text_for(other["title"], role)

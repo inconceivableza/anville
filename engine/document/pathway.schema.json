@@ -821,7 +821,7 @@
         "type": { "const": "download" },
         "estimate": { "$ref": "#/$defs/estimate" },
         "file": {
-          "description": "The PDF's name in the pathways/files folder, such as 'whatever-you-do-workbook.pdf'.",
+          "description": "The PDF's name in the pathways/files folder, such as 'whatever-you-do-workbook-section-2.pdf'.",
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*\\.pdf$"
         },
@@ -830,7 +830,7 @@
           "$ref": "#/$defs/text"
         },
         "button_label": {
-          "description": "The wording of the button that downloads it, such as 'Download the workbook (PDF)'.",
+          "description": "The wording of the button that downloads it, such as 'Download Section 2 (PDF)'.",
           "$ref": "#/$defs/text"
         }
       }

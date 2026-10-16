@@ -287,7 +287,7 @@ def lock_note(sections, completed=(), title_of="last"):
 
 
 def test_a_locked_section_names_the_sections_it_still_waits_for():
-    """✨ As the Workbook names Walk with a coach and Five trusted voices once Section 1 is complete (ticket 52)."""
+    """✨ As Section 2 names Walk with a coach and Five trusted voices once Section 1 is complete (ticket 52)."""
     sections = [section("a"), section("b"), section("c"), section("last", requires=["a", "b", "c"])]
 
     assert lock_note(sections) == "Opens once you've finished A, B and C."

@@ -218,19 +218,53 @@
         }
       },
       {
-        "id": "workbook",
-        "title": "The Workbook",
-        "number": "02–04",
-        "estimate": "Three or four sittings of half an hour",
+        "id": "shape",
+        "title": "The shape of your life",
+        "number": "02",
+        "estimate": "About 30–40 minutes",
         "requires": ["designed", "walk-with-a-coach", "trusted-voices"],
-        "complete_label": "I've finished the workbook",
+        "complete_label": "I've finished Section 2",
         "blocks": [
           {
-            "id": "workbook-pdf",
+            "id": "shape-pdf",
             "type": "download",
-            "file": "whatever-you-do-workbook.pdf",
-            "body": "Sections two to four, to work through on paper.\n\nThis booklet covers the middle of the course, which works better on paper. At the end it will send you back online to finish.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their assessments of you – don’t let that stop you making progress on the workbook.\n\nFor now this is a draft of the workbook. The finished version will take its place.",
-            "button_label": "Download the workbook (PDF)"
+            "file": "whatever-you-do-workbook-section-2.pdf",
+            "body": "Section two, to work through on paper: mapping your story, and what has happened in each season of it.\n\nSections two to four make up the middle of the course, which works better on paper, so each is a booklet of its own. When you've finished this one, come back here to say so, and Section 3 opens.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their assessments of you – don’t let that stop you making progress on the workbook.",
+            "button_label": "Download Section 2 (PDF)"
+          }
+        ]
+      },
+      {
+        "id": "calling",
+        "title": "Putting your calling into words",
+        "number": "03",
+        "estimate": "About 30–40 minutes",
+        "requires": ["shape"],
+        "complete_label": "I've finished Section 3",
+        "blocks": [
+          {
+            "id": "calling-pdf",
+            "type": "download",
+            "file": "whatever-you-do-workbook-section-3.pdf",
+            "body": "Section three, to work through on paper: narrowing your calling to a sentence, then opening it back up.\n\nWhen you've finished it, come back here to say so, and Section 4 opens.",
+            "button_label": "Download Section 3 (PDF)"
+          }
+        ]
+      },
+      {
+        "id": "growth",
+        "title": "Growth plan",
+        "number": "04",
+        "estimate": "About 30–40 minutes",
+        "requires": ["calling"],
+        "complete_label": "I've finished Section 4",
+        "blocks": [
+          {
+            "id": "growth-pdf",
+            "type": "download",
+            "file": "whatever-you-do-workbook-section-4.pdf",
+            "body": "Section four, to work through on paper: turning all of it into something you will actually do.\n\nWhen you've finished it, come back here to say so, and Section 5, a letter to your future self, opens.",
+            "button_label": "Download Section 4 (PDF)"
           }
         ]
       },
@@ -239,7 +273,7 @@
         "title": "A letter to your future self",
         "number": "05",
         "estimate": "About 15 minutes",
-        "requires": ["workbook"],
+        "requires": ["growth"],
         "blocks": [
           {
             "id": "lt-task",
