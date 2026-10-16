@@ -11,7 +11,10 @@ import logging
 import re
 
 import pytest
+from django.core.exceptions import PermissionDenied
 from django.db import OperationalError
+from django.test import Client
+from django.views.defaults import permission_denied, server_error
 
 from config.logs import RedactLinks
 
@@ -162,6 +165,71 @@ def test_the_operator_still_signs_in_at_the_admin_by_username(client, django_use
 
     assert signed_in.status_code == 302
     assert client.get("/admin/").status_code == 200
+
+
+# Error pages
+
+A_LINK_WITH_ITS_TOKEN = "/observe/s3cr3t-T0ken/"
+
+
+def is_anvilles_own_page_naming_nothing_of_the_request(response, path):
+    """✨ Drawn in the site's layout rather than Django's bare page, and without the address asked for, which may
+    hold a link's token."""
+    page = response.content.decode()
+    return '<html lang="en-GB">' in page and path not in page and "s3cr3t-T0ken" not in page
+
+
+@pytest.mark.django_db
+def test_an_address_with_nothing_at_it_gets_anvilles_not_found_page(client, settings):
+    settings.DEBUG = False
+    path = f"{A_LINK_WITH_ITS_TOKEN}nothing-here/"
+
+    response = client.get(path)
+
+    assert response.status_code == 404
+    assert is_anvilles_own_page_naming_nothing_of_the_request(response, path)
+
+
+@pytest.mark.django_db
+def test_a_request_for_another_host_gets_anvilles_bad_request_page(client, settings):
+    settings.DEBUG = False
+
+    response = client.get(A_LINK_WITH_ITS_TOKEN, headers={"Host": "not-this-site.example"})
+
+    assert response.status_code == 400
+    assert is_anvilles_own_page_naming_nothing_of_the_request(response, A_LINK_WITH_ITS_TOKEN)
+
+
+@pytest.mark.django_db
+def test_a_refused_request_gets_anvilles_forbidden_page(rf, settings):
+    settings.DEBUG = False
+
+    response = permission_denied(rf.get(A_LINK_WITH_ITS_TOKEN), PermissionDenied())
+
+    assert response.status_code == 403
+    assert is_anvilles_own_page_naming_nothing_of_the_request(response, A_LINK_WITH_ITS_TOKEN)
+
+
+@pytest.mark.django_db
+def test_a_form_sent_from_a_stale_page_gets_anvilles_forbidden_page(settings):
+    settings.DEBUG = False
+    path = f"{A_LINK_WITH_ITS_TOKEN}start/"
+
+    response = Client(enforce_csrf_checks=True).post(path)
+
+    assert response.status_code == 403
+    assert is_anvilles_own_page_naming_nothing_of_the_request(response, path)
+
+
+def test_the_server_error_page_needs_no_context_and_no_database(rf, settings):
+    # ✨ No django_db mark: any query here fails the test. Django gives this page no context, since it is shown
+    # when something has already failed.
+    settings.DEBUG = False
+
+    response = server_error(rf.get(A_LINK_WITH_ITS_TOKEN))
+
+    assert response.status_code == 500
+    assert is_anvilles_own_page_naming_nothing_of_the_request(response, A_LINK_WITH_ITS_TOKEN)
 
 
 # What reaches the log

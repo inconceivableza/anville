@@ -305,6 +305,16 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - A made-up token in the link says "This link no longer works" and to ask whoever sent it for a new one, and names no group or organisation.
 - Phone width: the join page's heading, sentence and "Join" button fit without the page scrolling sideways.
 
+## Error pages (with `DJANGO_DEBUG` off, as a deployment runs)
+
+Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `python manage.py runserver`, after `python manage.py collectstatic --noinput`, since WhiteNoise then serves the styles from `staticfiles/`.
+
+- `/observe/made-up-token/nothing-here/` shows "Page not found" in the site's styles, with the footer's Credits link and a "Go to the homepage" pill that leads there. Neither the address nor "made-up-token" appears anywhere on the page.
+- Open a page with a form (sign in), delete the `csrftoken` cookie in the browser's developer tools, then send the form: "This page was out of date", with the same layout.
+- At `/admin/`, five wrong passwords for the operator's username bring "Too many failed login attempts. Try again later." under the form, and the right password is then refused too, for five minutes.
+- Phone width: each page's heading, sentence and pill fit without the page scrolling sideways.
+- The server error and bad request pages are drawn the same way; the tests render them, since neither is easy to cause by hand.
+
 ## Your organisations (`/organisations/`, after giving the account a permission in the admin)
 
 - With no permission, the hub's foot shows "Your consent · Your groups" only, and `/organisations/` says the page is for admins and offers the pathway, naming no organisation or group. After adding a permission, "Your organisations" joins the same line, as quiet as the others.

@@ -1,0 +1,14 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/base.html" %}
+{% comment %}
+  ✨ The page Django shows for an error (404.html, 500.html, 403.html, 403_csrf.html and 400.html beside the engine's
+  templates, each giving its title, heading and message). It uses nothing from its context, since the server error
+  page is given none and needs no database, and never names the address asked for, which may hold an observer's or
+  coach's link.
+{% endcomment %}
+{% block content %}
+  <h1>{% block heading %}{% endblock heading %}</h1>
+  <p>{% block message %}{% endblock message %}</p>
+  <p><a class="pill" href="{% url 'home' %}">Go to the homepage</a></p>
+{% endblock content %}
