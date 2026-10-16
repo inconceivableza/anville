@@ -459,10 +459,14 @@ def coach_checklist(request, block_id):
 
     screen = _checklist_step(block, to, request.POST, _coach_kept(state.answers, block_id))
     kept = state.answers
+    coach = None
     if to == "save" and screen["screen"] == "chosen":
-        # ✨ Always a new contact, so the previous coach's link stops, with any answer given through it.
+        # ✨ Always a new contact, so the previous coach's link stops, with any answer given through it. Their link is
+        # made in the same act, so nobody misses that step (ticket 51b).
         [coach] = state.stored_response(request.user).replace_contacts(block_id, [screen["coach"]], Contact.Role.COACH)
+        link = _issue_link(request, coach)
         screen["coach"] = {**screen["coach"], "id": coach.pk}
+        screen["issued"] = {"contact": coach.pk, "link": link}
         kept = {**kept, block_id: [screen["coach"]]}
     elif to == "remove" and state.response is not None:
         state.response.replace_contacts(block_id, [], Contact.Role.COACH)
@@ -474,7 +478,10 @@ def coach_checklist(request, block_id):
     page = page_of(section, block_id)
     is_htmx = request.headers.get("HX-Request") == "true"
     if not is_htmx and stored:
-        # ✨ Once stored, the checklist is behind: the page shows only the coach kept, so it is safe to go back to.
+        # ✨ Once stored, the checklist is behind: the page shows only the coach kept, so it is safe to go back to, with
+        # the link just made, as issuing it leads back.
+        if coach is not None:
+            return _back_with_issued(request, coach, screen["issued"]["link"])
         return _see_other(f"{page_url(section['id'], page)}#block-{block_id}")
     shown = _section_page(state.with_answers(kept), section, page)
     checklist_block = next(on_page for on_page in shown["section"]["blocks"] if on_page["id"] == block_id)
@@ -483,7 +490,10 @@ def coach_checklist(request, block_id):
         # ✨ Keeping or removing a coach can change the page's way on (a skip label), so it comes too, as after an
         # autosave; stepping through the checklist changes nothing stored, so the way on stays as it was.
         context = {**shown, "block": checklist_block, "stored": stored}
-        return render(request, "engine/coach_checklist_result.html", context, status=status)
+        result = render(request, "engine/coach_checklist_result.html", context, status=status)
+        if coach is not None:
+            result["Cache-Control"] = "no-store"  # ✨ it holds the link, shown this once
+        return result
     # ✨ Never a redirect without JavaScript while choosing: the answers would have to go in the address, where they
     # are logged. The page returned is the one the checklist is on.
     return render(request, "engine/section.html", shown, status=status)
@@ -881,9 +891,18 @@ def issue_invitation(request, contact_id):
     the database would).
     """
     contact = _own_contact_or_404(request.user, contact_id)
+    return _back_with_issued(request, contact, _issue_link(request, contact))
+
+
+def _issue_link(request, contact):
+    """✨ Issue, or reissue, one contact's link, and return it, this once: an observer's or, for a coach, the coach's."""
     token = Invitation.issue(contact, link_lifetime(contact.response.version.document))
     link_to = "coaching" if contact.role == Contact.Role.COACH else "observe"
-    link = request.build_absolute_uri(reverse(link_to, args=[token]))
+    return request.build_absolute_uri(reverse(link_to, args=[token]))
+
+
+def _back_with_issued(request, contact, link):
+    """✨ A redirect to where the contact is listed, carrying the link just issued for that page to show this once."""
     listed_at = _listed_at(contact)
     back = _see_other(listed_at)
     back.set_signed_cookie(

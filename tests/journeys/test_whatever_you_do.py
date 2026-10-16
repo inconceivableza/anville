@@ -507,13 +507,6 @@ SEND_TWO = "Send at least 2 people their links to continue."
 WORKBOOK_PDF = "/downloads/workbook-pdf/"
 
 
-def issue_the_coachs_link(client):
-    """✨ The coach page's "issue" button, as the participant presses it."""
-    page = client.get(COACH_PAGE).content.decode()
-    issue = re.search(r'formaction="(/invitations/\d+/issue/)"', page).group(1)
-    assert client.post(issue).status_code == 303
-
-
 def through_section_1_without_inviting(client):
     """✨ Onboarding done, then everything Section 1 asks of the participant themselves: the reading, the sort, the
     comparison visited (with no observer answers, its below-minimum explanation) and the reflection."""
@@ -527,9 +520,8 @@ def through_section_1_without_inviting(client):
 
 
 def invite_everyone(client):
-    """✨ A coach chosen and their link issued, and two people added and each given a link."""
+    """✨ A coach chosen, which issues their link, and two people added and each given a link."""
     choose(client)
-    issue_the_coachs_link(client)
     add_people(client, 2)
     issue_link(client, "Person 0")
     issue_link(client, "Person 1")
@@ -546,7 +538,7 @@ def through_to_the_workbook(client):
 @pytest.mark.django_db
 def test_section_1_is_completed_only_once_the_coach_and_two_people_have_their_links(participant):
     """✨ Skipping the coach in onboarding put the choice off until here, so a coach is needed (ticket 40). Naming
-    people is not inviting them: it is their working links that count."""
+    people is not inviting them: it is their working links that count. Choosing the coach makes theirs (ticket 51b)."""
     client = through_section_1_without_inviting(participant)
     choose(client)
     add_people(client, 2)
@@ -558,10 +550,9 @@ def test_section_1_is_completed_only_once_the_coach_and_two_people_have_their_li
         COMPLETE_THE_ASSESSMENT: True,
         VIEW_THE_COMPARISON: True,
         COMPLETE_THE_REFLECTIONS: True,
-        SEND_THE_COACH: False,
+        SEND_THE_COACH: True,
         SEND_TWO: False,
     }
-    issue_the_coachs_link(client)
     issue_link(client, "Person 0")
     assert gate_checklist(complete(client, "designed").content.decode())[SEND_TWO] is False
     issue_link(client, "Person 1")

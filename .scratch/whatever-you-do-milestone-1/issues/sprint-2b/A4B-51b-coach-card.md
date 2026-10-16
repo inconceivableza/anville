@@ -4,7 +4,7 @@
 
 **Blocked by:** A3-50 (Before we begin as a wizard)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 2b (12–16 Oct)
 
@@ -12,7 +12,7 @@
 
 - [ ] The card's tag comes from its section's status and then the coach's answer: waiting, accepted or declined
 - [ ] The card's sentence is authored in the pathway document, and says only what is true
-- [ ] Inviting leads through the checklist to the coach's name, and then their link, shown to copy, in one act. The coach's email is optional
+- [x] Inviting leads through the checklist to the coach's name, and then their link, shown to copy, in one act. The coach's email is optional
 - [ ] The coach can still be invited, and their link reissued, once Before we begin is complete
 
 **Context**

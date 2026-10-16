@@ -76,6 +76,34 @@ def stored_besides_links():
     return [list(model.objects.order_by("pk").values()) for model in (Response, Contact, ObserverResponse)]
 
 
+def link_shown(page):
+    """✨ The path of the coach's link shown to copy on a page, or None."""
+    found = re.search(r'value="http://testserver(/coaching/[A-Za-z0-9_-]+/)"', page)
+    return found.group(1) if found else None
+
+
+# Inviting
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("htmx", [True, False], ids=["htmx", "no javascript"])
+@pytest.mark.parametrize("email", ["sam@example.com", ""], ids=["with an email", "without one"])
+def test_saving_the_coach_makes_their_link_in_the_same_act_and_shows_it_the_email_optional(
+    signed_in_client, load_pathway, observer, htmx, email  # noqa: F811
+):
+    """✨ Ticket 51b: nobody misses the step of making the link."""
+    load_pathway(with_a_coach_and_contacts())
+
+    saved = choose(signed_in_client, email=email, htmx=htmx)
+
+    page = saved.content.decode() if htmx else shown(signed_in_client, ONBOARDING)
+    link = link_shown(page)
+    assert link, "the coach's link is not shown on saving"
+    assert observer.get(link).status_code == 200
+    assert Contact.objects.get().email == email
+    assert link_shown(shown(signed_in_client, ONBOARDING)) is None  # ✨ shown once: only its hash is kept
+
+
 # What is kept
 
 
