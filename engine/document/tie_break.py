@@ -11,6 +11,10 @@ the participant's own result alone, never an observer's. Nothing here touches th
 # ✨ The content owner's prototype's: within four points of the leader, and at most the top four.
 DEFAULT_THRESHOLD = 4
 DEFAULT_CLUSTER = 4
+# ✨ The prototype's: at most ten pairs, a guess it asks to be checked against drop-off (ticket 30b).
+DEFAULT_BUDGET = 10
+# ✨ A framework tied on its own gets a second round of the same pairs, with different statements (ticket 30b).
+ROUNDS = 2
 
 
 TIE_BREAK = "tie_break"
@@ -37,3 +41,39 @@ def tie_break(document, result):
             tied[framework["framework"]] = close[:cluster]
     outcome = GENERALIST if len(tied) > 1 else TIE_BREAK if tied else None
     return {"tied": tied, "outcome": outcome}
+
+
+def pair_plan(document, result):
+    """✨ The "Which is more true of you?" pairs a participant marked for the tie-break answers, in order (ticket 30b), or
+    [] for anyone else. Each is `{"framework", "constructs": [a, b], "statements": [a's, b's], "round"}`.
+
+    As the content owner's prototype plans them: every pair of the tied framework's constructs, never across
+    frameworks, those involving the higher-ranked first (by the sum of the two ranks, ties in the order made), then a
+    second round of the same pairs with the next statement of each, all cut to the document's budget from the end.
+    Construct a shows its statement at the round's place and b the one after, so no pair repeats a statement across the
+    two rounds. Worked out afresh from the stored result each time; the answers are stored, the plan is not.
+    """
+    detected = tie_break(document, result)
+    if detected["outcome"] != TIE_BREAK:
+        return []
+    settings = document["measurement"]["tie_break"]
+    statements = settings["statements"]
+    [(framework, cluster)] = detected["tied"].items()
+    ranked = [
+        (i + j, a, b) for i, a in enumerate(cluster) for j, b in enumerate(cluster) if i < j
+    ]
+    ranked.sort(key=lambda pair: pair[0])
+    planned = [
+        {
+            "framework": framework,
+            "constructs": [a, b],
+            "statements": [
+                statements[a][round_ % len(statements[a])],
+                statements[b][(round_ + 1) % len(statements[b])],
+            ],
+            "round": round_,
+        }
+        for round_ in range(ROUNDS)
+        for _, a, b in ranked
+    ]
+    return planned[: settings.get("budget", DEFAULT_BUDGET)]

@@ -4,7 +4,7 @@
 
 **Blocked by:** D1-30a (Tie detection and the generalist)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 2b (12–16 Oct)
 

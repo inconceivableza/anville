@@ -6,7 +6,7 @@ detection runs on the participant's own sort alone, never an observer's."""
 
 import pytest
 
-from tests.documents import complete_sort, sort_pathway
+from tests.documents import complete_sort, sort_pathway, with_a_tie_break
 from tests.journeys.test_answers import participant  # noqa: F401 (a fixture)
 from tests.journeys.test_comparison import comparison, observer_sort, with_observers
 from tests.journeys.test_consent import give_consent
@@ -22,10 +22,7 @@ EVEN = complete_sort(a5={"bucket": "strength", "value": 50}, p1={"bucket": "stre
 @pytest.fixture
 def signed_in(client, participant, load_pathway):
     """✨ A participant with onboarding complete, on a pathway with a tie-break and the generalist's wording."""
-    pathway = sort_pathway()
-    pathway["measurement"]["tie_break"] = {"threshold": 4, "cluster": 4}
-    pathway["presentation"]["generalist"] = {"heading": "A generalist", "text": f"{GENERALIST} is itself a finding."}
-    load_pathway(pathway)
+    load_pathway(with_a_tie_break(sort_pathway(), threshold=4, cluster=4))
     client.force_login(participant)
     give_consent(client)
     client.post("/sections/onboarding/complete/")

@@ -401,10 +401,11 @@ def without_estimates(document):
 
 
 def without_the_tie_break(document):
-    """✨ The tie-break is not in the original prototype, so the faithful port takes neither its settings nor the
-    generalist's wording (ticket 30a)."""
+    """✨ The tie-break is not in the original prototype, so the faithful port takes neither its settings and statements,
+    nor the generalist's wording (ticket 30a), nor the pair screen's (ticket 30b)."""
     document["measurement"].pop("tie_break", None)
     document["presentation"].pop("generalist", None)
+    document["presentation"].pop("tie_break", None)
     return document
 
 

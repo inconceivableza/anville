@@ -490,7 +490,25 @@
       }
     ],
     "scoring": { "method": "compositional_share" },
-    "tie_break": { "threshold": 4, "cluster": 4 }
+    "tie_break": {
+      "threshold": 4,
+      "cluster": 4,
+      "budget": 10,
+      "statements": {
+        "apostle": ["I'd rather start something new than improve what exists", "I'm drawn to places where nothing has been built yet", "I get restless once something is settled and running well"],
+        "prophet": ["I notice when something is wrong before other people do", "I'll say the uncomfortable thing if it needs saying", "I care more about what's right than what's comfortable"],
+        "evangelist": ["I naturally bring new people into things I care about", "I find it easy to make an idea appealing to outsiders", "I'm energised by talking with people who disagree with me"],
+        "shepherd": ["I notice when someone in a group is struggling", "I'd stay with one person who needs help rather than reach many", "I think about how a decision will affect the people in it"],
+        "teacher": ["I'm satisfied when someone finally understands something", "I break complicated things into simpler parts without thinking", "I want to know why something works, not just that it does"],
+        "deacon": ["I'd rather fix the practical problem than discuss it", "I notice what needs doing and quietly get on with it", "I get real satisfaction from things working properly"],
+        "ponder": ["I need to sit with a question before I can answer it", "I'm drawn to the problem underneath the problem", "I'd rather understand deeply than decide quickly"],
+        "ideate": ["I generate more options than anyone asked for", "I see possibilities that aren't obvious to other people", "I'm energised by a blank page"],
+        "assess": ["I can tell quite quickly whether an idea will work", "I spot the flaw in a plan everyone else is excited about", "People come to me for a straight verdict"],
+        "rally": ["I can get people moving on something", "I'm the one who turns talk into commitment", "I build momentum when the energy is flagging"],
+        "facilitate": ["I draw the quiet person into the conversation", "I help a group find its own answer", "I'm good at getting the best out of other people"],
+        "deliver": ["I finish what other people start", "I'd rather ship something good than perfect it forever", "I'm the one who makes sure it actually happens"]
+      }
+    }
   },
   "observers": {
     "privacy_notice": "[Draft: this notice must be written properly before anyone real takes part.]\n\n{name} has asked you to help them see their strengths as others see them. You'll sort some strengths into buckets and adjust the intensity of each. Takes about 10–15 minutes.\n\nWhat we keep: your answers, and how you know {name}. You don't give your name: we know who this link was sent to because {name} added you to their list, and that is kept apart from your answers.\n\nWhat {name} sees of your answers: nothing until enough people have answered. Then, the average of everyone's answers, and each person's answers without their name, lowest first, as a word such as \"Strong\" and a dot on a line. {name} may also choose to show this to a trusted third party. Your name is never shown with your answers.\n\nIf you change your mind, you can withdraw while this link works, and your answers will be deleted.",
@@ -540,6 +558,11 @@
     "generalist": {
       "heading": "You’re a generalist",
       "text": "Your top results are too close to call in both profiles, so neither has one clear leader. That is itself a finding: you draw on several of these strengths in much the same measure."
+    },
+    "tie_break": {
+      "question": "Which is more true of you?",
+      "skip": "Neither fits — skip",
+      "frameworks": { "apest": "Your role among people", "pep": "How you work" }
     },
     "standing": {
       "bands": [

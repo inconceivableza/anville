@@ -28,6 +28,8 @@ def lint(document):
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
         *_unworded_generalist(document),
+        *_unworded_pairs(document),
+        *_constructs_without_statements(document),
         *_sort_needs(document),
         *_ungated_sorts(document),
         *_undeclared_translations(document),
@@ -246,6 +248,35 @@ def _unworded_generalist(document):
             "/measurement/tie_break",
             "A pathway with a tie-break needs presentation.generalist, the words that tell a participant tied on both "
             "frameworks they are a generalist.",
+        )
+
+
+def _unworded_pairs(document):
+    """✨ A tie-break asks its pairs on a screen of its own (ticket 30b), so a pathway with one needs that screen's words."""
+    if "tie_break" in document.get("measurement", {}) and "tie_break" not in document.get("presentation", {}):
+        yield Problem(
+            "/measurement/tie_break",
+            "A pathway with a tie-break needs presentation.tie_break, the question and skip its pairs are asked with.",
+        )
+
+
+def _constructs_without_statements(document):
+    """✨ Any construct can be tied, so a tie-break needs statements for every one (ticket 30b); the schema asks for
+    three of each."""
+    measurement = document.get("measurement", {})
+    if "tie_break" not in measurement:
+        return
+    statements = measurement["tie_break"].get("statements", {})
+    missing = [
+        construct["id"]
+        for framework in measurement.get("frameworks", [])
+        for construct in framework["constructs"]
+        if construct["id"] not in statements
+    ]
+    if missing:
+        yield Problem(
+            "/measurement/tie_break/statements",
+            f"A tie-break needs three statements for every construct; these have none: {', '.join(missing)}.",
         )
 
 
