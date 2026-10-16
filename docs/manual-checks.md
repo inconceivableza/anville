@@ -16,6 +16,17 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 | Reduced motion | DevTools, the ⋮ menu, More tools, Rendering, then "Emulate CSS media feature prefers-reduced-motion: reduce". |
 | Phone width | DevTools' device toolbar (⌘⇧M), at a width around 375px. |
 
+## Buttons and colours (every page, beside a build from before the styles were tidied)
+
+- With the sprint's previous build open in a second window, the homepage, hub, onboarding wizard, a section page with its way on, the coach checklist, results, comparison, invitations, consent, the account pages and the organisation pages look the same, at a wide screen and at phone width: the same colours, and each button the same size, colour and place.
+- Expected differences, and only these: a button that was a link ("Go to your pathway", "← Previous page", "← Back to the hub", "Invite people who know you →") has no underline; an outlined button on the page's cream shows the cream through it, where it had a paler fill, and darkens a touch on hover, where it turned cream; and the wizard's "Continue" is in the page's typeface.
+- A full-width button ("Mark complete", "I agree", "Join") has its words centred; a pill that spans a hub card ("Manage", the next step's "Begin") keeps its words at the left, as before.
+- Keyboard only: each button and pill, the homepage's included, shows a dark green ring when Tab reaches it.
+- With a mouse, the homepage's, hub's and wizard's pills lean towards the pointer as before; a button on any other page stays still.
+- Without JavaScript, the Copy buttons on the invitations, coach and organisation pages are still hidden.
+- A disabled "Mark complete" is grey with muted words, and the pointer shows it can't be pressed.
+- Phone width: the header's "Your pathway" and "Sign out", and the save row's "Save", are the small size and fit on one line.
+
 ## The homepage (`/`, signed out and signed in)
 
 - Side by side with the prototype's homepage (`Prototypes for reference/original-prototype.html`) and its newer "How it works" (`how-it-works-homepagesection.html`), the words match. The only differences: "anonymously" is gone from step 1, the Churches, Writing, Newsletter, Team, Go further, Donate and Contact sections are gone, and so are the footer's Privacy Policy and Terms links.
