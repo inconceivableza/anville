@@ -1355,6 +1355,12 @@ form + .way-on,
   color: var(--ink);
 }
 
+/* ✨ Centred on the page, over a backdrop: the reset at the top takes away the browser's own `margin: auto`, which
+   left a modal dialog in the window's top corner (fix-2). */
+.contact-dialog:modal {
+  margin: auto;
+}
+
 .contact-dialog::backdrop {
   background: var(--hero-shade);
 }
