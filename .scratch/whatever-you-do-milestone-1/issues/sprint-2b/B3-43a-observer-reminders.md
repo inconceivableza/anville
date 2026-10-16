@@ -4,17 +4,22 @@
 
 **Blocked by:** B2B-55 (Answer collection freezes once results are viewed)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** Observers (ADR 0005); Delivery and hosting; Legalities are parked, not forgotten; Open content and product items
 
-- [ ] Sending marks the person as having sent, on their contact, kept through a reissue, a withdrawal and an edit to the contact (ADR 0016). A person not marked, whose link works, is reminded a week after the link was made and weekly after, never while answer collection is frozen or the participant's consent is withdrawn, and never a coach; a reissue restarts the week, and after an unfreeze an overdue reminder goes the next morning
-- [ ] A daily scheduled job in the chart, behind a value of its own, sends what is due, never the same reminder twice even if two runs overlap, retries a failed send the next day, and skips addresses at reserved example domains
-- [ ] The email names the participant and the date the link stops working, asks the observer to use the link the participant sent, and says where their name and email came from, what they are used for, how often and until when, and how to stop. The observers' privacy notice gains that reminders are sent and can be stopped
-- [ ] The email's stop link, and its `List-Unsubscribe` headers with one-click POST, stop this participant's reminders to that person. The link's page stops them only when its button is pressed, never on opening, and works while the contact exists, whatever has happened to the link. The stop is kept on the contact, through a reissue and an edit, and nothing the participant does undoes it
-- [ ] Nothing in a reminder, a stop or their absence reaches the participant: their pages are unchanged
+- [x] Sending marks the person as having sent, on their contact, kept through a reissue, a withdrawal and an edit to the contact (ADR 0016). A person not marked, whose link works, is reminded a week after the link was made and weekly after, never while answer collection is frozen or the participant's consent is withdrawn, and never a coach; a reissue restarts the week, and after an unfreeze an overdue reminder goes the next morning
+- [x] A daily scheduled job in the chart, behind a value of its own, sends what is due, never the same reminder twice even if two runs overlap, retries a failed send the next day, and skips addresses at reserved example domains
+- [x] The email names the participant and the date the link stops working, asks the observer to use the link the participant sent, and says where their name and email came from, what they are used for, how often and until when, and how to stop. The observers' privacy notice gains that reminders are sent and can be stopped
+- [x] The email's stop link, and its `List-Unsubscribe` headers with one-click POST, stop this participant's reminders to that person. The link's page stops them only when its button is pressed, never on opening, and works while the contact exists, whatever has happened to the link. The stop is kept on the contact, through a reissue and an edit, and nothing the participant does undoes it
+- [x] Nothing in a reminder, a stop or their absence reaches the participant: their pages are unchanged
+
+**Carried from 55**
+
+- Collection is frozen while the participant's response holds a freeze time, set by the confirmed press and cleared by a withdrawal that leaves fewer than the minimum. An unfreeze keeps no time of its own, so an overdue reminder after one is found from the link's own weekly clock
+- The observers' privacy notice, in both documents, now ends with withdrawing at any time and that no new answers are added once the participant has looked; the reminders sentence goes beside them
 
 **Context**
 

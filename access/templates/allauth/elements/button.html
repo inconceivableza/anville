@@ -1,10 +1,10 @@
 {# Copyright (C) New Community Church SE London 2026. #}
 {# For licensing information see ../../../../LICENSE.md #}
 {% load allauth %}
-{# ✨ allauth's button element, given the prototype's primary-button classes so the stylesheet's existing rules apply. #}
+{# ✨ allauth's button element, drawn as the prototype's pill across its row. #}
 {% comment %} djlint:off {% endcomment %}
 <{% if attrs.href %}a href="{{ attrs.href }}"{% else %}button{% endif %}
-class="btn btn-primary btn-full"
+class="pill full"
 {% if attrs.form %}form="{{ attrs.form }}"{% endif %}
 {% if attrs.id %}id="{{ attrs.id }}"{% endif %}
 {% if attrs.name %}name="{{ attrs.name }}"{% endif %}

@@ -6,7 +6,7 @@
   Public, so the participant header shows only to someone signed in, giving a participant their way back.
   The pathway's translations come first, from its document, so its "Unless otherwise indicated" notice is read
   before the exceptions. The homepage's Colossians 3:23 is the homepage's own, so its notice follows whatever pathway
-  is published, until ticket 32b moves the homepage into content.
+  is published, until ticket 32b moves the homepage into content. The pathway's photos' credits follow (ticket 49b).
 {% endcomment %}
 {% block head_title %}Credits{% endblock head_title %}
 
@@ -20,4 +20,9 @@
   {% endfor %}
   <h2 class="credits-name">New International Version Anglicised</h2>
   <p class="credits-notice">Scripture quotations marked NIV taken from the Holy Bible, New International Version Anglicised Copyright © 1979, 1984, 2011 Biblica. Used by permission of Hodder &amp; Stoughton Ltd, an Hachette UK company. All rights reserved. 'NIV' is a registered trademark of Biblica UK trademark number 1448790.</p>
+  {# ✨ The pathway's photos' credits, as its document lists them (ticket 49b). #}
+  {% if photo_credits %}
+    <h2 class="credits-name">Photographs</h2>
+    {% for credit in photo_credits %}<p class="credits-photo">{{ credit }}</p>{% endfor %}
+  {% endif %}
 {% endblock content %}

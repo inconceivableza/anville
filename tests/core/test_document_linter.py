@@ -159,6 +159,24 @@ def test_a_sort_whose_section_could_be_completed_without_it_is_reported():
     ]
 
 
+def results_of(named):
+    """✨ The sort pathway with the calling section showing the results of the block `named`."""
+    document = sort_pathway()
+    document["content"]["sections"][1]["blocks"].append({"id": "shown", "type": "sort_results", "sort": named})
+    return document
+
+
+def test_a_sort_results_block_naming_a_sort_is_accepted():
+    assert validate(results_of("strengths-sort")) == []
+
+
+@pytest.mark.parametrize("named", ["statement", "nowhere"])
+def test_a_sort_results_block_naming_anything_but_a_sort_is_reported(named):
+    assert validate(results_of(named)) == [
+        Problem(path="/content/sections/1/blocks/1/sort", message=f"There is no sort '{named}' in this pathway.")
+    ]
+
+
 def test_a_pathway_without_a_sort_needs_no_scoring_method():
     document = pathway_document()
     assert "scoring" not in document["measurement"]
@@ -253,3 +271,88 @@ def test_a_section_that_is_a_part_of_no_section_it_can_be_is_reported(parts, mes
         document["content"]["sections"][index]["part_of"] = part_of
 
     assert validate(document) == [Problem(path="/content/sections/2/part_of", message=message)]
+
+
+# ✨ Hub side cards and section numbers (ticket 49a)
+
+
+def test_a_section_number_that_is_not_a_number_or_a_range_of_them_is_reported_at_its_path():
+    document = pathway_document()
+    document["content"]["sections"][1]["number"] = "Section 2"
+
+    assert [problem.path for problem in validate(document)] == ["/content/sections/1/number"]
+
+
+def test_a_side_card_without_its_sentence_is_reported_at_its_path():
+    document = pathway_document()
+    document["content"]["sections"][1]["side_card"] = {}
+
+    assert [problem.path for problem in validate(document)] == ["/content/sections/1/side_card"]
+
+
+def test_a_part_of_a_section_cannot_be_a_side_card_nor_carry_a_number():
+    """✨ A part is listed within its section, so it is drawn as no card and shows no number of its own."""
+    document = sort_pathway()
+    strengths = document["content"]["sections"][2]
+    strengths.update(part_of="calling", number="03", side_card={"sentence": "Sort the statements."})
+
+    assert validate(document) == [
+        Problem(
+            path="/content/sections/2/number",
+            message="A part of a section is listed within it, so it shows no number of its own.",
+        ),
+        Problem(
+            path="/content/sections/2/side_card",
+            message="A part of a section is listed within it, so it cannot be a hub side card.",
+        ),
+    ]
+
+
+def test_a_section_with_parts_cannot_be_a_side_card():
+    """✨ Its parts are listed within it, which a card has no room for, so they would be on the hub nowhere."""
+    document = sort_pathway()
+    document["content"]["sections"][2]["part_of"] = "calling"
+    document["content"]["sections"][1]["side_card"] = {"sentence": "Write your statement."}
+
+    assert validate(document) == [
+        Problem(
+            path="/content/sections/1/side_card",
+            message="Section 'calling' has parts, which are listed within it, so it cannot be a hub side card.",
+        )
+    ]
+
+
+# ✨ Photos and their credits (ticket 49b)
+
+
+def with_a_photo(section_id="calling", credit=None):
+    document = pathway_document()
+    credit = credit if credit is not None else {"kind": "courtesy", "text": "Photograph of grass from Unsplash."}
+    document["photos"] = {section_id: {"file": "grass.jpg", "credit": credit}}
+    return document
+
+
+def test_a_photo_named_for_a_section_that_does_not_exist_is_reported():
+    assert validate(with_a_photo("nowhere")) == [
+        Problem(path="/photos/nowhere", message="There is no section 'nowhere' in this pathway.")
+    ]
+
+
+@pytest.mark.parametrize(
+    "credit",
+    [
+        {"kind": "maybe", "text": "Photograph from Unsplash."},
+        {"text": "Photograph from Unsplash."},
+        {"kind": "courtesy"},  # ✨ a credit to list needs its wording
+        {"kind": "required"},
+    ],
+)
+def test_a_photo_whose_credit_is_not_required_courtesy_or_marked_as_needing_none_is_reported(credit):
+    problems = validate(with_a_photo(credit=credit))
+
+    assert problems
+    assert all(problem.path.startswith("/photos/calling/credit") for problem in problems)
+
+
+def test_a_photo_marked_as_needing_no_credit_is_accepted():
+    assert validate(with_a_photo(credit={"kind": "none"})) == []

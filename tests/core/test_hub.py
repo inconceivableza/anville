@@ -122,37 +122,27 @@ def test_a_locked_section_is_never_the_next_step():
 # Progress
 
 
-def test_progress_counts_the_blocks_the_participant_does_something_with_and_no_others():
-    sections = [section("first", blocks=[prose("intro"), long_text("a"), prose("outro"), long_text("b")])]
+def test_progress_counts_the_sections_complete_not_the_answers():
+    """✨ "2 of 5 sections complete", as the prototype's hub says (ticket 49a)."""
+    hub = hub_for(A_CHAIN, {"a": "Written", "b": "Written", "c": "Written"}, completed=["first"])
 
-    hub = hub_for(sections, {"a": "Written"}, completed=[])
-    assert (hub.answered, hub.total) == (1, 2)
-
-
-def test_progress_counts_across_every_section_of_the_track():
-    hub = hub_for(A_CHAIN, {"a": "Written", "c": "Written"}, completed=[])
-
-    assert (hub.answered, hub.total) == (2, 3)
+    assert (hub.complete, hub.total) == (1, 3)
 
 
 @pytest.mark.parametrize("answer", ["", "   ", None])
-def test_a_block_left_blank_is_not_counted_as_answered(answer):
-    hub = hub_for([section("first", blocks=[long_text("a")])], {"a": answer}, completed=[])
-
-    assert (hub.answered, hub.total) == (0, 1)
+def test_a_block_left_blank_does_not_start_its_section(answer):
+    assert statuses([section("first", blocks=[long_text("a")])], {"a": answer}) == [NOT_STARTED]
 
 
-def test_a_pathway_with_nothing_interactive_in_it_reports_no_progress_rather_than_dividing_by_zero():
-    hub = hub_for([section("first", blocks=[prose("intro")])], {}, completed=[])
-
-    assert (hub.answered, hub.total) == (0, 0)
+def test_prose_alone_does_not_start_a_section():
+    assert statuses([section("first", blocks=[prose("intro")])], {"intro": "Read"}) == [NOT_STARTED]
 
 
 def test_progress_counts_only_the_sections_it_is_given_so_a_track_counts_only_its_own():
     """✨ Tracks arrive in ticket 23; the hub already counts only the sections handed to it."""
-    hub = hub_for(A_CHAIN[:2], {"a": "Written", "c": "Written"}, completed=[])
+    hub = hub_for(A_CHAIN[:2], {}, completed=["first", "third"])
 
-    assert (hub.answered, hub.total) == (1, 2)
+    assert (hub.complete, hub.total) == (1, 2)
 
 
 # What a participant has reached within a section
@@ -268,6 +258,41 @@ def test_a_part_is_locked_until_the_participant_reaches_its_sections_link_to_it(
 
     assert statuses([gifts, part])[1] == LOCKED
     assert statuses([gifts, part], answers={"read": True})[1] == NOT_STARTED
+
+
+# A hub side card
+
+
+def side_card(id, requires=()):
+    return {**gated_on(section(id, requires, blocks=[long_text("sort")]), "sort"), "side_card": {"sentence": "Go on."}}
+
+
+def test_a_side_card_is_complete_once_its_gate_passes_with_nothing_pressed():
+    """✨ Walk with a coach and Five trusted voices (ticket 52): complete once their links are made."""
+    sections = [section("first"), side_card("card")]
+
+    assert statuses(sections)[1] == NOT_STARTED
+    assert statuses(sections, answers={"sort": "Sorted"})[1] == COMPLETE
+
+
+def test_a_side_card_whose_gate_passes_stays_locked_while_a_section_it_requires_is_not_complete():
+    sections = [section("first"), side_card("card", requires=["first"])]
+
+    assert statuses(sections, answers={"sort": "Sorted"})[1] == LOCKED
+    assert statuses(sections, answers={"sort": "Sorted"}, completed=["first"])[1] == COMPLETE
+
+
+def lock_note(sections, completed=(), title_of="last"):
+    return next(state for state in hub_for(sections, {}, completed).sections if state.id == title_of).lock_note
+
+
+def test_a_locked_section_names_the_sections_it_still_waits_for():
+    """✨ As Section 2 names Walk with a coach and Five trusted voices once Section 1 is complete (ticket 52)."""
+    sections = [section("a"), section("b"), section("c"), section("last", requires=["a", "b", "c"])]
+
+    assert lock_note(sections) == "Opens once you've finished A, B and C."
+    assert lock_note(sections, completed=["a"]) == "Opens once you've finished B and C."
+    assert lock_note(sections, completed=["a", "b"]) == "Opens once you've finished C."
 
 
 # What the hub says about each section

@@ -10,7 +10,7 @@
   </p>
   <form method="post" action="{% url 'replace_link' group.pk %}" class="consent-choices">
     {% csrf_token %}
-    <button type="submit" class="btn btn-primary btn-full">Replace link</button>
-    <a class="btn btn-secondary btn-full" href="{% url 'your_organisations' %}#group-{{ group.pk }}">Keep this link</a>
+    <button type="submit" class="pill full">Replace link</button>
+    <a class="pill ghost full" href="{% url 'your_organisations' %}#group-{{ group.pk }}">Keep this link</a>
   </form>
 {% endblock content %}

@@ -75,12 +75,13 @@
             "id": "contacts-intro",
             "type": "rich_text",
             "label": "Who knows you best?",
-            "body": "One of the most valuable parts of this course is comparing how you see yourself with how others experience you. We often miss things about ourselves that others can see clearly.\n\nWe need at least 5 people whose opinion you trust – people who know you well enough to be honest. They'll receive a short, anonymous survey about your strengths."
+            "body": "One of the most valuable parts of this course is comparing how you see yourself with how others experience you. We often miss things about ourselves that others can see clearly.\n\nWe need at least 5 people whose opinion you trust – people who know you well enough to be honest. They'll receive a short survey about your strengths, through a link you send them."
           },
           {
             "id": "contacts",
             "type": "contact_list",
-            "min_rows": 5
+            "needed": 5,
+            "optional": 0
           }
         ],
         "gate": {
@@ -420,7 +421,25 @@
     "scoring": { "method": "compositional_share" }
   },
   "observers": {
-    "privacy_notice": "[Draft: this notice must be written properly before anyone real takes part.]\n\n{name} has asked you to help them see their strengths as others see them. You'll sort some strengths into buckets and adjust the intensity of each. Takes about 10–15 minutes.\n\nWhat we keep: your answers, and how you know {name}. You don't give your name: we know who this link was sent to because {name} added you to their list, and that is kept apart from your answers.\n\nWhat {name} sees of your answers: nothing until enough people have answered. Then, the average of everyone's answers, and each person's answers without their name, lowest first, as a word such as \"Strong\" and a dot on a line. Your name is never shown with your answers.\n\nIf you change your mind, you can withdraw while this link works, and your answers will be deleted."
+    "privacy_notice": "[Draft: this notice must be written properly before anyone real takes part.]\n\n{name} has asked you to help them see their strengths as others see them. You'll sort some strengths into buckets and adjust the intensity of each. Takes about 10–15 minutes.\n\nWhat we keep: your answers, and how you know {name}. You don't give your name: we know who this link was sent to because {name} added you to their list. {name} never sees which answers are whose, though the people who run the service can.\n\nWhat {name} sees of your answers: nothing until enough people have answered. Then, the average of everyone's answers, and each person's answers without their name, lowest first, as a word such as \"Strong\" and a dot on a line. Your name is never shown with your answers. Once {name} has looked at the combined results, no new answers are added.\n\nIf you change your mind, you can withdraw at any time, and your answers will be removed: through this link while it works, and after that by asking the people who run the service. If you haven't answered, we'll email you a reminder once a week until your link runs out, and every reminder lets you stop them. This link is yours alone so that you answer only once, can stop the reminders and can withdraw; your answers are combined with everyone else's before {name} sees them.",
+    "reminder": {
+      "subject": "How do you see {name}'s strengths?",
+      "body": "Hi {observer}, {name} asked how you see {name}'s strengths, as part of Whatever You Do. It takes about 10–15 minutes. Please answer through the link {name} sent you, or with the button below. Your link works until {until}.\n\nYour name is never shown to {name} with your answers. {name} gave us your name and email address; we use them only to remind you, once a week until you answer or your link runs out.",
+      "stop": "Don't want these reminders? Stop reminders about {name}",
+      "answer": "Answer for {name} →",
+      "details": "How we handle your details"
+    },
+    "relationship": {
+      "question": "Your relationship to {name}",
+      "choices": [
+        { "id": "family", "label": "Family member" },
+        { "id": "friend", "label": "Close friend" },
+        { "id": "colleague", "label": "Colleague / work contact" },
+        { "id": "church", "label": "Church family / leader" },
+        { "id": "mentor", "label": "Mentor / teacher" },
+        { "id": "other", "label": "Other" }
+      ]
+    }
   },
   "presentation": {
     "results_title": "{name}, here’s your profile",
@@ -501,6 +520,8 @@
       "sort_heading": { "participant": "Sort your strengths", "observer": "Sort {name}'s strengths" },
       "sort_instruction": { "participant": "Choose the bucket that fits best", "observer": "Choose the bucket that fits {name} best" },
       "all_sorted": "All {count} sorted!",
+      "send_or_fine_tune": "You can send your assessment now, or fine-tune how strong each one is in {name} first.",
+      "fine_tune_label": "Continue to fine-tuning →",
       "fine_tune_heading": { "participant": "How strong is each one?", "observer": "How strong is each one in {name}?" },
       "fine_tune_intro": "Grouped by how you sorted them. Adjust the sliders to fine-tune.",
       "slider_min": { "participant": "Not me", "observer": "Not {name}" },

@@ -20,12 +20,18 @@ def lint(document):
         *_duplicate_options(document),
         *_missing_sections(document, section_ids),
         *_impossible_parts(document, section_ids),
+        *_unshowable_side_cards_and_numbers(document),
+        *_photos_of_missing_sections(document, section_ids),
         *_unknown_linked_sections(document, section_ids),
         *_links_holding_their_own_section(document),
+        *_results_of_no_sort(document),
         *_empty_pages(document),
         *_unreadable_clauses(document),
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
+        *_unworded_generalist(document),
+        *_unworded_pairs(document),
+        *_constructs_without_statements(document),
         *_sort_needs(document),
         *_ungated_sorts(document),
         *_undeclared_translations(document),
@@ -115,6 +121,35 @@ def _impossible_parts(document, section_ids):
             )
 
 
+def _unshowable_side_cards_and_numbers(document):
+    """✨ A hub side card or a number the hub could not show (ticket 49a). A part is listed within its section, so it
+    shows no number and is drawn as no card; a section with parts lists them within it, which a card has no room for."""
+    sections = document["content"]["sections"]
+    with_parts = {section["part_of"] for section in sections if "part_of" in section}
+    for s, section in enumerate(sections):
+        path = f"/content/sections/{s}"
+        if "part_of" in section and "number" in section:
+            yield Problem(f"{path}/number", "A part of a section is listed within it, so it shows no number of its own.")
+        if "side_card" not in section:
+            continue
+        if "part_of" in section:
+            yield Problem(
+                f"{path}/side_card", "A part of a section is listed within it, so it cannot be a hub side card."
+            )
+        elif section["id"] in with_parts:
+            yield Problem(
+                f"{path}/side_card",
+                f"Section '{section['id']}' has parts, which are listed within it, so it cannot be a hub side card.",
+            )
+
+
+def _photos_of_missing_sections(document, section_ids):
+    """✨ A photo is named by the section it is shown with, so one named for no section is shown nowhere (ticket 49b)."""
+    for section_id in document.get("photos", {}):
+        if section_id not in section_ids:
+            yield Problem(f"/photos/{section_id}", f"There is no section '{section_id}' in this pathway.")
+
+
 def _unknown_linked_sections(document, section_ids):
     for s, section in enumerate(document["content"]["sections"]):
         for b, block in enumerate(section["blocks"]):
@@ -122,6 +157,17 @@ def _unknown_linked_sections(document, section_ids):
                 yield Problem(
                     f"/content/sections/{s}/blocks/{b}/section",
                     f"There is no section '{block['section']}' in this pathway.",
+                )
+
+
+def _results_of_no_sort(document):
+    """✨ A `sort_results` block shows the results of the sort it names (ticket 57), so it must name one."""
+    types = block_types_by_id(document)
+    for s, section in enumerate(document["content"]["sections"]):
+        for b, block in enumerate(section["blocks"]):
+            if block["type"] == "sort_results" and not (block["sort"] in types and types[block["sort"]].scored):
+                yield Problem(
+                    f"/content/sections/{s}/blocks/{b}/sort", f"There is no sort '{block['sort']}' in this pathway."
                 )
 
 
@@ -212,6 +258,46 @@ def _missing_constructs(document, construct_ids):
                 f"/presentation/constructs/{c}/construct",
                 f"There is no construct '{description['construct']}' in this pathway.",
             )
+
+
+def _unworded_generalist(document):
+    """✨ A tie-break tells a participant tied on both frameworks that they are a generalist (ticket 30a), so a pathway
+    with one needs the words to tell them in."""
+    if "tie_break" in document.get("measurement", {}) and "generalist" not in document.get("presentation", {}):
+        yield Problem(
+            "/measurement/tie_break",
+            "A pathway with a tie-break needs presentation.generalist, the words that tell a participant tied on both "
+            "frameworks they are a generalist.",
+        )
+
+
+def _unworded_pairs(document):
+    """✨ A tie-break asks its pairs on a screen of its own (ticket 30b), so a pathway with one needs that screen's words."""
+    if "tie_break" in document.get("measurement", {}) and "tie_break" not in document.get("presentation", {}):
+        yield Problem(
+            "/measurement/tie_break",
+            "A pathway with a tie-break needs presentation.tie_break, the question and skip its pairs are asked with.",
+        )
+
+
+def _constructs_without_statements(document):
+    """✨ Any construct can be tied, so a tie-break needs statements for every one (ticket 30b); the schema asks for
+    three of each."""
+    measurement = document.get("measurement", {})
+    if "tie_break" not in measurement:
+        return
+    statements = measurement["tie_break"].get("statements", {})
+    missing = [
+        construct["id"]
+        for framework in measurement.get("frameworks", [])
+        for construct in framework["constructs"]
+        if construct["id"] not in statements
+    ]
+    if missing:
+        yield Problem(
+            "/measurement/tie_break/statements",
+            f"A tie-break needs three statements for every construct; these have none: {', '.join(missing)}.",
+        )
 
 
 # ✨ What a sort is scored by. Without any of these the document would load, and the participant's page

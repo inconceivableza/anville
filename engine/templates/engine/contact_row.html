@@ -1,0 +1,112 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ One row of a contact list (ticket 51a): someone listed, or an empty row for the next person. With JavaScript each
+  of its buttons sends back this row alone, which takes its place, so typing not yet saved in any other row is never
+  lost; without, each leads to the list's page again, opened at this person (fix-2).
+
+  Someone listed is saved as their name or email is typed, only the row's status coming back, the Save button being
+  for browsers without JavaScript. An
+  empty row stores nobody until "Get link", which adds them and makes their link in the same act, so nobody is listed
+  without one. A link just made, or reissued, opens in a dialog to copy, this once (only its hash is kept); without
+  JavaScript the dialog shows open, in the row. Remove, for someone whose link works, asks first: in a dialog here, or
+  on a page of its own without JavaScript.
+
+  novalidate leaves the email addresses to the server, whose refusal says what is wrong under the fields; without
+  JavaScript, or for a new row, the row comes back with what was typed, the field at fault marked.
+
+  While answer collection is frozen (ticket 55) no empty row is offered, nor any way to issue or reissue a link; people
+  can still be changed and their links revoked.
+{% endcomment %}
+{% if row.contact_id or not block.frozen %}
+<li class="contact-row"{% if row.contact_id %} id="person-{{ row.contact_id }}"{% endif %}>
+  {% if row.contact_id %}
+    {# ✨ Saved as they type, once typing pauses, and as a field is left (fix-2). Only the row's status is swapped in #}
+    {# ✨ from the row sent back, never its fields, so nothing typed while a save is on its way is lost. #}
+    <form class="contact-person" novalidate method="post" action="{% url 'contact' block.id row.contact_id %}"
+          hx-post="{% url 'contact' block.id row.contact_id %}" hx-trigger="input delay:600ms, change, submit"
+          hx-sync="this:queue last" hx-target="find .save-status" hx-select=".save-status" hx-swap="outerHTML">
+  {% else %}
+    <form class="contact-person" novalidate method="post" action="{% url 'contacts' block.id %}"
+          hx-post="{% url 'contacts' block.id %}" hx-target="closest li" hx-swap="outerHTML">
+  {% endif %}
+    {% csrf_token %}
+    <input type="hidden" name="version" value="{{ pathway.version_id }}">
+    <input type="hidden" name="row" value="{{ row.number }}">
+    <span class="contact-num" aria-hidden="true">{{ row.number }}</span>
+    <span class="tag contact-need">{% if row.is_needed %}Needed{% else %}Optional{% endif %}</span>
+    <label class="contact-field contact-name">
+      <span class="visually-hidden">Person {{ row.number }}, first name</span>
+      <input type="text" name="name" placeholder="First name" value="{{ row.name }}" maxlength="150" autocomplete="off"{% if row.contact_id %} id="person-{{ row.contact_id }}-name"{% endif %}{% if row.invalid == "name" %} aria-invalid="true"{% endif %}{% if block.is_fixed %} disabled{% endif %}>
+    </label>
+    <label class="contact-field contact-email">
+      <span class="visually-hidden">Person {{ row.number }}, email address</span>
+      <input type="email" name="email" placeholder="Email address" value="{{ row.email }}" maxlength="254" autocomplete="off"{% if row.contact_id %} id="person-{{ row.contact_id }}-email"{% endif %}{% if row.invalid == "email" %} aria-invalid="true"{% endif %}{% if block.is_fixed %} disabled{% endif %}>
+    </label>
+    {% if not block.is_fixed %}
+      {% if row.contact_id %}
+        <button type="submit" class="pill ghost small save-fallback">Save</button>
+      {% else %}
+        <button type="submit" class="pill small">Get link</button>
+      {% endif %}
+    {% endif %}
+    {% if row.refusal %}
+      <p class="save-status" role="alert"><span class="save-refused">Not saved. {{ row.refusal }}</span></p>
+    {% elif row.contact_id %}
+      <output class="save-status" aria-live="polite">{% if row.saved %}Saved{% endif %}</output>
+    {% endif %}
+  </form>
+  {% if row.contact_id %}
+    {% if row.issued %}
+      {# ✨ Open without JavaScript, and shown as a modal once it has loaded. #}
+      <dialog class="contact-dialog" open data-shows-modal aria-labelledby="invite-link-{{ row.contact_id }}-label">
+        <label id="invite-link-{{ row.contact_id }}-label" for="invite-link-{{ row.contact_id }}">Share this link with {{ row.name }}:</label>
+        <div class="invitation-link-row">
+          {# ✨ Focused, so a keyboard or screen reader user lands on the link. #}
+          <input type="text" id="invite-link-{{ row.contact_id }}" value="{{ row.issued }}" readonly autofocus>
+          <button type="button" class="pill invitation-copy" data-copy="invite-link-{{ row.contact_id }}">Copy</button>
+        </div>
+        <p>This link is shown only this once. If you lose it, reissue it.</p>
+        <form method="dialog"><button type="submit" class="pill ghost small">Done</button></form>
+      </dialog>
+    {% endif %}
+    {% if row.invitation %}
+      <span class="invitation-status">Link works until {{ row.invitation.expires_at|date:"j F Y" }}</span>
+    {% endif %}
+    {% if not block.frozen %}
+      <form method="post" action="{% url 'issue_invitation' row.contact_id %}"
+            hx-post="{% url 'issue_invitation' row.contact_id %}" hx-target="closest li" hx-swap="outerHTML">
+        {% csrf_token %}
+        <button type="submit" class="pill ghost small">{% if row.invitation %}Reissue link{% else %}Issue link{% endif %}</button>
+      </form>
+    {% endif %}
+    {% if row.invitation %}
+      <form method="post" action="{% url 'revoke_invitation' row.contact_id %}"
+            hx-post="{% url 'revoke_invitation' row.contact_id %}" hx-target="closest li" hx-swap="outerHTML">
+        {% csrf_token %}
+        <button type="submit" class="pill ghost small">Revoke link</button>
+      </form>
+    {% endif %}
+    {% if not block.is_fixed %}
+      <form method="post" action="{% url 'contact_removal' block.id row.contact_id %}"
+            hx-post="{% url 'contact_removal' block.id row.contact_id %}" hx-target="closest li" hx-swap="outerHTML">
+        {% csrf_token %}
+        <button type="submit" class="pill ghost small">Remove</button>
+      </form>
+      {% if row.confirming %}
+        <dialog class="contact-dialog" open data-shows-modal aria-labelledby="remove-{{ row.contact_id }}-heading">
+          <h3 id="remove-{{ row.contact_id }}-heading">Remove {{ row.name }}?</h3>
+          <p>The link you gave {{ row.name }} will stop working. To ask them again, you would add them again with a new link.</p>
+          <form method="post" action="{% url 'contact_removal' block.id row.contact_id %}"
+                hx-post="{% url 'contact_removal' block.id row.contact_id %}" hx-target="closest li" hx-swap="outerHTML">
+            {% csrf_token %}
+            <input type="hidden" name="confirmed" value="yes">
+            <button type="submit" class="pill small">Remove {{ row.name }}</button>
+          </form>
+          <form method="dialog"><button type="submit" class="pill ghost small">Keep {{ row.name }}</button></form>
+        </dialog>
+      {% endif %}
+    {% endif %}
+  {% endif %}
+</li>
+{% endif %}

@@ -4,17 +4,22 @@
 
 **Blocked by:** D1-30a (Tie detection and the generalist)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** The instrument and scoring; The instrument and results; The pathway document and versions
 
-- [ ] Pairs are always within the tied framework, never across APEST(d) and PEP. Pairs among the top-ranked constructs survive trimming to the question budget (10 by default, set in the pathway document) first, and a second round with different statements may fill what is left of it. The planning is a pure function of a result and the document
-- [ ] Three statements per construct, 36 in all, are authored content in the pathway document, taken from the content owner's prototype and separate from the 36 sort items
-- [ ] Sending a sort that 30a marks for the tie-break leads to it; any other sort leads to the results, as today. Observers are never offered one
-- [ ] Each pair shows one statement for each of its two constructs, in random left-right order, with a quiet label naming the framework, and "Neither fits — skip"
-- [ ] The answers are stored beside the sort's stored result, which is kept as it is. A participant who leaves part-way comes back to the next unanswered pair, and once every pair is answered or skipped goes on to their results
+- [x] Pairs are always within the tied framework, never across APEST(d) and PEP. Pairs among the top-ranked constructs survive trimming to the question budget (10 by default, set in the pathway document) first, and a second round with different statements may fill what is left of it. The planning is a pure function of a result and the document
+- [x] Three statements per construct, 36 in all, are authored content in the pathway document, taken from the content owner's prototype and separate from the 36 sort items
+- [x] Sending a sort that 30a marks for the tie-break leads to it; any other sort leads to the results, as today. Observers are never offered one
+- [x] Each pair shows one statement for each of its two constructs, in random left-right order, with a quiet label naming the framework, and "Neither fits — skip"
+- [x] The answers are stored beside the sort's stored result, which is kept as it is. A participant who leaves part-way comes back to the next unanswered pair, and once every pair is answered or skipped goes on to their results
+
+**Carried from 30a**
+
+- 30a's tie detection gives, from the stored result and the document, each tied framework's constructs that enter the tie-break (leader first, at most the cluster size) and whether the participant is marked, a generalist or neither. Nothing about it is stored
+- The threshold and cluster size are the document's tie-break settings, beside which the budget belongs. The drift test already sets those settings and the generalist's wording aside, so the statements can be set aside in the same place
 
 **Context**
 

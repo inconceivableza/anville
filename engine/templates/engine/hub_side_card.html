@@ -1,0 +1,16 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% load section_pages %}
+{# ✨ A section the pathway document marks as a hub side card (ticket 49a): its title, its authored sentence and its #}
+{# status, the hub's own. Nothing on it is written here. A locked one is named but not linked, as in the list. #}
+<section class="card hub-side-card{% if section.is_locked %} locked{% endif %}">
+  <div class="row">
+    {% if section.is_locked %}
+      <h3>{{ section.title }}</h3>
+    {% else %}
+      <h3><a href="{% page_url section.id section.page %}">{{ section.title }}</a></h3>
+    {% endif %}
+    <span class="tag{% if section.is_next %} up-next{% endif %}">{{ section.label }}</span>
+  </div>
+  <p>{{ section.side_card }}</p>
+</section>

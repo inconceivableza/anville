@@ -23,7 +23,7 @@
       <p>You need at least <strong>{{ comparison.minimum }} people</strong> to complete the strengths survey about you before we can show a meaningful comparison.</p>
     {% endif %}
     <p><strong>{{ comparison.observers }} of {{ comparison.minimum }}</strong> have answered so far.</p>
-    {% if not for_coach %}<p><a class="btn btn-primary" href="{% url 'invitations' %}">Invite people who know you →</a></p>{% endif %}
+    {% if not for_coach %}<p><a class="pill" href="{% url 'invitations' %}">Invite people who know you →</a></p>{% endif %}
   </section>
 {% else %}
   <p class="results-desc">{% if for_coach %}Comparing {{ name }}'s self-assessment with the averaged responses of the {{ comparison.observers }} people {{ name }} asked.{% else %}Comparing your self-assessment with the averaged responses of {{ comparison.observers }} people who know you.{% endif %}</p>

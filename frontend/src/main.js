@@ -19,15 +19,6 @@ htmx.config.responseHandling = [
 window.htmx = htmx;
 document.documentElement.dataset.javascript = "loaded";
 
-// ✨ The onboarding sliders update their visible value without owning the form state or submission.
-document.addEventListener("input", (event) => {
-  const slider = event.target.closest("[data-onboarding-slider]");
-  if (!slider) return;
-  const output = document.querySelector(`output[for="${CSS.escape(slider.id)}"]`);
-  if (output) output.value = slider.value;
-  slider.setAttribute("aria-valuetext", `${slider.value} out of 10`);
-});
-
 // ✨ Keep the autosave status honest without flicker. "Saved" disappears as soon as the participant changes
 // their answer, because it no longer describes what is on screen. A quick save then shows "Saved" again
 // directly; "Saving…" appears only when a save is slow; a failure without a reason from the server says so.
@@ -86,53 +77,6 @@ document.addEventListener("input", (event) => {
 });
 document.querySelectorAll("textarea[maxlength]").forEach(showLengthLeft);
 
-// ✨ A contact list's "add another": with JavaScript a row is added in the page, rather than the button saving the
-// list and reloading. The new row copies the last one, emptied and numbered, and takes the focus. Nothing is
-// saved until something is typed into it, and an empty row is never kept.
-const MAX_CONTACT_ROWS = 50; // ✨ the server's MAX_CONTACTS
-
-function addContactRow(button) {
-  const rows = button.closest("form").querySelector(".contact-rows");
-  const row = rows.lastElementChild.cloneNode(true);
-  const number = rows.children.length + 1;
-  row.querySelector(".contact-num").textContent = number;
-  row.querySelectorAll(".visually-hidden").forEach((label) => {
-    label.textContent = label.textContent.replace(/^Person \d+/, `Person ${number}`);
-  });
-  row.querySelectorAll("input").forEach((input) => (input.value = ""));
-  rows.append(row);
-  button.value = number + 1;
-  button.disabled = number >= MAX_CONTACT_ROWS;
-  row.querySelector('input:not([type="hidden"])').focus(); // ✨ past the row's contact id
-}
-
-// ✨ A saved list sends back each row's contact id as it now is; put them back into the rows, so the next save
-// edits the people this one kept rather than adding them again (which would stop their observers' links).
-// A refusal about one row of a list names the field at fault; mark it (red, and aria-invalid for a screen
-// reader) until a save goes through. Rows are counted from 1, as the refusal words them.
-document.addEventListener("htmx:afterSwap", (event) => {
-  const status = event.detail.target;
-  const rows = status.classList?.contains("save-status") && status.closest("form")?.querySelector(".contact-rows");
-  if (!rows) return;
-  const saved = status.querySelector("[data-contact-ids]");
-  saved?.dataset.contactIds.split(",").forEach((id, row) => {
-    const field = rows.children[row]?.querySelector('input[name="contact"]');
-    if (field) field.value = id;
-  });
-  rows.querySelectorAll("[aria-invalid]").forEach((input) => input.removeAttribute("aria-invalid"));
-  const marked = status.querySelector("[data-invalid-row]");
-  if (!marked) return;
-  const row = rows.children[Number(marked.dataset.invalidRow) - 1];
-  row?.querySelector(`input[name="${marked.dataset.invalidField}"]`)?.setAttribute("aria-invalid", "true");
-});
-
-document.addEventListener("click", (event) => {
-  const button = event.target.closest("[data-add-row]");
-  if (!button) return;
-  event.preventDefault();
-  addContactRow(button);
-});
-
 // ✨ Each coach checklist screen takes the last one's place in the page, which leaves the window where it was: after
 // "Continue →" from the short intro, part way down the long questions. As a new page would, bring a screen whose top
 // has gone out of view back to it, and move the focus to its heading, so a screen reader says where they now are
@@ -171,6 +115,24 @@ document.addEventListener("click", async (event) => {
   }
 });
 
+// ✨ A dialog in a contact list's row (a link just issued, or asking before someone is removed) shows open in the row
+// without JavaScript; once it has loaded, as a modal, on the page and in each row htmx sends back (fix-2).
+htmx.onLoad((content) => {
+  content.querySelectorAll("dialog[data-shows-modal][open]").forEach((dialog) => {
+    dialog.close();
+    dialog.showModal();
+  });
+});
+
+// ✨ An agreement scale shows the point chosen beside its prompt, as v3's does (fix-2); without JavaScript it shows
+// once the page comes back.
+document.addEventListener("change", (event) => {
+  if (!event.target.matches?.(".rate input")) return;
+  const shown = event.target.closest("fieldset").querySelector(".scale-val");
+  shown.textContent = event.target.value;
+  shown.classList.remove("unset");
+});
+
 // ✨ Whether the visitor has asked their device for less motion; every movement below is skipped if so.
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -203,6 +165,7 @@ if (document.querySelector("main.page") && !reducedMotion) {
     navigating = true;
     const wipe = document.createElement("div");
     wipe.setAttribute("aria-hidden", "true");
+    wipe.dataset.pageWipeOverlay = "";
     Object.assign(wipe.style, {
       position: "fixed",
       inset: "0",
@@ -217,6 +180,12 @@ if (document.querySelector("main.page") && !reducedMotion) {
       { duration: 500, easing: "cubic-bezier(.7,0,.3,1)", fill: "forwards" },
     );
     animation.onfinish = () => window.location.assign(destination.href);
+  });
+  // ✨ Back restores the page from the browser's cache as it was left, overlay and all: take it away (fix-2).
+  window.addEventListener("pageshow", (event) => {
+    if (!event.persisted) return;
+    document.querySelectorAll("[data-page-wipe-overlay]").forEach((wipe) => wipe.remove());
+    navigating = false;
   });
 }
 
@@ -237,14 +206,14 @@ if (document.querySelector("main.page") && !reducedMotion) {
   const STEP_MS = 7000; // ✨ how long each step shows before the next
   let i = 0, timer, start, remain = STEP_MS;
   const pauseReasons = new Set();
-  bar.innerHTML = steps.map((step, j) => `<button class="tab" role="tab" id="atab${j}" aria-controls="aText" aria-selected="${j === 0}"><span class="n">0${j + 1}</span><b>${step.title}</b><span class="bar"><i></i></span></button>`).join("");
+  bar.innerHTML = steps.map((step, j) => `<button class="tab" role="tab" id="atab${j}" aria-controls="aText" aria-selected="${j === 0}"><span class="tab-number">0${j + 1}</span><b>${step.title}</b><span class="bar"><i></i></span></button>`).join("");
   if (imgs) imgs.innerHTML = steps.map((_, j) => `<div class="tp-anim" data-i="${j}"></div>`).join("");
   const tabs = [...bar.children];
   const pics = imgs ? [...imgs.children] : [];
   bar.style.setProperty("--dur", STEP_MS + "ms");
   const render = () => {
     const step = steps[i];
-    text.innerHTML = `<div class="tp-anim"><span class="n">STEP 0${i + 1}</span><h3>${step.title}</h3><p>${step.summary}</p></div><ul class="tp-anim">${step.activities.map((activity) => `<li><svg><use href="#leaf"/></svg>${activity}</li>`).join("")}</ul><div class="out"><span>In your workbook</span><b>${step.outcome}</b></div>`;
+    text.innerHTML = `<div class="tp-anim"><span class="tp-step">STEP 0${i + 1}</span><h3>${step.title}</h3><p>${step.summary}</p></div><ul class="tp-anim">${step.activities.map((activity) => `<li><svg><use href="#leaf"/></svg>${activity}</li>`).join("")}</ul><div class="out"><span>In your workbook</span><b>${step.outcome}</b></div>`;
     text.setAttribute("aria-labelledby", "atab" + i);
     tabs.forEach((tab, j) => {
       tab.setAttribute("aria-selected", j === i);
@@ -485,25 +454,26 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
 })();
 
 // --- Magnetic buttons (fine pointers only) ---
+// ✨ Only a pill marked data-magnetic follows the pointer: the homepage's and the hub's.
 if (window.matchMedia("(hover: hover) and (pointer: fine)").matches && !reducedMotion) {
   document.addEventListener("pointermove", (event) => {
-    const button = event.target.closest && event.target.closest(".pill");
+    const button = event.target.closest && event.target.closest("[data-magnetic]");
     if (button) {
       const box = button.getBoundingClientRect();
       const dx = (event.clientX - (box.left + box.width / 2)) / box.width;
       const dy = (event.clientY - (box.top + box.height / 2)) / box.height;
       button.style.transition = "transform .25s cubic-bezier(.2,.7,.2,1), filter .2s";
       button.style.transform = `translate(${(dx * 10).toFixed(1)}px,${(dy * 8).toFixed(1)}px)`;
-      const arrow = button.querySelector(".ar");
+      const arrow = button.querySelector(".pill-arrow");
       if (arrow) arrow.style.translate = `${(dx * 5).toFixed(1)}px ${(dy * 4).toFixed(1)}px`;
     }
   }, { passive: true });
   document.addEventListener("pointerout", (event) => {
-    const button = event.target.closest && event.target.closest(".pill");
+    const button = event.target.closest && event.target.closest("[data-magnetic]");
     if (button && !button.contains(event.relatedTarget)) {
       button.style.transition = "transform .5s cubic-bezier(.2,.7,.2,1), filter .2s";
       button.style.transform = "";
-      const arrow = button.querySelector(".ar");
+      const arrow = button.querySelector(".pill-arrow");
       if (arrow) arrow.style.translate = "";
     }
   });

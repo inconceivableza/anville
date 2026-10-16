@@ -31,6 +31,43 @@
       "description": "The translation a passage is from when it names none of its own: one of 'translations'.",
       "type": "string"
     },
+    "photos": {
+      "description": "The pathway's photos, keyed by the section each is shown with, such as the hub's next step over a section's photo. Each is a file in the pathways/files folder, with its credit.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "credit"],
+        "properties": {
+          "file": {
+            "description": "The photo's name in the pathways/files folder, such as 'grass.jpg'.",
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*\\.(jpg|jpeg|png|webp)$"
+          },
+          "credit": {
+            "description": "Who the photo is credited to. 'required' when its licence requires a credit, 'courtesy' when its licence does not ask for one, as Unsplash's does not, and 'none' when the author marks it as needing none (public domain, or the author's own). The credits page lists required credits always, courtesy ones while 'show_courtesy_credits' is on, and nothing for 'none'.",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind"],
+            "properties": {
+              "kind": { "enum": ["required", "courtesy", "none"] },
+              "text": {
+                "description": "The credit as the credits page lists it, such as 'Photograph by … on Unsplash.'",
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "if": { "required": ["kind"], "properties": { "kind": { "enum": ["required", "courtesy"] } } },
+            "then": { "required": ["text"] }
+          }
+        }
+      }
+    },
+    "show_courtesy_credits": {
+      "description": "Whether the credits page lists photos' courtesy credits, those their licence does not ask for. It never hides a credit a licence requires.",
+      "type": "boolean",
+      "default": false
+    },
     "content": {
       "type": "object",
       "additionalProperties": false,
@@ -62,6 +99,39 @@
           "additionalProperties": false,
           "required": ["method"],
           "properties": { "method": { "enum": ["compositional_share"] } }
+        },
+        "tie_break": {
+          "description": "When a participant's own sort leaves a framework's leaders too close to call (ticket 30a). A framework is tied when another construct's rounded percent is within threshold points of its leader's; at most cluster constructs, leader first, enter the tie-break. Tied on exactly one framework, the participant is marked for the tie-break; on both, they are told they are a generalist, in presentation.generalist's wording. With no tie_break, nobody is marked.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "threshold": {
+              "description": "How many percentage points behind its leader a construct may be and still tie with it. 4 when left out.",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "cluster": {
+              "description": "How many of a tied framework's top constructs, at most, enter the tie-break. 4 when left out.",
+              "type": "integer",
+              "minimum": 2
+            },
+            "budget": {
+              "description": "How many 'Which is more true of you?' pairs a participant marked for the tie-break answers, at most (ticket 30b). 10 when left out.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "statements": {
+              "description": "Three statements for each construct, keyed by its id, that the tie-break's pairs set against each other (ticket 30b). Separate from the instrument's items. Every construct needs them.",
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": { "$ref": "#/$defs/text" }
+              }
+            }
+          }
         }
       }
     },
@@ -84,6 +154,55 @@
         "privacy_notice": {
           "description": "What an observer is told before any question: who asked, what is stored, what the participant will and will not see, and how to withdraw. Paragraphs are separated by a blank line. {name} is replaced with the participant's name. The engine's own draft when left out.",
           "$ref": "#/$defs/text"
+        },
+        "reminder": {
+          "description": "The email that reminds an observer who has not answered, once a week while their link works. It is the first message the observer gets, so it says where their name and email came from, what they are used for, how often and until when. {name} is replaced with the participant's name, {observer} with the observer's, and {until} with the day their link stops working. Each field left out is the engine's draft's.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "subject": { "$ref": "#/$defs/text" },
+            "body": {
+              "description": "Paragraphs are separated by a blank line.",
+              "$ref": "#/$defs/text"
+            },
+            "stop": {
+              "description": "The line before the link that stops the reminders.",
+              "$ref": "#/$defs/text"
+            },
+            "answer": {
+              "description": "The button that leads to the privacy notice and a fresh link of the observer's own.",
+              "$ref": "#/$defs/text"
+            },
+            "details": {
+              "description": "The link beside the button, to the same page, for the privacy notice.",
+              "$ref": "#/$defs/text"
+            }
+          }
+        },
+        "relationship": {
+          "description": "How the observer knows the participant, asked with the observer assessment and stored with it, never used to slice or filter results. Not asked when left out.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["question", "choices"],
+          "properties": {
+            "question": {
+              "description": "The question's label. {name} is replaced with the participant's name.",
+              "$ref": "#/$defs/text"
+            },
+            "choices": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["id", "label"],
+                "properties": {
+                  "id": { "$ref": "#/$defs/identifier" },
+                  "label": { "$ref": "#/$defs/text" }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -134,6 +253,47 @@
           "$ref": "#/$defs/text"
         },
         "disclaimer": { "$ref": "#/$defs/text" },
+        "generalist": {
+          "description": "What the results page tells a participant tied on both frameworks (measurement.tie_break): that they are a generalist. Needed whenever the pathway has a tie-break.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["heading", "text"],
+          "properties": {
+            "heading": { "$ref": "#/$defs/text" },
+            "text": { "$ref": "#/$defs/text" }
+          }
+        },
+        "tie_break": {
+          "description": "The wording of the tie-break's pair screen (measurement.tie_break, ticket 30b): the question over each pair, the skip, and a quiet label naming each framework, keyed by its id (the framework's own label when left out). Then what the results page says on the framework the answers re-weighted (ticket 30c): separated, with a new leader (changed) or the same one (same), or genuinely balanced, the choices having gone in a circle (circle) or left the best of them level (level). Needed whenever the pathway has a tie-break.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["question", "skip", "separated", "balanced"],
+          "properties": {
+            "question": { "$ref": "#/$defs/text" },
+            "skip": { "$ref": "#/$defs/text" },
+            "frameworks": { "type": "object", "additionalProperties": { "$ref": "#/$defs/text" } },
+            "separated": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["heading", "changed", "same"],
+              "properties": {
+                "heading": { "$ref": "#/$defs/text" },
+                "changed": { "$ref": "#/$defs/text" },
+                "same": { "$ref": "#/$defs/text" }
+              }
+            },
+            "balanced": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["heading", "circle", "level"],
+              "properties": {
+                "heading": { "$ref": "#/$defs/text" },
+                "circle": { "$ref": "#/$defs/text" },
+                "level": { "$ref": "#/$defs/text" }
+              }
+            }
+          }
+        },
         "standing": {
           "description": "Where a construct's share stands, in words, on the results page and the comparison, by how far it sits from an even share of its framework (an even share is 100 divided among the framework's constructs). A share takes the highest band whose at_least, a percent of an even share, it reaches, in whatever order the bands are written; below them all it takes the below label. Placeholders (Leading 125, Strong 105, Present 85, Less used) when left out.",
           "type": "object",
@@ -237,6 +397,11 @@
             "sort_heading": { "$ref": "#/$defs/text" },
             "sort_instruction": { "$ref": "#/$defs/text" },
             "all_sorted": { "$ref": "#/$defs/text" },
+            "send_or_fine_tune": {
+              "description": "Shown to observers only, once every card is placed, beside sending now and fine-tuning first.",
+              "$ref": "#/$defs/text"
+            },
+            "fine_tune_label": { "$ref": "#/$defs/text" },
             "fine_tune_heading": { "$ref": "#/$defs/text" },
             "fine_tune_intro": { "$ref": "#/$defs/text" },
             "slider_min": { "$ref": "#/$defs/text" },
@@ -296,6 +461,34 @@
           "$ref": "#/$defs/identifier"
         },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "number": {
+          "description": "The section's number as the hub shows it beside the section, such as '01', or '02–04' for a section standing in for three. Without one, the hub shows none.",
+          "type": "string",
+          "pattern": "^[0-9]+(–[0-9]+)?$"
+        },
+        "side_card": {
+          "description": "Draw this section as a card beside the hub's list of sections, below it on a phone, rather than in the list, as Walk with a coach is. The card shows the section's title, this sentence and its status.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sentence"],
+          "properties": {
+            "sentence": { "$ref": "#/$defs/text" }
+          }
+        },
+        "wizard": {
+          "description": "Take a participant who has not completed this section to it in place of the hub, shown page by page without the hub's links or the sidebar, beside the section's photo, as Before we begin is. Once complete it is listed in the hub as any other section.",
+          "const": true
+        },
+        "next_step": {
+          "description": "What the hub's next step says while this section is the next step, in place of the section's title and time estimate, such as 'Start with your gifts.' and a sentence on what it asks.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["heading", "sentence"],
+          "properties": {
+            "heading": { "$ref": "#/$defs/text" },
+            "sentence": { "$ref": "#/$defs/text" }
+          }
+        },
         "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } },
         "gate": { "$ref": "#/$defs/gate" },
         "complete_label": {
@@ -308,7 +501,7 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "section_link", "download", "page_break"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "section_link", "download", "page_break"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
@@ -318,6 +511,7 @@
         { "if": { "properties": { "type": { "const": "single_select" } } }, "then": { "$ref": "#/$defs/single_select" } },
         { "if": { "properties": { "type": { "const": "contact_list" } } }, "then": { "$ref": "#/$defs/contact_list" } },
         { "if": { "properties": { "type": { "const": "coach_checklist" } } }, "then": { "$ref": "#/$defs/coach_checklist" } },        { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } },
+        { "if": { "properties": { "type": { "const": "sort_results" } } }, "then": { "$ref": "#/$defs/sort_results" } },
         { "if": { "properties": { "type": { "const": "section_link" } } }, "then": { "$ref": "#/$defs/section_link" } },
         { "if": { "properties": { "type": { "const": "download" } } }, "then": { "$ref": "#/$defs/download" } },
         { "if": { "properties": { "type": { "const": "page_break" } } }, "then": { "$ref": "#/$defs/page_break" } }
@@ -455,7 +649,7 @@
       }
     },
     "contact_list": {
-      "description": "People who know the participant, a first name and an email address per row, with a way to add another. They are kept as contacts, apart from the participant's answers. At most 50.",
+      "description": "People who know the participant, a first name and an email address per row, each added with their observer's link or changed on their own. Once its rows are filled, one more is offered. They are kept as contacts, apart from the participant's answers. At most 50.",
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "type"],
@@ -463,10 +657,17 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "contact_list" },
         "estimate": { "$ref": "#/$defs/estimate" },
-        "min_rows": {
-          "description": "How many empty rows the list opens with. The section's gate says how many people are needed.",
+        "needed": {
+          "description": "How many of the list's first rows are marked as needed. The section's gate says what completing it takes.",
           "type": "integer",
-          "minimum": 1,
+          "minimum": 0,
+          "maximum": 50,
+          "default": 0
+        },
+        "optional": {
+          "description": "How many more rows follow the needed ones, marked as optional.",
+          "type": "integer",
+          "minimum": 0,
           "maximum": 50,
           "default": 5
         }
@@ -595,6 +796,21 @@
         }
       }
     },
+    "sort_results": {
+      "description": "A sort's results, shown in full as its results page shows them, once the participant has them; before then, nothing.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "sort"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "sort_results" },
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "sort": {
+          "description": "The identifier of the sort whose results these are.",
+          "$ref": "#/$defs/identifier"
+        }
+      }
+    },
     "download": {
       "description": "A file for the participant to download, such as a workbook to print. The app serves it only to a participant who has reached this block.",
       "type": "object",
@@ -605,7 +821,7 @@
         "type": { "const": "download" },
         "estimate": { "$ref": "#/$defs/estimate" },
         "file": {
-          "description": "The PDF's name in the pathways/files folder, such as 'whatever-you-do-workbook.pdf'.",
+          "description": "The PDF's name in the pathways/files folder, such as 'whatever-you-do-workbook-section-2.pdf'.",
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*\\.pdf$"
         },
@@ -614,7 +830,7 @@
           "$ref": "#/$defs/text"
         },
         "button_label": {
-          "description": "The wording of the button that downloads it, such as 'Download the workbook (PDF)'.",
+          "description": "The wording of the button that downloads it, such as 'Download Section 2 (PDF)'.",
           "$ref": "#/$defs/text"
         }
       }

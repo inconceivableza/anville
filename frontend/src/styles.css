@@ -8,8 +8,8 @@
  * its two fonts and the base styles the current blocks need. Later screens add their rules here.
  *
  * The palette is Whatever You Do's branding, not Anville's. Rules below use the variables only, never raw
- * colours, so a later per-pathway theme can swap the :root block alone. The variable names are the
- * prototype's (so "--gold" is green) to keep its rules portable as they are.
+ * colours, so a later per-pathway theme can swap the :root block alone. Each colour has one name, the final
+ * prototype's where it has one, so its rules can be brought in as they are.
  *
  * Fonts are bundled by Vite and served from this deployment: loading them from Google would send every
  * visitor's IP address to Google.
@@ -21,20 +21,16 @@
 
 :root {
   color-scheme: light;
-  /* ✨ Whatever You Do palette. The variable names are Anville's to keep the rules below portable; only their values
-     changed. New names from the reference HTML are added as aliases where it uses them. "--gold" is the prototype's
-     deep green, which text can be read in; its lime accent is "--green", for fills and for the dark panels. */
-  --gold: #2f5a2b;
-  --gold-dark: #2f5a2b;
+  /* ✨ Whatever You Do palette, one name per colour (ticket 53a). "--green-deep" is the prototype's deep green, which
+     text can be read in; its lime accent is "--green", for fills and for the dark panels. The "--gold-" tints keep
+     the original prototype's names. */
   --gold-light: #b8dd8a;
   --gold-pale: #eef5df;
   --gold-glow: rgba(166, 207, 114, 0.2);
   --focus-ring: rgba(166, 207, 114, 0.15);
   --ink: #1c1714;
   --ink-light: #3d2d27;
-  --ink-muted: #6c625a;
   --cream: #f2f0e3;
-  --white: #f8f7ef;
   --sage: #7a9e5a;
   --sage-light: #eef5df;
   --red-soft: #c25b56;
@@ -45,9 +41,9 @@
   --needs-choice-border: #e0b850;
   --needs-choice-bg: #fdf8ec;
   --needs-choice-ring: rgba(224, 184, 80, 0.18);
-  /* ✨ A field a refusal named: --red-soft, faintly, as the focus ring is --gold. */
+  /* ✨ A field a refusal named: --red-soft, faintly, as the focus ring is --green-deep. */
   --error-ring: rgba(194, 91, 86, 0.18);
-  /* ✨ The coach checklist's outcomes, as the mock-up colours them: going ahead is --gold, a second thought amber, a stop --red-soft. */
+  /* ✨ The coach checklist's outcomes, as the mock-up colours them: going ahead is --green-deep, a second thought amber, a stop --red-soft. */
   --warn: #b8860b;
   --warn-pale: #fdf6e3;
   --stop-pale: #fbeeed;
@@ -88,11 +84,8 @@
   --bucket-4-pale: #e8eef5;
   --bucket-5: #7a9e5a;
   --bucket-5-pale: #eef5df;
-  /* ✨ The homepage, as the prototypes colour it: the dark brown of its menu and coach panel, its footer, the hero
-     behind the video, and the mockups' tones in the newer "How it works". */
-  --deep: #1d1413;
-  --deep-menu: rgba(29, 20, 19, 0.97);
-  --footer: #1d1413;
+  /* ✨ The homepage, as the prototypes colour it: the hero behind the video, and the mockups' tones in the newer "How
+     it works". Its menu, coach panel and footer are --brown. */
   --hero-bg: #2a1d17;
   --hero-shade: rgba(0, 0, 0, 0.35);
   --menu-shade: rgba(0, 0, 0, 0.3);
@@ -127,7 +120,7 @@
   --font-script: "Newsreader Variable", Georgia, "Times New Roman", serif;
   --font-mono: "Instrument Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
-  /* ✨ Aliases from the reference HTML, so its rules can be dropped in verbatim. */
+  /* ✨ The final prototype's names, so its rules can be dropped in verbatim. */
   --paper: #f8f7ef;
   --brown: #1d1413;
   --brown-2: #2b1f1c;
@@ -138,6 +131,10 @@
   --green-ink: #1d2a10;
   --green-deep: #2f5a2b;
   --on-dark-2: #c9bdb0;
+  /* ✨ v3's rating buttons (fix-2): a hovered point's edge, and the points below the one chosen. */
+  --rate-hover-edge: #b5ab92;
+  --rate-in: #dfe9cf;
+  --rate-in-edge: #c3d6a6;
 
   /* ✨ The new look's tints and shades, named by their colour and opacity. */
   --brown-05: rgba(29, 20, 19, 0.05);
@@ -153,6 +150,7 @@
   --brown-78: rgba(29, 20, 19, 0.78);
   --brown-85: rgba(29, 20, 19, 0.85);
   --brown-86: rgba(29, 20, 19, 0.86);
+  --brown-97: rgba(29, 20, 19, 0.97);
   --on-dark-22: rgba(242, 236, 226, 0.22);
   --warm-12: rgba(255, 240, 220, 0.12);
   --warm-14: rgba(255, 240, 220, 0.14);
@@ -249,7 +247,7 @@ body {
 }
 
 .site-header-title:hover {
-  color: var(--gold);
+  color: var(--green-deep);
 }
 
 /* ✨ The sidebar is a <details>: its summary is the button, and once open the list is a panel down the left of the
@@ -268,7 +266,7 @@ body {
 
 .pathway-nav-toggle[open] > summary {
   background: var(--gold-pale);
-  border-color: var(--gold);
+  border-color: var(--green-deep);
 }
 
 .pathway-nav {
@@ -280,7 +278,7 @@ body {
   max-height: calc(100vh - 100%);
   overflow-y: auto;
   padding: var(--space-lg);
-  background: var(--white);
+  background: var(--paper);
   border-right: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   box-shadow: 0 8px 24px var(--shadow);
@@ -308,7 +306,7 @@ body {
 
 .pathway-nav-section.is-current > .pathway-nav-row {
   background: var(--gold-pale);
-  border-left-color: var(--gold);
+  border-left-color: var(--green-deep);
 }
 
 /* ✨ A part of a section, indented within that section's entry (ticket 41b) */
@@ -324,13 +322,13 @@ body {
 }
 
 span.pathway-nav-title {
-  color: var(--ink-muted);
+  color: var(--muted);
   font-weight: 500;
 }
 
 a.pathway-nav-title:hover,
 .pathway-nav-links a:hover {
-  color: var(--gold);
+  color: var(--green-deep);
 }
 
 .pathway-nav-links {
@@ -349,7 +347,7 @@ a.pathway-nav-title:hover,
 }
 
 .pathway-nav-links a[aria-current="page"] {
-  color: var(--gold);
+  color: var(--green-deep);
   font-weight: 600;
 }
 
@@ -362,7 +360,7 @@ a.pathway-nav-title:hover,
 }
 
 .site-footer a {
-  color: var(--ink-muted);
+  color: var(--muted);
 }
 
 /* ---------- ONBOARDING ---------- */
@@ -387,7 +385,13 @@ main.container:has(> .ob) {
   border-radius: var(--radius-xl);
 }
 
+/* ✨ As tall as the wizard's first page, and no taller: a longer page (the ratings) scrolls past it while it stays in
+   view, as v3's photo fills the viewport, rather than stretching with the page and zooming its photo (fix-2). */
 .ob-photo {
+  position: sticky;
+  top: var(--space-2xs);
+  align-self: start;
+  height: min(760px, calc(100vh - 40px) - 2 * var(--space-2xs));
   display: grid;
   align-content: space-between;
   min-height: 420px;
@@ -407,6 +411,16 @@ main.container:has(> .ob) {
 .ob-photo > * {
   position: relative;
   z-index: 1;
+}
+
+/* ✨ The wizard's section photo fills the panel beneath its shade, as the prototype's does (ticket 50). */
+.ob-photo > img {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .ob-photo-art {
@@ -513,170 +527,10 @@ main.container:has(> .ob) {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.step-intro {
-  display: grid;
-  gap: var(--space-sm);
-}
-
 .step h1 {
   margin: 0;
   font-size: clamp(36px, 4.6vw, 56px);
   font-weight: 300;
-}
-
-.step .why {
-  max-width: 50ch;
-  color: var(--muted);
-  font-size: var(--text-md);
-}
-
-.opts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-xs);
-  border: 0;
-}
-
-.opt {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: start;
-  gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
-  border-radius: var(--radius-md);
-  background: var(--paper);
-  box-shadow: inset 0 0 0 1px var(--cream-2);
-  cursor: pointer;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
-}
-
-.opt:has(input:checked) {
-  background: var(--brown);
-  box-shadow: none;
-  color: var(--on-dark);
-}
-
-.opt input {
-  margin-top: 5px;
-  accent-color: var(--green);
-}
-
-.opt b {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  font-weight: 400;
-}
-
-.opt small {
-  display: block;
-  margin-top: var(--space-2xs);
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.opt:has(input:checked) small {
-  color: var(--on-dark-2);
-}
-
-.path-options .opt {
-  min-height: 108px;
-  align-content: center;
-}
-
-.baseline-questions {
-  display: grid;
-}
-
-.scale {
-  display: grid;
-  gap: var(--space-sm);
-  padding: var(--space-lg) 0;
-  border-top: 1px solid var(--cream-2);
-}
-
-.scale > label {
-  font-family: var(--font-heading);
-  font-size: clamp(20px, 2vw, 26px);
-  line-height: 1.2;
-  text-wrap: pretty;
-}
-
-.sl {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 2ch;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.sl input[type="range"] {
-  width: 100%;
-  accent-color: var(--green-deep);
-  cursor: pointer;
-}
-
-.sl output {
-  color: var(--ink);
-  font-family: var(--font-heading);
-  font-size: var(--text-xl);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.ends {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-md);
-  color: var(--muted);
-  font-size: var(--text-xs);
-}
-
-.field {
-  display: grid;
-  gap: var(--space-xs);
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.field strong {
-  color: var(--ink);
-  font-size: var(--text-md);
-  font-weight: 500;
-}
-
-.check {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
-  color: var(--ink-light);
-}
-
-.check input {
-  width: 17px;
-  height: 17px;
-  flex: 0 0 auto;
-  margin-top: 3px;
-  accent-color: var(--green-deep);
-}
-
-.aside {
-  padding-left: var(--space-md);
-  border-left: 2px solid var(--green);
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.step-foot {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-md);
-  padding-top: var(--space-xs);
-}
-
-.ob-error {
-  margin-bottom: var(--space-md);
-  color: var(--red-text);
 }
 
 @media (max-width: 900px) {
@@ -686,6 +540,9 @@ main.container:has(> .ob) {
   }
 
   .ob-photo {
+    position: relative;
+    top: auto;
+    height: auto;
     min-height: 240px;
   }
 
@@ -740,10 +597,6 @@ main.container:has(> .ob) {
   .ob-main {
     padding: var(--space-lg) var(--space-md) var(--space-xl);
   }
-
-  .opts {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -751,8 +604,7 @@ main.container:has(> .ob) {
     animation: none;
   }
 
-  .prog .bar i,
-  .opt {
+  .prog .bar i {
     transition: none;
   }
 }
@@ -763,7 +615,8 @@ main.container:has(> .ob) {
   margin-bottom: 6px;
 }
 
-.credits-notice {
+.credits-notice,
+.credits-photo {
   font-size: var(--text-sm);
   color: var(--ink-light);
   margin-bottom: 16px;
@@ -777,7 +630,7 @@ main.container:has(> .ob) {
   [data-reveal] .w,
   .lg,
   .pill,
-  .pill .ar {
+  .pill .pill-arrow {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
@@ -828,11 +681,41 @@ h2 {
   padding-inline: clamp(16px, 4vw, 48px);
 }
 
-.hub {
+/* ✨ The prototype's frame (ticket 49a): the page deep brown, and the hub, with the header above it, cream and inset
+   10px within it, its content on the 1180px wrap rather than in the 720px container */
+body:has(> main > .hub) {
+  background: var(--brown);
+  padding: 10px;
+}
+
+body:has(> main > .hub) > .site-header {
   background: var(--cream);
-  border-radius: var(--radius-panel);
-  margin: calc(-1 * var(--space-xl)) calc(-1 * var(--space-2xl)) 0;
-  padding: var(--space-xl) var(--space-2xl) var(--space-4xl);
+  border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+}
+
+body:has(> main > .hub) > main.container {
+  max-width: none;
+  padding: 0 0 var(--space-xl);
+  background: var(--cream);
+  border-radius: 0 0 var(--radius-panel) var(--radius-panel);
+}
+
+body:has(> main > .hub) > .site-footer {
+  padding-top: var(--space-md);
+}
+
+body:has(> main > .hub) > .site-footer a {
+  color: var(--on-dark-2);
+}
+
+main > .hub ~ .hub-consent {
+  max-width: 1180px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 48px);
+}
+
+.hub {
+  padding-bottom: var(--space-3xl);
 }
 
 .hub-head {
@@ -890,6 +773,19 @@ h2 {
   background: linear-gradient(0deg, var(--brown-85), var(--brown-15));
 }
 
+/* ✨ The section's photo, where the document names one, under the same shade; taller, as the prototype's (ticket 49b). */
+.next:has(> img) {
+  min-height: 360px;
+}
+
+.next > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .next > *:not(img) {
   position: relative;
   z-index: 2;
@@ -923,10 +819,29 @@ h2 {
   border-top: 1px solid var(--cream-2);
 }
 
-.srow .n {
+.srow .srow-number {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--muted);
+}
+
+/* ✨ A section's row keeps its columns whether or not it has a number (ticket 49a) */
+.slist > .srow > .srow-body {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.slist > .srow > .tag {
+  grid-column: 3;
+}
+
+/* ✨ The hub's section and side card headings take the heading face, as v3's h3 does (fix-2). */
+.srow h3,
+.card h3 {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.08;
 }
 
 .srow h3 {
@@ -939,7 +854,7 @@ h2 {
 }
 
 .srow h3 a:hover {
-  color: var(--gold);
+  color: var(--green-deep);
 }
 
 .srow p {
@@ -1008,7 +923,7 @@ h2 {
   white-space: nowrap;
 }
 
-.tag.go {
+.tag.up-next {
   background: var(--green);
   color: var(--green-ink);
 }
@@ -1051,21 +966,43 @@ h2 {
   gap: var(--space-sm);
 }
 
+/* ✨ A section drawn as a hub side card (ticket 49a): its title leads to it, as a row's does, unless it is locked */
+.hub-side-card h3 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.hub-side-card h3 a:hover {
+  color: var(--green-deep);
+}
+
+/* ✨ On the dark card, its light text, and the lime accent when hovered, as v3's dark card reads (fix-2). */
+.card.dark h3 a {
+  color: var(--on-dark);
+}
+
+.card.dark h3 a:hover {
+  color: var(--green);
+}
+
+.hub-side-card.locked h3 {
+  color: var(--muted);
+}
+
 .meter {
   display: grid;
   gap: var(--space-2xs);
   font-size: 12.5px;
 }
 
-.meter .lbl {
+.meter .meter-label {
   display: flex;
   justify-content: space-between;
   font-variant-numeric: tabular-nums;
 }
 
-/* ✨ The meters and baseline bars are <progress> elements, so their fill needs no inline width */
-.meter .tr,
-.base .tr {
+/* ✨ The meters are <progress> elements, so their fill needs no inline width */
+.meter .track {
   appearance: none;
   display: block;
   width: 100%;
@@ -1076,65 +1013,16 @@ h2 {
   background: var(--track-on-dark);
 }
 
-.meter .tr::-webkit-progress-bar {
+.meter .track::-webkit-progress-bar {
   background: var(--track-on-dark);
 }
 
-.meter .tr::-webkit-progress-value {
+.meter .track::-webkit-progress-value {
   background: var(--green);
 }
 
-.meter .tr::-moz-progress-bar {
+.meter .track::-moz-progress-bar {
   background: var(--green);
-}
-
-.names {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2xs);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.names li {
-  font-size: 12.5px;
-  padding: var(--space-2xs) var(--space-sm);
-  border-radius: var(--radius-pill-shape);
-  background: var(--warm-12);
-}
-
-.base {
-  display: grid;
-  gap: var(--space-sm);
-}
-
-.base .b {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 110px 18px;
-  gap: var(--space-sm);
-  align-items: center;
-  font-size: var(--text-sm);
-  color: var(--muted);
-}
-
-.base .tr,
-.base .tr::-webkit-progress-bar {
-  background: var(--cream-2);
-}
-
-.base .tr::-webkit-progress-value {
-  background: var(--brown-3);
-}
-
-.base .tr::-moz-progress-bar {
-  background: var(--brown-3);
-}
-
-.base b {
-  text-align: right;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
 }
 
 /* The hub's own nav, replacing the old sidebar header (ticket 41a) */
@@ -1163,14 +1051,6 @@ h2 {
   color: var(--ink);
 }
 
-/* The hub breaks out of the 720px container; on a phone it fills the width */
-@media (max-width: 720px) {
-  .hub {
-    margin: calc(-1 * var(--space-xl)) 0 0;
-    border-radius: 0;
-  }
-}
-
 /* A section page: the way back, and the completion the participant chooses */
 
 .back-to-hub {
@@ -1179,11 +1059,11 @@ h2 {
 }
 
 .back-to-hub a {
-  color: var(--ink-muted);
+  color: var(--muted);
 }
 
 .back-to-hub a:hover {
-  color: var(--gold);
+  color: var(--green-deep);
 }
 
 .completion {
@@ -1195,7 +1075,7 @@ h2 {
 /* ✨ "Page 2 of 3", under a paged section's heading */
 .page-count {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
   margin-bottom: 8px;
 }
 
@@ -1225,7 +1105,7 @@ form + .way-on,
 .completion-done {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--gold);
+  color: var(--green-deep);
 }
 
 .gate-messages {
@@ -1251,12 +1131,12 @@ form + .way-on,
 /* A requirement already met stays in its place, quieter, so the list keeps its height */
 .gate-messages li.is-met {
   background: none;
-  border-left-color: var(--gold);
-  color: var(--ink-muted);
+  border-left-color: var(--green-deep);
+  color: var(--muted);
 }
 
 .gate-messages li.is-met .gate-mark {
-  color: var(--gold);
+  color: var(--green-deep);
 }
 
 .gate-refused {
@@ -1267,67 +1147,89 @@ form + .way-on,
 
 /* Buttons */
 
-/* ✨ Shaped as the prototype's pill (ticket 48); a page's own markup moves to .pill with ticket 53 */
-.btn {
+/* ✨ Every button and button-like link is the prototype's pill (ticket 53a): dark green text on the light green, which
+   light text on it would not pass for contrast. .ghost is its ring in the text's colour; .full spans its row, .small
+   is the header's and the save row's size. These come before the pages' own rules, so a page can still hide or place
+   one. */
+.pill {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-lg);
-  border: none;
+  gap: var(--space-sm);
+  border: 0;
   border-radius: var(--radius-pill-shape);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  cursor: pointer;
-  transition: filter 0.2s, background 0.2s;
-}
-
-/* ✨ As the prototype's pill: dark green text on the light green, which light text on it would not pass for contrast */
-.btn-primary {
+  padding: var(--space-sm) var(--space-lg);
   background: var(--green);
   color: var(--green-ink);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.2s;
 }
 
-.btn-primary:hover {
+/* ✨ The prototype's arrow sits closer to the pill's end than its words would */
+.pill:has(> .pill-arrow) {
+  padding-right: var(--space-md);
+}
+
+.pill .pill-arrow {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-round-shape);
+  display: grid;
+  place-items: center;
+  background: var(--white-40);
+  transition: transform 0.25s, translate 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.pill .pill-arrow svg,
+.pill > svg {
+  width: 10px;
+  height: 10px;
+  display: block;
+}
+
+.pill:hover {
   filter: brightness(1.06);
 }
 
-.btn-primary:disabled {
+.pill:hover .pill-arrow {
+  transform: rotate(45deg);
+}
+
+.pill:focus-visible {
+  outline: 2px solid var(--green-deep);
+  outline-offset: 2px;
+}
+
+.pill:disabled:not(.ghost) {
   background: var(--border);
-  color: var(--ink-muted);
+  color: var(--muted);
   cursor: not-allowed;
 }
 
-.btn-full {
-  width: 100%;
-}
-
-/* ✨ As the prototype's ghost pill: a ring in the text's colour */
-.btn-secondary {
-  background: var(--white);
-  color: var(--ink);
+/* ✨ On the cream, its pale fill, as the ghost button had before ticket 53a (fix-2); on a dark panel, none. */
+.pill.ghost {
+  background: var(--paper);
+  color: inherit;
   box-shadow: inset 0 0 0 1px currentColor;
 }
 
-.btn-secondary:hover {
-  background: var(--cream);
+.pill.full {
+  width: 100%;
+  justify-content: center;
 }
 
-.btn-sm {
+.pill.small {
   padding: var(--space-xs) var(--space-md);
   font-size: var(--text-xs);
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 2px;
 }
 
 /* Panels: a long-text question */
 
 .question-card {
-  background: var(--white);
+  background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: var(--space-lg);
@@ -1352,7 +1254,7 @@ form + .way-on,
   font-size: var(--text-md);
   line-height: 1.5;
   color: var(--ink);
-  background: var(--white);
+  background: var(--paper);
   resize: vertical;
   min-height: 80px;
   transition: border-color 0.2s;
@@ -1360,16 +1262,18 @@ form + .way-on,
 
 .question-card textarea:focus {
   outline: none;
-  border-color: var(--gold);
+  border-color: var(--green-deep);
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 /*
  * ✨ A single select, as the prototype's account screen draws it: the browser's own arrow replaced by a
  * small caret, drawn from two gradient halves so it takes --ink rather than a raw colour in an SVG.
- * 16px text also stops iOS zooming in on it.
+ * 16px text also stops iOS zooming in on it. A form panel's, such as the observer's optional relationship, takes the
+ * same look as the text inputs it sits among (fix-2), without the amber, since nothing needs choosing there.
  */
-.question-card select {
+.question-card select,
+.name-section select {
   width: 100%;
   padding: var(--space-md) var(--space-2xl) var(--space-md) var(--space-md);
   border: 1px solid var(--border);
@@ -1379,7 +1283,7 @@ form + .way-on,
   color: var(--ink);
   -webkit-appearance: none;
   appearance: none;
-  background-color: var(--white);
+  background-color: var(--paper);
   background-image:
     linear-gradient(45deg, transparent 50%, var(--ink) 50%),
     linear-gradient(135deg, var(--ink) 50%, transparent 50%);
@@ -1398,13 +1302,15 @@ form + .way-on,
   box-shadow: 0 0 0 3px var(--needs-choice-ring);
 }
 
-.question-card select:focus {
+.question-card select:focus,
+.name-section select:focus {
   outline: none;
-  border-color: var(--gold);
+  border-color: var(--green-deep);
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
-/* ✨ A contact list, as the prototype's contact screen: a numbered row per person, the name narrower than the email. */
+/* ✨ A contact list, as the prototype's contact screen: a numbered row per person, the name narrower than the email,
+   marked needed or optional, each saved on its own; under a person, their link and its buttons (ticket 51a). */
 .contact-rows {
   list-style: none;
   margin: 0 0 var(--space-xs);
@@ -1413,9 +1319,74 @@ form + .way-on,
 
 .contact-row {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-xs);
   align-items: center;
-  margin-bottom: 6px;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.contact-person {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1 0 100%;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+/* ✨ Under the fields, on a line of its own, so a refusal never squeezes them (fix-2). */
+.contact-person .save-status {
+  flex: 1 0 100%;
+  margin: 0;
+}
+
+.contact-person .save-status:empty {
+  display: none;
+}
+
+/* ✨ A link just issued, or asking before someone is removed: a modal once JavaScript has loaded, and without it, open
+   in the row, under the person (fix-2). */
+.contact-dialog {
+  max-width: min(520px, calc(100vw - 2 * var(--space-md)));
+  padding: var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* ✨ Centred on the page, over a backdrop: the reset at the top takes away the browser's own `margin: auto`, which
+   left a modal dialog in the window's top corner (fix-2). */
+.contact-dialog:modal {
+  margin: auto;
+}
+
+.contact-dialog::backdrop {
+  background: var(--hero-shade);
+}
+
+.contact-dialog:not(:modal) {
+  position: static;
+  flex: 1 0 100%;
+  order: 1;
+  max-width: none;
+  margin: var(--space-xs) 0 0;
+}
+
+.contact-dialog h3 {
+  margin: 0 0 var(--space-xs);
+}
+
+.contact-dialog form {
+  display: inline-block;
+  margin: var(--space-sm) var(--space-xs) 0 0;
+}
+
+/* ✨ A quiet label, at v3's tag size (fix-2). */
+.contact-need {
+  flex: 0 0 auto;
+  font-size: 10px;
+  padding: 3px 8px;
 }
 
 .contact-num {
@@ -1428,7 +1399,7 @@ form + .way-on,
   justify-content: center;
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--gold);
+  color: var(--green-deep);
 }
 
 .question-card .contact-field {
@@ -1437,11 +1408,11 @@ form + .way-on,
 }
 
 .contact-name {
-  flex: 2;
+  flex: 2 1 0;
 }
 
 .contact-email {
-  flex: 3;
+  flex: 3 1 0;
 }
 
 .contact-field input {
@@ -1452,12 +1423,12 @@ form + .way-on,
   font-family: var(--font-body);
   font-size: var(--text-md);
   color: var(--ink);
-  background: var(--white);
+  background: var(--paper);
 }
 
 .contact-field input:focus {
   outline: none;
-  border-color: var(--gold);
+  border-color: var(--green-deep);
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
@@ -1468,7 +1439,7 @@ form + .way-on,
 }
 
 @media (max-width: 600px) {
-  .contact-row {
+  .contact-person {
     flex-wrap: wrap;
   }
 
@@ -1519,13 +1490,13 @@ form + .way-on,
 }
 
 .coach-needed b {
-  color: var(--gold);
+  color: var(--green-deep);
 }
 
 .coach-footnote,
 .coach-sub {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
   margin: 0 0 var(--space-md);
 }
 
@@ -1538,13 +1509,13 @@ form + .way-on,
   font-family: var(--font-body);
   font-size: var(--text-md);
   color: var(--ink);
-  background: var(--white);
+  background: var(--paper);
 }
 
 .coach-checklist input[type="text"]:focus,
 .coach-checklist input[type="email"]:focus {
   outline: none;
-  border-color: var(--gold);
+  border-color: var(--green-deep);
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
@@ -1629,8 +1600,8 @@ form + .way-on,
   border-radius: var(--radius-lg);
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--ink-muted);
-  background: var(--white);
+  color: var(--muted);
+  background: var(--paper);
   transition: all 0.12s;
 }
 
@@ -1639,14 +1610,14 @@ form + .way-on,
 }
 
 .coach-option input:focus-visible + span {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--green-deep);
   outline-offset: 2px;
 }
 
 .coach-yes input:checked + span {
-  border-color: var(--gold);
+  border-color: var(--green-deep);
   background: var(--gold-pale);
-  color: var(--gold);
+  color: var(--green-deep);
 }
 
 .coach-maybe input:checked + span {
@@ -1670,6 +1641,7 @@ form + .way-on,
 
 .coach-grow {
   flex: 1;
+  justify-content: center;
 }
 
 .coach-outcome {
@@ -1685,7 +1657,7 @@ form + .way-on,
 
 .coach-go {
   background: var(--gold-pale);
-  border-left: 4px solid var(--gold);
+  border-left: 4px solid var(--green-deep);
 }
 
 .coach-check {
@@ -1747,7 +1719,7 @@ form + .way-on,
 .coach-brief > summary::after {
   content: "\25be";
   margin-left: auto;
-  color: var(--gold);
+  color: var(--green-deep);
   font-size: var(--text-xs);
 }
 
@@ -1770,7 +1742,7 @@ form + .way-on,
 .coach-brief-sub {
   display: block;
   font-size: var(--text-xs);
-  color: var(--ink-muted);
+  color: var(--muted);
   margin-top: 1px;
 }
 
@@ -1804,7 +1776,7 @@ form + .way-on,
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--gold);
+  color: var(--green-deep);
   display: block;
 }
 
@@ -1829,7 +1801,7 @@ form + .way-on,
 }
 
 .coach-brief-avoid {
-  background: var(--white);
+  background: var(--paper);
   border-left: 3px solid var(--red-soft);
   border-radius: var(--radius-md);
   padding: var(--space-sm) var(--space-sm);
@@ -1863,7 +1835,7 @@ form + .way-on,
   height: 22px;
   margin: var(--space-2xs) 0 0;
   flex-shrink: 0;
-  accent-color: var(--gold);
+  accent-color: var(--green-deep);
 }
 
 .coach-commitment-text {
@@ -1878,7 +1850,7 @@ form + .way-on,
   margin: var(--space-2xs) 0 0;
 }
 
-.coach-commitments .btn-full + .btn-full {
+.coach-commitments .pill.full + .pill.full {
   margin-top: 8px;
 }
 
@@ -1909,7 +1881,7 @@ form + .way-on,
   width: 18px;
   height: 18px;
   margin-top: 3px;
-  accent-color: var(--gold);
+  accent-color: var(--green-deep);
 }
 
 /* ✨ The comparison's coach box: its line sits under the label's words, not under the box. */
@@ -1931,11 +1903,11 @@ form + .way-on,
 
 .coach-kept p {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
   margin: 0 0 var(--space-sm);
 }
 
-.btn-primary.coach-warn {
+.pill.coach-warn {
   background: var(--warn);
 }
 
@@ -1992,6 +1964,87 @@ form + .way-on,
   margin-top: 8px;
 }
 
+/* ✨ The tie-break's pairs (ticket 30b), as the content owner's prototype draws them */
+
+.pair-screen {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.pair-steps {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+}
+
+.pair-step {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.pair-step.done {
+  background: var(--green-deep);
+}
+
+.pair-step.now {
+  background: var(--gold-light);
+}
+
+.pair-framework,
+.pair-count {
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.pair-question {
+  text-align: center;
+  font-size: var(--text-lg);
+  font-weight: 400;
+  margin: 12px 0 20px;
+}
+
+.pair-options {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.pair-option {
+  background: var(--paper);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 19px 22px;
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  line-height: 1.45;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+
+.pair-option:hover,
+.pair-option:focus-visible {
+  border-color: var(--green-deep);
+}
+
+.pair-skip {
+  display: block;
+  margin: 15px auto 0;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* Hint boxes: rich text set off from the page */
 
 .hint-box {
@@ -2006,7 +2059,7 @@ form + .way-on,
 }
 
 .hint-box strong {
-  color: var(--gold);
+  color: var(--green-deep);
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -2014,7 +2067,8 @@ form + .way-on,
   margin-bottom: 4px;
 }
 
-/* ✨ A demo deployment's notice, on the homepage and the account pages (ticket 26): amber, as a caution is
+/* ✨ A demo deployment's notice, on the homepage and the account pages (ticket 26), the hub and the pages observers
+   and coaches land on (ticket 46): amber, as a caution is
    elsewhere, so it does not read as part of the pathway's own content. */
 
 .demo-notice {
@@ -2043,10 +2097,32 @@ form + .way-on,
   margin: var(--space-xl) auto 0;
 }
 
+/* ✨ The smaller notice, atop every other page (ticket 46): one thin amber line in the page's flow, so it is plainly
+   seen but covers nothing and does not compete with the page's own content. */
+
+.demo-strip {
+  background: var(--warn-pale);
+  border-bottom: 1px solid var(--warn);
+  padding: 6px var(--space-md);
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink);
+  line-height: 1.4;
+  text-align: center;
+}
+
+.demo-strip strong {
+  color: var(--warn-text);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 6px;
+}
+
 /* Scripture reading: the passages, the note beneath them, and the confirmation that opens the activity */
 
 .scripture {
-  background: var(--white);
+  background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: var(--space-lg);
@@ -2076,12 +2152,12 @@ form + .way-on,
   font-size: var(--text-sm);
   font-style: normal;
   font-weight: 600;
-  color: var(--gold);
+  color: var(--green-deep);
 }
 
 .scripture-note {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
   padding: var(--space-sm) var(--space-md);
   background: var(--gold-pale);
   border-radius: var(--radius-lg);
@@ -2097,13 +2173,13 @@ form + .way-on,
   margin-top: 20px;
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--gold);
+  color: var(--green-deep);
 }
 
-/* The 1–10 agreement scale. Each point is a radio button drawn as the prototype's square button. */
+/* The 1–10 agreement scale. Each point is a radio button drawn as a button. */
 
 .baseline-q {
-  background: var(--white);
+  background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: var(--space-lg) var(--space-lg);
@@ -2131,72 +2207,113 @@ form + .way-on,
 
 .baseline-anchor {
   font-size: var(--text-xs);
-  color: var(--ink-muted);
+  color: var(--muted);
 }
 
-.baseline-btns {
+/* ✨ v3's `.scale .qh` (fix-2): the prompt on the left and the value chosen on the right, large in the heading face. */
+.scale-qh {
   display: flex;
-  gap: var(--space-xs);
   justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  width: 100%;
+  padding: 0;
 }
 
-.bl-btn {
+.scale-val {
+  flex: none;
+  font-family: var(--font-heading);
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1;
+  min-width: 1.4em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+/* ✨ v3's paler shade fails contrast on the paper, so muted text, as a placeholder is. */
+.scale-val.unset {
+  color: var(--muted);
+}
+
+/* ✨ v3's `.rate` (fix-2): ten buttons, each a radio. The points below the one chosen are filled in, as a meter. */
+.rate {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.rate-point {
   position: relative;
-  flex: 1;
-  aspect-ratio: 1;
-  min-width: 0;
-  max-width: 40px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--white);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--ink-muted);
-  cursor: pointer;
-  transition: all 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 38px;
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--cream-2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
 }
 
-.bl-btn input {
+.rate-point input {
   position: absolute;
   inset: 0;
+  margin: 0;
   opacity: 0;
   cursor: pointer;
 }
 
-.bl-btn:hover {
-  border-color: var(--gold);
+/* ✨ No hover on a fixed rating; `:where` keeps this below the filled and chosen points. */
+.rate-point:where(:hover:not(:has(input:disabled))) {
+  box-shadow: inset 0 0 0 1px var(--rate-hover-edge);
   color: var(--ink);
 }
 
-.bl-btn:has(input:checked) {
-  border-color: var(--gold);
-  background: var(--gold);
-  color: var(--white);
-  box-shadow: 0 2px 6px var(--gold-glow);
+.rate-point:has(~ .rate-point input:checked) {
+  background: var(--rate-in);
+  box-shadow: inset 0 0 0 1px var(--rate-in-edge);
+  color: var(--green-ink);
 }
 
-.bl-btn:has(input:focus-visible) {
-  outline: 2px solid var(--gold);
+.rate-point:has(input:checked) {
+  background: var(--green-deep);
+  box-shadow: none;
+  color: var(--snow);
+  font-weight: 600;
+}
+
+.rate-point:has(input:focus-visible) {
+  outline: 2px solid var(--green-deep);
   outline-offset: 2px;
 }
 
-/* ✨ A fixed rating: the chosen point keeps its colour, and nothing invites a click or a hover. */
-.bl-btn:has(input:disabled),
-.bl-btn:has(input:disabled) input {
+/* ✨ A fixed rating: nothing invites a click. */
+.rate-point:has(input:disabled),
+.rate-point:has(input:disabled) input {
   cursor: default;
 }
 
-.bl-btn:has(input:disabled):not(:has(input:checked)):hover {
-  border-color: var(--border);
-  color: var(--ink-muted);
+@media (max-width: 480px) {
+  .rate {
+    gap: 3px;
+  }
+
+  .rate-point {
+    height: 34px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
 }
 
 .fixed-note {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
   margin-top: 8px;
 }
 
@@ -2204,7 +2321,7 @@ form + .way-on,
    rendered by Django, so they are styled by element. */
 
 .name-section {
-  background: var(--white);
+  background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: var(--space-xl);
@@ -2229,14 +2346,14 @@ form + .way-on,
   border-radius: var(--radius-lg);
   font-size: var(--text-md);
   font-family: var(--font-body);
-  background: var(--white);
+  background: var(--paper);
   color: var(--ink);
   transition: border-color 0.2s;
 }
 
 .name-section input:not([type="checkbox"], [type="radio"], [type="hidden"]):focus {
   outline: none;
-  border-color: var(--gold);
+  border-color: var(--green-deep);
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
@@ -2258,7 +2375,7 @@ form + .way-on,
   display: block;
   margin-top: 8px;
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
 }
 
 .name-section .helptext ul {
@@ -2321,8 +2438,8 @@ form + .way-on,
   margin-bottom: 24px;
 }
 
-.account-page a:not(.btn) {
-  color: var(--gold);
+.account-page a:not(.pill) {
+  color: var(--green-deep);
 }
 
 .account-page .messages {
@@ -2362,34 +2479,14 @@ form + .way-on,
 }
 
 .hub-consent a {
-  color: var(--gold);
+  color: var(--green-deep);
 }
 
-/* ✨ Inviting observers: one row per person, with their link shown once after issuing it. */
-
-.invitations {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 var(--space-lg);
-}
-
-.invitation {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-xs) var(--space-sm);
-  padding: var(--space-md) 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.invitation-name {
-  font-weight: 600;
-  flex: 1 1 auto;
-}
+/* ✨ A link issued to someone: how long it works, and the link itself, shown once after issuing it. */
 
 .invitation-status {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
 }
 
 .invitation-link {
@@ -2442,7 +2539,7 @@ form + .way-on,
 }
 
 .member-status {
-  color: var(--ink-muted);
+  color: var(--muted);
 }
 
 .administered-group + .administered-group {
@@ -2466,7 +2563,7 @@ html[data-javascript="loaded"] .invitation-copy {
 
 .save-status {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
 }
 
 .save-refused {
@@ -2475,14 +2572,14 @@ html[data-javascript="loaded"] .invitation-copy {
 
 .length-left {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
   margin-top: 6px;
 }
 
 /* Results. Bars are SVG, sized by their own width attribute, so no template needs an inline style. */
 
 .results-section {
-  background: var(--white);
+  background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: var(--space-xl);
@@ -2496,7 +2593,7 @@ html[data-javascript="loaded"] .invitation-copy {
 
 .results-desc {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
   margin-bottom: 16px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border);
@@ -2519,7 +2616,7 @@ html[data-javascript="loaded"] .invitation-copy {
 
 .result-bar-persona {
   font-weight: 400;
-  color: var(--ink-muted);
+  color: var(--muted);
   font-size: var(--text-xs);
 }
 
@@ -2545,7 +2642,7 @@ html[data-javascript="loaded"] .invitation-copy {
 }
 
 .result-axis-end {
-  stroke: var(--ink-muted);
+  stroke: var(--muted);
   stroke-width: 0.6;
   vector-effect: non-scaling-stroke;
 }
@@ -2564,14 +2661,14 @@ html[data-javascript="loaded"] .invitation-copy {
 
 .result-bar-subdesc {
   font-size: var(--text-xs);
-  color: var(--ink-muted);
+  color: var(--muted);
   margin-top: 2px;
   line-height: 1.4;
 }
 
 .item-scores summary {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
   cursor: pointer;
 }
 
@@ -2606,7 +2703,7 @@ html[data-javascript="loaded"] .invitation-copy {
 
 .results-disclaimer {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
   margin-bottom: 20px;
 }
 
@@ -2616,7 +2713,7 @@ html[data-javascript="loaded"] .invitation-copy {
 }
 
 /* ✨ The comparison: per construct, a "You" bar above an "Others" bar in --blue-soft, as the prototype's comparison
-   screen paired them. "You" is --gold, or the rank colours where the results page ranks the bars. */
+   screen paired them. "You" is --green-deep, or the rank colours where the results page ranks the bars. */
 
 .comparison-illustrative {
   background: var(--warn-pale);
@@ -2697,7 +2794,7 @@ html[data-javascript="loaded"] .invitation-copy {
 .comparison-seen-by-others {
   font-size: var(--text-xs);
   font-weight: 400;
-  color: var(--ink-muted);
+  color: var(--muted);
 }
 
 @media (max-width: 600px) {
@@ -2727,7 +2824,7 @@ html[data-javascript="loaded"] .invitation-copy {
   grid-area: spread;
   visibility: hidden;
   font-size: var(--text-xs);
-  color: var(--ink-muted);
+  color: var(--muted);
 }
 
 /* ✨ In the observers' blue, as their dots above it are, so it is plainly about them. */
@@ -2762,7 +2859,7 @@ html[data-javascript="loaded"] .invitation-copy {
 
 /* ✨ The largest gaps and the questions to reflect on, as the prototype drew them. */
 .gap-card {
-  background: var(--white);
+  background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: var(--space-md) var(--space-lg);
@@ -2786,7 +2883,7 @@ html[data-javascript="loaded"] .invitation-copy {
 .gap-card-framework {
   font-size: var(--text-xs);
   font-weight: 400;
-  color: var(--ink-muted);
+  color: var(--muted);
 }
 
 .gap-card-badge {
@@ -2810,14 +2907,14 @@ html[data-javascript="loaded"] .invitation-copy {
 
 .gap-card-desc {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
   line-height: 1.5;
   margin: 0;
 }
 
 .reflection-prompt {
   background: var(--gold-pale);
-  border-left: 3px solid var(--gold);
+  border-left: 3px solid var(--green-deep);
   padding: var(--space-md) var(--space-md);
   margin-bottom: 10px;
   border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
@@ -2835,7 +2932,7 @@ html[data-javascript="loaded"] .invitation-copy {
 
 .comparison-waiting p {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
   margin-bottom: 8px;
 }
 
@@ -2881,12 +2978,12 @@ html[data-javascript="loaded"] .sort-progress {
 }
 
 .sort-progress::-webkit-progress-value {
-  background: var(--gold);
+  background: var(--green-deep);
   border-radius: var(--radius-sm);
 }
 
 .sort-progress::-moz-progress-bar {
-  background: var(--gold);
+  background: var(--green-deep);
   border-radius: var(--radius-sm);
 }
 
@@ -2916,7 +3013,7 @@ html[data-javascript="loaded"] .sort-progress {
   display: inline-block;
   font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--gold);
+  color: var(--green-deep);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 8px;
@@ -2946,13 +3043,13 @@ html[data-javascript="loaded"] .sort-progress {
 .card-counter {
   font-size: var(--text-sm);
   font-weight: 700;
-  color: var(--gold);
+  color: var(--green-deep);
   white-space: nowrap;
 }
 
 .sort-instruction {
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
 }
 
 .sort-card {
@@ -2964,7 +3061,7 @@ html[data-javascript="loaded"] .sort-progress {
   min-height: 100px;
   margin: 0 auto var(--space-sm);
   padding: var(--space-md) var(--space-lg);
-  background: var(--white);
+  background: var(--paper);
   border: 2px solid var(--border);
   border-radius: var(--radius);
   box-shadow: 0 2px 12px var(--shadow);
@@ -3010,13 +3107,13 @@ html[data-javascript="loaded"] .sort-progress {
   justify-content: center;
   border: 2px solid var(--bucket, var(--border));
   border-radius: var(--radius);
-  background: var(--white);
+  background: var(--paper);
   box-shadow: 0 2px 8px var(--shadow);
   font-family: var(--font-body);
   font-size: var(--text-xs);
   font-weight: 600;
   line-height: 1.3;
-  color: var(--ink-muted);
+  color: var(--muted);
   text-align: center;
   cursor: pointer;
   transition: all 0.15s;
@@ -3035,7 +3132,7 @@ html[data-javascript="loaded"] .sort-progress {
   display: block;
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--gold);
+  color: var(--green-deep);
   margin-bottom: 2px;
 }
 
@@ -3048,13 +3145,13 @@ html[data-javascript="loaded"] .sort-progress {
   border-radius: var(--radius-pill-shape);
   font-family: var(--font-body);
   font-size: var(--text-sm);
-  color: var(--ink-muted);
+  color: var(--muted);
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .undo-btn:hover:not(:disabled) {
-  border-color: var(--gold);
+  border-color: var(--green-deep);
   color: var(--ink);
 }
 
@@ -3066,7 +3163,7 @@ html[data-javascript="loaded"] .sort-progress {
 .bucket-btn:focus-visible,
 .undo-btn:focus-visible,
 .score-slider:focus-visible {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--green-deep);
   outline-offset: 2px;
 }
 
@@ -3103,6 +3200,23 @@ html[data-javascript="loaded"] .sort-progress {
   font-size: var(--text-lg);
 }
 
+.sort-done-choice {
+  max-width: 34em;
+  margin: 0 auto 16px;
+}
+
+/* ✨ Sending now and fine-tuning first, side by side, wrapping one above the other on a narrow screen. */
+.sort-done-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.sort-done-actions .sort-submit {
+  margin-top: 0;
+}
+
 .bucket-name {
   width: 140px;
   text-align: right;
@@ -3122,7 +3236,7 @@ html[data-javascript="loaded"] .sort-progress {
 }
 
 .score-section {
-  background: var(--white);
+  background: var(--paper);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: var(--space-lg) var(--space-lg);
@@ -3150,7 +3264,7 @@ html[data-javascript="loaded"] .sort-progress {
   align-items: center;
   gap: var(--space-xs);
   font-size: var(--text-xs);
-  color: var(--ink-muted);
+  color: var(--muted);
   white-space: nowrap;
 }
 
@@ -3167,8 +3281,8 @@ html[data-javascript="loaded"] .sort-progress {
   appearance: none;
   width: 20px;
   height: 20px;
-  background: var(--gold);
-  border: 3px solid var(--white);
+  background: var(--green-deep);
+  border: 3px solid var(--paper);
   border-radius: var(--radius-round-shape);
   box-shadow: 0 1px 4px var(--gold-glow);
   cursor: pointer;
@@ -3177,8 +3291,8 @@ html[data-javascript="loaded"] .sort-progress {
 .score-slider::-moz-range-thumb {
   width: 20px;
   height: 20px;
-  background: var(--gold);
-  border: 3px solid var(--white);
+  background: var(--green-deep);
+  border: 3px solid var(--paper);
   border-radius: var(--radius-round-shape);
   box-shadow: 0 1px 4px var(--gold-glow);
   cursor: pointer;
@@ -3201,11 +3315,6 @@ html[data-javascript="loaded"] .save-fallback {
   .question-card,
   .baseline-q {
     padding: var(--space-lg) var(--space-md);
-  }
-
-  .bl-btn {
-    max-width: 36px;
-    font-size: var(--text-sm);
   }
 
   .bucket-buttons {
@@ -3242,7 +3351,7 @@ html[data-javascript="loaded"] .save-fallback {
 
 /* ✨ The homepage (ticket 32a): the original prototype's landing page, with the content owner's newer
    "How it works" (its rules prefixed hiw-). Classes are the prototypes', prefixed so they cannot meet the
-   engine's own (.section, .step, .btn). */
+   engine's own (.section, .step). */
 
 .hp-nav-toggle {
   position: fixed;
@@ -3252,7 +3361,7 @@ html[data-javascript="loaded"] .save-fallback {
   width: 48px;
   height: 48px;
   border-radius: var(--radius-round-shape);
-  background: var(--deep-menu);
+  background: var(--brown-97);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -3306,7 +3415,7 @@ html[data-javascript="loaded"] .save-fallback {
   right: 0;
   width: min(300px, 85vw);
   height: 100vh;
-  background: var(--deep-menu);
+  background: var(--brown-97);
   z-index: 999;
   padding: var(--space-4xl) var(--space-2xl) var(--space-2xl);
   display: flex;
@@ -3361,53 +3470,6 @@ body > svg[aria-hidden="true"] {
   text-transform: uppercase;
 }
 
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-sm);
-  border: 0;
-  border-radius: var(--radius-pill-shape);
-  padding: var(--space-sm) var(--space-md) var(--space-sm) var(--space-lg);
-  background: var(--green);
-  color: var(--green-ink);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  text-decoration: none;
-  transition: filter 0.2s, transform 0.2s;
-}
-
-.pill .ar {
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-round-shape);
-  display: grid;
-  place-items: center;
-  background: var(--white-40);
-  transition: transform 0.25s, translate 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-
-.pill .ar svg,
-.pill > svg {
-  width: 10px;
-  height: 10px;
-  display: block;
-}
-
-.pill:hover {
-  filter: brightness(1.06);
-}
-
-.pill:hover .ar {
-  transform: rotate(45deg);
-}
-
-.pill.ghost {
-  background: transparent;
-  color: inherit;
-  box-shadow: inset 0 0 0 1px currentColor;
-  padding: var(--space-sm) var(--space-lg);
-}
-
 /* ---------- NAV ---------- */
 .nav {
   position: absolute;
@@ -3421,14 +3483,14 @@ body > svg[aria-hidden="true"] {
   font-size: 13.5px;
 }
 
-.nav .l,
-.nav .r {
+.nav .nav-left,
+.nav .nav-right {
   display: flex;
   gap: 26px;
   align-items: center;
 }
 
-.nav .r {
+.nav .nav-right {
   justify-content: flex-end;
 }
 
@@ -3448,8 +3510,8 @@ body > svg[aria-hidden="true"] {
 }
 
 @media (max-width: 760px) {
-  .nav .l a:not(:first-child),
-  .nav .r a {
+  .nav .nav-left a:not(:first-child),
+  .nav .nav-right a {
     display: none;
   }
 }
@@ -3754,7 +3816,7 @@ body > svg[aria-hidden="true"] {
   cursor: pointer;
 }
 
-.tab .n {
+.tab .tab-number {
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.1em;
@@ -3862,7 +3924,7 @@ body > svg[aria-hidden="true"] {
   gap: 28px;
 }
 
-.tp-text .n {
+.tp-text .tp-step {
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.12em;
@@ -4564,6 +4626,7 @@ body > svg[aria-hidden="true"] {
 
 .atabs .top .pill.ghost {
   color: var(--on-dark);
+  background: transparent;
 }
 
 .atabs .tab {
@@ -4642,6 +4705,7 @@ body > svg[aria-hidden="true"] {
 
 .journey-coach .pill.ghost {
   color: var(--on-dark);
+  background: transparent;
   white-space: nowrap;
 }
 

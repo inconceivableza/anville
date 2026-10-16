@@ -2,7 +2,7 @@
 // For licensing information see ../../LICENSE.md
 
 // ✨ The sort assessment: every item sorted into a bucket one card at a time, then fine-tuned with a slider
-// seeded by its bucket. The server hands over the items and the buckets (weakest first) as JSON beside the
+// seeded by its bucket. An observer may send before fine-tuning. The server hands over the items and the buckets (weakest first) as JSON beside the
 // form. The widget's only output is the form's hidden `value`, the whole sort as JSON; the server never
 // trusts it, and checks and scores it on submit. Nothing is kept before then, so a reload starts the sort
 // again, as in the prototype. Card order is shuffled per visit and not recorded (see the spec's open items).
@@ -20,7 +20,9 @@ export function mountSorts() {
 }
 
 function mountSort(form) {
-  const { items, buckets, wording } = JSON.parse(document.getElementById(form.dataset.sort).textContent);
+  const { items, buckets, wording, sends_before_fine_tuning } = JSON.parse(
+    document.getElementById(form.dataset.sort).textContent,
+  );
   const stage = form.querySelector(".sort-stage");
   const announcer = form.querySelector("[data-sort-announcer]");
   const progress = form.querySelector(".sort-progress");
@@ -146,17 +148,40 @@ function mountSort(form) {
             ),
           ),
         ),
-        on(
-          el("button", { type: "button", class: "btn btn-primary", "data-focus": "continue" }, "Continue to fine-tuning →"),
-          "click",
-          () => {
-            render(fineTuning);
-            writeAnswer();
-          },
+        ...(sends_before_fine_tuning ? [el("p", { class: "sort-done-choice" }, wording.send_or_fine_tune)] : []),
+        el(
+          "div",
+          { class: "sort-done-actions" },
+          ...(sends_before_fine_tuning ? [sendNowButton()] : []),
+          on(
+            el(
+              "button",
+              { type: "button", class: sends_before_fine_tuning ? "pill ghost" : "pill", "data-focus": "continue" },
+              wording.fine_tune_label,
+            ),
+            "click",
+            () => {
+              render(fineTuning);
+              writeAnswer();
+            },
+          ),
         ),
         undoButton(),
       ),
     ];
+  }
+
+  // ✨ An observer may send as soon as every card is placed. Only the buckets are sent: the server gives each item its
+  // bucket's seed, exactly as an untouched slider would have kept it.
+  function sendNowButton() {
+    return on(
+      el("button", { type: "submit", class: "pill sort-submit", "data-focus": "send" }, wording.submit_label),
+      "click",
+      () => {
+        const sort = Object.fromEntries(history.map(({ item, bucket }) => [item.id, { bucket: bucket.id }]));
+        form.querySelector('input[name="value"]').value = JSON.stringify(sort);
+      },
+    );
   }
 
   function fineTuning() {
@@ -173,7 +198,7 @@ function mountSort(form) {
             el("div", { class: "score-section" }, ...inBucket(bucket).map((item) => slider(item, bucket))),
           ),
         ),
-      el("button", { type: "submit", class: "btn btn-primary btn-full sort-submit" }, wording.submit_label),
+      el("button", { type: "submit", class: "pill full sort-submit" }, wording.submit_label),
     ];
   }
 

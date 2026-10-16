@@ -117,10 +117,11 @@ def test_the_hub_leads_back_to_the_page_of_a_link_holding_the_participant_again(
     assert state.page == 1
 
 
-def test_progress_counts_a_sections_blocks_on_every_page_and_not_its_page_breaks():
-    hub = hub_for([THREE_PAGES], {"a": "Written", "d": "Written"}, completed=[])
+def test_an_answer_on_any_page_puts_the_section_in_progress():
+    """✨ The hub counts sections complete, not answers (ticket 49a), so a section's blocks count towards its status."""
+    [state] = hub_for([THREE_PAGES], {"d": "Written"}, completed=[]).sections
 
-    assert (hub.answered, hub.total) == (2, 3)
+    assert state.status == "in-progress"
 
 
 # The gate, page by page

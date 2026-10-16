@@ -12,6 +12,10 @@
   <section class="results-section">
     <h2>{{ framework.heading }}</h2>
     {% if framework.subtitle %}<p class="results-desc">{{ framework.subtitle }}</p>{% endif %}
+    {% comment %}✨ How the tie-break's answers changed this framework (ticket 30c). It speaks to the participant, so only their own page, which sets `own_page`, shows it.{% endcomment %}
+    {% if own_page and framework.tie_break %}
+      <div class="hint-box"><strong>{{ framework.tie_break.heading }}</strong>{{ framework.tie_break.text }}</div>
+    {% endif %}
 
     {% for bar in framework.bars %}
       <div class="result-bar-row">

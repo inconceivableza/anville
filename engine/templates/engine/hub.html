@@ -8,26 +8,38 @@
 {% load section_pages %}
 {% block head_title %}{% if hub %}{{ title }}{% else %}Anville{% endif %}{% endblock head_title %}
 
+{% block demo_notice %}{% endblock demo_notice %}
+
 {% block content %}
+  {% include "access/demo_notice.html" %}
   {% if hub %}
     <div class="hub">
       <div class="wrap">
         <div class="hub-head">
           <h1>Welcome, <i>{{ name }}</i></h1>
-          <span class="label hub-progress">{{ hub.answered }} of {{ hub.total }} answered</span>
+          <span class="label hub-progress">{{ hub.complete }} of {{ hub.total }} sections complete</span>
         </div>
         <div class="hub-grid">
           <div>
             {% if hub.next_step %}
-              <div class="panel next">
-                <p class="label">Your next step</p>
-                <h2>{{ hub.next_step.title }}</h2>
-                <p>{% if hub.next_step.status == 'in-progress' %}Carry on where you left off.{% else %}This is the next thing waiting for you.{% endif %}</p>
-                <a class="pill" href="{% page_url hub.next_step.id hub.next_step.page %}">
-                  {% if hub.next_step.status == 'in-progress' %}Carry on{% else %}Begin{% endif %}
-                  <span class="ar"><svg width="10" height="10"><use href="#arrow"/></svg></span>
-                </a>
-              </div>
+              {# ✨ What it says is the document's: the section's own heading and sentence, or its title and estimate (ticket 49b). #}
+              {% with step=hub.next_step %}
+                <section class="panel next">
+                  {% if photo %}<img src="{{ photo }}" alt="">{% endif %}
+                  <p class="label">Your next step</p>
+                  {% if step.next_step %}
+                    <h2>{{ step.next_step.heading }}</h2>
+                    <p>{{ step.next_step.sentence }}</p>
+                  {% else %}
+                    <h2>{{ step.title }}</h2>
+                    {% if step.estimate %}<p>{{ step.estimate }}</p>{% endif %}
+                  {% endif %}
+                  <a class="pill" data-magnetic href="{% page_url step.id step.page %}">
+                    {% if step.status == 'in-progress' %}Carry on{% else %}Begin{% endif %}
+                    <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span>
+                  </a>
+                </section>
+              {% endwith %}
             {% else %}
               <div class="panel next">
                 <h2>Nothing is waiting for you right now.</h2>
@@ -36,42 +48,18 @@
             {% endif %}
             <ol class="slist">
               {% for entry in hub.outline %}
-                {% include "engine/hub_section.html" with section=entry.section parts=entry.parts number=entry.number %}
+                {% include "engine/hub_section.html" with section=entry.section parts=entry.parts %}
               {% endfor %}
             </ol>
           </div>
           <aside class="side">
-            <div class="card dark">
-              <div class="row"><h3>Five trusted voices</h3><span class="tag">{% if voices.invited == 0 %}Not started{% else %}{{ voices.replied }} replied{% endif %}</span></div>
-              <p>Invite people who know you well. Their anonymous answers sit beside your own in Section 1.</p>
-              <div class="meter"><div class="lbl"><span>Invited</span><span>{{ voices.invited }} / {{ voices.max }}</span></div><progress class="tr" max="{{ voices.max }}" value="{{ voices.invited }}" aria-hidden="true"></progress></div>
-              <div class="meter"><div class="lbl"><span>Replied</span><span>{{ voices.replied }} / {{ voices.max }}</span></div><progress class="tr" max="{{ voices.max }}" value="{{ voices.replied }}" aria-hidden="true"></progress></div>
-              <a class="pill" href="{% url 'invitations' %}">Manage <span class="ar"><svg width="10" height="10"><use href="#arrow"/></svg></span></a>
-              {% if voices.names %}
-                <ul class="names">{% for name in voices.names %}<li>{{ name }}</li>{% endfor %}</ul>
+            {% for section in side_cards %}
+              {% if section.id == voices.section %}
+                {% include "engine/hub_voices_card.html" %}
+              {% else %}
+                {% include "engine/hub_side_card.html" %}
               {% endif %}
-            </div>
-            <div class="card">
-              <div class="row"><h3>Walk with a mentor</h3><span class="tag">Optional</span></div>
-              <p>When you're ready, ask someone to walk this with you. We'll send them a short briefing pack.</p>
-              {% if coach %}
-                <a class="pill ghost" href="{{ coach.coach_page }}">{% if coach.answer == "accepted" %}{{ coach.name }} is your coach{% elif coach.answer == "declined" %}{{ coach.name }} isn't able to be your coach{% elif coach.answer == "waiting" %}Waiting for {{ coach.name }} to answer{% else %}You've chosen {{ coach.name }}: send {{ coach.name }} a link{% endif %}</a>
-                {% if coach.shared %}<p>{{ coach.name }} can see your results and comparison.</p>{% endif %}
-              {% elif coach_page %}
-                <a class="pill ghost" href="{{ coach_page }}">Invite a mentor</a>
-              {% endif %}
-            </div>
-            {% if baseline %}
-              <div class="card">
-                <div class="row"><h3>Where you started</h3><span class="tag">Baseline</span></div>
-                <div class="base">
-                  {% for item in baseline %}
-                    <div class="b"><span>{{ item.label }}</span><progress class="tr" max="100" value="{{ item.percent }}" aria-hidden="true"></progress><b>{{ item.percent }}%</b></div>
-                  {% endfor %}
-                </div>
-                <p>We'll ask these again at the end, so you can see how far you've come.</p>
-              </div>
-            {% endif %}
+            {% endfor %}
           </aside>
         </div>
       </div>

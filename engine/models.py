@@ -10,7 +10,13 @@ from django.db import models, transaction
 from django.db.models import F, Func, Value
 from django.utils import timezone
 
+from access.consent import withdrawn_participants
 from engine.document.gates import comparison_visit_key, links_issued_key
+from engine.document.observers import minimum_observers
+
+
+class CollectionFrozen(Exception):
+    """✨ An observer assessment sent while the participant's answer collection is frozen (ticket 55)."""
 
 
 class PathwayVersion(models.Model):
@@ -62,6 +68,10 @@ class Response(models.Model):
     # ✨ When the participant first visited each sort's comparison with their observers, keyed by the sort's block, in
     # either state. Recorded, since a visit leaves no answer behind, and Section 1's gate waits on it (ticket 16c).
     comparisons_visited = models.JSONField(default=dict)
+    # ✨ When answer collection froze: the participant confirmed "Compare with how others see you →" with at least the
+    # minimum number of observer assessments in (ticket 55). Empty while it is open, and again once withdrawals leave
+    # fewer than the minimum.
+    collection_frozen_at = models.DateTimeField(null=True, blank=True)
     is_test_data = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -145,6 +155,28 @@ class Response(models.Model):
             updated_at=now,
         )
 
+    def freeze_collection(self):
+        """✨ Freeze answer collection, if at least the minimum number of observer assessments are in, counted under a
+        lock on this response, which a send takes too, so no send lands between the count and the freeze. Freezing
+        again keeps the first time. Returns whether collection is frozen."""
+        minimum = minimum_observers(self.version.document)
+        with transaction.atomic():
+            locked = Response.objects.select_for_update().get(pk=self.pk)
+            if locked.collection_frozen_at is None and _submitted_count(self) >= minimum:
+                locked.collection_frozen_at = timezone.now()
+                locked.save(update_fields=["collection_frozen_at"])
+        self.collection_frozen_at = locked.collection_frozen_at
+        return self.collection_frozen_at is not None
+
+    def unfreeze_below_minimum(self):
+        """✨ Open answer collection again if fewer than the minimum number of observer assessments are in, as after a
+        withdrawal (ticket 55). Counted under the same lock as freezing."""
+        minimum = minimum_observers(self.version.document)
+        with transaction.atomic():
+            Response.objects.select_for_update().filter(pk=self.pk).first()
+            if _submitted_count(self) < minimum:
+                Response.objects.filter(pk=self.pk).update(collection_frozen_at=None)
+
     def moved_past_by_section(self):
         """✨ The pages moved past, as {section identifier: set of page numbers}, as the hub reads them."""
         moved_past = {}
@@ -192,6 +224,29 @@ class Response(models.Model):
         Response.objects.filter(pk=self.pk).update(updated_at=timezone.now())
         return kept
 
+    def add_contact(self, block_id, person, lifetime, most):
+        """✨ Add one person to the end of a block's list, with their observer's link lasting `lifetime`, together or
+        not at all, so nobody is ever listed without having had a link (ticket 51a). Returns the contact and the link's
+        token, shown once; None if the list already holds `most`. Nobody else on the list is touched. The response's
+        row is locked first, so two people added at once take the next two places rather than the same one."""
+        with transaction.atomic():
+            Response.objects.select_for_update().filter(pk=self.pk).first()
+            held = self.contacts.filter(block_id=block_id)
+            if held.count() >= most:
+                return None
+            last = held.aggregate(last=models.Max("position"))["last"]
+            contact = Contact.objects.create(
+                response=self,
+                block_id=block_id,
+                role=Contact.Role.CONTACT,
+                position=0 if last is None else last + 1,
+                name=person["name"],
+                email=person["email"],
+            )
+            token = Invitation.issue(contact, lifetime)
+        Response.objects.filter(pk=self.pk).update(updated_at=timezone.now())
+        return contact, token
+
     def answers_with_contacts_and_visits(self):
         """✨ The stored answers, with each block's contacts read in as its answer, as the gate and progress read it.
         Each contact carries its id, which a contact list's rows send back so a save can tell them apart. Each visit to
@@ -222,7 +277,12 @@ class Contact(models.Model):
     role = models.CharField(max_length=16, choices=Role.choices)
     position = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=150)
-    email = models.EmailField(max_length=254)
+    email = models.EmailField(max_length=254, blank=True)  # ✨ a coach's is optional (ticket 51b); an observer's never is
+    # ✨ When this person first sent an observer assessment, and when they asked for no more reminders (ADR 0016). Kept
+    # here, not on the invitation, so both survive a reissue; nothing clears either, a withdrawal or an edit included,
+    # and both go with the contact. The participant never sees them.
+    sent_at = models.DateTimeField(null=True, blank=True)
+    reminders_stopped_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -256,6 +316,9 @@ class Invitation(models.Model):
     It is never claimed: the participant holding a copy could claim it as easily as use it. Only the answer is kept, on
     the link, so revoking or reissuing asks again. Each kind of link works only at its own address. Once the coach has
     accepted, the participant's consent for them to see the results and comparison is kept on the link too (ticket 27).
+
+    While the participant's consent is withdrawn, every link they gave out is refused as a dead one is, and works again,
+    as it was, once they agree again (ticket 45). Nothing about the link changes meanwhile, its expiry included.
     """
 
     class CoachAnswer(models.TextChoices):
@@ -274,6 +337,9 @@ class Invitation(models.Model):
     # ✨ When the participant ticked "Give my coach access to my results and this comparison" (ticket 27), while it stands. Kept on the link,
     # as the answer is, so revoking or reissuing it, or choosing another coach, takes the consent with it (ADR 0011).
     results_shared_at = models.DateTimeField(null=True, blank=True)
+    # ✨ The week of this link's own clock, counted from when it was issued, that its observer was last reminded for; 0
+    # before any reminder (ticket 43a). A reissue makes a new record, so the clock starts again.
+    reminded_week = models.PositiveSmallIntegerField(default=0)
 
     def works(self, now=None):
         """✨ Whether this link still works: it has not expired. A revoked link has no record to ask."""
@@ -296,29 +362,72 @@ class Invitation(models.Model):
     @classmethod
     def live(cls, token, role=Contact.Role.CONTACT):
         """✨ The invitation a token belongs to, claimed or not, or None if it is wrong, expired, revoked or a link for
-        someone in another role (an observer's link is no coach's, and the reverse). None says which."""
+        someone in another role (an observer's link is no coach's, and the reverse), or while the participant's consent
+        is withdrawn. None says which."""
         return (
-            cls.objects.select_related("contact__response__participant", "contact__response__version")
+            cls._while_consent_stands()
+            .select_related("contact__response__participant", "contact__response__version")
             .filter(token_hash=_hash_of(token), expires_at__gt=timezone.now(), contact__role=role)
             .first()
         )
 
     @classmethod
+    def _while_consent_stands(cls):
+        """✨ Every link but those of a participant whose consent is withdrawn."""
+        return cls.objects.exclude(contact__response__participant__in=withdrawn_participants())
+
+    @classmethod
     def claim(cls, token):
         """✨ Exchange an unclaimed, live observer's token for the observer's own secret, returned once; None if the
-        token is dead, already claimed or a coach's. One UPDATE, so of two claims at once exactly one wins."""
+        token is dead, already claimed or a coach's, or the participant's consent is withdrawn. One UPDATE, so of two
+        claims at once exactly one wins."""
         secret = secrets.token_urlsafe(32)
         now = timezone.now()
-        claimed = cls.objects.filter(
+        claimed = cls._while_consent_stands().filter(
             token_hash=_hash_of(token), expires_at__gt=now, claimed_at__isnull=True, contact__role=Contact.Role.CONTACT
         ).update(secret_hash=_hash_of(secret), claimed_at=now)
         return secret if claimed else None
 
     @classmethod
+    def answerable(cls, pk):
+        """✨ The observer's link with this id while a reminder's button may give them a fresh one (ticket 43b), or
+        None, saying nothing of why: the link is dead or a coach's, its person has sent, answer collection is frozen or
+        the participant's consent is withdrawn. A stop to reminders does not matter."""
+        return (
+            cls._answerable(pk)
+            .select_related("contact__response__participant", "contact__response__version")
+            .first()
+        )
+
+    @classmethod
+    def claim_afresh(cls, pk):
+        """✨ Give the observer of an `answerable` link a fresh link of their own, already claimed, and return its
+        secret, once; None if it is not answerable now. The same record with new hashes, not a reissue (ADR 0016), so
+        its expiry and reminders' week are kept, while the participant's copy and any earlier claim stop working. One
+        UPDATE, as a claim is."""
+        secret = secrets.token_urlsafe(32)
+        unseen = secrets.token_urlsafe(32)  # ✨ the participant's copy's replacement, which nobody is ever shown
+        refreshed = cls._answerable(pk).update(
+            token_hash=_hash_of(unseen), secret_hash=_hash_of(secret), claimed_at=timezone.now()
+        )
+        return secret if refreshed else None
+
+    @classmethod
+    def _answerable(cls, pk):
+        return cls._while_consent_stands().filter(
+            pk=pk,
+            expires_at__gt=timezone.now(),
+            contact__role=Contact.Role.CONTACT,
+            contact__sent_at__isnull=True,
+            contact__response__collection_frozen_at__isnull=True,
+        )
+
+    @classmethod
     def answer_as_coach(cls, token, answer):
         """✨ Keep a coach's answer, given through their live link, and nothing else; False if the link is dead or has
-        been answered already. One UPDATE, so of two answers at once exactly one is kept."""
-        answered = cls.objects.filter(
+        been answered already, or the participant's consent is withdrawn. One UPDATE, so of two answers at once exactly
+        one is kept."""
+        answered = cls._while_consent_stands().filter(
             token_hash=_hash_of(token),
             expires_at__gt=timezone.now(),
             contact__role=Contact.Role.COACH,
@@ -355,12 +464,15 @@ class Invitation(models.Model):
         )
 
     @classmethod
-    def claimed_by(cls, secret):
-        """✨ The live invitation an observer's secret claimed, with its contact, or None, saying nothing of why."""
+    def claimed_by(cls, secret, *, for_withdrawal=False):
+        """✨ The live invitation an observer's secret claimed, with its contact, or None, saying nothing of why: also
+        while the participant's consent is withdrawn, unless it is `for_withdrawal`, since closing a link never stops an
+        observer taking back what they sent (spec, Participants, access and consent)."""
         if not secret:
             return None
         return (
-            cls.objects.select_related("contact__response__participant", "contact__response__version")
+            (cls.objects if for_withdrawal else cls._while_consent_stands())
+            .select_related("contact__response__participant", "contact__response__version")
             .filter(secret_hash=_hash_of(secret), expires_at__gt=timezone.now())
             .first()
         )
@@ -381,12 +493,45 @@ class Result(models.Model):
     response = models.ForeignKey(Response, on_delete=models.CASCADE, related_name="results")
     block_id = models.CharField(max_length=64)
     scores = models.JSONField()
+    # ✨ The participant's answers to the tie-break's pairs (ticket 30b), in the order asked, each
+    # `{"framework", "constructs": [a, b], "round", "chosen"}`, `chosen` None for a skip. Kept beside the scores, which
+    # they never change.
+    tie_break_answers = models.JSONField(default=list)
+    # ✨ The scores re-weighted by those answers (ticket 30c), by their own named method, once every pair is answered or
+    # skipped; None until then, and for anyone with no tie-break. Kept beside the scores, never in their place.
+    reweighted = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["response", "block_id"], name="one_result_per_sort_per_response"),
         ]
+
+    def answer_pair(self, place, pair, chosen):
+        """✨ Store the answer to the tie-break's pair at `place` in the plan, `chosen` one of its constructs or None to
+        skip. Only the next unanswered pair takes one, checked under a lock, so a form sent twice or from a stale tab
+        stores nothing. Returns whether it was stored."""
+        with transaction.atomic():
+            locked = Result.objects.select_for_update().get(pk=self.pk)
+            if len(locked.tie_break_answers) != place:
+                return False
+            answer = {key: pair[key] for key in ("framework", "constructs", "round")}
+            locked.tie_break_answers = [*locked.tie_break_answers, {**answer, "chosen": chosen}]
+            locked.save(update_fields=["tie_break_answers"])
+        self.tie_break_answers = locked.tie_break_answers
+        return True
+
+    def keep_reweighted(self, reweighted):
+        """✨ Store the re-weighted result beside the scores (ticket 30c). Worked out from the stored scores and answers
+        alone, so storing it twice stores the same."""
+        self.reweighted = reweighted
+        self.save(update_fields=["reweighted"])
+
+    @property
+    def shown(self):
+        """✨ The result the participant's results page and comparison show: the re-weighted one once there is one,
+        otherwise the sort's as scored."""
+        return self.reweighted or self.scores
 
 
 class ObserverAssessments(NamedTuple):
@@ -411,6 +556,9 @@ class ObserverResponse(models.Model):
     assessment = models.JSONField(null=True, blank=True)
     written_answers = models.JSONField(default=dict)
     submitted_at = models.DateTimeField(null=True, blank=True)
+    # ✨ How the observer knows the participant, by the id of a choice the document offers, or empty if they chose none.
+    # Stored only: nothing reads it to slice or filter results (ticket 15b).
+    relationship = models.CharField(max_length=64, null=True, blank=True)
     # ✨ Empty for seeded observers, who claimed nothing. Unique, so each claim sends one observer response.
     sent_by = models.CharField(max_length=64, unique=True, null=True, blank=True)
     is_test_data = models.BooleanField(default=False)
@@ -426,23 +574,73 @@ class ObserverResponse(models.Model):
         ]
 
     @classmethod
-    def send(cls, response, secret, assessment, is_test_data=False):
-        """✨ Store the observer assessment sent with a claimed secret, about the participant whose response it is. It
-        counts at once. A second from the same secret raises IntegrityError from the database and changes nothing.
-        `is_test_data` is set only by a seeding command, never from a request."""
+    def send(cls, response, secret, assessment, is_test_data=False, relationship=None):
+        """✨ Store the observer assessment sent with a claimed secret, about the participant whose response it is, with
+        the relationship the observer chose, if any. It counts at once. A second from the same secret raises
+        IntegrityError from the database and changes nothing. `is_test_data` is set only by a seeding command, never
+        from a request.
+
+        The claimed link's row is locked first, as a withdrawal's ending of the claim locks it, so a send and a
+        withdrawal at once take turns: a send that finds the claim ended meanwhile stores nothing and returns None, and
+        one that went first is deleted by the withdrawal.
+
+        Under the same lock, the participant's response is locked too, as freezing locks it, and a send while answer
+        collection is frozen raises CollectionFrozen and stores nothing (ticket 55)."""
         with transaction.atomic():
-            return cls.objects.create(
+            claimed = (
+                Invitation.objects.select_for_update()
+                .filter(secret_hash=_hash_of(secret), expires_at__gt=timezone.now())
+                .first()
+            )
+            if claimed is None:
+                return None
+            open_to_answers = (
+                Response.objects.select_for_update().filter(pk=response.pk, collection_frozen_at__isnull=True).first()
+            )
+            if open_to_answers is None:
+                raise CollectionFrozen
+            now = timezone.now()
+            sent = cls.objects.create(
                 response=response,
                 assessment=assessment,
-                submitted_at=timezone.now(),
+                relationship=relationship,
+                submitted_at=now,
                 sent_by=_sent_by(secret),
                 is_test_data=is_test_data,
             )
+            # ✨ The person is marked as having sent, so they are never reminded again (ADR 0016).
+            Contact.objects.filter(pk=claimed.contact_id, sent_at__isnull=True).update(sent_at=now)
+            return sent
 
     @classmethod
     def sent_with(cls, secret):
         """✨ Whether an observer assessment has been sent with this secret."""
         return cls.objects.filter(sent_by=_sent_by(secret)).exists()
+
+    @classmethod
+    def withdraw(cls, secret):
+        """✨ Delete whatever the observer sent with their claimed secret, found by its hash alone, and end the claim, so
+        their own link stops working and asks nothing again; False, changing nothing, if the secret claims no live link.
+
+        The participant's copy of the link stays used up, as it was, so nothing they can see changes. Ending the claim
+        and deleting happen together or not at all. Withdrawing works while answer collection is frozen too, and if it
+        leaves fewer than the minimum, collection opens again (ticket 55).
+        """
+        if not secret:
+            return False
+        with transaction.atomic():
+            claimed = (
+                Invitation.objects.select_for_update(of=("self",))
+                .select_related("contact__response__version")
+                .filter(secret_hash=_hash_of(secret), expires_at__gt=timezone.now())
+                .first()
+            )
+            if claimed is None:
+                return False
+            Invitation.objects.filter(pk=claimed.pk).update(secret_hash=None)
+            cls.objects.filter(sent_by=_sent_by(secret)).delete()
+            claimed.contact.response.unfreeze_below_minimum()
+        return True
 
     @classmethod
     def assessments_for(cls, response):
@@ -457,6 +655,11 @@ class ObserverResponse(models.Model):
             assessments=[assessment for assessment, _ in rows],
             all_test_data=bool(rows) and all(is_test_data for _, is_test_data in rows),
         )
+
+
+def _submitted_count(response):
+    """✨ How many observer assessments of a participant's response have been sent, as the minimum counts them."""
+    return ObserverResponse.objects.filter(response=response, submitted_at__isnull=False).count()
 
 
 def _sent_by(secret):

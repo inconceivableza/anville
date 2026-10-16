@@ -1,0 +1,26 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/participant.html" %}
+{% comment %}
+  ✨ What "Compare with how others see you →" asks first, with the minimum in and collection not yet frozen (ticket
+  55): how many of the people invited have answered, and that once they look no more answers are added. When everyone
+  invited has answered it says more mildly that they can no longer add anyone. Its button freezes collection.
+{% endcomment %}
+{% block head_title %}Before you look{% endblock head_title %}
+
+{% block content %}
+  <p class="back-to-hub"><a href="{% url 'results' block_id %}">← Back to results</a></p>
+  <h1>Before you look</h1>
+  <div class="hint-box">
+    {% if everyone %}
+      <p>Everyone you invited has answered. Once you look, you can't add anyone else.</p>
+    {% else %}
+      <p>{{ answered }} of the {{ invited }} people you invited have answered. Once you look, no more answers are added, so anyone who hasn't answered yet won't be able to.</p>
+    {% endif %}
+  </div>
+  <form class="results-next" method="post" action="{% url 'visit_comparison' block_id %}">
+    {% csrf_token %}
+    <input type="hidden" name="confirmed" value="yes">
+    <button type="submit" class="pill">Compare with how others see you →</button>
+  </form>
+{% endblock content %}

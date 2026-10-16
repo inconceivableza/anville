@@ -9,11 +9,14 @@ recomputed, and are shown only as words and places on an axis (ticket 38); the w
 the same pathway version the result was scored against.
 """
 
+import random
+
 from engine.document.comparison import agreement, comparison_settings, largest_gaps, seen_by_others
 from engine.document.observers import minimum_observers
 from engine.document.scoring import percents_by_construct
 from engine.document.standing import standing
 from engine.document.text import text_for
+from engine.document.tie_break import BALANCED, CIRCLE, GENERALIST, LEVEL, SAME_TOP, TOP_CHANGED, tie_break
 
 # ✨ The stylesheet defines --rank-1 to --rank-6; every rank below the sixth takes the sixth colour.
 RANK_COLOURS = 6
@@ -66,19 +69,72 @@ def results_page(document, scores, sort, name, role="participant"):
     return {
         "title": text_for(title, role).replace("{name}", name),
         "frameworks": [
-            _framework(
-                document,
-                frameworks[scored["framework"]],
-                framework_presentation.get(scored["framework"], {}),
-                scored["constructs"],
-                construct_presentation,
-                document["instrument"]["items"],
-                sort,
-                role,
-            )
+            {
+                **_framework(
+                    document,
+                    frameworks[scored["framework"]],
+                    framework_presentation.get(scored["framework"], {}),
+                    scored["constructs"],
+                    construct_presentation,
+                    document["instrument"]["items"],
+                    sort,
+                    role,
+                ),
+                "tie_break": _after_tie_break(presentation, scores, scored["framework"], role),
+            }
             for scored in scores["frameworks"]
         ],
         "disclaimer": _text(presentation, "disclaimer", role),
+        "generalist": _generalist(document, scores, presentation, role),
+    }
+
+
+def _generalist(document, scores, presentation, role):
+    """✨ The document's words telling a participant tied on both frameworks that they are a generalist (ticket 30a), or
+    None for anyone else. Read from the participant's own stored result, the only one this page is given."""
+    if tie_break(document, scores)["outcome"] != GENERALIST:
+        return None
+    wording = presentation["generalist"]
+    return {"heading": text_for(wording["heading"], role), "text": text_for(wording["text"], role)}
+
+
+def _after_tie_break(presentation, scores, framework, role):
+    """✨ What the results page says of a framework the tie-break re-weighted (ticket 30c), in the document's words, or
+    None for any other: separated, with a new leader or the same one, or genuinely balanced, the choices having gone in
+    a circle or left the best of them level, with no winner named."""
+    broken = scores.get("tie_break")
+    if broken is None or broken["framework"] != framework:
+        return None
+    wording = presentation["tie_break"]
+    outcome = broken["outcome"]
+    said = wording["balanced"] if outcome in BALANCED else wording["separated"]
+    text = {TOP_CHANGED: "changed", SAME_TOP: "same", CIRCLE: "circle", LEVEL: "level"}[outcome]
+    return {"heading": text_for(said["heading"], role), "text": text_for(said[text], role)}
+
+
+def pair_page(document, plan, place):
+    """✨ What the tie-break's pair screen shows of the pair at `place` in the plan (ticket 30b): the document's question
+    and skip, a quiet label naming the pair's framework (its own label where the document gives none), one statement
+    for each of its two constructs in a random left-right order, as the prototype flips them, and how far through the
+    participant is. Each option carries its construct, which is what the form sends back."""
+    wording = document["presentation"]["tie_break"]
+    pair = plan[place]
+    frameworks = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
+    label = wording.get("frameworks", {}).get(pair["framework"], frameworks[pair["framework"]]["label"])
+    options = [
+        {"construct": construct, "text": text_for(statement, "participant")}
+        for construct, statement in zip(pair["constructs"], pair["statements"])
+    ]
+    random.shuffle(options)
+    return {
+        "place": place,
+        "number": place + 1,
+        "count": len(plan),
+        "steps": [index < place for index in range(len(plan))],
+        "framework": text_for(label, "participant"),
+        "question": text_for(wording["question"], "participant"),
+        "skip": text_for(wording["skip"], "participant"),
+        "options": options,
     }
 
 

@@ -4,20 +4,20 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** Operating and demonstrating
 
-- [ ] No page looks any different, at desktop or phone width
+- [x] No page looks any different, at desktop or phone width
 
 **Carried from 48**
 
-- [ ] One set of button rules: A0-48 shaped `.btn` like the prototype's pill in the stylesheet alone; each page's markup moves to `.pill` and `.pill.ghost`
-- [ ] One name per colour: the stylesheet keeps Anville's names beside the prototype's for the same values (`--gold` and `--green-deep`, `--white` and `--paper`, `--deep`, `--footer` and `--brown`, `--ink-muted` and `--muted`)
-- [ ] Class names from the prototype that say nothing (`.n`, `.ar`, `.l`, `.r`, `.lbl`, `.tr`, `.b`, `.go`) get names that do
-- [ ] The homepage's tests pin its copy ("Begin your journey" three times, its taglines), which `CODING_STANDARDS.md` rules out; they test behaviour instead: where each "Begin" leads, that nothing points at a placeholder
+- [x] One set of button rules: A0-48 shaped `.btn` like the prototype's pill in the stylesheet alone; each page's markup moves to `.pill` and `.pill.ghost`
+- [x] One name per colour: the stylesheet keeps Anville's names beside the prototype's for the same values (`--gold` and `--green-deep`, `--white` and `--paper`, `--deep`, `--footer` and `--brown`, `--ink-muted` and `--muted`)
+- [x] Class names from the prototype that say nothing (`.n`, `.ar`, `.l`, `.r`, `.lbl`, `.tr`, `.b`, `.go`) get names that do
+- [x] The homepage's tests pin its copy ("Begin your journey" three times, its taglines), which `CODING_STANDARDS.md` rules out; they test behaviour instead: where each "Begin" leads, that nothing points at a placeholder
 
 **Context**
 

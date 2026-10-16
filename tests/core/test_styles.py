@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 STYLESHEET = ROOT / "frontend" / "src" / "styles.css"
 TEMPLATES = sorted(path for app in ("access", "engine") for path in (ROOT / app / "templates").rglob("*.html"))
 
-# Hex colours, functional colours and the named colours most likely to slip in (but not var(--white) or white-space).
+# Hex colours, functional colours and the named colours most likely to slip in (but not var(--white-40) or white-space).
 RAW_COLOUR = re.compile(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|lab|lch)\(|(?<![-\w])(?:white|black)\b(?!-)")
 
 
@@ -94,10 +94,11 @@ def _contrast(foreground, background):
 def test_body_text_and_buttons_meet_wcag_aa_contrast():
     css = STYLESHEET.read_text()
     colours = _root_colours(css)
-    selectors = ("body", ".btn-primary", ".btn-secondary", ".bl-btn:has(input:checked)")
+    # ✨ a ghost pill has the text's own colours; a rating's chosen point, and those below it (fix-2)
+    selectors = ("body", ".pill", ".rate-point:has(input:checked)", ".rate-point:has(~ .rate-point input:checked)")
     pairs = {selector: _rule_colours(css, selector) for selector in selectors}
-    pairs["muted text on the page"] = ("--ink-muted", "--cream")
-    pairs["text on the dark panels"] = ("--on-dark", "--deep")
+    pairs["muted text on the page"] = ("--muted", "--cream")
+    pairs["text on the dark panels"] = ("--on-dark", "--brown")
 
     ratios = {name: round(_contrast(colours[text], colours[background]), 2) for name, (text, background) in pairs.items()}
 
@@ -106,7 +107,7 @@ def test_body_text_and_buttons_meet_wcag_aa_contrast():
 
 # ✨ Colours made to be read on the dark panels, and the results' and comparison's colours, which the prototype fixes
 # and ticket 48 keeps unchanged; every other text colour is read on the page's cream.
-ON_DARK = re.compile(r"--(on-dark[\w-]*|cream[\w-]*|snow|white|paper|green)$")
+ON_DARK = re.compile(r"--(on-dark[\w-]*|cream[\w-]*|snow|paper|green)$")
 FIXED_BY_THE_RESULTS = re.compile(r"--(tone-[\w-]+|rank-\d|comparison-[\w-]+|blue-soft)$")
 
 

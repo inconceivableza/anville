@@ -1,24 +1,27 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
-"""✨ A contact list: people who know the participant, a name and an email per row, kept as records of their own.
+"""✨ A contact list: people who know the participant, a name and an email each, kept as records of their own.
 
-The rows are people other than the participant, so they are stored as contacts (which later become observers'
-invitations, ticket 13) rather than among the participant's answers. The gate still reads them as the block's
-answer, so a section can ask for none or at least an authored number.
+The people are other than the participant, so they are stored as contacts (each with an observer's link, ticket 13)
+rather than among the participant's answers. The gate still reads them as the block's answer, so a section can ask for
+none or at least an authored number. Each person is added, with their link, or changed on their own, so saving one
+never touches anyone else (ticket 51a).
 """
 
 import re
 
 import pytest
+from django.test import Client
 
-from engine.models import Contact, Response
+from engine.models import Contact, Invitation, Response
 from tests.documents import pathway_document
 from tests.journeys.pages import gate_checklist, version_on
 from tests.journeys.test_answers import shown
-from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
+from tests.journeys.test_hub import a_fresh_participant, signed_in_client  # noqa: F401  (fixtures, used by name)
 
 ONBOARDING = "onboarding"
+VOICES = "voices"
 ADD_TWO = "Add at least two people, or leave the list empty to do this later."
 
 
@@ -26,12 +29,31 @@ def with_a_contact_list(**fields):
     """✨ The test pathway with a contact list at the foot of onboarding, whose gate asks for none or at least two."""
     document = pathway_document()
     onboarding = document["content"]["sections"][0]
-    onboarding["blocks"].append({"id": "contacts", "type": "contact_list", "min_rows": 2, **fields})
+    onboarding["blocks"].append({"id": "contacts", "type": "contact_list", "needed": 2, "optional": 0, **fields})
     onboarding["gate"] = {
         "clauses": [
             {"type": "entry_count", "block": "contacts", "min": 2, "allow_none": True, "message": ADD_TWO},
         ]
     }
+    return document
+
+
+def with_trusted_voices(document=None, **fields):
+    """✨ The test pathway with a side card after onboarding holding the contact list, three people needed and two
+    more optional, as Five trusted voices is (ticket 51a), and complete once three of them have links (ticket 52)."""
+    document = document or pathway_document()
+    document["content"]["sections"].append(
+        {
+            "id": VOICES,
+            "title": "Five trusted voices",
+            "requires": ["onboarding"],
+            "side_card": {"sentence": "Invite people who know you well."},
+            "blocks": [{"id": "contacts", "type": "contact_list", "needed": 3, "optional": 2, **fields}],
+            "gate": {
+                "clauses": [{"type": "links_issued", "block": "contacts", "min": 3, "message": "Add three people."}]
+            },
+        }
+    )
     return document
 
 
@@ -41,26 +63,105 @@ def participant(signed_in_client, load_pathway):  # noqa: F811
     return signed_in_client
 
 
+@pytest.fixture
+def voices(signed_in_client, load_pathway):  # noqa: F811
+    """✨ A participant with Before we begin complete, on whose hub Five trusted voices is a side card."""
+    load_pathway(with_trusted_voices())
+    assert signed_in_client.post(f"/sections/{ONBOARDING}/complete/").status_code == 303
+    return signed_in_client
+
+
+def the_list(page):
+    found = re.search(r'<div id="block-contacts".*?</ol>', page, re.S)
+    assert found, "no contact list on this page"
+    return found.group(0)
+
+
+def forms_of(page):
+    """✨ Each form of the list, as (where it posts, its fields as the page fills them)."""
+    forms = []
+    for action, form in re.findall(r'<form[^>]*\baction="([^"]+)"[^>]*>(.*?)</form>', the_list(page), re.S):
+        fields = {}
+        for tag in re.findall(r"<input[^>]*>", form):
+            name = re.search(r'\bname="([^"]+)"', tag)
+            if name:
+                value = re.search(r'\bvalue="([^"]*)"', tag)
+                fields[name.group(1)] = value.group(1) if value else ""
+        forms.append((action, fields))
+    return forms
+
+
 def rows_shown(page):
     """✨ Each row of the contact list as the participant sees it, as (name, email)."""
-    form = re.search(r'<form id="block-contacts".*?</form>', page, re.S).group(0)
-
-    def values(field):
-        inputs = re.findall(rf'<input[^>]*\bname="{field}"[^>]*>', form)
-        return [re.search(r'value="([^"]*)"', tag).group(1) if 'value="' in tag else "" for tag in inputs]
-
-    return list(zip(values("name"), values("email"), strict=True))
+    return [
+        (fields["name"], fields["email"]) for _, fields in forms_of(page) if "name" in fields and "email" in fields
+    ]
 
 
-def save_contacts(client, *rows, **extra):
-    """✨ Save the whole list as the browser does, one name and one email per row, in order."""
-    form = {
-        "name": [name for name, _ in rows],
-        "email": [email for _, email in rows],
-        "version": version_on(shown(client, ONBOARDING)),
-        **extra,
-    }
-    return client.post("/answers/contacts/", form, HTTP_HX_REQUEST="true")
+def add_person(client, person, section=ONBOARDING, page=None, htmx=False):
+    """✨ Add one person as the participant does, in the list's first empty row, on the page given or as it is now;
+    `htmx` as the page's JavaScript sends it."""
+    action, fields = next(
+        form for form in forms_of(page or shown(client, section)) if "name" in form[1] and not form[1]["name"]
+    )
+    name, email = person
+    return client.post(action, {**fields, "name": name, "email": email}, **(HTMX if htmx else {}))
+
+
+def save_person(client, name, changed, section=ONBOARDING, page=None, htmx=False):
+    """✨ Change the named person's row and save it, on the page given (one left open, say) or as it is now; `htmx` as
+    the row's autosave sends it."""
+    action, fields = next(form for form in forms_of(page or shown(client, section)) if form[1].get("name") == name)
+    new_name, new_email = changed
+    return client.post(action, {**fields, "name": new_name, "email": new_email}, **(HTMX if htmx else {}))
+
+
+# ✨ What htmx adds to every request it sends.
+HTMX = {"HTTP_HX_REQUEST": "true"}
+
+
+def save_contacts(client, *rows, section=ONBOARDING):
+    """✨ Add each person in turn, as the participant does, each with their link; an empty row is passed over."""
+    added = None
+    for row in rows:
+        if row != BLANK:
+            added = add_person(client, row, section)
+    return added
+
+
+def action_in_row(client, name, pattern, section=ONBOARDING):
+    """✨ Where a button in the named person's row posts, on the list's page as it is now."""
+    rows = re.findall(r'<li class="contact-row".*?</li>', shown(client, section), re.S)
+    row = next(row for row in rows if f'value="{name}"' in row)
+    found = re.search(rf'action="({pattern})"', row)
+    assert found, f"no {pattern} for {name} on the contact list's page"
+    return found.group(1)
+
+
+def removal_action(client, name, section=ONBOARDING):
+    """✨ Where the named person's Remove button posts."""
+    return action_in_row(client, name, r"/contacts/[\w-]+/\d+/remove/", section)
+
+
+def confirmation_of(page):
+    """✨ The form that confirms a removal on the page given, as (where it posts, its fields), or None if it asks
+    nothing."""
+    for action, form in re.findall(r'<form[^>]*\baction="([^"]+/remove/)"[^>]*>(.*?)</form>', page, re.S):
+        fields = dict(re.findall(r'<input[^>]*\bname="([^"]+)"[^>]*\bvalue="([^"]*)"', form))
+        if "confirmed" in fields:
+            return action, fields
+    return None
+
+
+def take_off_the_list(client, name, section=ONBOARDING):
+    """✨ Take the named person off the list as the participant does: press their Remove button, then, if the page asks
+    first, confirm. Returns the last response."""
+    pressed = client.post(removal_action(client, name, section))
+    asked = confirmation_of(pressed.content.decode()) if pressed.status_code == 200 else None
+    if asked is None:
+        return pressed
+    action, fields = asked
+    return client.post(action, fields)
 
 
 def stored():
@@ -71,18 +172,26 @@ JO, PRIYA, CHRIS = ("Jo", "jo@example.com"), ("Priya", "priya@example.com"), ("C
 BLANK = ("", "")
 
 
+def link_shown(page):
+    found = re.search(r"http://testserver(/observe/[A-Za-z0-9_-]+/)", page)
+    return found.group(1) if found else None
+
+
 # What the participant sees
 
 
 @pytest.mark.django_db
-def test_the_list_opens_with_as_many_empty_rows_as_the_author_asks_for(participant):
-    assert rows_shown(shown(participant, ONBOARDING)) == [BLANK, BLANK]
+def test_the_list_opens_with_as_many_empty_rows_as_the_author_asks_for(signed_in_client, load_pathway):  # noqa: F811
+    load_pathway(with_a_contact_list(needed=3, optional=2))
+
+    assert rows_shown(shown(signed_in_client, ONBOARDING)) == [BLANK] * 5
 
 
 @pytest.mark.django_db
-def test_without_an_authored_number_the_list_opens_with_five_rows(signed_in_client, load_pathway):  # noqa: F811
+def test_without_authored_numbers_the_list_opens_with_five_rows(signed_in_client, load_pathway):  # noqa: F811
     document = with_a_contact_list()
-    del document["content"]["sections"][0]["blocks"][-1]["min_rows"]
+    for field in ("needed", "optional"):
+        del document["content"]["sections"][0]["blocks"][-1][field]
     load_pathway(document)
 
     assert rows_shown(shown(signed_in_client, ONBOARDING)) == [BLANK] * 5
@@ -94,182 +203,326 @@ def test_each_row_asks_for_a_first_name_and_an_email_address_as_the_prototype_do
 
     assert re.search(r'<input[^>]*type="text"[^>]*name="name"[^>]*placeholder="First name"', page)
     assert re.search(r'<input[^>]*type="email"[^>]*name="email"[^>]*placeholder="Email address"', page)
-    assert "+ Add another person" in page
-
-
-# Saving
 
 
 @pytest.mark.django_db
-def test_the_list_is_saved_as_contacts_in_the_order_written_and_acknowledged(participant):
-    saved = save_contacts(participant, JO, PRIYA)
-
-    assert saved.status_code == 200
-    assert "Saved" in saved.content.decode()
-    assert stored() == [JO, PRIYA]
-    assert {contact.role for contact in Contact.objects.all()} == {Contact.Role.CONTACT}
-
-
-@pytest.mark.django_db
-def test_contacts_are_kept_apart_from_the_participants_answers(participant):
+def test_once_every_row_is_filled_one_more_is_offered(participant):
     save_contacts(participant, JO, PRIYA)
 
+    assert rows_shown(shown(participant, ONBOARDING)) == [JO, PRIYA, BLANK]
+
+
+# Adding and saving
+
+
+@pytest.mark.django_db
+def test_people_are_kept_as_contacts_in_the_order_added_apart_from_the_participants_answers(participant):
+    save_contacts(participant, JO, PRIYA)
+
+    assert stored() == [JO, PRIYA]
     response = Response.objects.get()
     assert "contacts" not in response.answers
-    assert {contact.response for contact in Contact.objects.all()} == {response}
-    assert {contact.block_id for contact in Contact.objects.all()} == {"contacts"}
+    assert {(contact.response, contact.block_id, contact.role) for contact in Contact.objects.all()} == {
+        (response, "contacts", Contact.Role.CONTACT)
+    }
 
 
 @pytest.mark.django_db
-def test_empty_rows_are_left_out_and_space_around_each_entry_is_trimmed(participant):
-    save_contacts(participant, BLANK, ("  Jo ", " jo@example.com  "), ("   ", "  "), PRIYA)
+def test_adding_a_person_makes_their_link_in_the_same_act_and_shows_it_to_copy(participant):
+    added = add_person(participant, JO)
 
-    assert stored() == [JO, PRIYA]
+    assert added.status_code == 303
+    page = participant.get(added.url).content.decode()
+    link = link_shown(page)
+    assert link
+    assert Client().get(link).status_code == 200
+    assert not Contact.objects.filter(invitation__isnull=True).exists()
 
 
 @pytest.mark.django_db
-def test_saving_again_replaces_the_list_so_a_person_taken_off_it_is_not_kept(participant):
+def test_nobody_is_listed_without_having_had_a_link(participant):
     save_contacts(participant, JO, PRIYA, CHRIS)
 
-    save_contacts(participant, JO, BLANK, CHRIS)
-
-    assert stored() == [JO, CHRIS]
+    assert Invitation.objects.count() == Contact.objects.count() == 3
 
 
 @pytest.mark.django_db
-def test_emptying_every_row_keeps_no_contacts(participant):
-    save_contacts(participant, JO, PRIYA)
+def test_space_around_each_entry_is_trimmed(participant):
+    add_person(participant, ("  Jo ", " jo@example.com  "))
 
-    assert save_contacts(participant, BLANK, BLANK).status_code == 200
-    assert stored() == []
+    assert stored() == [JO]
 
 
 @pytest.mark.django_db
 def test_saved_contacts_survive_a_reload(participant):
     save_contacts(participant, JO, PRIYA, CHRIS)
 
-    assert rows_shown(shown(participant, ONBOARDING)) == [JO, PRIYA, CHRIS]
+    assert rows_shown(shown(participant, ONBOARDING)) == [JO, PRIYA, CHRIS, BLANK]
 
 
 @pytest.mark.django_db
-def test_fewer_contacts_than_the_authored_number_are_shown_above_empty_rows(signed_in_client, load_pathway):  # noqa: F811
-    load_pathway(with_a_contact_list(min_rows=4))
-    save_contacts(signed_in_client, JO)
+def test_saving_one_person_leaves_everyone_else_unchanged_even_from_a_page_left_open(participant):
+    """✨ Ticket 13a's bug: a page open since before someone was added saved its whole list, which dropped them."""
+    add_person(participant, JO)
+    left_open = shown(participant, ONBOARDING)
+    priyas_link = link_shown(participant.get(add_person(participant, PRIYA).url).content.decode())
 
-    assert rows_shown(shown(signed_in_client, ONBOARDING)) == [JO, BLANK, BLANK, BLANK]
+    saved = save_person(participant, "Jo", ("Joanne", "joanne@example.com"), page=left_open)
+
+    assert saved.status_code == 303
+    assert stored() == [("Joanne", "joanne@example.com"), PRIYA]
+    assert Client().get(priyas_link).status_code == 200
+
+
+@pytest.mark.django_db
+def test_changing_a_persons_details_keeps_their_link_working(participant):
+    jos_link = link_shown(participant.get(add_person(participant, JO).url).content.decode())
+
+    save_person(participant, "Jo", ("Joanne", "joanne@example.com"))
+
+    assert stored() == [("Joanne", "joanne@example.com")]
+    assert Client().get(jos_link).status_code == 200
+
+
+@pytest.mark.django_db
+def test_another_participants_contact_cannot_be_changed(participant):
+    add_person(participant, JO)
+    left_open = shown(participant, ONBOARDING)
+
+    someone_else = a_fresh_participant(participant, "someone@example.com")
+
+    assert save_person(someone_else, "Jo", PRIYA, page=left_open).status_code == 404
+    assert stored() == [JO]
+
+
+# Saving as it changes, a row at a time (fix-2)
+
+
+def row_of(page, name):
+    """✨ The named person's row on a page."""
+    rows = re.findall(r'<li class="contact-row".*?</li>', page, re.S)
+    return next(row for row in rows if f'value="{name}"' in row)
+
+
+def rows_sent_back(response):
+    """✨ The rows a response holds, by who is in them (None for an empty row), asserting it holds nothing else."""
+    body = response.content.decode()
+    assert "<html" not in body and 'id="block-contacts"' not in body, "the whole page came back, not a row"
+    rows = re.findall(r'<li class="contact-row".*?</li>', body, re.S)
+    assert body.count("<li") == len(rows)
+    return [re.search(r'name="name"[^>]*value="([^"]*)"', row).group(1) or None for row in rows]
+
+
+@pytest.mark.django_db
+def test_a_change_to_someone_listed_is_saved_as_it_changes_with_no_save_button_to_press(participant):
+    add_person(participant, JO)
+    row = row_of(shown(participant, ONBOARDING), "Jo")
+
+    assert re.search(r'<form class="contact-person"[^>]*hx-trigger="input delay:\d+ms, change\b', row)
+    assert all("save-fallback" in button for button in re.findall(r"<button[^>]*>\s*Save\s*</button>", row))
+    saved = save_person(participant, "Jo", ("Joanne", "joanne@example.com"), htmx=True)
+
+    assert saved.status_code == 200
+    assert stored() == [("Joanne", "joanne@example.com")]
+
+
+@pytest.mark.django_db
+def test_an_invalid_email_is_refused_in_that_row_alone_and_changes_nothing(participant):
+    save_contacts(participant, JO, PRIYA)
+
+    refused = save_person(participant, "Jo", ("Jo", "jo@"), htmx=True)
+
+    assert refused.status_code == 400
+    assert "Check the email address." in refused.content.decode()
+    assert rows_sent_back(refused) == ["Jo"]
+    assert stored() == [JO, PRIYA]
+
+
+@pytest.mark.django_db
+def test_a_new_row_stores_nobody_until_get_link_is_pressed(participant):
+    page = shown(participant, ONBOARDING)
+    empty = re.findall(r'<li class="contact-row".*?</li>', page, re.S)[0]
+
+    assert "hx-trigger" not in empty
+    assert re.search(r"<button[^>]*>\s*Get link\s*</button>", empty)
+    assert stored() == []
+    assert add_person(participant, JO, page=page, htmx=True).status_code == 200
+    assert stored() == [JO]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("action", ["save", "get link", "reissue", "revoke", "remove"])
+def test_each_action_with_javascript_sends_back_its_own_row_alone(participant, action):
+    """✨ So typing not yet saved in any other row is never lost (fix-2)."""
+    save_contacts(participant, JO, PRIYA)
+
+    if action == "save":
+        sent = save_person(participant, "Jo", ("Joanne", "jo@example.com"), htmx=True)
+        assert rows_sent_back(sent) == ["Joanne"]
+    elif action == "get link":
+        sent = add_person(participant, CHRIS, htmx=True)
+        assert rows_sent_back(sent)[0] == "Chris"
+        assert set(rows_sent_back(sent)[1:]) <= {None}  # ✨ and the next empty row, now that every row is filled
+        assert link_shown(sent.content.decode())
+    elif action in ("reissue", "revoke"):
+        path = r"/invitations/\d+/issue/" if action == "reissue" else r"/invitations/\d+/revoke/"
+        sent = participant.post(action_in_row(participant, "Jo", path), **HTMX)
+        assert rows_sent_back(sent) == ["Jo"]
+    else:
+        asked = participant.post(removal_action(participant, "Jo"), **HTMX)
+        assert rows_sent_back(asked) == ["Jo"]
+        assert stored() == [JO, PRIYA]
+        action_to_confirm, fields = confirmation_of(asked.content.decode())
+        sent = participant.post(action_to_confirm, fields, **HTMX)
+        assert stored() == [PRIYA]
+        assert rows_sent_back(sent) in ([], [None])
+    assert sent.status_code == 200
+
+
+# Taking someone off the list (ticket 13d)
+
+
+@pytest.mark.django_db
+def test_removing_a_person_deletes_them_and_their_link_which_is_then_refused_as_a_dead_one(participant):
+    jos_link = link_shown(participant.get(add_person(participant, JO).url).content.decode())
+    add_person(participant, PRIYA)
+
+    removed = take_off_the_list(participant, "Jo")
+
+    assert removed.status_code == 303
+    assert stored() == [PRIYA]
+    assert Invitation.objects.count() == 1
+    assert Client().get(jos_link).status_code == 404
+
+
+@pytest.mark.django_db
+def test_removing_someone_whose_link_is_live_asks_first(participant):
+    add_person(participant, JO)
+
+    pressed = participant.post(removal_action(participant, "Jo"))
+
+    assert pressed.status_code == 200
+    assert confirmation_of(pressed.content.decode())
+    assert stored() == [JO]
+
+
+@pytest.mark.django_db
+def test_someone_whose_link_no_longer_works_is_removed_without_asking(participant):
+    add_person(participant, JO)
+    participant.post(action_in_row(participant, "Jo", r"/invitations/\d+/revoke/"))
+
+    pressed = participant.post(removal_action(participant, "Jo"))
+
+    assert pressed.status_code == 303
+    assert stored() == []
+
+
+@pytest.mark.django_db
+def test_opening_the_removal_address_removes_nobody(participant):
+    add_person(participant, JO)
+    action = removal_action(participant, "Jo")
+
+    participant.get(action)
+    participant.get(action, {"confirmed": "yes"})
+
+    assert stored() == [JO]
+    assert Invitation.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_another_participants_contact_cannot_be_removed(participant):
+    add_person(participant, JO)
+    action = removal_action(participant, "Jo")
+
+    someone_else = a_fresh_participant(participant, "someone@example.com")
+
+    assert someone_else.post(action, {"confirmed": "yes"}).status_code == 404
+    assert stored() == [JO]
+    assert Invitation.objects.count() == 1
 
 
 # Refusals
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("email", ["priya@", "priya", "priya@example", "priya example.com", "@example.com"])
-def test_an_email_address_that_is_not_one_is_refused_naming_its_row_and_nothing_changes(participant, email):
-    """✨ Checked as Django checks an email field, not the prototype's "has an @ past the first character"."""
-    save_contacts(participant, JO)
-
-    refused = save_contacts(participant, JO, ("Priya", email))
+@pytest.mark.parametrize("person", [("Priya", ""), ("", "priya@example.com")])
+def test_a_person_needs_a_name_and_an_email_address(participant, person):
+    refused = add_person(participant, person)
 
     assert refused.status_code == 400
-    assert "Check the email address in row 2." in refused.content.decode()
+    assert "Add both a name and an email address." in refused.content.decode()
+    assert stored() == []
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("changed", [("Jo", ""), ("", "jo@example.com")])
+def test_a_person_saved_without_a_name_or_an_email_address_is_refused_and_unchanged(participant, changed):
+    add_person(participant, JO)
+
+    refused = save_person(participant, "Jo", changed)
+
+    assert refused.status_code == 400
+    assert "Add both a name and an email address." in refused.content.decode()
     assert stored() == [JO]
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("row", [("Priya", ""), ("", "priya@example.com")])
-def test_a_row_with_only_a_name_or_only_an_email_is_refused_naming_its_row(participant, row):
-    refused = save_contacts(participant, JO, BLANK, row)
+@pytest.mark.parametrize("email", ["priya@", "priya", "priya@example", "priya example.com", "@example.com"])
+def test_an_email_address_that_is_not_one_is_refused(participant, email):
+    """✨ Checked as Django checks an email field, not the prototype's "has an @ past the first character"."""
+    refused = add_person(participant, ("Priya", email))
 
     assert refused.status_code == 400
-    assert "Add both a name and an email address in row 3." in refused.content.decode()
+    assert "Check the email address." in refused.content.decode()
     assert stored() == []
 
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
-    "row, refusal",
+    "person, refusal",
     [
-        (("P" * 151, "priya@example.com"), "The name in row 1 is too long."),
-        (("Priya", "p" * 243 + "@example.com"), "Check the email address in row 1."),
+        (("P" * 151, "priya@example.com"), "The name is too long."),
+        (("Priya", "p" * 243 + "@example.com"), "Check the email address."),
     ],
 )
-def test_a_name_or_email_too_long_to_keep_is_refused_naming_its_row(participant, row, refusal):
-    refused = save_contacts(participant, row)
+def test_a_name_or_email_too_long_to_keep_is_refused(participant, person, refusal):
+    refused = add_person(participant, person)
 
     assert refused.status_code == 400
     assert refusal in refused.content.decode()
     assert stored() == []
 
 
-def marked_invalid(refused):
-    """✨ The row and field a refusal says is at fault, which main.js marks in the list, or None."""
-    marked = re.search(r'data-invalid-row="(\d+)" data-invalid-field="(\w+)"', refused.content.decode())
-    return (int(marked.group(1)), marked.group(2)) if marked else None
-
-
 @pytest.mark.django_db
-@pytest.mark.parametrize(
-    "rows, at_fault",
-    [
-        ((JO, ("Priya", "priya")), (2, "email")),
-        ((JO, BLANK, ("Chris", "")), (3, "email")),
-        ((("", "jo@example.com"),), (1, "name")),
-        ((("J" * 151, "jo@example.com"),), (1, "name")),
-    ],
-)
-def test_a_refusal_says_which_field_is_at_fault_so_the_page_can_mark_it(participant, rows, at_fault):
-    assert marked_invalid(save_contacts(participant, *rows)) == at_fault
+@pytest.mark.parametrize("person, at_fault", [(("Priya", "priya@"), "email"), (("", "priya@example.com"), "name")])
+def test_a_refusal_comes_back_as_typed_with_the_field_at_fault_marked(participant, person, at_fault):
+    refused = add_person(participant, person).content.decode()
 
-
-@pytest.mark.django_db
-def test_a_refusal_about_the_whole_list_marks_no_field(participant):
-    people = [(f"Person {number}", f"person{number}@example.com") for number in range(51)]
-
-    assert marked_invalid(save_contacts(participant, *people)) is None
+    assert ("Priya" if person[0] else "", person[1]) in rows_shown(refused)
+    assert re.search(rf'<input[^>]*name="{at_fault}"[^>]*aria-invalid="true"', refused)
 
 
 @pytest.mark.django_db
 def test_the_browser_leaves_checking_the_email_addresses_to_the_server(participant):
-    """✨ With its own check on, the browser stops an address without an "@" before htmx sends it, silently, so
-    the participant is never told which row is wrong. The server's refusal names the row instead."""
-    page = shown(participant, ONBOARDING)
+    """✨ With its own check on, the browser stops an address without an "@" before it is sent, so the server's
+    refusal, which says what is wrong, is never seen."""
+    add_person(participant, JO)
+    forms = re.findall(r'<form class="contact-person"[^>]*>', the_list(shown(participant, ONBOARDING)))
 
-    assert re.search(r'<form id="block-contacts"[^>]*\snovalidate[\s>]', page)
+    assert forms and all(re.search(r"\snovalidate[\s>]", form) for form in forms)
 
 
 @pytest.mark.django_db
-def test_a_list_of_more_than_fifty_people_is_refused(participant):
-    people = [(f"Person {number}", f"person{number}@example.com") for number in range(51)]
+def test_a_fifty_first_person_is_refused(participant):
+    add_person(participant, JO)
+    fifty = [{"name": f"Person {number}", "email": f"person{number}@example.com"} for number in range(50)]
+    Response.objects.get().replace_contacts("contacts", fifty, Contact.Role.CONTACT)  # ✨ quicker than 50 requests
 
-    refused = save_contacts(participant, *people)
+    refused = participant.post("/contacts/contacts/", {"name": "Priya", "email": "priya@example.com"})
 
     assert refused.status_code == 400
     assert "Add no more than 50 people." in refused.content.decode()
-    assert stored() == []
-
-
-# Adding another row
-
-
-@pytest.mark.django_db
-def test_add_another_without_javascript_saves_the_list_and_comes_back_with_one_more_row(participant):
-    """✨ With JavaScript the row is added in the page. Without it, the button submits the form with one more
-    row asked for, and the page comes back showing it."""
-    added = participant.post(
-        "/answers/contacts/",
-        {"name": ["Jo", "Priya"], "email": ["jo@example.com", "priya@example.com"], "rows": "3",
-         "version": version_on(shown(participant, ONBOARDING))},
-    )
-
-    assert added.status_code == 303
-    assert added.url == "/sections/onboarding/?rows=3#block-contacts"
-    assert stored() == [JO, PRIYA]
-    assert rows_shown(participant.get(added.url).content.decode()) == [JO, PRIYA, BLANK]
-
-
-@pytest.mark.django_db
-def test_rows_asked_for_in_the_address_are_capped_at_fifty(participant):
-    assert len(rows_shown(participant.get("/sections/onboarding/?rows=1000").content.decode())) == 50
+    assert Contact.objects.count() == 50
 
 
 # The gate and progress
@@ -282,35 +535,18 @@ def test_the_section_can_be_completed_with_no_contacts_at_all(participant):
 
 @pytest.mark.django_db
 def test_once_anyone_is_added_the_authored_number_is_needed_to_complete(participant):
-    save_contacts(participant, JO)
+    add_person(participant, JO)
 
     refused = participant.post(f"/sections/{ONBOARDING}/complete/")
 
     assert refused.status_code == 400
     assert gate_checklist(refused.content.decode()) == {ADD_TWO: False}
-    save_contacts(participant, JO, PRIYA)
+    add_person(participant, PRIYA)
     assert participant.post(f"/sections/{ONBOARDING}/complete/").status_code == 303
 
 
 @pytest.mark.django_db
-def test_the_gate_keeps_up_with_each_save(participant):
-    saved = save_contacts(participant, JO)
-
-    assert gate_checklist(saved.content.decode()) == {ADD_TWO: False}
-    assert gate_checklist(save_contacts(participant, JO, PRIYA).content.decode()) == {ADD_TWO: True}
-
-
-@pytest.mark.django_db
-def test_a_contact_list_counts_towards_progress_once_anyone_is_on_it(participant):
-    assert "0 of 3 answered" in participant.get("/hub/").content.decode()  # ✨ the test pathway's two, and this
-
-    save_contacts(participant, JO)
-
-    assert "1 of 3 answered" in participant.get("/hub/").content.decode()
-
-
-@pytest.mark.django_db
-def test_a_contact_list_in_a_locked_section_refuses_the_list(signed_in_client, load_pathway):  # noqa: F811
+def test_a_contact_list_in_a_locked_section_refuses_anyone_added(signed_in_client, load_pathway):  # noqa: F811
     document = with_a_contact_list()
     onboarding, calling = document["content"]["sections"]
     calling["blocks"].append(onboarding["blocks"].pop())
@@ -318,10 +554,29 @@ def test_a_contact_list_in_a_locked_section_refuses_the_list(signed_in_client, l
     load_pathway(document)
 
     refused = signed_in_client.post(
-        "/answers/contacts/",
-        {"name": ["Jo"], "email": ["jo@example.com"], "version": version_on(shown(signed_in_client, ONBOARDING))},
-        HTTP_HX_REQUEST="true",
+        "/contacts/contacts/",
+        {"name": "Jo", "email": "jo@example.com", "version": version_on(shown(signed_in_client, ONBOARDING))},
     )
 
     assert refused.status_code == 403
     assert stored() == []
+
+
+# Five trusted voices, a side card of its own
+
+
+@pytest.mark.django_db
+def test_people_can_be_added_and_changed_once_before_we_begin_is_complete(voices):
+    add_person(voices, JO, VOICES)
+    save_person(voices, "Jo", ("Joanne", "joanne@example.com"), VOICES)
+    add_person(voices, PRIYA, VOICES)
+
+    assert stored() == [("Joanne", "joanne@example.com"), PRIYA]
+
+
+@pytest.mark.django_db
+def test_the_old_invitations_address_is_the_lists_own_page(voices):
+    went = voices.get("/invitations/")
+
+    assert went.status_code == 302
+    assert went.url == f"/sections/{VOICES}/#block-contacts"

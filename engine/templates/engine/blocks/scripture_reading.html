@@ -22,7 +22,7 @@
       {% csrf_token %}
       <input type="hidden" name="value" value="true">
       <input type="hidden" name="version" value="{{ pathway.version_id }}">
-      <button type="submit" class="btn btn-primary">{{ block.text.confirm_label|default:"I have read these" }}</button>
+      <button type="submit" class="pill">{{ block.text.confirm_label|default:"I have read these" }}</button>
     </form>
   {% endif %}
 </div>

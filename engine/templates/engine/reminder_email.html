@@ -1,0 +1,20 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ A reminder email's HTML part, beside its plain text (ticket 43b): the document's wording, the button for a fresh
+  link and the link to the same page for its privacy notice, then the way to stop. Unstyled, since templates carry no
+  inline styles or raw colours, so mail clients show the button as a plain link.
+{% endcomment %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{ subject }}</title>
+  </head>
+  <body>
+    {{ body|linebreaks }}
+    <p><a href="{{ answer_link }}">{{ answer }}</a></p>
+    <p><a href="{{ answer_link }}">{{ details }}</a></p>
+    <p>{{ stop }}:<br><a href="{{ stop_link }}">{{ stop_link }}</a></p>
+  </body>
+</html>

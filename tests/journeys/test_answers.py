@@ -228,6 +228,27 @@ def test_an_agreement_scale_shows_its_prompt_and_both_anchor_labels(signed_in):
     assert "Strongly agree" in page
 
 
+def _points(page, block_id):
+    return re.findall(rf'<input[^>]*id="answer-{block_id}-\d+"[^>]*>', page)
+
+
+@pytest.mark.django_db
+def test_an_agreement_scale_is_ten_radio_buttons_from_one_to_ten(signed_in):
+    """✨ Fix-2: v3's ten buttons, each a radio, so the scale works without JavaScript."""
+    points = _points(shown(signed_in, ONBOARDING), "baseline-bible")
+
+    assert [re.search(r' value="(\d+)"', point).group(1) for point in points] == [str(n) for n in range(1, 11)]
+    assert all('type="radio"' in point and ' name="value"' in point for point in points)
+
+
+@pytest.mark.django_db
+def test_an_unanswered_rating_shows_no_point_chosen_and_stores_nothing(signed_in):
+    points = _points(shown(signed_in, ONBOARDING), "baseline-bible")
+
+    assert not any(" checked" in point for point in points)
+    assert "baseline-bible" not in Response.objects.get().answers
+
+
 @pytest.mark.django_db
 def test_a_participant_cannot_answer_a_block_that_exists_only_in_a_later_version(signed_in, load_pathway):
     answer(signed_in, "statement", "Started on the first version.")

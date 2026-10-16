@@ -18,13 +18,12 @@ class UnknownBlock(Exception):
 class AnswerRefused(Exception):
     """✨ The submitted value is not a valid answer for its block.
 
-    `field` says which entry is at fault, and where the answer has rows, such as a contact list, `row` (counted
-    from 1) says which row, so the page can mark it as well as saying so. The coach's details use `field` alone.
+    `field` says which entry is at fault, such as a person's name or email address, so the page can mark it as well
+    as saying so.
     """
 
-    def __init__(self, message, row=None, field=None):
+    def __init__(self, message, field=None):
         super().__init__(message)
-        self.row = row
         self.field = field
 
 
@@ -37,14 +36,18 @@ def answerable_block(document, block_id):
     raise UnknownBlock(block_id)
 
 
-def answer_from_form(document, block, submitted):
+def answer_from_form(document, block, submitted, role="participant"):
     """✨ The answer a submitted form value stands for, or AnswerRefused. Text is kept exactly as written.
 
-    The document is the block's own pathway version, since what a valid answer is can depend on it.
+    The document is the block's own pathway version, since what a valid answer is can depend on it. An observer's
+    answer may leave out what its kind fills in for observers (an observer's sort, its slider values).
     """
     if submitted is None:
         raise AnswerRefused("No answer was sent.")
     kind = BLOCK_TYPES[block["type"]].captures
-    if not Draft202012Validator(kind.schema_for(document, block)).is_valid(value := kind.from_form(submitted)):
+    value = kind.from_form(submitted)
+    if role == "observer" and kind.observer_defaults is not None:
+        value = kind.observer_defaults(document, value)
+    if not Draft202012Validator(kind.schema_for(document, block)).is_valid(value):
         raise AnswerRefused(kind.refusal)
     return value

@@ -4,16 +4,22 @@
 
 **Blocked by:** B3-43a (Observer reminders)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** Observers (ADR 0005); Legalities are parked, not forgotten
 
-- [ ] The reminder email gains an "Answer for Sam →" button and a "How we handle your details" link, both to a page showing the observers' privacy notice and a button to start. Opening the page changes nothing
-- [ ] Pressing it gives the observer a fresh link of their own, already claimed, shown once and kept as a claim keeps it, and takes them into the assessment. Only then do the participant's copy and any link the observer claimed before stop working
-- [ ] The fresh link replaces the token on the same invitation: the date it stops working and the participant's page are unchanged
-- [ ] The button's address is signed and names the invitation, and is not a link the observer landing accepts. It works again until the person has sent, and is refused, as a dead link is, once the link expires or the participant revokes or reissues it or removes the contact, while answer collection is frozen, and while the participant's consent is withdrawn. A stop to reminders does not refuse it
+- [x] The reminder email gains an "Answer for Sam →" button and a "How we handle your details" link, both to a page showing the observers' privacy notice and a button to start. Opening the page changes nothing
+- [x] Pressing it gives the observer a fresh link of their own, already claimed, shown once and kept as a claim keeps it, and takes them into the assessment. Only then do the participant's copy and any link the observer claimed before stop working
+- [x] The fresh link replaces the token on the same invitation: the date it stops working and the participant's page are unchanged
+- [x] The button's address is signed and names the invitation, and is not a link the observer landing accepts. It works again until the person has sent, and is refused, as a dead link is, once the link expires or the participant revokes or reissues it or removes the contact, while answer collection is frozen, and while the participant's consent is withdrawn. A stop to reminders does not refuse it
+
+**Carried from 43a**
+
+- The reminder email is plain text only: its wording comes from the document's `observers.reminder` (subject, body, stop line), and the engine adds the stop link and the `List-Unsubscribe` headers. A button needs an HTML part beside it, and its wording a field of its own
+- The stop address is signed (Django's signer, its own salt) and names the contact, with no expiry; the button's address should use a salt of its own so neither address works as the other. Reminders' links are made from the `ANVILLE_SITE_URL` setting, since the job has no request
+- Each reissue makes a new invitation, so a fresh link that replaces the token on the same invitation keeps the link's weekly reminder clock as it was
 
 **Context**
 

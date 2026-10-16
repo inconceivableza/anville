@@ -13,13 +13,13 @@
 {% participant_nav as nav %}
 <header class="site-header">
   <div class="nav light">
-    <div class="l">
+    <div class="nav-left">
       <a class="site-header-title" href="{% url 'hub' %}">{{ nav.title|default:"Anville" }}</a>
     </div>
-    <div class="r">
+    <div class="nav-right">
       {% if nav.sidebar %}
         <details class="pathway-nav-toggle">
-          <summary class="btn btn-secondary btn-sm">Your pathway</summary>
+          <summary class="pill ghost small">Your pathway</summary>
           <nav class="pathway-nav" aria-label="Your pathway">
             <ol class="pathway-nav-sections">
               {% for entry in nav.sidebar.outline %}
@@ -36,7 +36,7 @@
       {% endif %}
       <form method="post" action="{% url 'account_logout' %}">
         {% csrf_token %}
-        <button type="submit" class="btn btn-secondary btn-sm">Sign out</button>
+        <button type="submit" class="pill ghost small">Sign out</button>
       </form>
     </div>
   </div>

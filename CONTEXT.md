@@ -132,6 +132,14 @@ _Avoid_: rating, card.
 A score expressed as a share of a grand total, so only relative shape survives and absolute strength is discarded. The prototype's profile is compositional; the plans call the same property *ipsative*.
 _Avoid_: normalised score, percentage score.
 
+**Tie-break**:
+The few "Which is more true of you?" pairs a participant answers straight after their self-assessment, before their results, when it leaves one framework's leading constructs too close to call. Any pair may be skipped. Observers never get one.
+_Avoid_: tiebreaker, decider, play-off.
+
+**Generalist**:
+A participant whose self-assessment leaves both frameworks too close to call. They get no tie-break, and are told so in their results, after the prototype's "Two flat profiles is itself a finding".
+_Avoid_: all-rounder, flat profile (for the person).
+
 ### People
 
 **Participant**:
@@ -213,6 +221,10 @@ _Avoid_: field value, datum.
 **Result**:
 The scores and presentation computed from an assessment against the pathway version it was answered on. A **self-result** comes from a self-assessment and is persisted once rather than recomputed. An **observer result** comes from one observer assessment and is worked out when needed, never stored or shown on its own. The comparison's spread shows each observer's standing and a dot at their share for one construct at a time, each construct's in ascending order on its own, so no observer result can be put back together from it.
 _Avoid_: report, profile, profiling, outcome.
+
+**Re-weighted result**:
+A self-result with the tie-break's answers applied, by a second named scoring method, once every pair is answered or skipped. It is stored beside the self-result, which is kept, and is what the participant's results and comparison show.
+_Avoid_: rescored result, adjusted result, final result.
 
 **Standing**:
 Where a construct's share sits against an even share of its framework, said in a word from the pathway document, such as "Leading", "Strong", "Present" or "Less used". Results and the comparison show standings, never percents. In the document, a standing's thresholds are its `bands`, as the agreement's are; on the page it is always a standing.

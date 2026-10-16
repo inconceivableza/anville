@@ -4,17 +4,17 @@
 
 **Blocked by:** A3-50 (Before we begin as a wizard)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** Feedback from others; Observers (ADR 0005)
 
-- [ ] The Five trusted voices card shows a tag and a line for where things stand, taken first from its section's status, so once complete it never goes back to asking for more people. Two meters show invited (people with a working link) and answered (assessments sent), and no names. Its "Manage" leads to the section's own page
-- [ ] On that page adding a person makes their link in the same act and shows it there to copy, so nobody is listed without having had one. Reissue stays for a lost or expired link. The invitations page is this page
-- [ ] The list shows three rows marked as needed and two more as optional, both numbers set on the block. An observer needs a name and an email address
-- [ ] Saving one person never removes or changes anyone else on the list, even from the page left open in another tab
-- [ ] People can still be added and changed once Before we begin is complete
+- [x] The Five trusted voices card shows a tag and a line for where things stand, taken first from its section's status, so once complete it never goes back to asking for more people. Two meters show invited (people with a working link) and answered (assessments sent), and no names. Its "Manage" leads to the section's own page
+- [x] On that page adding a person makes their link in the same act and shows it there to copy, so nobody is listed without having had one. Reissue stays for a lost or expired link. The invitations page is this page
+- [x] The list shows three rows marked as needed and two more as optional, both numbers set on the block. An observer needs a name and an email address
+- [x] Saving one person never removes or changes anyone else on the list, even from the page left open in another tab
+- [x] People can still be added and changed once Before we begin is complete
 
 **Context**
 
@@ -25,3 +25,13 @@
 - Prototype reference: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`, the hub's trusted voices card. Its name box on the card itself is not kept: links are made on the section's page
 - As merged from the `hackathon-ui` branch in A0-48, the card counts a claimed link as a reply. Answered counts assessments sent
 - Split from ticket 51 on 15 Oct; 51b holds the coach's card
+
+**Carried from 50**
+
+- Five trusted voices is now the side card section `trusted-voices`, holding the contact list, last in the document after Walk with a coach. Its side-card sentence is already the one above. Its gate is still Before we begin's old clause ("Add at least 2 people, or leave the list empty to do this later."), and its "Who knows you best?" text still promises "a short, anonymous survey"
+- The hub's own Five trusted voices card in the template still shows beside the side card, as 49a noted
+
+## Answer
+
+- The gate's "at least 2" against three rows needed, and the card's tag once the section completes from links: carried to A5A-52
+- Nobody can be taken off the list until the page's remove button: carried to A5B-13d

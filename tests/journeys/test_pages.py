@@ -18,7 +18,7 @@ from engine.models import Response
 from tests.documents import pathway_document, scripture_reading, sort_pathway, translated
 from tests.journeys.pages import gate_checklist, main_of, version_on
 from tests.journeys.test_coach_checklist import step, the_coach_checklist
-from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
+from tests.journeys.test_hub import hub_entry, signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_navigation import section_in, sidebar_of
 
 FIRST = "/sections/onboarding/"
@@ -127,7 +127,7 @@ def test_a_pages_unmet_clauses_are_listed_beneath_its_continue(participant):
 def test_answering_what_the_page_needs_opens_its_continue_without_a_reload(participant):
     sent_back = save(participant, "why", "To find out.").content.decode()
 
-    assert '<button type="submit" class="btn btn-primary btn-full">Continue →</button>' in sent_back
+    assert '<button type="submit" class="pill full">Continue →</button>' in sent_back
 
 
 @pytest.mark.django_db
@@ -181,8 +181,8 @@ def skippable(signed_in_client, load_pathway):  # noqa: F811
 
 def way_on_look(page):
     """✨ How the way on at the foot of a page looks: "primary" or "secondary"."""
-    button = re.search(r'<div id="completion".*?<button type="submit" class="btn btn-(\w+)', page, re.S)
-    return button.group(1)
+    button = re.search(r'<div id="completion".*?<button type="submit" class="pill( ghost)?', page, re.S)
+    return "secondary" if button.group(1) else "primary"
 
 
 @pytest.mark.django_db
@@ -219,8 +219,8 @@ def test_the_way_on_follows_an_answer_given_and_taken_back_without_a_reload(skip
     answered = unescape(save(skippable, "story", "It began in a small town.").content.decode())
     taken_back = unescape(save(skippable, "story", "").content.decode())
 
-    assert '<button type="submit" class="btn btn-primary btn-full">Continue →</button>' in answered
-    assert f'<button type="submit" class="btn btn-secondary btn-full">{SKIP}</button>' in taken_back
+    assert '<button type="submit" class="pill full">Continue →</button>' in answered
+    assert f'<button type="submit" class="pill ghost full">{SKIP}</button>' in taken_back
 
 
 @pytest.mark.django_db
@@ -567,18 +567,7 @@ def test_before_a_sort_is_in_the_results_page_leads_to_the_page_the_sort_is_on(
     assert (response.status_code, response.url) == (302, "/sections/strengths/pages/2/")
 
 
-# Progress and estimates are the section's, whatever its pages
-
-
-@pytest.mark.django_db
-def test_progress_counts_a_sections_blocks_wherever_they_sit(participant):
-    """✨ The rating and "why" on the first page, the story on the second, and the calling statement."""
-    assert "0 of 4 answered" in shown(participant, "/hub/")
-
-    through_to(participant, 2)
-    save(participant, "story", "It began in a small town.")
-
-    assert "2 of 4 answered" in shown(participant, "/hub/")
+# Estimates are the section's, whatever its pages
 
 
 @pytest.mark.django_db
@@ -587,5 +576,6 @@ def test_a_paged_sections_estimate_is_said_once_for_the_whole_section(signed_in_
     document["content"]["sections"][0]["estimate"] = "About 3 minutes"
     load_pathway(document)
 
-    assert shown(signed_in_client, "/hub/").count("About 3 minutes") == 1
+    # ✨ in the section's entry; the next step says it too, while the section is next (ticket 49b)
+    assert hub_entry(shown(signed_in_client, "/hub/"), "Before we begin").count("About 3 minutes") == 1
     assert "Whole section: About 3 minutes" in shown(signed_in_client)

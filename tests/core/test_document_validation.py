@@ -164,24 +164,25 @@ def test_a_single_selects_options_may_not_share_an_identifier():
     assert "'other'" in problem.message
 
 
-def test_a_contact_list_needs_nothing_but_may_say_how_many_rows_it_opens_with():
+def test_a_contact_list_needs_nothing_but_may_say_how_many_rows_are_needed_and_optional():
     document = pathway_document()
     blocks = document["content"]["sections"][0]["blocks"]
     blocks.append({"id": "contacts", "type": "contact_list"})
     assert validate(document) == []
 
-    blocks[-1]["min_rows"] = 5
+    blocks[-1].update(needed=3, optional=2)
     assert validate(document) == []
 
 
-@pytest.mark.parametrize("min_rows", [0, 51, "5", 2.5])
-def test_a_contact_lists_rows_are_a_whole_number_from_one_to_fifty(min_rows):
-    """✨ Fifty is the most a participant may add, so a list may not open with more."""
+@pytest.mark.parametrize("field", ["needed", "optional"])
+@pytest.mark.parametrize("rows", [-1, 51, "5", 2.5])
+def test_a_contact_lists_rows_are_a_whole_number_up_to_fifty(field, rows):
+    """✨ Fifty is the most a participant may add, so a list may not ask for more."""
     document = pathway_document()
-    document["content"]["sections"][0]["blocks"].append({"id": "contacts", "type": "contact_list", "min_rows": min_rows})
+    document["content"]["sections"][0]["blocks"].append({"id": "contacts", "type": "contact_list", field: rows})
 
     [problem] = validate(document)
-    assert problem.path == "/content/sections/0/blocks/2/min_rows"
+    assert problem.path == f"/content/sections/0/blocks/2/{field}"
 
 
 def test_a_count_of_entries_may_allow_none_by_a_yes_or_no():

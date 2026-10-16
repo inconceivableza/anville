@@ -4,6 +4,8 @@
 {# ✨ Every engine page. The account pages have their own base, replacing allauth's #}
 {# (access/templates/allauth/layouts/base.html), and the homepage overrides `body`, so anything sitewide, such as #}
 {# the credits link, goes in all three. #}
+{# ✨ The demo notice is the exception: every page here shows the smaller one, and a page showing the full notice #}
+{# (the hub, and the pages observers and coaches land on) empties `demo_notice`, so none shows both (ticket 46). #}
 <!doctype html>
 <html lang="en-GB">
   <head>
@@ -20,6 +22,7 @@
       <symbol id="tick" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1"/><path d="M5 8.2l2 2 4-4.4" fill="none" stroke="currentColor" stroke-width="1.3"/></symbol>
     </svg>
     {% block body %}
+      {% block demo_notice %}{% include "engine/demo_strip.html" %}{% endblock demo_notice %}
       {% block header %}{% endblock header %}
       <main class="container">
         {% block content %}{% endblock content %}

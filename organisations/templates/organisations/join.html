@@ -7,7 +7,7 @@
   {% include "organisations/what_admins_see.html" %}
   <form method="post" action="{% url 'join' group.join_token %}">
     {% csrf_token %}
-    <button type="submit" class="btn btn-primary btn-full">Join</button>
+    <button type="submit" class="pill full">Join</button>
   </form>
   <p><a href="{% url 'hub' %}">Not now, go to your pathway</a></p>
 {% endblock content %}

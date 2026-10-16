@@ -4,17 +4,27 @@
 
 **Blocked by:** A2-49b (Next step wording and photos)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** Onboarding; Hub, progress and gates; Engine: sections, tracks, gates, progress
 
-- [ ] A section the pathway document marks as a wizard is where a participant who has not completed it is taken instead of the hub, shown page by page without the hub's links or the sidebar, in the prototype's layout with the section's photo beside it
-- [ ] Before we begin is a wizard of these two pages, the reason and then the five ratings, and no more: the hackathon's working-style and reminder steps go. Completing it lands on the hub, which shows it complete and never asks for it again
-- [ ] The account holds nothing from the wizard: a migration takes out the four fields the hackathon added (reason, way of working, reminder, onboarding completed), which have already run on staging
-- [ ] Walk with a coach and Five trusted voices are hub side card sections, holding the coach checklist and the contact list as they work today. Answers already given in them are kept
-- [ ] Once complete, Before we begin is listed in the hub and can be reread, with its ratings fixed. A participant who had completed it before this change is not sent through the wizard again, and one part-way through it lands on the wizard page they had reached
+- [x] A section the pathway document marks as a wizard is where a participant who has not completed it is taken instead of the hub, shown page by page without the hub's links or the sidebar, in the prototype's layout with the section's photo beside it
+- [x] Before we begin is a wizard of these two pages, the reason and then the five ratings, and no more: the hackathon's working-style and reminder steps go. Completing it lands on the hub, which shows it complete and never asks for it again
+- [x] The account holds nothing from the wizard: a migration takes out the four fields the hackathon added (reason, way of working, reminder, onboarding completed), which have already run on staging
+- [x] Walk with a coach and Five trusted voices are hub side card sections, holding the coach checklist and the contact list as they work today. Answers already given in them are kept
+- [x] Once complete, Before we begin is listed in the hub and can be reread, with its ratings fixed. A participant who had completed it before this change is not sent through the wizard again, and one part-way through it lands on the wizard page they had reached
+
+**Carried from 49a**
+
+- A section gets `"side_card": {"sentence": …}` to be drawn as a card; the hub's own Five trusted voices and Walk with a mentor cards, written in the template, stay until 51a and 51b, so once these sections are side cards both show at once until then
+- A side card can still be the hub's next step, the first section neither complete nor locked, so where the side cards sit in the document decides whether one is; and the sidebar lists no side card, since it shares the hub's list
+
+**Carried from 49b**
+
+- [x] The wizard's photo, the figure facing the sun, goes beside the document as the grass did (`pathways/files`), named in the document's `photos` for Before we begin, with a courtesy credit (Unsplash); the photo view serves it at the section's address (`photo`, by section id)
+- The hub's next step draws the photo of whichever section it points at, so Before we begin's photo shows there too while it is next, until the wizard keeps it off the hub
 
 **Context**
 

@@ -76,7 +76,7 @@ gh workflow run deploy.yml -f environment=whatever-you-do-staging -f tag=latest
 
 `tag` may be a commit, a `v*` tag or `latest`. The workflow resolves it to a digest, opens the tunnel, checks the host's tier, applies the environment's secrets, installs cert-manager and the issuers if the host lacks them, installs or upgrades the environment, and then asks `https://<hostname>/healthz` which commit is answering. It fails if that is not the commit it deployed.
 
-A deploy runs migrations. It does not publish a pathway: see "Publish a pathway" below.
+A deploy runs migrations, then `createcachetable` for the cache the workers share. It does not publish a pathway: see "Publish a pathway" below.
 
 ## After the first deploy
 
@@ -87,7 +87,7 @@ k exec -it deployment/anville -- python manage.py createsuperuser --username ope
 k exec deployment/anville -- python manage.py seed_observers --help    # staging only
 ```
 
-The operator's account is given a username and no email address on purpose. Signing in to the site is by email (`ACCOUNT_LOGIN_METHODS`), so an account with no email can reach `/admin/`, where Django's own backend takes the username, and cannot reach the hub at all. The operator is then never walked into the consent flow, leaves no consent or answers among the participants' own, and `username == email` goes on meaning "this row is a participant". An email address on the account would also take that address out of use, since no participant can sign up with an address another user holds. To see what a participant sees, sign up an ordinary account. `/admin/` is served on the public hostname, so that password belongs with the environment's other secrets.
+The operator's account is given a username and no email address on purpose. Signing in to the site is by email (`ACCOUNT_LOGIN_METHODS`), so an account with no email can reach `/admin/`, where Django's own backend takes the username, and cannot reach the hub at all. The operator is then never walked into the consent flow, leaves no consent or answers among the participants' own, and `username == email` goes on meaning "this row is a participant". An email address on the account would also take that address out of use, since no participant can sign up with an address another user holds. To see what a participant sees, sign up an ordinary account. `/admin/` is served on the public hostname, so that password belongs with the environment's other secrets. Its sign-in refuses repeated wrong passwords as the site's does, so after five for one account the right one is refused too, for five minutes.
 
 Then publish the environment's pathway, as below.
 
@@ -142,13 +142,11 @@ k exec deployment/anville -- python manage.py sendtestemail <your address>
 
 It should arrive from the address in `email.from`, and on staging with `[TEST]` before the subject and the disclaimer at the top of the body. The message's headers (in Gmail, Show original) should show SPF, DKIM and DMARC passing, and the provider's statistics should show it sent. A new provider account may hold its first messages until the provider has reviewed it.
 
-Password reset stays refused until ticket 28a, whether or not email is set up.
+Sign-in's "Forgot your password?" sends its link through the same email, so without `EMAIL_URL` the link is written only to the pod's log.
 
 To go back to fake email, delete `EMAIL_URL` from the GitHub Environment and deploy again. To stop sending at once, revoke the environment's key at the provider.
 
 ## Set up Google sign-in
-
-Google sign-in arrives with ticket 28b; until then an environment shows no Google button, whatever it is given. The steps below can be taken beforehand.
 
 An environment offers Google sign-in only when it is given a Google OAuth client. Without one, sign-in is by email and password alone, as before.
 
@@ -177,7 +175,7 @@ The authorised domains on the Branding page have to be verified in Search Consol
 
 | What | Where |
 |---|---|
-| The client ID and secret | `ANVILLE_GOOGLE_CLIENT_ID` and `ANVILLE_GOOGLE_CLIENT_SECRET`, secrets in the environment's GitHub Environment, listed as optional in its `secrets.example.yaml` (ticket 28b adds them). Both absent, there is no Google button; both present, there is |
+| The client ID and secret | `ANVILLE_GOOGLE_CLIENT_ID` and `ANVILLE_GOOGLE_CLIENT_SECRET`, secrets in the environment's GitHub Environment, listed as optional in its `secrets.example.yaml`. Both present, there is a Google button on sign in and sign up; either absent, there is none, and the Google pages are not found. A change takes effect at the next deploy |
 | The redirect URI | The client itself, in the Cloud Console, from the environment's `hostname` in `values.yaml`. A hostname that changes needs the client changed to match |
 | The app name, the support email and the links | The project's Branding page, once for every environment that shares the project |
 | Who may sign in before the app is published | The project's Audience page, as test users |
@@ -213,9 +211,21 @@ It installs the pinned release after checking its checksum, unless that version 
 
 **Fake email.** An environment with no `EMAIL_URL` secret delivers nothing: each message is written to the pod's log. On a staging environment it is written with the test-system disclaimer it would carry if it were sent: `[TEST]` before the subject, and the disclaimer at the top of the body. To see one, run `k exec deployment/anville -- python manage.py sendtestemail someone@example.com` and read the log. The log then holds whatever links the messages carried, which is acceptable only where the data is fake. A production environment cannot be deployed without `EMAIL_URL`. "Set up email" above turns real email on.
 
-**Resetting a password.** Password reset is refused until ticket 28a. Until then the operator runs `changepassword`, as above. A participant's username is their whole email address (ticket 37), so that is what the command takes; the admin shows it. The operator's own account is the exception: a username of its own, and no email address.
+**Resetting a password.** A participant resets their own from sign-in's "Forgot your password?", which emails them a link. Where email is fake, or for an account with no email, the operator runs `changepassword`, as above. A participant's username is their whole email address (ticket 37), so that is what the command takes; the admin shows it. The operator's own account is the exception: a username of its own, and no email address.
 
 **Changing a secret.** Change it in the GitHub Environment and deploy again. The pods restart only when a secret has changed. `POSTGRES_PASSWORD` is the exception: PostgreSQL reads it once, when its data is first created.
+
+**Rotate the secret key.** Changing `DJANGO_SECRET_KEY` alone would sign everyone out and break whatever else was signed with the old key, such as the cookie that shows a link just issued. Observers' and coaches' links do not depend on it. Instead:
+
+1. In the GitHub Environment, copy the current `DJANGO_SECRET_KEY` into `DJANGO_SECRET_KEY_FALLBACKS` (several old keys go comma-separated), and give `DJANGO_SECRET_KEY` a new value, generated as `secrets.example.yaml` says.
+2. Deploy. New sessions and cookies are signed with the new key; those signed with the old one are still accepted.
+3. Once the sessions signed with the old key have expired, two weeks after the deploy by default, delete `DJANGO_SECRET_KEY_FALLBACKS` and deploy again.
+
+Remove the old key promptly, as Django's deployment checklist warns: while it is a fallback, anyone who holds it can still forge a session. If a key has leaked, skip the fallback and replace it outright, accepting that everyone is signed out.
+
+**Expired sessions.** Sessions are kept in the database, each tied to an account, and nothing else removes the expired ones. A CronJob runs `clearsessions` each night, at 03:45 by default (`sessions.schedule`), clear of the backup's hour. To run it now: `k create job --from=cronjob/anville-clearsessions clearsessions-now`.
+
+**Observer reminders.** Off unless `reminders.enabled` is true in the environment's `values.yaml`. Then a CronJob runs `send_reminders` each morning, at 08:00 UTC by default (`reminders.schedule`), and emails each observer who has not answered, once a week while their link works. Its links are made from `hostname`, so set that first, and without `EMAIL_URL` each reminder is only written to the log. Addresses at reserved example domains (`example.com` and the like) are skipped, so to see one on staging, add a person at an address you can read. To run it now: `k create job --from=cronjob/anville-reminders reminders-now`. Real observers need the production email provider and its processor agreement first.
 
 ## Backups
 

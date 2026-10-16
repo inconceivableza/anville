@@ -4,16 +4,22 @@
 
 **Blocked by:** D2-30b (The tie-break's pairs after the sort)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** The instrument and scoring; The instrument and results; Open content and product items
 
-- [ ] Re-weighting is a second named scoring method beside the compositional score (ADR 0003), so the frozen method and its fixtures stay as they are. The re-weighted result is stored beside the sort's, never in its place
-- [ ] When the choices go in a circle, the result says the constructs are genuinely balanced rather than forcing a winner
-- [ ] The results page shows the re-weighted result, and how the tie-break changed it
-- [ ] The comparison sets the participant's re-weighted result beside the observers', so it agrees with their results page. Observers have no tie-break, so theirs are their sorts as sent
+- [x] Re-weighting is a second named scoring method beside the compositional score (ADR 0003), so the frozen method and its fixtures stay as they are. The re-weighted result is stored beside the sort's, never in its place
+- [x] When the choices go in a circle, the result says the constructs are genuinely balanced rather than forcing a winner
+- [x] The results page shows the re-weighted result, and how the tie-break changed it
+- [x] The comparison sets the participant's re-weighted result beside the observers', so it agrees with their results page. Observers have no tie-break, so theirs are their sorts as sent
+
+**Carried from 30b**
+
+- The answers are stored on the sort's result, in the order asked, each with its framework, its two constructs, its round and the construct chosen (empty for a skip); the plan itself is worked out afresh from the result and the document, never stored
+- While pairs are left, the results page leads to the next one; the comparison and the hub's "Where you started" still read the sort's result as sent, which this ticket's re-weighting replaces
+- The prototype's re-weighting (`rescore`) reads only the tied framework's answers; a skip counts as an appearance for both constructs and a win for neither
 
 **Context**
 

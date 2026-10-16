@@ -159,6 +159,25 @@ def sort_pathway():
     return document
 
 
+def with_a_tie_break(document, **settings):
+    """✨ `document` with a tie-break (tickets 30a–30c): any settings given, three statements for each of its constructs,
+    the pair screen's wording, what the results page says after it, and the generalist's."""
+    constructs = [c["id"] for framework in document["measurement"]["frameworks"] for c in framework["constructs"]]
+    document["measurement"]["tie_break"] = {
+        **settings,
+        "statements": {c: [f"I am {c}, first", f"I am {c}, second", f"I am {c}, third"] for c in constructs},
+    }
+    document["presentation"]["generalist"] = {"heading": "A generalist", "text": "Two flat profiles is itself a finding."}
+    document["presentation"]["tie_break"] = {
+        "question": "Which is more true of you?",
+        "skip": "Neither fits — skip",
+        "frameworks": {"apest": "Your role among people", "pep": "How you work"},
+        "separated": {"heading": "Separated", "changed": "The top changed.", "same": "The same one leads."},
+        "balanced": {"heading": "Genuinely balanced", "circle": "They went in a circle.", "level": "None came ahead."},
+    }
+    return document
+
+
 def complete_sort(**overrides):
     """✨ A sort of `sort_pathway()`'s two items, both placed and fine-tuned, with any item's entry replaced."""
     return {"a5": {"bucket": "strength", "value": 90}, "p1": {"bucket": "not-me", "value": 10}, **overrides}

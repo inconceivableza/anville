@@ -1,163 +1,147 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
+"""✨ Before we begin as a wizard (ticket 50): a section the document marks as a wizard is where a participant who has
+not completed it is taken in place of the hub, page by page, and afterwards it is listed in the hub like any other.
+Its coach and contacts pages became the hub side cards Walk with a coach and Five trusted voices."""
+
+import json
+from pathlib import Path
+
 import pytest
+from django.utils import timezone
 
-from access.models import Account
-from engine.models import Response
-from tests.documents import pathway_document
-from tests.journeys.test_access import require_the_code, sign_up
-from tests.journeys.test_consent import give_consent
+from engine.models import Contact, Publication, Response
+from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 
-
-def onboarding_pathway():
-    document = pathway_document()
-    onboarding = document["content"]["sections"][0]
-    # ✨ In place of the test pathway's one opening rating, so the five below are the section's only scales.
-    onboarding["blocks"] = [block for block in onboarding["blocks"] if block["type"] != "agreement_scale"]
-    onboarding["blocks"].insert(
-        0,
-        {
-            "id": "reason",
-            "type": "single_select",
-            "prompt": "What’s bringing you here?",
-            "options": [
-                {"id": "exploring", "label": "Exploring my calling"},
-                {"id": "changing", "label": "Thinking about a change"},
-            ],
-        },
-    )
-    onboarding["blocks"].extend(
-        {
-            "id": f"bl-{name}",
-            "type": "agreement_scale",
-            "prompt": f"Baseline statement {name}",
-            "min_label": "Not at all",
-            "max_label": "Completely",
-        }
-        for name in ("bible", "gifts", "call", "plan", "peace")
-    )
-    return document
+DOCUMENT = Path(__file__).resolve().parents[2] / "pathways" / "whatever-you-do.json"
+WIZARD = "/sections/onboarding/"
+RATINGS_PAGE = "/sections/onboarding/pages/2/"
+RATINGS = ("bl-bible", "bl-gifts", "bl-call", "bl-plan", "bl-peace")
 
 
 @pytest.fixture
-def new_participant(client, settings, load_pathway):
-    require_the_code(settings)
-    load_pathway(onboarding_pathway())
-    sign_up(client)
-    give_consent(client)
-    return client
+def participant(signed_in_client, load_pathway):  # noqa: F811
+    load_pathway(json.loads(DOCUMENT.read_text(encoding="utf-8")))
+    return signed_in_client
 
 
-@pytest.mark.django_db
-def test_a_new_participant_is_sent_through_onboarding_after_consent(new_participant):
-    response = new_participant.get("/hub/")
-
-    assert (response.status_code, response.url) == (302, "/onboarding/")
-    page = new_participant.get(response.url).content.decode()
-    assert "Step 1 of 4" in page
-    assert "What’s bringing you here?" in page
-    assert "Exploring my calling" in page
+def answer(client, block_id, value):
+    return client.post(f"/answers/{block_id}/", {"value": value, "version": Publication.current_version().pk})
 
 
-@pytest.mark.django_db
-def test_the_reason_and_all_five_authored_scales_are_saved_as_pathway_answers(new_participant):
-    reason = new_participant.post("/onboarding/", {"step": "0", "action": "continue", "reason": "exploring"})
+def through_the_first_page(client):
+    answer(client, "reason", "exploring")
+    return client.post("/sections/onboarding/pages/1/continue/")
 
-    assert (reason.status_code, reason.url) == (303, "/onboarding/?step=1")
-    response = Response.objects.get()
-    assert response.answers["reason"] == "exploring"
-    assert Account.objects.get().reason == "exploring"
 
-    baseline = new_participant.post(
-        "/onboarding/",
-        {
-            "step": "1",
-            "action": "continue",
-            "bl-bible": "2",
-            "bl-gifts": "4",
-            "bl-call": "6",
-            "bl-plan": "8",
-            "bl-peace": "10",
-        },
+def through_the_wizard(client):
+    """✨ The reason, then the five ratings, then completing it, as the participant does; returns the completion."""
+    through_the_first_page(client)
+    for rating in RATINGS:
+        answer(client, rating, "7")
+    return client.post("/sections/onboarding/complete/")
+
+
+def a_response_from_before(user):
+    """✨ A participant who completed Before we begin before this change, every answer it asks for stored, with a coach
+    chosen and two people listed on what were then its own pages."""
+    response = Response.objects.create(
+        participant=user,
+        version=Publication.current_version(),
+        answers={"reason": "exploring", **{rating: 7 for rating in RATINGS}},
+        completed_sections={"onboarding": timezone.now().isoformat()},
+        fixed_answers={rating: timezone.now().isoformat() for rating in RATINGS},
     )
-
-    assert (baseline.status_code, baseline.url) == (303, "/onboarding/?step=2")
-    response.refresh_from_db()
-    assert [
-        response.answers[f"bl-{name}"] for name in ("bible", "gifts", "call", "plan", "peace")
-    ] == [2, 4, 6, 8, 10]
-    # ✨ Going back to the ratings shows them as saved.
-    page = new_participant.get("/onboarding/?step=1").content.decode()
-    assert "Baseline statement peace" in page
-    assert 'type="range"' in page
-    assert 'value="10"' in page
+    response.replace_contacts("coach", [{"name": "Sam", "email": "sam@example.com"}], Contact.Role.COACH)
+    people = [{"name": "Ana", "email": "ana@example.com"}, {"name": "Bo", "email": "bo@example.com"}]
+    response.replace_contacts("contacts", people, Contact.Role.CONTACT)
+    return response
 
 
 @pytest.mark.django_db
-def test_path_and_reminder_are_saved_before_the_hub_opens(new_participant):
-    new_participant.post("/onboarding/", {"step": "0", "action": "continue", "reason": "exploring"})
-    new_participant.post(
-        "/onboarding/",
-        {
-            "step": "1",
-            "action": "continue",
-            **{f"bl-{name}": "5" for name in ("bible", "gifts", "call", "plan", "peace")},
-        },
-    )
-    path = new_participant.post("/onboarding/", {"step": "2", "action": "continue", "path": "paper"})
+def test_a_participant_who_has_not_completed_it_is_taken_to_its_wizard_in_place_of_the_hub(participant):
+    hub = participant.get("/hub/")
 
-    assert (path.status_code, path.url) == (303, "/onboarding/?step=3")
-    account = Account.objects.get()
-    assert account.path == "paper"
-    assert not account.onboarding_completed
-
-    saved = new_participant.post(
-        "/onboarding/", {"step": "3", "action": "continue", "remind": "on"}
-    )
-
-    assert (saved.status_code, saved.url) == (303, "/hub/")
-    account.refresh_from_db()
-    assert account.remind
-    assert account.onboarding_completed
-    assert new_participant.get("/hub/").status_code == 200
+    assert (hub.status_code, hub.url) == (302, WIZARD)
+    page = participant.get(WIZARD).content.decode()
+    assert 'id="answer-reason"' in page
+    assert 'id="answer-bl-bible-1"' not in page  # ✨ the ratings are its second page
+    assert 'class="pathway-nav"' not in page
+    assert 'href="/hub/"' not in page
+    assert 'src="/photos/onboarding/"' in page
+    assert participant.get("/photos/onboarding/").status_code == 200
 
 
 @pytest.mark.django_db
-def test_an_invalid_reason_is_not_saved(new_participant):
-    invalid_reason = new_participant.post(
-        "/onboarding/", {"step": "0", "action": "continue", "reason": "not-an-option"}
-    )
+def test_completing_the_two_pages_lands_on_the_hub_with_it_complete_and_never_sends_them_back(participant):
+    completed = through_the_wizard(participant)
 
-    assert invalid_reason.status_code == 400
-    assert Account.objects.get().reason == ""
-    assert not Response.objects.exists()
-
-
-@pytest.mark.django_db
-def test_an_invalid_path_is_not_saved(new_participant):
-    new_participant.post("/onboarding/", {"step": "0", "action": "continue", "reason": "exploring"})
-    new_participant.post(
-        "/onboarding/",
-        {
-            "step": "1",
-            "action": "continue",
-            **{f"bl-{name}": "5" for name in ("bible", "gifts", "call", "plan", "peace")},
-        },
-    )
-
-    refused = new_participant.post("/onboarding/", {"step": "2", "action": "continue", "path": "remote"})
-
-    assert refused.status_code == 400
-    assert Account.objects.get().path == ""
+    assert (completed.status_code, completed.url) == (303, "/hub/")
+    assert "onboarding" in Response.objects.get().completed_sections
+    for _ in range(2):
+        hub = participant.get("/hub/")
+        assert hub.status_code == 200
+    assert '<a class="hub-section-title" href="/sections/onboarding/">' in hub.content.decode()
 
 
 @pytest.mark.django_db
-def test_an_existing_account_can_open_the_hub_without_onboarding(new_participant):
-    account = Account.objects.get()
-    account.onboarding_completed = True
-    account.save(update_fields=["onboarding_completed"])
+def test_once_complete_it_offers_no_way_to_mark_it_not_complete(participant):
+    """✨ Ticket 50: the hub never asks for it again, so it is never taken back (fix-2)."""
+    through_the_wizard(participant)
 
-    response = new_participant.get("/hub/")
+    page = participant.get(RATINGS_PAGE).content.decode()
 
-    assert response.status_code == 200
+    assert "/sections/onboarding/reopen/" not in page
+    assert "Mark as not complete" not in page
+
+
+@pytest.mark.django_db
+def test_once_complete_taking_its_completion_back_is_refused(participant):
+    through_the_wizard(participant)
+
+    refused = participant.post("/sections/onboarding/reopen/")
+
+    assert refused.status_code == 404
+    assert "onboarding" in Response.objects.get().completed_sections
+    assert participant.get("/hub/").status_code == 200
+
+
+@pytest.mark.django_db
+def test_one_part_way_through_lands_on_the_page_they_had_reached(participant):
+    through_the_first_page(participant)
+
+    hub = participant.get("/hub/")
+
+    assert (hub.status_code, hub.url) == (302, RATINGS_PAGE)
+
+
+@pytest.mark.django_db
+def test_a_participant_who_completed_it_before_this_change_is_not_sent_through_it(participant, django_user_model):
+    a_response_from_before(django_user_model.objects.get())
+
+    assert participant.get("/hub/").status_code == 200
+
+
+@pytest.mark.django_db
+def test_a_coach_and_people_given_before_show_in_the_side_cards(participant, django_user_model):
+    a_response_from_before(django_user_model.objects.get())
+
+    coach = participant.get("/sections/walk-with-a-coach/").content.decode()
+    voices = participant.get("/sections/trusted-voices/").content.decode()
+
+    assert "You've chosen Sam" in coach
+    assert 'value="ana@example.com"' in voices
+    assert 'value="bo@example.com"' in voices
+
+
+@pytest.mark.django_db
+def test_once_complete_it_can_be_reread_and_a_changed_rating_is_refused(participant):
+    through_the_wizard(participant)
+
+    reread = participant.get(RATINGS_PAGE)
+
+    assert reread.status_code == 200
+    assert 'id="answer-bl-bible-7" name="value" value="7" checked disabled' in reread.content.decode()
+    assert answer(participant, "bl-bible", "2").status_code == 409
+    assert Response.objects.get().answers["bl-bible"] == 7

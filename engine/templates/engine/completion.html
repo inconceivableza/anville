@@ -23,9 +23,9 @@
       <form method="post" action="{% url 'move_past_page' section.id page.number %}">
         {% csrf_token %}
         {% if page.skip_label %}
-          <button type="submit" class="btn btn-secondary btn-full"{% if unmet %} disabled{% endif %}>{{ page.skip_label }}</button>
+          <button type="submit" class="pill ghost full"{% if unmet %} disabled{% endif %}>{{ page.skip_label }}</button>
         {% else %}
-          <button type="submit" class="btn btn-primary btn-full"{% if unmet %} disabled{% endif %}>{{ page.continue_label }}</button>
+          <button type="submit" class="pill full"{% if unmet %} disabled{% endif %}>{{ page.continue_label }}</button>
         {% endif %}
       </form>
     </div>
@@ -33,12 +33,15 @@
     {% if refused %}
       <p class="gate-refused">This page is not finished yet.</p>
     {% endif %}
-  {% elif offers_way_on and not section.is_part and not is_complete %}
+  {% elif offers_way_on and section.is_side_card and not is_complete %}
+    {# ✨ A hub side card is complete once its gate passes, with nothing to press (ticket 52): only what it waits on. #}
+    {% include "engine/gate_checklist.html" %}
+  {% elif offers_way_on and not section.is_part and not section.is_side_card and not is_complete %}
     <div class="way-on">
       {% include "engine/previous_page.html" %}
       <form method="post" action="{% url 'complete_section' section.id %}">
         {% csrf_token %}
-        <button type="submit" class="btn btn-primary btn-full"{% if unmet %} disabled{% endif %}>{{ section.complete_label }}</button>
+        <button type="submit" class="pill full"{% if unmet %} disabled{% endif %}>{{ section.complete_label }}</button>
       </form>
     </div>
     {% include "engine/gate_checklist.html" %}
@@ -46,18 +49,22 @@
       <p class="gate-refused">This section was not marked complete: it is not finished yet.</p>
     {% endif %}
   {% else %}
-    {% if section.is_part %}
-      {# ✨ A part of a section is complete once its gate passes, so it has no completion of its own (ticket 41b). #}
+    {% if section.is_part or section.is_side_card %}
+      {# ✨ A part of a section, or a hub side card, is complete once its gate passes, so it has no completion of its #}
+      {# ✨ own (tickets 41b, 52). #}
     {% elif offers_way_on and is_complete %}
       {% if holds_fixed_answers %}
         <p class="completion-done">You marked this section complete. Ratings fixed when you completed this section can no longer be changed.</p>
       {% else %}
         <p class="completion-done">You marked this section complete. You can still change your answers here.</p>
       {% endif %}
-      <form method="post" action="{% url 'reopen_section' section.id %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-secondary btn-sm">Mark as not complete</button>
-      </form>
+      {% if section.reopens %}
+        {# ✨ A wizard's completion is never taken back: the hub never asks for it again (ticket 50). #}
+        <form method="post" action="{% url 'reopen_section' section.id %}">
+          {% csrf_token %}
+          <button type="submit" class="pill ghost small">Mark as not complete</button>
+        </form>
+      {% endif %}
     {% endif %}
     {% if page.number > 1 %}<div class="way-on">{% include "engine/previous_page.html" %}</div>{% endif %}
   {% endif %}

@@ -1,0 +1,55 @@
+{{- /*
+Copyright (C) New Community Church SE London 2026.
+For licensing information see ../../../../LICENSE.md
+*/ -}}
+{{- if .Values.reminders.enabled }}
+{{- /*
+✨ Observers who have not answered are reminded each morning that a reminder is due (ticket 43a): the send_reminders
+command, in the application's own image, with the web pod's environment. Never two at once; a run that overlapped
+another would still send no reminder twice.
+*/ -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-reminders
+  labels:
+    {{- include "anville.labels" . | nindent 4 }}
+    app.kubernetes.io/component: reminders
+spec:
+  schedule: {{ .Values.reminders.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            {{- include "anville.labels" . | nindent 12 }}
+            app.kubernetes.io/component: reminders
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: reminders
+              image: {{ include "anville.image" . }}
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["python", "manage.py", "send_reminders"]
+              env:
+                {{- include "anville.djangoEnv" . | nindent 16 }}
+              securityContext:
+                {{- include "anville.containerSecurity" . | nindent 16 }}
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: tmp
+              emptyDir: {}
+{{- end }}

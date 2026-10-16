@@ -7,13 +7,20 @@ An observer reaches it only through the link they claimed, sends it once, and ne
 """
 
 import json
+import re
 
 import pytest
 from django.test import Client
+from django.utils import timezone
 
-from engine.models import Invitation, ObserverAssessments, ObserverResponse, Response
+from access.consent import current_text_version
+from access.models import Consent
+from engine.models import Contact, Invitation, ObserverAssessments, ObserverResponse, Response
 from tests.documents import complete_sort, sort_pathway
-from tests.journeys.test_contact_list import JO, PRIYA, save_contacts
+from tests.journeys.test_coach_checklist import choose
+from tests.journeys.test_coach_link import issue_coach_link, with_a_coach_and_contacts
+from tests.journeys.test_consent import give_consent, withdraw_consent
+from tests.journeys.test_contact_list import CHRIS, JO, PRIYA, save_contacts, take_off_the_list
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_invitations import (  # noqa: F401  (observer is a fixture, used by name)
     A_WRONG_TOKEN,
@@ -23,18 +30,22 @@ from tests.journeys.test_invitations import (  # noqa: F401  (observer is a fixt
     token_of,
 )
 from tests.journeys.test_observer_landing import claim, the_observers_page
-from tests.journeys.test_results import widget_data
+from tests.journeys.test_results import SORT, submit_sort, widget_data
 
 
 def observed_pathway():
     """✨ The sort pathway with a contact list in onboarding, and observer wording for one bucket and the sort's heading
     (its item a5 already has observer wording)."""
     document = sort_pathway()
-    document["content"]["sections"][0]["blocks"].append({"id": "contacts", "type": "contact_list", "min_rows": 2})
+    document["content"]["sections"][0]["blocks"].append({"id": "contacts", "type": "contact_list", "needed": 2})
     not_me = document["instrument"]["buckets"][0]
     not_me["label"] = {"participant": not_me["label"], "observer": "Not {name}"}
     document["presentation"]["sort_wording"] = {
         "sort_heading": {"participant": "Sort your strengths", "observer": "Sort {name}'s strengths"},
+    }
+    document.setdefault("observers", {})["relationship"] = {
+        "question": "Your relationship to {name}",
+        "choices": [{"id": "family", "label": "Family member"}, {"id": "friend", "label": "Close friend"}],
     }
     return document
 
@@ -46,9 +57,10 @@ def participant(signed_in_client, load_pathway):  # noqa: F811
     return signed_in_client
 
 
-def send(client, assessment, link=None):
+def send(client, assessment, link=None, relationship=None):
     """✨ Send an observer assessment as the widget's form does: through a link if given, else by the observer cookie."""
-    return client.post(f"{link}assessment/" if link else "/observe/assessment/", {"value": json.dumps(assessment)})
+    posted = {"value": json.dumps(assessment), **({"relationship": relationship} if relationship is not None else {})}
+    return client.post(f"{link}assessment/" if link else "/observe/assessment/", posted)
 
 
 def observer_assessments():
@@ -76,6 +88,20 @@ def test_an_assessment_sent_through_the_claimed_link_counts_on_its_own_and_leave
     assert sent["Location"] == ("/observe/" if through == "cookie" else own_link)
     assert observer_assessments() == ObserverAssessments(assessments=[complete_sort()], all_test_data=False)
     assert Response.objects.get().answers == answers_before
+
+
+@pytest.mark.django_db
+def test_an_observer_can_send_straight_after_placing_the_cards_and_each_item_keeps_its_buckets_seed(
+    participant, observer  # noqa: F811
+):
+    claim(observer, issue_link(participant, "Jo"))
+
+    sent = send(observer, {"a5": {"bucket": "strength"}, "p1": {"bucket": "not-me"}})
+
+    assert sent.status_code == 303
+    assert observer_assessments().assessments == [
+        {"a5": {"bucket": "strength", "value": 85}, "p1": {"bucket": "not-me", "value": 10}}
+    ]
 
 
 @pytest.mark.django_db
@@ -121,6 +147,27 @@ def test_an_assessment_that_breaks_the_contract_is_refused_and_nothing_is_stored
     assert not ObserverResponse.objects.exists()
 
 
+@pytest.mark.django_db
+def test_the_relationship_chosen_is_stored_with_the_assessment(participant, observer):  # noqa: F811
+    claim(observer, issue_link(participant, "Jo"))
+    asked = the_observers_page(observer).content.decode()
+    assert re.search(r'<select[^>]*name="relationship"', asked)
+
+    send(observer, complete_sort(), relationship="friend")
+
+    assert ObserverResponse.objects.get().relationship == "friend"
+
+
+@pytest.mark.django_db
+def test_a_relationship_outside_the_offered_choices_is_refused_and_nothing_is_stored(participant, observer):  # noqa: F811
+    claim(observer, issue_link(participant, "Jo"))
+
+    refused = send(observer, complete_sort(), relationship="colleague")
+
+    assert refused.status_code == 400
+    assert not ObserverResponse.objects.exists()
+
+
 # Outliving the link (ADR 0007), held apart from who sent it
 
 
@@ -137,7 +184,7 @@ def test_a_sent_assessment_survives_its_link_being_revoked_or_reissued_or_its_pe
     if ended == "reissued":
         issue_link(participant, "Jo")
     if ended == "taken off the list":
-        save_contacts(participant, PRIYA)
+        take_off_the_list(participant, "Jo")
 
     assert observer_assessments().assessments == [complete_sort()]
 
@@ -159,11 +206,311 @@ def test_nothing_kept_with_a_sent_assessment_ties_it_to_the_contact_or_their_lin
     secret = token_of(claim(observer, issue_link(participant, "Jo")))
     send(observer, complete_sort())
 
-    invitation = Invitation.objects.get()
+    invitation = Invitation.objects.get(contact__name="Jo")
     kept = ObserverResponse.objects.values().get()
     assert "contact_id" not in kept and "invitation_id" not in kept
     ties = {invitation.token_hash, invitation.secret_hash, secret}
     assert [field for field, value in kept.items() if str(value) in ties] == []
+
+
+# Withdrawing (ticket 15b)
+
+
+def withdraw(client, link=None):
+    """✨ Withdraw as the observer's page does: through a link if given, else by the observer cookie."""
+    return client.post(f"{link}withdraw/" if link else "/observe/withdraw/")
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("through", ["cookie", "own link"])
+def test_withdrawing_through_the_claimed_link_deletes_that_observers_answers_and_nobody_elses(
+    participant, observer, through  # noqa: F811
+):
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+    someone_else = Client()
+    claim(someone_else, issue_link(participant, "Priya"))
+    kept = complete_sort(a5={"bucket": "strength", "value": 73})
+    send(someone_else, kept)
+
+    withdrawn = withdraw(observer) if through == "cookie" else withdraw(Client(), own_link)
+
+    assert withdrawn.status_code == 200
+    assert observer_assessments().assessments == [kept]
+
+
+@pytest.mark.django_db
+def test_a_send_that_reaches_the_store_after_a_withdrawal_on_the_same_link_stores_nothing(participant, observer):  # noqa: F811
+    """✨ A send and a withdrawal at the same moment: the send's view has already found the link live when the
+    withdrawal ends it, so the store itself must find the link ended and keep nothing. Two real requests racing are
+    impractical on the test database, so the send is made straight to the store after the withdrawal."""
+    secret = token_of(claim(observer, issue_link(participant, "Jo")))
+    withdraw(observer)
+
+    stored = ObserverResponse.send(Response.objects.get(), secret, complete_sort())
+
+    assert stored is None
+    assert observer_assessments().assessments == []
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("by", ["unclaimed copy", "claimed copy", "revoked own link", "expired own link"])
+def test_neither_the_participants_copy_nor_a_link_that_stopped_working_can_withdraw(
+    participant, observer, by  # noqa: F811
+):
+    copy = issue_link(participant, "Jo")
+    if by == "unclaimed copy":
+        link, sent = copy, None
+    else:
+        own_link = claim(observer, copy)
+        send(observer, complete_sort())
+        link, sent = (copy if by == "claimed copy" else own_link), [complete_sort()]
+    if by == "revoked own link":
+        participant.post(invitation_action(participant, "Jo", "revoke"))
+    if by == "expired own link":
+        Invitation.objects.update(expires_at=timezone.now())
+
+    refused = withdraw(participant, link)
+
+    assert refused.status_code == 404
+    assert observer_assessments().assessments == (sent or [])
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("through", ["cookie", "own link"])
+def test_opening_the_withdrawal_page_deletes_nothing_and_asks_with_a_post(participant, observer, through):  # noqa: F811
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+
+    opened = observer.get("/observe/withdraw/" if through == "cookie" else f"{own_link}withdraw/")
+
+    assert opened.status_code == 200
+    assert re.search(r'<form method="post" action="[^"]*/withdraw/"', opened.content.decode())
+    assert observer_assessments().assessments == [complete_sort()]
+    assert the_observers_page(observer).status_code == 200
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("through", ["cookie", "own link"])
+def test_after_sending_the_claimed_link_offers_only_the_thanks_and_a_way_to_withdraw(
+    participant, observer, through  # noqa: F811
+):
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+
+    page = (the_observers_page(observer) if through == "cookie" else Client().get(own_link)).content.decode()
+
+    withdraw_at = "/observe/withdraw/" if through == "cookie" else f"{own_link}withdraw/"
+    assert f'href="{withdraw_at}"' in page
+    assert "<form" not in page and "<select" not in page and "Not built yet" not in page
+
+
+# While the participant's consent is withdrawn (ticket 45)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("through", ["cookie", "own link"])
+def test_while_the_participant_has_withdrawn_no_assessment_is_sent_or_stored(participant, observer, through):  # noqa: F811
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    withdraw_consent(participant)
+
+    refused = send(observer, complete_sort()) if through == "cookie" else send(Client(), complete_sort(), own_link)
+
+    assert refused.status_code == 404
+    assert observer_assessments().assessments == []
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("through", ["cookie", "own link"])
+def test_while_the_participant_has_withdrawn_an_observer_can_still_withdraw_their_answers(
+    participant, observer, through  # noqa: F811
+):
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+    withdraw_consent(participant)
+
+    opened = observer.get("/observe/withdraw/" if through == "cookie" else f"{own_link}withdraw/")
+    withdrawn = withdraw(observer) if through == "cookie" else withdraw(Client(), own_link)
+
+    assert opened.status_code == 200
+    assert withdrawn.status_code == 200
+    assert observer_assessments().assessments == []
+
+
+@pytest.mark.django_db
+def test_consenting_again_opens_every_observers_link_as_it_was(participant, observer):  # noqa: F811
+    unclaimed = issue_link(participant, "Priya")
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+    expiries = list(Invitation.objects.order_by("pk").values_list("expires_at", flat=True))
+    withdraw_consent(participant)
+
+    give_consent(participant)
+
+    assert Client().get(unclaimed).status_code == 200
+    assert Client().get(own_link).status_code == 200
+    assert the_observers_page(observer).status_code == 200
+    assert observer_assessments().assessments == [complete_sort()]
+    assert list(Invitation.objects.order_by("pk").values_list("expires_at", flat=True)) == expiries
+
+
+@pytest.mark.django_db
+def test_consent_merely_out_of_date_keeps_every_observers_link_working(participant, observer):  # noqa: F811
+    """✨ The consent text changed and the participant has not agreed again: they are asked, but nobody is cut off."""
+    link = issue_link(participant, "Jo")
+    Consent.objects.update(text_version=current_text_version() - 1)
+
+    claim(observer, link)
+    sent = send(observer, complete_sort())
+
+    assert sent.status_code < 400
+    assert observer_assessments().assessments == [complete_sort()]
+
+
+# Answer collection freezes (ticket 55)
+
+
+def answered_by(participant, *names):
+    """✨ Each named person, already on the list, claims a fresh link and sends; returns each one's browser, by name."""
+    browsers = {}
+    for name in names:
+        browsers[name] = Client()
+        claim(browsers[name], issue_link(participant, name))
+        assert send(browsers[name], complete_sort()).status_code == 303
+    return browsers
+
+
+def press_compare(participant, confirmed=True):
+    """✨ The participant's "Compare with how others see you →", and the confirmation's button if `confirmed`."""
+    return participant.post(f"/results/{SORT}/comparison/visit/", {"confirmed": "yes"} if confirmed else {})
+
+
+def freeze(participant):
+    """✨ The participant sends their own sort and presses compare, confirming, as freezes collection with the minimum
+    in."""
+    participant.post("/sections/onboarding/complete/")
+    submit_sort(participant, complete_sort())
+    assert press_compare(participant).status_code == 303
+    assert Response.objects.get().collection_frozen_at is not None
+
+
+def add(participant, person):
+    """✨ Post one new person to the list, as its empty row does, whether or not the page offers that row."""
+    name, email = person
+    version = Response.objects.get().version_id
+    return participant.post("/contacts/contacts/", {"name": name, "email": email, "version": version})
+
+
+@pytest.fixture
+def three_answered(participant):
+    """✨ Jo, Priya and Chris have each sent; Sam has claimed a link and not sent."""
+    save_contacts(participant, CHRIS, SAM)
+    browsers = answered_by(participant, "Jo", "Priya", "Chris")
+    browsers["Sam"] = Client()
+    claim(browsers["Sam"], issue_link(participant, "Sam"))
+    return browsers
+
+
+SAM = ("Sam", "sam@example.com")
+
+
+@pytest.mark.django_db
+def test_once_frozen_an_observers_send_is_refused_and_nothing_is_stored(participant, three_answered):
+    freeze(participant)
+
+    page = the_observers_page(three_answered["Sam"])
+    refused = send(three_answered["Sam"], complete_sort())
+
+    assert page.status_code == 200
+    assert widget_data(page.content.decode()) is None
+    assert refused.status_code == 409
+    assert len(observer_assessments().assessments) == 3
+
+
+@pytest.mark.django_db
+def test_once_frozen_the_participant_can_neither_add_people_nor_issue_or_reissue_their_links_but_can_revoke(
+    participant, three_answered
+):
+    freeze(participant)
+    contacts_before = Contact.objects.count()
+    links_before = set(Invitation.objects.values_list("token_hash", flat=True))
+    page = participant.get("/invitations/", follow=True).content.decode()
+
+    added = add(participant, ("Kim", "kim@example.com"))
+    issued = participant.post(f"/invitations/{Contact.objects.get(name='Sam').pk}/issue/")
+    reissued = participant.post(f"/invitations/{Contact.objects.get(name='Jo').pk}/issue/")
+
+    assert added.status_code == 403 and issued.status_code == 403 and reissued.status_code == 403
+    assert Contact.objects.count() == contacts_before
+    assert set(Invitation.objects.values_list("token_hash", flat=True)) == links_before
+    assert "Get link" not in page and "issue/" not in page
+    revoked = participant.post(invitation_action(participant, "Sam", "revoke"))
+    assert revoked.status_code == 303
+    assert not Invitation.objects.filter(contact__name="Sam").exists()
+
+
+@pytest.mark.django_db
+def test_once_frozen_the_coachs_link_can_still_be_issued_and_reissued(signed_in_client, load_pathway):  # noqa: F811
+    """✨ Frozen as the press freezes it, in a pathway with a coach and no sort: the coach's link is no observer's."""
+    load_pathway(with_a_coach_and_contacts())
+    choose(signed_in_client)
+    first = issue_coach_link(signed_in_client)
+    Response.objects.update(collection_frozen_at=timezone.now())
+
+    again = issue_coach_link(signed_in_client)
+
+    assert again != first
+    assert Invitation.live(token_of(again), role=Contact.Role.COACH) is not None
+
+
+@pytest.mark.django_db
+def test_a_withdrawal_after_the_freeze_deletes_the_answers_and_the_comparison_counts_without_them(
+    participant, three_answered
+):
+    save_contacts(participant, ("Kim", "kim@example.com"))
+    answered_by(participant, "Kim")
+    freeze(participant)
+
+    withdraw(three_answered["Jo"])
+
+    assert len(observer_assessments().assessments) == 3
+    assert send(three_answered["Sam"], complete_sort()).status_code == 409
+
+
+@pytest.mark.django_db
+def test_below_the_minimum_after_a_withdrawal_collection_unfreezes_until_the_next_confirmed_press(
+    participant, three_answered
+):
+    freeze(participant)
+
+    withdraw(three_answered["Jo"])
+
+    assert len(observer_assessments().assessments) == 2
+    assert "2 of 3" in participant.get(f"/results/{SORT}/comparison/").content.decode()
+    assert send(three_answered["Sam"], complete_sort()).status_code == 303
+    assert add(participant, ("Kim", "kim@example.com")).status_code == 303
+    assert press_compare(participant, confirmed=False).status_code == 200
+    assert Response.objects.get().collection_frozen_at is None
+    assert press_compare(participant).status_code == 303
+    assert Response.objects.get().collection_frozen_at is not None
+
+
+@pytest.mark.django_db
+def test_with_consent_withdrawn_and_collection_frozen_an_observers_link_gets_the_dead_link_refusal(
+    participant, three_answered
+):
+    save_contacts(participant, ("Kim", "kim@example.com"))
+    unclaimed = issue_link(participant, "Kim")
+    freeze(participant)
+    withdraw_consent(participant)
+
+    for refused in (
+        Client().get(unclaimed),
+        the_observers_page(three_answered["Sam"]),
+        send(three_answered["Sam"], complete_sort()),
+    ):
+        assert refused.status_code == 404
+        assert refused.templates[0].name == "engine/link_refused.html"
 
 
 # The observer's wording

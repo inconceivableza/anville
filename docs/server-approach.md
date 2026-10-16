@@ -78,14 +78,16 @@ The application needs these changes first. They are step 1 of ticket 26, and the
 - **Static files.** `STATIC_ROOT`, and WhiteNoise to serve it, so there is no second nginx container. Vite's hashed filenames suit WhiteNoise's far-future caching.
 - **`/healthz`.** It answers 200 with the commit SHA, read from `ANVILLE_COMMIT`, which the image sets when it is built, and checks the database with one trivial query. The Kubernetes probes must send the environment's `Host` header, or Django refuses the pod-IP request with `DisallowedHost`.
 - **Proxy and cookie settings from the environment.** One switch, `DJANGO_HTTPS`, sets `SECURE_PROXY_SSL_HEADER` (ticket 26), the redirect to HTTPS, and secure session and CSRF cookies; `DJANGO_HSTS_SECONDS` and `DJANGO_CSRF_TRUSTED_ORIGINS` sit beside it. All default to the safe development behaviour when unset.
-- **Email from the environment.** `EMAIL_URL` and `DEFAULT_FROM_EMAIL`, read with django-environ, defaulting to the console backend, and `ANVILLE_EMAIL_DISCLAIMER`, which marks every outgoing message when set. See section 11.
+- **Email from the environment.** `EMAIL_URL` and `DEFAULT_FROM_EMAIL`, read with django-environ, defaulting to the console backend, and `ANVILLE_EMAIL_DISCLAIMER`, which marks every outgoing message when set. `SERVER_EMAIL`, the address of Django's own messages, defaults to `DEFAULT_FROM_EMAIL`. See section 11.
+- **Secret key rotation.** `DJANGO_SECRET_KEY_FALLBACKS`, comma-separated and empty by default, holds old keys while they are rotated out, so sessions and signed cookies made with them still hold. `deploy/README.md` gives the steps.
 - **Database connection reuse.** `CONN_MAX_AGE` from the environment, as `DATABASE_CONN_MAX_AGE`. It matters little in-cluster and a good deal with a managed database reached over TLS.
 
 - **Errors in the log, without observers' or coaches' links.** With debug off Django logs nothing by default, so errors are sent to the server's output, with the token or secret of any observer's or coach's link redacted.
+- **Error pages of Anville's own** (ticket 47a). Not found, server error, forbidden (and a form sent from a stale page) and bad request are drawn in the site's layout, from `404.html`, `500.html`, `403.html`, `403_csrf.html` and `400.html` in the engine's templates. They name nothing of the request, so no link's token, and the server error page needs no context and no database.
+- **A cache shared by every worker** (ticket 47a). allauth counts sign-in and sign-up attempts in the cache. Django's default cache is per process, so with two gunicorn workers each would count apart and the limits would be looser than configured. `CACHE_URL` names the cache; the chart sets Django's database cache (`dbcache://anville_cache`), which needs no new service, and runs `createcachetable` after the migration. Unset, as in development and the tests, the cache stays per process. The backup leaves the cache's rows out, since its keys hold IP addresses and are worth nothing in a restore.
+- **The admin's sign-in is limited as the site's is** (ticket 47a). `/admin/` is public, and allauth's limits cover only allauth's own form. The admin keeps its own form, since the operator's account has a username and no email address and the site's sign-in takes only email, but checks each password through allauth's adapter, so wrong passwords are counted and refused there as at sign-in.
 
 `config/settings.py` already takes the secret key, debug flag, allowed hosts, database URL and enrolment code from the environment, so one image serves every environment (ADR 0002).
-
-One known limit to record, not fix now: Django's default cache is per process, so allauth's rate limits are counted per gunicorn worker.
 
 ## 4. Build workflow (`build.yml`)
 
@@ -100,10 +102,11 @@ One known limit to record, not fix now: Django's default cache is per process, s
 `deploy/chart/anville` renders one environment into one namespace:
 
 - **Deployment** `anville`: one replica, `Recreate` strategy, resource requests and limits, liveness and readiness on `/healthz`.
-- **Migrations** run as an init container (`manage.py migrate`) in that same pod. With one replica and `Recreate` there is exactly one migrator, it works the same for an in-cluster or a managed database, and a failed migration fails `helm --wait` and so the deploy. A pre-upgrade hook Job would not work on first install, because the in-cluster database does not exist yet when hooks run. Move to a Job if replicas ever exceed one.
+- **Migrations** run as an init container (`manage.py migrate`, then `manage.py createcachetable` for the shared cache of section 3) in that same pod. With one replica and `Recreate` there is exactly one migrator, it works the same for an in-cluster or a managed database, and a failed migration fails `helm --wait` and so the deploy. A pre-upgrade hook Job would not work on first install, because the in-cluster database does not exist yet when hooks run. Move to a Job if replicas ever exceed one.
 - **Service** and **Ingress** (Traefik, TLS from cert-manager) for the environment's hostname.
 - **PostgreSQL**, when `postgres.enabled`: a StatefulSet on the official `postgres:17` image, the same one `compose.yaml` uses, with a local-path volume and a cluster-internal Service. Never exposed outside the cluster, and a NetworkPolicy admits only this environment's own pods, since environments of one tier share a host.
 - **Backup CronJob**, when `backup.enabled`: see section 7.
+- **Session clearing CronJob**, always: see section 7.
 - **Secret references** only. The chart never contains a secret value. The deploy workflow applies one Secret per environment and passes a hash of it, so that changing a secret restarts the pods.
 
 Base `values.yaml` ships safe defaults: no hostname, which means no ingress, and the `letsencrypt-staging` issuer, so an environment without its overlay claims no real hostname and no real certificate. `values.schema.json` refuses an unknown tier or issuer, and the chart refuses to render without an image digest.
@@ -143,6 +146,7 @@ Its GitHub Environment holds:
 |---|---|---|
 | Secret | `DEPLOY_SSH_KEY`, `DEPLOY_KNOWN_HOSTS`, `KUBECONFIG` | Access to the host its values name. Environments on one host repeat them. The deploy reaches the host by its canonical name, so `DEPLOY_KNOWN_HOSTS` is scanned by that name |
 | Secret | `DJANGO_SECRET_KEY` | Never shared between environments |
+| Secret | `DJANGO_SECRET_KEY_FALLBACKS` | Optional: only while an old key is being rotated out, and removed once its sessions have expired |
 | Secret | `ANVILLE_ENROLMENT_CODE` | Per environment, and only where its values turn `enrolment.required` on. The chart turns it on unless told otherwise, as the application does; `whatever-you-do-staging` turns it off (ticket 37) |
 | Secret | `POSTGRES_PASSWORD` | In-cluster database; the chart composes `DATABASE_URL` from it, so it must be safe inside a URL: letters, digits, `-` and `_` only. It is read when the database is first created, and changing it later does not change the database's password |
 | Secret | `DATABASE_URL` | Managed database only, in place of the above |
@@ -214,6 +218,8 @@ The cost is memory: the chart requests 192 MiB for each environment's PostgreSQL
 - One server's limits and tuning for all of them: `max_connections` above the sum of every environment's gunicorn workers plus the backups (each worker holds a connection while `CONN_MAX_AGE` lasts), and a memory limit sized for the total.
 
 Point-in-time recovery for a shared server stays all-or-nothing, so shared servers suit staging, and production keeps one server per environment.
+
+**Expired sessions are cleared each night.** Sessions are kept in the database, each tied to an account, and Django removes the expired ones only when asked. A second CronJob, in every environment, runs `manage.py clearsessions` in the application's image at 03:45 (`sessions.schedule`), outside the backup's hour so the two never overlap.
 
 **Restores are rehearsed.** A dump is restored into a scratch namespace with no ingress, on a host of the same tier, and the smoke test run against it by port-forward. Production dumps are never restored onto a staging host: the sizing doc calls that a data-protection event, and it is.
 
@@ -295,7 +301,7 @@ A staging environment is private in the sense ticket 26 means: an unadvertised h
 
 Initial delivery is through **Mailjet**, over SMTP, with Django's own SMTP backend. No mail runs on the host.
 
-- **Configuration is one URL.** `EMAIL_URL=smtp+tls://<api key>:<secret key>@in-v3.mailjet.com:587`, a per-environment secret, plus `DEFAULT_FROM_EMAIL` in the environment's values (`email.from`), which the deploy requires whenever `EMAIL_URL` is set, since the provider refuses Django's `webmaster@localhost`. Changing provider later is a change of that secret, not of the image. Port 587 is the one to use: Hetzner blocks outbound 25 and 465 on new accounts.
+- **Configuration is one URL.** `EMAIL_URL=smtp+tls://<api key>:<secret key>@in-v3.mailjet.com:587`, a per-environment secret, plus `DEFAULT_FROM_EMAIL` in the environment's values (`email.from`), which the deploy requires whenever `EMAIL_URL` is set, since the provider refuses Django's `webmaster@localhost`. The chart sets `SERVER_EMAIL`, the address of Django's own messages such as errors to `ADMINS`, from the same value, since Django's `root@localhost` would be refused too. Changing provider later is a change of that secret, not of the image. Port 587 is the one to use: Hetzner blocks outbound 25 and 465 on new accounts.
 - **No new dependency.** django-environ already parses the URL. A provider package such as django-anymail is only worth adding if delivery webhooks (bounces, complaints) are wanted.
 - **Unset means fake email.** Without `EMAIL_URL` the console backend is used: each message is written to the pod's log and nothing leaves the host. Password reset stays refused until ticket 28a turns it on; a deploy must not enable it merely because the secret is present.
 - **One Mailjet API key per environment**, so a staging key can be revoked without touching production and each environment's sending is visible apart. Each is a Mailjet subaccount. The Free and Essential plans allow one, enough for staging; production needs a larger plan or Mailjet's support.
@@ -320,7 +326,7 @@ Every message carries a disclaimer:
 
 The sizing doc priced Scaleway TEM for this line; Mailjet replaces it for now and that figure has not been re-estimated.
 
-Sending is in the request path until a worker exists. That is acceptable for sign-in and reset messages. Scheduled or bulk sending, such as invitation reminders, is when the worker and Redis left out in section 2 come back.
+Sending is in the request path until a worker exists. That is acceptable for sign-in and reset messages. Scheduled or bulk sending, such as invitation reminders, is when the worker and Redis left out in section 2 come back. The cache does not bring Redis back: the workers share the database's (section 3).
 
 ## 12. Development
 

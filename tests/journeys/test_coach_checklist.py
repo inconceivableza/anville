@@ -32,8 +32,12 @@ ALL_YES = {question_id: "yes" for question_id in QUESTION_IDS}
 
 def the_coach_checklist():
     document = json.loads(WHATEVER_YOU_DO.read_text(encoding="utf-8"))
-    onboarding = document["content"]["sections"][0]
-    return next(block for block in onboarding["blocks"] if block["type"] == "coach_checklist")
+    return next(
+        block
+        for section in document["content"]["sections"]
+        for block in section["blocks"]
+        if block["type"] == "coach_checklist"
+    )
 
 
 def with_a_coach_checklist():
@@ -344,12 +348,6 @@ def test_the_candidates_name_is_never_logged(participant, caplog):
 
 
 @pytest.mark.django_db
-def test_the_checklist_does_not_count_towards_progress(participant):
-    """✨ It keeps no answer, so there is nothing to count: the test pathway's two, as without it."""
-    assert "0 of 2 answered" in participant.get("/hub/").content.decode()
-
-
-@pytest.mark.django_db
 def test_the_coach_step_can_be_skipped_and_blocks_nothing(participant):
     answer(participant, "baseline-bible", "7", section=ONBOARDING)
 
@@ -441,7 +439,6 @@ def test_saving_without_the_box_ticked_is_refused_keeping_what_was_typed(partici
 @pytest.mark.parametrize(
     ("email", "refusal"),
     [
-        ("", "Add their email address to continue."),
         ("sam", "Check their email address."),
         ("sam@", "Check their email address."),
         ("sam@example", "Check their email address."),
@@ -585,13 +582,6 @@ def test_the_coachs_details_are_never_logged(participant, caplog):
     choose(participant, name="Zebedee", email="zebedee@", confirmed=False)  # ✨ and a refused one
 
     assert "zebedee" not in caplog.text.lower()
-
-
-@pytest.mark.django_db
-def test_a_chosen_coach_does_not_count_towards_progress(participant):
-    choose(participant)
-
-    assert "0 of 2 answered" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db

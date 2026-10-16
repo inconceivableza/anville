@@ -11,7 +11,10 @@ import logging
 import re
 
 import pytest
+from django.core.exceptions import PermissionDenied
 from django.db import OperationalError
+from django.test import Client
+from django.views.defaults import permission_denied, server_error
 
 from config.logs import RedactLinks
 
@@ -133,6 +136,100 @@ def issue_link_shown_over_https(client, name):
     issued = client.post(invitation_action(client, name, "issue"), follow=True)
     assert issued.status_code == 200
     return re.search(r"https://testserver(?::80)?(/observe/[A-Za-z0-9_-]+/)", issued.content.decode()).group(1)
+
+
+# The admin's sign-in
+
+
+@pytest.mark.django_db
+def test_repeated_wrong_passwords_at_the_admin_are_refused_as_at_sign_in(client, django_user_model):
+    # ✨ allauth refuses sign-in after five wrong passwords for one account in five minutes. The admin's own form,
+    # where the operator signs in by username, counts them the same way, so the right password is then refused too.
+    django_user_model.objects.create_superuser("operator", "", "the-right-password")
+    for _ in range(5):
+        wrong = client.post("/admin/login/", {"username": "operator", "password": "a-wrong-password"})
+        assert wrong.status_code == 200
+
+    refused = client.post("/admin/login/?next=/admin/", {"username": "operator", "password": "the-right-password"})
+
+    assert refused.status_code == 200
+    assert "_auth_user_id" not in client.session
+    assert client.get("/admin/").status_code == 302
+
+
+@pytest.mark.django_db
+def test_the_operator_still_signs_in_at_the_admin_by_username(client, django_user_model):
+    django_user_model.objects.create_superuser("operator", "", "the-right-password")
+
+    signed_in = client.post("/admin/login/?next=/admin/", {"username": "operator", "password": "the-right-password"})
+
+    assert signed_in.status_code == 302
+    assert client.get("/admin/").status_code == 200
+
+
+# Error pages
+
+A_LINK_WITH_ITS_TOKEN = "/observe/s3cr3t-T0ken/"
+
+
+def is_anvilles_own_page_naming_nothing_of_the_request(response, path):
+    """✨ Drawn in the site's layout rather than Django's bare page, and without the address asked for, which may
+    hold a link's token."""
+    page = response.content.decode()
+    return '<html lang="en-GB">' in page and path not in page and "s3cr3t-T0ken" not in page
+
+
+@pytest.mark.django_db
+def test_an_address_with_nothing_at_it_gets_anvilles_not_found_page(client, settings):
+    settings.DEBUG = False
+    path = f"{A_LINK_WITH_ITS_TOKEN}nothing-here/"
+
+    response = client.get(path)
+
+    assert response.status_code == 404
+    assert is_anvilles_own_page_naming_nothing_of_the_request(response, path)
+
+
+@pytest.mark.django_db
+def test_a_request_for_another_host_gets_anvilles_bad_request_page(client, settings):
+    settings.DEBUG = False
+
+    response = client.get(A_LINK_WITH_ITS_TOKEN, headers={"Host": "not-this-site.example"})
+
+    assert response.status_code == 400
+    assert is_anvilles_own_page_naming_nothing_of_the_request(response, A_LINK_WITH_ITS_TOKEN)
+
+
+@pytest.mark.django_db
+def test_a_refused_request_gets_anvilles_forbidden_page(rf, settings):
+    settings.DEBUG = False
+
+    response = permission_denied(rf.get(A_LINK_WITH_ITS_TOKEN), PermissionDenied())
+
+    assert response.status_code == 403
+    assert is_anvilles_own_page_naming_nothing_of_the_request(response, A_LINK_WITH_ITS_TOKEN)
+
+
+@pytest.mark.django_db
+def test_a_form_sent_from_a_stale_page_gets_anvilles_forbidden_page(settings):
+    settings.DEBUG = False
+    path = f"{A_LINK_WITH_ITS_TOKEN}start/"
+
+    response = Client(enforce_csrf_checks=True).post(path)
+
+    assert response.status_code == 403
+    assert is_anvilles_own_page_naming_nothing_of_the_request(response, path)
+
+
+def test_the_server_error_page_needs_no_context_and_no_database(rf, settings):
+    # ✨ No django_db mark: any query here fails the test. Django gives this page no context, since it is shown
+    # when something has already failed.
+    settings.DEBUG = False
+
+    response = server_error(rf.get(A_LINK_WITH_ITS_TOKEN))
+
+    assert response.status_code == 500
+    assert is_anvilles_own_page_naming_nothing_of_the_request(response, A_LINK_WITH_ITS_TOKEN)
 
 
 # What reaches the log

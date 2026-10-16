@@ -17,11 +17,13 @@
 #
 # From the environment, as deploy/environments/<environment>/secrets.example.yaml describes:
 #   DJANGO_SECRET_KEY
-#   ANVILLE_ENROLMENT_CODE                              when enrolment.required
+#   DJANGO_SECRET_KEY_FALLBACKS                         optional; only while a key is being rotated out
+#   ANVILLE_ENROLMENT_CODE                             when enrolment.required
 #   POSTGRES_PASSWORD                                   when postgres.enabled
 #   DATABASE_URL                                        when not
 #   BACKUP_TARGET, BACKUP_SSH_KEY, BACKUP_KNOWN_HOSTS   when backup.enabled
 #   EMAIL_URL                                           optional on staging, required on production; needs email.from
+#   ANVILLE_GOOGLE_CLIENT_ID, ANVILLE_GOOGLE_CLIENT_SECRET  optional; Google sign-in only with both
 #   ACME_EMAIL                                          optional
 #
 # Needs kubectl, helm and yq.
@@ -114,8 +116,9 @@ SECRETS=$(mktemp -d)
 trap 'rm -r "$SECRETS"' EXIT
 (
   umask 077
-  for name in "${NEEDED[@]}" EMAIL_URL; do
-    # One file for each secret that has a value. EMAIL_URL is left out when absent, which means fake email.
+  for name in "${NEEDED[@]}" EMAIL_URL DJANGO_SECRET_KEY_FALLBACKS ANVILLE_GOOGLE_CLIENT_ID ANVILLE_GOOGLE_CLIENT_SECRET; do
+    # One file for each secret that has a value. EMAIL_URL is left out when absent, which means fake email;
+    # DJANGO_SECRET_KEY_FALLBACKS when no old key is being kept; the Google pair, which means no Google sign-in.
     [ -z "${!name:-}" ] || printf '%s' "${!name}" > "$SECRETS/$name"
   done
 )

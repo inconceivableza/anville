@@ -2,21 +2,24 @@
 # For licensing information see ../LICENSE.md
 
 import json
+import mimetypes
 from typing import NamedTuple
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.humanize.templatetags.humanize import apnumber
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.debug import sensitive_post_parameters
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods, require_POST
 
 from access.consent import consent_required
-from access.models import Account, name_shown_for
+from access.models import name_shown_for
 from engine.document import (
     BLOCK_TYPES,
     LONG_TEXT_MAX_LENGTH,
@@ -52,16 +55,9 @@ from engine.document.coach import (
     coach_from_form,
     commitments,
 )
-from engine.document.contacts import (
-    MAX_CONTACTS,
-    contact_id_per_row,
-    contacts_from_form,
-    rows_as_typed,
-    rows_posted,
-    rows_to_show,
-)
+from engine.document.contacts import LIST_FULL, MAX_CONTACTS, contact_from_form, needed, rows_of, voices_card
 from engine.document.aggregation import aggregate
-from engine.document.gates import clauses_of, has_content
+from engine.document.gates import clauses_of, has_content, links_issued_key
 from engine.document.scoring import score
 from engine.hub import (
     block_ids_fixed_on_completion,
@@ -72,10 +68,29 @@ from engine.hub import (
     page_reached,
     section_by_id,
     track_sections,
+    with_coach_answer,
 )
-from engine.document.observers import link_lifetime, privacy_notice
-from engine.models import Contact, Invitation, ObserverResponse, PathwayVersion, Publication, Response, Result
-from engine.results import comparison_page, results_page
+from engine.document.observers import (
+    link_lifetime,
+    minimum_observers,
+    privacy_notice,
+    relationship_from_form,
+    relationship_question,
+)
+from engine.document.photos import credits_listed
+from engine.models import (
+    CollectionFrozen,
+    Contact,
+    Invitation,
+    ObserverResponse,
+    PathwayVersion,
+    Publication,
+    Response,
+    Result,
+)
+from engine import reminders
+from engine.document.tie_break import pair_plan, reweigh
+from engine.results import comparison_page, pair_page, results_page
 
 
 class ParticipantState(NamedTuple):
@@ -120,10 +135,14 @@ def home(request):
 
 def credits_page(request):
     """✨ The copyright notice of each translation the published pathway quotes, open to anyone, since the public
-    homepage quotes scripture too. The publishers ask for their notices on the work's copyright page (ticket 39)."""
+    homepage quotes scripture too. The publishers ask for their notices on the work's copyright page (ticket 39). After
+    them, the credits of the pathway's photos that the document lists (ticket 49b)."""
     version = Publication.current_version()
     translations = version.document.get("translations", {}) if version else {}
-    return render(request, "engine/credits.html", {"translations": translations.values()})
+    photo_credits = credits_listed(version.document) if version else []
+    return render(
+        request, "engine/credits.html", {"translations": translations.values(), "photo_credits": photo_credits}
+    )
 
 
 @login_required
@@ -135,9 +154,9 @@ def hub(request):
         return render(request, "engine/hub.html", {})
     if not any(section["blocks"] for section in state.sections):
         return render(request, "engine/hub.html", {})  # ✨ no content is the empty state, never a fallback
-    account = getattr(request.user, "account", None)
-    if account is not None and not account.onboarding_completed and _onboarding_content(state.version.document):
-        return redirect("onboarding")
+    wizard = _wizard_due(state)
+    if wizard is not None:
+        return redirect(wizard)
     hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
     return render(
         request,
@@ -145,13 +164,58 @@ def hub(request):
         {
             "title": text_for(state.version.document["title"], "participant"),
             "hub": hub,
-            "coach": _coach_of(state.response),
-            "coach_page": _coach_page_of(state.version.document, hub),
-            "voices": _hub_voices(state.response),
-            "baseline": _hub_baseline(state.version.document, state),
+            "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
+            "side_cards": _side_cards(state, hub),
+            "voices": _hub_voices(state, hub),
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
+
+
+def _side_cards(state, hub):
+    """✨ The hub's side cards, the coach's section's tagged with where the coach stands (ticket 51b)."""
+    document = state.version.document
+    coach = _coach_of(state.response)
+    checklists = [block["id"] for block in blocks_of(document) if block["type"] == "coach_checklist"]
+    coach_section = section_of(document, checklists[0])["id"] if checklists else None
+    return [
+        with_coach_answer(card, coach["answer"] if coach else None) if card.id == coach_section else card
+        for card in hub.side_cards()
+    ]
+
+
+def _photo_of(document, section_id):
+    """✨ The address of the photo the document names for the section by this identifier, or None for no section or one
+    without a photo (ticket 49b)."""
+    if section_id not in document.get("photos", {}):
+        return None
+    return reverse("photo", args=[section_id])
+
+
+def _wizard_due(state):
+    """✨ Where a participant is taken in place of the hub (ticket 50): the page they have reached of the first section
+    the document marks as a wizard that they have not completed and can open, or None."""
+    for section in state.sections:
+        if _shows_as_wizard(state, section):
+            reached = state.reached(section)
+            if reached is not None:
+                return page_url(section["id"], reached)
+    return None
+
+
+def _shows_as_wizard(state, section):
+    """✨ Whether a section's pages are drawn as its wizard, without the hub's links or the sidebar: until it is
+    complete. Once complete it is reread as any other section."""
+    return bool(section.get("wizard")) and section["id"] not in state.completed
+
+
+def _section_shown(request, state, section, shown, status=200):
+    """✨ A page of a section as `_section_page` gives it, drawn as its wizard while it is one."""
+    if _shows_as_wizard(state, section):
+        steps = range(1, shown["page"]["count"] + 1)
+        shown = {**shown, "photo": _photo_of(state.version.document, section["id"]), "steps": steps}
+        return render(request, "engine/wizard.html", shown, status=status)
+    return render(request, "engine/section.html", shown, status=status)
 
 
 def _coach_page_of(document, hub):
@@ -226,153 +290,12 @@ def start(request):
     """✨ Where agreeing to consent leads. A participant with nothing saved goes straight to their first step,
     as the prototype goes from its account screen into onboarding; anyone who has begun goes to the hub."""
     state = _participant(request.user)
-    account = getattr(request.user, "account", None)
-    if account is not None and not account.onboarding_completed and state.version and _onboarding_content(state.version.document):
-        return redirect("onboarding")
     if state.response is not None or state.version is None:
         return redirect("hub")
     next_step = hub_for(state.sections, state.answers, state.completed).next_step
     if next_step is None or not any(section["blocks"] for section in state.sections):
         return redirect("hub")  # ✨ the hub's empty state says there is nothing to begin
     return redirect("section", next_step.id)
-
-
-@login_required
-@consent_required
-def onboarding(request):
-    """✨ The new participant's four presentational steps, with reason and baseline saved as pathway answers."""
-    account = getattr(request.user, "account", None)
-    if account is None or account.onboarding_completed:
-        return redirect("hub")
-
-    state = _participant(request.user)
-    if state.version is None:
-        return redirect("hub")
-
-    onboarding_content = _onboarding_content(state.version.document)
-    if onboarding_content is None:
-        return redirect("hub")
-    onboarding_section, reason_block, baseline_blocks = onboarding_content
-
-    reason_text = authored_text(reason_block, "participant")
-    reason_text["id"] = reason_block["id"]
-    reason_text["answer"] = state.answers.get(reason_block["id"])
-    baseline = [
-        {
-            "id": block["id"],
-            "text": authored_text(block, "participant"),
-            "value": state.answers.get(block["id"]),
-        }
-        for block in baseline_blocks
-    ]
-    step = _onboarding_step(account, baseline)
-    requested_step = request.POST.get("step") if request.method == "POST" else request.GET.get("step")
-    try:
-        requested_step = int(requested_step) if requested_step is not None else step
-    except (TypeError, ValueError):
-        requested_step = step
-    requested_step = max(0, min(requested_step, step))
-
-    error = None
-    status = 200
-    if request.method == "POST" and request.POST.get("action") == "back":
-        return _see_other(f"{reverse('onboarding')}?step={max(0, requested_step - 1)}")
-    if request.method == "POST" and request.POST.get("action") == "continue":
-        if requested_step == 0:
-            try:
-                answer = answer_from_form(state.version.document, reason_block, request.POST.get(reason_block["id"]))
-                if not _is_open(state, onboarding_section, reason_block):
-                    raise AnswerRefused("This step is not open yet.")
-                with transaction.atomic():
-                    response = state.stored_response(request.user)
-                    if not response.save_answer(reason_block["id"], answer):
-                        raise AnswerRefused("This answer is fixed and can no longer be changed.")
-                    account.reason = answer
-                    account.save(update_fields=["reason"])
-                return _see_other(f"{reverse('onboarding')}?step=1")
-            except AnswerRefused as refused:
-                error = str(refused)
-                status = 400
-        elif requested_step == 1:
-            try:
-                answers = []
-                for block in baseline_blocks:
-                    if not _is_open(state, onboarding_section, block):
-                        raise AnswerRefused("This step is not open yet.")
-                    if block["id"] in state.fixed:
-                        raise AnswerRefused("A baseline answer is fixed and can no longer be changed.")
-                    answers.append(
-                        (block["id"], answer_from_form(state.version.document, block, request.POST.get(block["id"])))
-                    )
-                with transaction.atomic():
-                    response = state.stored_response(request.user)
-                    if not all(response.save_answer(block_id, value) for block_id, value in answers):
-                        raise AnswerRefused("A baseline answer is fixed and can no longer be changed.")
-                return _see_other(f"{reverse('onboarding')}?step=2")
-            except AnswerRefused as refused:
-                error = str(refused)
-                status = 400
-        elif requested_step == 2:
-            selected_path = request.POST.get("path")
-            if selected_path not in {choice[0] for choice in Account._meta.get_field("path").choices}:
-                error = "Choose how you'd like to work."
-                status = 400
-            else:
-                account.path = selected_path
-                account.save(update_fields=["path"])
-                return _see_other(f"{reverse('onboarding')}?step=3")
-        elif requested_step == 3:
-            account.remind = request.POST.get("remind") == "on"
-            account.onboarding_completed = True
-            account.save(update_fields=["remind", "onboarding_completed"])
-            return _see_other("hub")
-
-    if request.method == "POST" and status == 400:
-        if requested_step == 0:
-            reason_text["answer"] = request.POST.get(reason_block["id"], "")
-        elif requested_step == 1:
-            for question in baseline:
-                question["value"] = request.POST.get(question["id"], "")
-
-    return render(
-        request,
-        "engine/onboarding.html",
-        {
-            "step": requested_step,
-            "reason": reason_text,
-            "baseline": baseline,
-            "selected_path": request.POST.get("path", account.path),
-            "remind": request.POST.get("remind") == "on" if request.method == "POST" else account.remind,
-            "display_name": account.display_name,
-            "email": request.user.email,
-            "error": error,
-        },
-        status=status,
-    )
-
-
-def _onboarding_step(account, baseline):
-    """✨ The furthest onboarding step whose prerequisites have been saved."""
-    if not account.reason:
-        return 0
-    if any(question["value"] is None for question in baseline):
-        return 1
-    if not account.path:
-        return 2
-    return 3
-
-
-def _onboarding_content(document):
-    """✨ The authored reason and baseline blocks that make this pathway eligible for the four-step introduction."""
-    for section in document["content"]["sections"]:
-        reason = next(
-            (block for block in section["blocks"] if block["id"] == "reason" and block["type"] == "single_select"),
-            None,
-        )
-        scales = [block for block in section["blocks"] if block["type"] == "agreement_scale"]
-        if reason and scales:
-            return section, reason, scales
-    return None
 
 
 @login_required
@@ -388,18 +311,20 @@ def section(request, section_id, page=1):
     _page_or_404(section, page)
     if page > reached:
         return redirect(page_url(section_id, reached))
-    # ✨ A coach's link just issued from the coach page, shown this once, as on the invitations page. Read only on a page
-    # holding a coach checklist, whose address is the path the cookie was set for, so deleting it here reaches it; the
-    # section's later pages sit under that path too when the checklist is on its first.
-    holds_checklist = any(block["type"] == "coach_checklist" for block in pages_of(section)[page - 1])
-    issued = _issued_link(request) if holds_checklist else None
-    shown = render(
-        request, "engine/section.html", _section_page(state, section, page, _asked_rows(request.GET), issued=issued)
-    )
+    # ✨ A link just issued, a coach's or an observer's, shown this once. Read only on a page holding a coach checklist or
+    # a contact list, whose address is the path the cookie was set for, so deleting it here reaches it; the section's
+    # later pages sit under that path too when the block is on its first.
+    shows_links = any(block["type"] in LISTED_WITH_LINKS for block in pages_of(section)[page - 1])
+    issued = _issued_link(request) if shows_links else None
+    shown = _section_shown(request, state, section, _section_page(state, section, page, issued=issued))
     if issued is not None:
         shown["Cache-Control"] = "no-store"
         shown.delete_cookie(ISSUED_COOKIE, path=request.path)
     return shown
+
+
+# ✨ The blocks whose people are listed with their links: a coach checklist's coach, and a contact list's people.
+LISTED_WITH_LINKS = ("coach_checklist", "contact_list")
 
 
 @login_required
@@ -420,7 +345,7 @@ def move_past_page(request, section_id, page):
         return _see_other(page_url(section_id, reached))
     shown = _section_page(state, section, page)
     if not shown["offers_way_on"] or shown["unmet"]:
-        return render(request, "engine/section.html", {**shown, "refused": True}, status=400)
+        return _section_shown(request, state, section, {**shown, "refused": True}, status=400)
 
     state.stored_response(request.user).move_past_page(section_id, page)
     return _see_other(page_url(section_id, page + 1))
@@ -432,11 +357,11 @@ def move_past_page(request, section_id, page):
 def complete_section(request, section_id):
     """✨ The participant's own act of finishing a section, re-checked here rather than trusted to the page. It is
     done from the section's last page, so a participant who has not reached it is sent to the page they have. A part of
-    a section has no completion of its own: it is complete once its gate passes."""
+    a section, or a hub side card, has no completion of its own: it is complete once its gate passes."""
     state = _participant(request.user)
     section = _section_or_404(state.version, section_id)
-    if "part_of" in section:
-        raise Http404("A part of a section is complete once its gate passes, with no completion of its own.")
+    if _completes_itself(section):
+        raise Http404("This section is complete once its gate passes, with no completion of its own.")
     reached = state.reached(section)
     if reached is None:
         return redirect("hub")
@@ -445,7 +370,7 @@ def complete_section(request, section_id):
         return _see_other(page_url(section_id, reached))
     if unmet(section, state.answers):
         shown = _section_page(state, section, last)
-        return render(request, "engine/section.html", {**shown, "refused": True}, status=400)
+        return _section_shown(request, state, section, {**shown, "refused": True}, status=400)
 
     fixed_block_ids = block_ids_fixed_on_completion(section, state.answers)
     state.stored_response(request.user).complete_section(section_id, fixed_block_ids=fixed_block_ids)
@@ -457,9 +382,12 @@ def complete_section(request, section_id):
 @consent_required
 @require_POST
 def reopen_section(request, section_id):
-    """✨ The participant taking back their own completion. Their answers stay exactly as they left them."""
+    """✨ The participant taking back their own completion. Their answers stay exactly as they left them. A section that
+    completes itself was never theirs to take back, and a side card stays complete (ticket 52). Nor is a wizard's, which
+    the hub never asks for again once given (ticket 50)."""
     state = _participant(request.user)
-    _section_or_404(state.version, section_id)
+    if not _reopens(_section_or_404(state.version, section_id)):
+        raise Http404("This section's completion is not taken back.")
     if state.response is not None:
         state.response.reopen_section(section_id)
     return _see_other("hub")
@@ -481,6 +409,9 @@ def save_answer(request, block_id):
         block = answerable_block(state.version.document, block_id)
     except UnknownBlock:
         raise Http404("This pathway version has no block by that identifier that takes an answer.")
+    if BLOCK_TYPES[block["type"]].captures is CONTACTS:
+        # ✨ Never the whole list at once, which from a page left open would drop whoever was added since (ticket 51a).
+        raise Http404("A contact list keeps each person on their own, at its own address.")
     # ✨ A block a participant has not reached is as shut as the page that would have shown it, whether a
     # lock or an unconfirmed reading holds it. Otherwise they could fill it in without ever opening it, and
     # both would be decoration again, which is exactly the prototype's mistake.
@@ -492,38 +423,23 @@ def save_answer(request, block_id):
         return _refuse_fixed(request)
     block_type = BLOCK_TYPES[block["type"]]
     try:
-        if block_type.captures is CONTACTS:
-            names, emails = request.POST.getlist("name"), request.POST.getlist("email")
-            value = contacts_from_form(names, emails, request.POST.getlist("contact"))
-        else:
-            value = answer_from_form(state.version.document, block, request.POST.get("value"))
+        value = answer_from_form(state.version.document, block, request.POST.get("value"))
     except AnswerRefused as refused:
-        context = {"refusal": str(refused), "invalid_row": refused.row, "invalid_field": refused.field}
-        if block_type.captures is CONTACTS and request.POST.get("next") == "invitations":
-            # ✨ That list is not autosaved, so there is no status line to put this in: the page comes back instead,
-            # with the list as typed.
-            typed = {"rows": rows_as_typed(names, emails, request.POST.getlist("contact")), **context}
-            return _invitations_page(request, refused={block_id: typed}, status=400)
-        return render(request, "engine/save_status.html", context, status=400)
+        return render(request, "engine/save_status.html", {"refusal": str(refused)}, status=400)
 
     participant_response = state.stored_response(request.user)
     # ✨ The row is updated in place, so the answers read before are a step behind what is about to be stored.
     saved = state.with_answers({**state.answers, block_id: value})
-    if block_type.captures is CONTACTS:
-        saved_contacts = participant_response.replace_contacts(block_id, value, Contact.Role.CONTACT)
-        if request.POST.get("next") == "invitations":
-            return _see_other(f"{reverse('invitations')}{_rows_query(request.POST)}")
-        # ✨ main.js puts these back into the rows, so the next autosave from the same page edits the people this one
-        # kept rather than adding them again.
-        saved_ids = [contact.pk for contact in saved_contacts]
-        contact_ids = contact_id_per_row(value, saved_ids, rows_posted(names, emails))
-        return _saved(request, saved, section, block_id, contact_ids)
     if block_type.scored:
+        scores = score(state.version.document, value)
         try:
-            participant_response.submit_sort(block_id, value, score(state.version.document, value))
+            participant_response.submit_sort(block_id, value, scores)
         except IntegrityError:
             refusal = "Your results are already in. Retaking the sort is not offered yet."
             return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
+        # ✨ A sort too close to call on one framework leads to the tie-break's pairs first (ticket 30b).
+        if pair_plan(state.version.document, scores):
+            return _go_to(request, reverse("tie_break", args=[block_id]))
         return _to_results(request, block_id)
     if not participant_response.save_answer(block_id, value):
         return _refuse_fixed(request)  # ✨ a completion fixed it after the check above, and the UPDATE saw that
@@ -555,10 +471,14 @@ def coach_checklist(request, block_id):
 
     screen = _checklist_step(block, to, request.POST, _coach_kept(state.answers, block_id))
     kept = state.answers
+    coach = None
     if to == "save" and screen["screen"] == "chosen":
-        # ✨ Always a new contact, so the previous coach's link stops, with any answer given through it.
+        # ✨ Always a new contact, so the previous coach's link stops, with any answer given through it. Their link is
+        # made in the same act, so nobody misses that step (ticket 51b).
         [coach] = state.stored_response(request.user).replace_contacts(block_id, [screen["coach"]], Contact.Role.COACH)
+        link = _issue_link(request, coach)
         screen["coach"] = {**screen["coach"], "id": coach.pk}
+        screen["issued"] = {"contact": coach.pk, "link": link}
         kept = {**kept, block_id: [screen["coach"]]}
     elif to == "remove" and state.response is not None:
         state.response.replace_contacts(block_id, [], Contact.Role.COACH)
@@ -570,7 +490,10 @@ def coach_checklist(request, block_id):
     page = page_of(section, block_id)
     is_htmx = request.headers.get("HX-Request") == "true"
     if not is_htmx and stored:
-        # ✨ Once stored, the checklist is behind: the page shows only the coach kept, so it is safe to go back to.
+        # ✨ Once stored, the checklist is behind: the page shows only the coach kept, so it is safe to go back to, with
+        # the link just made, as issuing it leads back.
+        if coach is not None:
+            return _back_with_issued(request, coach, screen["issued"]["link"])
         return _see_other(f"{page_url(section['id'], page)}#block-{block_id}")
     shown = _section_page(state.with_answers(kept), section, page)
     checklist_block = next(on_page for on_page in shown["section"]["blocks"] if on_page["id"] == block_id)
@@ -579,7 +502,10 @@ def coach_checklist(request, block_id):
         # ✨ Keeping or removing a coach can change the page's way on (a skip label), so it comes too, as after an
         # autosave; stepping through the checklist changes nothing stored, so the way on stays as it was.
         context = {**shown, "block": checklist_block, "stored": stored}
-        return render(request, "engine/coach_checklist_result.html", context, status=status)
+        result = render(request, "engine/coach_checklist_result.html", context, status=status)
+        if coach is not None:
+            result["Cache-Control"] = "no-store"  # ✨ it holds the link, shown this once
+        return result
     # ✨ Never a redirect without JavaScript while choosing: the answers would have to go in the address, where they
     # are logged. The page returned is the one the checklist is on.
     return render(request, "engine/section.html", shown, status=status)
@@ -697,25 +623,18 @@ def _coach_declined(contact_id):
     return Invitation.objects.filter(contact_id=contact_id, coach_answer=Invitation.CoachAnswer.DECLINED).exists()
 
 
-def _saved(request, state, section, block_id, contact_ids=None):
+def _saved(request, state, section, block_id):
     """✨ What a stored answer sends back: with htmx, the status and its page's gate; without, its page again.
 
-    A contact list's "add another" without JavaScript saves the list and asks for one more row than it showed,
-    which the page then shows. A block that opens what follows (a reading) lands at its confirmation, with what it
-    opened beneath, rather than back at its top above what was just read (ticket 41e).
+    A block that opens what follows (a reading) lands at its confirmation, with what it opened beneath, rather than
+    back at its top above what was just read (ticket 41e).
     """
     page = page_of(section, block_id)
     if request.headers.get("HX-Request") == "true":
         shown = _section_page(state, section, page)
-        return render(request, "engine/save_result.html", {**shown, "contact_ids": contact_ids})
+        return render(request, "engine/save_result.html", shown)
     block = next(block for block in section["blocks"] if block["id"] == block_id)
-    return _see_other(f"{page_url(section['id'], page)}{_rows_query(request.POST)}#{landing_of(block)}")
-
-
-def _rows_query(posted):
-    """✨ The address's query for the rows "add another" asked for without JavaScript, or nothing."""
-    rows = _asked_rows(posted)
-    return f"?rows={rows}" if rows else ""
+    return _see_other(f"{page_url(section['id'], page)}#{landing_of(block)}")
 
 
 @login_required
@@ -730,8 +649,68 @@ def results(request, block_id):
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
-    shown = results_page(state.version.document, result.scores, state.answers[block_id], name_shown_for(request.user))
-    return render(request, "engine/results.html", {"results": shown, "section": section, "block_id": block_id})
+    if _pairs_left(state.version.document, result):
+        return redirect("tie_break", block_id)
+    drawn = _results_drawn(state, result, block_id)
+    return render(request, "engine/results.html", {"drawn": drawn, "results": drawn["results"], "section": section})
+
+
+def _results_drawn(state, result, block_id):
+    """✨ The participant's own results for a sort as both its results page and a `sort_results` block draw them
+    (`engine/own_results.html`), or None while there are none to show: before the sort is in, or while tie-break pairs
+    are left (ticket 57). Like the results page, it stores the re-weighted result the first time it is shown."""
+    document = state.version.document
+    if result is None or _pairs_left(document, result):
+        return None
+    scores = _scores_shown_storing_reweighted(document, result)
+    name = name_shown_for(state.response.participant)
+    return {"results": results_page(document, scores, state.answers[block_id], name), "block_id": block_id}
+
+
+@login_required
+@consent_required
+@require_http_methods(["GET", "POST"])
+def tie_break(request, block_id):
+    """✨ The tie-break's next unanswered pair (ticket 30b), for a participant whose own sort left one framework too close
+    to call; anyone else, or one who has answered or skipped every pair, goes on to their results. Answering stores the
+    choice beside the sort's result and comes back here for the next. Only the participant's own result is read, so an
+    observer's sort never leads here."""
+    state, result, section = _own_result(request.user, block_id)
+    if result is None:
+        return redirect(page_url(section["id"], section["page"]))
+    plan = pair_plan(state.version.document, result.scores)
+    if request.method == "POST":
+        try:
+            place = int(request.POST.get("pair", ""))
+        except ValueError:
+            place = -1
+        chosen = request.POST.get("chosen") or None
+        if not 0 <= place < len(plan) or (chosen is not None and chosen not in plan[place]["constructs"]):
+            refusal = "That is not one of this pair’s answers."
+            return render(request, "engine/save_status.html", {"refusal": refusal}, status=400)
+        # ✨ A pair already answered (a form sent twice, or from a stale tab) stores nothing; either way the next is shown.
+        result.answer_pair(place, plan[place], chosen)
+        _scores_shown_storing_reweighted(state.version.document, result)  # ✨ the last answer re-weights the result
+        return _see_other("tie_break", block_id)
+    place = len(result.tie_break_answers)
+    if place >= len(plan):
+        return redirect("results", block_id)
+    shown = pair_page(state.version.document, plan, place)
+    return render(request, "engine/tie_break.html", {"pair": shown, "block_id": block_id})
+
+
+def _pairs_left(document, result):
+    """✨ Whether the participant still has tie-break pairs to answer or skip before their results (ticket 30b)."""
+    return len(result.tie_break_answers) < len(pair_plan(document, result.scores))
+
+
+def _scores_shown_storing_reweighted(document, result):
+    """✨ The participant's result as their results page and comparison show it (ticket 30c): re-weighted by the
+    tie-break's answers once every pair is answered or skipped, or else the sort's as scored. The re-weighted result
+    is worked out and stored beside the sort's the first time it is needed, so this writes, on a GET too."""
+    if result.reweighted is None and pair_plan(document, result.scores) and not _pairs_left(document, result):
+        result.keep_reweighted(reweigh(document, result.scores, result.tie_break_answers))
+    return result.shown
 
 
 @login_required
@@ -744,7 +723,8 @@ def comparison(request, block_id):
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
-    shown = _comparison_of(state.response, result.scores, state.answers[block_id])
+    scores = _scores_shown_storing_reweighted(state.version.document, result)
+    shown = _comparison_of(state.response, scores, state.answers[block_id])
     sort = next(block for block in blocks_of(state.response.version.document) if block["id"] == block_id)
     context = {
         "comparison": shown,
@@ -825,31 +805,23 @@ def _coach_of(response):
     }
 
 
-def _hub_voices(response):
-    """✨ The trusted-voices card on the hub: how many people the participant has invited, how many have replied,
-    their names, and the most they can invite."""
-    if response is None:
-        return {"invited": 0, "replied": 0, "names": [], "max": MAX_CONTACTS}
-    contacts = response.contacts.filter(role=Contact.Role.CONTACT).select_related("invitation").order_by("position")
-    names = [contact.name for contact in contacts]
-    live = [contact.live_invitation() for contact in contacts]
-    replied = sum(1 for invitation in live if invitation and invitation.claimed_at)
-    return {"invited": len(names), "replied": replied, "names": names, "max": MAX_CONTACTS}
-
-
-def _hub_baseline(document, state):
-    """✨ The "Where you started" card on the hub: the participant's own scores on the sort, the top constructs by
-    percent, or None before they have a result."""
-    scored = _scored_block(document)
-    if scored is None:
-        return None
-    result = Result.objects.filter(response=state.response, block_id=scored["id"]).first()
-    if result is None:
-        return None
-    shown = results_page(document, result.scores, state.answers.get(scored["id"], {}), name_shown_for(state.response.participant))
-    bars = [bar for framework in shown["frameworks"] for bar in framework["bars"]]
-    bars.sort(key=lambda bar: bar["percent"], reverse=True)
-    return [{"label": bar["label"], "percent": bar["percent"]} for bar in bars[:4]]
+def _hub_voices(state, hub):
+    """✨ The Five trusted voices card (ticket 51a): the hub's side card whose section holds a contact list, or None for
+    a pathway without one, or while it is locked, when it is drawn as any other side card. What it shows is the contact
+    list's `voices_card`; this reads what that needs, and the section's own page lists everyone."""
+    document = state.version.document
+    for block in blocks_of(document):
+        if block["type"] != "contact_list":
+            continue
+        section_id = section_of(document, block["id"])["id"]
+        card = next((side_card for side_card in hub.side_cards() if side_card.id == section_id), None)
+        if card is None or card.is_locked:
+            continue
+        invited = state.answers.get(links_issued_key(block["id"]), 0)
+        answered = len(ObserverResponse.assessments_for(state.response).assessments) if state.response else 0
+        shown = voices_card(block, card, invited, answered, minimum_observers(document), frozen=_frozen(state.response))
+        return {"section": section_id, **shown}
+    return None
 
 
 @login_required
@@ -859,11 +831,23 @@ def visit_comparison(request, block_id):
     """✨ The results page's "Compare with how others see you →": record the visit Section 1's gate waits on, then go to
     the comparison. Recorded whatever the comparison will show, since the explanation below the minimum counts too
     (ticket 16c). Only this press counts, never loading the comparison's address, which a browser may do ahead of
-    time (Chrome preloads from the address bar) without the participant ever seeing it."""
+    time (Chrome preloads from the address bar) without the participant ever seeing it.
+
+    With at least the minimum number of observer assessments in, and collection not yet frozen, the press first asks:
+    how many of the people invited have answered, and that once they look no more answers are added. Its button
+    confirms, which freezes collection, then goes on as before (ticket 55). Below the minimum nothing is asked."""
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return _see_other(page_url(section["id"], section["page"]))
-    state.response.visit_comparison(block_id)
+    response = state.response
+    answered = len(ObserverResponse.assessments_for(response).assessments)
+    if response.collection_frozen_at is None and answered >= minimum_observers(state.version.document):
+        if request.POST.get("confirmed") != "yes":
+            invited = response.contacts.filter(role=Contact.Role.CONTACT).count()
+            context = {"block_id": block_id, "answered": answered, "invited": invited, "everyone": answered >= invited}
+            return render(request, "engine/comparison_confirm.html", context)
+        response.freeze_collection()
+    response.visit_comparison(block_id)
     return _see_other("comparison", block_id)
 
 
@@ -902,33 +886,269 @@ def download(request, block_id):
 
 @login_required
 @consent_required
+def photo(request, section_id):
+    """✨ The photo the published pathway names for a section, a file beside the document (ticket 49b). Only a file the
+    document names as a photo is served, and the schema keeps its name to letters, digits and hyphens, so it cannot
+    leave the folder."""
+    state = _participant(request.user)
+    named = state.version.document.get("photos", {}).get(section_id) if state.version else None
+    if named is None:
+        raise Http404("This pathway has no photo for that section.")
+    path = settings.PATHWAY_FILES_DIR / named["file"]
+    if not path.is_file():
+        raise Http404("This pathway's photo is not here.")
+    return FileResponse(path.open("rb"), content_type=mimetypes.guess_type(path.name)[0])
+
+
+@login_required
+@consent_required
 def invitations(request):
-    """✨ The people on the participant's contact list, each with a link to act as an observer (ADR 0005). A link just
-    issued is shown this once, from the cookie issuing left, which goes as it is read; a reload shows none."""
-    issued = _issued_link(request)
-    shown = _invitations_page(request, issued=issued)
-    shown["Cache-Control"] = "no-store"
-    if issued is not None:
-        shown.delete_cookie(ISSUED_COOKIE, path=reverse("invitations"))
-    return shown
+    """✨ The old address of the invitations page, which is now the contact list's own page (ticket 51a): the first
+    contact list the participant has reached, or else the hub."""
+    state = _participant(request.user)
+    document = state.version.document if state.version else None
+    for block in blocks_of(document) if document else ():
+        if block["type"] == "contact_list" and _is_open(state, section_of(document, block["id"]), block):
+            return redirect(_block_address(document, block["id"]))
+    return redirect("hub")
+
+
+@login_required
+@consent_required
+@require_POST
+def contacts(request, block_id):
+    """✨ Add one person to a contact list, and make their observer's link in the same act (ticket 51a), so nobody is
+    listed without having had one. Then back to the list at them, which shows the link this once. Nobody else on the
+    list is touched, so a page left open since someone else was added never drops them."""
+    state = _participant(request.user, first_version=lambda: _published_version(request.POST.get("version")))
+    block = _block_of_type(state.version, block_id, "contact_list")
+    shut = _list_shut(request, state, block)
+    if shut is not None:
+        return shut
+    if _frozen(state.response):
+        return _refuse_frozen(request)
+    try:
+        person = contact_from_form(request.POST.get("name"), request.POST.get("email"))
+    except AnswerRefused as refused:
+        return _person_refused(request, state, block, refused)
+    lifetime = link_lifetime(state.version.document)
+    added = state.stored_response(request.user).add_contact(block_id, person, lifetime, MAX_CONTACTS)
+    if added is None:
+        return _person_refused(request, state, block, AnswerRefused(LIST_FULL))
+    person, token = added
+    link = _link_of(request, person, token)
+    if _is_htmx(request):
+        # ✨ In place of the row they were typed into, and once every row is filled, the next empty one after them.
+        state = _participant(request.user)
+        rows = _contact_rows(block, state.answers, {"contact": person.pk, "link": link})
+        added_row = _as_typed_in(request, block, next(row for row in rows if row["contact_id"] == person.pk))
+        held = len(state.answers.get(block_id) or [])
+        grown = rows_of(block, held) > rows_of(block, held - 1)
+        return _rows_sent_back(request, state, block, [added_row, *rows[-1:]] if grown else [added_row])
+    return _back_with_issued(request, person, link)
+
+
+@login_required
+@consent_required
+@require_POST
+def contact(request, block_id, contact_id):
+    """✨ Change one person's name or email address, and theirs alone (ticket 51a), as the row saves on a change with
+    JavaScript, or by its Save button without (fix-2). Their link keeps working. Another participant's contact, or one
+    from another list, is a 404 that says nothing of whether it exists."""
+    state, block, person = _listed_person(request, block_id, contact_id)
+    shut = _list_shut(request, state, block)
+    if shut is not None:
+        return shut
+    try:
+        changed = contact_from_form(request.POST.get("name"), request.POST.get("email"))
+    except AnswerRefused as refused:
+        return _person_refused(request, state, block, refused, contact_id=person.pk)
+    Contact.objects.filter(pk=person.pk).update(**changed)
+    if _is_htmx(request):
+        state = _participant(request.user)
+        return _rows_sent_back(request, state, block, [_listed_row(state, block, person.pk, saved=True)])
+    return _see_other(_listed_at(person))
+
+
+@login_required
+@consent_required
+def contact_removal(request, block_id, contact_id):
+    """✨ Take one person off a contact list (ticket 13d), deleting them and their link; anything already sent through
+    it stays (ADR 0007). Someone whose link still works is removed only once the participant has confirmed, having been
+    told it will stop; opening this address, or pressing Remove for them, only asks. Then back to the list, or with
+    JavaScript, their row alone: asking in it, then gone, an empty row in its place while the list still shows as many
+    (fix-2)."""
+    state, block, person = _listed_person(request, block_id, contact_id)
+    shut = _list_shut(request, state, block)
+    if shut is not None:
+        return shut
+    confirmed = request.method == "POST" and (
+        request.POST.get("confirmed") == "yes" or person.live_invitation() is None
+    )
+    is_htmx = request.method == "POST" and _is_htmx(request)
+    if not confirmed and is_htmx:
+        return _rows_sent_back(request, state, block, [_listed_row(state, block, person.pk, confirming=True)])
+    if not confirmed:
+        context = {"person": person, "back": _listed_at(person), "has_live_link": person.live_invitation() is not None}
+        return render(request, "engine/contact_removal.html", context)
+    number = _listed_row(state, block, person.pk)["number"] if is_htmx else None
+    person.delete()  # ✨ their invitation goes with them
+    if is_htmx:
+        state = _participant(request.user)
+        held = len(state.answers.get(block_id) or [])
+        if rows_of(block, held) < rows_of(block, held + 1):
+            return _rows_sent_back(request, state, block, [])
+        return _rows_sent_back(request, state, block, [_empty_row(block, number)])
+    return _see_other(_block_address(state.version.document, block_id))
+
+
+def _listed_person(request, block_id, contact_id):
+    """✨ The participant's state, a contact list block and one person on it, or a 404 that says nothing of whether
+    another participant has a contact by that number, or this one on another list."""
+    state = _participant(request.user)
+    block = _block_of_type(state.version, block_id, "contact_list")
+    person = _own_contact_or_404(request.user, contact_id)
+    if person.block_id != block_id or person.role != Contact.Role.CONTACT or person.response != state.response:
+        raise Http404("You have no contact by that number on this list.")
+    return state, block, person
+
+
+def _list_shut(request, state, block):
+    """✨ The refusal for a change to a contact list the participant has not reached, or whose people a completion
+    fixed, or None while it is open to change."""
+    if not _is_open(state, section_of(state.version.document, block["id"]), block):
+        return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
+    if block["id"] in state.fixed:
+        return _refuse_fixed(request)
+    return None
+
+
+def _person_refused(request, state, block, refused, contact_id=None):
+    """✨ The list's page again, saying why one person was not saved, with what was typed in their row (or, for someone
+    new, the first empty one) and the field at fault marked, so nothing typed is lost."""
+    typed = {
+        "contact_id": contact_id,
+        "name": request.POST.get("name", ""),
+        "email": request.POST.get("email", ""),
+        "refusal": str(refused),
+        "invalid": refused.field,
+    }
+    if _is_htmx(request):
+        # ✨ Their row alone, as typed, where they typed it (fix-2).
+        rows = _contact_rows(block, state.answers, typed=typed)
+        row = next((row for row in rows if row["contact_id"] == contact_id), None) or _empty_row(block, 0)
+        row = _as_typed_in(request, block, {**row, **{key: typed[key] for key in typed if key != "contact_id"}})
+        return _rows_sent_back(request, state, block, [row], status=400)
+    section = section_of(state.version.document, block["id"])
+    shown = _section_page(state, section, page_of(section, block["id"]))
+    on_page = next(shown_block for shown_block in shown["section"]["blocks"] if shown_block["id"] == block["id"])
+    on_page["rows"] = _contact_rows(block, state.answers, typed=typed)
+    if not any(row.get("refusal") for row in on_page["rows"]):
+        on_page["refusal"] = typed["refusal"]
+    return _section_shown(request, state, section, shown, status=400)
+
+
+def _is_htmx(request):
+    return request.headers.get("HX-Request") == "true"
+
+
+def _rows_sent_back(request, state, block, rows, status=200):
+    """✨ Rows of a contact list alone, as one of its buttons sends them back with JavaScript, to take that row's place
+    (fix-2): never the page, so typing not yet saved in another row is kept. Never cached, since a row may hold a link
+    just issued."""
+    shown_block = {
+        "id": block["id"],
+        "is_fixed": block["id"] in state.fixed,
+        "frozen": RESULTS_SEEN if _frozen(state.response) else None,
+    }
+    context = {"rows": rows, "block": shown_block, "pathway": {"version_id": state.version.pk}}
+    sent = render(request, "engine/contact_rows.html", context, status=status)
+    sent["Cache-Control"] = "no-store"
+    return sent
+
+
+def _listed_row(state, block, contact_id, issued=None, **marks):
+    """✨ One person's row as the list shows it, with `issued`, their link just issued, and any `marks` (saved, or asking
+    before they are removed)."""
+    issued_for = {"contact": contact_id, "link": issued} if issued else None
+    row = next(row for row in _contact_rows(block, state.answers, issued_for) if row["contact_id"] == contact_id)
+    return {**row, **marks}
+
+
+def _empty_row(block, number):
+    """✨ An empty row of a contact list, for the next person, at its place."""
+    return {
+        "number": number,
+        "is_needed": number <= needed(block),
+        "contact_id": None,
+        "name": "",
+        "email": "",
+        "invitation": None,
+        "issued": None,
+    }
+
+
+def _as_typed_in(request, block, row):
+    """✨ A row sent back for someone new, numbered as the empty row they were typed into, which it replaces: the list's
+    page numbers them in order once it is next drawn."""
+    posted = request.POST.get("row", "")
+    if not posted.isdigit():
+        return row
+    number = int(posted)
+    return {**row, "number": number, "is_needed": number <= needed(block)}
 
 
 @login_required
 @consent_required
 @require_POST
 def issue_invitation(request, contact_id):
-    """✨ Issue, or reissue, one contact's link, then go back to where that person is listed, which shows it this once:
-    only its hash is kept. An observer is listed on the invitations page; the coach on the coach page, and their link
-    leads to the coach's own page rather than an observer's.
+    """✨ Issue, or reissue, one contact's link (one that was lost or has expired), then go back to where that person is
+    listed, which shows it this once: only its hash is kept. An observer is listed on their contact list's page; the
+    coach on the coach page, and their link leads to the coach's own page rather than an observer's.
 
     A redirect, so a reload of the page that follows never issues again. The link travels to that page in a short-lived
     signed cookie of the participant's own, not in the address (where the history would keep it) or the session (where
     the database would).
+
+    While answer collection is frozen an observer's link is neither issued nor reissued; a coach's still is (ticket 55).
     """
     contact = _own_contact_or_404(request.user, contact_id)
+    if contact.role == Contact.Role.CONTACT and _frozen(contact.response):
+        return _refuse_frozen(request)
+    link = _issue_link(request, contact)
+    if contact.role == Contact.Role.CONTACT and _is_htmx(request):
+        return _person_row_sent_back(request, contact, issued=link)  # ✨ with the link in it (fix-2)
+    return _back_with_issued(request, contact, link)
+
+
+def _frozen(response):
+    """✨ Whether a participant's answer collection is frozen (ticket 55), so nobody can be added or sent a new link."""
+    return response is not None and response.collection_frozen_at is not None
+
+
+def _refuse_frozen(request):
+    return render(request, "engine/save_status.html", {"refusal": RESULTS_SEEN}, status=403)
+
+
+# ✨ Why the participant can add nobody while answer collection is frozen: the Five trusted voices card's wording (ticket
+# 51a), on the card, the list's page and any refusal.
+RESULTS_SEEN = "You've seen your results, so no more answers are added."
+
+
+def _issue_link(request, contact):
+    """✨ Issue, or reissue, one contact's link, and return it, this once: an observer's or, for a coach, the coach's."""
     token = Invitation.issue(contact, link_lifetime(contact.response.version.document))
+    return _link_of(request, contact, token)
+
+
+def _link_of(request, contact, token):
+    """✨ The link a contact's token is used at: the coach's own page for a coach, the observer's landing otherwise."""
     link_to = "coaching" if contact.role == Contact.Role.COACH else "observe"
-    link = request.build_absolute_uri(reverse(link_to, args=[token]))
+    return request.build_absolute_uri(reverse(link_to, args=[token]))
+
+
+def _back_with_issued(request, contact, link):
+    """✨ A redirect to where the contact is listed, carrying the link just issued for that page to show this once."""
     listed_at = _listed_at(contact)
     back = _see_other(listed_at)
     back.set_signed_cookie(
@@ -963,15 +1183,26 @@ def revoke_invitation(request, contact_id):
     does nothing. The page comes back at that person."""
     contact = _own_contact_or_404(request.user, contact_id)
     Invitation.objects.filter(contact=contact).delete()
+    if contact.role == Contact.Role.CONTACT and _is_htmx(request):
+        return _person_row_sent_back(request, contact)  # ✨ fix-2
     return _see_other(_listed_at(contact))
 
 
+def _person_row_sent_back(request, contact, issued=None):
+    """✨ An observer's row of their contact list alone, as it now stands, with `issued`, their link just issued."""
+    state = _participant(request.user)
+    block = _block_of_type(state.version, contact.block_id, "contact_list")
+    return _rows_sent_back(request, state, block, [_listed_row(state, block, contact.pk, issued=issued)])
+
+
 def _listed_at(contact):
-    """✨ The address of the page a contact is listed on, at their place in it: the invitations page for an observer,
-    the page of the coach checklist that chose them for a coach."""
-    if contact.role != Contact.Role.COACH:
-        return f"{reverse('invitations')}#person-{contact.pk}"
-    return _block_address(contact.response.version.document, contact.block_id)
+    """✨ The address of the page a contact is listed on, at their place in it: the page of the contact list holding
+    them, at their row, for an observer; the page of the coach checklist that chose them for a coach."""
+    document = contact.response.version.document
+    if contact.role == Contact.Role.COACH:
+        return _block_address(document, contact.block_id)
+    section = section_of(document, contact.block_id)
+    return f"{page_url(section['id'], page_of(section, contact.block_id))}#person-{contact.pk}"
 
 
 def observe(request, token):
@@ -986,11 +1217,18 @@ def observe(request, token):
         return _observers_page(request, token, came_by_link=True)  # ✨ an observer's own link, or the refusal
     if invitation.claimed_at is not None:
         return render(request, "engine/link_used.html", status=410)
+    frozen = NO_MORE_ANSWERS if invitation.contact.response.collection_frozen_at is not None else None
+    return _landing(request, invitation, reverse("start_observing", args=[token]), frozen)
+
+
+def _landing(request, invitation, action, frozen=None):
+    """✨ The privacy notice and the button that claims, posting to `action`. Never cached, since it is reached by a
+    secret."""
     document, name = _asked_by(invitation)
     shown = render(
         request,
         "engine/observer_landing.html",
-        {"notice": privacy_notice(document, name), "name": name, "token": token},
+        {"notice": privacy_notice(document, name), "name": name, "action": action, "frozen": frozen},
     )
     shown["Cache-Control"] = "no-store"
     return shown
@@ -1011,6 +1249,30 @@ def start_observing(request, token):
         if Invitation.live(token) is not None:
             return render(request, "engine/link_used.html", status=410)
         return _refuse_link(request)
+    return _claimed(request, secret)
+
+
+@require_http_methods(["GET", "POST"])
+def fresh_link(request, signed):
+    """✨ Where a reminder's button leads (ticket 43b, ADR 0016): the privacy notice and a button, as the observer's
+    landing has. Opening it changes nothing, since mail filters open every link in a message; only the button's POST
+    gives the observer a fresh link of their own, already claimed, in place of the one they were sent, and takes them
+    into the observer assessment. It works again until they have sent; a tampered address, or one whose link is dead,
+    reissued or frozen, or whose participant's consent is withdrawn, gets the dead-link refusal."""
+    pk = reminders.invitation_to_answer(signed)
+    invitation = Invitation.answerable(pk) if pk is not None else None
+    if invitation is None:
+        return _refuse_link(request)
+    if request.method == "GET":
+        return _landing(request, invitation, reverse("fresh_link", args=[signed]))
+    secret = Invitation.claim_afresh(invitation.pk)
+    if secret is None:
+        return _refuse_link(request)
+    return _claimed(request, secret)
+
+
+def _claimed(request, secret):
+    """✨ The observer's page for a link just claimed, showing their own link this once and leaving it in a cookie."""
     invitation = Invitation.claimed_by(secret)
     own_link = request.build_absolute_uri(reverse("observe", args=[secret]))
     shown = _observers_page(request, secret, own_link=own_link)
@@ -1143,9 +1405,10 @@ def _shared_with_coach(invitation, name):
     if result is None:
         return None
     sort = participant_response.answers[scored["id"]]
+    scores = _scores_shown_storing_reweighted(document, result)
     return {
-        "results": results_page(document, result.scores, sort, name),
-        "comparison": _comparison_of(participant_response, result.scores, sort),
+        "results": results_page(document, scores, sort, name),
+        "comparison": _comparison_of(participant_response, scores, sort),
     }
 
 
@@ -1177,15 +1440,74 @@ def send_assessment(request, token=None):
     if scored is None:
         raise Http404("This pathway has no assessment for observers.")
     try:
-        assessment = answer_from_form(document, scored, request.POST.get("value"))
+        assessment = answer_from_form(document, scored, request.POST.get("value"), role="observer")
+        relationship = relationship_from_form(document, request.POST.get("relationship"))
     except AnswerRefused as refused:
         return render(request, "engine/save_status.html", {"refusal": str(refused)}, status=400)
     try:
-        ObserverResponse.send(invitation.contact.response, secret, assessment)
+        sent = ObserverResponse.send(invitation.contact.response, secret, assessment, relationship=relationship)
     except IntegrityError:
         refusal = "Your assessment has already been sent."
         return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
+    except CollectionFrozen:
+        return render(request, "engine/save_status.html", {"refusal": NO_MORE_ANSWERS}, status=409)
+    if sent is None:
+        # ✨ The observer withdrew through another page while this send was on its way.
+        return _refuse_link(request)
     return _go_to(request, back)
+
+
+@require_http_methods(["GET", "POST"])
+def withdrawal(request, token=None):
+    """✨ The observer withdrawing, with the secret they claimed: from their own link (`token`), or else from the cookie
+    (ticket 15b). Opening the page asks and deletes nothing; only its button's POST deletes what they sent, found by
+    the hash of that secret, and ends their link. The participant's copy of the link is not a secret, and a link that
+    has stopped working claims nothing, so both are refused as any wrong link is: after that, the privacy notice tells
+    the observer to ask the people who run the service. A participant's withdrawn consent closes every other page of
+    the observer's, never this one (ticket 45).
+    """
+    secret = request.COOKIES.get(OBSERVER_COOKIE) if token is None else token
+    invitation = Invitation.claimed_by(secret, for_withdrawal=True)
+    if invitation is None:
+        return _refuse_link(request)
+    _, name = _asked_by(invitation)
+    action = reverse("withdrawal") if token is None else reverse("withdrawal_by_link", args=[token])
+    if request.method == "POST":
+        ObserverResponse.withdraw(secret)
+        shown = render(request, "engine/withdrawal.html", {"name": name, "withdrawn": True})
+        shown.delete_cookie(OBSERVER_COOKIE, path=reverse("observer"))
+    else:
+        shown = render(request, "engine/withdrawal.html", {"name": name, "action": action})
+    shown["Cache-Control"] = "no-store"
+    return shown
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def stop_reminders(request, signed):
+    """✨ Where a reminder's stop link leads (ticket 43a): opening it only asks, and only a POST stops this participant's
+    reminders to that person, from the page's button or as a mail provider's one-click `List-Unsubscribe` (RFC 8058).
+    It works while the contact exists, whatever has happened to their link, and looks the same throughout; a tampered or
+    removed one gets the dead-link refusal.
+
+    Exempt from CSRF, since a one-click POST comes from the mail provider with no token: the signed address is the only
+    authority, so a forged POST would need it anyway, and all it can do is stop reminders."""
+    contact = reminders.contact_to_stop(signed)
+    if contact is None:
+        return _refuse_link(request)
+    name = name_shown_for(contact.response.participant)
+    if request.method == "POST":
+        reminders.stop_reminders(contact)
+        shown = render(request, "engine/stop_reminders.html", {"name": name, "stopped": True})
+    else:
+        action = reverse("stop_reminders", args=[signed])
+        shown = render(request, "engine/stop_reminders.html", {"name": name, "action": action})
+    shown["Cache-Control"] = "no-store"
+    return shown
+
+
+# ✨ What an observer is told while answer collection is frozen (ticket 55).
+NO_MORE_ANSWERS = "No more answers are being taken."
 
 
 # ✨ Where an observer's own secret is kept, so the observer's pages know them without a link or an account. It
@@ -1195,23 +1517,34 @@ OBSERVER_COOKIE = "observer"
 
 def _observers_page(request, secret, own_link=None, came_by_link=False):
     """✨ The observer's page for the invitation a secret claimed, or the refusal if there is none: the observer
-    assessment until it is sent, then thanks. `own_link` is their link, shown only as they claim it. An observer who
-    `came_by_link` rather than by the cookie sends the assessment through that link. Never cached, since it is reached
-    by a secret."""
+    assessment until it is sent, then thanks. While answer collection is frozen, one who has not sent is told no more
+    answers are being taken, and offered no assessment (ticket 55). `own_link` is their link, shown only as they claim
+    it. An observer who `came_by_link` rather than by the cookie sends the assessment through that link. Never cached,
+    since it is reached by a secret."""
     invitation = Invitation.claimed_by(secret)
     if invitation is None:
         return _refuse_link(request)
     document, name = _asked_by(invitation)
     scored = _scored_block(document)
     sent = ObserverResponse.sent_with(secret)
+    frozen = not sent and invitation.contact.response.collection_frozen_at is not None
     assessment = None
-    if scored and not sent:
+    if scored and not sent and not frozen:
         assessment = {
             "id": scored["id"],
             "widget": BLOCK_TYPES[scored["type"]].widget(document, "observer", name),
             "action": reverse("send_assessment_by_link", args=[secret]) if came_by_link else reverse("send_assessment"),
+            "relationship": relationship_question(document, name),
         }
-    context = {"name": name, "own_link": own_link, "assessment": assessment, "sent": sent}
+    withdraw_at = reverse("withdrawal_by_link", args=[secret]) if came_by_link else reverse("withdrawal")
+    context = {
+        "name": name,
+        "own_link": own_link,
+        "assessment": assessment,
+        "sent": sent,
+        "frozen": NO_MORE_ANSWERS if frozen else None,
+        "withdraw_at": withdraw_at,
+    }
     shown = render(request, "engine/observer.html", context)
     shown["Cache-Control"] = "no-store"
     return shown
@@ -1233,44 +1566,6 @@ def _asked_by(invitation):
     """✨ The pathway document an invitation belongs to, and the display name of the participant who asked."""
     participant_response = invitation.contact.response
     return participant_response.version.document, name_shown_for(participant_response.participant)
-
-
-def _invitations_page(request, issued=None, refused=None, status=200):
-    """✨ The invitations page. `issued` is a link just issued, shown this once; `refused` is a contact list whose
-    save was refused, keyed by block, with its rows as typed and why, shown in place of what is stored."""
-    state = _participant(request.user)
-    contacts = Contact.objects.none()
-    if state.response is not None:
-        contacts = (
-            state.response.contacts.filter(role=Contact.Role.CONTACT)
-            .select_related("invitation")
-            .order_by("block_id", "position")
-        )
-    people = [{"contact": contact, "invitation": contact.live_invitation()} for contact in contacts]
-    contact_lists = _contact_lists_to_edit(state, request.GET, refused or {})
-    shown = {"people": people, "issued": issued, "contact_lists": contact_lists}
-    if state.version is not None:
-        shown["pathway"] = {"version_id": state.version.pk, "max_contacts": MAX_CONTACTS}
-    return render(request, "engine/invitations.html", shown, status=status)
-
-
-def _contact_lists_to_edit(state, query, refused):
-    """✨ The pathway's contact lists the participant can change here, as their template needs them: those they have
-    reached, so one skipped in onboarding can be filled in now, and not fixed by a completion. A list whose save was
-    refused shows as typed, with why."""
-    if state.version is None:
-        return []
-    document = state.version.document
-    return [
-        {
-            **_block_for_participant(document, block, state.answers, state.fixed, {}, _asked_rows(query)),
-            **refused.get(block["id"], {}),
-        }
-        for block in blocks_of(document)
-        if block["type"] == "contact_list"
-        and block["id"] not in state.fixed
-        and _is_open(state, section_of(document, block["id"]), block)
-    ]
 
 
 def _own_contact_or_404(user, contact_id):
@@ -1314,6 +1609,9 @@ def _participant(user, first_version=Publication.current_version):
 
     A participant without a response yet reads `first_version()`: by default the published version, so what they
     see is what their first answer will be recorded against.
+
+    Not only a read: it stores the completion of each hub side card whose gate now passes, the first time it is seen,
+    on any request, a GET included (ticket 52).
     """
     participant_response = Response.in_progress(user)
     if participant_response is None:
@@ -1322,13 +1620,21 @@ def _participant(user, first_version=Publication.current_version):
         return ParticipantState(None, version, sections, {}, complete_sections(sections, {}, ()), {}, set())
     sections = track_sections(participant_response.version.document)
     answers = participant_response.answers_with_contacts_and_visits()
+    # ✨ A part of a section, or a hub side card, is complete once its gate passes, so locks and the hub count it without
+    # a completion.
+    completed = complete_sections(sections, answers, participant_response.completed_sections)
+    # ✨ A side card's completion is stored the first time it is seen, so it stays complete once its links expire or are revoked, or
+    # its people are taken off the list, and never locks again what it opened (ticket 52).
+    stored = participant_response.completed_sections
+    for section in sections:
+        if "side_card" in section and section["id"] in completed and section["id"] not in stored:
+            participant_response.complete_section(section["id"])
     return ParticipantState(
         response=participant_response,
         version=participant_response.version,
         sections=sections,
         answers=answers,
-        # ✨ A part of a section is complete once its gate passes, so locks and the hub count it without a completion.
-        completed=complete_sections(sections, answers, participant_response.completed_sections),
+        completed=completed,
         moved_past=participant_response.moved_past_by_section(),
         fixed=set(participant_response.fixed_answers),
     )
@@ -1370,16 +1676,10 @@ def _section_or_404(version, section_id):
     return section
 
 
-def _asked_rows(query):
-    """✨ How many rows a contact list's "add another" asked for without JavaScript, or 0. Capped when shown."""
-    asked = query.get("rows", "")
-    return min(int(asked), MAX_CONTACTS) if asked.isdigit() else 0
-
-
-def _section_page(state, section, page=1, asked_rows=0, issued=None):
+def _section_page(state, section, page=1, issued=None):
     """✨ One page of a section as its template needs it. Every page but the last ends in "Continue →", held by that
-    page's own clauses; the last ends in the section's completion, held by the whole gate. `issued` is a coach's link
-    just issued, which a coach checklist on the page shows this once."""
+    page's own clauses; the last ends in the section's completion, held by the whole gate. `issued` is a link just
+    issued, a coach's or an observer's, which the page shows this once beside the person it is for."""
     version, answers, fixed = state.version, state.answers, state.fixed
     opened, activity_open = open_blocks(section, answers, state.sections, up_to_page=page)
     on_page = {block["id"] for block in pages_of(section)[page - 1]}
@@ -1407,7 +1707,6 @@ def _section_page(state, section, page=1, asked_rows=0, issued=None):
             "version_id": version.pk,
             "scale_points": SCALE_POINTS,
             "long_text_max_length": LONG_TEXT_MAX_LENGTH,
-            "max_contacts": MAX_CONTACTS,
         },
         "section": {
             "id": section["id"],
@@ -1415,8 +1714,19 @@ def _section_page(state, section, page=1, asked_rows=0, issued=None):
             "estimate": states[section["id"]].estimate,
             "complete_label": text_for(section.get("complete_label", "Mark complete"), "participant"),
             "is_part": "part_of" in section,
+            "is_side_card": "side_card" in section,
+            "reopens": _reopens(section),
             "blocks": [
-                _block_for_participant(version.document, block, answers, fixed, states, asked_rows, issued)
+                _block_for_participant(
+                    version.document,
+                    block,
+                    answers,
+                    fixed,
+                    states,
+                    issued,
+                    _frozen(state.response),
+                    drawn=_sort_results_drawn(state, block),
+                )
                 for block in blocks
             ],
         },
@@ -1431,6 +1741,18 @@ def _section_page(state, section, page=1, asked_rows=0, issued=None):
     }
 
 
+def _completes_itself(section):
+    """✨ Whether a section is complete once its gate passes, with no completion of its own to press: a part of a section
+    (ticket 41b), or a hub side card (ticket 52)."""
+    return "part_of" in section or "side_card" in section
+
+
+def _reopens(section):
+    """✨ Whether the participant can take back a section's completion: not one that completes itself, nor a wizard,
+    which once complete is never asked for again (ticket 50)."""
+    return not _completes_itself(section) and not section.get("wizard")
+
+
 def _section_this_is_part_of(state, section):
     """✨ The section a part of a section belongs to, as its ways back name it: {"title", "href"}, at the page of it the
     participant has reached. None for a section that is not a part, or whose section is outside the track or locked."""
@@ -1443,13 +1765,16 @@ def _section_this_is_part_of(state, section):
 
 def _requirement_links(state, section):
     """✨ Where each of a section's requirements met on another page is met, by its message (ticket 41b): a coach's link
-    on the coach page, people's links on the invitations page. One whose page is not open yet is left out."""
+    on the coach page, people's links on the invitations page. One whose page is not open yet is left out, and so is one
+    met in this section itself, as on a hub side card (ticket 52)."""
     document = state.version.document
     links = {}
     for clause in clauses_of(section):
         if clause["type"] != "links_issued":
             continue
         block = next(block for block in blocks_of(document) if block["id"] == clause["block"])
+        if section_of(document, block["id"])["id"] == section["id"]:
+            continue
         if not _is_open(state, section_of(document, block["id"]), block):
             continue
         is_coach = block["type"] == "coach_checklist"
@@ -1491,10 +1816,19 @@ def _published_version(posted):
     return PathwayVersion.objects.filter(pk=int(posted), publications__isnull=False).distinct().first()
 
 
-def _block_for_participant(document, block, answers, fixed, states, asked_rows=0, issued=None):
+def _sort_results_drawn(state, block):
+    """✨ For a `sort_results` block, its sort's results as `_results_drawn` gives them, or None; None for any other."""
+    if block["type"] != "sort_results":
+        return None
+    result = Result.objects.filter(response=state.response, block_id=block["sort"]).first()
+    return _results_drawn(state, result, block["sort"])
+
+
+def _block_for_participant(document, block, answers, fixed, states, issued=None, frozen=False, drawn=None):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
     identifier; a link to a section outside the participant's track has no state and shows nothing. `issued` is a
-    coach's link just issued."""
+    link just issued, a coach's or an observer's. While answer collection is `frozen`, a contact list says why it adds
+    nobody (ticket 55). `drawn` is a `sort_results` block's results, from `_sort_results_drawn`."""
     widget = BLOCK_TYPES[block["type"]].widget
     text = authored_text(block, "participant")
     if block["type"] == "scripture_reading":
@@ -1502,7 +1836,7 @@ def _block_for_participant(document, block, answers, fixed, states, asked_rows=0
             shown["translation"] = translation_shown(document, passage)
     is_checklist = block["type"] == "coach_checklist"
     return {
-        "rows": _contact_rows(block, answers, asked_rows) if block["type"] == "contact_list" else None,
+        "rows": _contact_rows(block, answers, issued) if block["type"] == "contact_list" else None,
         "checklist": _opening_checklist(text, _coach_kept(answers, block["id"]), issued) if is_checklist else None,
         "id": block["id"],
         "landing": landing_of(block),  # ✨ where saving it without JavaScript comes back to
@@ -1514,6 +1848,8 @@ def _block_for_participant(document, block, answers, fixed, states, asked_rows=0
         "is_fixed": block["id"] in fixed,
         "widget": widget(document, "participant", "") if widget else None,  # ✨ the participant's wording names no one
         "link": states.get(block["section"]) if block["type"] == "section_link" else None,
+        "frozen": RESULTS_SEEN if frozen and block["type"] == "contact_list" else None,
+        "drawn": drawn,
     }
 
 
@@ -1525,8 +1861,31 @@ def _opening_checklist(text, kept, issued=None):
     return _checklist_screen(text)
 
 
-def _contact_rows(block, answers, asked_rows):
-    """✨ A contact list's rows: every saved person in order, then empty rows up to the number to show."""
-    contacts = answers.get(block["id"]) or []
-    empty = {"name": "", "email": ""}
-    return [*contacts, *[empty] * (rows_to_show(block, contacts, asked_rows) - len(contacts))]
+def _contact_rows(block, answers, issued=None, typed=None):
+    """✨ A contact list's rows: each person on it in order, with their invitation while their link works and the link
+    itself if it was just issued (`issued`, shown this once), then empty rows for the next people. Each row is marked
+    needed or optional by its place. `typed` is a person whose save was refused, shown as typed in their row, or for
+    someone new in the first empty one, with why and the field at fault."""
+    people = answers.get(block["id"]) or []
+    links = Invitation.objects.filter(contact_id__in=[person["id"] for person in people], expires_at__gt=timezone.now())
+    working = {invitation.contact_id: invitation for invitation in links}
+    rows = []
+    for number in range(1, rows_of(block, len(people)) + 1):
+        person = people[number - 1] if number <= len(people) else {"name": "", "email": "", "id": None}
+        just_issued = issued and issued["contact"] == person["id"]
+        rows.append(
+            {
+                "number": number,
+                "is_needed": number <= needed(block),
+                "contact_id": person["id"],
+                "name": person["name"],
+                "email": person["email"],
+                "invitation": working.get(person["id"]),
+                "issued": issued["link"] if just_issued else None,
+            }
+        )
+    if typed is not None:
+        row = next((row for row in rows if row["contact_id"] == typed["contact_id"]), None)
+        if row is not None:  # ✨ a full list has no empty row: its refusal is the list's own
+            row.update(name=typed["name"], email=typed["email"], refusal=typed["refusal"], invalid=typed["invalid"])
+    return rows

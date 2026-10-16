@@ -4,16 +4,16 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** The instrument and scoring; Observers (ADR 0005)
 
-- [ ] After placing the cards, the observer is offered "Send my assessment" beside fine-tuning, without scrolling past every slider
-- [ ] An assessment sent without fine-tuning scores from the bucket seeds, exactly as one sent with the sliders untouched
-- [ ] The participant's own assessment is unchanged
-- [ ] Observer wording for the choice is authored content in both pathway documents
+- [x] After placing the cards, the observer is offered "Send my assessment" beside fine-tuning, without scrolling past every slider
+- [x] An assessment sent without fine-tuning scores from the bucket seeds, exactly as one sent with the sliders untouched
+- [x] The participant's own assessment is unchanged
+- [x] Observer wording for the choice is authored content in both pathway documents
 
 **Context**
 

@@ -8,11 +8,23 @@
     }
   },
   "translation": "ESV",
+  "photos": {
+    "onboarding": {
+      "file": "facing-sun.jpg",
+      "credit": { "kind": "courtesy", "text": "Photograph of a figure facing the sun from Unsplash." }
+    },
+    "designed": {
+      "file": "grass.jpg",
+      "credit": { "kind": "courtesy", "text": "Photograph of grass from Unsplash." }
+    }
+  },
+  "show_courtesy_credits": true,
   "content": {
     "sections": [
       {
         "id": "onboarding",
         "title": "Before we begin",
+        "wizard": true,
         "estimate": "About 10 minutes",
         "complete_label": "Continue →",
         "blocks": [
@@ -30,6 +42,10 @@
               { "id": "exploring", "label": "Generally exploring calling" },
               { "id": "other", "label": "Other" }
             ]
+          },
+          {
+            "id": "to-ratings",
+            "type": "page_break"
           },
           {
             "id": "baseline-intro",
@@ -75,11 +91,275 @@
             "min_label": "Strongly disagree",
             "max_label": "Strongly agree",
             "fixed_once_complete": true
+          }
+        ],
+        "gate": {
+          "clauses": [
+            { "type": "has_answer", "block": "reason", "message": "Choose what's bringing you to the course to continue." },
+            { "type": "has_answer", "block": "bl-bible", "message": "Answer all five to continue" },
+            { "type": "has_answer", "block": "bl-gifts", "message": "Answer all five to continue" },
+            { "type": "has_answer", "block": "bl-call", "message": "Answer all five to continue" },
+            { "type": "has_answer", "block": "bl-plan", "message": "Answer all five to continue" },
+            { "type": "has_answer", "block": "bl-peace", "message": "Answer all five to continue" }
+          ]
+        }
+      },
+      {
+        "id": "designed",
+        "title": "How you've been designed",
+        "number": "01",
+        "requires": ["onboarding"],
+        "next_step": {
+          "heading": "Start with your gifts.",
+          "sentence": "Take the ten-minute strengths assessment and read three short passages on gifts."
+        },
+        "blocks": [
+          {
+            "id": "gifts-question",
+            "type": "rich_text",
+            "variant": "hint",
+            "label": "The big question",
+            "body": "Based on what people you trust say about you, and your own self-examination, what gifts and talents has God given (and not given) you? Remember – you don't have 'church gifts' and 'non-church gifts'. A teaching gift looks different in a school vs in kids' work, but it's still a teaching gift."
           },
           {
-            "id": "to-coach",
-            "type": "page_break"
+            "id": "gifts-reading",
+            "type": "scripture_reading",
+            "heading": "Read these passages before continuing",
+            "passages": [
+              {
+                "reference": "Romans 12:6–8",
+                "text": "Having gifts that differ according to the grace given to us, let us use them: if prophecy, in proportion to our faith; if service, in our serving; the one who teaches, in his teaching; the one who exhorts, in his exhortation; the one who contributes, in generosity; the one who leads, with zeal; the one who does acts of mercy, with cheerfulness."
+              },
+              {
+                "reference": "1 Corinthians 12:8–10, 28–30",
+                "text": "For to one is given through the Spirit the utterance of wisdom, and to another the utterance of knowledge according to the same Spirit, to another faith by the same Spirit, to another gifts of healing by the one Spirit, to another the working of miracles, to another prophecy, to another the ability to distinguish between spirits, to another various kinds of tongues, to another the interpretation of tongues.\n\nAnd God has appointed in the church first apostles, second prophets, third teachers, then miracles, then gifts of healing, helping, administrating, and various kinds of tongues. Are all apostles? Are all prophets? Are all teachers? Do all work miracles? Do all possess gifts of healing? Do all speak with tongues? Do all interpret?"
+              },
+              {
+                "reference": "1 Peter 4:9–11",
+                "text": "Show hospitality to one another without grumbling. As each has received a gift, use it to serve one another, as good stewards of God's varied grace: whoever speaks, as one who speaks oracles of God; whoever serves, as one who serves by the strength that God supplies—in order that in everything God may be glorified through Jesus Christ. To him belong glory and dominion for ever and ever. Amen."
+              }
+            ],
+            "note": "As you read, reflect: what gifts do you see in yourself? Which do others affirm in you? Which are notably absent – and what might that tell you about how God has designed you?",
+            "confirm_label": "I've read these passages and I'm ready to continue"
           },
+          {
+            "id": "gifts-activity",
+            "type": "rich_text",
+            "label": "Your activity",
+            "body": "This section uses the Strengths Assessment – a tool where you sort and rate your strengths across 36 areas. You can also invite people you trust to do the same for you."
+          },
+          {
+            "id": "strengths-link",
+            "type": "section_link",
+            "section": "strengths",
+            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 3 trusted people to assess you too.",
+            "button_label": "Open Strengths Assessment →",
+            "holds_what_follows": true
+          },
+          { "id": "strengths-results", "type": "sort_results", "sort": "strengths-sort" },
+          {
+            "id": "gifts-summary",
+            "type": "long_text",
+            "prompt": "Having completed the assessment and read the passages above, summarise: what gifts and talents has God given you? And what has He not given you?",
+            "placeholder": "Draw on the scripture, your assessment results, and what others have told you..."
+          }
+        ],
+        "gate": {
+          "clauses": [
+            {
+              "type": "has_answer",
+              "block": "strengths-sort",
+              "message": "Complete the Strengths Assessment to continue."
+            },
+            {
+              "type": "has_answer",
+              "block": "gifts-summary",
+              "message": "Complete the gifts reflections to continue."
+            }
+          ]
+        }
+      },
+      {
+        "id": "strengths",
+        "title": "Strengths assessment",
+        "estimate": "About 10 minutes",
+        "requires": ["onboarding"],
+        "part_of": "designed",
+        "blocks": [
+          {
+            "id": "strengths-sort",
+            "type": "sort_assessment",
+            "coach_brief": {
+              "title": "Session 1 – Their gifts",
+              "purpose": "Help them believe what the assessment is telling them, and notice where they discount themselves.",
+              "length": "45–60 minutes",
+              "questions": [
+                { "text": "Which of these results surprised you, and which felt obvious?" },
+                { "text": "Where others rated you higher than you rated yourself – why do you think that gap is there?" },
+                { "text": "What is something you are good at that you have stopped noticing because it comes easily?" },
+                { "text": "Which of these strengths do you actually enjoy using, and which just drain you?" }
+              ],
+              "watch_for": [
+                { "text": "People routinely dismiss their strongest gift as \"nothing special\". If they wave something away, slow down and ask about it." },
+                { "text": "A low score is not a failing. Help them read the whole profile, not just hunt for weaknesses." }
+              ],
+              "avoid": "Do not treat the assessment as a verdict. It is a conversation starter, not a diagnosis."
+            }
+          }
+        ],
+        "gate": {
+          "clauses": [
+            {
+              "type": "has_answer",
+              "block": "strengths-sort",
+              "message": "Complete the Strengths Assessment to continue."
+            }
+          ]
+        }
+      },
+      {
+        "id": "shape",
+        "title": "The shape of your life",
+        "number": "02",
+        "estimate": "About 30–40 minutes",
+        "requires": ["designed", "walk-with-a-coach", "trusted-voices"],
+        "complete_label": "I've finished Section 2",
+        "blocks": [
+          {
+            "id": "shape-pdf",
+            "type": "download",
+            "file": "whatever-you-do-workbook-section-2.pdf",
+            "body": "Section two, to work through on paper: mapping your story, and what has happened in each season of it.\n\nSections two to four make up the middle of the course, which works better on paper, so each is a booklet of its own. When you've finished this one, come back here to say so, and Section 3 opens.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their assessments of you – don’t let that stop you making progress on the workbook.",
+            "button_label": "Download Section 2 (PDF)"
+          }
+        ]
+      },
+      {
+        "id": "calling",
+        "title": "Putting your calling into words",
+        "number": "03",
+        "estimate": "About 30–40 minutes",
+        "requires": ["shape"],
+        "complete_label": "I've finished Section 3",
+        "blocks": [
+          {
+            "id": "calling-pdf",
+            "type": "download",
+            "file": "whatever-you-do-workbook-section-3.pdf",
+            "body": "Section three, to work through on paper: narrowing your calling to a sentence, then opening it back up.\n\nWhen you've finished it, come back here to say so, and Section 4 opens.",
+            "button_label": "Download Section 3 (PDF)"
+          }
+        ]
+      },
+      {
+        "id": "growth",
+        "title": "Growth plan",
+        "number": "04",
+        "estimate": "About 30–40 minutes",
+        "requires": ["calling"],
+        "complete_label": "I've finished Section 4",
+        "blocks": [
+          {
+            "id": "growth-pdf",
+            "type": "download",
+            "file": "whatever-you-do-workbook-section-4.pdf",
+            "body": "Section four, to work through on paper: turning all of it into something you will actually do.\n\nWhen you've finished it, come back here to say so, and Section 5, a letter to your future self, opens.",
+            "button_label": "Download Section 4 (PDF)"
+          }
+        ]
+      },
+      {
+        "id": "letter",
+        "title": "A letter to your future self",
+        "number": "05",
+        "estimate": "About 15 minutes",
+        "requires": ["growth"],
+        "blocks": [
+          {
+            "id": "lt-task",
+            "type": "rich_text",
+            "estimate": "About 10 minutes",
+            "variant": "hint",
+            "label": "The task",
+            "body": "Write to yourself as you will be in twelve months' time. You have just done a lot of thinking, and most of it fades faster than you would expect. Put it down now, while it is still warm, and let it find you again when you need it."
+          },
+          {
+            "id": "lt-message",
+            "type": "long_text",
+            "prompt": "Your letter",
+            "placeholder": "Dear me,"
+          },
+          {
+            "id": "pl-intro",
+            "type": "rich_text",
+            "estimate": "About 5 minutes",
+            "body": "You answered these same questions at the start. Let's see where you are now.\n\nTo what extent would you agree with the following statements?"
+          },
+          {
+            "id": "pl-bible",
+            "type": "agreement_scale",
+            "prompt": "I have a detailed understanding of what the Bible teaches about 'work' and 'calling'",
+            "min_label": "Strongly disagree",
+            "max_label": "Strongly agree",
+            "fixed_once_complete": true
+          },
+          {
+            "id": "pl-gifts",
+            "type": "agreement_scale",
+            "prompt": "I have a detailed understanding of what my God-given talents/gifts and limitations are",
+            "min_label": "Strongly disagree",
+            "max_label": "Strongly agree",
+            "fixed_once_complete": true
+          },
+          {
+            "id": "pl-call",
+            "type": "agreement_scale",
+            "prompt": "I have a strong sense of what God's specific 'call' and purpose is for my life",
+            "min_label": "Strongly disagree",
+            "max_label": "Strongly agree",
+            "fixed_once_complete": true
+          },
+          {
+            "id": "pl-plan",
+            "type": "agreement_scale",
+            "prompt": "I have a clear, practical plan for how to pursue God's purpose for my life, in terms of 'work' / 'calling'",
+            "min_label": "Strongly disagree",
+            "max_label": "Strongly agree",
+            "fixed_once_complete": true
+          },
+          {
+            "id": "pl-peace",
+            "type": "agreement_scale",
+            "prompt": "I am at peace with God's plan for my life",
+            "min_label": "Strongly disagree",
+            "max_label": "Strongly agree",
+            "fixed_once_complete": true
+          }
+        ],
+        "gate": {
+          "clauses": [
+            {
+              "type": "min_text_length",
+              "block": "lt-message",
+              "min": 10,
+              "message": "Write at least one part of your letter (10 characters or more) before sealing it."
+            },
+            { "type": "has_answer", "block": "pl-bible", "message": "Answer all five to continue" },
+            { "type": "has_answer", "block": "pl-gifts", "message": "Answer all five to continue" },
+            { "type": "has_answer", "block": "pl-call", "message": "Answer all five to continue" },
+            { "type": "has_answer", "block": "pl-plan", "message": "Answer all five to continue" },
+            { "type": "has_answer", "block": "pl-peace", "message": "Answer all five to continue" }
+          ]
+        }
+      },
+      {
+        "id": "walk-with-a-coach",
+        "title": "Walk with a coach",
+        "requires": ["onboarding"],
+        "side_card": {
+          "sentence": "When you're ready, ask someone to walk this with you."
+        },
+        "blocks": [
           {
             "id": "coach",
             "type": "coach_checklist",
@@ -157,256 +437,38 @@
                 "commitment": "I'll make time for a few unhurried conversations, and I'll protect them."
               }
             ]
-          },
-          {
-            "id": "to-contacts",
-            "type": "page_break",
-            "skip_label": "I'll sort this later →"
-          },
+          }
+        ],
+        "gate": {
+          "clauses": [
+            { "type": "links_issued", "block": "coach", "min": 1, "message": "Choose a coach and send them their link." }
+          ]
+        }
+      },
+      {
+        "id": "trusted-voices",
+        "title": "Five trusted voices",
+        "requires": ["onboarding"],
+        "side_card": {
+          "sentence": "Invite people who know you well. Their answers sit beside your own in Section 1, combined so you never see whose is whose."
+        },
+        "blocks": [
           {
             "id": "contacts-intro",
             "type": "rich_text",
             "label": "Who knows you best?",
-            "body": "One of the most valuable parts of this course is comparing how you see yourself with how others experience you. We often miss things about ourselves that others can see clearly.\n\nWe need at least 2 people whose opinion you trust – people who know you well enough to be honest. They'll receive a short, anonymous survey about your strengths."
+            "body": "One of the most valuable parts of this course is comparing how you see yourself with how others experience you. We often miss things about ourselves that others can see clearly.\n\nWe need at least 3 people whose opinion you trust – people who know you well enough to be honest. They'll receive a short survey about your strengths, through a link you send them."
           },
           {
             "id": "contacts",
             "type": "contact_list",
-            "min_rows": 2
+            "needed": 3,
+            "optional": 2
           }
         ],
         "gate": {
           "clauses": [
-            { "type": "has_answer", "block": "reason", "message": "Choose what's bringing you to the course to continue." },
-            { "type": "has_answer", "block": "bl-bible", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "bl-gifts", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "bl-call", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "bl-plan", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "bl-peace", "message": "Answer all five to continue" },
-            { "type": "entry_count", "block": "contacts", "min": 2, "allow_none": true, "message": "Add at least 2 people, or leave the list empty to do this later." }
-          ]
-        }
-      },
-      {
-        "id": "designed",
-        "title": "Section 1: How you've been designed",
-        "requires": ["onboarding"],
-        "blocks": [
-          {
-            "id": "gifts-question",
-            "type": "rich_text",
-            "variant": "hint",
-            "label": "The big question",
-            "body": "Based on what people you trust say about you, and your own self-examination, what gifts and talents has God given (and not given) you? Remember – you don't have 'church gifts' and 'non-church gifts'. A teaching gift looks different in a school vs in kids' work, but it's still a teaching gift."
-          },
-          {
-            "id": "gifts-reading",
-            "type": "scripture_reading",
-            "heading": "Read these passages before continuing",
-            "passages": [
-              {
-                "reference": "Romans 12:6–8",
-                "text": "Having gifts that differ according to the grace given to us, let us use them: if prophecy, in proportion to our faith; if service, in our serving; the one who teaches, in his teaching; the one who exhorts, in his exhortation; the one who contributes, in generosity; the one who leads, with zeal; the one who does acts of mercy, with cheerfulness."
-              },
-              {
-                "reference": "1 Corinthians 12:8–10, 28–30",
-                "text": "For to one is given through the Spirit the utterance of wisdom, and to another the utterance of knowledge according to the same Spirit, to another faith by the same Spirit, to another gifts of healing by the one Spirit, to another the working of miracles, to another prophecy, to another the ability to distinguish between spirits, to another various kinds of tongues, to another the interpretation of tongues.\n\nAnd God has appointed in the church first apostles, second prophets, third teachers, then miracles, then gifts of healing, helping, administrating, and various kinds of tongues. Are all apostles? Are all prophets? Are all teachers? Do all work miracles? Do all possess gifts of healing? Do all speak with tongues? Do all interpret?"
-              },
-              {
-                "reference": "1 Peter 4:9–11",
-                "text": "Show hospitality to one another without grumbling. As each has received a gift, use it to serve one another, as good stewards of God's varied grace: whoever speaks, as one who speaks oracles of God; whoever serves, as one who serves by the strength that God supplies—in order that in everything God may be glorified through Jesus Christ. To him belong glory and dominion for ever and ever. Amen."
-              }
-            ],
-            "note": "As you read, reflect: what gifts do you see in yourself? Which do others affirm in you? Which are notably absent – and what might that tell you about how God has designed you?",
-            "confirm_label": "I've read these passages and I'm ready to continue"
-          },
-          {
-            "id": "gifts-activity",
-            "type": "rich_text",
-            "label": "Your activity",
-            "body": "This section uses the Strengths Assessment – a tool where you sort and rate your strengths across 36 areas. You can also invite people you trust to do the same for you."
-          },
-          {
-            "id": "strengths-link",
-            "type": "section_link",
-            "section": "strengths",
-            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 2 trusted people to assess you too.",
-            "button_label": "Open Strengths Assessment →",
-            "holds_what_follows": true
-          },
-          {
-            "id": "gifts-summary",
-            "type": "long_text",
-            "prompt": "Having completed the assessment and read the passages above, summarise: what gifts and talents has God given you? And what has He not given you?",
-            "placeholder": "Draw on the scripture, your assessment results, and what others have told you..."
-          }
-        ],
-        "gate": {
-          "clauses": [
-            {
-              "type": "has_answer",
-              "block": "strengths-sort",
-              "message": "Complete the Strengths Assessment to continue."
-            },
-            {
-              "type": "comparison_visited",
-              "block": "strengths-sort",
-              "message": "View the 'Compare with how others see you' results to continue."
-            },
-            {
-              "type": "has_answer",
-              "block": "gifts-summary",
-              "message": "Complete the gifts reflections to continue."
-            },
-            {
-              "type": "links_issued",
-              "block": "coach",
-              "min": 1,
-              "message": "Choose a coach and send them their link to continue."
-            },
-            {
-              "type": "links_issued",
-              "block": "contacts",
-              "min": 2,
-              "message": "Send at least 2 people their links to continue."
-            }
-          ]
-        }
-      },
-      {
-        "id": "strengths",
-        "title": "Strengths assessment",
-        "estimate": "About 10 minutes",
-        "requires": ["onboarding"],
-        "part_of": "designed",
-        "blocks": [
-          {
-            "id": "strengths-sort",
-            "type": "sort_assessment",
-            "coach_brief": {
-              "title": "Session 1 – Their gifts",
-              "purpose": "Help them believe what the assessment is telling them, and notice where they discount themselves.",
-              "length": "45–60 minutes",
-              "questions": [
-                { "text": "Which of these results surprised you, and which felt obvious?" },
-                { "text": "Where others rated you higher than you rated yourself – why do you think that gap is there?" },
-                { "text": "What is something you are good at that you have stopped noticing because it comes easily?" },
-                { "text": "Which of these strengths do you actually enjoy using, and which just drain you?" }
-              ],
-              "watch_for": [
-                { "text": "People routinely dismiss their strongest gift as \"nothing special\". If they wave something away, slow down and ask about it." },
-                { "text": "A low score is not a failing. Help them read the whole profile, not just hunt for weaknesses." }
-              ],
-              "avoid": "Do not treat the assessment as a verdict. It is a conversation starter, not a diagnosis."
-            }
-          }
-        ],
-        "gate": {
-          "clauses": [
-            {
-              "type": "has_answer",
-              "block": "strengths-sort",
-              "message": "Complete the Strengths Assessment to continue."
-            }
-          ]
-        }
-      },
-      {
-        "id": "workbook",
-        "title": "Sections 2–4: The Workbook",
-        "estimate": "Three or four sittings of half an hour",
-        "requires": ["designed"],
-        "complete_label": "I've finished the workbook",
-        "blocks": [
-          {
-            "id": "workbook-pdf",
-            "type": "download",
-            "file": "whatever-you-do-workbook.pdf",
-            "body": "Sections two to four, to work through on paper.\n\nThis booklet covers the middle of the course, which works better on paper. At the end it will send you back online to finish.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their assessments of you – don’t let that stop you making progress on the workbook.\n\nFor now this is a draft of the workbook. The finished version will take its place.",
-            "button_label": "Download the workbook (PDF)"
-          }
-        ]
-      },
-      {
-        "id": "letter",
-        "title": "Section 5: A letter to your future self",
-        "estimate": "About 15 minutes",
-        "requires": ["workbook"],
-        "blocks": [
-          {
-            "id": "lt-task",
-            "type": "rich_text",
-            "estimate": "About 10 minutes",
-            "variant": "hint",
-            "label": "The task",
-            "body": "Write to yourself as you will be in twelve months' time. You have just done a lot of thinking, and most of it fades faster than you would expect. Put it down now, while it is still warm, and let it find you again when you need it."
-          },
-          {
-            "id": "lt-message",
-            "type": "long_text",
-            "prompt": "Your letter",
-            "placeholder": "Dear me,"
-          },
-          {
-            "id": "pl-intro",
-            "type": "rich_text",
-            "estimate": "About 5 minutes",
-            "body": "You answered these same questions at the start. Let's see where you are now.\n\nTo what extent would you agree with the following statements?"
-          },
-          {
-            "id": "pl-bible",
-            "type": "agreement_scale",
-            "prompt": "I have a detailed understanding of what the Bible teaches about 'work' and 'calling'",
-            "min_label": "Strongly disagree",
-            "max_label": "Strongly agree",
-            "fixed_once_complete": true
-          },
-          {
-            "id": "pl-gifts",
-            "type": "agreement_scale",
-            "prompt": "I have a detailed understanding of what my God-given talents/gifts and limitations are",
-            "min_label": "Strongly disagree",
-            "max_label": "Strongly agree",
-            "fixed_once_complete": true
-          },
-          {
-            "id": "pl-call",
-            "type": "agreement_scale",
-            "prompt": "I have a strong sense of what God's specific 'call' and purpose is for my life",
-            "min_label": "Strongly disagree",
-            "max_label": "Strongly agree",
-            "fixed_once_complete": true
-          },
-          {
-            "id": "pl-plan",
-            "type": "agreement_scale",
-            "prompt": "I have a clear, practical plan for how to pursue God's purpose for my life, in terms of 'work' / 'calling'",
-            "min_label": "Strongly disagree",
-            "max_label": "Strongly agree",
-            "fixed_once_complete": true
-          },
-          {
-            "id": "pl-peace",
-            "type": "agreement_scale",
-            "prompt": "I am at peace with God's plan for my life",
-            "min_label": "Strongly disagree",
-            "max_label": "Strongly agree",
-            "fixed_once_complete": true
-          }
-        ],
-        "gate": {
-          "clauses": [
-            {
-              "type": "min_text_length",
-              "block": "lt-message",
-              "min": 10,
-              "message": "Write at least one part of your letter (10 characters or more) before sealing it."
-            },
-            { "type": "has_answer", "block": "pl-bible", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "pl-gifts", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "pl-call", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "pl-plan", "message": "Answer all five to continue" },
-            { "type": "has_answer", "block": "pl-peace", "message": "Answer all five to continue" }
+            { "type": "links_issued", "block": "contacts", "min": 3, "message": "Add at least 3 people." }
           ]
         }
       }
@@ -486,10 +548,47 @@
         ]
       }
     ],
-    "scoring": { "method": "compositional_share" }
+    "scoring": { "method": "compositional_share" },
+    "tie_break": {
+      "threshold": 4,
+      "cluster": 4,
+      "budget": 10,
+      "statements": {
+        "apostle": ["I'd rather start something new than improve what exists", "I'm drawn to places where nothing has been built yet", "I get restless once something is settled and running well"],
+        "prophet": ["I notice when something is wrong before other people do", "I'll say the uncomfortable thing if it needs saying", "I care more about what's right than what's comfortable"],
+        "evangelist": ["I naturally bring new people into things I care about", "I find it easy to make an idea appealing to outsiders", "I'm energised by talking with people who disagree with me"],
+        "shepherd": ["I notice when someone in a group is struggling", "I'd stay with one person who needs help rather than reach many", "I think about how a decision will affect the people in it"],
+        "teacher": ["I'm satisfied when someone finally understands something", "I break complicated things into simpler parts without thinking", "I want to know why something works, not just that it does"],
+        "deacon": ["I'd rather fix the practical problem than discuss it", "I notice what needs doing and quietly get on with it", "I get real satisfaction from things working properly"],
+        "ponder": ["I need to sit with a question before I can answer it", "I'm drawn to the problem underneath the problem", "I'd rather understand deeply than decide quickly"],
+        "ideate": ["I generate more options than anyone asked for", "I see possibilities that aren't obvious to other people", "I'm energised by a blank page"],
+        "assess": ["I can tell quite quickly whether an idea will work", "I spot the flaw in a plan everyone else is excited about", "People come to me for a straight verdict"],
+        "rally": ["I can get people moving on something", "I'm the one who turns talk into commitment", "I build momentum when the energy is flagging"],
+        "facilitate": ["I draw the quiet person into the conversation", "I help a group find its own answer", "I'm good at getting the best out of other people"],
+        "deliver": ["I finish what other people start", "I'd rather ship something good than perfect it forever", "I'm the one who makes sure it actually happens"]
+      }
+    }
   },
   "observers": {
-    "privacy_notice": "[Draft: this notice must be written properly before anyone real takes part.]\n\n{name} has asked you to help them see their strengths as others see them. You'll sort some strengths into buckets and adjust the intensity of each. Takes about 10–15 minutes.\n\nWhat we keep: your answers, and how you know {name}. You don't give your name: we know who this link was sent to because {name} added you to their list, and that is kept apart from your answers.\n\nWhat {name} sees of your answers: nothing until enough people have answered. Then, the average of everyone's answers, and each person's answers without their name, lowest first, as a word such as \"Strong\" and a dot on a line. {name} may also choose to show this to a trusted third party. Your name is never shown with your answers.\n\nIf you change your mind, you can withdraw while this link works, and your answers will be deleted."
+    "privacy_notice": "[Draft: this notice must be written properly before anyone real takes part.]\n\n{name} has asked you to help them see their strengths as others see them. You'll sort some strengths into buckets and adjust the intensity of each. Takes about 10–15 minutes.\n\nWhat we keep: your answers, and how you know {name}. You don't give your name: we know who this link was sent to because {name} added you to their list. {name} never sees which answers are whose, though the people who run the service can.\n\nWhat {name} sees of your answers: nothing until enough people have answered. Then, the average of everyone's answers, and each person's answers without their name, lowest first, as a word such as \"Strong\" and a dot on a line. {name} may also choose to show this to a trusted third party. Your name is never shown with your answers. Once {name} has looked at the combined results, no new answers are added.\n\nIf you change your mind, you can withdraw at any time, and your answers will be removed: through this link while it works, and after that by asking the people who run the service. If you haven't answered, we'll email you a reminder once a week until your link runs out, and every reminder lets you stop them. This link is yours alone so that you answer only once, can stop the reminders and can withdraw; your answers are combined with everyone else's before {name} sees them.",
+    "reminder": {
+      "subject": "How do you see {name}'s strengths?",
+      "body": "Hi {observer}, {name} asked how you see {name}'s strengths, as part of Whatever You Do. It takes about 10–15 minutes. Please answer through the link {name} sent you, or with the button below. Your link works until {until}.\n\nYour name is never shown to {name} with your answers. {name} gave us your name and email address; we use them only to remind you, once a week until you answer or your link runs out.",
+      "stop": "Don't want these reminders? Stop reminders about {name}",
+      "answer": "Answer for {name} →",
+      "details": "How we handle your details"
+    },
+    "relationship": {
+      "question": "Your relationship to {name}",
+      "choices": [
+        { "id": "family", "label": "Family member" },
+        { "id": "friend", "label": "Close friend" },
+        { "id": "colleague", "label": "Colleague / work contact" },
+        { "id": "church", "label": "Church family / leader" },
+        { "id": "mentor", "label": "Mentor / teacher" },
+        { "id": "other", "label": "Other" }
+      ]
+    }
   },
   "presentation": {
     "results_title": "{name}, here’s your profile",
@@ -522,6 +621,25 @@
       { "construct": "deliver", "tone": "brown", "persona": "The Doer", "description": "Rolling up sleeves and pushing the work over the finish line" }
     ],
     "disclaimer": "Important: This is a free, rapid, directional tool, designed to give you a useful starting point for reflection and conversation. It is not backed by extensive psychometric datasets or rigorous validation (yet). Please treat these results as indicative, not definitive.",
+    "generalist": {
+      "heading": "You’re a generalist",
+      "text": "Your top results are too close to call in both profiles, so neither has one clear leader. That is itself a finding: you draw on several of these strengths in much the same measure."
+    },
+    "tie_break": {
+      "question": "Which is more true of you?",
+      "skip": "Neither fits — skip",
+      "frameworks": { "apest": "Your role among people", "pep": "How you work" },
+      "separated": {
+        "heading": "Separated",
+        "changed": "The top changed after your answers to “Which is more true of you?”.",
+        "same": "The same one leads, now ahead of the others after your answers to “Which is more true of you?”."
+      },
+      "balanced": {
+        "heading": "Genuinely balanced",
+        "circle": "Your answers went in a circle — each option beat one and lost to another. That’s a real result rather than an error: these sit equally in you.",
+        "level": "Your answers put none of these ahead of the others. That’s a real result rather than an error: these sit equally in you."
+      }
+    },
     "standing": {
       "bands": [
         { "at_least": 125, "label": "Leading" },
@@ -570,6 +688,8 @@
       "sort_heading": { "participant": "Sort your strengths", "observer": "Sort {name}'s strengths" },
       "sort_instruction": { "participant": "Choose the bucket that fits best", "observer": "Choose the bucket that fits {name} best" },
       "all_sorted": "All {count} sorted!",
+      "send_or_fine_tune": "You can send your assessment now, or fine-tune how strong each one is in {name} first.",
+      "fine_tune_label": "Continue to fine-tuning →",
       "fine_tune_heading": { "participant": "How strong is each one?", "observer": "How strong is each one in {name}?" },
       "fine_tune_intro": "Grouped by how you sorted them. Adjust the sliders to fine-tune.",
       "slider_min": { "participant": "Not me", "observer": "Not {name}" },

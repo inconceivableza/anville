@@ -17,7 +17,7 @@
     </p>
     {{ block.text.body|linebreaks }}
     {% if block.text.button_label and not block.link.is_locked %}
-      <p><a class="btn btn-primary" href="{% page_url block.link.id block.link.page %}">{{ block.text.button_label }}</a></p>
+      <p><a class="pill" href="{% page_url block.link.id block.link.page %}">{{ block.text.button_label }}</a></p>
     {% endif %}
     <span class="status-chip status-{{ block.link.status }}">{{ block.link.label }}</span>
   </div>

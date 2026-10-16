@@ -1,0 +1,53 @@
+{{- /*
+Copyright (C) New Community Church SE London 2026.
+For licensing information see ../../../../LICENSE.md
+*/ -}}
+{{- /*
+✨ Expired sessions removed each night (docs/server-approach.md, section 7). Sessions are kept in the database,
+each tied to an account, and Django removes the expired ones only when asked. It runs in the application's own
+image, with the web pod's environment.
+*/ -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-clearsessions
+  labels:
+    {{- include "anville.labels" . | nindent 4 }}
+    app.kubernetes.io/component: clearsessions
+spec:
+  schedule: {{ .Values.sessions.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            {{- include "anville.labels" . | nindent 12 }}
+            app.kubernetes.io/component: clearsessions
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: clearsessions
+              image: {{ include "anville.image" . }}
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["python", "manage.py", "clearsessions"]
+              env:
+                {{- include "anville.djangoEnv" . | nindent 16 }}
+              securityContext:
+                {{- include "anville.containerSecurity" . | nindent 16 }}
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: tmp
+              emptyDir: {}

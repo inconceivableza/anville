@@ -1,0 +1,30 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/participant.html" %}
+{% comment %}
+  ✨ One of the tie-break's pairs (ticket 30b), as the content owner's prototype draws it: how far through, a quiet label
+  naming the framework, the question, one statement for each construct as a button, and a quiet skip. A plain form, so
+  it works without JavaScript; each button sends its construct.
+{% endcomment %}
+{% block head_title %}{{ pair.question }}{% endblock head_title %}
+
+{% block content %}
+  <div class="pair-screen">
+    <ol class="pair-steps" aria-hidden="true">
+      {% for done in pair.steps %}<li class="pair-step{% if done %} done{% elif forloop.counter0 == pair.place %} now{% endif %}"></li>{% endfor %}
+    </ol>
+    <p class="pair-framework">{{ pair.framework }}</p>
+    <h1 class="pair-question">{{ pair.question }}</h1>
+    <form method="post" action="{% url 'tie_break' block_id %}">
+      {% csrf_token %}
+      <input type="hidden" name="pair" value="{{ pair.place }}">
+      <div class="pair-options">
+        {% for option in pair.options %}
+          <button type="submit" class="pair-option" name="chosen" value="{{ option.construct }}">{{ option.text }}</button>
+        {% endfor %}
+      </div>
+      <button type="submit" class="pair-skip" name="chosen" value="">{{ pair.skip }}</button>
+    </form>
+    <p class="pair-count">{{ pair.number }} of {{ pair.count }}</p>
+  </div>
+{% endblock content %}
