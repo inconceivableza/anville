@@ -7,9 +7,11 @@ An observer reaches it only through the link they claimed, sends it once, and ne
 """
 
 import json
+import re
 
 import pytest
 from django.test import Client
+from django.utils import timezone
 
 from engine.models import Invitation, ObserverAssessments, ObserverResponse, Response
 from tests.documents import complete_sort, sort_pathway
@@ -36,6 +38,10 @@ def observed_pathway():
     document["presentation"]["sort_wording"] = {
         "sort_heading": {"participant": "Sort your strengths", "observer": "Sort {name}'s strengths"},
     }
+    document.setdefault("observers", {})["relationship"] = {
+        "question": "Your relationship to {name}",
+        "choices": [{"id": "family", "label": "Family member"}, {"id": "friend", "label": "Close friend"}],
+    }
     return document
 
 
@@ -46,9 +52,10 @@ def participant(signed_in_client, load_pathway):  # noqa: F811
     return signed_in_client
 
 
-def send(client, assessment, link=None):
+def send(client, assessment, link=None, relationship=None):
     """✨ Send an observer assessment as the widget's form does: through a link if given, else by the observer cookie."""
-    return client.post(f"{link}assessment/" if link else "/observe/assessment/", {"value": json.dumps(assessment)})
+    posted = {"value": json.dumps(assessment), **({"relationship": relationship} if relationship is not None else {})}
+    return client.post(f"{link}assessment/" if link else "/observe/assessment/", posted)
 
 
 def observer_assessments():
@@ -135,6 +142,27 @@ def test_an_assessment_that_breaks_the_contract_is_refused_and_nothing_is_stored
     assert not ObserverResponse.objects.exists()
 
 
+@pytest.mark.django_db
+def test_the_relationship_chosen_is_stored_with_the_assessment(participant, observer):  # noqa: F811
+    claim(observer, issue_link(participant, "Jo"))
+    asked = the_observers_page(observer).content.decode()
+    assert re.search(r'<select[^>]*name="relationship"', asked)
+
+    send(observer, complete_sort(), relationship="friend")
+
+    assert ObserverResponse.objects.get().relationship == "friend"
+
+
+@pytest.mark.django_db
+def test_a_relationship_outside_the_offered_choices_is_refused_and_nothing_is_stored(participant, observer):  # noqa: F811
+    claim(observer, issue_link(participant, "Jo"))
+
+    refused = send(observer, complete_sort(), relationship="colleague")
+
+    assert refused.status_code == 400
+    assert not ObserverResponse.objects.exists()
+
+
 # Outliving the link (ADR 0007), held apart from who sent it
 
 
@@ -178,6 +206,84 @@ def test_nothing_kept_with_a_sent_assessment_ties_it_to_the_contact_or_their_lin
     assert "contact_id" not in kept and "invitation_id" not in kept
     ties = {invitation.token_hash, invitation.secret_hash, secret}
     assert [field for field, value in kept.items() if str(value) in ties] == []
+
+
+# Withdrawing (ticket 15b)
+
+
+def withdraw(client, link=None):
+    """✨ Withdraw as the observer's page does: through a link if given, else by the observer cookie."""
+    return client.post(f"{link}withdraw/" if link else "/observe/withdraw/")
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("through", ["cookie", "own link"])
+def test_withdrawing_through_the_claimed_link_deletes_that_observers_answers_and_nobody_elses(
+    participant, observer, through  # noqa: F811
+):
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+    someone_else = Client()
+    claim(someone_else, issue_link(participant, "Priya"))
+    kept = complete_sort(a5={"bucket": "strength", "value": 73})
+    send(someone_else, kept)
+
+    withdrawn = withdraw(observer) if through == "cookie" else withdraw(Client(), own_link)
+
+    assert withdrawn.status_code == 200
+    assert observer_assessments().assessments == [kept]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("by", ["unclaimed copy", "claimed copy", "revoked own link", "expired own link"])
+def test_neither_the_participants_copy_nor_a_link_that_stopped_working_can_withdraw(
+    participant, observer, by  # noqa: F811
+):
+    copy = issue_link(participant, "Jo")
+    if by == "unclaimed copy":
+        link, sent = copy, None
+    else:
+        own_link = claim(observer, copy)
+        send(observer, complete_sort())
+        link, sent = (copy if by == "claimed copy" else own_link), [complete_sort()]
+    if by == "revoked own link":
+        participant.post(invitation_action(participant, "Jo", "revoke"))
+    if by == "expired own link":
+        Invitation.objects.update(expires_at=timezone.now())
+
+    refused = withdraw(participant, link)
+
+    assert refused.status_code == 404
+    assert observer_assessments().assessments == (sent or [])
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("through", ["cookie", "own link"])
+def test_opening_the_withdrawal_page_deletes_nothing_and_asks_with_a_post(participant, observer, through):  # noqa: F811
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+
+    opened = observer.get("/observe/withdraw/" if through == "cookie" else f"{own_link}withdraw/")
+
+    assert opened.status_code == 200
+    assert re.search(r'<form method="post" action="[^"]*/withdraw/"', opened.content.decode())
+    assert observer_assessments().assessments == [complete_sort()]
+    assert the_observers_page(observer).status_code == 200
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("through", ["cookie", "own link"])
+def test_after_sending_the_claimed_link_offers_only_the_thanks_and_a_way_to_withdraw(
+    participant, observer, through  # noqa: F811
+):
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+
+    page = (the_observers_page(observer) if through == "cookie" else Client().get(own_link)).content.decode()
+
+    withdraw_at = "/observe/withdraw/" if through == "cookie" else f"{own_link}withdraw/"
+    assert f'href="{withdraw_at}"' in page
+    assert "<form" not in page and "<select" not in page and "Not built yet" not in page
 
 
 # The observer's wording

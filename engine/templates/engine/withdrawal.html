@@ -1,0 +1,28 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/base.html" %}
+{% comment %}
+  ✨ The observer withdrawing (ticket 15b): opening the page only asks, and its button deletes what they sent and ends
+  their link. Then word that it is done, and nothing else, since the link no longer works.
+{% endcomment %}
+{% block head_title %}Withdraw your answers{% endblock head_title %}
+
+{% block content %}
+  <div class="section-header">
+    <h2>Withdraw your answers</h2>
+  </div>
+  {% if withdrawn %}
+    <div class="question-card">
+      <h3>Your answers have been withdrawn</h3>
+      <p>What you sent about {{ name }} has been deleted, and your link no longer works.</p>
+    </div>
+  {% else %}
+    <div class="question-card">
+      <p>Withdrawing deletes what you sent about {{ name }}, and your link will stop working. This can't be undone.</p>
+      <form method="post" action="{{ action }}">
+        {% csrf_token %}
+        <button type="submit" class="pill full">Withdraw my answers</button>
+      </form>
+    </div>
+  {% endif %}
+{% endblock content %}

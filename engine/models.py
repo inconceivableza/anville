@@ -411,6 +411,9 @@ class ObserverResponse(models.Model):
     assessment = models.JSONField(null=True, blank=True)
     written_answers = models.JSONField(default=dict)
     submitted_at = models.DateTimeField(null=True, blank=True)
+    # ✨ How the observer knows the participant, by the id of a choice the document offers, or empty if they chose none.
+    # Stored only: nothing reads it to slice or filter results (ticket 15b).
+    relationship = models.CharField(max_length=64, null=True, blank=True)
     # ✨ Empty for seeded observers, who claimed nothing. Unique, so each claim sends one observer response.
     sent_by = models.CharField(max_length=64, unique=True, null=True, blank=True)
     is_test_data = models.BooleanField(default=False)
@@ -426,14 +429,16 @@ class ObserverResponse(models.Model):
         ]
 
     @classmethod
-    def send(cls, response, secret, assessment, is_test_data=False):
-        """✨ Store the observer assessment sent with a claimed secret, about the participant whose response it is. It
-        counts at once. A second from the same secret raises IntegrityError from the database and changes nothing.
-        `is_test_data` is set only by a seeding command, never from a request."""
+    def send(cls, response, secret, assessment, is_test_data=False, relationship=None):
+        """✨ Store the observer assessment sent with a claimed secret, about the participant whose response it is, with
+        the relationship the observer chose, if any. It counts at once. A second from the same secret raises
+        IntegrityError from the database and changes nothing. `is_test_data` is set only by a seeding command, never
+        from a request."""
         with transaction.atomic():
             return cls.objects.create(
                 response=response,
                 assessment=assessment,
+                relationship=relationship,
                 submitted_at=timezone.now(),
                 sent_by=_sent_by(secret),
                 is_test_data=is_test_data,
@@ -443,6 +448,25 @@ class ObserverResponse(models.Model):
     def sent_with(cls, secret):
         """✨ Whether an observer assessment has been sent with this secret."""
         return cls.objects.filter(sent_by=_sent_by(secret)).exists()
+
+    @classmethod
+    def withdraw(cls, secret):
+        """✨ Delete whatever the observer sent with their claimed secret, found by its hash alone, and end the claim, so
+        their own link stops working and asks nothing again; False, changing nothing, if the secret claims no live link.
+
+        The participant's copy of the link stays used up, as it was, so nothing they can see changes. Ending the claim
+        and deleting happen together or not at all.
+        """
+        if not secret:
+            return False
+        with transaction.atomic():
+            ended = Invitation.objects.filter(secret_hash=_hash_of(secret), expires_at__gt=timezone.now()).update(
+                secret_hash=None
+            )
+            if not ended:
+                return False
+            cls.objects.filter(sent_by=_sent_by(secret)).delete()
+        return True
 
     @classmethod
     def assessments_for(cls, response):
