@@ -58,10 +58,13 @@
       {% else %}
         <p class="completion-done">You marked this section complete. You can still change your answers here.</p>
       {% endif %}
-      <form method="post" action="{% url 'reopen_section' section.id %}">
-        {% csrf_token %}
-        <button type="submit" class="pill ghost small">Mark as not complete</button>
-      </form>
+      {% if section.reopens %}
+        {# ✨ A wizard's completion is never taken back: the hub never asks for it again (ticket 50). #}
+        <form method="post" action="{% url 'reopen_section' section.id %}">
+          {% csrf_token %}
+          <button type="submit" class="pill ghost small">Mark as not complete</button>
+        </form>
+      {% endif %}
     {% endif %}
     {% if page.number > 1 %}<div class="way-on">{% include "engine/previous_page.html" %}</div>{% endif %}
   {% endif %}

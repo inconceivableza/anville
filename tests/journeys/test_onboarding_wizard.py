@@ -86,6 +86,28 @@ def test_completing_the_two_pages_lands_on_the_hub_with_it_complete_and_never_se
 
 
 @pytest.mark.django_db
+def test_once_complete_it_offers_no_way_to_mark_it_not_complete(participant):
+    """✨ Ticket 50: the hub never asks for it again, so it is never taken back (fix-2)."""
+    through_the_wizard(participant)
+
+    page = participant.get(RATINGS_PAGE).content.decode()
+
+    assert "/sections/onboarding/reopen/" not in page
+    assert "Mark as not complete" not in page
+
+
+@pytest.mark.django_db
+def test_once_complete_taking_its_completion_back_is_refused(participant):
+    through_the_wizard(participant)
+
+    refused = participant.post("/sections/onboarding/reopen/")
+
+    assert refused.status_code == 404
+    assert "onboarding" in Response.objects.get().completed_sections
+    assert participant.get("/hub/").status_code == 200
+
+
+@pytest.mark.django_db
 def test_one_part_way_through_lands_on_the_page_they_had_reached(participant):
     through_the_first_page(participant)
 

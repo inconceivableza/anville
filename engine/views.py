@@ -384,10 +384,11 @@ def complete_section(request, section_id):
 @require_POST
 def reopen_section(request, section_id):
     """✨ The participant taking back their own completion. Their answers stay exactly as they left them. A section that
-    completes itself was never theirs to take back, and a side card stays complete (ticket 52)."""
+    completes itself was never theirs to take back, and a side card stays complete (ticket 52). Nor is a wizard's, which
+    the hub never asks for again once given (ticket 50)."""
     state = _participant(request.user)
-    if _completes_itself(_section_or_404(state.version, section_id)):
-        raise Http404("This section is complete once its gate passes, with no completion of its own.")
+    if not _reopens(_section_or_404(state.version, section_id)):
+        raise Http404("This section's completion is not taken back.")
     if state.response is not None:
         state.response.reopen_section(section_id)
     return _see_other("hub")
@@ -1618,6 +1619,7 @@ def _section_page(state, section, page=1, issued=None):
             "complete_label": text_for(section.get("complete_label", "Mark complete"), "participant"),
             "is_part": "part_of" in section,
             "is_side_card": "side_card" in section,
+            "reopens": _reopens(section),
             "blocks": [
                 _block_for_participant(version.document, block, answers, fixed, states, issued, _frozen(state.response))
                 for block in blocks
@@ -1638,6 +1640,12 @@ def _completes_itself(section):
     """✨ Whether a section is complete once its gate passes, with no completion of its own to press: a part of a section
     (ticket 41b), or a hub side card (ticket 52)."""
     return "part_of" in section or "side_card" in section
+
+
+def _reopens(section):
+    """✨ Whether the participant can take back a section's completion: not one that completes itself, nor a wizard,
+    which once complete is never asked for again (ticket 50)."""
+    return not _completes_itself(section) and not section.get("wizard")
 
 
 def _section_this_is_part_of(state, section):
