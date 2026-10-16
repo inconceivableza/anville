@@ -4,16 +4,16 @@
 
 **Blocked by:** A4A-51a (Trusted voices card and page); A4B-51b (Coach card)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** Hub, progress and gates; Engine: sections, tracks, gates, progress; Observers (ADR 0005)
 
-- [ ] Section 1's gate no longer asks for the comparison to have been visited, nor for anyone's link
-- [ ] Walk with a coach is complete once the coach has a link, and Five trusted voices once three people have links. Neither has anything to press, and each stays complete after that: links that later expire or are revoked, or people taken off the list, never lock the Workbook again
-- [ ] The Workbook requires Section 1 and both hub side cards, and while it is locked the hub names the sections still open, for example "Opens once you've finished Walk with a coach and Five trusted voices."
-- [ ] The comparison still needs three answers, and nothing a participant must do to reach the Workbook waits on an observer
+- [x] Section 1's gate no longer asks for the comparison to have been visited, nor for anyone's link
+- [x] Walk with a coach is complete once the coach has a link, and Five trusted voices once three people have links. Neither has anything to press, and each stays complete after that: links that later expire or are revoked, or people taken off the list, never lock the Workbook again
+- [x] The Workbook requires Section 1 and both hub side cards, and while it is locked the hub names the sections still open, for example "Opens once you've finished Walk with a coach and Five trusted voices."
+- [x] The comparison still needs three answers, and nothing a participant must do to reach the Workbook waits on an observer
 
 **Context**
 

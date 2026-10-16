@@ -1509,13 +1509,16 @@ def _section_this_is_part_of(state, section):
 
 def _requirement_links(state, section):
     """✨ Where each of a section's requirements met on another page is met, by its message (ticket 41b): a coach's link
-    on the coach page, people's links on the invitations page. One whose page is not open yet is left out."""
+    on the coach page, people's links on the invitations page. One whose page is not open yet is left out, and so is one
+    met in this section itself, as on a hub side card (ticket 52)."""
     document = state.version.document
     links = {}
     for clause in clauses_of(section):
         if clause["type"] != "links_issued":
             continue
         block = next(block for block in blocks_of(document) if block["id"] == clause["block"])
+        if section_of(document, block["id"])["id"] == section["id"]:
+            continue
         if not _is_open(state, section_of(document, block["id"]), block):
             continue
         is_coach = block["type"] == "coach_checklist"

@@ -152,7 +152,7 @@
             "id": "strengths-link",
             "type": "section_link",
             "section": "strengths",
-            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 2 trusted people to assess you too.",
+            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 3 trusted people to assess you too.",
             "button_label": "Open Strengths Assessment →",
             "holds_what_follows": true
           },
@@ -171,26 +171,9 @@
               "message": "Complete the Strengths Assessment to continue."
             },
             {
-              "type": "comparison_visited",
-              "block": "strengths-sort",
-              "message": "View the 'Compare with how others see you' results to continue."
-            },
-            {
               "type": "has_answer",
               "block": "gifts-summary",
               "message": "Complete the gifts reflections to continue."
-            },
-            {
-              "type": "links_issued",
-              "block": "coach",
-              "min": 1,
-              "message": "Choose a coach and send them their link to continue."
-            },
-            {
-              "type": "links_issued",
-              "block": "contacts",
-              "min": 2,
-              "message": "Send at least 2 people their links to continue."
             }
           ]
         }
@@ -238,7 +221,7 @@
         "title": "The Workbook",
         "number": "02–04",
         "estimate": "Three or four sittings of half an hour",
-        "requires": ["designed"],
+        "requires": ["designed", "walk-with-a-coach", "trusted-voices"],
         "complete_label": "I've finished the workbook",
         "blocks": [
           {
@@ -420,7 +403,12 @@
               }
             ]
           }
-        ]
+        ],
+        "gate": {
+          "clauses": [
+            { "type": "links_issued", "block": "coach", "min": 1, "message": "Choose a coach and send them their link." }
+          ]
+        }
       },
       {
         "id": "trusted-voices",
@@ -434,7 +422,7 @@
             "id": "contacts-intro",
             "type": "rich_text",
             "label": "Who knows you best?",
-            "body": "One of the most valuable parts of this course is comparing how you see yourself with how others experience you. We often miss things about ourselves that others can see clearly.\n\nWe need at least 2 people whose opinion you trust – people who know you well enough to be honest. They'll receive a short survey about your strengths, through a link you send them."
+            "body": "One of the most valuable parts of this course is comparing how you see yourself with how others experience you. We often miss things about ourselves that others can see clearly.\n\nWe need at least 3 people whose opinion you trust – people who know you well enough to be honest. They'll receive a short survey about your strengths, through a link you send them."
           },
           {
             "id": "contacts",
@@ -445,7 +433,7 @@
         ],
         "gate": {
           "clauses": [
-            { "type": "entry_count", "block": "contacts", "min": 2, "allow_none": true, "message": "Add at least 2 people, or leave the list empty to do this later." }
+            { "type": "links_issued", "block": "contacts", "min": 3, "message": "Add at least 3 people." }
           ]
         }
       }
