@@ -189,6 +189,20 @@ def test_a_participant_resets_a_forgotten_password_by_the_emailed_link_and_signs
 
 
 @pytest.mark.django_db
+def test_asking_to_reset_an_unknown_address_looks_the_same_and_sends_nothing(client, settings, mailoutbox):
+    require_the_code(settings)
+    sign_up(client)
+    client.logout()
+
+    known = client.post("/accounts/password/reset/", {"email": "participant@example.com"}, follow=True)
+    unknown = client.post("/accounts/password/reset/", {"email": "nobody@example.com"}, follow=True)
+
+    assert unknown.redirect_chain == known.redirect_chain
+    assert unknown.content == known.content
+    assert [email.to for email in mailoutbox] == [["participant@example.com"]]
+
+
+@pytest.mark.django_db
 def test_a_refused_sign_up_still_says_why_on_the_styled_page(client, settings):
     require_the_code(settings)
 

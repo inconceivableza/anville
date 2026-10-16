@@ -12,9 +12,9 @@
 
 - [x] Sign-in offers "Forgot your password?" again, and the reset pages can be reached
 - [x] A participant who asks for a reset is emailed a link, sets a new password through it, and signs in with that password
-- [ ] Asking for a reset never reveals whether an address has an account
+- [x] Asking for a reset never reveals whether an address has an account
 - [x] On staging, the reset email carries the test-system disclaimer, as every other message does. Already met: the disclaimer wraps every message the site sends
-- [ ] The temporary journey test that asserts reset is neither offered nor reachable gives way to tests of the working flow
+- [x] The temporary journey test that asserts reset is neither offered nor reachable gives way to tests of the working flow
 
 **Context**
 
