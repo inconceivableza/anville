@@ -346,6 +346,13 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - The notice (load the pathway again first) ends with withdrawing at any time, through the link or by asking the people who run the service, and says no new answers are added once the participant has looked.
 - Phone width: "Before you look" and the frozen notes fit with no sideways scroll.
 
+## Observer reminders (after `migrate` and loading the pathway again; a person added at an address not at `example.com`)
+
+- Move every link's clock back eight days with `python manage.py shell -c "from datetime import timedelta; from django.db.models import F; from engine.models import Invitation; Invitation.objects.update(issued_at=F('issued_at') - timedelta(days=8))"`, then run `python manage.py send_reminders`: it says "Sent 1 reminder." and the email printed above it reads "How do you see <name>'s strengths?", names the participant and the day the link stops working, asks for the link the participant sent, says where the name and email came from, and ends with "Stop reminders about <name>" and its link. Run it again: "Sent 0 reminders."
+- Open the stop link in a private window: "Stop reminders about <name>" with a "Stop reminders" button; opening it stops nothing. Press it: "Reminders stopped". Move the clocks back another week and run the command: nothing is sent to that person.
+- The participant's hub and list's page look the same before and after. The observers' notice ends with the reminders sentence.
+- Phone width: the stop page fits with no sideways scroll.
+
 ## Organisations and groups in the operator's admin (`/admin/`, as a superuser)
 
 - The index has an "Organisations and groups" section with Groups, Memberships, Organisations and Permissions, apart from "Authentication and Authorization"'s own Groups.

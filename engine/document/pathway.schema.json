@@ -155,6 +155,22 @@
           "description": "What an observer is told before any question: who asked, what is stored, what the participant will and will not see, and how to withdraw. Paragraphs are separated by a blank line. {name} is replaced with the participant's name. The engine's own draft when left out.",
           "$ref": "#/$defs/text"
         },
+        "reminder": {
+          "description": "The email that reminds an observer who has not answered, once a week while their link works. It is the first message the observer gets, so it says where their name and email came from, what they are used for, how often and until when. {name} is replaced with the participant's name, {observer} with the observer's, and {until} with the day their link stops working. Each field left out is the engine's draft's.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "subject": { "$ref": "#/$defs/text" },
+            "body": {
+              "description": "Paragraphs are separated by a blank line.",
+              "$ref": "#/$defs/text"
+            },
+            "stop": {
+              "description": "The line before the link that stops the reminders.",
+              "$ref": "#/$defs/text"
+            }
+          }
+        },
         "relationship": {
           "description": "How the observer knows the participant, asked with the observer assessment and stored with it, never used to slice or filter results. Not asked when left out.",
           "type": "object",

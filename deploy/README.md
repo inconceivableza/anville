@@ -225,6 +225,8 @@ Remove the old key promptly, as Django's deployment checklist warns: while it is
 
 **Expired sessions.** Sessions are kept in the database, each tied to an account, and nothing else removes the expired ones. A CronJob runs `clearsessions` each night, at 03:45 by default (`sessions.schedule`), clear of the backup's hour. To run it now: `k create job --from=cronjob/anville-clearsessions clearsessions-now`.
 
+**Observer reminders.** Off unless `reminders.enabled` is true in the environment's `values.yaml`. Then a CronJob runs `send_reminders` each morning, at 08:00 UTC by default (`reminders.schedule`), and emails each observer who has not answered, once a week while their link works. Its links are made from `hostname`, so set that first, and without `EMAIL_URL` each reminder is only written to the log. Addresses at reserved example domains (`example.com` and the like) are skipped, so to see one on staging, add a person at an address you can read. To run it now: `k create job --from=cronjob/anville-reminders reminders-now`. Real observers need the production email provider and its processor agreement first.
+
 ## Backups
 
 With `backup.enabled`, a CronJob dumps the database each night, checks that the dump can be read back, and sends it over SFTP to `BACKUP_TARGET`, keeping the newest 30. To run one now:

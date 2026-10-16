@@ -62,6 +62,8 @@ from the variable before it, so the password must be safe inside a URL: letters,
   value: "true"
 - name: DJANGO_HSTS_SECONDS
   value: {{ .Values.web.hstsSeconds | quote }}
+- name: ANVILLE_SITE_URL
+  value: {{ printf "https://%s" .Values.hostname | quote }}
 {{- end }}
 - name: DATABASE_CONN_MAX_AGE
   value: {{ .Values.web.connMaxAge | quote }}

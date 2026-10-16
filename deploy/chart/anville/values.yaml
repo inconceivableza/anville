@@ -95,3 +95,10 @@ sessions:
   # When expired sessions are removed from the database each night (clearsessions). Kept clear of the backup's hour,
   # so the two never run at once.
   schedule: "45 3 * * *"
+
+reminders:
+  # Whether observers who have not answered are emailed a reminder once a week (send_reminders, run daily). Needs a
+  # hostname, since the email's links are made from it, and EMAIL_URL, or each reminder is only written to the log.
+  enabled: false
+  # When the daily run goes, in UTC: morning in the UK, clear of the backup's and the session clearing's hours.
+  schedule: "0 8 * * *"
