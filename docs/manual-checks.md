@@ -71,6 +71,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - "Your consent" sits quietly at the foot of the hub, including on the empty "Nothing to begin yet" hub.
 - Once agreed, "Go to your pathway" and "Withdraw my consent" look alike in size, stacked as the first two buttons were.
 - With a section open in one tab, withdraw in another, then type in the first tab: the page goes to the consent page rather than showing "Saved" or an error.
+- With an observer's link and the coach's link open in a private window, withdraw: both now show the same refusal as a wrong link, naming nobody, also at phone width. The observer's "withdraw" page still opens. Agree again: both links work as before.
 
 ## The header and the pathway sidebar (every participant page)
 

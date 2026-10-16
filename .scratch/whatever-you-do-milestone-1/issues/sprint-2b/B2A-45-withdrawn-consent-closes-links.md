@@ -14,7 +14,7 @@
 - [x] While the participant has withdrawn, the coach's link gets the same refusal: no commitments to accept or decline, and no results or comparison, whatever the participant had ticked
 - [x] Giving consent again opens the links again, as they were: an unexpired link that was not revoked works, a claim made before still holds, answers already sent still count, and the coach still sees what the participant had shared. Withdrawing changes no link's expiry
 - [x] Only a withdrawal closes the links: a participant whose consent is merely out of date, because the consent text changed and they have not yet agreed again, keeps them working
-- [ ] The consent page says, where it offers withdrawal, that the participant's observers and coach can no longer use their links until consent is given again
+- [x] The consent page says, where it offers withdrawal, that the participant's observers and coach can no longer use their links until consent is given again
 
 **Context**
 
