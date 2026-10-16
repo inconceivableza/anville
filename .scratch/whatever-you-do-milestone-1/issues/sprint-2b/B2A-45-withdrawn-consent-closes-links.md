@@ -4,7 +4,7 @@
 
 **Blocked by:** B1A-15b (The observer's relationship and withdrawal)
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct); before any real participant data
 
