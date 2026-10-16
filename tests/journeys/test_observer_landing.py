@@ -25,6 +25,7 @@ from tests.journeys.test_contact_list import (  # noqa: F401  (participant is a 
     save_contacts,
     with_a_contact_list,
 )
+from tests.journeys.test_consent import withdraw_consent
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_invitations import (  # noqa: F401  (observer is a fixture, used by name)
     A_WRONG_TOKEN,
@@ -157,6 +158,46 @@ def test_starting_from_a_wrong_expired_or_revoked_link_is_refused_as_opening_one
     assert refused.status_code == 404
     assert refused.content.decode() == refused_as_wrong.content.decode()
     assert the_observers_page(observer).status_code == 404
+
+
+# While the participant's consent is withdrawn (ticket 45)
+
+
+@pytest.mark.django_db
+def test_while_the_participant_has_withdrawn_every_observers_link_is_refused_and_nothing_is_claimed(
+    participant, observer
+):
+    save_contacts(participant, JO, PRIYA)
+    unclaimed = issue_link(participant, "Priya")
+    own_link = claim(observer, issue_link(participant, "Jo"))
+
+    withdraw_consent(participant)
+
+    stranger = Client()
+    for refused in (
+        stranger.get(unclaimed),
+        start(stranger, unclaimed),
+        stranger.get(own_link),
+        the_observers_page(observer),
+    ):
+        assert refused.status_code == 404
+    assert not Invitation.objects.filter(contact__name="Priya", claimed_at__isnull=False).exists()
+
+
+@pytest.mark.django_db
+def test_while_the_participant_has_withdrawn_a_link_is_refused_exactly_as_a_revoked_one_is(participant, observer):
+    """✨ So a link says nothing of the participant's consent to whoever holds it."""
+    save_contacts(participant, JO, PRIYA)
+    revoked = issue_link(participant, "Priya")
+    participant.post(invitation_action(participant, "Priya", "revoke"))
+    refused_as_revoked = observer.get(revoked).content.decode()
+    link = issue_link(participant, "Jo")
+
+    withdraw_consent(participant)
+
+    refused = observer.get(link)
+    assert refused.status_code == 404
+    assert refused.content.decode() == refused_as_revoked
 
 
 # The privacy notice

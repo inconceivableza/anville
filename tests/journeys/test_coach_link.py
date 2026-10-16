@@ -19,6 +19,7 @@ import time_machine
 from engine.models import Contact, Invitation, ObserverResponse, Response
 from tests.journeys.test_answers import shown
 from tests.journeys.test_coach_checklist import QUESTION_IDS, choose, step, text, the_coach_checklist
+from tests.journeys.test_consent import withdraw_consent
 from tests.journeys.test_contact_list import JO, ONBOARDING, save_contacts, with_a_contact_list
 from tests.journeys.test_hub import a_fresh_participant, signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_invitations import (  # noqa: F401  (observer is a fixture, used by name)
@@ -130,6 +131,23 @@ def test_wrong_expired_and_revoked_coach_links_are_refused_alike_saying_nothing_
     for detail in ("Sam", "sam@example.com", "participant"):
         assert detail not in page
     assert told(participant) != "accepted"
+
+
+@pytest.mark.django_db
+def test_while_the_participant_has_withdrawn_the_coachs_link_is_refused_as_a_dead_one_and_takes_no_answer(
+    participant, observer
+):
+    """✨ Ticket 45."""
+    link = issue_coach_link(participant)
+    refused_as_wrong = observer.get(f"/coaching/{A_WRONG_TOKEN}/").content.decode()
+    withdraw_consent(participant)
+
+    refused = observer.get(link)
+
+    assert refused.status_code == 404
+    assert refused.content.decode() == refused_as_wrong
+    assert answer_as_coach(observer, link, "accept").status_code == 404
+    assert Invitation.objects.get().coach_answer is None
 
 
 @pytest.mark.django_db

@@ -10,6 +10,7 @@ from django.db import models, transaction
 from django.db.models import F, Func, Value
 from django.utils import timezone
 
+from access.consent import withdrawn_participants
 from engine.document.gates import comparison_visit_key, links_issued_key
 
 
@@ -256,6 +257,9 @@ class Invitation(models.Model):
     It is never claimed: the participant holding a copy could claim it as easily as use it. Only the answer is kept, on
     the link, so revoking or reissuing asks again. Each kind of link works only at its own address. Once the coach has
     accepted, the participant's consent for them to see the results and comparison is kept on the link too (ticket 27).
+
+    While the participant's consent is withdrawn, every link they gave out is refused as a dead one is, and works again,
+    as it was, once they agree again (ticket 45). Nothing about the link changes meanwhile, its expiry included.
     """
 
     class CoachAnswer(models.TextChoices):
@@ -296,20 +300,28 @@ class Invitation(models.Model):
     @classmethod
     def live(cls, token, role=Contact.Role.CONTACT):
         """✨ The invitation a token belongs to, claimed or not, or None if it is wrong, expired, revoked or a link for
-        someone in another role (an observer's link is no coach's, and the reverse). None says which."""
+        someone in another role (an observer's link is no coach's, and the reverse), or while the participant's consent
+        is withdrawn. None says which."""
         return (
-            cls.objects.select_related("contact__response__participant", "contact__response__version")
+            cls._while_consent_stands()
+            .select_related("contact__response__participant", "contact__response__version")
             .filter(token_hash=_hash_of(token), expires_at__gt=timezone.now(), contact__role=role)
             .first()
         )
 
     @classmethod
+    def _while_consent_stands(cls):
+        """✨ Every link but those of a participant whose consent is withdrawn."""
+        return cls.objects.exclude(contact__response__participant__in=withdrawn_participants())
+
+    @classmethod
     def claim(cls, token):
         """✨ Exchange an unclaimed, live observer's token for the observer's own secret, returned once; None if the
-        token is dead, already claimed or a coach's. One UPDATE, so of two claims at once exactly one wins."""
+        token is dead, already claimed or a coach's, or the participant's consent is withdrawn. One UPDATE, so of two
+        claims at once exactly one wins."""
         secret = secrets.token_urlsafe(32)
         now = timezone.now()
-        claimed = cls.objects.filter(
+        claimed = cls._while_consent_stands().filter(
             token_hash=_hash_of(token), expires_at__gt=now, claimed_at__isnull=True, contact__role=Contact.Role.CONTACT
         ).update(secret_hash=_hash_of(secret), claimed_at=now)
         return secret if claimed else None
@@ -317,8 +329,9 @@ class Invitation(models.Model):
     @classmethod
     def answer_as_coach(cls, token, answer):
         """✨ Keep a coach's answer, given through their live link, and nothing else; False if the link is dead or has
-        been answered already. One UPDATE, so of two answers at once exactly one is kept."""
-        answered = cls.objects.filter(
+        been answered already, or the participant's consent is withdrawn. One UPDATE, so of two answers at once exactly
+        one is kept."""
+        answered = cls._while_consent_stands().filter(
             token_hash=_hash_of(token),
             expires_at__gt=timezone.now(),
             contact__role=Contact.Role.COACH,
@@ -355,12 +368,15 @@ class Invitation(models.Model):
         )
 
     @classmethod
-    def claimed_by(cls, secret):
-        """✨ The live invitation an observer's secret claimed, with its contact, or None, saying nothing of why."""
+    def claimed_by(cls, secret, *, for_withdrawal=False):
+        """✨ The live invitation an observer's secret claimed, with its contact, or None, saying nothing of why: also
+        while the participant's consent is withdrawn, unless it is `for_withdrawal`, since closing a link never stops an
+        observer taking back what they sent (spec, Participants, access and consent)."""
         if not secret:
             return None
         return (
-            cls.objects.select_related("contact__response__participant", "contact__response__version")
+            (cls.objects if for_withdrawal else cls._while_consent_stands())
+            .select_related("contact__response__participant", "contact__response__version")
             .filter(secret_hash=_hash_of(secret), expires_at__gt=timezone.now())
             .first()
         )
@@ -433,8 +449,19 @@ class ObserverResponse(models.Model):
         """✨ Store the observer assessment sent with a claimed secret, about the participant whose response it is, with
         the relationship the observer chose, if any. It counts at once. A second from the same secret raises
         IntegrityError from the database and changes nothing. `is_test_data` is set only by a seeding command, never
-        from a request."""
+        from a request.
+
+        The claimed link's row is locked first, as a withdrawal's ending of the claim locks it, so a send and a
+        withdrawal at once take turns: a send that finds the claim ended meanwhile stores nothing and returns None, and
+        one that went first is deleted by the withdrawal."""
         with transaction.atomic():
+            claimed = (
+                Invitation.objects.select_for_update()
+                .filter(secret_hash=_hash_of(secret), expires_at__gt=timezone.now())
+                .first()
+            )
+            if claimed is None:
+                return None
             return cls.objects.create(
                 response=response,
                 assessment=assessment,

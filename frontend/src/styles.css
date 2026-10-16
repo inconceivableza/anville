@@ -2056,7 +2056,8 @@ form + .way-on,
   margin-bottom: 4px;
 }
 
-/* ✨ A demo deployment's notice, on the homepage and the account pages (ticket 26): amber, as a caution is
+/* ✨ A demo deployment's notice, on the homepage and the account pages (ticket 26), the hub and the pages observers
+   and coaches land on (ticket 46): amber, as a caution is
    elsewhere, so it does not read as part of the pathway's own content. */
 
 .demo-notice {
@@ -2083,6 +2084,28 @@ form + .way-on,
 .hero-copy .demo-notice {
   max-width: 520px;
   margin: var(--space-xl) auto 0;
+}
+
+/* ✨ The smaller notice, atop every other page (ticket 46): one thin amber line in the page's flow, so it is plainly
+   seen but covers nothing and does not compete with the page's own content. */
+
+.demo-strip {
+  background: var(--warn-pale);
+  border-bottom: 1px solid var(--warn);
+  padding: 6px var(--space-md);
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink);
+  line-height: 1.4;
+  text-align: center;
+}
+
+.demo-strip strong {
+  color: var(--warn-text);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 6px;
 }
 
 /* Scripture reading: the passages, the note beneath them, and the confirmation that opens the activity */

@@ -42,6 +42,13 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Phone width: the headline fits without sideways scrolling, step 4's four-column roadmap is still legible, the Begin buttons are easy to tap, each step's mockup sits above its words, and the impact figures stay beside their text.
 - Signed out, both "Begin →" buttons open sign-up; signed in, both open the hub. Signing in, and agreeing to consent, both land on the hub, not the homepage.
 
+## The demo notice beyond the homepage (ticket 46; `ANVILLE_DEMO_NOTICE` set in `.env`)
+
+- The hub, an observer's link before starting, and the coach's link show the full amber "Demo" notice at the top of the page, as the sign-up page does, and no thin strip.
+- Every other page (a section, results, the comparison, invitations, credits, the observer's own page after starting) shows a thin amber strip at the very top, "DEMO Use made-up details, not your own.", and not the full notice.
+- Phone width: the strip stays on one or two lines, easy to read, and covers nothing: the header and the page's first lines sit below it, not under it.
+- With it unset, no page shows either.
+
 ## Sign up
 
 - "I am 18 or over" sits beside its checkbox, as "Remember me" does on sign in.
@@ -80,6 +87,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - "Your consent" sits quietly at the foot of the hub, including on the empty "Nothing to begin yet" hub.
 - Once agreed, "Go to your pathway" and "Withdraw my consent" look alike in size, stacked as the first two buttons were.
 - With a section open in one tab, withdraw in another, then type in the first tab: the page goes to the consent page rather than showing "Saved" or an error.
+- With an observer's link and the coach's link open in a private window, withdraw: both now show the same refusal as a wrong link, naming nobody, also at phone width. The observer's "withdraw" page still opens. Agree again: both links work as before.
 
 ## The header and the pathway sidebar (every participant page)
 
@@ -112,11 +120,12 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 ## Back to the hub and Section 1 (ticket 41b)
 
 - Completing onboarding, and later Section 1, lands on the hub with the next step's card highlighted.
-- Before Section 1's reading is confirmed, the Strengths assessment shows "Locked" and is not a link, on the hub and in "Your pathway", and the hub says "Opens from Section 1: How you've been designed, once you've read the passages."; typing `/sections/strengths/` lands on the hub. Once the reading is confirmed, it opens.
+- Before Section 1's reading is confirmed, the Strengths assessment shows "Locked" and is not a link, on the hub and in "Your pathway", and the hub says "Opens from How you've been designed, once you've read the passages."; typing `/sections/strengths/` lands on the hub. Once the reading is confirmed, it opens.
 - On the hub, the Strengths assessment sits inside Section 1's card, indented and quieter, on a line of its own; in "Your pathway" it is indented under Section 1. Both read well at phone width.
 - A screen reader announces the Strengths assessment as a list nested within Section 1's entry.
-- The Strengths assessment's page starts with "← Back to Section 1: How you've been designed" and has no "Mark complete", before or after the sort. Once the sort is in, its chip reads "Complete" on the hub, in the sidebar and on Section 1's card.
-- The results page's "← Back to Section 1: …" and the comparison's closing "← Return to Section 1: How you've been designed" both land on Section 1.
+- The Strengths assessment's page starts with "← Back to How you've been designed" and has no "Mark complete", before or after the sort. Once the sort is in, its chip reads "Complete" on the hub, in the sidebar and on Section 1's card.
+- The results page's "← Back to How you've been designed" and the comparison's closing "← Return to How you've been designed" both land on Section 1.
+- On the hub, Section 1 and Section 5 read "How you've been designed" and "A letter to your future self", with no "Section 1: " or "Section 5: " before them, beside their "01" and "05".
 - On Section 1, with the coach's or the observers' links not yet sent, those two requirements beneath "Mark complete" are links, to the coach page and the invitations page; once met, each is ticked and plain.
 
 ## Autosaved answers (long text, 1–10 scale, single select)
