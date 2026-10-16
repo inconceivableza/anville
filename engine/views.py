@@ -1235,7 +1235,8 @@ def _observers_page(request, secret, own_link=None, came_by_link=False):
             "widget": BLOCK_TYPES[scored["type"]].widget(document, "observer", name),
             "action": reverse("send_assessment_by_link", args=[secret]) if came_by_link else reverse("send_assessment"),
         }
-    context = {"name": name, "own_link": own_link, "assessment": assessment, "sent": sent}
+    withdraw_at = reverse("withdrawal_by_link", args=[secret]) if came_by_link else reverse("withdrawal")
+    context = {"name": name, "own_link": own_link, "assessment": assessment, "sent": sent, "withdraw_at": withdraw_at}
     shown = render(request, "engine/observer.html", context)
     shown["Cache-Control"] = "no-store"
     return shown

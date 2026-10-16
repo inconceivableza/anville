@@ -3,8 +3,8 @@
 {% extends "engine/base.html" %}
 {% comment %}
   ✨ The observer's own page, once they have claimed their link. As they claim it, their own link is shown this once
-  to bookmark, since the one they were sent is now used up. Then the observer assessment until it is sent, and thanks
-  after.
+  to bookmark, since the one they were sent is now used up. Then the observer assessment until it is sent, and after
+  it only thanks and the way to withdraw (ticket 15b).
 {% endcomment %}
 {% block head_title %}Answering for {{ name }}{% endblock head_title %}
 
@@ -27,6 +27,7 @@
     <div class="question-card">
       <h3>Thank you</h3>
       <p>Your assessment has been sent. It will help {{ name }} understand how God has designed them – that's a real gift.</p>
+      <p><a href="{{ withdraw_at }}">Withdraw my answers</a></p>
     </div>
   {% elif assessment %}
     {% comment %}
@@ -47,6 +48,6 @@
         <noscript><p>The sort needs JavaScript. Turn it on in your browser, then reload this page.</p></noscript>
       </form>
     {% endwith %}
+    <p>[Not built yet: the written questions come in a later version.]</p>
   {% endif %}
-  <p>[Not built yet: the written questions come in a later version.]</p>
 {% endblock content %}

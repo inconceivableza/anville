@@ -231,6 +231,21 @@ def test_opening_the_withdrawal_page_deletes_nothing_and_asks_with_a_post(partic
     assert the_observers_page(observer).status_code == 200
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize("through", ["cookie", "own link"])
+def test_after_sending_the_claimed_link_offers_only_the_thanks_and_a_way_to_withdraw(
+    participant, observer, through  # noqa: F811
+):
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+
+    page = (the_observers_page(observer) if through == "cookie" else Client().get(own_link)).content.decode()
+
+    withdraw_at = "/observe/withdraw/" if through == "cookie" else f"{own_link}withdraw/"
+    assert f'href="{withdraw_at}"' in page
+    assert "<form" not in page and "<select" not in page and "Not built yet" not in page
+
+
 # The observer's wording
 
 
