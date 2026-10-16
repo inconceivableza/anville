@@ -17,10 +17,8 @@ import pytest
 from django.utils.html import escape
 
 from engine.models import Contact, ObserverResponse, Response
-from tests.journeys.pages import gate_checklist
 from tests.journeys.test_coach_checklist import choose
-from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
-from tests.journeys.test_invitations import invitation_action, issue_link
+from tests.journeys.test_hub import hub_entry, signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.prototype import js_string
 from tests.journeys.test_whatever_you_do_faithful_port import (
     A_LETTER,
@@ -28,9 +26,6 @@ from tests.journeys.test_whatever_you_do_faithful_port import (
     ADD_FIVE,
     ANSWER_ALL_FOUR,
     BASELINE_STATEMENTS,
-    COMPLETE_THE_ASSESSMENT,
-    COMPLETE_THE_REFLECTIONS,
-    SECTION_1,
     VIEW_THE_COMPARISON,
     add_people,
     answer,
@@ -38,7 +33,6 @@ from tests.journeys.test_whatever_you_do_faithful_port import (
     move_past,
     onboarding_pages,
     submit_the_sort,
-    visit_the_comparison,
 )
 from tests.journeys.test_whatever_you_do_faithful_port import SLOTS as PROTOTYPE_SLOTS
 from tests.journeys.test_whatever_you_do_faithful_port import the_pathway as the_faithful_port
@@ -55,9 +49,10 @@ SAYS_HOW_MUCH = {
     ),
 }
 SLOTS = (*PROTOTYPE_SLOTS, "peace")
-# ✨ Two people rather than the prototype's five, for now, so the pathway can be tried without inventing five
-# (the developer's call, 2026-09-29).
-ADD_TWO = "Add at least 2 people, or leave the list empty to do this later."
+# ✨ Three people rather than the prototype's five, each with their link (ticket 52), as the list marks three needed
+# (ticket 51a). The two side cards' gates, which complete them with nothing to press.
+ADD_THREE = "Add at least 3 people."
+SEND_THE_COACH = "Choose a coach and send them their link."
 # ✨ Before we begin's coach and contacts pages became the hub side cards Walk with a coach and Five trusted voices
 # (ticket 50).
 COACH_PAGE = "/sections/walk-with-a-coach/"
@@ -166,22 +161,27 @@ def test_progress_counts_the_pathways_sections(participant):
 
 
 @pytest.mark.django_db
-def test_once_anyone_is_added_five_trusted_voices_needs_only_two_for_now(participant):
+def test_walk_with_a_coach_completes_once_the_coach_has_a_link_and_five_trusted_voices_once_three_people_have(
+    participant,
+):
+    """✨ Neither has anything to press (ticket 52): choosing the coach makes their link (ticket 51b), and adding a
+    person theirs (ticket 51a)."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
-    add_people(participant, 1)
+    assert "1 of 7 sections complete" in participant.get("/hub/").content.decode()
 
-    refused = complete(participant, "trusted-voices")
+    choose(participant)
+    assert "2 of 7 sections complete" in participant.get("/hub/").content.decode()
 
-    assert refused.status_code == 400
-    assert ADD_TWO in refused.content.decode()
     add_people(participant, 2)
-    assert complete(participant, "trusted-voices").status_code == 303
+    assert "2 of 7 sections complete" in participant.get("/hub/").content.decode()
+    add_people(participant, 3)
+    assert "3 of 7 sections complete" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db
 def test_the_contact_list_opens_with_three_rows_needed_and_two_optional(participant):
-    """✨ Three needed (ticket 51a), while the gate still asks for two for now (ticket 52's)."""
+    """✨ Three needed (ticket 51a), as its gate and its introduction ask (ticket 52)."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
 
@@ -189,7 +189,7 @@ def test_the_contact_list_opens_with_three_rows_needed_and_two_optional(particip
 
     assert page.count('name="email"') == 5
     assert (page.count(">Needed<"), page.count(">Optional<")) == (3, 2)
-    assert "We need at least 2 people whose opinion you trust" in page
+    assert "We need at least 3 people whose opinion you trust" in page
 
 
 @pytest.mark.django_db
@@ -421,7 +421,7 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
                 clause["message"] = ANSWER_ALL_FIVE
         plan_clause = next(index for index, clause in enumerate(clauses) if clause.get("block") == f"{prefix}-plan")
         clauses.insert(plan_clause + 1, {"type": "has_answer", "block": f"{prefix}-peace", "message": ANSWER_ALL_FIVE})
-    two_contacts_for_now(expected)
+    three_people_each_with_their_link(expected)
     the_workbook_in_place_of_sections_2_to_4(expected)
 
     assert without_the_next_step_and_photos(
@@ -469,156 +469,131 @@ def without_numbers(document):
 def the_workbook_in_place_of_sections_2_to_4(document):
     """✨ Sections 2–4 are done on paper here, so this pathway leaves them out, keeping them in the faithful port, and
     offers the content owner's workbook in their place (ticket 40). The Workbook is new content with nothing in the
-    faithful port to compare it with, so it is taken as it is; the tests above say what it does. Section 1 asks for
-    the coach's link and two observers' links, which opens the Workbook, and the letter waits for the Workbook."""
+    faithful port to compare it with, so it is taken as it is; the tests above say what it does. Section 1 is completed
+    on the participant's own work, without the comparison visited (ticket 52); the Workbook opens once it and both side
+    cards are complete, and the letter waits for the Workbook."""
     sections = document["content"]["sections"]
     sections[:] = [section for section in sections if section["id"] not in ("shape", "calling", "growth")]
     workbook = next(s for s in without_estimates(the_pathway())["content"]["sections"] if s["id"] == "workbook")
     strengths = next(index for index, section in enumerate(sections) if section["id"] == "strengths")
     sections.insert(strengths + 1, workbook)
     designed = next(section for section in sections if section["id"] == "designed")
-    designed["gate"]["clauses"] += [
-        {"type": "links_issued", "block": "coach", "min": 1, "message": SEND_THE_COACH},
-        {"type": "links_issued", "block": "contacts", "min": 2, "message": SEND_TWO},
+    designed["gate"]["clauses"] = [
+        clause for clause in designed["gate"]["clauses"] if clause["message"] != VIEW_THE_COMPARISON
     ]
     next(section for section in sections if section["id"] == "letter")["requires"] = ["workbook"]
 
 
-def two_contacts_for_now(document):
-    """✨ The faithful port asks for the prototype's five people; this pathway asks for two, in each place it says so:
-    onboarding's list, and Section 1's Strengths assessment card."""
+def three_people_each_with_their_link(document):
+    """✨ The faithful port asks for the prototype's five people, or none for now; this pathway asks for three, each with
+    their link (ticket 52), in each place it says so: onboarding's list, which became Five trusted voices, and Section
+    1's Strengths assessment card."""
     for block in document["content"]["sections"][1]["blocks"]:
         if block["id"] == "strengths-link":
-            block["body"] = block["body"].replace("at least 5 trusted people", "at least 2 trusted people")
+            block["body"] = block["body"].replace("at least 5 trusted people", "at least 3 trusted people")
     onboarding = document["content"]["sections"][0]
     for block in onboarding["blocks"]:
         if block["type"] == "contact_list":
             block.update(needed=3, optional=2)
         if block["id"] == "contacts-intro":
-            block["body"] = block["body"].replace("at least 5 people", "at least 2 people")
-    for clause in onboarding["gate"]["clauses"]:
-        if clause["message"] == ADD_FIVE:
-            clause.update(min=2, message=ADD_TWO)
+            block["body"] = block["body"].replace("at least 5 people", "at least 3 people")
+    onboarding["gate"]["clauses"] = [
+        {"type": "links_issued", "block": "contacts", "min": 3, "message": ADD_THREE} if clause["message"] == ADD_FIVE
+        else clause
+        for clause in onboarding["gate"]["clauses"]
+    ]
 
 
 # The Workbook, in place of Sections 2–4 (ticket 40)
 
-# ✨ One sentence whether or not a coach has been chosen, since skipping the coach in onboarding put the choice off.
-SEND_THE_COACH = "Choose a coach and send them their link to continue."
-SEND_TWO = "Send at least 2 people their links to continue."
 WORKBOOK_PDF = "/downloads/workbook-pdf/"
+WORKBOOK = "/sections/workbook/"
 
 
-def through_section_1_without_inviting(client):
-    """✨ Onboarding done, then everything Section 1 asks of the participant themselves: the reading, the sort, the
-    comparison visited (with no observer answers, its below-minimum explanation) and the reflection."""
+def through_section_1(client):
+    """✨ Onboarding done, then everything Section 1 asks: the participant's own work alone, the reading, the sort and
+    the reflection (ticket 52)."""
     answer_onboarding(client)
     complete(client, "onboarding")
     answer(client, "gifts-reading", "true")
     submit_the_sort(client)
-    visit_the_comparison(client)
     answer(client, "gifts-summary", A_REFLECTION)
     return client
 
 
 def invite_everyone(client):
-    """✨ A coach chosen, which issues their link, and two people added and each given a link."""
+    """✨ A coach chosen, which makes their link, and three people added, each with their link."""
     choose(client)
-    add_people(client, 2)
-    issue_link(client, "Person 0")
-    issue_link(client, "Person 1")
+    add_people(client, 3)
 
 
 def through_to_the_workbook(client):
-    """✨ Section 1 done with everyone invited and completed, which opens the Workbook."""
-    through_section_1_without_inviting(client)
-    invite_everyone(client)
+    """✨ Section 1 completed, and a coach and three people given links, which opens the Workbook."""
+    through_section_1(client)
     assert complete(client, "designed").status_code == 303
+    invite_everyone(client)
     return client
 
 
 @pytest.mark.django_db
-def test_section_1_is_completed_only_once_the_coach_and_two_people_have_their_links(participant):
-    """✨ Skipping the coach in onboarding put the choice off until here, so a coach is needed (ticket 40). It is
-    working links that count: choosing the coach makes theirs (ticket 51b), and adding a person theirs (ticket 51a)."""
-    client = through_section_1_without_inviting(participant)
-    choose(client)
-    add_people(client, 1)
+def test_section_1_completes_without_the_comparison_visited_and_without_any_link(participant):
+    """✨ Reversing ticket 16c (ticket 52): Section 1 is completed on the participant's own work."""
+    client = through_section_1(participant)
 
-    refused = complete(client, "designed")
-
-    assert refused.status_code == 400
-    assert gate_checklist(refused.content.decode()) == {
-        COMPLETE_THE_ASSESSMENT: True,
-        VIEW_THE_COMPARISON: True,
-        COMPLETE_THE_REFLECTIONS: True,
-        SEND_THE_COACH: True,
-        SEND_TWO: False,
-    }
-    add_people(client, 2)
     assert complete(client, "designed").status_code == 303
+    assert not Contact.objects.exists()
+    assert Response.objects.get().comparisons_visited == {}
 
 
 @pytest.mark.django_db
-def test_a_participant_with_no_coach_is_asked_for_their_coachs_link(participant):
-    client = through_section_1_without_inviting(participant)
-    add_people(client, 2)
-    issue_link(client, "Person 0")
-    issue_link(client, "Person 1")
-
-    refused = complete(client, "designed")
-
-    assert refused.status_code == 400
-    assert gate_checklist(refused.content.decode())[SEND_THE_COACH] is False
-
-
-def gate_links(page):
-    """✨ The gate's messages that are links, as {message: where it leads}."""
-    linked = re.findall(r'<a [^>]*href="([^"]*)"[^>]*>\s*<span class="gate-message">(.*?)</span>', page, re.S)
-    return {message: href for href, message in linked}
-
-
-@pytest.mark.django_db
-def test_section_1s_unmet_links_lead_to_the_coach_page_and_the_invitations_page(participant):
-    """✨ Ticket 41b: Section 1 says what it is still waiting on, and leads there."""
-    client = through_section_1_without_inviting(participant)
-
-    page = client.get(SECTION_1).content.decode()
-
-    assert gate_links(page) == {SEND_THE_COACH: f"{COACH_PAGE}#block-coach", SEND_TWO: "/invitations/"}
-
-
-@pytest.mark.django_db
-def test_a_revoked_link_no_longer_counts(participant):
-    client = through_section_1_without_inviting(participant)
-    invite_everyone(client)
-
-    client.post(invitation_action(client, "Person 1", "revoke"))
-
-    refused = complete(client, "designed")
-    assert refused.status_code == 400
-    assert gate_checklist(refused.content.decode())[SEND_TWO] is False
-
-
-@pytest.mark.django_db
-def test_the_workbook_opens_once_section_1_is_complete_without_waiting_on_any_observer(participant):
-    client = through_section_1_without_inviting(participant)
-    invite_everyone(client)
-    assert client.get("/sections/workbook/").status_code == 302
-
+def test_the_workbook_stays_locked_until_section_1_and_both_cards_are_complete_and_names_those_still_open(
+    participant,
+):
+    client = through_section_1(participant)
     complete(client, "designed")
+    assert client.get(WORKBOOK).status_code == 302
+    assert escape("Opens once you've finished Walk with a coach and Five trusted voices.") in hub_entry(
+        client.get("/hub/").content.decode(), "The Workbook"
+    )
 
-    assert client.get("/sections/workbook/").status_code == 200
+    choose(client)
+    assert client.get(WORKBOOK).status_code == 302
+    assert escape("Opens once you've finished Five trusted voices.") in hub_entry(
+        client.get("/hub/").content.decode(), "The Workbook"
+    )
+
+    add_people(client, 3)
+    assert client.get(WORKBOOK).status_code == 200
+
+
+@pytest.mark.django_db
+def test_the_workbook_waits_for_section_1_even_once_both_cards_are_complete(participant):
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+    invite_everyone(participant)
+
+    assert participant.get(WORKBOOK).status_code == 302
+    assert escape("Opens once you've finished How you've been designed.") in hub_entry(
+        participant.get("/hub/").content.decode(), "The Workbook"
+    )
+
+
+@pytest.mark.django_db
+def test_everything_that_opens_the_workbook_is_done_with_no_observer_answers_at_all(participant):
+    """✨ Nothing a participant must do to reach the Workbook waits on an observer (ticket 52)."""
+    client = through_to_the_workbook(participant)
+
+    assert client.get(WORKBOOK).status_code == 200
     assert not ObserverResponse.objects.exists()
 
 
 @pytest.mark.django_db
 def test_the_workbook_pdf_is_refused_until_the_workbook_is_reached_then_served_from_its_page(participant):
-    client = through_section_1_without_inviting(participant)
-    invite_everyone(client)
+    client = through_section_1(participant)
+    complete(client, "designed")
     assert client.get(WORKBOOK_PDF).status_code == 403
 
-    complete(client, "designed")
+    invite_everyone(client)
 
     assert f'href="{WORKBOOK_PDF}"' in client.get("/sections/workbook/").content.decode()
     served = client.get(WORKBOOK_PDF)

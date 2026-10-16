@@ -356,11 +356,11 @@ def move_past_page(request, section_id, page):
 def complete_section(request, section_id):
     """✨ The participant's own act of finishing a section, re-checked here rather than trusted to the page. It is
     done from the section's last page, so a participant who has not reached it is sent to the page they have. A part of
-    a section has no completion of its own: it is complete once its gate passes."""
+    a section, or a hub side card, has no completion of its own: it is complete once its gate passes."""
     state = _participant(request.user)
     section = _section_or_404(state.version, section_id)
-    if "part_of" in section:
-        raise Http404("A part of a section is complete once its gate passes, with no completion of its own.")
+    if _completes_itself(section):
+        raise Http404("This section is complete once its gate passes, with no completion of its own.")
     reached = state.reached(section)
     if reached is None:
         return redirect("hub")
@@ -381,9 +381,11 @@ def complete_section(request, section_id):
 @consent_required
 @require_POST
 def reopen_section(request, section_id):
-    """✨ The participant taking back their own completion. Their answers stay exactly as they left them."""
+    """✨ The participant taking back their own completion. Their answers stay exactly as they left them. A section that
+    completes itself was never theirs to take back, and a side card stays complete (ticket 52)."""
     state = _participant(request.user)
-    _section_or_404(state.version, section_id)
+    if _completes_itself(_section_or_404(state.version, section_id)):
+        raise Http404("This section is complete once its gate passes, with no completion of its own.")
     if state.response is not None:
         state.response.reopen_section(section_id)
     return _see_other("hub")
@@ -940,11 +942,7 @@ def contacts(request, block_id):
 def contact(request, block_id, contact_id):
     """✨ Change one person's name or email address, and theirs alone (ticket 51a). Their link keeps working. Another
     participant's contact, or one from another list, is a 404 that says nothing of whether it exists."""
-    state = _participant(request.user)
-    block = _block_of_type(state.version, block_id, "contact_list")
-    person = _own_contact_or_404(request.user, contact_id)
-    if person.block_id != block_id or person.role != Contact.Role.CONTACT or person.response != state.response:
-        raise Http404("You have no contact by that number on this list.")
+    state, block, person = _listed_person(request, block_id, contact_id)
     shut = _list_shut(request, state, block)
     if shut is not None:
         return shut
@@ -954,6 +952,37 @@ def contact(request, block_id, contact_id):
         return _person_refused(request, state, block, refused, contact_id=person.pk)
     Contact.objects.filter(pk=person.pk).update(**changed)
     return _see_other(_listed_at(person))
+
+
+@login_required
+@consent_required
+def contact_removal(request, block_id, contact_id):
+    """✨ Take one person off a contact list (ticket 13d), deleting them and their link; anything already sent through
+    it stays (ADR 0007). Someone whose link still works is removed only once the participant has confirmed, having been
+    told it will stop; opening this address, or pressing Remove for them, only asks. Then back to the list."""
+    state, block, person = _listed_person(request, block_id, contact_id)
+    shut = _list_shut(request, state, block)
+    if shut is not None:
+        return shut
+    confirmed = request.method == "POST" and (
+        request.POST.get("confirmed") == "yes" or person.live_invitation() is None
+    )
+    if not confirmed:
+        context = {"person": person, "back": _listed_at(person), "has_live_link": person.live_invitation() is not None}
+        return render(request, "engine/contact_removal.html", context)
+    person.delete()  # ✨ their invitation goes with them
+    return _see_other(_block_address(state.version.document, block_id))
+
+
+def _listed_person(request, block_id, contact_id):
+    """✨ The participant's state, a contact list block and one person on it, or a 404 that says nothing of whether
+    another participant has a contact by that number, or this one on another list."""
+    state = _participant(request.user)
+    block = _block_of_type(state.version, block_id, "contact_list")
+    person = _own_contact_or_404(request.user, contact_id)
+    if person.block_id != block_id or person.role != Contact.Role.CONTACT or person.response != state.response:
+        raise Http404("You have no contact by that number on this list.")
+    return state, block, person
 
 
 def _list_shut(request, state, block):
@@ -1438,13 +1467,21 @@ def _participant(user, first_version=Publication.current_version):
         return ParticipantState(None, version, sections, {}, complete_sections(sections, {}, ()), {}, set())
     sections = track_sections(participant_response.version.document)
     answers = participant_response.answers_with_contacts_and_visits()
+    # ✨ A part of a section, or a hub side card, is complete once its gate passes, so locks and the hub count it without
+    # a completion.
+    completed = complete_sections(sections, answers, participant_response.completed_sections)
+    # ✨ A side card's is stored the first time it is seen, so it stays complete once its links expire or are revoked, or
+    # its people are taken off the list, and never locks again what it opened (ticket 52).
+    stored = participant_response.completed_sections
+    for section in sections:
+        if "side_card" in section and section["id"] in completed and section["id"] not in stored:
+            participant_response.complete_section(section["id"])
     return ParticipantState(
         response=participant_response,
         version=participant_response.version,
         sections=sections,
         answers=answers,
-        # ✨ A part of a section is complete once its gate passes, so locks and the hub count it without a completion.
-        completed=complete_sections(sections, answers, participant_response.completed_sections),
+        completed=completed,
         moved_past=participant_response.moved_past_by_section(),
         fixed=set(participant_response.fixed_answers),
     )
@@ -1524,6 +1561,7 @@ def _section_page(state, section, page=1, issued=None):
             "estimate": states[section["id"]].estimate,
             "complete_label": text_for(section.get("complete_label", "Mark complete"), "participant"),
             "is_part": "part_of" in section,
+            "is_side_card": "side_card" in section,
             "blocks": [
                 _block_for_participant(version.document, block, answers, fixed, states, issued, _frozen(state.response))
                 for block in blocks
@@ -1540,6 +1578,12 @@ def _section_page(state, section, page=1, issued=None):
     }
 
 
+def _completes_itself(section):
+    """✨ Whether a section is complete once its gate passes, with no completion of its own to press: a part of a section
+    (ticket 41b), or a hub side card (ticket 52)."""
+    return "part_of" in section or "side_card" in section
+
+
 def _section_this_is_part_of(state, section):
     """✨ The section a part of a section belongs to, as its ways back name it: {"title", "href"}, at the page of it the
     participant has reached. None for a section that is not a part, or whose section is outside the track or locked."""
@@ -1552,13 +1596,16 @@ def _section_this_is_part_of(state, section):
 
 def _requirement_links(state, section):
     """✨ Where each of a section's requirements met on another page is met, by its message (ticket 41b): a coach's link
-    on the coach page, people's links on the invitations page. One whose page is not open yet is left out."""
+    on the coach page, people's links on the invitations page. One whose page is not open yet is left out, and so is one
+    met in this section itself, as on a hub side card (ticket 52)."""
     document = state.version.document
     links = {}
     for clause in clauses_of(section):
         if clause["type"] != "links_issued":
             continue
         block = next(block for block in blocks_of(document) if block["id"] == clause["block"])
+        if section_of(document, block["id"])["id"] == section["id"]:
+            continue
         if not _is_open(state, section_of(document, block["id"]), block):
             continue
         is_coach = block["type"] == "coach_checklist"

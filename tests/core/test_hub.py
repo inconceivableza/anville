@@ -260,6 +260,41 @@ def test_a_part_is_locked_until_the_participant_reaches_its_sections_link_to_it(
     assert statuses([gifts, part], answers={"read": True})[1] == NOT_STARTED
 
 
+# A hub side card
+
+
+def side_card(id, requires=()):
+    return {**gated_on(section(id, requires, blocks=[long_text("sort")]), "sort"), "side_card": {"sentence": "Go on."}}
+
+
+def test_a_side_card_is_complete_once_its_gate_passes_with_nothing_pressed():
+    """✨ Walk with a coach and Five trusted voices (ticket 52): complete once their links are made."""
+    sections = [section("first"), side_card("card")]
+
+    assert statuses(sections)[1] == NOT_STARTED
+    assert statuses(sections, answers={"sort": "Sorted"})[1] == COMPLETE
+
+
+def test_a_side_card_whose_gate_passes_stays_locked_while_a_section_it_requires_is_not_complete():
+    sections = [section("first"), side_card("card", requires=["first"])]
+
+    assert statuses(sections, answers={"sort": "Sorted"})[1] == LOCKED
+    assert statuses(sections, answers={"sort": "Sorted"}, completed=["first"])[1] == COMPLETE
+
+
+def lock_note(sections, completed=(), title_of="last"):
+    return next(state for state in hub_for(sections, {}, completed).sections if state.id == title_of).lock_note
+
+
+def test_a_locked_section_names_the_sections_it_still_waits_for():
+    """✨ As the Workbook names Walk with a coach and Five trusted voices once Section 1 is complete (ticket 52)."""
+    sections = [section("a"), section("b"), section("c"), section("last", requires=["a", "b", "c"])]
+
+    assert lock_note(sections) == "Opens once you've finished A, B and C."
+    assert lock_note(sections, completed=["a"]) == "Opens once you've finished B and C."
+    assert lock_note(sections, completed=["a", "b"]) == "Opens once you've finished C."
+
+
 # What the hub says about each section
 
 

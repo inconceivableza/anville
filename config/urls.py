@@ -29,6 +29,7 @@ from engine.views import (
     comparison,
     complete_section,
     contact,
+    contact_removal,
     contacts,
     credits_page,
     download,
@@ -72,6 +73,8 @@ urlpatterns = [
     # ✨ A contact list's people, each added (with their link) or changed on their own (ticket 51a).
     path("contacts/<slug:block_id>/", contacts, name="contacts"),
     path("contacts/<slug:block_id>/<int:contact_id>/", contact, name="contact"),
+    # ✨ Taking one person off the list, asking first while their link works (ticket 13d).
+    path("contacts/<slug:block_id>/<int:contact_id>/remove/", contact_removal, name="contact_removal"),
     path("invitations/", invitations, name="invitations"),
     path("invitations/<int:contact_id>/issue/", issue_invitation, name="issue_invitation"),
     path("invitations/<int:contact_id>/revoke/", revoke_invitation, name="revoke_invitation"),

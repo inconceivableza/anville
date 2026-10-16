@@ -184,7 +184,7 @@ def test_a_sent_assessment_survives_its_link_being_revoked_or_reissued_or_its_pe
     if ended == "reissued":
         issue_link(participant, "Jo")
     if ended == "taken off the list":
-        take_off_the_list("Jo")
+        take_off_the_list(participant, "Jo")
 
     assert observer_assessments().assessments == [complete_sort()]
 
