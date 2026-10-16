@@ -53,23 +53,13 @@
             </ol>
           </div>
           <aside class="side">
-            {% for section in hub.side_cards %}
+            {% for section in side_cards %}
               {% if section.id == voices.section %}
                 {% include "engine/hub_voices_card.html" %}
               {% else %}
                 {% include "engine/hub_side_card.html" %}
               {% endif %}
             {% endfor %}
-            <div class="card">
-              <div class="row"><h3>Walk with a mentor</h3><span class="tag">Optional</span></div>
-              <p>When you're ready, ask someone to walk this with you. We'll send them a short briefing pack.</p>
-              {% if coach %}
-                <a class="pill ghost" data-magnetic href="{{ coach.coach_page }}">{% if coach.answer == "accepted" %}{{ coach.name }} is your coach{% elif coach.answer == "declined" %}{{ coach.name }} isn't able to be your coach{% elif coach.answer == "waiting" %}Waiting for {{ coach.name }} to answer{% else %}You've chosen {{ coach.name }}: send {{ coach.name }} a link{% endif %}</a>
-                {% if coach.shared %}<p>{{ coach.name }} can see your results and comparison.</p>{% endif %}
-              {% elif coach_page %}
-                <a class="pill ghost" data-magnetic href="{{ coach_page }}">Invite a mentor</a>
-              {% endif %}
-            </div>
           </aside>
         </div>
       </div>

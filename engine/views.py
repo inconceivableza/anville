@@ -68,6 +68,7 @@ from engine.hub import (
     section_by_id,
     track_sections,
     where_voices_stand,
+    with_coach_answer,
 )
 from engine.document.observers import (
     link_lifetime,
@@ -154,12 +155,23 @@ def hub(request):
             "title": text_for(state.version.document["title"], "participant"),
             "hub": hub,
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
-            "coach": _coach_of(state.response),
-            "coach_page": _coach_page_of(state.version.document, hub),
+            "side_cards": _side_cards(state, hub),
             "voices": _hub_voices(state, hub),
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
+
+
+def _side_cards(state, hub):
+    """✨ The hub's side cards, the coach's section's tagged with the coach's answer once there is one (ticket 51b)."""
+    document = state.version.document
+    coach = _coach_of(state.response)
+    checklists = [block["id"] for block in blocks_of(document) if block["type"] == "coach_checklist"]
+    coach_section = section_of(document, checklists[0])["id"] if checklists else None
+    return [
+        with_coach_answer(card, coach["answer"]) if coach and card.id == coach_section else card
+        for card in hub.side_cards()
+    ]
 
 
 def _photo_of(document, section_id):
@@ -446,10 +458,14 @@ def coach_checklist(request, block_id):
 
     screen = _checklist_step(block, to, request.POST, _coach_kept(state.answers, block_id))
     kept = state.answers
+    coach = None
     if to == "save" and screen["screen"] == "chosen":
-        # ✨ Always a new contact, so the previous coach's link stops, with any answer given through it.
+        # ✨ Always a new contact, so the previous coach's link stops, with any answer given through it. Their link is
+        # made in the same act, so nobody misses that step (ticket 51b).
         [coach] = state.stored_response(request.user).replace_contacts(block_id, [screen["coach"]], Contact.Role.COACH)
+        link = _issue_link(request, coach)
         screen["coach"] = {**screen["coach"], "id": coach.pk}
+        screen["issued"] = {"contact": coach.pk, "link": link}
         kept = {**kept, block_id: [screen["coach"]]}
     elif to == "remove" and state.response is not None:
         state.response.replace_contacts(block_id, [], Contact.Role.COACH)
@@ -461,7 +477,10 @@ def coach_checklist(request, block_id):
     page = page_of(section, block_id)
     is_htmx = request.headers.get("HX-Request") == "true"
     if not is_htmx and stored:
-        # ✨ Once stored, the checklist is behind: the page shows only the coach kept, so it is safe to go back to.
+        # ✨ Once stored, the checklist is behind: the page shows only the coach kept, so it is safe to go back to, with
+        # the link just made, as issuing it leads back.
+        if coach is not None:
+            return _back_with_issued(request, coach, screen["issued"]["link"])
         return _see_other(f"{page_url(section['id'], page)}#block-{block_id}")
     shown = _section_page(state.with_answers(kept), section, page)
     checklist_block = next(on_page for on_page in shown["section"]["blocks"] if on_page["id"] == block_id)
@@ -470,7 +489,10 @@ def coach_checklist(request, block_id):
         # ✨ Keeping or removing a coach can change the page's way on (a skip label), so it comes too, as after an
         # autosave; stepping through the checklist changes nothing stored, so the way on stays as it was.
         context = {**shown, "block": checklist_block, "stored": stored}
-        return render(request, "engine/coach_checklist_result.html", context, status=status)
+        result = render(request, "engine/coach_checklist_result.html", context, status=status)
+        if coach is not None:
+            result["Cache-Control"] = "no-store"  # ✨ it holds the link, shown this once
+        return result
     # ✨ Never a redirect without JavaScript while choosing: the answers would have to go in the address, where they
     # are logged. The page returned is the one the checklist is on.
     return render(request, "engine/section.html", shown, status=status)
@@ -883,7 +905,8 @@ def contacts(request, block_id):
     added = state.stored_response(request.user).add_contact(block_id, person, lifetime, MAX_CONTACTS)
     if added is None:
         return _person_refused(request, state, block, AnswerRefused(LIST_FULL))
-    return _back_with_link(request, *added)
+    person, token = added
+    return _back_with_issued(request, person, _link_of(request, person, token))
 
 
 @login_required
@@ -941,22 +964,32 @@ def _person_refused(request, state, block, refused, contact_id=None):
 @consent_required
 @require_POST
 def issue_invitation(request, contact_id):
-    """✨ Issue, or reissue, one contact's link: one that was lost or has expired. An observer's link leads to the
-    observer's landing; the coach's to the coach's own page."""
-    contact = _own_contact_or_404(request.user, contact_id)
-    token = Invitation.issue(contact, link_lifetime(contact.response.version.document))
-    return _back_with_link(request, contact, token)
-
-
-def _back_with_link(request, contact, token):
-    """✨ Back to where a contact is listed, which shows the link just issued this once: only its hash is kept.
+    """✨ Issue, or reissue, one contact's link (one that was lost or has expired), then go back to where that person is
+    listed, which shows it this once: only its hash is kept. An observer is listed on their contact list's page; the
+    coach on the coach page, and their link leads to the coach's own page rather than an observer's.
 
     A redirect, so a reload of the page that follows never issues again. The link travels to that page in a short-lived
     signed cookie of the participant's own, not in the address (where the history would keep it) or the session (where
     the database would).
     """
+    contact = _own_contact_or_404(request.user, contact_id)
+    return _back_with_issued(request, contact, _issue_link(request, contact))
+
+
+def _issue_link(request, contact):
+    """✨ Issue, or reissue, one contact's link, and return it, this once: an observer's or, for a coach, the coach's."""
+    token = Invitation.issue(contact, link_lifetime(contact.response.version.document))
+    return _link_of(request, contact, token)
+
+
+def _link_of(request, contact, token):
+    """✨ The link a contact's token is used at: the coach's own page for a coach, the observer's landing otherwise."""
     link_to = "coaching" if contact.role == Contact.Role.COACH else "observe"
-    link = request.build_absolute_uri(reverse(link_to, args=[token]))
+    return request.build_absolute_uri(reverse(link_to, args=[token]))
+
+
+def _back_with_issued(request, contact, link):
+    """✨ A redirect to where the contact is listed, carrying the link just issued for that page to show this once."""
     listed_at = _listed_at(contact)
     back = _see_other(listed_at)
     back.set_signed_cookie(

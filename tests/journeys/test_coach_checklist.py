@@ -439,7 +439,6 @@ def test_saving_without_the_box_ticked_is_refused_keeping_what_was_typed(partici
 @pytest.mark.parametrize(
     ("email", "refusal"),
     [
-        ("", "Add their email address to continue."),
         ("sam", "Check their email address."),
         ("sam@", "Check their email address."),
         ("sam@example", "Check their email address."),

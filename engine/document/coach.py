@@ -6,7 +6,7 @@
 The questions, which of them are critical and why each matters are authored in the pathway document; turning
 the answers into an outcome is the engine's (ADR 0003). Nothing here is kept: the answers are opinions about
 another person, and are only ever read from a form and worked out again. Only the coach finally chosen, a name and
-an email address, is kept, and as a contact. The coach is then asked, through their link, to commit to the same
+any email address given, is kept, and as a contact. The coach is then asked, through their link, to commit to the same
 questions as first-person promises; of that, only whether they accepted or declined is kept (ticket 13c).
 """
 
@@ -74,15 +74,14 @@ def candidate_name_from_form(posted):
 
 def coach_from_form(posted):
     """✨ The chosen coach as {"name", "email"}, or AnswerRefused naming the field at fault. Held to a contact's rules,
-    and only once the participant ticks that they have spoken to them; the tick itself is not kept."""
+    and only once the participant ticks that they have spoken to them; the tick itself is not kept. The email address
+    is optional, as the system sends the coach nothing (ticket 51b), and is "" when left out."""
     try:
         name = candidate_name_from_form(posted)
     except AnswerRefused as refused:
         raise AnswerRefused(str(refused), field="name") from None
     typed = coach_details_as_typed(posted)
-    if not typed["email"]:
-        raise AnswerRefused("Add their email address to continue.", field="email")
-    if not is_email_address(typed["email"]):
+    if typed["email"] and not is_email_address(typed["email"]):
         raise AnswerRefused("Check their email address.", field="email")
     if not typed["confirmed"]:
         raise AnswerRefused("Tick the box to confirm you've spoken to them.", field="confirmed")

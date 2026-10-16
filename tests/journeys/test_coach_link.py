@@ -17,11 +17,16 @@ import pytest
 import time_machine
 
 from engine.models import Contact, Invitation, ObserverResponse, Response
+from tests.documents import pathway_document
 from tests.journeys.test_answers import shown
 from tests.journeys.test_coach_checklist import QUESTION_IDS, choose, step, text, the_coach_checklist
 from tests.journeys.test_consent import withdraw_consent
 from tests.journeys.test_contact_list import JO, ONBOARDING, save_contacts, with_a_contact_list
-from tests.journeys.test_hub import a_fresh_participant, signed_in_client  # noqa: F401  (a fixture, used by name)
+from tests.journeys.test_hub import (  # noqa: F401  (signed_in_client is a fixture, used by name)
+    a_fresh_participant,
+    side_card,
+    signed_in_client,
+)
 from tests.journeys.test_invitations import (  # noqa: F401  (observer is a fixture, used by name)
     A_WRONG_TOKEN,
     ISSUED_AT,
@@ -46,9 +51,9 @@ def participant(signed_in_client, load_pathway):  # noqa: F811
     return signed_in_client
 
 
-def coach_link_action(client, action):
+def coach_link_action(client, action, section=ONBOARDING):
     """✨ Where the coach page posts to issue or revoke the coach's link, from a button within the checklist's form."""
-    found = re.search(rf'formaction="(/invitations/\d+/{action}/)"', shown(client, ONBOARDING))
+    found = re.search(rf'formaction="(/invitations/\d+/{action}/)"', shown(client, section))
     assert found, f"no way to {action} the coach's link on the coach page"
     return found.group(1)
 
@@ -74,6 +79,92 @@ def told(client):
 def stored_besides_links():
     """✨ Every row the coach's answer must leave alone: the participant's response, their contacts, observers' answers."""
     return [list(model.objects.order_by("pk").values()) for model in (Response, Contact, ObserverResponse)]
+
+
+def link_shown(page):
+    """✨ The path of the coach's link shown to copy on a page, or None."""
+    found = re.search(r'value="http://testserver(/coaching/[A-Za-z0-9_-]+/)"', page)
+    return found.group(1) if found else None
+
+
+# Inviting
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("htmx", [True, False], ids=["htmx", "no javascript"])
+@pytest.mark.parametrize("email", ["sam@example.com", ""], ids=["with an email", "without one"])
+def test_saving_the_coach_makes_their_link_in_the_same_act_and_shows_it_the_email_optional(
+    signed_in_client, load_pathway, observer, htmx, email  # noqa: F811
+):
+    """✨ Ticket 51b: nobody misses the step of making the link."""
+    load_pathway(with_a_coach_and_contacts())
+
+    saved = choose(signed_in_client, email=email, htmx=htmx)
+
+    page = saved.content.decode() if htmx else shown(signed_in_client, ONBOARDING)
+    link = link_shown(page)
+    assert link, "the coach's link is not shown on saving"
+    assert observer.get(link).status_code == 200
+    assert Contact.objects.get().email == email
+    assert link_shown(shown(signed_in_client, ONBOARDING)) is None  # ✨ shown once: only its hash is kept
+
+
+def with_a_coach_card():
+    """✨ The test pathway with Whatever You Do's coach checklist in a section of its own after onboarding, which the hub
+    draws as a side card, as Whatever You Do's Walk with a coach is (ticket 50)."""
+    document = pathway_document()
+    document["content"]["sections"].append(
+        {
+            "id": "walk-with-a-coach",
+            "title": "Walk with a coach",
+            "requires": [ONBOARDING],
+            "side_card": {"sentence": "When you're ready, ask someone to walk this with you."},
+            "blocks": [the_coach_checklist()],
+        }
+    )
+    return document
+
+
+def coach_card_tag(client):
+    """✨ The tag on the hub's Walk with a coach card."""
+    card = side_card(client.get("/hub/").content.decode(), "Walk with a coach")
+    return re.search(r'<span class="tag[^"]*">([^<]*)</span>', card).group(1).strip()
+
+
+@pytest.mark.django_db
+def test_the_hub_cards_tag_follows_the_sections_status_then_the_coachs_answer(
+    signed_in_client, load_pathway, observer  # noqa: F811
+):
+    load_pathway(with_a_coach_card())
+    assert coach_card_tag(signed_in_client) == "Locked"
+    signed_in_client.post(f"/sections/{ONBOARDING}/complete/")
+    assert coach_card_tag(signed_in_client) == "Not started"
+
+    first = link_shown(choose(signed_in_client).content.decode())
+    assert coach_card_tag(signed_in_client) == "Waiting"
+    answer_as_coach(observer, first, "accept")
+    assert coach_card_tag(signed_in_client) == "Accepted"
+    reissue = coach_link_action(signed_in_client, "issue", section="walk-with-a-coach")
+    second = link_shown(signed_in_client.post(reissue, follow=True).content.decode())
+    assert coach_card_tag(signed_in_client) == "Waiting"
+    answer_as_coach(observer, second, "decline")
+    assert coach_card_tag(signed_in_client) == "Declined"
+
+
+@pytest.mark.django_db
+def test_the_coach_can_be_invited_and_their_link_reissued_once_before_we_begin_is_complete(
+    signed_in_client, load_pathway, observer  # noqa: F811
+):
+    load_pathway(with_a_coach_card())
+    assert signed_in_client.post(f"/sections/{ONBOARDING}/complete/").status_code == 303
+
+    first = link_shown(choose(signed_in_client).content.decode())
+    reissue = coach_link_action(signed_in_client, "issue", section="walk-with-a-coach")
+    second = link_shown(signed_in_client.post(reissue, follow=True).content.decode())
+
+    assert first and second and first != second
+    assert observer.get(first).status_code == 404
+    assert observer.get(second).status_code == 200
 
 
 # What is kept
