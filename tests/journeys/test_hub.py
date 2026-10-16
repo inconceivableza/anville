@@ -255,8 +255,9 @@ def test_five_trusted_voices_completes_once_three_people_have_links_and_stays_co
 ):
     """✨ Nothing to press (ticket 52), and never asking for more people once complete (ticket 51a): links that expire
     or are revoked, or people taken off the list, never take the completion back."""
-    from engine.models import Contact, Invitation
-    from tests.journeys.test_invitations import invitation_action  # ✨ as above
+    from engine.models import Invitation
+    from tests.journeys.test_contact_list import VOICES, take_off_the_list  # ✨ as above
+    from tests.journeys.test_invitations import invitation_action
 
     add_people_with_links(trusted_voices, PEOPLE[0])
     assert tag_of(voices_card(trusted_voices)) == "2 more needed"
@@ -267,7 +268,7 @@ def test_five_trusted_voices_completes_once_three_people_have_links_and_stays_co
     assert trusted_voices.post("/sections/voices/complete/").status_code == 404
 
     trusted_voices.post(invitation_action(trusted_voices, "Jo", "revoke"))
-    Contact.objects.filter(name="Priya").delete()  # ✨ as taking her off the list does (ticket 13d)
+    assert take_off_the_list(trusted_voices, "Priya", VOICES).status_code == 303
     # ✨ Chris's link expired: travelling 31 days would end the participant's session too.
     Invitation.objects.filter(contact__name="Chris").update(expires_at=timezone.now() - timedelta(days=1))
 
