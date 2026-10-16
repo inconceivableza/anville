@@ -157,14 +157,49 @@ def test_the_sign_out_confirmation_loads_the_built_stylesheet(client, settings):
 
 
 @pytest.mark.django_db
-def test_until_email_can_be_sent_password_reset_is_neither_offered_nor_reachable(client, mailoutbox):
-    """✨ Temporary: ticket 28a replaces this with tests of the working flow once email delivery exists.
+def test_sign_in_offers_a_password_reset_whose_pages_can_be_reached(client):
+    sign_in_page = client.get("/accounts/login/").content.decode()
 
-    Guards against an allauth upgrade quietly bringing back a link whose page crashes without a mail server.
-    """
-    assert "Forgot your password?" not in client.get("/accounts/login/").content.decode()
-    assert client.post("/accounts/password/reset/", {"email": "participant@example.com"}).status_code == 404
-    assert mailoutbox == []
+    assert 'href="/accounts/password/reset/"' in sign_in_page
+    assert client.get("/accounts/password/reset/").status_code == 200
+    assert client.get("/accounts/password/reset/done/").status_code == 200
+
+
+@pytest.mark.django_db
+def test_a_participant_resets_a_forgotten_password_by_the_emailed_link_and_signs_in_with_it(
+    client, settings, mailoutbox
+):
+    require_the_code(settings)
+    sign_up(client)
+    client.logout()
+
+    client.post("/accounts/password/reset/", {"email": "participant@example.com"})
+    [email] = mailoutbox
+    assert email.to == ["participant@example.com"]
+    # ✨ allauth's link leads to a page that keeps the key in the session and redirects to the form, so the key is not
+    # left in the address the form is posted to.
+    link = re.search(r"http://testserver(/accounts/password/reset/key/\S+/)", email.body).group(1)
+    form = client.get(link, follow=True)
+    new_password = "a-new-and-different-passphrase"
+    client.post(form.redirect_chain[-1][0], {"password1": new_password, "password2": new_password})
+
+    assert not client.login(username="participant@example.com", password=PASSWORD)
+    client.post("/accounts/login/", {"login": "participant@example.com", "password": new_password})
+    assert get_user(client).email == "participant@example.com"
+
+
+@pytest.mark.django_db
+def test_asking_to_reset_an_unknown_address_looks_the_same_and_sends_nothing(client, settings, mailoutbox):
+    require_the_code(settings)
+    sign_up(client)
+    client.logout()
+
+    known = client.post("/accounts/password/reset/", {"email": "participant@example.com"}, follow=True)
+    unknown = client.post("/accounts/password/reset/", {"email": "nobody@example.com"}, follow=True)
+
+    assert unknown.redirect_chain == known.redirect_chain
+    assert unknown.content == known.content
+    assert [email.to for email in mailoutbox] == [["participant@example.com"]]
 
 
 @pytest.mark.django_db

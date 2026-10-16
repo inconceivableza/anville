@@ -96,6 +96,8 @@ LOGIN_REDIRECT_URL = "hub"
 ACCOUNT_LOGOUT_REDIRECT_URL = "home"  # ✨ the header's "Sign out" leads to the homepage (ticket 41a)
 ACCOUNT_SIGNUP_FORM_CLASS = "access.forms.EnrolmentCodeSignupForm"
 ACCOUNT_FORMS = {"login": "access.forms.SignInForm"}
+# ✨ A reset asked for an address with no account sends nothing, so the form cannot be used to mail strangers.
+ACCOUNT_EMAIL_UNKNOWN_ACCOUNTS = False
 # ✨ On unless the environment turns it off, so a deployment that forgets the setting admits nobody without the code.
 ANVILLE_ENROLMENT_REQUIRED = env.bool("ANVILLE_ENROLMENT_REQUIRED", default=True)
 ANVILLE_ENROLMENT_CODE = env("ANVILLE_ENROLMENT_CODE", default="")

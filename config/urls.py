@@ -19,8 +19,8 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import include, path, re_path
-from access.views import consent, password_reset_unavailable
+from django.urls import include, path
+from access.views import consent
 from config.health import healthz
 from engine.views import (
     answer_coaching,
@@ -53,8 +53,6 @@ from engine.views import (
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("healthz", healthz, name="healthz"),
-    # ✨ Ahead of allauth's own routes, so every password reset page is refused until email exists (ticket 28a).
-    re_path(r"^accounts/password/reset/", password_reset_unavailable),
     path("accounts/", include("allauth.urls")),
     path("consent/", consent, name="consent"),
     path("start/", start, name="start"),
