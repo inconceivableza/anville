@@ -48,6 +48,11 @@
         }
       }
     },
+    "show_courtesy_credits": {
+      "description": "Whether the credits page lists photos' courtesy credits, those their licence does not ask for. It never hides a credit a licence requires.",
+      "type": "boolean",
+      "default": false
+    },
     "content": {
       "type": "object",
       "additionalProperties": false,

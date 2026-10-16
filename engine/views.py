@@ -75,6 +75,7 @@ from engine.hub import (
     track_sections,
 )
 from engine.document.observers import link_lifetime, privacy_notice, relationship_from_form, relationship_question
+from engine.document.photos import credits_listed
 from engine.models import Contact, Invitation, ObserverResponse, PathwayVersion, Publication, Response, Result
 from engine.results import comparison_page, results_page
 
@@ -121,10 +122,14 @@ def home(request):
 
 def credits_page(request):
     """✨ The copyright notice of each translation the published pathway quotes, open to anyone, since the public
-    homepage quotes scripture too. The publishers ask for their notices on the work's copyright page (ticket 39)."""
+    homepage quotes scripture too. The publishers ask for their notices on the work's copyright page (ticket 39). After
+    them, the credits of the pathway's photos that the document lists (ticket 49b)."""
     version = Publication.current_version()
     translations = version.document.get("translations", {}) if version else {}
-    return render(request, "engine/credits.html", {"translations": translations.values()})
+    photo_credits = credits_listed(version.document) if version else []
+    return render(
+        request, "engine/credits.html", {"translations": translations.values(), "photo_credits": photo_credits}
+    )
 
 
 @login_required

@@ -757,7 +757,8 @@ main.container:has(> .ob) {
   margin-bottom: 6px;
 }
 
-.credits-notice {
+.credits-notice,
+.credits-photo {
   font-size: var(--text-sm);
   color: var(--ink-light);
   margin-bottom: 16px;
