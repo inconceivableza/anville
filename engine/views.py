@@ -652,7 +652,8 @@ def results(request, block_id):
     if _pairs_left(state.version.document, result):
         return redirect("tie_break", block_id)
     document = state.version.document
-    shown = results_page(document, _shown(document, result), state.answers[block_id], name_shown_for(request.user))
+    scores = _scores_shown_storing_reweighted(document, result)
+    shown = results_page(document, scores, state.answers[block_id], name_shown_for(request.user))
     return render(request, "engine/results.html", {"results": shown, "section": section, "block_id": block_id})
 
 
@@ -679,7 +680,7 @@ def tie_break(request, block_id):
             return render(request, "engine/save_status.html", {"refusal": refusal}, status=400)
         # ✨ A pair already answered (a form sent twice, or from a stale tab) stores nothing; either way the next is shown.
         result.answer_pair(place, plan[place], chosen)
-        _shown(state.version.document, result)  # ✨ the last answer re-weights the result
+        _scores_shown_storing_reweighted(state.version.document, result)  # ✨ the last answer re-weights the result
         return _see_other("tie_break", block_id)
     place = len(result.tie_break_answers)
     if place >= len(plan):
@@ -693,10 +694,10 @@ def _pairs_left(document, result):
     return len(result.tie_break_answers) < len(pair_plan(document, result.scores))
 
 
-def _shown(document, result):
+def _scores_shown_storing_reweighted(document, result):
     """✨ The participant's result as their results page and comparison show it (ticket 30c): re-weighted by the
-    tie-break's answers once every pair is answered or skipped, stored beside the sort's the first time it is needed,
-    or else the sort's as scored."""
+    tie-break's answers once every pair is answered or skipped, or else the sort's as scored. The re-weighted result
+    is worked out and stored beside the sort's the first time it is needed, so this writes, on a GET too."""
     if result.reweighted is None and pair_plan(document, result.scores) and not _pairs_left(document, result):
         result.keep_reweighted(reweigh(document, result.scores, result.tie_break_answers))
     return result.shown
@@ -712,7 +713,7 @@ def comparison(request, block_id):
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
-    scores = _shown(state.version.document, result)
+    scores = _scores_shown_storing_reweighted(state.version.document, result)
     shown = _comparison_of(state.response, scores, state.answers[block_id])
     sort = next(block for block in blocks_of(state.response.version.document) if block["id"] == block_id)
     context = {
@@ -1394,7 +1395,7 @@ def _shared_with_coach(invitation, name):
     if result is None:
         return None
     sort = participant_response.answers[scored["id"]]
-    scores = _shown(document, result)
+    scores = _scores_shown_storing_reweighted(document, result)
     return {
         "results": results_page(document, scores, sort, name),
         "comparison": _comparison_of(participant_response, scores, sort),
@@ -1598,6 +1599,9 @@ def _participant(user, first_version=Publication.current_version):
 
     A participant without a response yet reads `first_version()`: by default the published version, so what they
     see is what their first answer will be recorded against.
+
+    Not only a read: it stores the completion of each hub side card whose gate now passes, the first time it is seen,
+    on any request, a GET included (ticket 52).
     """
     participant_response = Response.in_progress(user)
     if participant_response is None:
@@ -1609,7 +1613,7 @@ def _participant(user, first_version=Publication.current_version):
     # ✨ A part of a section, or a hub side card, is complete once its gate passes, so locks and the hub count it without
     # a completion.
     completed = complete_sections(sections, answers, participant_response.completed_sections)
-    # ✨ A side card's is stored the first time it is seen, so it stays complete once its links expire or are revoked, or
+    # ✨ A side card's completion is stored the first time it is seen, so it stays complete once its links expire or are revoked, or
     # its people are taken off the list, and never locks again what it opened (ticket 52).
     stored = participant_response.completed_sections
     for section in sections:
