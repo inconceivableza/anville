@@ -467,8 +467,19 @@ class ObserverResponse(models.Model):
         """✨ Store the observer assessment sent with a claimed secret, about the participant whose response it is, with
         the relationship the observer chose, if any. It counts at once. A second from the same secret raises
         IntegrityError from the database and changes nothing. `is_test_data` is set only by a seeding command, never
-        from a request."""
+        from a request.
+
+        The claimed link's row is locked first, as a withdrawal's ending of the claim locks it, so a send and a
+        withdrawal at once take turns: a send that finds the claim ended meanwhile stores nothing and returns None, and
+        one that went first is deleted by the withdrawal."""
         with transaction.atomic():
+            claimed = (
+                Invitation.objects.select_for_update()
+                .filter(secret_hash=_hash_of(secret), expires_at__gt=timezone.now())
+                .first()
+            )
+            if claimed is None:
+                return None
             return cls.objects.create(
                 response=response,
                 assessment=assessment,

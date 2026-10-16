@@ -238,6 +238,20 @@ def test_withdrawing_through_the_claimed_link_deletes_that_observers_answers_and
 
 
 @pytest.mark.django_db
+def test_a_send_that_reaches_the_store_after_a_withdrawal_on_the_same_link_stores_nothing(participant, observer):  # noqa: F811
+    """✨ A send and a withdrawal at the same moment: the send's view has already found the link live when the
+    withdrawal ends it, so the store itself must find the link ended and keep nothing. Two real requests racing are
+    impractical on the test database, so the send is made straight to the store after the withdrawal."""
+    secret = token_of(claim(observer, issue_link(participant, "Jo")))
+    withdraw(observer)
+
+    stored = ObserverResponse.send(Response.objects.get(), secret, complete_sort())
+
+    assert stored is None
+    assert observer_assessments().assessments == []
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize("by", ["unclaimed copy", "claimed copy", "revoked own link", "expired own link"])
 def test_neither_the_participants_copy_nor_a_link_that_stopped_working_can_withdraw(
     participant, observer, by  # noqa: F811

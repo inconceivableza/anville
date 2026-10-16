@@ -439,9 +439,11 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
 
 
 def without_numbers(document):
-    """✨ The hub's section numbers are this pathway's alone (ticket 49a): the faithful port takes none."""
+    """✨ The hub's section numbers are this pathway's alone (ticket 49a): the faithful port takes none, and keeps
+    "Section 1: " and the like at the start of its titles, which this pathway drops beside its numbers."""
     for section in document["content"]["sections"]:
         section.pop("number", None)
+        section["title"] = re.sub(r"^Section \d+: ", "", section["title"])
     return document
 
 

@@ -189,7 +189,7 @@
       },
       {
         "id": "designed",
-        "title": "Section 1: How you've been designed",
+        "title": "How you've been designed",
         "number": "01",
         "requires": ["onboarding"],
         "blocks": [
@@ -331,7 +331,7 @@
       },
       {
         "id": "letter",
-        "title": "Section 5: A letter to your future self",
+        "title": "A letter to your future self",
         "number": "05",
         "estimate": "About 15 minutes",
         "requires": ["workbook"],
