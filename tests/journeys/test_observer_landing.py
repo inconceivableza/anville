@@ -123,7 +123,7 @@ def test_a_claimed_link_stops_when_it_is_revoked_or_expires_or_its_person_is_tak
         if ended == "revoked":
             participant.post(invitation_action(participant, "Jo", "revoke"))
         if ended == "taken off the list":
-            take_off_the_list("Jo")
+            take_off_the_list(participant, "Jo")
 
     with time_machine.travel(ISSUED_AT + timedelta(days=31 if ended == "expired" else 1), tick=False):
         assert the_observers_page(observer).status_code == 404

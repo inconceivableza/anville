@@ -123,9 +123,39 @@ def save_contacts(client, *rows, section=ONBOARDING):
     return added
 
 
-def take_off_the_list(name):
-    """✨ Delete a contact as taking them off the list does. The page's way to do it is ticket 13d's."""
-    Contact.objects.filter(name=name).delete()
+def action_in_row(client, name, pattern, section=ONBOARDING):
+    """✨ Where a button in the named person's row posts, on the list's page as it is now."""
+    rows = re.findall(r'<li class="contact-row".*?</li>', shown(client, section), re.S)
+    row = next(row for row in rows if f'value="{name}"' in row)
+    found = re.search(rf'action="({pattern})"', row)
+    assert found, f"no {pattern} for {name} on the contact list's page"
+    return found.group(1)
+
+
+def removal_action(client, name, section=ONBOARDING):
+    """✨ Where the named person's Remove button posts."""
+    return action_in_row(client, name, r"/contacts/[\w-]+/\d+/remove/", section)
+
+
+def confirmation_of(page):
+    """✨ The form that confirms a removal on the page given, as (where it posts, its fields), or None if it asks
+    nothing."""
+    for action, form in re.findall(r'<form[^>]*\baction="([^"]+/remove/)"[^>]*>(.*?)</form>', page, re.S):
+        fields = dict(re.findall(r'<input[^>]*\bname="([^"]+)"[^>]*\bvalue="([^"]*)"', form))
+        if "confirmed" in fields:
+            return action, fields
+    return None
+
+
+def take_off_the_list(client, name, section=ONBOARDING):
+    """✨ Take the named person off the list as the participant does: press their Remove button, then, if the page asks
+    first, confirm. Returns the last response."""
+    pressed = client.post(removal_action(client, name, section))
+    asked = confirmation_of(pressed.content.decode()) if pressed.status_code == 200 else None
+    if asked is None:
+        return pressed
+    action, fields = asked
+    return client.post(action, fields)
 
 
 def stored():
@@ -257,6 +287,68 @@ def test_another_participants_contact_cannot_be_changed(participant):
 
     assert save_person(someone_else, "Jo", PRIYA, page=left_open).status_code == 404
     assert stored() == [JO]
+
+
+# Taking someone off the list (ticket 13d)
+
+
+@pytest.mark.django_db
+def test_removing_a_person_deletes_them_and_their_link_which_is_then_refused_as_a_dead_one(participant):
+    jos_link = link_shown(participant.get(add_person(participant, JO).url).content.decode())
+    add_person(participant, PRIYA)
+
+    removed = take_off_the_list(participant, "Jo")
+
+    assert removed.status_code == 303
+    assert stored() == [PRIYA]
+    assert Invitation.objects.count() == 1
+    assert Client().get(jos_link).status_code == 404
+
+
+@pytest.mark.django_db
+def test_removing_someone_whose_link_is_live_asks_first(participant):
+    add_person(participant, JO)
+
+    pressed = participant.post(removal_action(participant, "Jo"))
+
+    assert pressed.status_code == 200
+    assert confirmation_of(pressed.content.decode())
+    assert stored() == [JO]
+
+
+@pytest.mark.django_db
+def test_someone_whose_link_no_longer_works_is_removed_without_asking(participant):
+    add_person(participant, JO)
+    participant.post(action_in_row(participant, "Jo", r"/invitations/\d+/revoke/"))
+
+    pressed = participant.post(removal_action(participant, "Jo"))
+
+    assert pressed.status_code == 303
+    assert stored() == []
+
+
+@pytest.mark.django_db
+def test_opening_the_removal_address_removes_nobody(participant):
+    add_person(participant, JO)
+    action = removal_action(participant, "Jo")
+
+    participant.get(action)
+    participant.get(action, {"confirmed": "yes"})
+
+    assert stored() == [JO]
+    assert Invitation.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_another_participants_contact_cannot_be_removed(participant):
+    add_person(participant, JO)
+    action = removal_action(participant, "Jo")
+
+    someone_else = a_fresh_participant(participant, "someone@example.com")
+
+    assert someone_else.post(action, {"confirmed": "yes"}).status_code == 404
+    assert stored() == [JO]
+    assert Invitation.objects.count() == 1
 
 
 # Refusals

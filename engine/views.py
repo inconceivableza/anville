@@ -917,11 +917,7 @@ def contacts(request, block_id):
 def contact(request, block_id, contact_id):
     """✨ Change one person's name or email address, and theirs alone (ticket 51a). Their link keeps working. Another
     participant's contact, or one from another list, is a 404 that says nothing of whether it exists."""
-    state = _participant(request.user)
-    block = _block_of_type(state.version, block_id, "contact_list")
-    person = _own_contact_or_404(request.user, contact_id)
-    if person.block_id != block_id or person.role != Contact.Role.CONTACT or person.response != state.response:
-        raise Http404("You have no contact by that number on this list.")
+    state, block, person = _listed_person(request, block_id, contact_id)
     shut = _list_shut(request, state, block)
     if shut is not None:
         return shut
@@ -931,6 +927,37 @@ def contact(request, block_id, contact_id):
         return _person_refused(request, state, block, refused, contact_id=person.pk)
     Contact.objects.filter(pk=person.pk).update(**changed)
     return _see_other(_listed_at(person))
+
+
+@login_required
+@consent_required
+def contact_removal(request, block_id, contact_id):
+    """✨ Take one person off a contact list (ticket 13d), deleting them and their link; anything already sent through
+    it stays (ADR 0007). Someone whose link still works is removed only once the participant has confirmed, having been
+    told it will stop; opening this address, or pressing Remove for them, only asks. Then back to the list."""
+    state, block, person = _listed_person(request, block_id, contact_id)
+    shut = _list_shut(request, state, block)
+    if shut is not None:
+        return shut
+    confirmed = request.method == "POST" and (
+        request.POST.get("confirmed") == "yes" or person.live_invitation() is None
+    )
+    if not confirmed:
+        context = {"person": person, "back": _listed_at(person), "has_live_link": person.live_invitation() is not None}
+        return render(request, "engine/contact_removal.html", context)
+    person.delete()  # ✨ their invitation goes with them
+    return _see_other(_block_address(state.version.document, block_id))
+
+
+def _listed_person(request, block_id, contact_id):
+    """✨ The participant's state, a contact list block and one person on it, or a 404 that says nothing of whether
+    another participant has a contact by that number, or this one on another list."""
+    state = _participant(request.user)
+    block = _block_of_type(state.version, block_id, "contact_list")
+    person = _own_contact_or_404(request.user, contact_id)
+    if person.block_id != block_id or person.role != Contact.Role.CONTACT or person.response != state.response:
+        raise Http404("You have no contact by that number on this list.")
+    return state, block, person
 
 
 def _list_shut(request, state, block):

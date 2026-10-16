@@ -4,15 +4,15 @@
 
 **Blocked by:** A4A-51a (Trusted voices card and page)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** Observers (ADR 0005); Testing Decisions
 
-- [ ] Each person on the Five trusted voices page can be removed with one button, with or without JavaScript
-- [ ] Before someone whose link is live is removed, the participant is told that link will stop working
-- [ ] A removed person is deleted with their link, as taking them off the list already does, but answers they have sent stay (ADR 0007)
+- [x] Each person on the Five trusted voices page can be removed with one button, with or without JavaScript
+- [x] Before someone whose link is live is removed, the participant is told that link will stop working
+- [x] A removed person is deleted with their link, as taking them off the list already does, but answers they have sent stay (ADR 0007)
 
 **Context**
 
@@ -22,4 +22,4 @@
 **Carried from 51a**
 
 - Since 51a nobody can be taken off the list at all: each row saves one person, and a row saved without a name or email is refused, so clearing a row no longer removes anyone. The whole-list save is gone
-- The tests that need someone taken off the list use `take_off_the_list` in `tests/journeys/test_contact_list.py`, which deletes the contact directly; swap it for the page's button
+- The tests that need someone taken off the list use `take_off_the_list` in `tests/journeys/test_contact_list.py`, which now presses the page's button and confirms
