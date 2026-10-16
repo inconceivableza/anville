@@ -403,9 +403,8 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     """✨ The fifth rating is added to the faithful port here and the result compared whole, so a change made to
     one document and not the other fails, and so does a slip in the fifth rating itself (its place, its anchors,
     its gate clause, or a message still saying four). The minimum-length messages are reworded the same way,
-    the time estimates, checked above, the hub's section numbers, next-step wording and photos are set aside, and so is
-    the Workbook in place of
-    Sections 2–4."""
+    the time estimates, checked above, the hub's section numbers, next-step wording and photos and Section 1's results
+    are set aside, and so is the Workbook in place of Sections 2–4."""
     expected = the_faithful_port()
     for section in expected["content"]["sections"]:
         for clause in section.get("gate", {}).get("clauses", []):
@@ -448,12 +447,13 @@ def without_the_wizard(document):
 
 
 def without_the_next_step_and_photos(document):
-    """✨ The hub's next-step wording, its photos and their credits' setting are this pathway's alone (ticket 49b): the
-    faithful port takes none."""
+    """✨ The hub's next-step wording, its photos and their credits' setting are this pathway's alone (ticket 49b), and
+    so are the Strengths assessment's results shown in Section 1 (ticket 57): the faithful port takes none."""
     document.pop("photos", None)
     document.pop("show_courtesy_credits", None)
     for section in document["content"]["sections"]:
         section.pop("next_step", None)
+        section["blocks"] = [block for block in section["blocks"] if block["type"] != "sort_results"]
     return document
 
 

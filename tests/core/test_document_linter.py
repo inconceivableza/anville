@@ -159,15 +159,22 @@ def test_a_sort_whose_section_could_be_completed_without_it_is_reported():
     ]
 
 
-@pytest.mark.parametrize("named", ["strengths-sort", "statement", "nowhere"])
-def test_a_sort_results_block_naming_anything_but_a_sort_is_reported(named):
+def results_of(named):
+    """✨ The sort pathway with the calling section showing the results of the block `named`."""
     document = sort_pathway()
     document["content"]["sections"][1]["blocks"].append({"id": "shown", "type": "sort_results", "sort": named})
+    return document
 
-    expected = [] if named == "strengths-sort" else [
+
+def test_a_sort_results_block_naming_a_sort_is_accepted():
+    assert validate(results_of("strengths-sort")) == []
+
+
+@pytest.mark.parametrize("named", ["statement", "nowhere"])
+def test_a_sort_results_block_naming_anything_but_a_sort_is_reported(named):
+    assert validate(results_of(named)) == [
         Problem(path="/content/sections/1/blocks/1/sort", message=f"There is no sort '{named}' in this pathway.")
     ]
-    assert validate(document) == expected
 
 
 def test_a_pathway_without_a_sort_needs_no_scoring_method():

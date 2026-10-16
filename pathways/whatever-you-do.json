@@ -156,6 +156,7 @@
             "button_label": "Open Strengths Assessment →",
             "holds_what_follows": true
           },
+          { "id": "strengths-results", "type": "sort_results", "sort": "strengths-sort" },
           {
             "id": "gifts-summary",
             "type": "long_text",
