@@ -31,18 +31,19 @@ LABELS = {
 
 # ✨ The coach's answer as the coach's side card tags it (ticket 51b): "waiting" while a working link is unanswered.
 COACH_ANSWER_LABELS = {
-    "waiting": "Waiting",
+    "waiting": "Link issued",
     "accepted": "Accepted",
     "declined": "Declined",
 }
 
 
 def with_coach_answer(state, answer):
-    """✨ The coach's section as its side card shows it: its own status while locked or with no link answered or awaited,
-    and otherwise the coach's answer (ticket 51b)."""
-    if state.is_locked or answer not in COACH_ANSWER_LABELS:
+    """✨ The coach's section as its side card shows it: "Locked" while locked, the coach's answer while there is one or
+    a working link awaits it (ticket 51b), and otherwise, with no coach, or their link revoked or expired unanswered,
+    what it showed before any link was made, though the section stays complete (fix-2)."""
+    if state.is_locked:
         return state
-    return state._replace(label=COACH_ANSWER_LABELS[answer])
+    return state._replace(label=COACH_ANSWER_LABELS.get(answer, LABELS[NOT_STARTED]))
 
 
 class NextStepWording(NamedTuple):

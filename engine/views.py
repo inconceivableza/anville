@@ -174,13 +174,13 @@ def hub(request):
 
 
 def _side_cards(state, hub):
-    """✨ The hub's side cards, the coach's section's tagged with the coach's answer once there is one (ticket 51b)."""
+    """✨ The hub's side cards, the coach's section's tagged with where the coach stands (ticket 51b)."""
     document = state.version.document
     coach = _coach_of(state.response)
     checklists = [block["id"] for block in blocks_of(document) if block["type"] == "coach_checklist"]
     coach_section = section_of(document, checklists[0])["id"] if checklists else None
     return [
-        with_coach_answer(card, coach["answer"]) if coach and card.id == coach_section else card
+        with_coach_answer(card, coach["answer"] if coach else None) if card.id == coach_section else card
         for card in hub.side_cards()
     ]
 

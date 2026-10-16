@@ -142,14 +142,42 @@ def test_the_hub_cards_tag_follows_the_sections_status_then_the_coachs_answer(
     assert coach_card_tag(signed_in_client) == "Not started"
 
     first = link_shown(choose(signed_in_client).content.decode())
-    assert coach_card_tag(signed_in_client) == "Waiting"
+    assert coach_card_tag(signed_in_client) == "Link issued"
     answer_as_coach(observer, first, "accept")
     assert coach_card_tag(signed_in_client) == "Accepted"
     reissue = coach_link_action(signed_in_client, "issue", section="walk-with-a-coach")
     second = link_shown(signed_in_client.post(reissue, follow=True).content.decode())
-    assert coach_card_tag(signed_in_client) == "Waiting"
+    assert coach_card_tag(signed_in_client) == "Link issued"
     answer_as_coach(observer, second, "decline")
     assert coach_card_tag(signed_in_client) == "Declined"
+
+
+@pytest.mark.django_db
+def test_while_the_coachs_link_works_unanswered_the_card_says_a_link_is_issued(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    load_pathway(with_a_coach_card())
+    signed_in_client.post(f"/sections/{ONBOARDING}/complete/")
+
+    choose(signed_in_client)
+
+    assert coach_card_tag(signed_in_client) == "Link issued"
+
+
+@pytest.mark.django_db
+def test_once_the_coachs_link_is_revoked_the_card_shows_what_it_did_before_any_link(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    """✨ The card is complete once a link is issued, and stays so (ticket 52); its tag says where the coach stands."""
+    load_pathway(with_a_coach_card())
+    signed_in_client.post(f"/sections/{ONBOARDING}/complete/")
+    before = coach_card_tag(signed_in_client)
+    choose(signed_in_client)
+
+    signed_in_client.post(coach_link_action(signed_in_client, "revoke", section="walk-with-a-coach"))
+
+    assert coach_card_tag(signed_in_client) != "Complete"
+    assert coach_card_tag(signed_in_client) == before
 
 
 @pytest.mark.django_db
