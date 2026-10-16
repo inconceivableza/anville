@@ -115,6 +115,21 @@
               "description": "How many of a tied framework's top constructs, at most, enter the tie-break. 4 when left out.",
               "type": "integer",
               "minimum": 2
+            },
+            "budget": {
+              "description": "How many 'Which is more true of you?' pairs a participant marked for the tie-break answers, at most (ticket 30b). 10 when left out.",
+              "type": "integer",
+              "minimum": 1
+            },
+            "statements": {
+              "description": "Three statements for each construct, keyed by its id, that the tie-break's pairs set against each other (ticket 30b). Separate from the instrument's items. Every construct needs them.",
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": { "$ref": "#/$defs/text" }
+              }
             }
           }
         }
@@ -222,6 +237,17 @@
           "properties": {
             "heading": { "$ref": "#/$defs/text" },
             "text": { "$ref": "#/$defs/text" }
+          }
+        },
+        "tie_break": {
+          "description": "The wording of the tie-break's pair screen (measurement.tie_break, ticket 30b): the question over each pair, the skip, and a quiet label naming each framework, keyed by its id (the framework's own label when left out). Needed whenever the pathway has a tie-break.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["question", "skip"],
+          "properties": {
+            "question": { "$ref": "#/$defs/text" },
+            "skip": { "$ref": "#/$defs/text" },
+            "frameworks": { "type": "object", "additionalProperties": { "$ref": "#/$defs/text" } }
           }
         },
         "standing": {

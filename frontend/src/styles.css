@@ -2034,6 +2034,87 @@ form + .way-on,
   margin-top: 8px;
 }
 
+/* ✨ The tie-break's pairs (ticket 30b), as the content owner's prototype draws them */
+
+.pair-screen {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.pair-steps {
+  display: flex;
+  gap: 4px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+}
+
+.pair-step {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.pair-step.done {
+  background: var(--green-deep);
+}
+
+.pair-step.now {
+  background: var(--gold-light);
+}
+
+.pair-framework,
+.pair-count {
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.pair-question {
+  text-align: center;
+  font-size: var(--text-lg);
+  font-weight: 400;
+  margin: 12px 0 20px;
+}
+
+.pair-options {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.pair-option {
+  background: var(--paper);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 19px 22px;
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  line-height: 1.45;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+
+.pair-option:hover,
+.pair-option:focus-visible {
+  border-color: var(--green-deep);
+}
+
+.pair-skip {
+  display: block;
+  margin: 15px auto 0;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* Hint boxes: rich text set off from the page */
 
 .hint-box {

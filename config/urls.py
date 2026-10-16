@@ -48,6 +48,7 @@ from engine.views import (
     share_with_coach,
     start,
     start_observing,
+    tie_break,
     visit_comparison,
     withdrawal,
 )
@@ -62,6 +63,7 @@ urlpatterns = [
     path("answers/<slug:block_id>/", save_answer, name="save_answer"),
     path("coach/<slug:block_id>/", coach_checklist, name="coach_checklist"),
     path("results/<slug:block_id>/", results, name="results"),
+    path("results/<slug:block_id>/tie-break/", tie_break, name="tie_break"),
     path("results/<slug:block_id>/comparison/", comparison, name="comparison"),
     path("results/<slug:block_id>/comparison/visit/", visit_comparison, name="visit_comparison"),
     path("results/<slug:block_id>/comparison/coach/", share_with_coach, name="share_with_coach"),
