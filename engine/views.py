@@ -347,11 +347,11 @@ def move_past_page(request, section_id, page):
 def complete_section(request, section_id):
     """✨ The participant's own act of finishing a section, re-checked here rather than trusted to the page. It is
     done from the section's last page, so a participant who has not reached it is sent to the page they have. A part of
-    a section has no completion of its own: it is complete once its gate passes."""
+    a section, or a hub side card, has no completion of its own: it is complete once its gate passes."""
     state = _participant(request.user)
     section = _section_or_404(state.version, section_id)
-    if "part_of" in section:
-        raise Http404("A part of a section is complete once its gate passes, with no completion of its own.")
+    if _completes_itself(section):
+        raise Http404("This section is complete once its gate passes, with no completion of its own.")
     reached = state.reached(section)
     if reached is None:
         return redirect("hub")
@@ -372,9 +372,11 @@ def complete_section(request, section_id):
 @consent_required
 @require_POST
 def reopen_section(request, section_id):
-    """✨ The participant taking back their own completion. Their answers stay exactly as they left them."""
+    """✨ The participant taking back their own completion. Their answers stay exactly as they left them. A section that
+    completes itself was never theirs to take back, and a side card stays complete (ticket 52)."""
     state = _participant(request.user)
-    _section_or_404(state.version, section_id)
+    if _completes_itself(_section_or_404(state.version, section_id)):
+        raise Http404("This section is complete once its gate passes, with no completion of its own.")
     if state.response is not None:
         state.response.reopen_section(section_id)
     return _see_other("hub")
@@ -1379,13 +1381,21 @@ def _participant(user, first_version=Publication.current_version):
         return ParticipantState(None, version, sections, {}, complete_sections(sections, {}, ()), {}, set())
     sections = track_sections(participant_response.version.document)
     answers = participant_response.answers_with_contacts_and_visits()
+    # ✨ A part of a section, or a hub side card, is complete once its gate passes, so locks and the hub count it without
+    # a completion.
+    completed = complete_sections(sections, answers, participant_response.completed_sections)
+    # ✨ A side card's is stored the first time it is seen, so it stays complete once its links expire or are revoked, or
+    # its people are taken off the list, and never locks again what it opened (ticket 52).
+    stored = participant_response.completed_sections
+    for section in sections:
+        if "side_card" in section and section["id"] in completed and section["id"] not in stored:
+            participant_response.complete_section(section["id"])
     return ParticipantState(
         response=participant_response,
         version=participant_response.version,
         sections=sections,
         answers=answers,
-        # ✨ A part of a section is complete once its gate passes, so locks and the hub count it without a completion.
-        completed=complete_sections(sections, answers, participant_response.completed_sections),
+        completed=completed,
         moved_past=participant_response.moved_past_by_section(),
         fixed=set(participant_response.fixed_answers),
     )
@@ -1465,6 +1475,7 @@ def _section_page(state, section, page=1, issued=None):
             "estimate": states[section["id"]].estimate,
             "complete_label": text_for(section.get("complete_label", "Mark complete"), "participant"),
             "is_part": "part_of" in section,
+            "is_side_card": "side_card" in section,
             "blocks": [
                 _block_for_participant(version.document, block, answers, fixed, states, issued) for block in blocks
             ],
@@ -1478,6 +1489,12 @@ def _section_page(state, section, page=1, issued=None):
         "unmet": [message for message, met, _ in gate_checklist if not met],
         "checklist": gate_checklist,
     }
+
+
+def _completes_itself(section):
+    """✨ Whether a section is complete once its gate passes, with no completion of its own to press: a part of a section
+    (ticket 41b), or a hub side card (ticket 52)."""
+    return "part_of" in section or "side_card" in section
 
 
 def _section_this_is_part_of(state, section):

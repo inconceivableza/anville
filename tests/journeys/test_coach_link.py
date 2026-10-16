@@ -120,6 +120,7 @@ def with_a_coach_card():
             "requires": [ONBOARDING],
             "side_card": {"sentence": "When you're ready, ask someone to walk this with you."},
             "blocks": [the_coach_checklist()],
+            "gate": {"clauses": [{"type": "links_issued", "block": "coach", "min": 1, "message": "Invite a coach."}]},
         }
     )
     return document

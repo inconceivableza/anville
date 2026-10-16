@@ -235,8 +235,10 @@ def _waiting_on(part, completed, answers, sections, moved_past):
 def _lock_note(section, completed, answers, sections, moved_past, role):
     """✨ What the hub says under a locked section: for a part waiting on its section, where it opens from and, while a
     reading there is unconfirmed, what opens it; otherwise the engine's general note."""
+    if not _requires_met(section, completed):
+        return _sections_still_open(section, completed, sections, role)
     waiting = _waiting_on(section, completed, answers, sections, moved_past)
-    if waiting is None or not _requires_met(section, completed):
+    if waiting is None:
         return "Complete what comes before this to open it."
     title = text_for(waiting.section["title"], role)
     if waiting.holding is not None and BLOCK_TYPES[waiting.holding["type"]].opens_what_follows:
@@ -244,14 +246,37 @@ def _lock_note(section, completed, answers, sections, moved_past, role):
     return f"Opens from {title}."
 
 
+def _sections_still_open(section, completed, sections, role):
+    """✨ The lock note naming, by title, the sections a section requires that are not yet complete, as the Workbook
+    names Walk with a coach and Five trusted voices (ticket 52). A required section outside the track is not named."""
+    titles = [
+        text_for(other["title"], role)
+        for other in sections
+        if other["id"] in section.get("requires", []) and other["id"] not in completed
+    ]
+    if not titles:
+        return "Complete what comes before this to open it."
+    named = titles[0] if len(titles) == 1 else f"{', '.join(titles[:-1])} and {titles[-1]}"
+    return f"Opens once you've finished {named}."
+
+
 def complete_sections(sections, answers, completed):
-    """✨ The sections that are complete: those the participant completed, and each part of a section whose gate passes.
+    """✨ The sections that are complete: those the participant completed, each part of a section whose gate passes, and
+    each hub side card whose gate passes once it is open.
 
     A part has no completion of its own (ticket 41b), as the original prototype's Strengths assessment has none within
-    Section 1, so it is complete exactly when its gate passes, worked out here rather than stored.
+    Section 1, so it is complete exactly when its gate passes, worked out here rather than stored. A side card has nothing
+    to press either (ticket 52): it is complete once it is open and its gate passes, and the caller stores that, so it
+    stays complete when its links later expire or are revoked.
     """
     parts_done = {section["id"] for section in sections if "part_of" in section and gate_passes(section, answers)}
-    return set(completed) | parts_done
+    done = set(completed) | parts_done
+    cards_done = {
+        section["id"]
+        for section in sections
+        if "side_card" in section and _requires_met(section, done) and gate_passes(section, answers)
+    }
+    return done | cards_done
 
 
 def hub_for(sections, answers, completed, role="participant", moved_past=None):

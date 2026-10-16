@@ -40,7 +40,7 @@ def with_a_contact_list(**fields):
 
 def with_trusted_voices(document=None, **fields):
     """✨ The test pathway with a side card after onboarding holding the contact list, three people needed and two
-    more optional, as Five trusted voices is (ticket 51a)."""
+    more optional, as Five trusted voices is (ticket 51a), and complete once three of them have links (ticket 52)."""
     document = document or pathway_document()
     document["content"]["sections"].append(
         {
@@ -49,6 +49,9 @@ def with_trusted_voices(document=None, **fields):
             "requires": ["onboarding"],
             "side_card": {"sentence": "Invite people who know you well."},
             "blocks": [{"id": "contacts", "type": "contact_list", "needed": 3, "optional": 2, **fields}],
+            "gate": {
+                "clauses": [{"type": "links_issued", "block": "contacts", "min": 3, "message": "Add three people."}]
+            },
         }
     )
     return document

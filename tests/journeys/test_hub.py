@@ -2,10 +2,12 @@
 # For licensing information see ../../LICENSE.md
 
 import re
+from datetime import timedelta
 
 import pytest
 from django.contrib.auth import get_user_model
 from django.test import Client
+from django.utils import timezone
 
 from tests.documents import complete_sort, pathway_document, sort_pathway
 from tests.journeys.pages import loads_the_built_stylesheet, version_on
@@ -130,7 +132,7 @@ def test_each_hub_entry_shows_its_sections_time_estimate_even_while_locked(signe
 
     assert "About 15 minutes" in hub_entry(page, "Putting your calling into words")
     assert "Whole section:" not in hub_entry(page, "Putting your calling into words")  # ✨ plainly the section's here
-    assert "Complete what comes before this to open it." in hub_entry(page, "Putting your calling into words")
+    assert "Opens once you&#x27;ve finished Before we begin." in hub_entry(page, "Putting your calling into words")
     assert "time-estimate" not in hub_entry(page, "Before we begin")
 
 
@@ -161,6 +163,7 @@ def with_a_side_card(document):
             "requires": ["onboarding"],
             "side_card": {"sentence": "Invite people who know you well."},
             "blocks": [{"id": "voices-note", "type": "long_text", "prompt": "Who comes to mind?"}],
+            "gate": {"clauses": [{"type": "has_answer", "block": "voices-note", "message": "Say who comes to mind."}]},
         }
     )
     return document
@@ -247,11 +250,26 @@ def test_the_voices_card_names_nobody(trusted_voices):
 
 
 @pytest.mark.django_db
-def test_once_five_trusted_voices_is_complete_the_card_never_asks_for_more_people(trusted_voices):
+def test_five_trusted_voices_completes_once_three_people_have_links_and_stays_complete_whatever_becomes_of_them(
+    trusted_voices,
+):
+    """✨ Nothing to press (ticket 52), and never asking for more people once complete (ticket 51a): links that expire
+    or are revoked, or people taken off the list, never take the completion back."""
+    from engine.models import Contact, Invitation
+    from tests.journeys.test_invitations import invitation_action  # ✨ as above
+
     add_people_with_links(trusted_voices, PEOPLE[0])
     assert tag_of(voices_card(trusted_voices)) == "2 more needed"
 
-    trusted_voices.post("/sections/voices/complete/")
+    add_people_with_links(trusted_voices, *PEOPLE[1:])
+    assert tag_of(voices_card(trusted_voices)) == "Complete"
+    assert "Mark complete" not in trusted_voices.get("/sections/voices/").content.decode()
+    assert trusted_voices.post("/sections/voices/complete/").status_code == 404
+
+    trusted_voices.post(invitation_action(trusted_voices, "Jo", "revoke"))
+    Contact.objects.filter(name="Priya").delete()  # ✨ as taking her off the list does (ticket 13d)
+    # ✨ Chris's link expired: travelling 31 days would end the participant's session too.
+    Invitation.objects.filter(contact__name="Chris").update(expires_at=timezone.now() - timedelta(days=1))
 
     card = voices_card(trusted_voices)
     assert tag_of(card) == "Complete"
