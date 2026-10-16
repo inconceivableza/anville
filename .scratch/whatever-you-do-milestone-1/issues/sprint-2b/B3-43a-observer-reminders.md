@@ -4,7 +4,7 @@
 
 **Blocked by:** B2B-55 (Answer collection freezes once results are viewed)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 2b (12–16 Oct)
 
