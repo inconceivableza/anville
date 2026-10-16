@@ -257,7 +257,7 @@ So FaithTech sees, on staging: the homepage, onboarding with a display name, Sec
 - A coach brief is not a block: it is carried by what the coach is shown, which for now is the sort's results and comparison (ticket 25a; see Coach).
 - The growth-plan board and letter scheduling are not in the first set. Sections 4 and 5 use plain text and reflection blocks.
 - Every block, however interactive, produces exactly one answer value. The server validates that value against the block's answer schema and never trusts the widget. Simple blocks use server-rendered HTMX. Interaction-heavy blocks (sort, timeline, idea generator) are named block types, each with a configuration schema and a Vite JavaScript module that owns its interaction. Adding a bespoke block is additive: a schema, a widget and a validator.
-- The agreement scale is drawn as v3's slider in place of ten buttons, its thumb hidden and nothing sent until a point is chosen, so an unanswered rating looks and stays unanswered; without JavaScript the ten buttons are offered instead, since a slider cannot be left unanswered there (developer's call, 16 Oct, fix-2).
+- The agreement scale is drawn as v3's ten buttons (`.rate`), each a radio so it works without JavaScript: the points below the one chosen fill in as a meter, and the value chosen shows beside the prompt, a dash until one is. A slider was tried and dropped, since a range always holds a value (developer's call, 16 Oct, fix-2).
 - The prototype's 31 block types were a documentation taxonomy. Several (lock cards, status cards, the next-step banner, the completion gate) are engine-derived and are not blocks.
 
 ### Responses, answers and results

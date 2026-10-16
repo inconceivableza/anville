@@ -131,8 +131,10 @@
   --green-ink: #1d2a10;
   --green-deep: #2f5a2b;
   --on-dark-2: #c9bdb0;
-  /* ✨ v3's slider's ticks (fix-2). */
-  --scale-tick: #cfc7b1;
+  /* ✨ v3's rating buttons (fix-2): a hovered point's edge, and the points below the one chosen. */
+  --rate-hover-edge: #b5ab92;
+  --rate-in: #dfe9cf;
+  --rate-in-edge: #c3d6a6;
 
   /* ✨ The new look's tints and shades, named by their colour and opacity. */
   --brown-05: rgba(29, 20, 19, 0.05);
@@ -2168,7 +2170,7 @@ form + .way-on,
   color: var(--green-deep);
 }
 
-/* The 1–10 agreement scale. Each point is a radio button drawn as the prototype's square button. */
+/* The 1–10 agreement scale. Each point is a radio button drawn as a button. */
 
 .baseline-q {
   background: var(--paper);
@@ -2202,84 +2204,21 @@ form + .way-on,
   color: var(--muted);
 }
 
-.baseline-btns {
+/* ✨ v3's `.scale .qh` (fix-2): the prompt on the left and the value chosen on the right, large in the heading face. */
+.scale-qh {
   display: flex;
-  gap: var(--space-xs);
   justify-content: space-between;
-}
-
-.bl-btn {
-  position: relative;
-  flex: 1;
-  aspect-ratio: 1;
-  min-width: 0;
-  max-width: 40px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--paper);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.bl-btn input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.bl-btn:hover {
-  border-color: var(--green-deep);
-  color: var(--ink);
-}
-
-.bl-btn:has(input:checked) {
-  border-color: var(--green-deep);
-  background: var(--green-deep);
-  color: var(--paper);
-  box-shadow: 0 2px 6px var(--gold-glow);
-}
-
-.bl-btn:has(input:focus-visible) {
-  outline: 2px solid var(--green-deep);
-  outline-offset: 2px;
-}
-
-/* ✨ A fixed rating: the chosen point keeps its colour, and nothing invites a click or a hover. */
-.bl-btn:has(input:disabled),
-.bl-btn:has(input:disabled) input {
-  cursor: default;
-}
-
-.bl-btn:has(input:disabled):not(:has(input:checked)):hover {
-  border-color: var(--border);
-  color: var(--muted);
-}
-
-/* ✨ The slider in place of the buttons, ported from v3's `.sl` (fix-2): a rail with a tick per point, filled up to the
-   thumb, the value beside it in the heading face. Until a point is chosen the thumb is hidden and the value is a
-   dash. Without JavaScript the buttons above are offered instead. */
-.scale-slider {
-  --t: 22px;
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-html:not([data-javascript="loaded"]) .scale-slider {
-  display: none;
+  align-items: baseline;
+  gap: 16px;
+  width: 100%;
+  padding: 0;
 }
 
 .scale-val {
-  order: 1;
+  flex: none;
   font-family: var(--font-heading);
   font-size: 30px;
+  font-weight: 400;
   line-height: 1;
   min-width: 1.4em;
   text-align: right;
@@ -2292,118 +2231,78 @@ html:not([data-javascript="loaded"]) .scale-slider {
   color: var(--muted);
 }
 
-.sl {
-  position: relative;
-  flex: 1;
-  padding-top: 4px;
+/* ✨ v3's `.rate` (fix-2): ten buttons, each a radio. The points below the one chosen are filled in, as a meter. */
+.rate {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 5px;
 }
 
-.sl input {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: var(--t);
-  margin: 0;
-  background: transparent;
+.rate-point {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--cream-2);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
-  position: relative;
-  z-index: 2;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
 }
 
-.sl input:disabled {
+.rate-point input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* ✨ No hover on a fixed rating; `:where` keeps this below the filled and chosen points. */
+.rate-point:where(:hover:not(:has(input:disabled))) {
+  box-shadow: inset 0 0 0 1px var(--rate-hover-edge);
+  color: var(--ink);
+}
+
+.rate-point:has(~ .rate-point input:checked) {
+  background: var(--rate-in);
+  box-shadow: inset 0 0 0 1px var(--rate-in-edge);
+  color: var(--green-ink);
+}
+
+.rate-point:has(input:checked) {
+  background: var(--green-deep);
+  box-shadow: none;
+  color: var(--snow);
+  font-weight: 600;
+}
+
+.rate-point:has(input:focus-visible) {
+  outline: 2px solid var(--green-deep);
+  outline-offset: 2px;
+}
+
+/* ✨ A fixed rating: nothing invites a click. */
+.rate-point:has(input:disabled),
+.rate-point:has(input:disabled) input {
   cursor: default;
 }
 
-.sl .rail {
-  position: absolute;
-  left: calc(var(--t) / 2);
-  right: calc(var(--t) / 2);
-  top: calc(4px + var(--t) / 2 - 1.5px);
-  height: 3px;
-  border-radius: 3px;
-  background: var(--cream-2);
-}
+@media (max-width: 480px) {
+  .rate {
+    gap: 3px;
+  }
 
-.sl .fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: calc(var(--fill, 0) * 100%);
-  border-radius: 3px;
-  background: var(--brown);
-}
-
-.sl .ticks {
-  position: absolute;
-  left: calc(var(--t) / 2 - 3px);
-  right: calc(var(--t) / 2 - 3px);
-  top: calc(4px + var(--t) / 2 - 3px);
-  display: flex;
-  justify-content: space-between;
-  z-index: 1;
-}
-
-.sl .tk {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--scale-tick);
-}
-
-.sl input::-webkit-slider-runnable-track {
-  height: var(--t);
-  background: transparent;
-}
-
-.sl input::-moz-range-track {
-  height: var(--t);
-  background: transparent;
-}
-
-.sl input::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: var(--t);
-  height: var(--t);
-  border-radius: 50%;
-  background: var(--brown);
-  border: 3px solid var(--cream);
-  box-shadow: 0 0 0 1px var(--brown);
-}
-
-.sl input::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--brown);
-  border: 3px solid var(--cream);
-  box-shadow: 0 0 0 1px var(--brown);
-}
-
-.sl input.unset::-webkit-slider-thumb {
-  opacity: 0;
-}
-
-.sl input.unset::-moz-range-thumb {
-  opacity: 0;
-}
-
-.sl input:focus-visible {
-  outline: none;
-}
-
-.sl input.unset:focus-visible {
-  outline: 2px solid var(--green);
-  outline-offset: 4px;
-  border-radius: 999px;
-}
-
-.sl input:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 1px var(--brown), 0 0 0 5px var(--green);
-}
-
-.sl input:focus-visible::-moz-range-thumb {
-  box-shadow: 0 0 0 1px var(--brown), 0 0 0 5px var(--green);
+  .rate-point {
+    height: 34px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
 }
 
 .fixed-note {
@@ -3410,11 +3309,6 @@ html[data-javascript="loaded"] .save-fallback {
   .question-card,
   .baseline-q {
     padding: var(--space-lg) var(--space-md);
-  }
-
-  .bl-btn {
-    max-width: 36px;
-    font-size: var(--text-sm);
   }
 
   .bucket-buttons {

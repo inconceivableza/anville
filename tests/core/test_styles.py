@@ -94,7 +94,8 @@ def _contrast(foreground, background):
 def test_body_text_and_buttons_meet_wcag_aa_contrast():
     css = STYLESHEET.read_text()
     colours = _root_colours(css)
-    selectors = ("body", ".pill", ".bl-btn:has(input:checked)")  # ✨ a ghost pill has the text's own colours
+    # ✨ a ghost pill has the text's own colours; a rating's chosen point, and those below it (fix-2)
+    selectors = ("body", ".pill", ".rate-point:has(input:checked)", ".rate-point:has(~ .rate-point input:checked)")
     pairs = {selector: _rule_colours(css, selector) for selector in selectors}
     pairs["muted text on the page"] = ("--muted", "--cream")
     pairs["text on the dark panels"] = ("--on-dark", "--brown")

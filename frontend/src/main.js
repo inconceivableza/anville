@@ -124,28 +124,14 @@ htmx.onLoad((content) => {
   });
 });
 
-// ✨ An agreement scale's slider, as v3's (fix-2): its value beside it and the rail filled up to its thumb. It has no
-// name until it is first moved, so a form never sends one that was not chosen; moving it names it, shows its thumb and
-// lets htmx save it on the change that follows.
-function showScale(slider) {
-  const set = !slider.classList.contains("unset");
-  const share = set ? (slider.value - slider.min) / (slider.max - slider.min) : 0;
-  slider.closest(".sl").style.setProperty("--fill", share);
-  const shown = slider.closest(".scale-slider").querySelector(".scale-val");
-  shown.textContent = set ? slider.value : "–";
-  shown.classList.toggle("unset", !set);
-}
-
-document.addEventListener("input", (event) => {
-  const slider = event.target;
-  if (!slider.matches?.('.sl input[type="range"]')) return;
-  if (slider.dataset.name) slider.name = slider.dataset.name;
-  slider.classList.remove("unset");
-  slider.removeAttribute("aria-valuetext");
-  showScale(slider);
+// ✨ An agreement scale shows the point chosen beside its prompt, as v3's does (fix-2); without JavaScript it shows
+// once the page comes back.
+document.addEventListener("change", (event) => {
+  if (!event.target.matches?.(".rate input")) return;
+  const shown = event.target.closest("fieldset").querySelector(".scale-val");
+  shown.textContent = event.target.value;
+  shown.classList.remove("unset");
 });
-
-htmx.onLoad((content) => content.querySelectorAll('.sl input[type="range"]').forEach(showScale));
 
 // ✨ Whether the visitor has asked their device for less motion; every movement below is skipped if so.
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

@@ -1,40 +1,32 @@
 {# Copyright (C) New Community Church SE London 2026. #}
 {# For licensing information see ../../../../LICENSE.md #}
 {% comment %}
-  ✨ A 1–10 scale that saves as soon as a point is chosen, as v3's slider (fix-2). The two anchor labels describe the
-  scale's ends. A range always holds a value, so until it is moved it has no name for a form to send, and while
-  unanswered its thumb is hidden, so it looks unanswered; the page's JavaScript names it on the first move. Without
-  JavaScript the slider is hidden and the ten points are offered as buttons instead, the only ones the form sends.
+  ✨ A 1–10 scale that saves as soon as a point is chosen, drawn as v3's ten buttons (fix-2): each point a radio, the
+  points below the one chosen filled in, and the value chosen beside the prompt. The two anchor labels describe the
+  scale's ends. Until a point is chosen nothing is checked, so nothing is sent.
 
-  A fixed rating shows the point chosen, disabled, with nothing to save; the server refuses it anyway.
+  A fixed rating shows the point chosen, with every point disabled and nothing to save; the server refuses it anyway.
 {% endcomment %}
 <form id="block-{{ block.id }}" class="baseline-q" method="post" action="{% url 'save_answer' block.id %}">
   {% csrf_token %}
   <fieldset{% if not block.is_fixed %} hx-post="{% url 'save_answer' block.id %}" hx-trigger="change"
             hx-sync="this:queue last" hx-target="next .save-status"{% endif %}>
-    <legend class="baseline-label" id="prompt-{{ block.id }}">{{ block.text.prompt }}</legend>
-    <div class="scale-slider">
-      <output class="scale-val{% if block.answer is None %} unset{% endif %}" for="answer-{{ block.id }}" aria-hidden="true">{% if block.answer is None %}–{% else %}{{ block.answer }}{% endif %}</output>
-      <div class="sl">
-        <span class="rail" aria-hidden="true"><span class="fill"></span></span>
-        <span class="ticks" aria-hidden="true">{% for point in pathway.scale_points %}<span class="tk"></span>{% endfor %}</span>
-        <input type="range" id="answer-{{ block.id }}" min="{{ pathway.scale_points|first }}" max="{{ pathway.scale_points|last }}" step="1" data-name="value"{% if block.answer is None %} class="unset" aria-valuetext="Not answered yet"{% else %} value="{{ block.answer }}"{% endif %} aria-labelledby="prompt-{{ block.id }}" aria-describedby="anchor-{{ block.id }}-min anchor-{{ block.id }}-max"{% if block.is_fixed %} disabled{% endif %}>
-      </div>
-    </div>
+    <legend class="baseline-label scale-qh">
+      <span>{{ block.text.prompt }}</span>
+      <span class="scale-val{% if block.answer is None %} unset{% endif %}" aria-hidden="true">{% if block.answer is None %}–{% else %}{{ block.answer }}{% endif %}</span>
+    </legend>
     <div class="baseline-scale">
       <span class="baseline-anchor" id="anchor-{{ block.id }}-min">{{ block.text.min_label }}</span>
       <span class="baseline-anchor" id="anchor-{{ block.id }}-max">{{ block.text.max_label }}</span>
     </div>
-    <noscript>
-      <div class="baseline-btns">
-        {% for point in pathway.scale_points %}
-          <label class="bl-btn">
-            <input type="radio" id="answer-{{ block.id }}-{{ point }}" name="value" value="{{ point }}"{% if block.answer == point %} checked{% endif %}{% if block.is_fixed %} disabled{% endif %}{% if forloop.first %} aria-describedby="anchor-{{ block.id }}-min"{% elif forloop.last %} aria-describedby="anchor-{{ block.id }}-max"{% endif %}>
-            <span>{{ point }}</span>
-          </label>
-        {% endfor %}
-      </div>
-    </noscript>
+    <div class="rate">
+      {% for point in pathway.scale_points %}
+        <label class="rate-point">
+          <input type="radio" id="answer-{{ block.id }}-{{ point }}" name="value" value="{{ point }}"{% if block.answer == point %} checked{% endif %}{% if block.is_fixed %} disabled{% endif %}{% if forloop.first %} aria-describedby="anchor-{{ block.id }}-min"{% elif forloop.last %} aria-describedby="anchor-{{ block.id }}-max"{% endif %}>
+          <span>{{ point }}</span>
+        </label>
+      {% endfor %}
+    </div>
   </fieldset>
   {% if block.is_fixed %}
     <p class="fixed-note">Fixed when you completed this section.</p>

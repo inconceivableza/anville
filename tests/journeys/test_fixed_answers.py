@@ -148,11 +148,8 @@ def test_a_fixed_rating_is_shown_as_chosen_but_cannot_be_changed_on_the_page(par
     answer(participant, "baseline-bible", "4")
     complete(participant)
 
-    page = shown(participant)
-    slider = re.search(r'<input type="range"[^>]*id="answer-baseline-bible"[^>]*>', page).group()
-    points = re.findall(r'<input[^>]*id="answer-baseline-bible-\d+"[^>]*>', page)  # ✨ the buttons without JavaScript
+    points = re.findall(r'<input[^>]*id="answer-baseline-bible-\d+"[^>]*>', shown(participant))
 
-    assert ' value="4"' in slider and " disabled" in slider and "unset" not in slider
     assert len(points) == 10
     assert all(" disabled" in point for point in points)
     assert sum(" checked" in point for point in points) == 1
