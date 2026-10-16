@@ -74,6 +74,8 @@ makes the table; files/backup.sh leaves its rows out of the dump. */}}
 {{- with .Values.email.from }}
 - name: DEFAULT_FROM_EMAIL
   value: {{ . | quote }}
+- name: SERVER_EMAIL
+  value: {{ . | quote }}
 {{- end }}
 {{- if eq .Values.tier "staging" }}
 - name: ANVILLE_DEMO_NOTICE
@@ -86,6 +88,12 @@ makes the table; files/backup.sh leaves its rows out of the dump. */}}
     secretKeyRef:
       name: {{ .Values.secretName }}
       key: DJANGO_SECRET_KEY
+- name: DJANGO_SECRET_KEY_FALLBACKS
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.secretName }}
+      key: DJANGO_SECRET_KEY_FALLBACKS
+      optional: true
 - name: ANVILLE_ENROLMENT_REQUIRED
   value: {{ .Values.enrolment.required | quote }}
 {{- if .Values.enrolment.required }}

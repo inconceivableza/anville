@@ -90,6 +90,14 @@ def test_trusted_origins_are_a_list_from_the_environment():
     assert settings["CSRF_TRUSTED_ORIGINS"] == ["https://a.example", "https://b.example"]
 
 
+def test_old_secret_keys_are_a_list_from_the_environment_and_none_by_default():
+    assert settings_with({}, "SECRET_KEY_FALLBACKS")["SECRET_KEY_FALLBACKS"] == []
+    assert settings_with({"DJANGO_SECRET_KEY_FALLBACKS": ""}, "SECRET_KEY_FALLBACKS")["SECRET_KEY_FALLBACKS"] == []
+    assert settings_with({"DJANGO_SECRET_KEY_FALLBACKS": "older-key,oldest-key"}, "SECRET_KEY_FALLBACKS") == {
+        "SECRET_KEY_FALLBACKS": ["older-key", "oldest-key"]
+    }
+
+
 def test_with_no_email_url_email_is_fake():
     settings = settings_with({}, "EMAIL_BACKEND", "DEFAULT_FROM_EMAIL")
 
@@ -124,6 +132,17 @@ def test_an_email_url_names_the_provider_and_its_credentials():
         "EMAIL_HOST_PASSWORD": "secret-key",
         "DEFAULT_FROM_EMAIL": "Anville <hello@example.org>",
     }
+
+
+def test_djangos_own_messages_come_from_the_sending_address_unless_the_environment_names_another():
+    assert settings_with({}, "SERVER_EMAIL")["SERVER_EMAIL"] == "webmaster@localhost"
+    assert settings_with({"DEFAULT_FROM_EMAIL": "Anville <hello@example.org>"}, "SERVER_EMAIL")["SERVER_EMAIL"] == (
+        "Anville <hello@example.org>"
+    )
+    named = settings_with(
+        {"DEFAULT_FROM_EMAIL": "hello@example.org", "SERVER_EMAIL": "errors@example.org"}, "SERVER_EMAIL"
+    )
+    assert named["SERVER_EMAIL"] == "errors@example.org"
 
 
 def test_a_disclaimer_wraps_whichever_email_backend_was_chosen():
