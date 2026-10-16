@@ -3119,6 +3119,23 @@ html[data-javascript="loaded"] .sort-progress {
   font-size: var(--text-lg);
 }
 
+.sort-done-choice {
+  max-width: 34em;
+  margin: 0 auto 16px;
+}
+
+/* ✨ Sending now and fine-tuning first, side by side, wrapping one above the other on a narrow screen. */
+.sort-done-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.sort-done-actions .sort-submit {
+  margin-top: 0;
+}
+
 .bucket-name {
   width: 140px;
   text-align: right;

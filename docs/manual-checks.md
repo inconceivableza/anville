@@ -50,6 +50,15 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - "First name" comes first, with "e.g. Ed" as its placeholder, and the browser offers nothing saved for it.
 - With `ANVILLE_ENROLMENT_REQUIRED=false` there is no enrolment code field; with it left out, the field sits after the email.
 
+## Password reset (sign in's "Forgot your password?")
+
+- Sign in shows "Forgot your password?" under the password field, and it opens the reset page, styled like sign in, with the demo notice when that is set.
+- Asking for a reset of your own account's address: the page says an email is on its way. Locally, with no `EMAIL_URL`, the email is printed in the `runserver` terminal; open its link in the same browser. Setting a new password there, then signing in with it, reaches the hub; the old password is refused.
+- Asking for a reset of an address with no account shows the very same page, and nothing is printed in the terminal.
+- On staging, the reset email reaches a mailbox you own and carries the test-system disclaimer at its top and the mark on its subject.
+- Opening the same link a second time says it is no longer valid.
+- Phone width: the reset pages and the new-password page fit without sideways scrolling, and their buttons are easy to tap.
+
 ## Consent
 
 - After signing up, and at a first sign-in, the consent page comes before the hub.
@@ -281,6 +290,8 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Above the sort (load the pathway again first), "Your relationship to …" names the participant, with "Select..." then Family member, Close friend, Colleague / work contact, Church family / leader, Mentor / teacher and Other. It stays put while the cards are sorted and fine-tuned, and leaving it on "Select..." still sends. At phone width the label and box fit without a sideways scroll.
 - After sending, the thanks carries a "Withdraw my answers" link, and nothing else is on the page: no sort, no relationship box, no "[Not built yet…]" line. From `/observe/` and from the bookmarked link alike.
 - "Withdraw my answers" opens a page saying what withdrawing does, with a "Withdraw my answers" button; opening it, reloading it or going Back changes nothing. Pressing the button says "Your answers have been withdrawn". Then `/observe/` and the bookmarked link both say "This link does not work", and as the participant the invitations page shows the person as before. At phone width the button fills the width.
+- Sending before fine-tuning (load the pathway again first): on "All 36 sorted!", under the bucket counts, "You can send your assessment now, or fine-tune how strong each one is in … first." and, side by side, "Send my assessment →" as the filled pill and "Continue to fine-tuning →" as the outlined one, with no slider to scroll past. Pressing send shows the thanks; the comparison (once three have answered) treats it as a sort sent with every slider untouched. Continuing still leads to the sliders and their "Send my assessment →". Undo still works from that screen. Keyboard: Tab reaches both buttons. Phone width: the two buttons stack, each whole, with no sideways scroll.
+- The participant's own "All 36 sorted!" shows only "Continue to fine-tuning →", as before, with no send button and no sentence about sending.
 
 ## Organisations and groups in the operator's admin (`/admin/`, as a superuser)
 
