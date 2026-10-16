@@ -75,6 +75,16 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - The footer's "Credits" shows the header while signed in, and the plain page once signed out.
 - With `ANVILLE_SIDEBAR=false` in `.env` and the server restarted, "Your pathway" is gone; the pathway's name and "Sign out" remain.
 
+## The hub's layout (the hub, beside the prototype's: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html#hub`)
+
+- The page is deep brown, and the hub, header included, is cream with rounded corners, inset a thin brown border from every edge. "Credits" sits below it on the brown, easy to read.
+- On a wide screen the hub is about as wide as the prototype's: the next step and the sections in a wide left column, and the coach and trusted voices cards in a narrower right one, in the prototype's proportions. No section's title wraps that would fit on one line in the prototype.
+- Section 1 shows "01", the Workbook "02–04" and Section 5 "05", each in small grey type to the left of the title; Before we begin shows no number, and its title lines up with the others. The Workbook is called "The Workbook". The Strengths assessment, within Section 1, shows no number.
+- The header says "0 of 5 sections complete" for a new participant, and counts up as sections, and the Strengths assessment, are completed. There is no "Where you started" card, even once the sort is in.
+- "Your consent · Your groups" sits below the hub, lined up with its left edge.
+- Phone width: one column, the cards below the sections; the brown border still shows, and nothing scrolls sideways.
+- A section the pathway marks as a side card (none until ticket 50 makes Walk with a coach and Five trusted voices so) shows in the right column as a card with its title, its sentence and its status, and not in the list; its title leads to it unless it is locked.
+
 ## Back to the hub and Section 1 (ticket 41b)
 
 - Completing onboarding, and later Section 1, lands on the hub with the next step's card highlighted.
