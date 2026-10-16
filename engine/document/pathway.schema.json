@@ -31,6 +31,23 @@
       "description": "The translation a passage is from when it names none of its own: one of 'translations'.",
       "type": "string"
     },
+    "photos": {
+      "description": "The pathway's photos, keyed by the section each is shown with, such as the hub's next step over a section's photo. Each is a file in the pathways/files folder, with its credit.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "credit"],
+        "properties": {
+          "file": {
+            "description": "The photo's name in the pathways/files folder, such as 'grass.jpg'.",
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*\\.(jpg|jpeg|png|webp)$"
+          },
+          "credit": { "type": "object" }
+        }
+      }
+    },
     "content": {
       "type": "object",
       "additionalProperties": false,

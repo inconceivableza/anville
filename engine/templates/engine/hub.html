@@ -22,6 +22,7 @@
               {# ✨ What it says is the document's: the section's own heading and sentence, or its title and estimate (ticket 49b). #}
               {% with step=hub.next_step %}
                 <section class="panel next">
+                  {% if photo %}<img src="{{ photo }}" alt="">{% endif %}
                   <p class="label">Your next step</p>
                   {% if step.next_step %}
                     <h2>{{ step.next_step.heading }}</h2>

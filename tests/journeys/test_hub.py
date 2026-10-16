@@ -238,6 +238,32 @@ def test_the_next_step_shows_the_sections_own_heading_and_sentence_or_else_its_t
     assert "Putting your calling into words" not in panel
 
 
+def with_a_photo(document, section_id="calling"):
+    """✨ The test pathway with the hub's photo of grass, a file beside the document, named by a section (ticket 49b)."""
+    document["photos"] = {
+        section_id: {"file": "grass.jpg", "credit": {"kind": "courtesy", "text": "Photograph of grass from Unsplash."}}
+    }
+    return document
+
+
+@pytest.mark.django_db
+def test_the_next_step_is_drawn_over_its_sections_photo_and_without_one_where_it_has_none(
+    signed_in_client, load_pathway
+):
+    load_pathway(with_a_photo(pathway_document()))
+
+    page = signed_in_client.get("/hub/")
+    assert page.status_code == 200
+    assert "<img" not in next_step(page.content.decode())
+
+    signed_in_client.post("/sections/onboarding/complete/")
+
+    photo = re.search(r'<img src="([^"]+)"', next_step(signed_in_client.get("/hub/").content.decode())).group(1)
+    served = signed_in_client.get(photo)
+    assert served.status_code == 200
+    assert served["Content-Type"] == "image/jpeg"
+
+
 @pytest.mark.django_db
 def test_authored_text_is_shown_escaped_and_unaltered(signed_in_client, load_pathway):
     document = pathway_document()

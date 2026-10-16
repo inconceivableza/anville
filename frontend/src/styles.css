@@ -914,6 +914,19 @@ main > .hub ~ .hub-consent {
   background: linear-gradient(0deg, var(--brown-85), var(--brown-15));
 }
 
+/* ✨ The section's photo, where the document names one, under the same shade; taller, as the prototype's (ticket 49b). */
+.next:has(> img) {
+  min-height: 360px;
+}
+
+.next > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .next > *:not(img) {
   position: relative;
   z-index: 2;
