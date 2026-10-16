@@ -8,9 +8,7 @@ by the author as needing none (public domain, or the author's own).
 """
 
 REQUIRED = "required"
-COURTESY = "courtesy"
-NONE = "none"
-CREDIT_KINDS = (REQUIRED, COURTESY, NONE)
+COURTESY = "courtesy"  # ✨ and "none", which lists nothing; the schema holds the three
 
 
 def credits_listed(document):

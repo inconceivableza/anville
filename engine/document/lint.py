@@ -21,6 +21,7 @@ def lint(document):
         *_missing_sections(document, section_ids),
         *_impossible_parts(document, section_ids),
         *_unshowable_side_cards_and_numbers(document),
+        *_photos_of_missing_sections(document, section_ids),
         *_unknown_linked_sections(document, section_ids),
         *_links_holding_their_own_section(document),
         *_empty_pages(document),
@@ -137,6 +138,13 @@ def _unshowable_side_cards_and_numbers(document):
                 f"{path}/side_card",
                 f"Section '{section['id']}' has parts, which are listed within it, so it cannot be a hub side card.",
             )
+
+
+def _photos_of_missing_sections(document, section_ids):
+    """✨ A photo is named by the section it is shown with, so one named for no section is shown nowhere (ticket 49b)."""
+    for section_id in document.get("photos", {}):
+        if section_id not in section_ids:
+            yield Problem(f"/photos/{section_id}", f"There is no section '{section_id}' in this pathway.")
 
 
 def _unknown_linked_sections(document, section_ids):
