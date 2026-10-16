@@ -214,6 +214,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 vars().update(env.email_url_config(env("EMAIL_URL", default="") or "consolemail://"))
 
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
+# ✨ Where Django's own messages, such as errors to ADMINS, come from. Django's default, root@localhost, is one a
+# provider refuses, so unless the environment names another it is the sending address above.
+SERVER_EMAIL = env("SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 
 # ✨ Set on a test system that can reach real mailboxes: every message then says, in its subject and at the top
 # of its body, that it is not from the real service. It wraps whichever backend the lines above chose.

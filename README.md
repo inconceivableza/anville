@@ -242,6 +242,7 @@ Everything a deployed copy needs is read from the environment, so one build serv
 | `DATABASE_CONN_MAX_AGE` | A database connection per request | Seconds to keep a connection for reuse |
 | `EMAIL_URL` | Email is fake: each message is printed in the server's output and nothing is delivered | The provider, as `smtp+tls://key:secret@host:587` |
 | `DEFAULT_FROM_EMAIL` | `webmaster@localhost` | The address messages come from |
+| `SERVER_EMAIL` | The same as `DEFAULT_FROM_EMAIL` | The address Django's own messages come from, such as errors sent to `ADMINS`. Django's own default, `root@localhost`, is refused by providers. The chart sets it from `email.from` |
 | `ANVILLE_EMAIL_DISCLAIMER` | Messages go as written | For a test system that can reach real mailboxes: every message has `[TEST]` put before its subject and this text at the top of its body, plain and HTML alike. The chart sets it on every staging environment |
 | `ANVILLE_DEMO_NOTICE` | Nothing is said | For a demo deployment: this text is shown on the homepage and on the account pages (sign up, sign in), saying it is a demo. The chart sets it on every staging environment |
 | `ANVILLE_COMMIT` | `unknown` | The commit the code was built from. The image sets it |

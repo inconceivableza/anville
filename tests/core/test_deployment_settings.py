@@ -126,6 +126,17 @@ def test_an_email_url_names_the_provider_and_its_credentials():
     }
 
 
+def test_djangos_own_messages_come_from_the_sending_address_unless_the_environment_names_another():
+    assert settings_with({}, "SERVER_EMAIL")["SERVER_EMAIL"] == "webmaster@localhost"
+    assert settings_with({"DEFAULT_FROM_EMAIL": "Anville <hello@example.org>"}, "SERVER_EMAIL")["SERVER_EMAIL"] == (
+        "Anville <hello@example.org>"
+    )
+    named = settings_with(
+        {"DEFAULT_FROM_EMAIL": "hello@example.org", "SERVER_EMAIL": "errors@example.org"}, "SERVER_EMAIL"
+    )
+    assert named["SERVER_EMAIL"] == "errors@example.org"
+
+
 def test_a_disclaimer_wraps_whichever_email_backend_was_chosen():
     fake = settings_with({"ANVILLE_EMAIL_DISCLAIMER": "From a test system."}, "EMAIL_BACKEND", "ANVILLE_DISCLAIMED_EMAIL_BACKEND")
     real = settings_with(

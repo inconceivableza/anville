@@ -70,6 +70,8 @@ from the variable before it, so the password must be safe inside a URL: letters,
 {{- with .Values.email.from }}
 - name: DEFAULT_FROM_EMAIL
   value: {{ . | quote }}
+- name: SERVER_EMAIL
+  value: {{ . | quote }}
 {{- end }}
 {{- if eq .Values.tier "staging" }}
 - name: ANVILLE_DEMO_NOTICE
