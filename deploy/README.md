@@ -217,6 +217,16 @@ It installs the pinned release after checking its checksum, unless that version 
 
 **Changing a secret.** Change it in the GitHub Environment and deploy again. The pods restart only when a secret has changed. `POSTGRES_PASSWORD` is the exception: PostgreSQL reads it once, when its data is first created.
 
+**Rotate the secret key.** Changing `DJANGO_SECRET_KEY` alone would sign everyone out and break whatever else was signed with the old key, such as the cookie that shows a link just issued. Observers' and coaches' links do not depend on it. Instead:
+
+1. In the GitHub Environment, copy the current `DJANGO_SECRET_KEY` into `DJANGO_SECRET_KEY_FALLBACKS` (several old keys go comma-separated), and give `DJANGO_SECRET_KEY` a new value, generated as `secrets.example.yaml` says.
+2. Deploy. New sessions and cookies are signed with the new key; those signed with the old one are still accepted.
+3. Once the sessions signed with the old key have expired, two weeks after the deploy by default, delete `DJANGO_SECRET_KEY_FALLBACKS` and deploy again.
+
+Remove the old key promptly, as Django's deployment checklist warns: while it is a fallback, anyone who holds it can still forge a session. If a key has leaked, skip the fallback and replace it outright, accepting that everyone is signed out.
+
+**Expired sessions.** Sessions are kept in the database, each tied to an account, and nothing else removes the expired ones. A CronJob runs `clearsessions` each night, at 03:45 by default (`sessions.schedule`), clear of the backup's hour. To run it now: `k create job --from=cronjob/anville-clearsessions clearsessions-now`.
+
 ## Backups
 
 With `backup.enabled`, a CronJob dumps the database each night, checks that the dump can be read back, and sends it over SFTP to `BACKUP_TARGET`, keeping the newest 30. To run one now:
