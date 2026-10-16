@@ -434,12 +434,13 @@
             "id": "contacts-intro",
             "type": "rich_text",
             "label": "Who knows you best?",
-            "body": "One of the most valuable parts of this course is comparing how you see yourself with how others experience you. We often miss things about ourselves that others can see clearly.\n\nWe need at least 2 people whose opinion you trust – people who know you well enough to be honest. They'll receive a short, anonymous survey about your strengths."
+            "body": "One of the most valuable parts of this course is comparing how you see yourself with how others experience you. We often miss things about ourselves that others can see clearly.\n\nWe need at least 2 people whose opinion you trust – people who know you well enough to be honest. They'll receive a short survey about your strengths, through a link you send them."
           },
           {
             "id": "contacts",
             "type": "contact_list",
-            "min_rows": 2
+            "needed": 3,
+            "optional": 2
           }
         ],
         "gate": {

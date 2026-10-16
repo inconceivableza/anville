@@ -624,7 +624,7 @@
       }
     },
     "contact_list": {
-      "description": "People who know the participant, a first name and an email address per row, with a way to add another. They are kept as contacts, apart from the participant's answers. At most 50.",
+      "description": "People who know the participant, a first name and an email address per row, each added with their observer's link or changed on their own. Once its rows are filled, one more is offered. They are kept as contacts, apart from the participant's answers. At most 50.",
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "type"],
@@ -632,10 +632,17 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "contact_list" },
         "estimate": { "$ref": "#/$defs/estimate" },
-        "min_rows": {
-          "description": "How many empty rows the list opens with. The section's gate says how many people are needed.",
+        "needed": {
+          "description": "How many of the list's first rows are marked as needed. The section's gate says what completing it takes.",
           "type": "integer",
-          "minimum": 1,
+          "minimum": 0,
+          "maximum": 50,
+          "default": 0
+        },
+        "optional": {
+          "description": "How many more rows follow the needed ones, marked as optional.",
+          "type": "integer",
+          "minimum": 0,
           "maximum": 50,
           "default": 5
         }

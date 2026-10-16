@@ -266,15 +266,13 @@ def test_the_four_end_ratings_are_fixed_once_the_letter_is_sent(participant):
 
 
 def add_people(client, count):
-    """✨ Save a contact list of `count` people, with fake details as the prototype's pre-filled rows have."""
-    return client.post(
-        "/answers/contacts/",
-        {
-            "name": [f"Person {number}" for number in range(count)],
-            "email": [f"person{number}@example.com" for number in range(count)],
-            "version": version(),
-        },
-    )
+    """✨ Bring the contact list up to `count` people, each added with their link on their own as the participant does
+    (ticket 51a), with fake details as the prototype's pre-filled rows have. Returns the last addition."""
+    added = None
+    for number in range(Contact.objects.filter(role=Contact.Role.CONTACT).count(), count):
+        person = {"name": f"Person {number}", "email": f"person{number}@example.com", "version": version()}
+        added = client.post("/contacts/contacts/", person)
+    return added
 
 
 CONTACTS_PAGE = "/sections/onboarding/pages/2/"
@@ -305,10 +303,9 @@ def test_the_contact_list_opens_with_the_prototypes_five_rows(participant):
     answer_onboarding(participant)
 
     page = participant.get(CONTACTS_PAGE).content.decode()
-    form = re.search(r'<form id="block-contacts".*?</form>', page, re.S).group(0)
+    contact_list = re.search(r'<div id="block-contacts".*?</ol>', page, re.S).group(0)
 
-    assert len(re.findall(r'<input[^>]*\bname="email"', form)) == 5
-    assert "+ Add another person" in form
+    assert len(re.findall(r'<input[^>]*\bname="email"', contact_list)) == 5
 
 
 @pytest.mark.django_db

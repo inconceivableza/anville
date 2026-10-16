@@ -21,3 +21,8 @@
 - The faithful port keeps the original prototype's gates
 - Since 50, both side cards require only Before we begin and are completed with "Mark complete", as any section; Walk with a coach has no gate, and Five trusted voices has Before we begin's old contacts clause
 - Why the side cards stay complete: links expire after 30 days, and once answer collection freezes (B2B-55) none of the observers' links can be reissued, so a completion worked out afresh from working links would lock the Workbook for good a month in
+
+**Carried from 51a**
+
+- Five trusted voices' list marks three rows "Needed" (`needed: 3` on the block), but its gate clause and its "Who knows you best?" text still say at least 2 (and the intro test pins "We need at least 2 people"). Bring the text to 3 with the new gate. Adding a person now issues their link in the same act, so people on the list always had one
+- The hub's card takes its tag from the section's status first: once 52 completes the section from links, "Complete" replaces "N more needed" and "Waiting for answers" there

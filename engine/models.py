@@ -193,6 +193,29 @@ class Response(models.Model):
         Response.objects.filter(pk=self.pk).update(updated_at=timezone.now())
         return kept
 
+    def add_contact(self, block_id, person, lifetime, most):
+        """✨ Add one person to the end of a block's list, with their observer's link lasting `lifetime`, together or
+        not at all, so nobody is ever listed without having had a link (ticket 51a). Returns the contact and the link's
+        token, shown once; None if the list already holds `most`. Nobody else on the list is touched. The response's
+        row is locked first, so two people added at once take the next two places rather than the same one."""
+        with transaction.atomic():
+            Response.objects.select_for_update().filter(pk=self.pk).first()
+            held = self.contacts.filter(block_id=block_id)
+            if held.count() >= most:
+                return None
+            last = held.aggregate(last=models.Max("position"))["last"]
+            contact = Contact.objects.create(
+                response=self,
+                block_id=block_id,
+                role=Contact.Role.CONTACT,
+                position=0 if last is None else last + 1,
+                name=person["name"],
+                email=person["email"],
+            )
+            token = Invitation.issue(contact, lifetime)
+        Response.objects.filter(pk=self.pk).update(updated_at=timezone.now())
+        return contact, token
+
     def answers_with_contacts_and_visits(self):
         """✨ The stored answers, with each block's contacts read in as its answer, as the gate and progress read it.
         Each contact carries its id, which a contact list's rows send back so a save can tell them apart. Each visit to

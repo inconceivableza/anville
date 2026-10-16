@@ -33,7 +33,7 @@ def test_with_the_old_key_among_the_fallbacks_the_participant_stays_signed_in_an
 
     settings.SECRET_KEY = A_NEW_KEY
     settings.SECRET_KEY_FALLBACKS = [old_key]
-    page = participant.get("/invitations/")
+    page = participant.get("/invitations/", follow=True)
 
     assert page.status_code == 200
     assert ISSUED_LINK.search(page.content.decode())

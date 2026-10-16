@@ -18,7 +18,7 @@ from access.models import Consent
 from engine.models import Invitation, ObserverAssessments, ObserverResponse, Response
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.test_consent import give_consent, withdraw_consent
-from tests.journeys.test_contact_list import JO, PRIYA, save_contacts
+from tests.journeys.test_contact_list import JO, PRIYA, save_contacts, take_off_the_list
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_invitations import (  # noqa: F401  (observer is a fixture, used by name)
     A_WRONG_TOKEN,
@@ -35,7 +35,7 @@ def observed_pathway():
     """✨ The sort pathway with a contact list in onboarding, and observer wording for one bucket and the sort's heading
     (its item a5 already has observer wording)."""
     document = sort_pathway()
-    document["content"]["sections"][0]["blocks"].append({"id": "contacts", "type": "contact_list", "min_rows": 2})
+    document["content"]["sections"][0]["blocks"].append({"id": "contacts", "type": "contact_list", "needed": 2})
     not_me = document["instrument"]["buckets"][0]
     not_me["label"] = {"participant": not_me["label"], "observer": "Not {name}"}
     document["presentation"]["sort_wording"] = {
@@ -182,7 +182,7 @@ def test_a_sent_assessment_survives_its_link_being_revoked_or_reissued_or_its_pe
     if ended == "reissued":
         issue_link(participant, "Jo")
     if ended == "taken off the list":
-        save_contacts(participant, PRIYA)
+        take_off_the_list("Jo")
 
     assert observer_assessments().assessments == [complete_sort()]
 
@@ -204,7 +204,7 @@ def test_nothing_kept_with_a_sent_assessment_ties_it_to_the_contact_or_their_lin
     secret = token_of(claim(observer, issue_link(participant, "Jo")))
     send(observer, complete_sort())
 
-    invitation = Invitation.objects.get()
+    invitation = Invitation.objects.get(contact__name="Jo")
     kept = ObserverResponse.objects.values().get()
     assert "contact_id" not in kept and "invitation_id" not in kept
     ties = {invitation.token_hash, invitation.secret_hash, secret}

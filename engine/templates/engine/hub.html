@@ -54,18 +54,12 @@
           </div>
           <aside class="side">
             {% for section in hub.side_cards %}
-              {% include "engine/hub_side_card.html" %}
-            {% endfor %}
-            <div class="card dark">
-              <div class="row"><h3>Five trusted voices</h3><span class="tag">{% if voices.invited == 0 %}Not started{% else %}{{ voices.replied }} replied{% endif %}</span></div>
-              <p>Invite people who know you well. Their anonymous answers sit beside your own in Section 1.</p>
-              <div class="meter"><div class="meter-label"><span>Invited</span><span>{{ voices.invited }} / {{ voices.max }}</span></div><progress class="track" max="{{ voices.max }}" value="{{ voices.invited }}" aria-hidden="true"></progress></div>
-              <div class="meter"><div class="meter-label"><span>Replied</span><span>{{ voices.replied }} / {{ voices.max }}</span></div><progress class="track" max="{{ voices.max }}" value="{{ voices.replied }}" aria-hidden="true"></progress></div>
-              <a class="pill" data-magnetic href="{% url 'invitations' %}">Manage <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span></a>
-              {% if voices.names %}
-                <ul class="names">{% for name in voices.names %}<li>{{ name }}</li>{% endfor %}</ul>
+              {% if section.id == voices.section %}
+                {% include "engine/hub_voices_card.html" %}
+              {% else %}
+                {% include "engine/hub_side_card.html" %}
               {% endif %}
-            </div>
+            {% endfor %}
             <div class="card">
               <div class="row"><h3>Walk with a mentor</h3><span class="tag">Optional</span></div>
               <p>When you're ready, ask someone to walk this with you. We'll send them a short briefing pack.</p>

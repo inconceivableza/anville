@@ -28,6 +28,8 @@ from engine.views import (
     coaching,
     comparison,
     complete_section,
+    contact,
+    contacts,
     credits_page,
     download,
     home,
@@ -67,6 +69,9 @@ urlpatterns = [
     path("results/<slug:block_id>/comparison/coach/", share_with_coach, name="share_with_coach"),
     path("downloads/<slug:block_id>/", download, name="download"),
     path("photos/<slug:section_id>/", photo, name="photo"),
+    # ✨ A contact list's people, each added (with their link) or changed on their own (ticket 51a).
+    path("contacts/<slug:block_id>/", contacts, name="contacts"),
+    path("contacts/<slug:block_id>/<int:contact_id>/", contact, name="contact"),
     path("invitations/", invitations, name="invitations"),
     path("invitations/<int:contact_id>/issue/", issue_invitation, name="issue_invitation"),
     path("invitations/<int:contact_id>/revoke/", revoke_invitation, name="revoke_invitation"),

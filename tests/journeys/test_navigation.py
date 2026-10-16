@@ -130,7 +130,7 @@ def test_after_onboarding_the_sidebar_shows_statuses_marks_the_current_section_a
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     "address",
-    ["/hub/", f"/sections/{CALLING}/", f"/results/{SORT}/", f"/results/{SORT}/comparison/", "/invitations/"],
+    ["/hub/", f"/sections/{CALLING}/", f"/results/{SORT}/", f"/results/{SORT}/comparison/"],
 )
 def test_every_participant_page_carries_the_header_with_sign_out_and_the_sidebar(under_way, address):
     page = under_way.get(address).content.decode()

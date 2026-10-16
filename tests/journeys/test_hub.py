@@ -5,8 +5,9 @@ import re
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.test import Client
 
-from tests.documents import pathway_document
+from tests.documents import complete_sort, pathway_document, sort_pathway
 from tests.journeys.pages import loads_the_built_stylesheet, version_on
 from tests.journeys.test_access import PASSWORD
 from tests.journeys.test_consent import give_consent
@@ -180,6 +181,84 @@ def test_a_side_card_section_is_drawn_as_a_card_and_not_listed_with_the_sections
     signed_in_client.post("/sections/onboarding/complete/")
 
     assert "Not started" in side_card(signed_in_client.get("/hub/").content.decode(), "Five trusted voices")
+
+
+@pytest.fixture
+def trusted_voices(signed_in_client, load_pathway):
+    """✨ A participant past Before we begin, whose hub has Five trusted voices beside it, over the sort pathway so that
+    observers can answer."""
+    from tests.journeys.test_contact_list import with_trusted_voices  # ✨ here, as that module imports this one
+
+    load_pathway(with_trusted_voices(sort_pathway()))
+    signed_in_client.post("/sections/onboarding/complete/")
+    return signed_in_client
+
+
+def voices_card(client):
+    """✨ The hub's Five trusted voices card."""
+    page = client.get("/hub/").content.decode()
+    return re.search(r'<section class="card dark hub-side-card hub-voices.*?</section>', page, re.S).group()
+
+
+def meters(card):
+    """✨ The card's meters, as {"Invited": n, "Answered": n}."""
+    return {label: int(count) for label, count in re.findall(r"<span>(Invited|Answered)</span><span>(\d+) /", card)}
+
+
+def tag_of(card):
+    return re.search(r'<span class="tag[^"]*">(.*?)</span>', card).group(1)
+
+
+def add_people_with_links(client, *people):
+    """✨ Add each person on Five trusted voices' page, which makes their link, and return the links."""
+    from tests.journeys.test_contact_list import VOICES, add_person, link_shown  # ✨ as above
+
+    return [link_shown(client.get(add_person(client, person, VOICES).url).content.decode()) for person in people]
+
+
+@pytest.mark.django_db
+def test_the_voices_card_counts_working_links_as_invited_and_assessments_sent_as_answered(trusted_voices):
+    from tests.journeys.test_invitations import invitation_action  # ✨ as above
+    from tests.journeys.test_observer_assessment import send
+    from tests.journeys.test_observer_landing import claim
+
+    jo, priya, _ = add_people_with_links(trusted_voices, *PEOPLE)
+    trusted_voices.post(invitation_action(trusted_voices, "Chris", "revoke"))
+    assert meters(voices_card(trusted_voices)) == {"Invited": 2, "Answered": 0}
+
+    claim(Client(), priya)
+    jos_observer = Client()
+    claim(jos_observer, jo)
+    assert meters(voices_card(trusted_voices)) == {"Invited": 2, "Answered": 0}
+
+    send(jos_observer, complete_sort())
+    assert meters(voices_card(trusted_voices)) == {"Invited": 2, "Answered": 1}
+
+
+@pytest.mark.django_db
+def test_the_voices_card_names_nobody(trusted_voices):
+    add_people_with_links(trusted_voices, *PEOPLE)
+
+    card = voices_card(trusted_voices)
+
+    for name, email in PEOPLE:
+        assert name not in card
+        assert email not in card
+
+
+@pytest.mark.django_db
+def test_once_five_trusted_voices_is_complete_the_card_never_asks_for_more_people(trusted_voices):
+    add_people_with_links(trusted_voices, PEOPLE[0])
+    assert tag_of(voices_card(trusted_voices)) == "2 more needed"
+
+    trusted_voices.post("/sections/voices/complete/")
+
+    card = voices_card(trusted_voices)
+    assert tag_of(card) == "Complete"
+    assert "needed" not in card
+
+
+PEOPLE = (("Jo", "jo@example.com"), ("Priya", "priya@example.com"), ("Chris", "chris@example.com"))
 
 
 @pytest.mark.django_db

@@ -18,3 +18,8 @@
 
 - Until A4A-51a the list was edited in two places, onboarding and the invitations page; it is one page now
 - The autosave bug carried from 13a went to A4A-51a, whose page saves each person on their own
+
+**Carried from 51a**
+
+- Since 51a nobody can be taken off the list at all: each row saves one person, and a row saved without a name or email is refused, so clearing a row no longer removes anyone. The whole-list save is gone
+- The tests that need someone taken off the list use `take_off_the_list` in `tests/journeys/test_contact_list.py`, which deletes the contact directly; swap it for the page's button

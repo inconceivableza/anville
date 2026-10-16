@@ -13,6 +13,7 @@ from django.db import IntegrityError
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods, require_POST
 
@@ -53,16 +54,9 @@ from engine.document.coach import (
     coach_from_form,
     commitments,
 )
-from engine.document.contacts import (
-    MAX_CONTACTS,
-    contact_id_per_row,
-    contacts_from_form,
-    rows_as_typed,
-    rows_posted,
-    rows_to_show,
-)
+from engine.document.contacts import LIST_FULL, MAX_CONTACTS, contact_from_form, needed, rows_of, rows_to_fill
 from engine.document.aggregation import aggregate
-from engine.document.gates import clauses_of, has_content
+from engine.document.gates import clauses_of, has_content, links_issued_key
 from engine.document.scoring import score
 from engine.hub import (
     block_ids_fixed_on_completion,
@@ -73,8 +67,15 @@ from engine.hub import (
     page_reached,
     section_by_id,
     track_sections,
+    where_voices_stand,
 )
-from engine.document.observers import link_lifetime, privacy_notice, relationship_from_form, relationship_question
+from engine.document.observers import (
+    link_lifetime,
+    minimum_observers,
+    privacy_notice,
+    relationship_from_form,
+    relationship_question,
+)
 from engine.document.photos import credits_listed
 from engine.models import Contact, Invitation, ObserverResponse, PathwayVersion, Publication, Response, Result
 from engine.document.tie_break import pair_plan, reweigh
@@ -155,7 +156,7 @@ def hub(request):
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
             "coach": _coach_of(state.response),
             "coach_page": _coach_page_of(state.version.document, hub),
-            "voices": _hub_voices(state.response),
+            "voices": _hub_voices(state, hub),
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
@@ -288,18 +289,20 @@ def section(request, section_id, page=1):
     _page_or_404(section, page)
     if page > reached:
         return redirect(page_url(section_id, reached))
-    # ✨ A coach's link just issued from the coach page, shown this once, as on the invitations page. Read only on a page
-    # holding a coach checklist, whose address is the path the cookie was set for, so deleting it here reaches it; the
-    # section's later pages sit under that path too when the checklist is on its first.
-    holds_checklist = any(block["type"] == "coach_checklist" for block in pages_of(section)[page - 1])
-    issued = _issued_link(request) if holds_checklist else None
-    shown = _section_shown(
-        request, state, section, _section_page(state, section, page, _asked_rows(request.GET), issued=issued)
-    )
+    # ✨ A link just issued, a coach's or an observer's, shown this once. Read only on a page holding a coach checklist or
+    # a contact list, whose address is the path the cookie was set for, so deleting it here reaches it; the section's
+    # later pages sit under that path too when the block is on its first.
+    shows_links = any(block["type"] in LISTED_WITH_LINKS for block in pages_of(section)[page - 1])
+    issued = _issued_link(request) if shows_links else None
+    shown = _section_shown(request, state, section, _section_page(state, section, page, issued=issued))
     if issued is not None:
         shown["Cache-Control"] = "no-store"
         shown.delete_cookie(ISSUED_COOKIE, path=request.path)
     return shown
+
+
+# ✨ The blocks whose people are listed with their links: a coach checklist's coach, and a contact list's people.
+LISTED_WITH_LINKS = ("coach_checklist", "contact_list")
 
 
 @login_required
@@ -381,6 +384,9 @@ def save_answer(request, block_id):
         block = answerable_block(state.version.document, block_id)
     except UnknownBlock:
         raise Http404("This pathway version has no block by that identifier that takes an answer.")
+    if BLOCK_TYPES[block["type"]].captures is CONTACTS:
+        # ✨ Never the whole list at once, which from a page left open would drop whoever was added since (ticket 51a).
+        raise Http404("A contact list keeps each person on their own, at its own address.")
     # ✨ A block a participant has not reached is as shut as the page that would have shown it, whether a
     # lock or an unconfirmed reading holds it. Otherwise they could fill it in without ever opening it, and
     # both would be decoration again, which is exactly the prototype's mistake.
@@ -392,32 +398,13 @@ def save_answer(request, block_id):
         return _refuse_fixed(request)
     block_type = BLOCK_TYPES[block["type"]]
     try:
-        if block_type.captures is CONTACTS:
-            names, emails = request.POST.getlist("name"), request.POST.getlist("email")
-            value = contacts_from_form(names, emails, request.POST.getlist("contact"))
-        else:
-            value = answer_from_form(state.version.document, block, request.POST.get("value"))
+        value = answer_from_form(state.version.document, block, request.POST.get("value"))
     except AnswerRefused as refused:
-        context = {"refusal": str(refused), "invalid_row": refused.row, "invalid_field": refused.field}
-        if block_type.captures is CONTACTS and request.POST.get("next") == "invitations":
-            # ✨ That list is not autosaved, so there is no status line to put this in: the page comes back instead,
-            # with the list as typed.
-            typed = {"rows": rows_as_typed(names, emails, request.POST.getlist("contact")), **context}
-            return _invitations_page(request, refused={block_id: typed}, status=400)
-        return render(request, "engine/save_status.html", context, status=400)
+        return render(request, "engine/save_status.html", {"refusal": str(refused)}, status=400)
 
     participant_response = state.stored_response(request.user)
     # ✨ The row is updated in place, so the answers read before are a step behind what is about to be stored.
     saved = state.with_answers({**state.answers, block_id: value})
-    if block_type.captures is CONTACTS:
-        saved_contacts = participant_response.replace_contacts(block_id, value, Contact.Role.CONTACT)
-        if request.POST.get("next") == "invitations":
-            return _see_other(f"{reverse('invitations')}{_rows_query(request.POST)}")
-        # ✨ main.js puts these back into the rows, so the next autosave from the same page edits the people this one
-        # kept rather than adding them again.
-        saved_ids = [contact.pk for contact in saved_contacts]
-        contact_ids = contact_id_per_row(value, saved_ids, rows_posted(names, emails))
-        return _saved(request, saved, section, block_id, contact_ids)
     if block_type.scored:
         scores = score(state.version.document, value)
         try:
@@ -601,25 +588,18 @@ def _coach_declined(contact_id):
     return Invitation.objects.filter(contact_id=contact_id, coach_answer=Invitation.CoachAnswer.DECLINED).exists()
 
 
-def _saved(request, state, section, block_id, contact_ids=None):
+def _saved(request, state, section, block_id):
     """✨ What a stored answer sends back: with htmx, the status and its page's gate; without, its page again.
 
-    A contact list's "add another" without JavaScript saves the list and asks for one more row than it showed,
-    which the page then shows. A block that opens what follows (a reading) lands at its confirmation, with what it
-    opened beneath, rather than back at its top above what was just read (ticket 41e).
+    A block that opens what follows (a reading) lands at its confirmation, with what it opened beneath, rather than
+    back at its top above what was just read (ticket 41e).
     """
     page = page_of(section, block_id)
     if request.headers.get("HX-Request") == "true":
         shown = _section_page(state, section, page)
-        return render(request, "engine/save_result.html", {**shown, "contact_ids": contact_ids})
+        return render(request, "engine/save_result.html", shown)
     block = next(block for block in section["blocks"] if block["id"] == block_id)
-    return _see_other(f"{page_url(section['id'], page)}{_rows_query(request.POST)}#{landing_of(block)}")
-
-
-def _rows_query(posted):
-    """✨ The address's query for the rows "add another" asked for without JavaScript, or nothing."""
-    rows = _asked_rows(posted)
-    return f"?rows={rows}" if rows else ""
+    return _see_other(f"{page_url(section['id'], page)}#{landing_of(block)}")
 
 
 @login_required
@@ -779,16 +759,31 @@ def _coach_of(response):
     }
 
 
-def _hub_voices(response):
-    """✨ The trusted-voices card on the hub: how many people the participant has invited, how many have replied,
-    their names, and the most they can invite."""
-    if response is None:
-        return {"invited": 0, "replied": 0, "names": [], "max": MAX_CONTACTS}
-    contacts = response.contacts.filter(role=Contact.Role.CONTACT).select_related("invitation").order_by("position")
-    names = [contact.name for contact in contacts]
-    live = [contact.live_invitation() for contact in contacts]
-    replied = sum(1 for invitation in live if invitation and invitation.claimed_at)
-    return {"invited": len(names), "replied": replied, "names": names, "max": MAX_CONTACTS}
+def _hub_voices(state, hub):
+    """✨ The Five trusted voices card (ticket 51a): the hub's side card whose section holds a contact list, or None for
+    a pathway without one, or while it is locked, when it is drawn as any other side card. It says where things stand,
+    how many people have a working link (invited) and how many observer assessments have been sent (answered), each
+    out of the rows the list asks to be filled, and never anyone's name: the section's own page lists everyone."""
+    document = state.version.document
+    for block in blocks_of(document):
+        if block["type"] != "contact_list":
+            continue
+        section_id = section_of(document, block["id"])["id"]
+        card = next((side_card for side_card in hub.side_cards() if side_card.id == section_id), None)
+        if card is None or card.is_locked:
+            continue
+        invited = state.answers.get(links_issued_key(block["id"]), 0)
+        answered = len(ObserverResponse.assessments_for(state.response).assessments) if state.response else 0
+        stand = where_voices_stand(card, needed(block), invited, answered, minimum_observers(document))
+        return {
+            "section": section_id,
+            "tag": stand.tag,
+            "line": stand.line,
+            "invited": invited,
+            "answered": answered,
+            "out_of": max(rows_to_fill(block), invited, answered, 1),
+        }
+    return None
 
 
 @login_required
@@ -858,30 +853,108 @@ def photo(request, section_id):
 @login_required
 @consent_required
 def invitations(request):
-    """✨ The people on the participant's contact list, each with a link to act as an observer (ADR 0005). A link just
-    issued is shown this once, from the cookie issuing left, which goes as it is read; a reload shows none."""
-    issued = _issued_link(request)
-    shown = _invitations_page(request, issued=issued)
-    shown["Cache-Control"] = "no-store"
-    if issued is not None:
-        shown.delete_cookie(ISSUED_COOKIE, path=reverse("invitations"))
-    return shown
+    """✨ The old address of the invitations page, which is now the contact list's own page (ticket 51a): the first
+    contact list the participant has reached, or else the hub."""
+    state = _participant(request.user)
+    document = state.version.document if state.version else None
+    for block in blocks_of(document) if document else ():
+        if block["type"] == "contact_list" and _is_open(state, section_of(document, block["id"]), block):
+            return redirect(_block_address(document, block["id"]))
+    return redirect("hub")
+
+
+@login_required
+@consent_required
+@require_POST
+def contacts(request, block_id):
+    """✨ Add one person to a contact list, and make their observer's link in the same act (ticket 51a), so nobody is
+    listed without having had one. Then back to the list at them, which shows the link this once. Nobody else on the
+    list is touched, so a page left open since someone else was added never drops them."""
+    state = _participant(request.user, first_version=lambda: _published_version(request.POST.get("version")))
+    block = _block_of_type(state.version, block_id, "contact_list")
+    shut = _list_shut(request, state, block)
+    if shut is not None:
+        return shut
+    try:
+        person = contact_from_form(request.POST.get("name"), request.POST.get("email"))
+    except AnswerRefused as refused:
+        return _person_refused(request, state, block, refused)
+    lifetime = link_lifetime(state.version.document)
+    added = state.stored_response(request.user).add_contact(block_id, person, lifetime, MAX_CONTACTS)
+    if added is None:
+        return _person_refused(request, state, block, AnswerRefused(LIST_FULL))
+    return _back_with_link(request, *added)
+
+
+@login_required
+@consent_required
+@require_POST
+def contact(request, block_id, contact_id):
+    """✨ Change one person's name or email address, and theirs alone (ticket 51a). Their link keeps working. Another
+    participant's contact, or one from another list, is a 404 that says nothing of whether it exists."""
+    state = _participant(request.user)
+    block = _block_of_type(state.version, block_id, "contact_list")
+    person = _own_contact_or_404(request.user, contact_id)
+    if person.block_id != block_id or person.role != Contact.Role.CONTACT or person.response != state.response:
+        raise Http404("You have no contact by that number on this list.")
+    shut = _list_shut(request, state, block)
+    if shut is not None:
+        return shut
+    try:
+        changed = contact_from_form(request.POST.get("name"), request.POST.get("email"))
+    except AnswerRefused as refused:
+        return _person_refused(request, state, block, refused, contact_id=person.pk)
+    Contact.objects.filter(pk=person.pk).update(**changed)
+    return _see_other(_listed_at(person))
+
+
+def _list_shut(request, state, block):
+    """✨ The refusal for a change to a contact list the participant has not reached, or whose people a completion
+    fixed, or None while it is open to change."""
+    if not _is_open(state, section_of(state.version.document, block["id"]), block):
+        return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
+    if block["id"] in state.fixed:
+        return _refuse_fixed(request)
+    return None
+
+
+def _person_refused(request, state, block, refused, contact_id=None):
+    """✨ The list's page again, saying why one person was not saved, with what was typed in their row (or, for someone
+    new, the first empty one) and the field at fault marked, so nothing typed is lost."""
+    section = section_of(state.version.document, block["id"])
+    shown = _section_page(state, section, page_of(section, block["id"]))
+    typed = {
+        "contact_id": contact_id,
+        "name": request.POST.get("name", ""),
+        "email": request.POST.get("email", ""),
+        "refusal": str(refused),
+        "invalid": refused.field,
+    }
+    on_page = next(shown_block for shown_block in shown["section"]["blocks"] if shown_block["id"] == block["id"])
+    on_page["rows"] = _contact_rows(block, state.answers, typed=typed)
+    if not any(row.get("refusal") for row in on_page["rows"]):
+        on_page["refusal"] = typed["refusal"]
+    return _section_shown(request, state, section, shown, status=400)
 
 
 @login_required
 @consent_required
 @require_POST
 def issue_invitation(request, contact_id):
-    """✨ Issue, or reissue, one contact's link, then go back to where that person is listed, which shows it this once:
-    only its hash is kept. An observer is listed on the invitations page; the coach on the coach page, and their link
-    leads to the coach's own page rather than an observer's.
+    """✨ Issue, or reissue, one contact's link: one that was lost or has expired. An observer's link leads to the
+    observer's landing; the coach's to the coach's own page."""
+    contact = _own_contact_or_404(request.user, contact_id)
+    token = Invitation.issue(contact, link_lifetime(contact.response.version.document))
+    return _back_with_link(request, contact, token)
+
+
+def _back_with_link(request, contact, token):
+    """✨ Back to where a contact is listed, which shows the link just issued this once: only its hash is kept.
 
     A redirect, so a reload of the page that follows never issues again. The link travels to that page in a short-lived
     signed cookie of the participant's own, not in the address (where the history would keep it) or the session (where
     the database would).
     """
-    contact = _own_contact_or_404(request.user, contact_id)
-    token = Invitation.issue(contact, link_lifetime(contact.response.version.document))
     link_to = "coaching" if contact.role == Contact.Role.COACH else "observe"
     link = request.build_absolute_uri(reverse(link_to, args=[token]))
     listed_at = _listed_at(contact)
@@ -922,11 +995,13 @@ def revoke_invitation(request, contact_id):
 
 
 def _listed_at(contact):
-    """✨ The address of the page a contact is listed on, at their place in it: the invitations page for an observer,
-    the page of the coach checklist that chose them for a coach."""
-    if contact.role != Contact.Role.COACH:
-        return f"{reverse('invitations')}#person-{contact.pk}"
-    return _block_address(contact.response.version.document, contact.block_id)
+    """✨ The address of the page a contact is listed on, at their place in it: the page of the contact list holding
+    them, at their row, for an observer; the page of the coach checklist that chose them for a coach."""
+    document = contact.response.version.document
+    if contact.role == Contact.Role.COACH:
+        return _block_address(document, contact.block_id)
+    section = section_of(document, contact.block_id)
+    return f"{page_url(section['id'], page_of(section, contact.block_id))}#person-{contact.pk}"
 
 
 def observe(request, token):
@@ -1222,43 +1297,6 @@ def _asked_by(invitation):
     return participant_response.version.document, name_shown_for(participant_response.participant)
 
 
-def _invitations_page(request, issued=None, refused=None, status=200):
-    """✨ The invitations page. `issued` is a link just issued, shown this once; `refused` is a contact list whose
-    save was refused, keyed by block, with its rows as typed and why, shown in place of what is stored."""
-    state = _participant(request.user)
-    contacts = Contact.objects.none()
-    if state.response is not None:
-        contacts = (
-            state.response.contacts.filter(role=Contact.Role.CONTACT)
-            .select_related("invitation")
-            .order_by("block_id", "position")
-        )
-    people = [{"contact": contact, "invitation": contact.live_invitation()} for contact in contacts]
-    contact_lists = _contact_lists_to_edit(state, request.GET, refused or {})
-    shown = {"people": people, "issued": issued, "contact_lists": contact_lists}
-    if state.version is not None:
-        shown["pathway"] = {"version_id": state.version.pk, "max_contacts": MAX_CONTACTS}
-    return render(request, "engine/invitations.html", shown, status=status)
-
-
-def _contact_lists_to_edit(state, query, refused):
-    """✨ The pathway's contact lists the participant can change here, as their template needs them: those they have
-    reached, and not fixed by a completion. A list whose save was refused shows as typed, with why."""
-    if state.version is None:
-        return []
-    document = state.version.document
-    return [
-        {
-            **_block_for_participant(document, block, state.answers, state.fixed, {}, _asked_rows(query)),
-            **refused.get(block["id"], {}),
-        }
-        for block in blocks_of(document)
-        if block["type"] == "contact_list"
-        and block["id"] not in state.fixed
-        and _is_open(state, section_of(document, block["id"]), block)
-    ]
-
-
 def _own_contact_or_404(user, contact_id):
     """✨ One of this participant's own contacts, their coach included, or a 404 that says nothing about whether anyone
     else has a contact by that number."""
@@ -1356,16 +1394,10 @@ def _section_or_404(version, section_id):
     return section
 
 
-def _asked_rows(query):
-    """✨ How many rows a contact list's "add another" asked for without JavaScript, or 0. Capped when shown."""
-    asked = query.get("rows", "")
-    return min(int(asked), MAX_CONTACTS) if asked.isdigit() else 0
-
-
-def _section_page(state, section, page=1, asked_rows=0, issued=None):
+def _section_page(state, section, page=1, issued=None):
     """✨ One page of a section as its template needs it. Every page but the last ends in "Continue →", held by that
-    page's own clauses; the last ends in the section's completion, held by the whole gate. `issued` is a coach's link
-    just issued, which a coach checklist on the page shows this once."""
+    page's own clauses; the last ends in the section's completion, held by the whole gate. `issued` is a link just
+    issued, a coach's or an observer's, which the page shows this once beside the person it is for."""
     version, answers, fixed = state.version, state.answers, state.fixed
     opened, activity_open = open_blocks(section, answers, state.sections, up_to_page=page)
     on_page = {block["id"] for block in pages_of(section)[page - 1]}
@@ -1393,7 +1425,6 @@ def _section_page(state, section, page=1, asked_rows=0, issued=None):
             "version_id": version.pk,
             "scale_points": SCALE_POINTS,
             "long_text_max_length": LONG_TEXT_MAX_LENGTH,
-            "max_contacts": MAX_CONTACTS,
         },
         "section": {
             "id": section["id"],
@@ -1402,8 +1433,7 @@ def _section_page(state, section, page=1, asked_rows=0, issued=None):
             "complete_label": text_for(section.get("complete_label", "Mark complete"), "participant"),
             "is_part": "part_of" in section,
             "blocks": [
-                _block_for_participant(version.document, block, answers, fixed, states, asked_rows, issued)
-                for block in blocks
+                _block_for_participant(version.document, block, answers, fixed, states, issued) for block in blocks
             ],
         },
         "is_complete": section["id"] in state.completed,
@@ -1477,10 +1507,10 @@ def _published_version(posted):
     return PathwayVersion.objects.filter(pk=int(posted), publications__isnull=False).distinct().first()
 
 
-def _block_for_participant(document, block, answers, fixed, states, asked_rows=0, issued=None):
+def _block_for_participant(document, block, answers, fixed, states, issued=None):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
     identifier; a link to a section outside the participant's track has no state and shows nothing. `issued` is a
-    coach's link just issued."""
+    link just issued, a coach's or an observer's."""
     widget = BLOCK_TYPES[block["type"]].widget
     text = authored_text(block, "participant")
     if block["type"] == "scripture_reading":
@@ -1488,7 +1518,7 @@ def _block_for_participant(document, block, answers, fixed, states, asked_rows=0
             shown["translation"] = translation_shown(document, passage)
     is_checklist = block["type"] == "coach_checklist"
     return {
-        "rows": _contact_rows(block, answers, asked_rows) if block["type"] == "contact_list" else None,
+        "rows": _contact_rows(block, answers, issued) if block["type"] == "contact_list" else None,
         "checklist": _opening_checklist(text, _coach_kept(answers, block["id"]), issued) if is_checklist else None,
         "id": block["id"],
         "landing": landing_of(block),  # ✨ where saving it without JavaScript comes back to
@@ -1511,8 +1541,31 @@ def _opening_checklist(text, kept, issued=None):
     return _checklist_screen(text)
 
 
-def _contact_rows(block, answers, asked_rows):
-    """✨ A contact list's rows: every saved person in order, then empty rows up to the number to show."""
-    contacts = answers.get(block["id"]) or []
-    empty = {"name": "", "email": ""}
-    return [*contacts, *[empty] * (rows_to_show(block, contacts, asked_rows) - len(contacts))]
+def _contact_rows(block, answers, issued=None, typed=None):
+    """✨ A contact list's rows: each person on it in order, with their invitation while their link works and the link
+    itself if it was just issued (`issued`, shown this once), then empty rows for the next people. Each row is marked
+    needed or optional by its place. `typed` is a person whose save was refused, shown as typed in their row, or for
+    someone new in the first empty one, with why and the field at fault."""
+    people = answers.get(block["id"]) or []
+    links = Invitation.objects.filter(contact_id__in=[person["id"] for person in people], expires_at__gt=timezone.now())
+    working = {invitation.contact_id: invitation for invitation in links}
+    rows = []
+    for number in range(1, rows_of(block, len(people)) + 1):
+        person = people[number - 1] if number <= len(people) else {"name": "", "email": "", "id": None}
+        just_issued = issued and issued["contact"] == person["id"]
+        rows.append(
+            {
+                "number": number,
+                "is_needed": number <= needed(block),
+                "contact_id": person["id"],
+                "name": person["name"],
+                "email": person["email"],
+                "invitation": working.get(person["id"]),
+                "issued": issued["link"] if just_issued else None,
+            }
+        )
+    if typed is not None:
+        row = next((row for row in rows if row["contact_id"] == typed["contact_id"]), None)
+        if row is not None:  # ✨ a full list has no empty row: its refusal is the list's own
+            row.update(name=typed["name"], email=typed["email"], refusal=typed["refusal"], invalid=typed["invalid"])
+    return rows

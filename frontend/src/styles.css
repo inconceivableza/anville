@@ -994,22 +994,6 @@ main > .hub ~ .hub-consent {
   background: var(--green);
 }
 
-.names {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2xs);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.names li {
-  font-size: 12.5px;
-  padding: var(--space-2xs) var(--space-sm);
-  border-radius: var(--radius-pill-shape);
-  background: var(--warm-12);
-}
-
 /* The hub's own nav, replacing the old sidebar header (ticket 41a) */
 .nav.light {
   position: relative;
@@ -1290,7 +1274,8 @@ form + .way-on,
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
-/* ✨ A contact list, as the prototype's contact screen: a numbered row per person, the name narrower than the email. */
+/* ✨ A contact list, as the prototype's contact screen: a numbered row per person, the name narrower than the email,
+   marked needed or optional, each saved on its own; under a person, their link and its buttons (ticket 51a). */
 .contact-rows {
   list-style: none;
   margin: 0 0 var(--space-xs);
@@ -1299,9 +1284,27 @@ form + .way-on,
 
 .contact-row {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-xs);
   align-items: center;
-  margin-bottom: 6px;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.contact-person {
+  display: flex;
+  flex: 1 0 100%;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.contact-person .save-status {
+  flex: 1 0 100%;
+  margin: 0;
+}
+
+.contact-need {
+  flex: 0 0 auto;
 }
 
 .contact-num {
@@ -1354,7 +1357,7 @@ form + .way-on,
 }
 
 @media (max-width: 600px) {
-  .contact-row {
+  .contact-person {
     flex-wrap: wrap;
   }
 
@@ -2356,27 +2359,7 @@ form + .way-on,
   color: var(--green-deep);
 }
 
-/* ✨ Inviting observers: one row per person, with their link shown once after issuing it. */
-
-.invitations {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 var(--space-lg);
-}
-
-.invitation {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-xs) var(--space-sm);
-  padding: var(--space-md) 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.invitation-name {
-  font-weight: 600;
-  flex: 1 1 auto;
-}
+/* ✨ A link issued to someone: how long it works, and the link itself, shown once after issuing it. */
 
 .invitation-status {
   font-size: var(--text-sm);

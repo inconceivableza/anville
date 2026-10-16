@@ -1,10 +1,11 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
-"""✨ A contact list as a form sends it: one first name and one email address per row, in order.
+"""✨ A contact list's people, each added or changed on their own: a first name and an email address apiece.
 
-The rows are people other than the participant, so the whole list is held to these rules before any of it is
-kept, and a refusal names the row it is about. Nothing here touches the database or a request.
+The people are other than the participant, so each is held to these rules before being kept. Saving one person at a
+time, never the whole list, means a page left open can only ever change the person it saves (ticket 51a). Nothing here
+touches the database or a request.
 """
 
 from django.core.exceptions import ValidationError
@@ -12,72 +13,49 @@ from django.core.validators import EmailValidator
 
 from engine.document.answers import AnswerRefused
 
-# ✨ The most people one list may hold, and so the most rows a page will show.
+# ✨ The most people one list may hold.
 MAX_CONTACTS = 50
-# ✨ How many empty rows a list opens with when its author does not say: the prototype's five.
-DEFAULT_ROWS = 5
+# ✨ How many of a list's rows are marked as needed, and how many more as optional, when its author does not say: none
+# needed, and the prototype's five rows.
+DEFAULT_NEEDED = 0
+DEFAULT_OPTIONAL = 5
 NAME_MAX_LENGTH = 150
 EMAIL_MAX_LENGTH = 254  # ✨ the longest address mail can carry (RFC 5321), and the column's width
 
 _is_email = EmailValidator()
 
 
-def contacts_from_form(names, emails, ids):
-    """✨ The people a submitted list names, as [{"name", "email", "id", "row"}] in the order written, or
-    AnswerRefused.
-
-    `id` is the contact id the row sent back ("" for a row not saved before), taken as given: whether it is the
-    participant's own is for whoever keeps the list to check. `row` is the row's number on the form, from 1.
-    A row left empty is dropped, and space around each entry is trimmed. The list is refused whole, so a slip
-    in one row never keeps the others half-changed.
-    """
-    rows = [(name.strip(), email.strip(), sent_id) for name, email, sent_id in _padded(names, emails, ids)]
-    contacts = []
-    for number, (name, email, sent_id) in enumerate(rows, start=1):
-        if not name and not email:
-            continue
-        if not name or not email:
-            missing = "email" if name else "name"
-            raise AnswerRefused(f"Add both a name and an email address in row {number}.", number, missing)
-        if len(name) > NAME_MAX_LENGTH:
-            raise AnswerRefused(f"The name in row {number} is too long.", number, "name")
-        if not is_email_address(email):
-            raise AnswerRefused(f"Check the email address in row {number}.", number, "email")
-        contacts.append({"name": name, "email": email, "id": sent_id, "row": number})
-    if len(contacts) > MAX_CONTACTS:
-        raise AnswerRefused(f"Add no more than {MAX_CONTACTS} people.")
-    return contacts
+def contact_from_form(name, email):
+    """✨ One person as a form sends them, as {"name", "email"} with space around each trimmed, or AnswerRefused, whose
+    `field` names the entry at fault."""
+    name, email = (name or "").strip(), (email or "").strip()
+    if not name or not email:
+        raise AnswerRefused("Add both a name and an email address.", field="email" if name else "name")
+    if len(name) > NAME_MAX_LENGTH:
+        raise AnswerRefused("The name is too long.", field="name")
+    if not is_email_address(email):
+        raise AnswerRefused("Check the email address.", field="email")
+    return {"name": name, "email": email}
 
 
-def rows_to_show(block, contacts, asked=0):
-    """✨ How many rows the list shows: its authored number, every saved person, or as many as were asked for by
-    "add another" without JavaScript, whichever is most, and never more than the list may hold."""
-    return min(max(block.get("min_rows", DEFAULT_ROWS), len(contacts), asked), MAX_CONTACTS)
+# ✨ Why a person cannot be added to a list already holding the most it may.
+LIST_FULL = f"Add no more than {MAX_CONTACTS} people."
 
 
-def rows_as_typed(names, emails, ids):
-    """✨ Every row of a submitted list as it was typed, empty ones included, as [{"name", "email", "id"}]: what a
-    refused list shows again, so nothing typed is lost."""
-    return [{"name": name, "email": email, "id": sent_id} for name, email, sent_id in _padded(names, emails, ids)]
+def needed(block):
+    """✨ How many of the list's rows are marked as needed."""
+    return block.get("needed", DEFAULT_NEEDED)
 
 
-def rows_posted(names, emails):
-    """✨ How many rows a submitted list had, empty ones included."""
-    return max(len(names), len(emails))
+def rows_to_fill(block):
+    """✨ How many rows the author asks to be filled: those needed, then those optional."""
+    return needed(block) + block.get("optional", DEFAULT_OPTIONAL)
 
 
-def contact_id_per_row(people, saved_ids, rows):
-    """✨ Each row's contact id once `people` (as `contacts_from_form` read them) are saved as `saved_ids`, in the
-    same order: "" for a row left empty, over all `rows` the form had."""
-    by_row = {person["row"]: saved_id for person, saved_id in zip(people, saved_ids, strict=True)}
-    return [by_row.get(row, "") for row in range(1, rows + 1)]
-
-
-def _padded(names, emails, ids):
-    # ✨ A form always sends every field of a row; one that did not is treated as leaving it empty. Contact ids
-    # past the last row are ignored.
-    length = rows_posted(names, emails)
-    return zip(*([*fields[:length], *[""] * (length - len(fields))] for fields in (names, emails, ids)))
+def rows_of(block, held):
+    """✨ How many rows the list shows while it holds `held` people: the rows to fill, or, once those are all filled,
+    one more for the next person, never past the most it may hold."""
+    return min(max(rows_to_fill(block), held + 1), MAX_CONTACTS)
 
 
 def is_email_address(email):

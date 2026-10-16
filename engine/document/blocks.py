@@ -147,10 +147,9 @@ def _choice_schema(document, block):
 
 CHOICE = AnswerKind("choice", _choice_schema, "Choose one of the options.", _text_from_form)
 
-# ✨ People other than the participant. A list is not sent as one form value: `contacts_from_form` reads its
-# rows and holds them to their rules, and they are kept as contacts rather than answers. The schema is what the
-# gate then reads. Each person also carries their contact id (an integer as stored, as sent back by the form a
-# string, "" before they are saved), and as a form sends them, their row on it.
+# ✨ People other than the participant. A list is never sent as one form value: each person is added or changed on
+# their own (`contact_from_form` holds them to their rules), and they are kept as contacts rather than answers. The
+# schema is what the gate then reads. Each person also carries their contact id.
 CONTACTS = AnswerKind(
     "contacts",
     {
@@ -162,8 +161,7 @@ CONTACTS = AnswerKind(
             "properties": {
                 "name": {"type": "string"},
                 "email": {"type": "string"},
-                "id": {"type": ["integer", "string"]},
-                "row": {"type": "integer"},
+                "id": {"type": "integer"},
             },
         },
     },

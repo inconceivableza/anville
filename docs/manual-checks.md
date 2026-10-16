@@ -109,7 +109,8 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - The header says "1 of 7 sections complete" once Before we begin is done, and counts up as sections, and the Strengths assessment, are completed. There is no "Where you started" card, even once the sort is in.
 - "Your consent · Your groups" sits below the hub, lined up with its left edge.
 - Phone width: one column, the cards below the sections; the brown border still shows, and nothing scrolls sideways.
-- Walk with a coach and Five trusted voices, side cards since ticket 50, show in the right column as cards with their title, sentence and status, and not in the list or "Your pathway"; each title leads to its page. Until tickets 51a and 51b, the hub's own "Five trusted voices" and "Walk with a mentor" cards show beside them.
+- Walk with a coach and Five trusted voices, side cards since ticket 50, show in the right column as cards with their title, sentence and status, and not in the list or "Your pathway"; each title leads to its page. Until ticket 51b, the hub's own "Walk with a mentor" card shows beside them.
+- Five trusted voices (ticket 51a) is a dark card, as the prototype's, with no names and no name box: "Not started" before anyone is added; with one person, "2 more needed" and "You'll see how others see you once 3 people have answered."; with three, "Waiting for answers". "Invited" counts people with a working link (revoking one counts down) and "Answered" counts assessments sent (starting from a link does not count), each "n / 5". "Manage" and the title lead to the section's page. Once the section is complete the tag says "Complete" and never asks for more people. Phone width: the meters fill the card.
 
 ## Before we begin as a wizard (ticket 50; load the pathway again first, then sign up as someone new)
 
@@ -148,16 +149,13 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 ## The contact list ("Who knows you best?")
 
-- In Whatever You Do it is the Five trusted voices side card's page (in the faithful port, onboarding's last page, reached by "Continue →" from the ratings): a numbered row per person, "First name" narrower than "Email address", two rows in Whatever You Do (five in the faithful port), with "+ Add another person" full width beneath.
-- Typing a name and email and leaving the field shows "Saved"; a reload shows them again. Moving from a new row's name to its email shows "Not saved. Add both a name and an email address in row N." until the email is typed and left, then "Saved".
-- A bad address (`jo`, `jo@`, `jo@example`) shows "Not saved. Check the email address in row N.", and that email box turns red. The next save that goes through clears the red. A half-filled row marks its empty field the same way.
-- "+ Add another person" adds an empty numbered row without reloading, and the cursor goes into its name. At 50 rows it is disabled.
-- Emptying every row and leaving the field shows "Saved"; a reload shows empty rows, and onboarding's "Add at least 2 people…" is ticked again.
-- With one person added, "Add at least 2 people…" is unticked beneath "Continue →"; with two it is ticked, as it is with none.
-- Without JavaScript: the Save button saves the list; "+ Add another person" saves it and comes back with one more row, at the list. A bad address is not stopped by the browser; the save comes back with the server's "Not saved. Check the email address in row N." on a plain page (as any refused save does without JavaScript).
-- Screen reader: after a refusal, the marked field is announced as invalid when Tab reaches it.
-- Keyboard only: Tab goes name, email, name, email down the rows, then to "+ Add another person"; Enter in a field saves.
-- Screen reader: each field is read as "Person 1, first name" and so on; the row numbers themselves are not read. A new row is numbered on.
+- In Whatever You Do it is the Five trusted voices side card's page (in the faithful port, onboarding's last page, reached by "Continue →" from the ratings): a numbered row per person, "First name" narrower than "Email address", the first three marked "Needed" and the next two "Optional" (in the faithful port, five "Needed"). The intro no longer says "anonymous".
+- "Add and get their link" on an empty row comes back with that person listed and their link under them, with Copy; once all five rows are filled a sixth empty one appears. A person's "Save" changes only them, and their link keeps working.
+- A bad address (`jo`, `jo@`, `jo@example`) or a missing name or email comes back with "Not saved." and why in that row, as typed, the field at fault red. The browser does not stop it first.
+- Two tabs: open the page in both, add Priya in one, then in the other (not reloaded) change Jo's email and save. Priya is still listed, and her link still opens "You've been invited".
+- After Before we begin is complete, people can still be added and changed. `/invitations/` opens this page.
+- Phone width: each row's fields stack, nothing scrolls sideways.
+- Screen reader: each field is read as "Person 1, first name" and so on; the row numbers themselves are not read; a marked field is announced as invalid.
 - Phone width: each row's name and email stack beneath its number, full width.
 
 ## The coach's details (Whatever You Do's coach page)
@@ -309,17 +307,14 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Phone width: a gap card's badge wraps under the construct's name instead of running off the card.
 - At the foot of each profile card, under a thin rule, one tick, "Show how the 3 responses were spread", unticked, the same size and green tick as "Give my coach access…". Ticking it (mouse, or Tab then Space), with JavaScript on or off, does it for every construct in that card at once, the other card unchanged: each construct's blue dot, group icon and grey gap give way to a small blue dot per person, your dot and icon staying, and "Strong agreement", "Some variation" or "Divided views" appears in the observers' blue under that construct's line, centred where the group icon stood a moment before (set against the nearer side instead when the icon was near either end, never cut off), the same size at any window width. People at the same place as each other, or as you, never cover one another: the later ones drop into a lane just below the line, and however many share a place, the lanes squeeze closer together to stay inside the drawing, never over the agreement words or the next construct. Ticking and unticking move nothing: the card stays the same height and the tick stays where it is, as the room for the agreement line is kept while it is hidden. Unticking puts everything back. Ticking saves nothing: a reload shows it unticked. VoiceOver, while it is ticked, also reads "Each person's place, lowest first:" and their standings under each construct, which never show on screen. With two observers there is no comparison at all.
 
-## Inviting observers (the hub's "Invite others to assess you →")
+## Inviting observers (the contact list's page, from the hub's Five trusted voices card)
 
-- "← Back to the hub" is at the top, as on a section's page, and still at the foot.
 - Issuing a link shows it under that person's name, in a read-only field with Copy. Copy puts the whole link on the clipboard and reads "Copied"; pasting it in a private window opens "You've been invited".
 - Without JavaScript, there is no Copy button, and the link in the field can be selected and copied by hand.
 - With enough people listed that the page scrolls: with JavaScript, issuing, reissuing or revoking a lower person's link changes only their row, and the page does not move; the new link is focused. Without JavaScript, the page comes back opened at that person, not at the top.
 - Reloading the page after issuing no longer shows the link (only its hash is kept), asks nothing about resending a form, and issues nothing new (the link from before still opens "You've been invited"), and the person shows "Link works until …" with "Reissue link" and "Revoke link".
 - Going Back in the browser after issuing does not bring the link back from the cache.
 - Phone width: the link field and Copy stay on one line without the page scrolling sideways.
-- The contact list under "Add or change people": adding someone and pressing "Save list" comes back to the page, scrolled to the list rather than the top, with them listed above, ready to issue a link. A refused save (an email like `priya@`) comes back at the list too, as typed, with the field marked and why beside "Save list". With JavaScript, "+ Add another person" adds a row in place; without it, it saves and comes back with one more row.
-- Autosave keeps people's links: in onboarding, add Jo and Priya in new rows without reloading (each field autosaves), issue Jo's link on the invitations page in another tab, then back in onboarding (still not reloaded) change Jo's email. Jo's link still opens "You've been invited".
 - The observer's landing (a link opened in a private window): the notice's paragraphs, then "I'm answering for …" naming the participant, with nothing asked before it. Pressing it shows "Bookmark this link, it's yours" with Copy, as on the invitations page; reloading, or Back then Forward, does not bring the link back.
 - After starting, the link as sent says "This link has already been used", in that window and in another; the bookmarked link, and `/observe/` in the same window, still reach "Answering for …". In a different browser, the bookmarked link reaches it too, but `/observe/` there says "This link does not work" (only starting sets the cookie). Reissuing from the invitations page stops them all.
 - Signed in as the participant in the same browser, opening and starting their own link changes nothing on their hub or sections.

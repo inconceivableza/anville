@@ -180,13 +180,15 @@ def test_once_anyone_is_added_five_trusted_voices_needs_only_two_for_now(partici
 
 
 @pytest.mark.django_db
-def test_the_contact_list_opens_with_two_rows_and_says_two_are_needed(participant):
+def test_the_contact_list_opens_with_three_rows_needed_and_two_optional(participant):
+    """✨ Three needed (ticket 51a), while the gate still asks for two for now (ticket 52's)."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
 
     page = participant.get(CONTACTS_PAGE).content.decode()
 
-    assert page.count('name="email"') == 2
+    assert page.count('name="email"') == 5
+    assert (page.count(">Needed<"), page.count(">Optional<")) == (3, 2)
     assert "We need at least 2 people whose opinion you trust" in page
 
 
@@ -491,7 +493,7 @@ def two_contacts_for_now(document):
     onboarding = document["content"]["sections"][0]
     for block in onboarding["blocks"]:
         if block["type"] == "contact_list":
-            block["min_rows"] = 2
+            block.update(needed=3, optional=2)
         if block["id"] == "contacts-intro":
             block["body"] = block["body"].replace("at least 5 people", "at least 2 people")
     for clause in onboarding["gate"]["clauses"]:
@@ -545,11 +547,11 @@ def through_to_the_workbook(client):
 
 @pytest.mark.django_db
 def test_section_1_is_completed_only_once_the_coach_and_two_people_have_their_links(participant):
-    """✨ Skipping the coach in onboarding put the choice off until here, so a coach is needed (ticket 40). Naming
-    people is not inviting them: it is their working links that count."""
+    """✨ Skipping the coach in onboarding put the choice off until here, so a coach is needed (ticket 40). It is
+    working links that count; adding a person makes theirs (ticket 51a)."""
     client = through_section_1_without_inviting(participant)
     choose(client)
-    add_people(client, 2)
+    add_people(client, 1)
 
     refused = complete(client, "designed")
 
@@ -562,9 +564,8 @@ def test_section_1_is_completed_only_once_the_coach_and_two_people_have_their_li
         SEND_TWO: False,
     }
     issue_the_coachs_link(client)
-    issue_link(client, "Person 0")
     assert gate_checklist(complete(client, "designed").content.decode())[SEND_TWO] is False
-    issue_link(client, "Person 1")
+    add_people(client, 2)
     assert complete(client, "designed").status_code == 303
 
 

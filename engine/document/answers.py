@@ -18,13 +18,12 @@ class UnknownBlock(Exception):
 class AnswerRefused(Exception):
     """✨ The submitted value is not a valid answer for its block.
 
-    `field` says which entry is at fault, and where the answer has rows, such as a contact list, `row` (counted
-    from 1) says which row, so the page can mark it as well as saying so. The coach's details use `field` alone.
+    `field` says which entry is at fault, such as a person's name or email address, so the page can mark it as well
+    as saying so.
     """
 
-    def __init__(self, message, row=None, field=None):
+    def __init__(self, message, field=None):
         super().__init__(message)
-        self.row = row
         self.field = field
 
 
