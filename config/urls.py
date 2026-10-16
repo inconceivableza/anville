@@ -19,8 +19,8 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import include, path, re_path
-from access.views import consent, password_reset_unavailable
+from django.urls import include, path
+from access.views import consent
 from config.health import healthz
 from engine.views import (
     answer_coaching,
@@ -48,13 +48,12 @@ from engine.views import (
     start,
     start_observing,
     visit_comparison,
+    withdrawal,
 )
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("healthz", healthz, name="healthz"),
-    # ✨ Ahead of allauth's own routes, so every password reset page is refused until email exists (ticket 28a).
-    re_path(r"^accounts/password/reset/", password_reset_unavailable),
     path("accounts/", include("allauth.urls")),
     path("consent/", consent, name="consent"),
     path("start/", start, name="start"),
@@ -72,9 +71,11 @@ urlpatterns = [
     path("observe/", observer, name="observer"),
     # ✨ Ahead of the link's own route, which would otherwise take "assessment" for a token.
     path("observe/assessment/", send_assessment, name="send_assessment"),
+    path("observe/withdraw/", withdrawal, name="withdrawal"),
     path("observe/<str:token>/", observe, name="observe"),
     path("observe/<str:token>/start/", start_observing, name="start_observing"),
     path("observe/<str:token>/assessment/", send_assessment, name="send_assessment_by_link"),
+    path("observe/<str:token>/withdraw/", withdrawal, name="withdrawal_by_link"),
     # ✨ The coach's link (ticket 13c), apart from the observers', so neither kind of link works at the other's address.
     path("coaching/<str:token>/", coaching, name="coaching"),
     path("coaching/<str:token>/answer/", answer_coaching, name="answer_coaching"),

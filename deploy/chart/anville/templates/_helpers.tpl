@@ -70,6 +70,8 @@ from the variable before it, so the password must be safe inside a URL: letters,
 {{- with .Values.email.from }}
 - name: DEFAULT_FROM_EMAIL
   value: {{ . | quote }}
+- name: SERVER_EMAIL
+  value: {{ . | quote }}
 {{- end }}
 {{- if eq .Values.tier "staging" }}
 - name: ANVILLE_DEMO_NOTICE
@@ -82,6 +84,12 @@ from the variable before it, so the password must be safe inside a URL: letters,
     secretKeyRef:
       name: {{ .Values.secretName }}
       key: DJANGO_SECRET_KEY
+- name: DJANGO_SECRET_KEY_FALLBACKS
+  valueFrom:
+    secretKeyRef:
+      name: {{ .Values.secretName }}
+      key: DJANGO_SECRET_KEY_FALLBACKS
+      optional: true
 - name: ANVILLE_ENROLMENT_REQUIRED
   value: {{ .Values.enrolment.required | quote }}
 {{- if .Values.enrolment.required }}

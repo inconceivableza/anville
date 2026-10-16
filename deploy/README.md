@@ -142,7 +142,7 @@ k exec deployment/anville -- python manage.py sendtestemail <your address>
 
 It should arrive from the address in `email.from`, and on staging with `[TEST]` before the subject and the disclaimer at the top of the body. The message's headers (in Gmail, Show original) should show SPF, DKIM and DMARC passing, and the provider's statistics should show it sent. A new provider account may hold its first messages until the provider has reviewed it.
 
-Password reset stays refused until ticket 28a, whether or not email is set up.
+Sign-in's "Forgot your password?" sends its link through the same email, so without `EMAIL_URL` the link is written only to the pod's log.
 
 To go back to fake email, delete `EMAIL_URL` from the GitHub Environment and deploy again. To stop sending at once, revoke the environment's key at the provider.
 
@@ -211,9 +211,19 @@ It installs the pinned release after checking its checksum, unless that version 
 
 **Fake email.** An environment with no `EMAIL_URL` secret delivers nothing: each message is written to the pod's log. On a staging environment it is written with the test-system disclaimer it would carry if it were sent: `[TEST]` before the subject, and the disclaimer at the top of the body. To see one, run `k exec deployment/anville -- python manage.py sendtestemail someone@example.com` and read the log. The log then holds whatever links the messages carried, which is acceptable only where the data is fake. A production environment cannot be deployed without `EMAIL_URL`. "Set up email" above turns real email on.
 
-**Resetting a password.** Password reset is refused until ticket 28a. Until then the operator runs `changepassword`, as above. A participant's username is their whole email address (ticket 37), so that is what the command takes; the admin shows it. The operator's own account is the exception: a username of its own, and no email address.
+**Resetting a password.** A participant resets their own from sign-in's "Forgot your password?", which emails them a link. Where email is fake, or for an account with no email, the operator runs `changepassword`, as above. A participant's username is their whole email address (ticket 37), so that is what the command takes; the admin shows it. The operator's own account is the exception: a username of its own, and no email address.
 
 **Changing a secret.** Change it in the GitHub Environment and deploy again. The pods restart only when a secret has changed. `POSTGRES_PASSWORD` is the exception: PostgreSQL reads it once, when its data is first created.
+
+**Rotate the secret key.** Changing `DJANGO_SECRET_KEY` alone would sign everyone out and break whatever else was signed with the old key, such as the cookie that shows a link just issued. Observers' and coaches' links do not depend on it. Instead:
+
+1. In the GitHub Environment, copy the current `DJANGO_SECRET_KEY` into `DJANGO_SECRET_KEY_FALLBACKS` (several old keys go comma-separated), and give `DJANGO_SECRET_KEY` a new value, generated as `secrets.example.yaml` says.
+2. Deploy. New sessions and cookies are signed with the new key; those signed with the old one are still accepted.
+3. Once the sessions signed with the old key have expired, two weeks after the deploy by default, delete `DJANGO_SECRET_KEY_FALLBACKS` and deploy again.
+
+Remove the old key promptly, as Django's deployment checklist warns: while it is a fallback, anyone who holds it can still forge a session. If a key has leaked, skip the fallback and replace it outright, accepting that everyone is signed out.
+
+**Expired sessions.** Sessions are kept in the database, each tied to an account, and nothing else removes the expired ones. A CronJob runs `clearsessions` each night, at 03:45 by default (`sessions.schedule`), clear of the backup's hour. To run it now: `k create job --from=cronjob/anville-clearsessions clearsessions-now`.
 
 ## Backups
 

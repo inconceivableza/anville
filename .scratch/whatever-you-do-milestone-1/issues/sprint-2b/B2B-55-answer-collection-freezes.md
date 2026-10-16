@@ -16,6 +16,11 @@
 - [ ] The observers' privacy notice says they can withdraw at any time and their answers will be removed: through their link while it works, and after that by asking the people who run the service. It says that once the participant has looked at the combined results no new answers are added. In place of "kept apart from your answers", it says the participant never sees which answers are whose, and the people who run the service can (ADR 0014)
 - [ ] An ADR records the freeze: what triggers it, what it refuses, that it unfreezes below the minimum, and that withdrawal always wins over a frozen comparison. It amends ADR 0007: revoking always works, but an observer's link cannot be reissued while collection is frozen
 
+**Carried from 15b**
+
+- Withdrawing deletes what the observer sent and ends their claim in one step, so their own link then gets the dead-link refusal and never asks again; the participant's copy stays used up. An unfreeze after a withdrawal therefore reopens other people's working links, never the withdrawn observer's. The withdrawal page must stay open while frozen
+- The privacy notice still says only "withdraw while this link works"; the rest of criterion 4 is this ticket's
+
 **Context**
 
 - Freezing on withdrawal was considered and dropped: keeping figures that include a withdrawn observer is lawful only if they are no longer that observer's personal data, which with three observers known to the participant cannot be relied on. The cost accepted is that the participant can see the count go down

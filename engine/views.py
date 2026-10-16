@@ -13,7 +13,7 @@ from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequ
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.debug import sensitive_post_parameters
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods, require_POST
 
 from access.consent import consent_required
 from access.models import Account, name_shown_for
@@ -73,7 +73,7 @@ from engine.hub import (
     section_by_id,
     track_sections,
 )
-from engine.document.observers import link_lifetime, privacy_notice
+from engine.document.observers import link_lifetime, privacy_notice, relationship_from_form, relationship_question
 from engine.models import Contact, Invitation, ObserverResponse, PathwayVersion, Publication, Response, Result
 from engine.results import comparison_page, results_page
 
@@ -1178,14 +1178,39 @@ def send_assessment(request, token=None):
         raise Http404("This pathway has no assessment for observers.")
     try:
         assessment = answer_from_form(document, scored, request.POST.get("value"), role="observer")
+        relationship = relationship_from_form(document, request.POST.get("relationship"))
     except AnswerRefused as refused:
         return render(request, "engine/save_status.html", {"refusal": str(refused)}, status=400)
     try:
-        ObserverResponse.send(invitation.contact.response, secret, assessment)
+        ObserverResponse.send(invitation.contact.response, secret, assessment, relationship=relationship)
     except IntegrityError:
         refusal = "Your assessment has already been sent."
         return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
     return _go_to(request, back)
+
+
+@require_http_methods(["GET", "POST"])
+def withdrawal(request, token=None):
+    """✨ The observer withdrawing, with the secret they claimed: from their own link (`token`), or else from the cookie
+    (ticket 15b). Opening the page asks and deletes nothing; only its button's POST deletes what they sent, found by
+    the hash of that secret, and ends their link. The participant's copy of the link is not a secret, and a link that
+    has stopped working claims nothing, so both are refused as any wrong link is: after that, the privacy notice tells
+    the observer to ask the people who run the service.
+    """
+    secret = request.COOKIES.get(OBSERVER_COOKIE) if token is None else token
+    invitation = Invitation.claimed_by(secret)
+    if invitation is None:
+        return _refuse_link(request)
+    _, name = _asked_by(invitation)
+    action = reverse("withdrawal") if token is None else reverse("withdrawal_by_link", args=[token])
+    if request.method == "POST":
+        ObserverResponse.withdraw(secret)
+        shown = render(request, "engine/withdrawal.html", {"name": name, "withdrawn": True})
+        shown.delete_cookie(OBSERVER_COOKIE, path=reverse("observer"))
+    else:
+        shown = render(request, "engine/withdrawal.html", {"name": name, "action": action})
+    shown["Cache-Control"] = "no-store"
+    return shown
 
 
 # ✨ Where an observer's own secret is kept, so the observer's pages know them without a link or an account. It
@@ -1210,8 +1235,10 @@ def _observers_page(request, secret, own_link=None, came_by_link=False):
             "id": scored["id"],
             "widget": BLOCK_TYPES[scored["type"]].widget(document, "observer", name),
             "action": reverse("send_assessment_by_link", args=[secret]) if came_by_link else reverse("send_assessment"),
+            "relationship": relationship_question(document, name),
         }
-    context = {"name": name, "own_link": own_link, "assessment": assessment, "sent": sent}
+    withdraw_at = reverse("withdrawal_by_link", args=[secret]) if came_by_link else reverse("withdrawal")
+    context = {"name": name, "own_link": own_link, "assessment": assessment, "sent": sent, "withdraw_at": withdraw_at}
     shown = render(request, "engine/observer.html", context)
     shown["Cache-Control"] = "no-store"
     return shown

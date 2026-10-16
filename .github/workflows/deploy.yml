@@ -105,6 +105,7 @@ jobs:
       - name: Deploy
         env:
           DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          DJANGO_SECRET_KEY_FALLBACKS: ${{ secrets.DJANGO_SECRET_KEY_FALLBACKS }}
           ANVILLE_ENROLMENT_CODE: ${{ secrets.ANVILLE_ENROLMENT_CODE }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

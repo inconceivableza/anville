@@ -27,6 +27,9 @@ environ.Env.read_env(BASE_DIR / ".env")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("DJANGO_SECRET_KEY")
+# ✨ Keys being rotated out, comma-separated, still accepted for what was signed with them (sessions, signed
+# cookies) but never used to sign anything new. deploy/README.md gives the steps.
+SECRET_KEY_FALLBACKS = env.list("DJANGO_SECRET_KEY_FALLBACKS", default=[])
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DJANGO_DEBUG", default=False)
@@ -95,6 +98,8 @@ LOGIN_REDIRECT_URL = "hub"
 ACCOUNT_LOGOUT_REDIRECT_URL = "home"  # ✨ the header's "Sign out" leads to the homepage (ticket 41a)
 ACCOUNT_SIGNUP_FORM_CLASS = "access.forms.EnrolmentCodeSignupForm"
 ACCOUNT_FORMS = {"login": "access.forms.SignInForm"}
+# ✨ A reset asked for an address with no account sends nothing, so the form cannot be used to mail strangers.
+ACCOUNT_EMAIL_UNKNOWN_ACCOUNTS = False
 # ✨ On unless the environment turns it off, so a deployment that forgets the setting admits nobody without the code.
 ANVILLE_ENROLMENT_REQUIRED = env.bool("ANVILLE_ENROLMENT_REQUIRED", default=True)
 ANVILLE_ENROLMENT_CODE = env("ANVILLE_ENROLMENT_CODE", default="")
@@ -223,6 +228,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 vars().update(env.email_url_config(env("EMAIL_URL", default="") or "consolemail://"))
 
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
+# ✨ Where Django's own messages, such as errors to ADMINS, come from. Django's default, root@localhost, is one a
+# provider refuses, so unless the environment names another it is the sending address above.
+SERVER_EMAIL = env("SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 
 # ✨ Set on a test system that can reach real mailboxes: every message then says, in its subject and at the top
 # of its body, that it is not from the real service. It wraps whichever backend the lines above chose.

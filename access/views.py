@@ -2,19 +2,12 @@
 # For licensing information see ../LICENSE.md
 
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods
 
 from access.consent import current_consent, current_text_version, latest_consent, withdraw
 from access.models import Consent
-
-
-def password_reset_unavailable(request, *args, **kwargs):
-    """✨ Every password reset page, refused until email delivery exists (ticket 28a). Without a mail server
-    allauth's reset form crashes, and the spec promises no email the system cannot send."""
-    raise Http404("Password reset is not available.")
 
 
 @login_required
