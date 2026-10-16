@@ -4,7 +4,7 @@
 
 **Blocked by:** B3-43a (Observer reminders)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 2b (12–16 Oct)
 
