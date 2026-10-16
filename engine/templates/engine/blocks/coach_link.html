@@ -21,7 +21,7 @@
       <div class="invitation-link-row">
         {# ✨ Owned by no form (no element has that id), so Enter here submits nothing: within the checklist's form it would press its first button, reissuing the link just copied. #}
         <input type="text" id="coach-link-{{ block.id }}" value="{{ link.issued }}" readonly autofocus form="coach-link-{{ block.id }}-in-no-form">
-        <button type="button" class="btn btn-primary invitation-copy" data-copy="coach-link-{{ block.id }}">Copy</button>
+        <button type="button" class="pill invitation-copy" data-copy="coach-link-{{ block.id }}">Copy</button>
       </div>
       <p>This link is shown only this once. If you lose it, reissue it.</p>
     </div>
@@ -36,13 +36,13 @@
   <div class="coach-buttons">
     {% url 'issue_invitation' link.contact_id as issue %}
     <button type="submit" formaction="{{ issue }}" hx-post="{{ issue }}" hx-target="#block-{{ block.id }}"
-            hx-select="#block-{{ block.id }}" hx-swap="outerHTML" class="btn btn-secondary">
+            hx-select="#block-{{ block.id }}" hx-swap="outerHTML" class="pill ghost">
       {% if link.invitation %}Reissue link{% else %}Get a link for {{ coach.name }}{% endif %}
     </button>
     {% if link.invitation %}
       {% url 'revoke_invitation' link.contact_id as revoke %}
       <button type="submit" formaction="{{ revoke }}" hx-post="{{ revoke }}" hx-target="#block-{{ block.id }}"
-              hx-select="#block-{{ block.id }}" hx-swap="outerHTML" class="btn btn-secondary">Revoke link</button>
+              hx-select="#block-{{ block.id }}" hx-swap="outerHTML" class="pill ghost">Revoke link</button>
     {% endif %}
   </div>
 </div>

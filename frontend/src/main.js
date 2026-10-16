@@ -485,9 +485,10 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
 })();
 
 // --- Magnetic buttons (fine pointers only) ---
+// ✨ Only a pill marked data-magnetic follows the pointer: the homepage's, the hub's and the onboarding wizard's.
 if (window.matchMedia("(hover: hover) and (pointer: fine)").matches && !reducedMotion) {
   document.addEventListener("pointermove", (event) => {
-    const button = event.target.closest && event.target.closest(".pill");
+    const button = event.target.closest && event.target.closest("[data-magnetic]");
     if (button) {
       const box = button.getBoundingClientRect();
       const dx = (event.clientX - (box.left + box.width / 2)) / box.width;
@@ -499,7 +500,7 @@ if (window.matchMedia("(hover: hover) and (pointer: fine)").matches && !reducedM
     }
   }, { passive: true });
   document.addEventListener("pointerout", (event) => {
-    const button = event.target.closest && event.target.closest(".pill");
+    const button = event.target.closest && event.target.closest("[data-magnetic]");
     if (button && !button.contains(event.relatedTarget)) {
       button.style.transition = "transform .5s cubic-bezier(.2,.7,.2,1), filter .2s";
       button.style.transform = "";

@@ -64,8 +64,8 @@
     <p>You agreed to version {{ given.text_version }} of this text on {{ given.given_at|date:"j F Y" }}.</p>
     <form method="post" action="{% url 'consent' %}" class="consent-choices">
       {% csrf_token %}
-      <a class="btn btn-primary btn-full" href="{% url 'hub' %}">Go to your pathway</a>
-      <button type="submit" name="decision" value="withdraw" class="btn btn-secondary btn-full">Withdraw my consent</button>
+      <a class="pill full" href="{% url 'hub' %}">Go to your pathway</a>
+      <button type="submit" name="decision" value="withdraw" class="pill ghost full">Withdraw my consent</button>
     </form>
     <p>
       Withdrawing closes the pathway until you agree again. For now, what you have already written is kept;
@@ -83,8 +83,8 @@
       {% csrf_token %}
       <input type="hidden" name="version" value="{{ version }}">
       {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
-      <button type="submit" name="decision" value="agree" class="btn btn-primary btn-full">I agree</button>
-      <button type="submit" name="decision" value="decline" class="btn btn-secondary btn-full">I do not agree</button>
+      <button type="submit" name="decision" value="agree" class="pill full">I agree</button>
+      <button type="submit" name="decision" value="decline" class="pill ghost full">I do not agree</button>
     </form>
   {% endif %}
 

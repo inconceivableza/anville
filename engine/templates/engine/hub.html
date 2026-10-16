@@ -23,7 +23,7 @@
                 <p class="label">Your next step</p>
                 <h2>{{ hub.next_step.title }}</h2>
                 <p>{% if hub.next_step.status == 'in-progress' %}Carry on where you left off.{% else %}This is the next thing waiting for you.{% endif %}</p>
-                <a class="pill" href="{% page_url hub.next_step.id hub.next_step.page %}">
+                <a class="pill" data-magnetic href="{% page_url hub.next_step.id hub.next_step.page %}">
                   {% if hub.next_step.status == 'in-progress' %}Carry on{% else %}Begin{% endif %}
                   <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span>
                 </a>
@@ -46,7 +46,7 @@
               <p>Invite people who know you well. Their anonymous answers sit beside your own in Section 1.</p>
               <div class="meter"><div class="meter-label"><span>Invited</span><span>{{ voices.invited }} / {{ voices.max }}</span></div><progress class="track"max="{{ voices.max }}" value="{{ voices.invited }}" aria-hidden="true"></progress></div>
               <div class="meter"><div class="meter-label"><span>Replied</span><span>{{ voices.replied }} / {{ voices.max }}</span></div><progress class="track"max="{{ voices.max }}" value="{{ voices.replied }}" aria-hidden="true"></progress></div>
-              <a class="pill" href="{% url 'invitations' %}">Manage <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span></a>
+              <a class="pill" data-magnetic href="{% url 'invitations' %}">Manage <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span></a>
               {% if voices.names %}
                 <ul class="names">{% for name in voices.names %}<li>{{ name }}</li>{% endfor %}</ul>
               {% endif %}
@@ -55,10 +55,10 @@
               <div class="row"><h3>Walk with a mentor</h3><span class="tag">Optional</span></div>
               <p>When you're ready, ask someone to walk this with you. We'll send them a short briefing pack.</p>
               {% if coach %}
-                <a class="pill ghost" href="{{ coach.coach_page }}">{% if coach.answer == "accepted" %}{{ coach.name }} is your coach{% elif coach.answer == "declined" %}{{ coach.name }} isn't able to be your coach{% elif coach.answer == "waiting" %}Waiting for {{ coach.name }} to answer{% else %}You've chosen {{ coach.name }}: send {{ coach.name }} a link{% endif %}</a>
+                <a class="pill ghost" data-magnetic href="{{ coach.coach_page }}">{% if coach.answer == "accepted" %}{{ coach.name }} is your coach{% elif coach.answer == "declined" %}{{ coach.name }} isn't able to be your coach{% elif coach.answer == "waiting" %}Waiting for {{ coach.name }} to answer{% else %}You've chosen {{ coach.name }}: send {{ coach.name }} a link{% endif %}</a>
                 {% if coach.shared %}<p>{{ coach.name }} can see your results and comparison.</p>{% endif %}
               {% elif coach_page %}
-                <a class="pill ghost" href="{{ coach_page }}">Invite a mentor</a>
+                <a class="pill ghost" data-magnetic href="{{ coach_page }}">Invite a mentor</a>
               {% endif %}
             </div>
             {% if baseline %}

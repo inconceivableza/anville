@@ -36,12 +36,12 @@
     {% if block.text.name_hint %}<p id="coach-hint-{{ block.id }}" class="coach-hint">{{ block.text.name_hint }}</p>{% endif %}
     {% include "engine/blocks/coach_checklist_answers.html" %}
     {% if checklist.refusal %}<p class="coach-refusal" role="alert">{{ checklist.refusal }}</p>{% endif %}
-    <button type="submit" name="step" value="questions" class="btn btn-primary btn-full">Continue →</button>
+    <button type="submit" name="step" value="questions" class="pill full">Continue →</button>
     {# ✨ Choosing again with a coach kept: they stay until someone else is saved. After "Continue →", so Enter in the name still goes on. #}
     {% if checklist.kept %}
       <div class="coach-kept">
         <p>{{ checklist.kept.name }} stays your coach until you save someone else.</p>
-        <button type="submit" name="step" value="keep" class="btn btn-secondary">Keep {{ checklist.kept.name }}</button>
+        <button type="submit" name="step" value="keep" class="pill ghost">Keep {{ checklist.kept.name }}</button>
       </div>
     {% endif %}
 
@@ -62,8 +62,8 @@
     {% endfor %}
     {% if checklist.refusal %}<p class="coach-refusal" role="alert">{{ checklist.refusal }}</p>{% endif %}
     <div class="coach-buttons">
-      <button type="submit" name="step" value="intro" class="btn btn-secondary">Back</button>
-      <button type="submit" name="step" value="outcome" class="btn btn-primary coach-grow">Continue →</button>
+      <button type="submit" name="step" value="intro" class="pill ghost">Back</button>
+      <button type="submit" name="step" value="outcome" class="pill coach-grow">Continue →</button>
     </div>
 
   {% elif checklist.screen == "proceed" %}
@@ -89,9 +89,9 @@
         <span>I've spoken to this person and they're happy to receive a link from me about coaching me through this course.</span>
       </label>
       {% if checklist.refusal %}<p class="coach-refusal" role="alert">{{ checklist.refusal }}</p>{% endif %}
-      <button type="submit" name="step" value="save" class="btn btn-primary btn-full">Save {% if checklist.name %}{{ checklist.name }} {% endif %}as your coach</button>
+      <button type="submit" name="step" value="save" class="pill full">Save {% if checklist.name %}{{ checklist.name }} {% endif %}as your coach</button>
       <div class="coach-buttons">
-        <button type="submit" name="step" value="restart" class="btn btn-secondary">Choose someone else</button>
+        <button type="submit" name="step" value="restart" class="pill ghost">Choose someone else</button>
       </div>
     </div>
 
@@ -110,8 +110,8 @@
       <p>{{ checklist.coach.email }}</p>
       {% if checklist.link %}{% include "engine/blocks/coach_link.html" with link=checklist.link coach=checklist.coach %}{% endif %}
       <div class="coach-buttons">
-        <button type="submit" name="step" value="restart" class="btn {% if checklist.link.answer == 'declined' %}btn-primary{% else %}btn-secondary{% endif %}">Choose someone else</button>
-        <button type="submit" name="step" value="remove" class="btn btn-secondary">Remove</button>
+        <button type="submit" name="step" value="restart" class="pill{% if checklist.link.answer != 'declined' %} ghost{% endif %}">Choose someone else</button>
+        <button type="submit" name="step" value="remove" class="pill ghost">Remove</button>
       </div>
     </div>
 
@@ -124,8 +124,8 @@
       {% include "engine/blocks/coach_checklist_flags.html" %}
       <p>None of this rules {{ checklist.name }} out, and it may be worth simply raising it with them. “Would you be able to mostly ask questions rather than give me advice?” is a fair thing to ask upfront.</p>
       <div class="coach-buttons">
-        <button type="submit" name="step" value="confident" class="btn btn-primary coach-warn">I’m still confident — ask {{ checklist.name }}</button>
-        <button type="submit" name="step" value="restart" class="btn btn-secondary">Think about someone else</button>
+        <button type="submit" name="step" value="confident" class="pill coach-warn">I’m still confident — ask {{ checklist.name }}</button>
+        <button type="submit" name="step" value="restart" class="pill ghost">Think about someone else</button>
       </div>
     </div>
 
@@ -136,8 +136,8 @@
       {% include "engine/blocks/coach_checklist_flags.html" %}
       <p>Think about who else might fit. It doesn’t have to be your closest friend or the most senior person you know — often the right coach is someone a little outside your immediate circle.</p>
       <div class="coach-buttons">
-        <button type="submit" name="step" value="restart" class="btn btn-primary">Try someone else</button>
-        <button type="submit" name="step" value="restart" class="btn btn-secondary">I’ll come back to this</button>
+        <button type="submit" name="step" value="restart" class="pill">Try someone else</button>
+        <button type="submit" name="step" value="restart" class="pill ghost">I’ll come back to this</button>
       </div>
     </div>
   {% endif %}

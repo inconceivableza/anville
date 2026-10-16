@@ -1261,61 +1261,82 @@ form + .way-on,
 
 /* Buttons */
 
-/* ✨ Shaped as the prototype's pill (ticket 48); a page's own markup moves to .pill with ticket 53 */
-.btn {
+/* ✨ Every button and button-like link is the prototype's pill (ticket 53a): dark green text on the light green, which
+   light text on it would not pass for contrast. .ghost is its ring in the text's colour; .full spans its row, .small
+   is the header's and the save row's size. These come before the pages' own rules, so a page can still hide or place
+   one. */
+.pill {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-lg);
-  border: none;
+  gap: var(--space-sm);
+  border: 0;
   border-radius: var(--radius-pill-shape);
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  cursor: pointer;
-  transition: filter 0.2s, background 0.2s;
-}
-
-/* ✨ As the prototype's pill: dark green text on the light green, which light text on it would not pass for contrast */
-.btn-primary {
+  padding: var(--space-sm) var(--space-lg);
   background: var(--green);
   color: var(--green-ink);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  cursor: pointer;
+  transition: filter 0.2s, transform 0.2s;
 }
 
-.btn-primary:hover {
+/* ✨ The prototype's arrow sits closer to the pill's end than its words would */
+.pill:has(> .pill-arrow) {
+  padding-right: var(--space-md);
+}
+
+.pill .pill-arrow {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-round-shape);
+  display: grid;
+  place-items: center;
+  background: var(--white-40);
+  transition: transform 0.25s, translate 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.pill .pill-arrow svg,
+.pill > svg {
+  width: 10px;
+  height: 10px;
+  display: block;
+}
+
+.pill:hover {
   filter: brightness(1.06);
 }
 
-.btn-primary:disabled {
+.pill:hover .pill-arrow {
+  transform: rotate(45deg);
+}
+
+.pill:focus-visible {
+  outline: 2px solid var(--green-deep);
+  outline-offset: 2px;
+}
+
+.pill:disabled:not(.ghost) {
   background: var(--border);
   color: var(--muted);
   cursor: not-allowed;
 }
 
-.btn-full {
-  width: 100%;
-}
-
-/* ✨ As the prototype's ghost pill: a ring in the text's colour */
-.btn-secondary {
-  background: var(--paper);
-  color: var(--ink);
+.pill.ghost {
+  background: transparent;
+  color: inherit;
   box-shadow: inset 0 0 0 1px currentColor;
 }
 
-.btn-secondary:hover {
-  background: var(--cream);
+.pill.full {
+  width: 100%;
+  justify-content: center;
 }
 
-.btn-sm {
+.pill.small {
   padding: var(--space-xs) var(--space-md);
   font-size: var(--text-xs);
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--green-deep);
-  outline-offset: 2px;
 }
 
 /* Panels: a long-text question */
@@ -1664,6 +1685,7 @@ form + .way-on,
 
 .coach-grow {
   flex: 1;
+  justify-content: center;
 }
 
 .coach-outcome {
@@ -1872,7 +1894,7 @@ form + .way-on,
   margin: var(--space-2xs) 0 0;
 }
 
-.coach-commitments .btn-full + .btn-full {
+.coach-commitments .pill.full + .pill.full {
   margin-top: 8px;
 }
 
@@ -1929,7 +1951,7 @@ form + .way-on,
   margin: 0 0 var(--space-sm);
 }
 
-.btn-primary.coach-warn {
+.pill.coach-warn {
   background: var(--warn);
 }
 
@@ -2315,7 +2337,7 @@ form + .way-on,
   margin-bottom: 24px;
 }
 
-.account-page a:not(.btn) {
+.account-page a:not(.pill) {
   color: var(--green-deep);
 }
 
@@ -3236,7 +3258,7 @@ html[data-javascript="loaded"] .save-fallback {
 
 /* ✨ The homepage (ticket 32a): the original prototype's landing page, with the content owner's newer
    "How it works" (its rules prefixed hiw-). Classes are the prototypes', prefixed so they cannot meet the
-   engine's own (.section, .step, .btn). */
+   engine's own (.section, .step). */
 
 .hp-nav-toggle {
   position: fixed;
@@ -3353,53 +3375,6 @@ body > svg[aria-hidden="true"] {
   font-size: var(--text-xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
-}
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-sm);
-  border: 0;
-  border-radius: var(--radius-pill-shape);
-  padding: var(--space-sm) var(--space-md) var(--space-sm) var(--space-lg);
-  background: var(--green);
-  color: var(--green-ink);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  text-decoration: none;
-  transition: filter 0.2s, transform 0.2s;
-}
-
-.pill .pill-arrow {
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-round-shape);
-  display: grid;
-  place-items: center;
-  background: var(--white-40);
-  transition: transform 0.25s, translate 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
-}
-
-.pill .pill-arrow svg,
-.pill > svg {
-  width: 10px;
-  height: 10px;
-  display: block;
-}
-
-.pill:hover {
-  filter: brightness(1.06);
-}
-
-.pill:hover .pill-arrow {
-  transform: rotate(45deg);
-}
-
-.pill.ghost {
-  background: transparent;
-  color: inherit;
-  box-shadow: inset 0 0 0 1px currentColor;
-  padding: var(--space-sm) var(--space-lg);
 }
 
 /* ---------- NAV ---------- */

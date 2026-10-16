@@ -30,7 +30,7 @@
               <div class="invitation-link-row">
                 {# ✨ Focused, so after a swap a keyboard or screen reader user lands on the link rather than nowhere. #}
                 <input type="text" id="invite-link-{{ person.contact.pk }}" value="{{ issued.link }}" readonly autofocus>
-                <button type="button" class="btn btn-primary invitation-copy" data-copy="invite-link-{{ person.contact.pk }}">Copy</button>
+                <button type="button" class="pill invitation-copy" data-copy="invite-link-{{ person.contact.pk }}">Copy</button>
               </div>
               <p>This link is shown only this once. If you lose it, reissue it.</p>
             </div>
@@ -46,14 +46,14 @@
                 hx-post="{% url 'issue_invitation' person.contact.pk %}" hx-target="#person-{{ person.contact.pk }}"
                 hx-select="#person-{{ person.contact.pk }}" hx-swap="outerHTML">
             {% csrf_token %}
-            <button type="submit" class="btn btn-secondary">{% if person.invitation %}Reissue link{% else %}Issue link{% endif %}</button>
+            <button type="submit" class="pill ghost">{% if person.invitation %}Reissue link{% else %}Issue link{% endif %}</button>
           </form>
           {% if person.invitation %}
             <form method="post" action="{% url 'revoke_invitation' person.contact.pk %}"
                   hx-post="{% url 'revoke_invitation' person.contact.pk %}" hx-target="#person-{{ person.contact.pk }}"
                   hx-select="#person-{{ person.contact.pk }}" hx-swap="outerHTML">
               {% csrf_token %}
-              <button type="submit" class="btn btn-secondary">Revoke link</button>
+              <button type="submit" class="pill ghost">Revoke link</button>
             </form>
           {% endif %}
         </li>
@@ -77,6 +77,6 @@
 
   <div class="nav-buttons">
     {# ✨ The prototype's "← Back to workbook" meant its hub; "the Workbook" is now a section of its own (ticket 41b). #}
-    <a class="btn btn-secondary" href="{% url 'hub' %}">← Back to the hub</a>
+    <a class="pill ghost" href="{% url 'hub' %}">← Back to the hub</a>
   </div>
 {% endblock content %}

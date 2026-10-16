@@ -23,9 +23,9 @@
       <form method="post" action="{% url 'move_past_page' section.id page.number %}">
         {% csrf_token %}
         {% if page.skip_label %}
-          <button type="submit" class="btn btn-secondary btn-full"{% if unmet %} disabled{% endif %}>{{ page.skip_label }}</button>
+          <button type="submit" class="pill ghost full"{% if unmet %} disabled{% endif %}>{{ page.skip_label }}</button>
         {% else %}
-          <button type="submit" class="btn btn-primary btn-full"{% if unmet %} disabled{% endif %}>{{ page.continue_label }}</button>
+          <button type="submit" class="pill full"{% if unmet %} disabled{% endif %}>{{ page.continue_label }}</button>
         {% endif %}
       </form>
     </div>
@@ -38,7 +38,7 @@
       {% include "engine/previous_page.html" %}
       <form method="post" action="{% url 'complete_section' section.id %}">
         {% csrf_token %}
-        <button type="submit" class="btn btn-primary btn-full"{% if unmet %} disabled{% endif %}>{{ section.complete_label }}</button>
+        <button type="submit" class="pill full"{% if unmet %} disabled{% endif %}>{{ section.complete_label }}</button>
       </form>
     </div>
     {% include "engine/gate_checklist.html" %}
@@ -56,7 +56,7 @@
       {% endif %}
       <form method="post" action="{% url 'reopen_section' section.id %}">
         {% csrf_token %}
-        <button type="submit" class="btn btn-secondary btn-sm">Mark as not complete</button>
+        <button type="submit" class="pill ghost small">Mark as not complete</button>
       </form>
     {% endif %}
     {% if page.number > 1 %}<div class="way-on">{% include "engine/previous_page.html" %}</div>{% endif %}

@@ -127,7 +127,7 @@ def test_a_pages_unmet_clauses_are_listed_beneath_its_continue(participant):
 def test_answering_what_the_page_needs_opens_its_continue_without_a_reload(participant):
     sent_back = save(participant, "why", "To find out.").content.decode()
 
-    assert '<button type="submit" class="btn btn-primary btn-full">Continue →</button>' in sent_back
+    assert '<button type="submit" class="pill full">Continue →</button>' in sent_back
 
 
 @pytest.mark.django_db
@@ -181,8 +181,8 @@ def skippable(signed_in_client, load_pathway):  # noqa: F811
 
 def way_on_look(page):
     """✨ How the way on at the foot of a page looks: "primary" or "secondary"."""
-    button = re.search(r'<div id="completion".*?<button type="submit" class="btn btn-(\w+)', page, re.S)
-    return button.group(1)
+    button = re.search(r'<div id="completion".*?<button type="submit" class="pill( ghost)?', page, re.S)
+    return "secondary" if button.group(1) else "primary"
 
 
 @pytest.mark.django_db
@@ -219,8 +219,8 @@ def test_the_way_on_follows_an_answer_given_and_taken_back_without_a_reload(skip
     answered = unescape(save(skippable, "story", "It began in a small town.").content.decode())
     taken_back = unescape(save(skippable, "story", "").content.decode())
 
-    assert '<button type="submit" class="btn btn-primary btn-full">Continue →</button>' in answered
-    assert f'<button type="submit" class="btn btn-secondary btn-full">{SKIP}</button>' in taken_back
+    assert '<button type="submit" class="pill full">Continue →</button>' in answered
+    assert f'<button type="submit" class="pill ghost full">{SKIP}</button>' in taken_back
 
 
 @pytest.mark.django_db

@@ -6,5 +6,5 @@
 {% endcomment %}
 <div id="block-{{ block.id }}" class="download">
   {{ block.text.body|linebreaks }}
-  <p><a class="btn btn-primary" href="{% url 'download' block.id %}">{{ block.text.button_label }}</a></p>
+  <p><a class="pill" href="{% url 'download' block.id %}">{{ block.text.button_label }}</a></p>
 </div>

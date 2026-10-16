@@ -135,7 +135,7 @@ def test_a_section_whose_gate_does_not_pass_says_what_is_missing_and_offers_no_w
     page = open_calling().get(CALLING).content.decode()
 
     assert gate_checklist(page) == {"Write a statement of at least ten characters.": False}
-    assert "<button type=\"submit\" class=\"btn btn-primary btn-full\" disabled>Mark complete</button>" in page
+    assert "<button type=\"submit\" class=\"pill full\" disabled>Mark complete</button>" in page
 
 
 @pytest.mark.django_db
@@ -208,7 +208,7 @@ def test_a_section_may_word_its_button_its_own_way(signed_in_client, load_pathwa
 
     onboarding = signed_in_client.get(ONBOARDING).content.decode()
 
-    assert '<button type="submit" class="btn btn-primary btn-full">Continue →</button>' in onboarding
+    assert '<button type="submit" class="pill full">Continue →</button>' in onboarding
     assert "Mark complete" not in onboarding
     signed_in_client.post("/sections/onboarding/complete/")
     assert "Mark complete</button>" in signed_in_client.get(CALLING).content.decode()
@@ -263,7 +263,7 @@ def test_writing_enough_opens_the_way_on_without_the_participant_reloading(open_
     sent_back = autosave(client, "statement", LONG_ENOUGH)
 
     assert 'hx-swap-oob="true"' in sent_back
-    assert '<button type="submit" class="btn btn-primary btn-full">Mark complete</button>' in sent_back
+    assert '<button type="submit" class="pill full">Mark complete</button>' in sent_back
     assert gate_checklist(sent_back) == {"Write a statement of at least ten characters.": True}
 
 
@@ -285,7 +285,7 @@ def test_writing_too_little_sends_back_the_gate_message_and_no_way_on(open_calli
     sent_back = autosave(client, "statement", "too short")
 
     assert gate_checklist(sent_back) == {"Write a statement of at least ten characters.": False}
-    assert '<button type="submit" class="btn btn-primary btn-full" disabled>Mark complete</button>' in sent_back
+    assert '<button type="submit" class="pill full" disabled>Mark complete</button>' in sent_back
 
 
 @pytest.mark.django_db
@@ -312,7 +312,7 @@ def test_the_gate_keeps_up_with_an_answer_taken_back_again(open_calling):
     sent_back = autosave(client, "statement", "")
 
     assert "Write a statement of at least ten characters." in sent_back
-    assert '<button type="submit" class="btn btn-primary btn-full" disabled>Mark complete</button>' in sent_back
+    assert '<button type="submit" class="pill full" disabled>Mark complete</button>' in sent_back
 
 
 # Reopening, the mirror of completing

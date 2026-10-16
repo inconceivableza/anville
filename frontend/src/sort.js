@@ -147,7 +147,7 @@ function mountSort(form) {
           ),
         ),
         on(
-          el("button", { type: "button", class: "btn btn-primary", "data-focus": "continue" }, "Continue to fine-tuning →"),
+          el("button", { type: "button", class: "pill", "data-focus": "continue" }, "Continue to fine-tuning →"),
           "click",
           () => {
             render(fineTuning);
@@ -173,7 +173,7 @@ function mountSort(form) {
             el("div", { class: "score-section" }, ...inBucket(bucket).map((item) => slider(item, bucket))),
           ),
         ),
-      el("button", { type: "submit", class: "btn btn-primary btn-full sort-submit" }, wording.submit_label),
+      el("button", { type: "submit", class: "pill full sort-submit" }, wording.submit_label),
     ];
   }
 

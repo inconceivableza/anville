@@ -11,9 +11,9 @@
 <div class="save-row">
   {% if save_label %}
     {% if refusal %}<p class="save-status" role="alert"><span class="save-refused">Not saved. {{ refusal }}</span></p>{% endif %}
-    <button type="submit" class="btn btn-primary btn-sm">{{ save_label }}</button>
+    <button type="submit" class="pill small">{{ save_label }}</button>
   {% else %}
     <output class="save-status" aria-live="polite"></output>
-    <button type="submit" class="btn btn-secondary btn-sm save-fallback">Save</button>
+    <button type="submit" class="pill ghost small save-fallback">Save</button>
   {% endif %}
 </div>

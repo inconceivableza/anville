@@ -75,8 +75,8 @@
         </label>
       {% endfor %}
       <p class="coach-hint">We keep only your answer, accept or decline, with the name and email address {{ name }} provided. We pass your answer on to {{ name }}, but never which boxes you ticked.</p>
-      <button type="submit" name="answer" value="accept" class="btn btn-primary btn-full">Accept →</button>
-      <button type="submit" name="answer" value="decline" class="btn btn-secondary btn-full">I can't commit to all of this</button>
+      <button type="submit" name="answer" value="accept" class="pill full">Accept →</button>
+      <button type="submit" name="answer" value="decline" class="pill ghost full">I can't commit to all of this</button>
     </form>
   {% endif %}
 {% endblock content %}

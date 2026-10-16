@@ -290,12 +290,12 @@ def test_the_coach_page_needs_nothing_to_go_on_from(participant):
     page = to_the_coach_page(participant).get(COACH_PAGE).content.decode()
 
     assert "Walking with a coach" in page
-    assert f'<button type="submit" class="btn btn-secondary btn-full">{escape(SORT_LATER)}</button>' in page
+    assert f'<button type="submit" class="pill ghost full">{escape(SORT_LATER)}</button>' in page
     assert move_past(participant, 2).url == CONTACTS_PAGE
 
 
 SORT_LATER = "I'll sort this later →"  # ✨ the original prototype's way past its mentor screen without a mentor
-CONTINUE_WITH_SAM = '<button type="submit" class="btn btn-primary btn-full">Continue with Sam →</button>'
+CONTINUE_WITH_SAM = '<button type="submit" class="pill full">Continue with Sam →</button>'
 
 
 @pytest.mark.django_db
@@ -309,7 +309,7 @@ def test_the_coach_page_goes_on_with_the_coach_once_chosen_and_says_sort_later_o
     assert CONTINUE_WITH_SAM in saved  # ✨ sent with the checklist, so the button changes without a reload
     assert '<div id="completion" class="completion" hx-swap-oob="true">' in saved
     assert CONTINUE_WITH_SAM in reloaded
-    assert f'<button type="submit" class="btn btn-secondary btn-full">{escape(SORT_LATER)}</button>' in removed
+    assert f'<button type="submit" class="pill ghost full">{escape(SORT_LATER)}</button>' in removed
 
 
 @pytest.mark.django_db
