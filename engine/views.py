@@ -73,6 +73,7 @@ from engine.hub import (
     page_reached,
     section_by_id,
     track_sections,
+    with_coach_answer,
 )
 from engine.document.observers import link_lifetime, privacy_notice, relationship_from_form, relationship_question
 from engine.document.photos import credits_listed
@@ -153,12 +154,23 @@ def hub(request):
             "title": text_for(state.version.document["title"], "participant"),
             "hub": hub,
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
-            "coach": _coach_of(state.response),
-            "coach_page": _coach_page_of(state.version.document, hub),
+            "side_cards": _side_cards(state, hub),
             "voices": _hub_voices(state.response),
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
+
+
+def _side_cards(state, hub):
+    """✨ The hub's side cards, the coach's section's tagged with the coach's answer once there is one (ticket 51b)."""
+    document = state.version.document
+    coach = _coach_of(state.response)
+    checklists = [block["id"] for block in blocks_of(document) if block["type"] == "coach_checklist"]
+    coach_section = section_of(document, checklists[0])["id"] if checklists else None
+    return [
+        with_coach_answer(card, coach["answer"]) if coach and card.id == coach_section else card
+        for card in hub.side_cards()
+    ]
 
 
 def _photo_of(document, section_id):

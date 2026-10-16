@@ -4,16 +4,16 @@
 
 **Blocked by:** A3-50 (Before we begin as a wizard)
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** Implementation Decisions › Coach; Feedback from others
 
-- [ ] The card's tag comes from its section's status and then the coach's answer: waiting, accepted or declined
-- [ ] The card's sentence is authored in the pathway document, and says only what is true
+- [x] The card's tag comes from its section's status and then the coach's answer: waiting, accepted or declined
+- [x] The card's sentence is authored in the pathway document, and says only what is true
 - [x] Inviting leads through the checklist to the coach's name, and then their link, shown to copy, in one act. The coach's email is optional
-- [ ] The coach can still be invited, and their link reissued, once Before we begin is complete
+- [x] The coach can still be invited, and their link reissued, once Before we begin is complete
 
 **Context**
 

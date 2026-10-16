@@ -29,6 +29,22 @@ LABELS = {
 }
 
 
+# ✨ The coach's answer as the coach's side card tags it (ticket 51b): "waiting" while a working link is unanswered.
+COACH_ANSWER_LABELS = {
+    "waiting": "Waiting",
+    "accepted": "Accepted",
+    "declined": "Declined",
+}
+
+
+def with_coach_answer(state, answer):
+    """✨ The coach's section as its side card shows it: its own status while locked or with no link answered or awaited,
+    and otherwise the coach's answer (ticket 51b)."""
+    if state.is_locked or answer not in COACH_ANSWER_LABELS:
+        return state
+    return state._replace(label=COACH_ANSWER_LABELS[answer])
+
+
 class NextStepWording(NamedTuple):
     """✨ What the hub's next step says for a section that carries its own wording for it (ticket 49b)."""
 
