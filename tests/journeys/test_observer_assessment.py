@@ -7,9 +7,11 @@ An observer reaches it only through the link they claimed, sends it once, and ne
 """
 
 import json
+import re
 
 import pytest
 from django.test import Client
+from django.utils import timezone
 
 from engine.models import Invitation, ObserverAssessments, ObserverResponse, Response
 from tests.documents import complete_sort, sort_pathway
@@ -190,6 +192,43 @@ def test_withdrawing_through_the_claimed_link_deletes_that_observers_answers_and
 
     assert withdrawn.status_code == 200
     assert observer_assessments().assessments == [kept]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("by", ["unclaimed copy", "claimed copy", "revoked own link", "expired own link"])
+def test_neither_the_participants_copy_nor_a_link_that_stopped_working_can_withdraw(
+    participant, observer, by  # noqa: F811
+):
+    copy = issue_link(participant, "Jo")
+    if by == "unclaimed copy":
+        link, sent = copy, None
+    else:
+        own_link = claim(observer, copy)
+        send(observer, complete_sort())
+        link, sent = (copy if by == "claimed copy" else own_link), [complete_sort()]
+    if by == "revoked own link":
+        participant.post(invitation_action(participant, "Jo", "revoke"))
+    if by == "expired own link":
+        Invitation.objects.update(expires_at=timezone.now())
+
+    refused = withdraw(participant, link)
+
+    assert refused.status_code == 404
+    assert observer_assessments().assessments == (sent or [])
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("through", ["cookie", "own link"])
+def test_opening_the_withdrawal_page_deletes_nothing_and_asks_with_a_post(participant, observer, through):  # noqa: F811
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+
+    opened = observer.get("/observe/withdraw/" if through == "cookie" else f"{own_link}withdraw/")
+
+    assert opened.status_code == 200
+    assert re.search(r'<form method="post" action="[^"]*/withdraw/"', opened.content.decode())
+    assert observer_assessments().assessments == [complete_sort()]
+    assert the_observers_page(observer).status_code == 200
 
 
 # The observer's wording
