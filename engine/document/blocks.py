@@ -61,6 +61,8 @@ class AnswerKind(NamedTuple):
     schema: dict | Callable[[dict, dict], dict]
     refusal: str
     from_form: Callable[[str], object] | None
+    # ✨ What an observer may leave out of the answer, filled in from the document before it is held to the schema.
+    observer_defaults: Callable[[dict, object], object] | None = None
 
     def schema_for(self, document, block):
         """✨ The answer schema for one block within its pathway document. Most kinds need neither; a sort
@@ -112,11 +114,28 @@ def _sort_schema(document, block):
     }
 
 
+def left_at_seeds(document, sort):
+    """✨ A sort with every placement sent without a value given its bucket's seed, as if its slider were left
+    untouched, so an observer can send straight after placing the cards. Anything else is passed on as sent, for the
+    schema to hold to the contract."""
+    if not isinstance(sort, dict):
+        return sort
+    seeds = {bucket["id"]: bucket["seed"] for bucket in document["instrument"]["buckets"]}
+
+    def seeded(placement):
+        if isinstance(placement, dict) and "value" not in placement and placement.get("bucket") in seeds:
+            return {**placement, "value": seeds[placement["bucket"]]}
+        return placement
+
+    return {item: seeded(placement) for item, placement in sort.items()}
+
+
 SORT = AnswerKind(
     "sort",
     _sort_schema,
     "Place every item in a bucket and give each one a score from 0 to 100, then submit again.",
     _sort_from_form,
+    observer_defaults=left_at_seeds,
 )
 
 
