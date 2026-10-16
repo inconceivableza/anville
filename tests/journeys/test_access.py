@@ -11,6 +11,8 @@ import pytest
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from django.contrib.auth import get_user
 
+from engine.models import Publication, Response
+from tests.documents import pathway_document
 from tests.journeys.pages import loads_the_built_stylesheet
 
 PASSWORD = "correct-horse-battery-staple"
@@ -323,3 +325,34 @@ def test_with_the_client_pair_set_google_is_offered_and_a_google_sign_up_makes_a
     assert participant.is_authenticated
     assert participant.email == "sam.google@example.com"
     assert participant.account.display_name == "Sam"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("missing", ["the 18+ confirmation", "the enrolment code"])
+def test_a_google_sign_up_without_either_confirmation_makes_no_account(client, settings, django_user_model, missing):
+    require_the_code(settings)
+    give_google_a_client(settings)
+
+    come_back_from_google(client)
+    if missing == "the 18+ confirmation":
+        finish_google_sign_up(client, is_adult=False)
+    else:
+        finish_google_sign_up(client, enrolment_code="")
+
+    assert not get_user(client).is_authenticated
+    assert not django_user_model.objects.exists()
+
+
+@pytest.mark.django_db
+def test_a_new_google_account_meets_the_consent_step_before_any_answer_is_stored(client, settings, load_pathway):
+    require_the_code(settings)
+    give_google_a_client(settings)
+    load_pathway(pathway_document())
+    come_back_from_google(client)
+    finish_google_sign_up(client)
+
+    hub = client.get("/hub/")
+    client.post("/answers/baseline-bible/", {"value": "7", "version": Publication.current_version().pk})
+
+    assert (hub.status_code, hub.url) == (302, "/consent/")
+    assert not Response.objects.exists()
