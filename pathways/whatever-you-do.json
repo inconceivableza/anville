@@ -597,7 +597,17 @@
     "tie_break": {
       "question": "Which is more true of you?",
       "skip": "Neither fits — skip",
-      "frameworks": { "apest": "Your role among people", "pep": "How you work" }
+      "frameworks": { "apest": "Your role among people", "pep": "How you work" },
+      "separated": {
+        "heading": "Separated",
+        "changed": "The top changed after your answers to “Which is more true of you?”.",
+        "same": "The same one leads, now ahead of the others after your answers to “Which is more true of you?”."
+      },
+      "balanced": {
+        "heading": "Genuinely balanced",
+        "circle": "Your answers went in a circle — each option beat one and lost to another. That’s a real result rather than an error: these sit equally in you.",
+        "level": "Your answers put none of these ahead of the others. That’s a real result rather than an error: these sit equally in you."
+      }
     },
     "standing": {
       "bands": [

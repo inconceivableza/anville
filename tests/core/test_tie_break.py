@@ -8,7 +8,7 @@ import pytest
 
 import tests.documents
 from engine.document import validate
-from engine.document.tie_break import pair_plan, tie_break
+from engine.document.tie_break import pair_plan, reweigh, tie_break
 from tests.documents import sort_pathway
 
 APEST = ["apostle", "prophet", "evangelist", "shepherd", "teacher", "deacon"]
@@ -152,6 +152,83 @@ def test_a_second_round_asks_about_the_same_pair_with_different_statements():
         for pair in pairs
         for construct, statement in zip(pair["constructs"], pair["statements"])
     )
+
+
+def answered(*picks, framework="apest"):
+    """✨ The stored answers to a tie-break's pairs, each `(a, b, chosen)`, `chosen` None for a skip."""
+    return [
+        {"framework": framework, "constructs": [a, b], "round": 0, "chosen": chosen} for a, b, chosen in picks
+    ]
+
+
+def percents(reweighted, framework_id="apest"):
+    """✨ A re-weighted result's framework as `[(construct, percent), ...]`, in its ranked order."""
+    [framework] = [framework for framework in reweighted["frameworks"] if framework["framework"] == framework_id]
+    return [(construct["construct"], construct["percent"]) for construct in framework["constructs"]]
+
+
+def test_re_weighting_a_tied_framework_gives_a_clear_leader_where_the_choices_give_one():
+    """✨ Prophet 26 and Shepherd 25 share 51 points. Shepherd chosen in both rounds wins 2 of 2, so weighs 2 to
+    Prophet's 1, and takes two thirds of the 51: 34 to 17. Everyone else, and the other framework, keep the sort's."""
+    sent = result(ONLY_ROLE_TIED, CLEAR_PEP)
+
+    chose_shepherd_twice = answered(("prophet", "shepherd", "shepherd"), ("prophet", "shepherd", "shepherd"))
+
+    reweighted = reweigh(planned(), sent, chose_shepherd_twice)
+
+    assert percents(reweighted) == [
+        ("shepherd", 34),
+        ("prophet", 17),
+        ("teacher", 16),
+        ("apostle", 13),
+        ("deacon", 11),
+        ("evangelist", 9),
+    ]
+    assert reweighted["tie_break"] == {"framework": "apest", "outcome": "top_changed"}
+    assert reweighted["frameworks"][1] == sent["frameworks"][1]
+    assert reweighted["method"] != sent["method"]
+
+
+def test_a_leader_the_choices_keep_is_kept_and_said_to_be_the_same():
+    """✨ A skip counts as an appearance for both and a win for neither: Prophet wins 1 of 2 and weighs 1.5 to
+    Shepherd's 1, so takes three fifths of the 51 points, 30.6 to 20.4."""
+    reweighted = reweigh(
+        planned(),
+        result(ONLY_ROLE_TIED, CLEAR_PEP),
+        answered(("prophet", "shepherd", "prophet"), ("prophet", "shepherd", None)),
+    )
+
+    assert percents(reweighted)[:2] == [("prophet", 31), ("shepherd", 20)]
+    assert reweighted["tie_break"]["outcome"] == "same_top"
+
+
+# ✨ Of the four tied in FLAT (68 points between them), Apostle beats Prophet, Prophet beats Shepherd and Shepherd
+# beats Apostle, and every pair with Deacon is skipped: each of the three wins 1 of 3 and Deacon none of 3.
+IN_A_CIRCLE = answered(
+    ("apostle", "prophet", "apostle"),
+    ("apostle", "shepherd", "shepherd"),
+    ("apostle", "deacon", None),
+    ("prophet", "shepherd", "prophet"),
+    ("prophet", "deacon", None),
+    ("shepherd", "deacon", None),
+)
+ALL_SKIPPED = answered(*[(*answer["constructs"], None) for answer in IN_A_CIRCLE])
+
+
+@pytest.mark.parametrize(
+    "answers, outcome, shares",
+    [
+        # ✨ Each of the three weighs 4/3 and Deacon 1, so 68 × (4/3) / 5 = 18.13 each and 13.6 for Deacon.
+        (IN_A_CIRCLE, "circle", {"apostle": 18, "prophet": 18, "shepherd": 18, "deacon": 14}),
+        (ALL_SKIPPED, "level", {"apostle": 17, "prophet": 17, "shepherd": 17, "deacon": 17}),
+    ],
+    ids=["in a circle", "every pair skipped"],
+)
+def test_choices_that_go_in_a_circle_or_pick_no_one_are_balanced_with_no_winner_forced(answers, outcome, shares):
+    reweighted = reweigh(planned(), result(FLAT, CLEAR_PEP), answers)
+
+    assert reweighted["tie_break"] == {"framework": "apest", "outcome": outcome}
+    assert {construct: percent for construct, percent in percents(reweighted) if construct in shares} == shares
 
 
 def with_a_tie_break(**settings):

@@ -77,7 +77,7 @@ from engine.hub import (
 from engine.document.observers import link_lifetime, privacy_notice, relationship_from_form, relationship_question
 from engine.document.photos import credits_listed
 from engine.models import Contact, Invitation, ObserverResponse, PathwayVersion, Publication, Response, Result
-from engine.document.tie_break import pair_plan
+from engine.document.tie_break import pair_plan, reweigh
 from engine.results import comparison_page, pair_page, results_page
 
 
@@ -636,7 +636,8 @@ def results(request, block_id):
         return redirect(page_url(section["id"], section["page"]))
     if _pairs_left(state.version.document, result):
         return redirect("tie_break", block_id)
-    shown = results_page(state.version.document, result.scores, state.answers[block_id], name_shown_for(request.user))
+    document = state.version.document
+    shown = results_page(document, _shown(document, result), state.answers[block_id], name_shown_for(request.user))
     return render(request, "engine/results.html", {"results": shown, "section": section, "block_id": block_id})
 
 
@@ -663,6 +664,7 @@ def tie_break(request, block_id):
             return render(request, "engine/save_status.html", {"refusal": refusal}, status=400)
         # ✨ A pair already answered (a form sent twice, or from a stale tab) stores nothing; either way the next is shown.
         result.answer_pair(place, plan[place], chosen)
+        _shown(state.version.document, result)  # ✨ the last answer re-weights the result
         return _see_other("tie_break", block_id)
     place = len(result.tie_break_answers)
     if place >= len(plan):
@@ -676,6 +678,15 @@ def _pairs_left(document, result):
     return len(result.tie_break_answers) < len(pair_plan(document, result.scores))
 
 
+def _shown(document, result):
+    """✨ The participant's result as their results page and comparison show it (ticket 30c): re-weighted by the
+    tie-break's answers once every pair is answered or skipped, stored beside the sort's the first time it is needed,
+    or else the sort's as scored."""
+    if result.reweighted is None and pair_plan(document, result.scores) and not _pairs_left(document, result):
+        result.keep_reweighted(reweigh(document, result.scores, result.tie_break_answers))
+    return result.shown
+
+
 @login_required
 @consent_required
 def comparison(request, block_id):
@@ -686,7 +697,8 @@ def comparison(request, block_id):
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
-    shown = _comparison_of(state.response, result.scores, state.answers[block_id])
+    scores = _shown(state.version.document, result)
+    shown = _comparison_of(state.response, scores, state.answers[block_id])
     sort = next(block for block in blocks_of(state.response.version.document) if block["id"] == block_id)
     context = {
         "comparison": shown,
@@ -1086,9 +1098,10 @@ def _shared_with_coach(invitation, name):
     if result is None:
         return None
     sort = participant_response.answers[scored["id"]]
+    scores = _shown(document, result)
     return {
-        "results": results_page(document, result.scores, sort, name),
-        "comparison": _comparison_of(participant_response, result.scores, sort),
+        "results": results_page(document, scores, sort, name),
+        "comparison": _comparison_of(participant_response, scores, sort),
     }
 
 
