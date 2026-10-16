@@ -1166,10 +1166,13 @@ def send_assessment(request, token=None):
     except AnswerRefused as refused:
         return render(request, "engine/save_status.html", {"refusal": str(refused)}, status=400)
     try:
-        ObserverResponse.send(invitation.contact.response, secret, assessment, relationship=relationship)
+        sent = ObserverResponse.send(invitation.contact.response, secret, assessment, relationship=relationship)
     except IntegrityError:
         refusal = "Your assessment has already been sent."
         return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
+    if sent is None:
+        # ✨ The observer withdrew through another page while this send was on its way.
+        return _refuse_link(request)
     return _go_to(request, back)
 
 
