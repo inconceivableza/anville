@@ -1177,7 +1177,7 @@ def send_assessment(request, token=None):
     if scored is None:
         raise Http404("This pathway has no assessment for observers.")
     try:
-        assessment = answer_from_form(document, scored, request.POST.get("value"))
+        assessment = answer_from_form(document, scored, request.POST.get("value"), role="observer")
     except AnswerRefused as refused:
         return render(request, "engine/save_status.html", {"refusal": str(refused)}, status=400)
     try:
