@@ -19,7 +19,7 @@ from tests.journeys.test_answers import CALLING, answer, participant  # noqa: F4
 from tests.journeys.test_coach_checklist import choose, step, text, the_coach_checklist
 from tests.journeys.test_coach_link import answer_as_coach, coach_link_action, issue_coach_link
 from tests.journeys.test_comparison import THREE_OBSERVERS, with_contacts
-from tests.journeys.test_consent import give_consent
+from tests.journeys.test_consent import give_consent, withdraw_consent
 from tests.journeys.test_invitations import observer  # noqa: F401 (a fixture, used by name as the coach)
 from tests.journeys.test_observer_responses import an_observer
 from tests.journeys.test_results import SORT, submit_sort
@@ -187,3 +187,35 @@ def test_revoking_reissuing_or_changing_the_coach_ends_access_and_clears_the_con
 
     assert observer.get(old).status_code == 404
     assert SHOWN not in what_the_coach_sees(observer, new)
+
+
+# While the participant's consent is withdrawn (ticket 45)
+
+
+@pytest.mark.django_db
+def test_while_the_participant_has_withdrawn_the_coach_sees_nothing_of_what_was_shared(
+    signed_in, participant, observer  # noqa: F811
+):
+    with_a_result(signed_in, participant)
+    link = an_accepted_coach(signed_in, observer)
+    assert share(signed_in).status_code == 303
+
+    withdraw_consent(signed_in)
+
+    refused = observer.get(link)
+    assert refused.status_code == 404
+    assert SHOWN not in refused.content.decode()
+    assert "Sam" not in refused.content.decode()
+
+
+@pytest.mark.django_db
+def test_consenting_again_shows_the_coach_what_was_shared_before(signed_in, participant, observer):  # noqa: F811
+    """✨ The participant gave the sharing separately, and can untick it: a withdrawal and a return leave it standing."""
+    with_a_result(signed_in, participant)
+    link = an_accepted_coach(signed_in, observer)
+    assert share(signed_in).status_code == 303
+    withdraw_consent(signed_in)
+
+    give_consent(signed_in)
+
+    assert SHOWN in what_the_coach_sees(observer, link)

@@ -1179,10 +1179,11 @@ def withdrawal(request, token=None):
     (ticket 15b). Opening the page asks and deletes nothing; only its button's POST deletes what they sent, found by
     the hash of that secret, and ends their link. The participant's copy of the link is not a secret, and a link that
     has stopped working claims nothing, so both are refused as any wrong link is: after that, the privacy notice tells
-    the observer to ask the people who run the service.
+    the observer to ask the people who run the service. A participant's withdrawn consent closes every other page of
+    the observer's, never this one (ticket 45).
     """
     secret = request.COOKIES.get(OBSERVER_COOKIE) if token is None else token
-    invitation = Invitation.claimed_by(secret)
+    invitation = Invitation.claimed_by(secret, for_withdrawal=True)
     if invitation is None:
         return _refuse_link(request)
     _, name = _asked_by(invitation)
