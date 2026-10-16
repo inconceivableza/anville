@@ -239,9 +239,11 @@ Everything a deployed copy needs is read from the environment, so one build serv
 | `DJANGO_HTTPS` | No forwarded header is trusted and plain HTTP is served | `true` behind a proxy that ends TLS: its `X-Forwarded-Proto` is trusted, plain HTTP is redirected to HTTPS, and the session, CSRF and observer cookies are marked Secure. Never set it without such a proxy in front, or anyone can claim to be on HTTPS |
 | `DJANGO_HSTS_SECONDS` | No `Strict-Transport-Security` header | How long browsers should refuse plain HTTP. Only read when `DJANGO_HTTPS` is on |
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | None | Further origins allowed to post forms, comma-separated. Not needed when the proxy passes the `Host` header on |
+| `DJANGO_SECRET_KEY_FALLBACKS` | Only `DJANGO_SECRET_KEY` is accepted | Old keys being rotated out, comma-separated: what they signed (sessions, signed cookies) is still accepted, but nothing new is signed with them. [deploy/README.md](deploy/README.md) gives the steps |
 | `DATABASE_CONN_MAX_AGE` | A database connection per request | Seconds to keep a connection for reuse |
 | `EMAIL_URL` | Email is fake: each message is printed in the server's output and nothing is delivered | The provider, as `smtp+tls://key:secret@host:587` |
 | `DEFAULT_FROM_EMAIL` | `webmaster@localhost` | The address messages come from |
+| `SERVER_EMAIL` | The same as `DEFAULT_FROM_EMAIL` | The address Django's own messages come from, such as errors sent to `ADMINS`. Django's own default, `root@localhost`, is refused by providers. The chart sets it from `email.from` |
 | `ANVILLE_EMAIL_DISCLAIMER` | Messages go as written | For a test system that can reach real mailboxes: every message has `[TEST]` put before its subject and this text at the top of its body, plain and HTML alike. The chart sets it on every staging environment |
 | `ANVILLE_DEMO_NOTICE` | Nothing is said | For a demo deployment: this text is shown on the homepage and on the account pages (sign up, sign in), saying it is a demo. The chart sets it on every staging environment |
 | `ANVILLE_COMMIT` | `unknown` | The commit the code was built from. The image sets it |
