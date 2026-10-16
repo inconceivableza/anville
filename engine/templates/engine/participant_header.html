@@ -13,10 +13,10 @@
 {% participant_nav as nav %}
 <header class="site-header">
   <div class="nav light">
-    <div class="l">
+    <div class="nav-left">
       <a class="site-header-title" href="{% url 'hub' %}">{{ nav.title|default:"Anville" }}</a>
     </div>
-    <div class="r">
+    <div class="nav-right">
       {% if nav.sidebar %}
         <details class="pathway-nav-toggle">
           <summary class="btn btn-secondary btn-sm">Your pathway</summary>

@@ -771,7 +771,7 @@ main.container:has(> .ob) {
   [data-reveal] .w,
   .lg,
   .pill,
-  .pill .ar {
+  .pill .pill-arrow {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
@@ -917,7 +917,7 @@ h2 {
   border-top: 1px solid var(--cream-2);
 }
 
-.srow .n {
+.srow .srow-number {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--muted);
@@ -1002,7 +1002,7 @@ h2 {
   white-space: nowrap;
 }
 
-.tag.go {
+.tag.up-next {
   background: var(--green);
   color: var(--green-ink);
 }
@@ -1051,15 +1051,15 @@ h2 {
   font-size: 12.5px;
 }
 
-.meter .lbl {
+.meter .meter-label {
   display: flex;
   justify-content: space-between;
   font-variant-numeric: tabular-nums;
 }
 
 /* ✨ The meters and baseline bars are <progress> elements, so their fill needs no inline width */
-.meter .tr,
-.base .tr {
+.meter .track,
+.base .track {
   appearance: none;
   display: block;
   width: 100%;
@@ -1070,15 +1070,15 @@ h2 {
   background: var(--track-on-dark);
 }
 
-.meter .tr::-webkit-progress-bar {
+.meter .track::-webkit-progress-bar {
   background: var(--track-on-dark);
 }
 
-.meter .tr::-webkit-progress-value {
+.meter .track::-webkit-progress-value {
   background: var(--green);
 }
 
-.meter .tr::-moz-progress-bar {
+.meter .track::-moz-progress-bar {
   background: var(--green);
 }
 
@@ -1103,7 +1103,7 @@ h2 {
   gap: var(--space-sm);
 }
 
-.base .b {
+.base .base-bar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 110px 18px;
   gap: var(--space-sm);
@@ -1112,16 +1112,16 @@ h2 {
   color: var(--muted);
 }
 
-.base .tr,
-.base .tr::-webkit-progress-bar {
+.base .track,
+.base .track::-webkit-progress-bar {
   background: var(--cream-2);
 }
 
-.base .tr::-webkit-progress-value {
+.base .track::-webkit-progress-value {
   background: var(--brown-3);
 }
 
-.base .tr::-moz-progress-bar {
+.base .track::-moz-progress-bar {
   background: var(--brown-3);
 }
 
@@ -3370,7 +3370,7 @@ body > svg[aria-hidden="true"] {
   transition: filter 0.2s, transform 0.2s;
 }
 
-.pill .ar {
+.pill .pill-arrow {
   width: 22px;
   height: 22px;
   border-radius: var(--radius-round-shape);
@@ -3380,7 +3380,7 @@ body > svg[aria-hidden="true"] {
   transition: transform 0.25s, translate 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-.pill .ar svg,
+.pill .pill-arrow svg,
 .pill > svg {
   width: 10px;
   height: 10px;
@@ -3391,7 +3391,7 @@ body > svg[aria-hidden="true"] {
   filter: brightness(1.06);
 }
 
-.pill:hover .ar {
+.pill:hover .pill-arrow {
   transform: rotate(45deg);
 }
 
@@ -3415,14 +3415,14 @@ body > svg[aria-hidden="true"] {
   font-size: 13.5px;
 }
 
-.nav .l,
-.nav .r {
+.nav .nav-left,
+.nav .nav-right {
   display: flex;
   gap: 26px;
   align-items: center;
 }
 
-.nav .r {
+.nav .nav-right {
   justify-content: flex-end;
 }
 
@@ -3442,8 +3442,8 @@ body > svg[aria-hidden="true"] {
 }
 
 @media (max-width: 760px) {
-  .nav .l a:not(:first-child),
-  .nav .r a {
+  .nav .nav-left a:not(:first-child),
+  .nav .nav-right a {
     display: none;
   }
 }
@@ -3748,7 +3748,7 @@ body > svg[aria-hidden="true"] {
   cursor: pointer;
 }
 
-.tab .n {
+.tab .tab-number {
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.1em;
@@ -3856,7 +3856,7 @@ body > svg[aria-hidden="true"] {
   gap: 28px;
 }
 
-.tp-text .n {
+.tp-text .tp-step {
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.12em;

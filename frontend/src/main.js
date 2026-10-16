@@ -237,14 +237,14 @@ if (document.querySelector("main.page") && !reducedMotion) {
   const STEP_MS = 7000; // ✨ how long each step shows before the next
   let i = 0, timer, start, remain = STEP_MS;
   const pauseReasons = new Set();
-  bar.innerHTML = steps.map((step, j) => `<button class="tab" role="tab" id="atab${j}" aria-controls="aText" aria-selected="${j === 0}"><span class="n">0${j + 1}</span><b>${step.title}</b><span class="bar"><i></i></span></button>`).join("");
+  bar.innerHTML = steps.map((step, j) => `<button class="tab" role="tab" id="atab${j}" aria-controls="aText" aria-selected="${j === 0}"><span class="tab-number">0${j + 1}</span><b>${step.title}</b><span class="bar"><i></i></span></button>`).join("");
   if (imgs) imgs.innerHTML = steps.map((_, j) => `<div class="tp-anim" data-i="${j}"></div>`).join("");
   const tabs = [...bar.children];
   const pics = imgs ? [...imgs.children] : [];
   bar.style.setProperty("--dur", STEP_MS + "ms");
   const render = () => {
     const step = steps[i];
-    text.innerHTML = `<div class="tp-anim"><span class="n">STEP 0${i + 1}</span><h3>${step.title}</h3><p>${step.summary}</p></div><ul class="tp-anim">${step.activities.map((activity) => `<li><svg><use href="#leaf"/></svg>${activity}</li>`).join("")}</ul><div class="out"><span>In your workbook</span><b>${step.outcome}</b></div>`;
+    text.innerHTML = `<div class="tp-anim"><span class="tp-step">STEP 0${i + 1}</span><h3>${step.title}</h3><p>${step.summary}</p></div><ul class="tp-anim">${step.activities.map((activity) => `<li><svg><use href="#leaf"/></svg>${activity}</li>`).join("")}</ul><div class="out"><span>In your workbook</span><b>${step.outcome}</b></div>`;
     text.setAttribute("aria-labelledby", "atab" + i);
     tabs.forEach((tab, j) => {
       tab.setAttribute("aria-selected", j === i);
@@ -494,7 +494,7 @@ if (window.matchMedia("(hover: hover) and (pointer: fine)").matches && !reducedM
       const dy = (event.clientY - (box.top + box.height / 2)) / box.height;
       button.style.transition = "transform .25s cubic-bezier(.2,.7,.2,1), filter .2s";
       button.style.transform = `translate(${(dx * 10).toFixed(1)}px,${(dy * 8).toFixed(1)}px)`;
-      const arrow = button.querySelector(".ar");
+      const arrow = button.querySelector(".pill-arrow");
       if (arrow) arrow.style.translate = `${(dx * 5).toFixed(1)}px ${(dy * 4).toFixed(1)}px`;
     }
   }, { passive: true });
@@ -503,7 +503,7 @@ if (window.matchMedia("(hover: hover) and (pointer: fine)").matches && !reducedM
     if (button && !button.contains(event.relatedTarget)) {
       button.style.transition = "transform .5s cubic-bezier(.2,.7,.2,1), filter .2s";
       button.style.transform = "";
-      const arrow = button.querySelector(".ar");
+      const arrow = button.querySelector(".pill-arrow");
       if (arrow) arrow.style.translate = "";
     }
   });
