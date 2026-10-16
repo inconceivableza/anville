@@ -353,6 +353,13 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - The participant's hub and list's page look the same before and after. The observers' notice ends with the reminders sentence.
 - Phone width: the stop page fits with no sideways scroll.
 
+## A fresh link from a reminder (load the pathway again; send a reminder as above)
+
+- The printed email has a plain-text part with "Answer for <name> →" and its link, and an HTML part with that as a link and "How we handle your details" beside it, both to the same `/reminders/answer/…/` address.
+- Open that address in a private window: the observers' privacy notice and "I'm answering for <name> →". Opening it changes nothing: the participant's copy of the link still opens its landing page.
+- Press the button: the observer's page, showing their own link once, with the assessment. The participant's copy now gets the dead-link page; the participant's list's page looks the same as before.
+- Press it again from another window: a new own link, and the first one is dead. After sending, the address gets the dead-link page. Phone width: no sideways scroll.
+
 ## Organisations and groups in the operator's admin (`/admin/`, as a superuser)
 
 - The index has an "Organisations and groups" section with Groups, Memberships, Organisations and Permissions, apart from "Authentication and Authorization"'s own Groups.

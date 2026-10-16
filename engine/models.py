@@ -389,6 +389,40 @@ class Invitation(models.Model):
         return secret if claimed else None
 
     @classmethod
+    def answerable(cls, pk):
+        """✨ The observer's link with this id while a reminder's button may give them a fresh one (ticket 43b), or
+        None, saying nothing of why: the link is dead or a coach's, its person has sent, answer collection is frozen or
+        the participant's consent is withdrawn. A stop to reminders does not matter."""
+        return (
+            cls._answerable(pk)
+            .select_related("contact__response__participant", "contact__response__version")
+            .first()
+        )
+
+    @classmethod
+    def claim_afresh(cls, pk):
+        """✨ Give the observer of an `answerable` link a fresh link of their own, already claimed, and return its
+        secret, once; None if it is not answerable now. The same record with new hashes, not a reissue (ADR 0016), so
+        its expiry and reminders' week are kept, while the participant's copy and any earlier claim stop working. One
+        UPDATE, as a claim is."""
+        secret = secrets.token_urlsafe(32)
+        unseen = secrets.token_urlsafe(32)  # ✨ the participant's copy's replacement, which nobody is ever shown
+        refreshed = cls._answerable(pk).update(
+            token_hash=_hash_of(unseen), secret_hash=_hash_of(secret), claimed_at=timezone.now()
+        )
+        return secret if refreshed else None
+
+    @classmethod
+    def _answerable(cls, pk):
+        return cls._while_consent_stands().filter(
+            pk=pk,
+            expires_at__gt=timezone.now(),
+            contact__role=Contact.Role.CONTACT,
+            contact__sent_at__isnull=True,
+            contact__response__collection_frozen_at__isnull=True,
+        )
+
+    @classmethod
     def answer_as_coach(cls, token, answer):
         """✨ Keep a coach's answer, given through their live link, and nothing else; False if the link is dead or has
         been answered already, or the participant's consent is withdrawn. One UPDATE, so of two answers at once exactly

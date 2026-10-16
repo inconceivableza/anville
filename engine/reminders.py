@@ -11,7 +11,8 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.core import signing
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import dateformat, timezone
 
@@ -30,6 +31,7 @@ EXAMPLE_DOMAINS = ("example.com", "example.net", "example.org")
 RESERVED_TOP_LEVEL = ("example", "test", "invalid", "localhost")
 
 STOP_SALT = "engine.reminders.stop"
+ANSWER_SALT = "engine.reminders.answer"
 
 
 def send_due_reminders():
@@ -100,8 +102,9 @@ def _at_example_domain(address):
 
 
 def _reminder(invitation):
-    """✨ The email for one reminder: the document's wording, naming the participant and the day the link stops
-    working, with the way to stop as a link and as `List-Unsubscribe` headers with one-click POST (RFC 8058)."""
+    """✨ The email for one reminder, as plain text and HTML: the document's wording, naming the participant and the day
+    the link stops working, the button for a fresh link and the link to its privacy notice (ticket 43b), and the way to
+    stop as a link and as `List-Unsubscribe` headers with one-click POST (RFC 8058)."""
     contact = invitation.contact
     participant_response = contact.response
     until = dateformat.format(timezone.localtime(invitation.expires_at), "j F Y")
@@ -109,12 +112,32 @@ def _reminder(invitation):
         participant_response.version.document, name_shown_for(participant_response.participant), contact.name, until
     )
     stop = stop_link(contact)
-    return EmailMessage(
+    answer = answer_link(invitation)
+    reminder = EmailMultiAlternatives(
         subject=wording["subject"],
-        body=f"{wording['body']}\n\n{wording['stop']}:\n{stop}\n",
+        body=f"{wording['body']}\n\n{wording['answer']}\n{answer}\n\n{wording['stop']}:\n{stop}\n",
         to=[contact.email],
         headers={"List-Unsubscribe": f"<{stop}>", "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"},
     )
+    html = render_to_string("engine/reminder_email.html", {**wording, "answer_link": answer, "stop_link": stop})
+    reminder.attach_alternative(html, "text/html")
+    return reminder
+
+
+def answer_link(invitation):
+    """✨ The address of a reminder's button (ticket 43b): a page with the privacy notice and a button that gives the
+    observer a fresh link of their own. Signed with a salt of its own, so it is no stop address, and naming this
+    invitation, so a reissue, which makes a new one, leaves it naming nothing. It never expires of itself."""
+    signed = signing.Signer(salt=ANSWER_SALT).sign(str(invitation.pk))
+    return settings.ANVILLE_SITE_URL + reverse("fresh_link", args=[signed])
+
+
+def invitation_to_answer(signed):
+    """✨ The id of the invitation a button's address was made for, or None if it was tampered with."""
+    try:
+        return int(signing.Signer(salt=ANSWER_SALT).unsign(signed))
+    except signing.BadSignature:
+        return None
 
 
 def stop_link(contact):

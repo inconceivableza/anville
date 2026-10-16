@@ -1123,12 +1123,18 @@ def observe(request, token):
         return _observers_page(request, token, came_by_link=True)  # ✨ an observer's own link, or the refusal
     if invitation.claimed_at is not None:
         return render(request, "engine/link_used.html", status=410)
-    document, name = _asked_by(invitation)
     frozen = NO_MORE_ANSWERS if invitation.contact.response.collection_frozen_at is not None else None
+    return _landing(request, invitation, reverse("start_observing", args=[token]), frozen)
+
+
+def _landing(request, invitation, action, frozen=None):
+    """✨ The privacy notice and the button that claims, posting to `action`. Never cached, since it is reached by a
+    secret."""
+    document, name = _asked_by(invitation)
     shown = render(
         request,
         "engine/observer_landing.html",
-        {"notice": privacy_notice(document, name), "name": name, "token": token, "frozen": frozen},
+        {"notice": privacy_notice(document, name), "name": name, "action": action, "frozen": frozen},
     )
     shown["Cache-Control"] = "no-store"
     return shown
@@ -1149,6 +1155,30 @@ def start_observing(request, token):
         if Invitation.live(token) is not None:
             return render(request, "engine/link_used.html", status=410)
         return _refuse_link(request)
+    return _claimed(request, secret)
+
+
+@require_http_methods(["GET", "POST"])
+def fresh_link(request, signed):
+    """✨ Where a reminder's button leads (ticket 43b, ADR 0016): the privacy notice and a button, as the observer's
+    landing has. Opening it changes nothing, since mail filters open every link in a message; only the button's POST
+    gives the observer a fresh link of their own, already claimed, in place of the one they were sent, and takes them
+    into the observer assessment. It works again until they have sent; a tampered address, or one whose link is dead,
+    reissued or frozen, or whose participant's consent is withdrawn, gets the dead-link refusal."""
+    pk = reminders.invitation_to_answer(signed)
+    invitation = Invitation.answerable(pk) if pk is not None else None
+    if invitation is None:
+        return _refuse_link(request)
+    if request.method == "GET":
+        return _landing(request, invitation, reverse("fresh_link", args=[signed]))
+    secret = Invitation.claim_afresh(invitation.pk)
+    if secret is None:
+        return _refuse_link(request)
+    return _claimed(request, secret)
+
+
+def _claimed(request, secret):
+    """✨ The observer's page for a link just claimed, showing their own link this once and leaving it in a cookie."""
     invitation = Invitation.claimed_by(secret)
     own_link = request.build_absolute_uri(reverse("observe", args=[secret]))
     shown = _observers_page(request, secret, own_link=own_link)

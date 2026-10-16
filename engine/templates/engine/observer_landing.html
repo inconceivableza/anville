@@ -5,7 +5,7 @@
   ✨ Where a working, unclaimed observer link lands, from the original prototype's welcome screen: the privacy notice
   before anything else, then the way to start, which claims the link. The prototype's name box is gone (observers type
   no name, ADR 0005), and its "completely anonymous" with it; how the observer knows the participant is asked with
-  the questions (ticket 15).
+  the questions (ticket 15). A reminder's button leads here too, and its start gives a fresh link (ticket 43b).
 {% endcomment %}
 {% block head_title %}You've been invited{% endblock head_title %}
 
@@ -26,7 +26,7 @@
       <p>{{ name }} has already looked at everyone's answers together, so no new answers are added. Thank you for being willing to help.</p>
     </div>
   {% else %}
-    <form method="post" action="{% url 'start_observing' token %}">
+    <form method="post" action="{{ action }}">
       {% csrf_token %}
       <button type="submit" class="pill full">I'm answering for {{ name }} →</button>
     </form>

@@ -39,12 +39,15 @@ DEFAULT_REMINDER = {
         "[Draft email: this pathway has not written its own reminder yet.]"
         "\n\n"
         "Hi {observer}, {name} asked you to answer some questions about them. Please answer through the link {name} "
-        "sent you. Your link works until {until}."
+        "sent you, or with the button below. Your link works until {until}."
         "\n\n"
         "{name} gave us your name and email address; we use them only to remind you, once a week until you answer or "
         "your link runs out."
     ),
     "stop": "Don't want these reminders? Stop reminders about {name}",
+    # ✨ The button that gives the observer a fresh link, and the link beside it to the same page (ticket 43b).
+    "answer": "Answer for {name} →",
+    "details": "How we handle your details",
 }
 
 
@@ -70,7 +73,7 @@ def privacy_notice(document, name):
 
 
 def reminder_email(document, name, observer, until):
-    """✨ The reminder email's wording, as {"subject", "body", "stop"}, in the observer's wording, naming the participant
+    """✨ The reminder email's wording, as {"subject", "body", "stop", "answer", "details"}, in the observer's wording, naming the participant
     as {name}, the observer as {observer} and the day their link stops working as {until} (ticket 43a). Each field the
     document leaves out is the engine's draft's."""
     authored = document.get("observers", {}).get("reminder", {})

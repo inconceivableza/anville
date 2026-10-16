@@ -33,6 +33,7 @@ from engine.views import (
     contacts,
     credits_page,
     download,
+    fresh_link,
     home,
     hub,
     invitations,
@@ -89,6 +90,8 @@ urlpatterns = [
     path("observe/<str:token>/withdraw/", withdrawal, name="withdrawal_by_link"),
     # ✨ A reminder's stop link (ticket 43a), which works whatever has happened to the observer's own link.
     path("reminders/stop/<str:signed>/", stop_reminders, name="stop_reminders"),
+    # ✨ A reminder's button, which gives the observer a fresh link of their own (ticket 43b).
+    path("reminders/answer/<str:signed>/", fresh_link, name="fresh_link"),
     # ✨ The coach's link (ticket 13c), apart from the observers', so neither kind of link works at the other's address.
     path("coaching/<str:token>/", coaching, name="coaching"),
     path("coaching/<str:token>/answer/", answer_coaching, name="answer_coaching"),

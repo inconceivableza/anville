@@ -168,6 +168,14 @@
             "stop": {
               "description": "The line before the link that stops the reminders.",
               "$ref": "#/$defs/text"
+            },
+            "answer": {
+              "description": "The button that leads to the privacy notice and a fresh link of the observer's own.",
+              "$ref": "#/$defs/text"
+            },
+            "details": {
+              "description": "The link beside the button, to the same page, for the privacy notice.",
+              "$ref": "#/$defs/text"
             }
           }
         },
