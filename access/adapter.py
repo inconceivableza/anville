@@ -7,6 +7,7 @@ from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from django import forms
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.http import Http404
 
 # ✨ The email is the username (ticket 37), so it can be no longer than the username column. allauth would otherwise cut
 # a longer one short to fit, leaving a username that is not the email, and that a second long email could clash with.
@@ -36,3 +37,12 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         if not (google_id and secret) or provider not in (None, "google") or client_id not in (None, google_id):
             return []
         return [SocialApp(provider="google", name="Google", client_id=google_id, secret=secret)]
+
+    def get_app(self, request, provider, client_id=None):
+        """✨ Without the pair, the Google routes are not found, rather than failing for want of an app."""
+        from allauth.socialaccount.models import SocialApp
+
+        try:
+            return super().get_app(request, provider, client_id=client_id)
+        except SocialApp.DoesNotExist:
+            raise Http404

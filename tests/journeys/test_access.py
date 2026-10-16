@@ -298,6 +298,18 @@ def finish_google_sign_up(client, *, enrolment_code="GRACE-2026", is_adult=True)
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("client_id, secret", [("", ""), (GOOGLE_CLIENT_ID, ""), ("", "test-secret")])
+def test_without_the_whole_client_pair_google_is_neither_offered_nor_reachable(client, settings, client_id, secret):
+    give_google_a_client(settings, client_id=client_id, secret=secret)
+
+    assert not offers_google(client.get("/accounts/login/").content.decode())
+    assert not offers_google(client.get("/accounts/signup/").content.decode())
+    assert client.post(GOOGLE_LOGIN).status_code == 404
+    assert client.get(GOOGLE_CALLBACK, {"code": "from-google", "state": "any"}).status_code == 404
+    assert client.post("/accounts/google/login/token/").status_code == 404
+
+
+@pytest.mark.django_db
 def test_with_the_client_pair_set_google_is_offered_and_a_google_sign_up_makes_an_account(client, settings):
     require_the_code(settings)
     give_google_a_client(settings)
