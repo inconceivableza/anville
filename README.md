@@ -240,6 +240,7 @@ Everything a deployed copy needs is read from the environment, so one build serv
 | `DJANGO_HSTS_SECONDS` | No `Strict-Transport-Security` header | How long browsers should refuse plain HTTP. Only read when `DJANGO_HTTPS` is on |
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | None | Further origins allowed to post forms, comma-separated. Not needed when the proxy passes the `Host` header on |
 | `DATABASE_CONN_MAX_AGE` | A database connection per request | Seconds to keep a connection for reuse |
+| `CACHE_URL` | Each process keeps its own cache | The cache every worker shares, where allauth counts sign-in and sign-up attempts. The chart sets `dbcache://anville_cache`, Django's database cache; `python manage.py createcachetable` makes its table, and the chart runs it after the migration |
 | `EMAIL_URL` | Email is fake: each message is printed in the server's output and nothing is delivered | The provider, as `smtp+tls://key:secret@host:587` |
 | `DEFAULT_FROM_EMAIL` | `webmaster@localhost` | The address messages come from |
 | `ANVILLE_EMAIL_DISCLAIMER` | Messages go as written | For a test system that can reach real mailboxes: every message has `[TEST]` put before its subject and this text at the top of its body, plain and HTML alike. The chart sets it on every staging environment |
@@ -248,7 +249,9 @@ Everything a deployed copy needs is read from the environment, so one build serv
 
 `/healthz` answers `{"status": "ok", "commit": "…"}` when the database can be reached, and 503 when it cannot. It still wants a `Host` header that `DJANGO_ALLOWED_HOSTS` lists.
 
-With `DJANGO_DEBUG` off, errors are printed to the server's output with any observer's or coach's link redacted, since whoever holds such a link can answer as them.
+With `DJANGO_DEBUG` off, errors are printed to the server's output with any observer's or coach's link redacted, since whoever holds such a link can answer as them. The visitor sees Anville's own page for not found, server error, forbidden and bad request (`engine/templates/404.html` and its neighbours), which names nothing of the address asked for.
+
+The admin's sign-in at `/admin/` refuses repeated wrong passwords as the site's sign-in does: five for one account in five minutes, or ten from one address in a minute.
 
 To serve the way a deployment does, gather the static files and start gunicorn, which reads `gunicorn.conf.py`:
 

@@ -76,7 +76,7 @@ gh workflow run deploy.yml -f environment=whatever-you-do-staging -f tag=latest
 
 `tag` may be a commit, a `v*` tag or `latest`. The workflow resolves it to a digest, opens the tunnel, checks the host's tier, applies the environment's secrets, installs cert-manager and the issuers if the host lacks them, installs or upgrades the environment, and then asks `https://<hostname>/healthz` which commit is answering. It fails if that is not the commit it deployed.
 
-A deploy runs migrations. It does not publish a pathway: see "Publish a pathway" below.
+A deploy runs migrations, then `createcachetable` for the cache the workers share. It does not publish a pathway: see "Publish a pathway" below.
 
 ## After the first deploy
 
@@ -87,7 +87,7 @@ k exec -it deployment/anville -- python manage.py createsuperuser --username ope
 k exec deployment/anville -- python manage.py seed_observers --help    # staging only
 ```
 
-The operator's account is given a username and no email address on purpose. Signing in to the site is by email (`ACCOUNT_LOGIN_METHODS`), so an account with no email can reach `/admin/`, where Django's own backend takes the username, and cannot reach the hub at all. The operator is then never walked into the consent flow, leaves no consent or answers among the participants' own, and `username == email` goes on meaning "this row is a participant". An email address on the account would also take that address out of use, since no participant can sign up with an address another user holds. To see what a participant sees, sign up an ordinary account. `/admin/` is served on the public hostname, so that password belongs with the environment's other secrets.
+The operator's account is given a username and no email address on purpose. Signing in to the site is by email (`ACCOUNT_LOGIN_METHODS`), so an account with no email can reach `/admin/`, where Django's own backend takes the username, and cannot reach the hub at all. The operator is then never walked into the consent flow, leaves no consent or answers among the participants' own, and `username == email` goes on meaning "this row is a participant". An email address on the account would also take that address out of use, since no participant can sign up with an address another user holds. To see what a participant sees, sign up an ordinary account. `/admin/` is served on the public hostname, so that password belongs with the environment's other secrets. Its sign-in refuses repeated wrong passwords as the site's does, so after five for one account the right one is refused too, for five minutes.
 
 Then publish the environment's pathway, as below.
 
