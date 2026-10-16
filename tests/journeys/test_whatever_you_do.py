@@ -412,7 +412,8 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     """✨ The fifth rating is added to the faithful port here and the result compared whole, so a change made to
     one document and not the other fails, and so does a slip in the fifth rating itself (its place, its anchors,
     its gate clause, or a message still saying four). The minimum-length messages are reworded the same way,
-    the time estimates, checked above, and the hub's section numbers are set aside, and so is the Workbook in place of
+    the time estimates, checked above, the hub's section numbers, next-step wording and photos are set aside, and so is
+    the Workbook in place of
     Sections 2–4."""
     expected = the_faithful_port()
     for section in expected["content"]["sections"]:
@@ -432,9 +433,19 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     two_contacts_for_now(expected)
     the_workbook_in_place_of_sections_2_to_4(expected)
 
-    assert without_numbers(without_the_tie_break(without_the_coach_step(without_estimates(the_pathway())))) == (
-        without_numbers(expected)
-    )
+    assert without_the_next_step_and_photos(
+        without_numbers(without_the_tie_break(without_the_coach_step(without_estimates(the_pathway()))))
+    ) == (without_numbers(expected))
+
+
+def without_the_next_step_and_photos(document):
+    """✨ The hub's next-step wording, its photos and their credits' setting are this pathway's alone (ticket 49b): the
+    faithful port takes none."""
+    document.pop("photos", None)
+    document.pop("show_courtesy_credits", None)
+    for section in document["content"]["sections"]:
+        section.pop("next_step", None)
+    return document
 
 
 def without_numbers(document):
