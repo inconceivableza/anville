@@ -4,16 +4,16 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct); carried from sprint 1
 
 **Spec:** Observers (ADR 0005); Open content and product items; Testing Decisions
 
-- [ ] The observer chooses a relationship, stored but never used to slice or filter results
-- [ ] A thank-you screen closes the flow; an observer following their claimed link after sending sees only the thank-you and withdrawal
-- [ ] An observer can withdraw through their claimed link while it is valid, which deletes their answers. Once the link has stopped working they ask the people who run the service, as the privacy notice says (B2B-55)
-- [ ] Withdrawal works only through the claimed secret (ticket 13b), never the participant's copy of the link
+- [x] The observer chooses a relationship, stored but never used to slice or filter results
+- [x] A thank-you screen closes the flow; an observer following their claimed link after sending sees only the thank-you and withdrawal
+- [x] An observer can withdraw through their claimed link while it is valid, which deletes their answers. Once the link has stopped working they ask the people who run the service, as the privacy notice says (B2B-55)
+- [x] Withdrawal works only through the claimed secret (ticket 13b), never the participant's copy of the link
 
 **Carried from 15a**
 

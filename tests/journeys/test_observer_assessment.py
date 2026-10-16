@@ -38,6 +38,10 @@ def observed_pathway():
     document["presentation"]["sort_wording"] = {
         "sort_heading": {"participant": "Sort your strengths", "observer": "Sort {name}'s strengths"},
     }
+    document.setdefault("observers", {})["relationship"] = {
+        "question": "Your relationship to {name}",
+        "choices": [{"id": "family", "label": "Family member"}, {"id": "friend", "label": "Close friend"}],
+    }
     return document
 
 
@@ -48,9 +52,10 @@ def participant(signed_in_client, load_pathway):  # noqa: F811
     return signed_in_client
 
 
-def send(client, assessment, link=None):
+def send(client, assessment, link=None, relationship=None):
     """✨ Send an observer assessment as the widget's form does: through a link if given, else by the observer cookie."""
-    return client.post(f"{link}assessment/" if link else "/observe/assessment/", {"value": json.dumps(assessment)})
+    posted = {"value": json.dumps(assessment), **({"relationship": relationship} if relationship is not None else {})}
+    return client.post(f"{link}assessment/" if link else "/observe/assessment/", posted)
 
 
 def observer_assessments():
@@ -118,6 +123,27 @@ def test_an_assessment_that_breaks_the_contract_is_refused_and_nothing_is_stored
     claim(observer, issue_link(participant, "Jo"))
 
     refused = send(observer, complete_sort(a5={"bucket": "strength", "value": 101}))
+
+    assert refused.status_code == 400
+    assert not ObserverResponse.objects.exists()
+
+
+@pytest.mark.django_db
+def test_the_relationship_chosen_is_stored_with_the_assessment(participant, observer):  # noqa: F811
+    claim(observer, issue_link(participant, "Jo"))
+    asked = the_observers_page(observer).content.decode()
+    assert re.search(r'<select[^>]*name="relationship"', asked)
+
+    send(observer, complete_sort(), relationship="friend")
+
+    assert ObserverResponse.objects.get().relationship == "friend"
+
+
+@pytest.mark.django_db
+def test_a_relationship_outside_the_offered_choices_is_refused_and_nothing_is_stored(participant, observer):  # noqa: F811
+    claim(observer, issue_link(participant, "Jo"))
+
+    refused = send(observer, complete_sort(), relationship="colleague")
 
     assert refused.status_code == 400
     assert not ObserverResponse.objects.exists()

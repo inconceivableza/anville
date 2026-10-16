@@ -411,6 +411,9 @@ class ObserverResponse(models.Model):
     assessment = models.JSONField(null=True, blank=True)
     written_answers = models.JSONField(default=dict)
     submitted_at = models.DateTimeField(null=True, blank=True)
+    # ✨ How the observer knows the participant, by the id of a choice the document offers, or empty if they chose none.
+    # Stored only: nothing reads it to slice or filter results (ticket 15b).
+    relationship = models.CharField(max_length=64, null=True, blank=True)
     # ✨ Empty for seeded observers, who claimed nothing. Unique, so each claim sends one observer response.
     sent_by = models.CharField(max_length=64, unique=True, null=True, blank=True)
     is_test_data = models.BooleanField(default=False)
@@ -426,14 +429,16 @@ class ObserverResponse(models.Model):
         ]
 
     @classmethod
-    def send(cls, response, secret, assessment, is_test_data=False):
-        """✨ Store the observer assessment sent with a claimed secret, about the participant whose response it is. It
-        counts at once. A second from the same secret raises IntegrityError from the database and changes nothing.
-        `is_test_data` is set only by a seeding command, never from a request."""
+    def send(cls, response, secret, assessment, is_test_data=False, relationship=None):
+        """✨ Store the observer assessment sent with a claimed secret, about the participant whose response it is, with
+        the relationship the observer chose, if any. It counts at once. A second from the same secret raises
+        IntegrityError from the database and changes nothing. `is_test_data` is set only by a seeding command, never
+        from a request."""
         with transaction.atomic():
             return cls.objects.create(
                 response=response,
                 assessment=assessment,
+                relationship=relationship,
                 submitted_at=timezone.now(),
                 sent_by=_sent_by(secret),
                 is_test_data=is_test_data,

@@ -73,7 +73,7 @@ from engine.hub import (
     section_by_id,
     track_sections,
 )
-from engine.document.observers import link_lifetime, privacy_notice
+from engine.document.observers import link_lifetime, privacy_notice, relationship_from_form, relationship_question
 from engine.models import Contact, Invitation, ObserverResponse, PathwayVersion, Publication, Response, Result
 from engine.results import comparison_page, results_page
 
@@ -1178,10 +1178,11 @@ def send_assessment(request, token=None):
         raise Http404("This pathway has no assessment for observers.")
     try:
         assessment = answer_from_form(document, scored, request.POST.get("value"))
+        relationship = relationship_from_form(document, request.POST.get("relationship"))
     except AnswerRefused as refused:
         return render(request, "engine/save_status.html", {"refusal": str(refused)}, status=400)
     try:
-        ObserverResponse.send(invitation.contact.response, secret, assessment)
+        ObserverResponse.send(invitation.contact.response, secret, assessment, relationship=relationship)
     except IntegrityError:
         refusal = "Your assessment has already been sent."
         return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
@@ -1234,6 +1235,7 @@ def _observers_page(request, secret, own_link=None, came_by_link=False):
             "id": scored["id"],
             "widget": BLOCK_TYPES[scored["type"]].widget(document, "observer", name),
             "action": reverse("send_assessment_by_link", args=[secret]) if came_by_link else reverse("send_assessment"),
+            "relationship": relationship_question(document, name),
         }
     withdraw_at = reverse("withdrawal_by_link", args=[secret]) if came_by_link else reverse("withdrawal")
     context = {"name": name, "own_link": own_link, "assessment": assessment, "sent": sent, "withdraw_at": withdraw_at}

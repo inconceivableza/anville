@@ -40,6 +40,18 @@
             hx-post="{{ assessment.action }}" hx-target="find .save-status"
             hx-disabled-elt="find .sort-submit" data-sort="{{ script_id }}">
         {% csrf_token %}
+        {% if assessment.relationship %}
+          {# ✨ The original prototype's question from its welcome screen, sent with the assessment (ticket 15b). #}
+          <div class="name-section">
+            <label for="relationship">{{ assessment.relationship.question }}</label>
+            <select id="relationship" name="relationship">
+              <option value="">Select...</option>
+              {% for choice in assessment.relationship.choices %}
+                <option value="{{ choice.id }}">{{ choice.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endif %}
         <input type="hidden" name="value">
         <p class="visually-hidden" aria-live="polite" data-sort-announcer></p>
         <progress class="sort-progress" max="100" value="0" aria-hidden="true"></progress>
