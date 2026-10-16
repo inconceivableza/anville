@@ -24,6 +24,7 @@ def lint(document):
         *_photos_of_missing_sections(document, section_ids),
         *_unknown_linked_sections(document, section_ids),
         *_links_holding_their_own_section(document),
+        *_results_of_no_sort(document),
         *_empty_pages(document),
         *_unreadable_clauses(document),
         *_missing_constructs(document, construct_ids),
@@ -156,6 +157,17 @@ def _unknown_linked_sections(document, section_ids):
                 yield Problem(
                     f"/content/sections/{s}/blocks/{b}/section",
                     f"There is no section '{block['section']}' in this pathway.",
+                )
+
+
+def _results_of_no_sort(document):
+    """✨ A `sort_results` block shows the results of the sort it names (ticket 57), so it must name one."""
+    types = block_types_by_id(document)
+    for s, section in enumerate(document["content"]["sections"]):
+        for b, block in enumerate(section["blocks"]):
+            if block["type"] == "sort_results" and not (block["sort"] in types and types[block["sort"]].scored):
+                yield Problem(
+                    f"/content/sections/{s}/blocks/{b}/sort", f"There is no sort '{block['sort']}' in this pathway."
                 )
 
 

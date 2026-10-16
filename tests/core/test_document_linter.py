@@ -159,6 +159,17 @@ def test_a_sort_whose_section_could_be_completed_without_it_is_reported():
     ]
 
 
+@pytest.mark.parametrize("named", ["strengths-sort", "statement", "nowhere"])
+def test_a_sort_results_block_naming_anything_but_a_sort_is_reported(named):
+    document = sort_pathway()
+    document["content"]["sections"][1]["blocks"].append({"id": "shown", "type": "sort_results", "sort": named})
+
+    expected = [] if named == "strengths-sort" else [
+        Problem(path="/content/sections/1/blocks/1/sort", message=f"There is no sort '{named}' in this pathway.")
+    ]
+    assert validate(document) == expected
+
+
 def test_a_pathway_without_a_sort_needs_no_scoring_method():
     document = pathway_document()
     assert "scoring" not in document["measurement"]
