@@ -135,6 +135,35 @@ def issue_link_shown_over_https(client, name):
     return re.search(r"https://testserver(?::80)?(/observe/[A-Za-z0-9_-]+/)", issued.content.decode()).group(1)
 
 
+# The admin's sign-in
+
+
+@pytest.mark.django_db
+def test_repeated_wrong_passwords_at_the_admin_are_refused_as_at_sign_in(client, django_user_model):
+    # ✨ allauth refuses sign-in after five wrong passwords for one account in five minutes. The admin's own form,
+    # where the operator signs in by username, counts them the same way, so the right password is then refused too.
+    django_user_model.objects.create_superuser("operator", "", "the-right-password")
+    for _ in range(5):
+        wrong = client.post("/admin/login/", {"username": "operator", "password": "a-wrong-password"})
+        assert wrong.status_code == 200
+
+    refused = client.post("/admin/login/?next=/admin/", {"username": "operator", "password": "the-right-password"})
+
+    assert refused.status_code == 200
+    assert "_auth_user_id" not in client.session
+    assert client.get("/admin/").status_code == 302
+
+
+@pytest.mark.django_db
+def test_the_operator_still_signs_in_at_the_admin_by_username(client, django_user_model):
+    django_user_model.objects.create_superuser("operator", "", "the-right-password")
+
+    signed_in = client.post("/admin/login/?next=/admin/", {"username": "operator", "password": "the-right-password"})
+
+    assert signed_in.status_code == 302
+    assert client.get("/admin/").status_code == 200
+
+
 # What reaches the log
 
 
