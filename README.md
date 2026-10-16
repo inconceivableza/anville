@@ -248,7 +248,7 @@ Everything a deployed copy needs is read from the environment, so one build serv
 | `DEFAULT_FROM_EMAIL` | `webmaster@localhost` | The address messages come from |
 | `SERVER_EMAIL` | The same as `DEFAULT_FROM_EMAIL` | The address Django's own messages come from, such as errors sent to `ADMINS`. Django's own default, `root@localhost`, is refused by providers. The chart sets it from `email.from` |
 | `ANVILLE_EMAIL_DISCLAIMER` | Messages go as written | For a test system that can reach real mailboxes: every message has `[TEST]` put before its subject and this text at the top of its body, plain and HTML alike. The chart sets it on every staging environment |
-| `ANVILLE_DEMO_NOTICE` | Nothing is said | For a demo deployment: this text is shown on the homepage and on the account pages (sign up, sign in), saying it is a demo. The chart sets it on every staging environment |
+| `ANVILLE_DEMO_NOTICE` | Nothing is said | For a demo deployment: this text is shown on the homepage, the account pages (sign up, sign in), the hub and the pages observers' and coaches' links lead to, saying it is a demo; every other page shows a short fixed line saying the same. The chart sets it on every staging environment |
 | `ANVILLE_COMMIT` | `unknown` | The commit the code was built from. The image sets it |
 
 `/healthz` answers `{"status": "ok", "commit": "…"}` when the database can be reached, and 503 when it cannot. It still wants a `Host` header that `DJANGO_ALLOWED_HOSTS` lists.

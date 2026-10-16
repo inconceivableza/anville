@@ -8,7 +8,10 @@
 {% load section_pages %}
 {% block head_title %}{% if hub %}{{ title }}{% else %}Anville{% endif %}{% endblock head_title %}
 
+{% block demo_notice %}{% endblock demo_notice %}
+
 {% block content %}
+  {% include "access/demo_notice.html" %}
   {% if hub %}
     <div class="hub">
       <div class="wrap">

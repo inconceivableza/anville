@@ -35,6 +35,13 @@ def latest_consent(participant):
     return Consent.objects.filter(participant=participant).order_by("-given_at").first()
 
 
+def withdrawn_participants():
+    """✨ The participants whose consent is withdrawn: they withdrew and have not agreed since, as ids to filter by. A
+    consent merely out of date, to a text that has since changed, is not withdrawn (ticket 45)."""
+    standing = Consent.objects.filter(withdrawn_at__isnull=True).values("participant")
+    return Consent.objects.filter(withdrawn_at__isnull=False).exclude(participant__in=standing).values("participant")
+
+
 def withdraw(participant):
     """✨ Withdraw every consent still standing. The rows stay, as the record of what was consented to and when.
 
