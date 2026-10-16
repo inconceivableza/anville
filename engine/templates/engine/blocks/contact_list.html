@@ -11,11 +11,16 @@
 
   novalidate leaves the email addresses to the server, whose refusal says what is wrong; the page comes back with what
   was typed, the field at fault marked.
+
+  While answer collection is frozen (ticket 55) the list says why, offers no empty row and no way to issue or reissue
+  a link; people can still be changed and their links revoked.
 {% endcomment %}
 <div id="block-{{ block.id }}" class="question-card contact-list">
+  {% if block.frozen %}<p class="hint-box">{{ block.frozen }} You can't add anyone or issue a link now, though you can still revoke one.</p>{% endif %}
   {% if block.refusal %}<p class="save-status" role="alert"><span class="save-refused">Not saved. {{ block.refusal }}</span></p>{% endif %}
   <ol class="contact-rows">
     {% for row in block.rows %}
+      {% if row.contact_id or not block.frozen %}
       <li class="contact-row"{% if row.contact_id %} id="person-{{ row.contact_id }}"{% endif %}>
         <form class="contact-person" novalidate method="post"
               action="{% if row.contact_id %}{% url 'contact' block.id row.contact_id %}{% else %}{% url 'contacts' block.id %}{% endif %}">
@@ -55,12 +60,14 @@
             ✨ With JavaScript, reissuing and revoking swap in this person's row alone, taken from the page the redirect
             leads to, so the page stays where it was. Without, that page loads, opened at this person.
           {% endcomment %}
-          <form method="post" action="{% url 'issue_invitation' row.contact_id %}"
-                hx-post="{% url 'issue_invitation' row.contact_id %}" hx-target="#person-{{ row.contact_id }}"
-                hx-select="#person-{{ row.contact_id }}" hx-swap="outerHTML">
-            {% csrf_token %}
-            <button type="submit" class="pill ghost small">{% if row.invitation %}Reissue link{% else %}Issue link{% endif %}</button>
-          </form>
+          {% if not block.frozen %}
+            <form method="post" action="{% url 'issue_invitation' row.contact_id %}"
+                  hx-post="{% url 'issue_invitation' row.contact_id %}" hx-target="#person-{{ row.contact_id }}"
+                  hx-select="#person-{{ row.contact_id }}" hx-swap="outerHTML">
+              {% csrf_token %}
+              <button type="submit" class="pill ghost small">{% if row.invitation %}Reissue link{% else %}Issue link{% endif %}</button>
+            </form>
+          {% endif %}
           {% if row.invitation %}
             <form method="post" action="{% url 'revoke_invitation' row.contact_id %}"
                   hx-post="{% url 'revoke_invitation' row.contact_id %}" hx-target="#person-{{ row.contact_id }}"
@@ -71,6 +78,7 @@
           {% endif %}
         {% endif %}
       </li>
+      {% endif %}
     {% endfor %}
   </ol>
 </div>

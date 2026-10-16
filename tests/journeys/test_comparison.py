@@ -182,7 +182,9 @@ def test_a_seeded_participant_reaches_the_comparison_from_their_results_page(cli
     button = re.search(r'action="(/results/[\w-]+/comparison/visit/)"', results(client).content.decode())
 
     assert button, "no way to the comparison on the results page"
-    page = client.post(button.group(1), follow=True)
+    asked = client.post(button.group(1))
+    assert asked.status_code == 200  # ✨ the minimum is in, so it asks first (ticket 55)
+    page = client.post(button.group(1), {"confirmed": "yes"}, follow=True)
     assert page.redirect_chain[-1][0].endswith("/comparison/")
     assert page.status_code == 200
     assert "Others:" in text(page)
@@ -246,6 +248,58 @@ def test_the_spread_gives_each_observers_standing_in_ascending_order_never_the_o
     apostle = strips(comparison(signed_in).content.decode())[0]
 
     assert apostle == ["Strong", "Leading", "Leading"]
+
+
+# Answer collection freezes (ticket 55)
+
+
+def press_compare(client, confirmed=False):
+    """✨ The results page's "Compare with how others see you →", or the confirmation's button that follows it."""
+    return client.post(f"/results/{SORT}/comparison/visit/", {"confirmed": "yes"} if confirmed else {})
+
+
+def is_frozen():
+    return Response.objects.get().collection_frozen_at is not None
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("invited", [4, 3], ids=["some yet to answer", "everyone answered"])
+def test_with_the_minimum_in_pressing_compare_asks_first_with_the_count_and_confirming_freezes(
+    signed_in, participant, invited
+):
+    response = with_observers(signed_in, participant, THREE_OBSERVERS)
+    with_contacts(response, *[PRIYA, CHRIS, "Jo Bloggs", "Sam Okafor"][:invited])
+
+    asked = press_compare(signed_in)
+
+    assert asked.status_code == 200
+    if invited == 4:
+        assert "3 of the 4" in text(asked)
+    assert re.search(r'<form[^>]* action="/results/[\w-]+/comparison/visit/"', asked.content.decode())
+    assert 'name="confirmed"' in asked.content.decode()
+    assert not is_frozen()
+    assert SORT not in Response.objects.get().comparisons_visited
+
+    confirmed = press_compare(signed_in, confirmed=True)
+
+    assert confirmed.status_code == 303
+    assert confirmed["Location"] == f"/results/{SORT}/comparison/"
+    assert is_frozen()
+    assert SORT in Response.objects.get().comparisons_visited
+
+
+@pytest.mark.django_db
+def test_below_the_minimum_pressing_compare_goes_straight_to_the_explanation_and_freezes_nothing(
+    signed_in, participant
+):
+    with_observers(signed_in, participant, THREE_OBSERVERS[:2])
+
+    pressed = press_compare(signed_in, confirmed=True)
+
+    assert pressed.status_code == 303
+    assert pressed["Location"] == f"/results/{SORT}/comparison/"
+    assert not is_frozen()
+    assert SORT in Response.objects.get().comparisons_visited
 
 
 @pytest.mark.django_db

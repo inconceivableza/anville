@@ -4,7 +4,8 @@
 {% comment %}
   ✨ The observer's own page, once they have claimed their link. As they claim it, their own link is shown this once
   to bookmark, since the one they were sent is now used up. Then the observer assessment until it is sent, and after
-  it only thanks and the way to withdraw (ticket 15b).
+  it only thanks and the way to withdraw (ticket 15b). While answer collection is frozen, one who has not sent is told
+  no more answers are being taken (ticket 55).
 {% endcomment %}
 {% block head_title %}Answering for {{ name }}{% endblock head_title %}
 
@@ -28,6 +29,12 @@
       <h3>Thank you</h3>
       <p>Your assessment has been sent. It will help {{ name }} understand how God has designed them – that's a real gift.</p>
       <p><a href="{{ withdraw_at }}">Withdraw my answers</a></p>
+    </div>
+  {% elif frozen %}
+    {# ✨ Answer collection is frozen (ticket 55): no assessment is offered, and none sent would be kept. #}
+    <div class="question-card">
+      <h3>{{ frozen }}</h3>
+      <p>{{ name }} has already looked at everyone's answers together, so no new answers are added. Thank you for being willing to help.</p>
     </div>
   {% elif assessment %}
     {% comment %}

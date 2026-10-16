@@ -15,10 +15,12 @@ from django.utils import timezone
 
 from access.consent import current_text_version
 from access.models import Consent
-from engine.models import Invitation, ObserverAssessments, ObserverResponse, Response
+from engine.models import Contact, Invitation, ObserverAssessments, ObserverResponse, Response
 from tests.documents import complete_sort, sort_pathway
+from tests.journeys.test_coach_checklist import choose
+from tests.journeys.test_coach_link import issue_coach_link, with_a_coach_and_contacts
 from tests.journeys.test_consent import give_consent, withdraw_consent
-from tests.journeys.test_contact_list import JO, PRIYA, save_contacts, take_off_the_list
+from tests.journeys.test_contact_list import CHRIS, JO, PRIYA, save_contacts, take_off_the_list
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_invitations import (  # noqa: F401  (observer is a fixture, used by name)
     A_WRONG_TOKEN,
@@ -28,7 +30,7 @@ from tests.journeys.test_invitations import (  # noqa: F401  (observer is a fixt
     token_of,
 )
 from tests.journeys.test_observer_landing import claim, the_observers_page
-from tests.journeys.test_results import widget_data
+from tests.journeys.test_results import SORT, submit_sort, widget_data
 
 
 def observed_pathway():
@@ -363,6 +365,152 @@ def test_consent_merely_out_of_date_keeps_every_observers_link_working(participa
 
     assert sent.status_code < 400
     assert observer_assessments().assessments == [complete_sort()]
+
+
+# Answer collection freezes (ticket 55)
+
+
+def answered_by(participant, *names):
+    """✨ Each named person, already on the list, claims a fresh link and sends; returns each one's browser, by name."""
+    browsers = {}
+    for name in names:
+        browsers[name] = Client()
+        claim(browsers[name], issue_link(participant, name))
+        assert send(browsers[name], complete_sort()).status_code == 303
+    return browsers
+
+
+def press_compare(participant, confirmed=True):
+    """✨ The participant's "Compare with how others see you →", and the confirmation's button if `confirmed`."""
+    return participant.post(f"/results/{SORT}/comparison/visit/", {"confirmed": "yes"} if confirmed else {})
+
+
+def freeze(participant):
+    """✨ The participant sends their own sort and presses compare, confirming, as freezes collection with the minimum
+    in."""
+    participant.post("/sections/onboarding/complete/")
+    submit_sort(participant, complete_sort())
+    assert press_compare(participant).status_code == 303
+    assert Response.objects.get().collection_frozen_at is not None
+
+
+def add(participant, person):
+    """✨ Post one new person to the list, as its empty row does, whether or not the page offers that row."""
+    name, email = person
+    version = Response.objects.get().version_id
+    return participant.post("/contacts/contacts/", {"name": name, "email": email, "version": version})
+
+
+@pytest.fixture
+def three_answered(participant):
+    """✨ Jo, Priya and Chris have each sent; Sam has claimed a link and not sent."""
+    save_contacts(participant, CHRIS, SAM)
+    browsers = answered_by(participant, "Jo", "Priya", "Chris")
+    browsers["Sam"] = Client()
+    claim(browsers["Sam"], issue_link(participant, "Sam"))
+    return browsers
+
+
+SAM = ("Sam", "sam@example.com")
+
+
+@pytest.mark.django_db
+def test_once_frozen_an_observers_send_is_refused_and_nothing_is_stored(participant, three_answered):
+    freeze(participant)
+
+    page = the_observers_page(three_answered["Sam"])
+    refused = send(three_answered["Sam"], complete_sort())
+
+    assert page.status_code == 200
+    assert widget_data(page.content.decode()) is None
+    assert refused.status_code == 409
+    assert len(observer_assessments().assessments) == 3
+
+
+@pytest.mark.django_db
+def test_once_frozen_the_participant_can_neither_add_people_nor_issue_or_reissue_their_links_but_can_revoke(
+    participant, three_answered
+):
+    freeze(participant)
+    contacts_before = Contact.objects.count()
+    links_before = set(Invitation.objects.values_list("token_hash", flat=True))
+    page = participant.get("/invitations/", follow=True).content.decode()
+
+    added = add(participant, ("Kim", "kim@example.com"))
+    issued = participant.post(f"/invitations/{Contact.objects.get(name='Sam').pk}/issue/")
+    reissued = participant.post(f"/invitations/{Contact.objects.get(name='Jo').pk}/issue/")
+
+    assert added.status_code == 403 and issued.status_code == 403 and reissued.status_code == 403
+    assert Contact.objects.count() == contacts_before
+    assert set(Invitation.objects.values_list("token_hash", flat=True)) == links_before
+    assert "Add and get their link" not in page and "issue/" not in page
+    revoked = participant.post(invitation_action(participant, "Sam", "revoke"))
+    assert revoked.status_code == 303
+    assert not Invitation.objects.filter(contact__name="Sam").exists()
+
+
+@pytest.mark.django_db
+def test_once_frozen_the_coachs_link_can_still_be_issued_and_reissued(signed_in_client, load_pathway):  # noqa: F811
+    """✨ Frozen as the press freezes it, in a pathway with a coach and no sort: the coach's link is no observer's."""
+    load_pathway(with_a_coach_and_contacts())
+    choose(signed_in_client)
+    first = issue_coach_link(signed_in_client)
+    Response.objects.update(collection_frozen_at=timezone.now())
+
+    again = issue_coach_link(signed_in_client)
+
+    assert again != first
+    assert Invitation.live(token_of(again), role=Contact.Role.COACH) is not None
+
+
+@pytest.mark.django_db
+def test_a_withdrawal_after_the_freeze_deletes_the_answers_and_the_comparison_counts_without_them(
+    participant, three_answered
+):
+    save_contacts(participant, ("Kim", "kim@example.com"))
+    answered_by(participant, "Kim")
+    freeze(participant)
+
+    withdraw(three_answered["Jo"])
+
+    assert len(observer_assessments().assessments) == 3
+    assert send(three_answered["Sam"], complete_sort()).status_code == 409
+
+
+@pytest.mark.django_db
+def test_below_the_minimum_after_a_withdrawal_collection_unfreezes_until_the_next_confirmed_press(
+    participant, three_answered
+):
+    freeze(participant)
+
+    withdraw(three_answered["Jo"])
+
+    assert len(observer_assessments().assessments) == 2
+    assert "2 of 3" in participant.get(f"/results/{SORT}/comparison/").content.decode()
+    assert send(three_answered["Sam"], complete_sort()).status_code == 303
+    assert add(participant, ("Kim", "kim@example.com")).status_code == 303
+    assert press_compare(participant, confirmed=False).status_code == 200
+    assert Response.objects.get().collection_frozen_at is None
+    assert press_compare(participant).status_code == 303
+    assert Response.objects.get().collection_frozen_at is not None
+
+
+@pytest.mark.django_db
+def test_with_consent_withdrawn_and_collection_frozen_an_observers_link_gets_the_dead_link_refusal(
+    participant, three_answered
+):
+    save_contacts(participant, ("Kim", "kim@example.com"))
+    unclaimed = issue_link(participant, "Kim")
+    freeze(participant)
+    withdraw_consent(participant)
+
+    for refused in (
+        Client().get(unclaimed),
+        the_observers_page(three_answered["Sam"]),
+        send(three_answered["Sam"], complete_sort()),
+    ):
+        assert refused.status_code == 404
+        assert refused.templates[0].name == "engine/link_refused.html"
 
 
 # The observer's wording

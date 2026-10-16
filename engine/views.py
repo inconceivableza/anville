@@ -78,7 +78,16 @@ from engine.document.observers import (
     relationship_question,
 )
 from engine.document.photos import credits_listed
-from engine.models import Contact, Invitation, ObserverResponse, PathwayVersion, Publication, Response, Result
+from engine.models import (
+    CollectionFrozen,
+    Contact,
+    Invitation,
+    ObserverResponse,
+    PathwayVersion,
+    Publication,
+    Response,
+    Result,
+)
 from engine.document.tie_break import pair_plan, reweigh
 from engine.results import comparison_page, pair_page, results_page
 
@@ -796,7 +805,9 @@ def _hub_voices(state, hub):
             continue
         invited = state.answers.get(links_issued_key(block["id"]), 0)
         answered = len(ObserverResponse.assessments_for(state.response).assessments) if state.response else 0
-        stand = where_voices_stand(card, needed(block), invited, answered, minimum_observers(document))
+        stand = where_voices_stand(
+            card, needed(block), invited, answered, minimum_observers(document), frozen=_frozen(state.response)
+        )
         return {
             "section": section_id,
             "tag": stand.tag,
@@ -815,11 +826,23 @@ def visit_comparison(request, block_id):
     """✨ The results page's "Compare with how others see you →": record the visit Section 1's gate waits on, then go to
     the comparison. Recorded whatever the comparison will show, since the explanation below the minimum counts too
     (ticket 16c). Only this press counts, never loading the comparison's address, which a browser may do ahead of
-    time (Chrome preloads from the address bar) without the participant ever seeing it."""
+    time (Chrome preloads from the address bar) without the participant ever seeing it.
+
+    With at least the minimum number of observer assessments in, and collection not yet frozen, the press first asks:
+    how many of the people invited have answered, and that once they look no more answers are added. Its button
+    confirms, which freezes collection, then goes on as before (ticket 55). Below the minimum nothing is asked."""
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return _see_other(page_url(section["id"], section["page"]))
-    state.response.visit_comparison(block_id)
+    response = state.response
+    answered = len(ObserverResponse.assessments_for(response).assessments)
+    if response.collection_frozen_at is None and answered >= minimum_observers(state.version.document):
+        if request.POST.get("confirmed") != "yes":
+            invited = response.contacts.filter(role=Contact.Role.CONTACT).count()
+            context = {"block_id": block_id, "answered": answered, "invited": invited, "everyone": answered >= invited}
+            return render(request, "engine/comparison_confirm.html", context)
+        response.freeze_collection()
+    response.visit_comparison(block_id)
     return _see_other("comparison", block_id)
 
 
@@ -897,6 +920,8 @@ def contacts(request, block_id):
     shut = _list_shut(request, state, block)
     if shut is not None:
         return shut
+    if _frozen(state.response):
+        return _refuse_frozen(request)
     try:
         person = contact_from_form(request.POST.get("name"), request.POST.get("email"))
     except AnswerRefused as refused:
@@ -971,9 +996,27 @@ def issue_invitation(request, contact_id):
     A redirect, so a reload of the page that follows never issues again. The link travels to that page in a short-lived
     signed cookie of the participant's own, not in the address (where the history would keep it) or the session (where
     the database would).
+
+    While answer collection is frozen an observer's link is neither issued nor reissued; a coach's still is (ticket 55).
     """
     contact = _own_contact_or_404(request.user, contact_id)
+    if contact.role == Contact.Role.CONTACT and _frozen(contact.response):
+        return _refuse_frozen(request)
     return _back_with_issued(request, contact, _issue_link(request, contact))
+
+
+def _frozen(response):
+    """✨ Whether a participant's answer collection is frozen (ticket 55), so nobody can be added or sent a new link."""
+    return response is not None and response.collection_frozen_at is not None
+
+
+def _refuse_frozen(request):
+    return render(request, "engine/save_status.html", {"refusal": RESULTS_SEEN}, status=403)
+
+
+# ✨ Why the participant can add nobody while answer collection is frozen: the Five trusted voices card's wording (ticket
+# 51a), on the card, the list's page and any refusal.
+RESULTS_SEEN = "You've seen your results, so no more answers are added."
 
 
 def _issue_link(request, contact):
@@ -1050,10 +1093,11 @@ def observe(request, token):
     if invitation.claimed_at is not None:
         return render(request, "engine/link_used.html", status=410)
     document, name = _asked_by(invitation)
+    frozen = NO_MORE_ANSWERS if invitation.contact.response.collection_frozen_at is not None else None
     shown = render(
         request,
         "engine/observer_landing.html",
-        {"notice": privacy_notice(document, name), "name": name, "token": token},
+        {"notice": privacy_notice(document, name), "name": name, "token": token, "frozen": frozen},
     )
     shown["Cache-Control"] = "no-store"
     return shown
@@ -1250,6 +1294,8 @@ def send_assessment(request, token=None):
     except IntegrityError:
         refusal = "Your assessment has already been sent."
         return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
+    except CollectionFrozen:
+        return render(request, "engine/save_status.html", {"refusal": NO_MORE_ANSWERS}, status=409)
     if sent is None:
         # ✨ The observer withdrew through another page while this send was on its way.
         return _refuse_link(request)
@@ -1281,6 +1327,10 @@ def withdrawal(request, token=None):
     return shown
 
 
+# ✨ What an observer is told while answer collection is frozen (ticket 55).
+NO_MORE_ANSWERS = "No more answers are being taken."
+
+
 # ✨ Where an observer's own secret is kept, so the observer's pages know them without a link or an account. It
 # holds one claim: claiming a second link, for someone else, replaces the first, whose own link still works.
 OBSERVER_COOKIE = "observer"
@@ -1288,17 +1338,19 @@ OBSERVER_COOKIE = "observer"
 
 def _observers_page(request, secret, own_link=None, came_by_link=False):
     """✨ The observer's page for the invitation a secret claimed, or the refusal if there is none: the observer
-    assessment until it is sent, then thanks. `own_link` is their link, shown only as they claim it. An observer who
-    `came_by_link` rather than by the cookie sends the assessment through that link. Never cached, since it is reached
-    by a secret."""
+    assessment until it is sent, then thanks. While answer collection is frozen, one who has not sent is told no more
+    answers are being taken, and offered no assessment (ticket 55). `own_link` is their link, shown only as they claim
+    it. An observer who `came_by_link` rather than by the cookie sends the assessment through that link. Never cached,
+    since it is reached by a secret."""
     invitation = Invitation.claimed_by(secret)
     if invitation is None:
         return _refuse_link(request)
     document, name = _asked_by(invitation)
     scored = _scored_block(document)
     sent = ObserverResponse.sent_with(secret)
+    frozen = not sent and invitation.contact.response.collection_frozen_at is not None
     assessment = None
-    if scored and not sent:
+    if scored and not sent and not frozen:
         assessment = {
             "id": scored["id"],
             "widget": BLOCK_TYPES[scored["type"]].widget(document, "observer", name),
@@ -1306,7 +1358,14 @@ def _observers_page(request, secret, own_link=None, came_by_link=False):
             "relationship": relationship_question(document, name),
         }
     withdraw_at = reverse("withdrawal_by_link", args=[secret]) if came_by_link else reverse("withdrawal")
-    context = {"name": name, "own_link": own_link, "assessment": assessment, "sent": sent, "withdraw_at": withdraw_at}
+    context = {
+        "name": name,
+        "own_link": own_link,
+        "assessment": assessment,
+        "sent": sent,
+        "frozen": NO_MORE_ANSWERS if frozen else None,
+        "withdraw_at": withdraw_at,
+    }
     shown = render(request, "engine/observer.html", context)
     shown["Cache-Control"] = "no-store"
     return shown
@@ -1466,7 +1525,8 @@ def _section_page(state, section, page=1, issued=None):
             "complete_label": text_for(section.get("complete_label", "Mark complete"), "participant"),
             "is_part": "part_of" in section,
             "blocks": [
-                _block_for_participant(version.document, block, answers, fixed, states, issued) for block in blocks
+                _block_for_participant(version.document, block, answers, fixed, states, issued, _frozen(state.response))
+                for block in blocks
             ],
         },
         "is_complete": section["id"] in state.completed,
@@ -1540,10 +1600,11 @@ def _published_version(posted):
     return PathwayVersion.objects.filter(pk=int(posted), publications__isnull=False).distinct().first()
 
 
-def _block_for_participant(document, block, answers, fixed, states, issued=None):
+def _block_for_participant(document, block, answers, fixed, states, issued=None, frozen=False):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
     identifier; a link to a section outside the participant's track has no state and shows nothing. `issued` is a
-    link just issued, a coach's or an observer's."""
+    link just issued, a coach's or an observer's. While answer collection is `frozen`, a contact list says why it adds
+    nobody (ticket 55)."""
     widget = BLOCK_TYPES[block["type"]].widget
     text = authored_text(block, "participant")
     if block["type"] == "scripture_reading":
@@ -1563,6 +1624,7 @@ def _block_for_participant(document, block, answers, fixed, states, issued=None)
         "is_fixed": block["id"] in fixed,
         "widget": widget(document, "participant", "") if widget else None,  # ✨ the participant's wording names no one
         "link": states.get(block["section"]) if block["type"] == "section_link" else None,
+        "frozen": RESULTS_SEEN if frozen and block["type"] == "contact_list" else None,
     }
 
 

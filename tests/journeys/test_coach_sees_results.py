@@ -52,13 +52,14 @@ def signed_in(client, participant, load_pathway):  # noqa: F811
 
 def with_a_result(client, participant, observers=THREE_OBSERVERS, visited=True):  # noqa: F811
     """✨ The participant's own sort (90/10) and the observers' (by default 80, 70 and 60, so means of 70 and 30), and
-    unless not `visited`, their press of "Compare with how others see you →". Returns their response."""
+    unless not `visited`, their press of "Compare with how others see you →", confirmed as it asks with the minimum in
+    (ticket 55). Returns their response."""
     submit_sort(client, complete_sort())
     response = Response.objects.get(participant=participant)
     for sort in observers:
         an_observer(response, sort)
     if visited:
-        assert client.post(f"/results/{SORT}/comparison/visit/").status_code == 303
+        assert client.post(f"/results/{SORT}/comparison/visit/", {"confirmed": "yes"}).status_code == 303
     return response
 
 

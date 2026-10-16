@@ -12,6 +12,11 @@ from django.utils import timezone
 
 from access.consent import withdrawn_participants
 from engine.document.gates import comparison_visit_key, links_issued_key
+from engine.document.observers import minimum_observers
+
+
+class CollectionFrozen(Exception):
+    """✨ An observer assessment sent while the participant's answer collection is frozen (ticket 55)."""
 
 
 class PathwayVersion(models.Model):
@@ -63,6 +68,10 @@ class Response(models.Model):
     # ✨ When the participant first visited each sort's comparison with their observers, keyed by the sort's block, in
     # either state. Recorded, since a visit leaves no answer behind, and Section 1's gate waits on it (ticket 16c).
     comparisons_visited = models.JSONField(default=dict)
+    # ✨ When answer collection froze: the participant confirmed "Compare with how others see you →" with at least the
+    # minimum number of observer assessments in (ticket 55). Empty while it is open, and again once withdrawals leave
+    # fewer than the minimum.
+    collection_frozen_at = models.DateTimeField(null=True, blank=True)
     is_test_data = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -145,6 +154,28 @@ class Response(models.Model):
             comparisons_visited=_MergeJson(visited, F("comparisons_visited")),
             updated_at=now,
         )
+
+    def freeze_collection(self):
+        """✨ Freeze answer collection, if at least the minimum number of observer assessments are in, counted under a
+        lock on this response, which a send takes too, so no send lands between the count and the freeze. Freezing
+        again keeps the first time. Returns whether collection is frozen."""
+        minimum = minimum_observers(self.version.document)
+        with transaction.atomic():
+            locked = Response.objects.select_for_update().get(pk=self.pk)
+            if locked.collection_frozen_at is None and _submitted_count(self) >= minimum:
+                locked.collection_frozen_at = timezone.now()
+                locked.save(update_fields=["collection_frozen_at"])
+        self.collection_frozen_at = locked.collection_frozen_at
+        return self.collection_frozen_at is not None
+
+    def unfreeze_below_minimum(self):
+        """✨ Open answer collection again if fewer than the minimum number of observer assessments are in, as after a
+        withdrawal (ticket 55). Counted under the same lock as freezing."""
+        minimum = minimum_observers(self.version.document)
+        with transaction.atomic():
+            Response.objects.select_for_update().filter(pk=self.pk).first()
+            if _submitted_count(self) < minimum:
+                Response.objects.filter(pk=self.pk).update(collection_frozen_at=None)
 
     def moved_past_by_section(self):
         """✨ The pages moved past, as {section identifier: set of page numbers}, as the hub reads them."""
@@ -509,7 +540,10 @@ class ObserverResponse(models.Model):
 
         The claimed link's row is locked first, as a withdrawal's ending of the claim locks it, so a send and a
         withdrawal at once take turns: a send that finds the claim ended meanwhile stores nothing and returns None, and
-        one that went first is deleted by the withdrawal."""
+        one that went first is deleted by the withdrawal.
+
+        Under the same lock, the participant's response is locked too, as freezing locks it, and a send while answer
+        collection is frozen raises CollectionFrozen and stores nothing (ticket 55)."""
         with transaction.atomic():
             claimed = (
                 Invitation.objects.select_for_update()
@@ -518,6 +552,11 @@ class ObserverResponse(models.Model):
             )
             if claimed is None:
                 return None
+            open_to_answers = (
+                Response.objects.select_for_update().filter(pk=response.pk, collection_frozen_at__isnull=True).first()
+            )
+            if open_to_answers is None:
+                raise CollectionFrozen
             return cls.objects.create(
                 response=response,
                 assessment=assessment,
@@ -538,17 +577,23 @@ class ObserverResponse(models.Model):
         their own link stops working and asks nothing again; False, changing nothing, if the secret claims no live link.
 
         The participant's copy of the link stays used up, as it was, so nothing they can see changes. Ending the claim
-        and deleting happen together or not at all.
+        and deleting happen together or not at all. Withdrawing works while answer collection is frozen too, and if it
+        leaves fewer than the minimum, collection opens again (ticket 55).
         """
         if not secret:
             return False
         with transaction.atomic():
-            ended = Invitation.objects.filter(secret_hash=_hash_of(secret), expires_at__gt=timezone.now()).update(
-                secret_hash=None
+            claimed = (
+                Invitation.objects.select_for_update(of=("self",))
+                .select_related("contact__response__version")
+                .filter(secret_hash=_hash_of(secret), expires_at__gt=timezone.now())
+                .first()
             )
-            if not ended:
+            if claimed is None:
                 return False
+            Invitation.objects.filter(pk=claimed.pk).update(secret_hash=None)
             cls.objects.filter(sent_by=_sent_by(secret)).delete()
+            claimed.contact.response.unfreeze_below_minimum()
         return True
 
     @classmethod
@@ -564,6 +609,11 @@ class ObserverResponse(models.Model):
             assessments=[assessment for assessment, _ in rows],
             all_test_data=bool(rows) and all(is_test_data for _, is_test_data in rows),
         )
+
+
+def _submitted_count(response):
+    """✨ How many observer assessments of a participant's response have been sent, as the minimum counts them."""
+    return ObserverResponse.objects.filter(response=response, submitted_at__isnull=False).count()
 
 
 def _sent_by(secret):

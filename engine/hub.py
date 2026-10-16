@@ -295,12 +295,15 @@ class VoicesStand(NamedTuple):
     line: str | None = None
 
 
-def where_voices_stand(state, needed, invited, answered, minimum):
+def where_voices_stand(state, needed, invited, answered, minimum, frozen=False):
     """✨ Where things stand for the side card holding the contact list (ticket 51a), from its section's `state` first:
-    locked, not started or complete, the card says so and nothing more, so once complete it never goes back to asking
-    for more people. Otherwise, how many more of the `needed` people need a working link, while fewer than that have
-    one (`invited`); then waiting, until `minimum` observer assessments have been sent (`answered`); then the section's
-    own status. Engine wording, as the section statuses are."""
+    locked, the card says so. While answer collection is `frozen`, it is complete, and says no more answers are added
+    (ticket 55). Not started or complete, the card says so and nothing more, so once complete it never goes back to
+    asking for more people. Otherwise, how many more of the `needed` people need a working link, while fewer than that
+    have one (`invited`); then waiting, until `minimum` observer assessments have been sent (`answered`); then the
+    section's own status. Engine wording, as the section statuses are."""
+    if state.status != LOCKED and frozen:
+        return VoicesStand(LABELS[COMPLETE], "You've seen your results, so no more answers are added.")
     if state.status in (LOCKED, NOT_STARTED, COMPLETE):
         return VoicesStand(state.label)
     if invited < needed:

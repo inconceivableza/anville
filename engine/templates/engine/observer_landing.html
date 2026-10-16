@@ -19,8 +19,16 @@
   <div class="hint-box">
     {{ notice|linebreaks }}
   </div>
-  <form method="post" action="{% url 'start_observing' token %}">
-    {% csrf_token %}
-    <button type="submit" class="pill full">I'm answering for {{ name }} →</button>
-  </form>
+  {% if frozen %}
+    {# ✨ Answer collection is frozen (ticket 55), so there is nothing to start. #}
+    <div class="question-card">
+      <h3>{{ frozen }}</h3>
+      <p>{{ name }} has already looked at everyone's answers together, so no new answers are added. Thank you for being willing to help.</p>
+    </div>
+  {% else %}
+    <form method="post" action="{% url 'start_observing' token %}">
+      {% csrf_token %}
+      <button type="submit" class="pill full">I'm answering for {{ name }} →</button>
+    </form>
+  {% endif %}
 {% endblock content %}
