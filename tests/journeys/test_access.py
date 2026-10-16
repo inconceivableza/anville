@@ -166,6 +166,29 @@ def test_sign_in_offers_a_password_reset_whose_pages_can_be_reached(client):
 
 
 @pytest.mark.django_db
+def test_a_participant_resets_a_forgotten_password_by_the_emailed_link_and_signs_in_with_it(
+    client, settings, mailoutbox
+):
+    require_the_code(settings)
+    sign_up(client)
+    client.logout()
+
+    client.post("/accounts/password/reset/", {"email": "participant@example.com"})
+    [email] = mailoutbox
+    assert email.to == ["participant@example.com"]
+    # ✨ allauth's link leads to a page that keeps the key in the session and redirects to the form, so the key is not
+    # left in the address the form is posted to.
+    link = re.search(r"http://testserver(/accounts/password/reset/key/\S+/)", email.body).group(1)
+    form = client.get(link, follow=True)
+    new_password = "a-new-and-different-passphrase"
+    client.post(form.redirect_chain[-1][0], {"password1": new_password, "password2": new_password})
+
+    assert not client.login(username="participant@example.com", password=PASSWORD)
+    client.post("/accounts/login/", {"login": "participant@example.com", "password": new_password})
+    assert get_user(client).email == "participant@example.com"
+
+
+@pytest.mark.django_db
 def test_a_refused_sign_up_still_says_why_on_the_styled_page(client, settings):
     require_the_code(settings)
 
