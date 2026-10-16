@@ -12,6 +12,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
 
 from engine.document.answers import AnswerRefused
+from engine.hub import COMPLETE, LABELS, LOCKED, NOT_STARTED
 
 # ✨ The most people one list may hold.
 MAX_CONTACTS = 50
@@ -56,6 +57,46 @@ def rows_of(block, held):
     """✨ How many rows the list shows while it holds `held` people: the rows to fill, or, once those are all filled,
     one more for the next person, never past the most it may hold."""
     return min(max(rows_to_fill(block), held + 1), MAX_CONTACTS)
+
+
+def voices_card(block, card, invited, answered, minimum, frozen=False):
+    """✨ The side card holding a contact list, as the Five trusted voices card shows it (ticket 51a): a tag, a line under
+    it or None, and its meters, how many people have a working link (`invited`) and how many observer assessments have
+    been sent (`answered`), each out of the rows the list asks to be filled. Engine wording, as the section statuses
+    are, and never anyone's name.
+
+    The tag reads the card's section (`card`, as the hub sees it) first: locked, it says so. While answer collection is
+    `frozen`, it is complete and says no more answers are added (ticket 55). While fewer of the `needed` people than
+    that have a working link, it says how many more are needed, unless the section is not started or already complete,
+    when it says so, so once complete it never goes back to asking for more people. Then it follows the answers: links
+    issued with none sent, some sent while fewer than `minimum`, then all of them once everyone with a working link has
+    sent, or else enough (fix-2)."""
+    tag, line = _voices_tag(card, needed(block), invited, answered, minimum, frozen)
+    return {
+        "tag": tag,
+        "line": line,
+        "invited": invited,
+        "answered": answered,
+        "out_of": max(rows_to_fill(block), invited, answered, 1),
+    }
+
+
+def _voices_tag(card, needed, invited, answered, minimum, frozen):
+    if not card.is_locked and frozen:
+        return LABELS[COMPLETE], "You've seen your results, so no more answers are added."
+    if card.status in (LOCKED, NOT_STARTED):
+        return card.label, None
+    if invited < needed:
+        if card.status == COMPLETE:
+            return card.label, None
+        return f"{needed - invited} more needed", f"You'll see how others see you once {minimum} people have answered."
+    if answered == 0:
+        return "Links issued", None
+    if answered < minimum:
+        return "Some answers received", None
+    if answered == invited:
+        return "All answers received", None
+    return "Enough answers received", None
 
 
 def is_email_address(email):

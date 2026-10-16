@@ -313,34 +313,6 @@ def _state(section, answers, completed, role, moved_past, sections):
     )
 
 
-class VoicesStand(NamedTuple):
-    """✨ Where the people a participant invites stand, as the Five trusted voices card says it: a tag, and a line under
-    it or None."""
-
-    tag: str
-    line: str | None = None
-
-
-def where_voices_stand(state, needed, invited, answered, minimum, frozen=False):
-    """✨ Where things stand for the side card holding the contact list (ticket 51a), from its section's `state` first:
-    locked, the card says so. While answer collection is `frozen`, it is complete, and says no more answers are added
-    (ticket 55). Not started or complete, the card says so and nothing more, so once complete it never goes back to
-    asking for more people. Otherwise, how many more of the `needed` people need a working link, while fewer than that
-    have one (`invited`); then waiting, until `minimum` observer assessments have been sent (`answered`); then the
-    section's own status. Engine wording, as the section statuses are."""
-    if state.status != LOCKED and frozen:
-        return VoicesStand(LABELS[COMPLETE], "You've seen your results, so no more answers are added.")
-    if state.status in (LOCKED, NOT_STARTED, COMPLETE):
-        return VoicesStand(state.label)
-    if invited < needed:
-        return VoicesStand(
-            f"{needed - invited} more needed", f"You'll see how others see you once {minimum} people have answered."
-        )
-    if answered < minimum:
-        return VoicesStand("Waiting for answers")
-    return VoicesStand(state.label)
-
-
 def _next_step_wording(section, role):
     """✨ The heading and sentence the section carries for when it is the next step, or None."""
     if "next_step" not in section:

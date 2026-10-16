@@ -55,7 +55,7 @@ from engine.document.coach import (
     coach_from_form,
     commitments,
 )
-from engine.document.contacts import LIST_FULL, MAX_CONTACTS, contact_from_form, needed, rows_of, rows_to_fill
+from engine.document.contacts import LIST_FULL, MAX_CONTACTS, contact_from_form, needed, rows_of, voices_card
 from engine.document.aggregation import aggregate
 from engine.document.gates import clauses_of, has_content, links_issued_key
 from engine.document.scoring import score
@@ -68,7 +68,6 @@ from engine.hub import (
     page_reached,
     section_by_id,
     track_sections,
-    where_voices_stand,
     with_coach_answer,
 )
 from engine.document.observers import (
@@ -797,9 +796,8 @@ def _coach_of(response):
 
 def _hub_voices(state, hub):
     """✨ The Five trusted voices card (ticket 51a): the hub's side card whose section holds a contact list, or None for
-    a pathway without one, or while it is locked, when it is drawn as any other side card. It says where things stand,
-    how many people have a working link (invited) and how many observer assessments have been sent (answered), each
-    out of the rows the list asks to be filled, and never anyone's name: the section's own page lists everyone."""
+    a pathway without one, or while it is locked, when it is drawn as any other side card. What it shows is the contact
+    list's `voices_card`; this reads what that needs, and the section's own page lists everyone."""
     document = state.version.document
     for block in blocks_of(document):
         if block["type"] != "contact_list":
@@ -810,17 +808,8 @@ def _hub_voices(state, hub):
             continue
         invited = state.answers.get(links_issued_key(block["id"]), 0)
         answered = len(ObserverResponse.assessments_for(state.response).assessments) if state.response else 0
-        stand = where_voices_stand(
-            card, needed(block), invited, answered, minimum_observers(document), frozen=_frozen(state.response)
-        )
-        return {
-            "section": section_id,
-            "tag": stand.tag,
-            "line": stand.line,
-            "invited": invited,
-            "answered": answered,
-            "out_of": max(rows_to_fill(block), invited, answered, 1),
-        }
+        shown = voices_card(block, card, invited, answered, minimum_observers(document), frozen=_frozen(state.response))
+        return {"section": section_id, **shown}
     return None
 
 

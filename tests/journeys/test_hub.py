@@ -263,7 +263,7 @@ def test_five_trusted_voices_completes_once_three_people_have_links_and_stays_co
     assert tag_of(voices_card(trusted_voices)) == "2 more needed"
 
     add_people_with_links(trusted_voices, *PEOPLE[1:])
-    assert tag_of(voices_card(trusted_voices)) == "Complete"
+    assert tag_of(voices_card(trusted_voices)) == "Links issued"
     assert "Mark complete" not in trusted_voices.get("/sections/voices/").content.decode()
     assert trusted_voices.post("/sections/voices/complete/").status_code == 404
 
@@ -278,6 +278,58 @@ def test_five_trusted_voices_completes_once_three_people_have_links_and_stays_co
 
 
 PEOPLE = (("Jo", "jo@example.com"), ("Priya", "priya@example.com"), ("Chris", "chris@example.com"))
+DEE = ("Dee", "dee@example.com")
+
+
+def answer_through(*links):
+    """✨ Each link's observer claiming it and sending an observer assessment."""
+    from tests.journeys.test_observer_assessment import send  # ✨ as above
+    from tests.journeys.test_observer_landing import claim
+
+    for link in links:
+        observer = Client()
+        claim(observer, link)
+        assert send(observer, complete_sort()).status_code in (200, 302, 303)
+
+
+@pytest.mark.django_db
+def test_the_voices_card_says_how_many_more_people_need_links_while_fewer_than_three_have_them(trusted_voices):
+    add_people_with_links(trusted_voices, *PEOPLE[:2])
+
+    assert tag_of(voices_card(trusted_voices)) == "1 more needed"
+
+
+@pytest.mark.django_db
+def test_the_voices_card_says_links_are_issued_once_three_have_them_and_nobody_has_answered(trusted_voices):
+    add_people_with_links(trusted_voices, *PEOPLE)
+
+    assert tag_of(voices_card(trusted_voices)) == "Links issued"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("answering", [1, 2])
+def test_the_voices_card_says_some_answers_are_in_while_fewer_than_three_have_answered(trusted_voices, answering):
+    links = add_people_with_links(trusted_voices, *PEOPLE)
+
+    answer_through(*links[:answering])
+
+    assert tag_of(voices_card(trusted_voices)) == "Some answers received"
+
+
+@pytest.mark.django_db
+def test_the_voices_card_says_all_answers_are_in_once_everyone_with_a_link_has_answered(trusted_voices):
+    answer_through(*add_people_with_links(trusted_voices, *PEOPLE))
+
+    assert tag_of(voices_card(trusted_voices)) == "All answers received"
+
+
+@pytest.mark.django_db
+def test_the_voices_card_says_enough_answers_are_in_once_three_have_answered_but_not_everyone(trusted_voices):
+    links = add_people_with_links(trusted_voices, *PEOPLE, DEE)
+
+    answer_through(*links[:3])
+
+    assert tag_of(voices_card(trusted_voices)) == "Enough answers received"
 
 
 @pytest.mark.django_db
