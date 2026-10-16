@@ -822,11 +822,41 @@ h2 {
   padding-inline: clamp(16px, 4vw, 48px);
 }
 
-.hub {
+/* ✨ The prototype's frame (ticket 49a): the page deep brown, and the hub, with the header above it, cream and inset
+   10px within it, its content on the 1180px wrap rather than in the 720px container */
+body:has(> main > .hub) {
+  background: var(--brown);
+  padding: 10px;
+}
+
+body:has(> main > .hub) > .site-header {
   background: var(--cream);
-  border-radius: var(--radius-panel);
-  margin: calc(-1 * var(--space-xl)) calc(-1 * var(--space-2xl)) 0;
-  padding: var(--space-xl) var(--space-2xl) var(--space-4xl);
+  border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+}
+
+body:has(> main > .hub) > main.container {
+  max-width: none;
+  padding: 0 0 var(--space-xl);
+  background: var(--cream);
+  border-radius: 0 0 var(--radius-panel) var(--radius-panel);
+}
+
+body:has(> main > .hub) > .site-footer {
+  padding-top: var(--space-md);
+}
+
+body:has(> main > .hub) > .site-footer a {
+  color: var(--on-dark-2);
+}
+
+main > .hub ~ .hub-consent {
+  max-width: 1180px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 48px);
+}
+
+.hub {
+  padding-bottom: var(--space-3xl);
 }
 
 .hub-head {
@@ -921,6 +951,16 @@ h2 {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--muted);
+}
+
+/* ✨ A section's row keeps its columns whether or not it has a number (ticket 49a) */
+.slist > .srow > .srow-body {
+  grid-column: 2;
+  min-width: 0;
+}
+
+.slist > .srow > .tag {
+  grid-column: 3;
 }
 
 .srow h3 {
@@ -1045,6 +1085,20 @@ h2 {
   gap: var(--space-sm);
 }
 
+/* ✨ A section drawn as a hub side card (ticket 49a): its title leads to it, as a row's does, unless it is locked */
+.hub-side-card h3 a {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.hub-side-card h3 a:hover {
+  color: var(--green-deep);
+}
+
+.hub-side-card.locked h3 {
+  color: var(--muted);
+}
+
 .meter {
   display: grid;
   gap: var(--space-2xs);
@@ -1057,9 +1111,8 @@ h2 {
   font-variant-numeric: tabular-nums;
 }
 
-/* ✨ The meters and baseline bars are <progress> elements, so their fill needs no inline width */
-.meter .track,
-.base .track {
+/* ✨ The meters are <progress> elements, so their fill needs no inline width */
+.meter .track {
   appearance: none;
   display: block;
   width: 100%;
@@ -1098,39 +1151,6 @@ h2 {
   background: var(--warm-12);
 }
 
-.base {
-  display: grid;
-  gap: var(--space-sm);
-}
-
-.base .base-bar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 110px 18px;
-  gap: var(--space-sm);
-  align-items: center;
-  font-size: var(--text-sm);
-  color: var(--muted);
-}
-
-.base .track,
-.base .track::-webkit-progress-bar {
-  background: var(--cream-2);
-}
-
-.base .track::-webkit-progress-value {
-  background: var(--brown-3);
-}
-
-.base .track::-moz-progress-bar {
-  background: var(--brown-3);
-}
-
-.base b {
-  text-align: right;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
-}
-
 /* The hub's own nav, replacing the old sidebar header (ticket 41a) */
 .nav.light {
   position: relative;
@@ -1155,14 +1175,6 @@ h2 {
 
 .linkbtn:hover {
   color: var(--ink);
-}
-
-/* The hub breaks out of the 720px container; on a phone it fills the width */
-@media (max-width: 720px) {
-  .hub {
-    margin: calc(-1 * var(--space-xl)) 0 0;
-    border-radius: 0;
-  }
 }
 
 /* A section page: the way back, and the completion the participant chooses */

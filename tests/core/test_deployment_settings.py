@@ -197,3 +197,13 @@ def test_only_the_files_vite_names_by_their_content_are_cached_for_good():
     assert all(immutable.match(f"/static/assets/{name}") for name in built)
     assert not immutable.match("/static/admin/css/base.css")
     assert not immutable.match("/static/manifest.json")
+
+
+def test_the_cache_is_per_process_unless_the_environment_names_the_database_cache():
+    # ✨ allauth counts sign-in and sign-up attempts in the cache, so every worker of a deployment must share one.
+    unset = settings_with({}, "CACHES")["CACHES"]["default"]
+    shared = settings_with({"CACHE_URL": "dbcache://anville_cache"}, "CACHES")["CACHES"]["default"]
+
+    assert unset["BACKEND"] == "django.core.cache.backends.locmem.LocMemCache"
+    assert shared["BACKEND"] == "django.core.cache.backends.db.DatabaseCache"
+    assert shared["LOCATION"] == "anville_cache"

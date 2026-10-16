@@ -411,17 +411,6 @@ def test_the_hub_follows_the_participant_as_they_go(open_calling):
     assert "Locked" not in page  # ✨ the calling section opened when onboarding was completed
 
 
-@pytest.mark.django_db
-def test_progress_counts_the_interactive_blocks_and_not_the_prose(signed_in_client, load_pathway):  # noqa: F811
-    load_pathway(pathway_document())
-
-    assert "0 of 2 answered" in signed_in_client.get("/hub/").content.decode()
-
-    signed_in_client.post("/answers/baseline-bible/", {"value": "7", "version": _version_id()})
-
-    assert "1 of 2 answered" in signed_in_client.get("/hub/").content.decode()
-
-
 # The scripture reading, which opens the activity beneath it
 
 
@@ -549,15 +538,6 @@ def test_a_link_to_a_locked_section_names_it_but_does_not_lead_there(open_callin
     assert "Strengths assessment" in page
     assert "status-chip status-locked" in page
     assert STRENGTHS_LINK not in page
-
-
-@pytest.mark.django_db
-def test_a_link_counts_towards_no_progress(signed_in_client, load_pathway):  # noqa: F811
-    """✨ It is a way to somewhere else, not something the participant answers: the rating, the statement and
-    the sort are the three."""
-    load_pathway(linking_to_the_sort())
-
-    assert "0 of 3 answered" in signed_in_client.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db

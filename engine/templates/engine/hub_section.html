@@ -3,7 +3,7 @@
 {% load section_pages %}
 {# ✨ One section's entry on the hub, with any `parts` of it listed within it (ticket 41b). A part is given no parts. #}
 <li class="hub-section srow{% if section.part_of %} hub-part{% endif %}{% if section.is_locked %} locked{% endif %}{% if section.is_next %} up-next{% endif %}">
-  {% if number %}<span class="srow-number">{{ number|stringformat:"02d" }}</span>{% endif %}
+  {% if section.number and not section.part_of %}<span class="srow-number">{{ section.number }}</span>{% endif %}
   <div class="srow-body">
     {% if section.is_locked %}
       <h3 class="hub-section-title">{{ section.title }}</h3>
@@ -16,7 +16,7 @@
     {% if parts %}
       <ol class="hub-parts">
         {% for part in parts %}
-          {% include "engine/hub_section.html" with section=part parts=None number="" %}
+          {% include "engine/hub_section.html" with section=part parts=None %}
         {% endfor %}
       </ol>
     {% endif %}

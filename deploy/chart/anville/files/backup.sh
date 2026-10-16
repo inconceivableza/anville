@@ -60,7 +60,9 @@ done
 [ "$TRIES" -eq 0 ] || echo "The database answered after about $((TRIES * 5)) seconds"
 
 echo "Dumping to $DUMP"
-pg_dump --format=custom --no-owner --no-privileges --file "$WORK/$DUMP" --dbname "$DATABASE_URL"
+# ✨ The cache's rows are left out (its table is kept, empty): sign-in limits keyed by IP address, worth nothing
+# in a restore. The table is the one CACHE_URL names in templates/_helpers.tpl.
+pg_dump --format=custom --no-owner --no-privileges --exclude-table-data=anville_cache --file "$WORK/$DUMP" --dbname "$DATABASE_URL"
 
 # A dump that cannot be read back is not a backup.
 pg_restore --list "$WORK/$DUMP" > /dev/null

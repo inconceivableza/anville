@@ -354,6 +354,20 @@
           "$ref": "#/$defs/identifier"
         },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "number": {
+          "description": "The section's number as the hub shows it beside the section, such as '01', or '02–04' for a section standing in for three. Without one, the hub shows none.",
+          "type": "string",
+          "pattern": "^[0-9]+(–[0-9]+)?$"
+        },
+        "side_card": {
+          "description": "Draw this section as a card beside the hub's list of sections, below it on a phone, rather than in the list, as Walk with a coach is. The card shows the section's title, this sentence and its status.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sentence"],
+          "properties": {
+            "sentence": { "$ref": "#/$defs/text" }
+          }
+        },
         "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } },
         "gate": { "$ref": "#/$defs/gate" },
         "complete_label": {

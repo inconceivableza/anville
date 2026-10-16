@@ -153,6 +153,15 @@ DATABASES = {
 }
 
 
+# Cache
+# https://docs.djangoproject.com/en/5.2/topics/cache/
+
+# ✨ allauth counts sign-in and sign-up attempts here. Unset, each process keeps its own, which is enough for
+# runserver and the tests. A deployment runs several gunicorn workers, so it names the database cache
+# (dbcache://<table>), shared by all of them without another service; createcachetable makes the table.
+CACHES = {"default": env.cache_url("CACHE_URL", default="locmemcache://")}
+
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 

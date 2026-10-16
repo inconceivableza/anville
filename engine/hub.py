@@ -9,7 +9,6 @@ cannot accidentally leave one out. Nothing here touches the database or a reques
 serves the hub page, the guard on a section page and the re-check when a section is completed.
 """
 
-import re
 from typing import NamedTuple
 
 from engine.document.blocks import BLOCK_TYPES, page_count, page_of, pages_of
@@ -34,7 +33,9 @@ class SectionState(NamedTuple):
     """✨ One section as the hub sees it. `is_next` marks the one section the hub points the participant at.
     `estimate` is the authored time it takes, or None once the section has been begun. `page` is the page of it
     the participant has reached, or the first once it is complete, which is where the hub leads. `part_of` is the
-    section it is a part of, if any. `lock_note` says, while it is locked, what opens it."""
+    section it is a part of, if any. `lock_note` says, while it is locked, what opens it. `number` is the authored number
+    the hub shows beside it, if any, and `side_card` the authored sentence of a section the hub draws as a side card, or
+    None for one it lists (ticket 49a)."""
 
     id: str
     title: str
@@ -45,6 +46,8 @@ class SectionState(NamedTuple):
     page: int = 1
     part_of: str | None = None
     lock_note: str | None = None
+    number: str | None = None
+    side_card: str | None = None
 
     @property
     def is_locked(self):
@@ -56,36 +59,31 @@ class OutlineEntry(NamedTuple):
 
     section: SectionState
     parts: tuple
-    number: int | None
 
 
 class Hub(NamedTuple):
-    """✨ A participant's whole hub: their track's sections, the one to do next, and how much is answered."""
+    """✨ A participant's whole hub: their track's sections, the one to do next, and how many of the sections are
+    complete, out of `total`."""
 
     sections: tuple
     next_step: SectionState | None
-    answered: int
+    complete: int
     total: int
 
     def outline(self):
         """✨ The sections as the hub and the sidebar list them, as `OutlineEntry`s, each with the parts listed under it.
-        A part of a section outside the track is listed on its own."""
+        A part of a section outside the track is listed on its own. A side card is not listed: it is drawn beside the
+        list (ticket 49a)."""
         listed = {state.id for state in self.sections if state.part_of is None}
         return [
-            OutlineEntry(
-                state,
-                tuple(part for part in self.sections if part.part_of == state.id),
-                _outline_number(state.title),
-            )
+            OutlineEntry(state, tuple(part for part in self.sections if part.part_of == state.id))
             for state in self.sections
-            if state.part_of not in listed
+            if state.part_of not in listed and state.side_card is None
         ]
 
-
-def _outline_number(title):
-    """✨ Use the authored course section number, not the row's position in the hub."""
-    match = re.match(r"^Section\s+(\d+):", title)
-    return int(match.group(1)) if match else None
+    def side_cards(self):
+        """✨ The sections the hub draws as side cards, in the document's order."""
+        return [state for state in self.sections if state.side_card is not None]
 
 
 def track_sections(document):
@@ -238,12 +236,11 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None):
     states = [_state(section, answers, completed, role, moved_past, sections) for section in sections]
     next_step = next((state for state in states if state.status in (NOT_STARTED, IN_PROGRESS)), None)
     states = [state._replace(is_next=state is next_step) for state in states]
-    interactive = [block for section in sections for block in _interactive_blocks(section)]
     return Hub(
         sections=tuple(states),
         next_step=next((state for state in states if state.is_next), None),
-        answered=sum(1 for block in interactive if has_content(answers.get(block["id"]))),
-        total=len(interactive),
+        complete=sum(1 for state in states if state.status == COMPLETE),
+        total=len(states),
     )
 
 
@@ -259,6 +256,8 @@ def _state(section, answers, completed, role, moved_past, sections):
         page=1 if status == COMPLETE else page_reached(section, moved_past, answers, sections),
         part_of=section.get("part_of"),
         lock_note=_lock_note(section, completed, answers, sections, moved_past, role) if status == LOCKED else None,
+        number=section.get("number"),
+        side_card=text_for(section["side_card"]["sentence"], role) if "side_card" in section else None,
     )
 
 
