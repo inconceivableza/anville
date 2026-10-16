@@ -344,6 +344,22 @@ def test_a_google_sign_up_without_either_confirmation_makes_no_account(client, s
 
 
 @pytest.mark.django_db
+def test_google_never_signs_in_to_an_account_already_made_with_its_address(client, settings, django_user_model):
+    """✨ Not on the agreed list: added because, broken, anyone holding a Google account with a participant's address
+    would be let into that participant's answers."""
+    require_the_code(settings)
+    give_google_a_client(settings)
+    sign_up(client, email="sam.google@example.com")
+    client.post("/accounts/logout/")
+
+    come_back_from_google(client)
+    finish_google_sign_up(client)
+
+    assert not get_user(client).is_authenticated
+    assert django_user_model.objects.count() == 1
+
+
+@pytest.mark.django_db
 def test_a_new_google_account_meets_the_consent_step_before_any_answer_is_stored(client, settings, load_pathway):
     require_the_code(settings)
     give_google_a_client(settings)
