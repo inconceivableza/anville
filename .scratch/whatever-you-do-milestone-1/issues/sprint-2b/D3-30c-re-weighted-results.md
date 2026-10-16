@@ -4,7 +4,7 @@
 
 **Blocked by:** D2-30b (The tie-break's pairs after the sort)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 2b (12–16 Oct)
 
