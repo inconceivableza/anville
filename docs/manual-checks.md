@@ -50,6 +50,15 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - "First name" comes first, with "e.g. Ed" as its placeholder, and the browser offers nothing saved for it.
 - With `ANVILLE_ENROLMENT_REQUIRED=false` there is no enrolment code field; with it left out, the field sits after the email.
 
+## Password reset (sign in's "Forgot your password?")
+
+- Sign in shows "Forgot your password?" under the password field, and it opens the reset page, styled like sign in, with the demo notice when that is set.
+- Asking for a reset of your own account's address: the page says an email is on its way. Locally, with no `EMAIL_URL`, the email is printed in the `runserver` terminal; open its link in the same browser. Setting a new password there, then signing in with it, reaches the hub; the old password is refused.
+- Asking for a reset of an address with no account shows the very same page, and nothing is printed in the terminal.
+- On staging, the reset email reaches a mailbox you own and carries the test-system disclaimer at its top and the mark on its subject.
+- Opening the same link a second time says it is no longer valid.
+- Phone width: the reset pages and the new-password page fit without sideways scrolling, and their buttons are easy to tap.
+
 ## Consent
 
 - After signing up, and at a first sign-in, the consent page comes before the hub.

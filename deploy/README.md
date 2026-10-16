@@ -142,7 +142,7 @@ k exec deployment/anville -- python manage.py sendtestemail <your address>
 
 It should arrive from the address in `email.from`, and on staging with `[TEST]` before the subject and the disclaimer at the top of the body. The message's headers (in Gmail, Show original) should show SPF, DKIM and DMARC passing, and the provider's statistics should show it sent. A new provider account may hold its first messages until the provider has reviewed it.
 
-Password reset stays refused until ticket 28a, whether or not email is set up.
+Sign-in's "Forgot your password?" sends its link through the same email, so without `EMAIL_URL` the link is written only to the pod's log.
 
 To go back to fake email, delete `EMAIL_URL` from the GitHub Environment and deploy again. To stop sending at once, revoke the environment's key at the provider.
 
@@ -213,7 +213,7 @@ It installs the pinned release after checking its checksum, unless that version 
 
 **Fake email.** An environment with no `EMAIL_URL` secret delivers nothing: each message is written to the pod's log. On a staging environment it is written with the test-system disclaimer it would carry if it were sent: `[TEST]` before the subject, and the disclaimer at the top of the body. To see one, run `k exec deployment/anville -- python manage.py sendtestemail someone@example.com` and read the log. The log then holds whatever links the messages carried, which is acceptable only where the data is fake. A production environment cannot be deployed without `EMAIL_URL`. "Set up email" above turns real email on.
 
-**Resetting a password.** Password reset is refused until ticket 28a. Until then the operator runs `changepassword`, as above. A participant's username is their whole email address (ticket 37), so that is what the command takes; the admin shows it. The operator's own account is the exception: a username of its own, and no email address.
+**Resetting a password.** A participant resets their own from sign-in's "Forgot your password?", which emails them a link. Where email is fake, or for an account with no email, the operator runs `changepassword`, as above. A participant's username is their whole email address (ticket 37), so that is what the command takes; the admin shows it. The operator's own account is the exception: a username of its own, and no email address.
 
 **Changing a secret.** Change it in the GitHub Environment and deploy again. The pods restart only when a secret has changed. `POSTGRES_PASSWORD` is the exception: PostgreSQL reads it once, when its data is first created.
 
