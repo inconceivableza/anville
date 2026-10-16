@@ -279,6 +279,8 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - From the bookmarked link in a different browser (no cookie), the assessment can be sent too, and the page it lands on is that link's.
 - With the widget open in two tabs, sending from the second says "Your assessment has already been sent." beneath its button, not a connection error.
 - The participant's own sort widget still reads in the first person, with "See my results →".
+- Sending before fine-tuning (load the pathway again first): on "All 36 sorted!", under the bucket counts, "You can send your assessment now, or fine-tune how strong each one is in … first." and, side by side, "Send my assessment →" as the filled pill and "Continue to fine-tuning →" as the outlined one, with no slider to scroll past. Pressing send shows the thanks; the comparison (once three have answered) treats it as a sort sent with every slider untouched. Continuing still leads to the sliders and their "Send my assessment →". Undo still works from that screen. Keyboard: Tab reaches both buttons. Phone width: the two buttons stack, each whole, with no sideways scroll.
+- The participant's own "All 36 sorted!" shows only "Continue to fine-tuning →", as before, with no send button and no sentence about sending.
 
 ## Organisations and groups in the operator's admin (`/admin/`, as a superuser)
 

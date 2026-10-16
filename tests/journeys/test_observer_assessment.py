@@ -79,6 +79,20 @@ def test_an_assessment_sent_through_the_claimed_link_counts_on_its_own_and_leave
 
 
 @pytest.mark.django_db
+def test_an_observer_can_send_straight_after_placing_the_cards_and_each_item_keeps_its_buckets_seed(
+    participant, observer  # noqa: F811
+):
+    claim(observer, issue_link(participant, "Jo"))
+
+    sent = send(observer, {"a5": {"bucket": "strength"}, "p1": {"bucket": "not-me"}})
+
+    assert sent.status_code == 303
+    assert observer_assessments().assessments == [
+        {"a5": {"bucket": "strength", "value": 85}, "p1": {"bucket": "not-me", "value": 10}}
+    ]
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize("by", ["unclaimed copy", "claimed copy", "wrong link", "no claim"])
 def test_neither_the_participants_copy_nor_a_wrong_link_nor_no_claim_can_send_an_assessment(
     participant, observer, by  # noqa: F811
