@@ -6,6 +6,7 @@
 Nothing here touches the database or a request.
 """
 
+import re
 from datetime import timedelta
 
 from engine.document.answers import AnswerRefused
@@ -26,8 +27,25 @@ DEFAULT_PRIVACY_NOTICE = (
     "{name} has asked you to answer some questions about them. Your answers are kept, and your name is never shown "
     "to {name} with them. Once {name} has looked at the combined results, no new answers are added. You can withdraw "
     "at any time, and your answers will be removed: through this link while it works, and after that by asking the "
-    "people who run the service."
+    "people who run the service. If you haven't answered, we'll email you a reminder once a week until your link runs "
+    "out, and every reminder lets you stop them."
 )
+
+# ✨ The engine's stand-in for a document that has written no reminder email, marked as a draft as the notice is. It still
+# says where the observer's details came from, what they are used for, how often and until when (ticket 43a).
+DEFAULT_REMINDER = {
+    "subject": "A reminder from {name}",
+    "body": (
+        "[Draft email: this pathway has not written its own reminder yet.]"
+        "\n\n"
+        "Hi {observer}, {name} asked you to answer some questions about them. Please answer through the link {name} "
+        "sent you. Your link works until {until}."
+        "\n\n"
+        "{name} gave us your name and email address; we use them only to remind you, once a week until you answer or "
+        "your link runs out."
+    ),
+    "stop": "Don't want these reminders? Stop reminders about {name}",
+}
 
 
 def link_lifetime(document):
@@ -49,6 +67,22 @@ def privacy_notice(document, name):
     """
     notice = document.get("observers", {}).get("privacy_notice", DEFAULT_PRIVACY_NOTICE)
     return text_for(notice, "observer").replace("{name}", name)
+
+
+def reminder_email(document, name, observer, until):
+    """✨ The reminder email's wording, as {"subject", "body", "stop"}, in the observer's wording, naming the participant
+    as {name}, the observer as {observer} and the day their link stops working as {until} (ticket 43a). Each field the
+    document leaves out is the engine's draft's."""
+    authored = document.get("observers", {}).get("reminder", {})
+    values = {"name": name, "observer": observer, "until": until}
+    # ✨ In one pass, so a name that happens to hold "{until}" is left as typed.
+    return {
+        field: REMINDER_PLACES.sub(lambda place: values[place[1]], text_for(authored.get(field, draft), "observer"))
+        for field, draft in DEFAULT_REMINDER.items()
+    }
+
+
+REMINDER_PLACES = re.compile(r"\{(name|observer|until)\}")
 
 
 def relationship_question(document, name):

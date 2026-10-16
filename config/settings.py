@@ -241,6 +241,10 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="webmaster@localhost")
 # provider refuses, so unless the environment names another it is the sending address above.
 SERVER_EMAIL = env("SERVER_EMAIL", default=DEFAULT_FROM_EMAIL)
 
+# ✨ Where the site is reached, with no trailing slash, for the links in email sent with no request to read it from:
+# the observers' reminders (ticket 43a). The chart sets it from the environment's hostname.
+ANVILLE_SITE_URL = env("ANVILLE_SITE_URL", default="http://localhost:8000").rstrip("/")
+
 # ✨ Set on a test system that can reach real mailboxes: every message then says, in its subject and at the top
 # of its body, that it is not from the real service. It wraps whichever backend the lines above chose.
 ANVILLE_EMAIL_DISCLAIMER = env("ANVILLE_EMAIL_DISCLAIMER", default="")

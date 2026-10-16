@@ -278,6 +278,11 @@ class Contact(models.Model):
     position = models.PositiveSmallIntegerField()
     name = models.CharField(max_length=150)
     email = models.EmailField(max_length=254)
+    # ✨ When this person first sent an observer assessment, and when they asked for no more reminders (ADR 0016). Kept
+    # here, not on the invitation, so both survive a reissue; nothing clears either, a withdrawal or an edit included,
+    # and both go with the contact. The participant never sees them.
+    sent_at = models.DateTimeField(null=True, blank=True)
+    reminders_stopped_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -332,6 +337,9 @@ class Invitation(models.Model):
     # ✨ When the participant ticked "Give my coach access to my results and this comparison" (ticket 27), while it stands. Kept on the link,
     # as the answer is, so revoking or reissuing it, or choosing another coach, takes the consent with it (ADR 0011).
     results_shared_at = models.DateTimeField(null=True, blank=True)
+    # ✨ The week of this link's own clock, counted from when it was issued, that its observer was last reminded for; 0
+    # before any reminder (ticket 43a). A reissue makes a new record, so the clock starts again.
+    reminded_week = models.PositiveSmallIntegerField(default=0)
 
     def works(self, now=None):
         """✨ Whether this link still works: it has not expired. A revoked link has no record to ask."""
@@ -557,14 +565,18 @@ class ObserverResponse(models.Model):
             )
             if open_to_answers is None:
                 raise CollectionFrozen
-            return cls.objects.create(
+            now = timezone.now()
+            sent = cls.objects.create(
                 response=response,
                 assessment=assessment,
                 relationship=relationship,
-                submitted_at=timezone.now(),
+                submitted_at=now,
                 sent_by=_sent_by(secret),
                 is_test_data=is_test_data,
             )
+            # ✨ The person is marked as having sent, so they are never reminded again (ADR 0016).
+            Contact.objects.filter(pk=claimed.contact_id, sent_at__isnull=True).update(sent_at=now)
+            return sent
 
     @classmethod
     def sent_with(cls, secret):

@@ -14,6 +14,7 @@ from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequ
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods, require_POST
 
@@ -88,6 +89,7 @@ from engine.models import (
     Response,
     Result,
 )
+from engine import reminders
 from engine.document.tie_break import pair_plan, reweigh
 from engine.results import comparison_page, pair_page, results_page
 
@@ -1352,6 +1354,30 @@ def withdrawal(request, token=None):
         shown.delete_cookie(OBSERVER_COOKIE, path=reverse("observer"))
     else:
         shown = render(request, "engine/withdrawal.html", {"name": name, "action": action})
+    shown["Cache-Control"] = "no-store"
+    return shown
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def stop_reminders(request, signed):
+    """✨ Where a reminder's stop link leads (ticket 43a): opening it only asks, and only a POST stops this participant's
+    reminders to that person, from the page's button or as a mail provider's one-click `List-Unsubscribe` (RFC 8058).
+    It works while the contact exists, whatever has happened to their link, and looks the same throughout; a tampered or
+    removed one gets the dead-link refusal.
+
+    Exempt from CSRF, since a one-click POST comes from the mail provider with no token: the signed address is the only
+    authority, so a forged POST would need it anyway, and all it can do is stop reminders."""
+    contact = reminders.contact_to_stop(signed)
+    if contact is None:
+        return _refuse_link(request)
+    name = name_shown_for(contact.response.participant)
+    if request.method == "POST":
+        reminders.stop_reminders(contact)
+        shown = render(request, "engine/stop_reminders.html", {"name": name, "stopped": True})
+    else:
+        action = reverse("stop_reminders", args=[signed])
+        shown = render(request, "engine/stop_reminders.html", {"name": name, "action": action})
     shown["Cache-Control"] = "no-store"
     return shown
 

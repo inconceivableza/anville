@@ -1,0 +1,27 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/base.html" %}
+{% comment %}
+  ✨ Where a reminder's stop link leads (ticket 43a): opening the page only asks, since mail filters open every link in
+  a message, and its button stops the reminders. It looks the same whatever has happened to the observer's link.
+{% endcomment %}
+{% block head_title %}Stop reminders{% endblock head_title %}
+
+{% block content %}
+  <div class="section-header">
+    <h2>Stop reminders about {{ name }}</h2>
+  </div>
+  {% if stopped %}
+    <div class="question-card">
+      <h3>Reminders stopped</h3>
+      <p>We won't email you any more reminders about {{ name }}.</p>
+    </div>
+  {% else %}
+    <div class="question-card">
+      <p>We'll stop emailing you reminders about {{ name }}.</p>
+      <form method="post" action="{{ action }}">
+        <button type="submit" class="pill full">Stop reminders</button>
+      </form>
+    </div>
+  {% endif %}
+{% endblock content %}
