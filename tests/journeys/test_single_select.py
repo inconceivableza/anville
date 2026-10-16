@@ -97,7 +97,6 @@ def test_choosing_the_empty_option_again_takes_the_answer_back(participant):
 
     assert cleared.status_code == 200
     assert chosen(shown(participant, ONBOARDING), "reason") is None
-    assert "0 of 3 answered" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db
@@ -108,8 +107,3 @@ def test_an_option_label_is_escaped_like_any_authored_text(signed_in_client, loa
 
     assert "<b>Bold</b>" not in page
     assert "&lt;b&gt;Bold&lt;/b&gt;" in page
-
-
-@pytest.mark.django_db
-def test_a_single_select_counts_towards_progress(participant):
-    assert "0 of 3 answered" in participant.get("/hub/").content.decode()  # ✨ the test pathway's two, and this

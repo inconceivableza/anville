@@ -14,6 +14,7 @@ from engine.document.observers import minimum_observers
 from engine.document.scoring import percents_by_construct
 from engine.document.standing import standing
 from engine.document.text import text_for
+from engine.document.tie_break import GENERALIST, tie_break
 
 # ✨ The stylesheet defines --rank-1 to --rank-6; every rank below the sixth takes the sixth colour.
 RANK_COLOURS = 6
@@ -79,7 +80,17 @@ def results_page(document, scores, sort, name, role="participant"):
             for scored in scores["frameworks"]
         ],
         "disclaimer": _text(presentation, "disclaimer", role),
+        "generalist": _generalist(document, scores, presentation, role),
     }
+
+
+def _generalist(document, scores, presentation, role):
+    """✨ The document's words telling a participant tied on both frameworks that they are a generalist (ticket 30a), or
+    None for anyone else. Read from the participant's own stored result, the only one this page is given."""
+    if tie_break(document, scores)["outcome"] != GENERALIST:
+        return None
+    wording = presentation["generalist"]
+    return {"heading": text_for(wording["heading"], role), "text": text_for(wording["text"], role)}
 
 
 def comparison_page(document, scores, sort, observer_average):

@@ -3,8 +3,8 @@
 {% extends "engine/base.html" %}
 {% comment %}
   ✨ The observer's own page, once they have claimed their link. As they claim it, their own link is shown this once
-  to bookmark, since the one they were sent is now used up. Then the observer assessment until it is sent, and thanks
-  after.
+  to bookmark, since the one they were sent is now used up. Then the observer assessment until it is sent, and after
+  it only thanks and the way to withdraw (ticket 15b).
 {% endcomment %}
 {% block head_title %}Answering for {{ name }}{% endblock head_title %}
 
@@ -27,6 +27,7 @@
     <div class="question-card">
       <h3>Thank you</h3>
       <p>Your assessment has been sent. It will help {{ name }} understand how God has designed them – that's a real gift.</p>
+      <p><a href="{{ withdraw_at }}">Withdraw my answers</a></p>
     </div>
   {% elif assessment %}
     {% comment %}
@@ -39,6 +40,18 @@
             hx-post="{{ assessment.action }}" hx-target="find .save-status"
             hx-disabled-elt="find .sort-submit" data-sort="{{ script_id }}">
         {% csrf_token %}
+        {% if assessment.relationship %}
+          {# ✨ The original prototype's question from its welcome screen, sent with the assessment (ticket 15b). #}
+          <div class="name-section">
+            <label for="relationship">{{ assessment.relationship.question }}</label>
+            <select id="relationship" name="relationship">
+              <option value="">Select...</option>
+              {% for choice in assessment.relationship.choices %}
+                <option value="{{ choice.id }}">{{ choice.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endif %}
         <input type="hidden" name="value">
         <p class="visually-hidden" aria-live="polite" data-sort-announcer></p>
         <progress class="sort-progress" max="100" value="0" aria-hidden="true"></progress>
@@ -47,6 +60,6 @@
         <noscript><p>The sort needs JavaScript. Turn it on in your browser, then reload this page.</p></noscript>
       </form>
     {% endwith %}
+    <p>[Not built yet: the written questions come in a later version.]</p>
   {% endif %}
-  <p>[Not built yet: the written questions come in a later version.]</p>
 {% endblock content %}

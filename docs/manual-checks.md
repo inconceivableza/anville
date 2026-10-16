@@ -84,6 +84,16 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - The footer's "Credits" shows the header while signed in, and the plain page once signed out.
 - With `ANVILLE_SIDEBAR=false` in `.env` and the server restarted, "Your pathway" is gone; the pathway's name and "Sign out" remain.
 
+## The hub's layout (the hub, beside the prototype's: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html#hub`)
+
+- The page is deep brown, and the hub, header included, is cream with rounded corners, inset a thin brown border from every edge. "Credits" sits below it on the brown, easy to read.
+- On a wide screen the hub is about as wide as the prototype's: the next step and the sections in a wide left column, and the coach and trusted voices cards in a narrower right one, in the prototype's proportions. No section's title wraps that would fit on one line in the prototype.
+- Section 1 shows "01", the Workbook "02–04" and Section 5 "05", each in small grey type to the left of the title; Before we begin shows no number, and its title lines up with the others. The Workbook is called "The Workbook". The Strengths assessment, within Section 1, shows no number.
+- The header says "0 of 5 sections complete" for a new participant, and counts up as sections, and the Strengths assessment, are completed. There is no "Where you started" card, even once the sort is in.
+- "Your consent · Your groups" sits below the hub, lined up with its left edge.
+- Phone width: one column, the cards below the sections; the brown border still shows, and nothing scrolls sideways.
+- A section the pathway marks as a side card (none until ticket 50 makes Walk with a coach and Five trusted voices so) shows in the right column as a card with its title, its sentence and its status, and not in the list; its title leads to it unless it is locked.
+
 ## Back to the hub and Section 1 (ticket 41b)
 
 - Completing onboarding, and later Section 1, lands on the hub with the next step's card highlighted.
@@ -250,6 +260,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - PEP dots that tie share a colour.
 - Phone width: each row's line still spans the width, the standing stays on one line beside the name, and no dot is cut off at either end.
 - A screen reader reads each construct's name, persona and standing, and passes over the drawing.
+- The generalist (Whatever You Do, a fresh participant): sorting every card into the same bucket and sending without moving a slider leaves both profiles level, and the results page opens with a hint box under the title, "You’re a generalist" in small capitals above its sentence, before the APEST(d) profile. A participant whose sort has clear leaders sees no such box, and neither does their coach's link. At phone width the box fits without the page scrolling sideways.
 
 ## The comparison (the results page's "Compare with how others see you →")
 
@@ -287,6 +298,9 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - From the bookmarked link in a different browser (no cookie), the assessment can be sent too, and the page it lands on is that link's.
 - With the widget open in two tabs, sending from the second says "Your assessment has already been sent." beneath its button, not a connection error.
 - The participant's own sort widget still reads in the first person, with "See my results →".
+- Above the sort (load the pathway again first), "Your relationship to …" names the participant, with "Select..." then Family member, Close friend, Colleague / work contact, Church family / leader, Mentor / teacher and Other. It stays put while the cards are sorted and fine-tuned, and leaving it on "Select..." still sends. At phone width the label and box fit without a sideways scroll.
+- After sending, the thanks carries a "Withdraw my answers" link, and nothing else is on the page: no sort, no relationship box, no "[Not built yet…]" line. From `/observe/` and from the bookmarked link alike.
+- "Withdraw my answers" opens a page saying what withdrawing does, with a "Withdraw my answers" button; opening it, reloading it or going Back changes nothing. Pressing the button says "Your answers have been withdrawn". Then `/observe/` and the bookmarked link both say "This link does not work", and as the participant the invitations page shows the person as before. At phone width the button fills the width.
 - Sending before fine-tuning (load the pathway again first): on "All 36 sorted!", under the bucket counts, "You can send your assessment now, or fine-tune how strong each one is in … first." and, side by side, "Send my assessment →" as the filled pill and "Continue to fine-tuning →" as the outlined one, with no slider to scroll past. Pressing send shows the thanks; the comparison (once three have answered) treats it as a sort sent with every slider untouched. Continuing still leads to the sliders and their "Send my assessment →". Undo still works from that screen. Keyboard: Tab reaches both buttons. Phone width: the two buttons stack, each whole, with no sideways scroll.
 - The participant's own "All 36 sorted!" shows only "Continue to fine-tuning →", as before, with no send button and no sentence about sending.
 

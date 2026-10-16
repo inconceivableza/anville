@@ -122,37 +122,27 @@ def test_a_locked_section_is_never_the_next_step():
 # Progress
 
 
-def test_progress_counts_the_blocks_the_participant_does_something_with_and_no_others():
-    sections = [section("first", blocks=[prose("intro"), long_text("a"), prose("outro"), long_text("b")])]
+def test_progress_counts_the_sections_complete_not_the_answers():
+    """✨ "2 of 5 sections complete", as the prototype's hub says (ticket 49a)."""
+    hub = hub_for(A_CHAIN, {"a": "Written", "b": "Written", "c": "Written"}, completed=["first"])
 
-    hub = hub_for(sections, {"a": "Written"}, completed=[])
-    assert (hub.answered, hub.total) == (1, 2)
-
-
-def test_progress_counts_across_every_section_of_the_track():
-    hub = hub_for(A_CHAIN, {"a": "Written", "c": "Written"}, completed=[])
-
-    assert (hub.answered, hub.total) == (2, 3)
+    assert (hub.complete, hub.total) == (1, 3)
 
 
 @pytest.mark.parametrize("answer", ["", "   ", None])
-def test_a_block_left_blank_is_not_counted_as_answered(answer):
-    hub = hub_for([section("first", blocks=[long_text("a")])], {"a": answer}, completed=[])
-
-    assert (hub.answered, hub.total) == (0, 1)
+def test_a_block_left_blank_does_not_start_its_section(answer):
+    assert statuses([section("first", blocks=[long_text("a")])], {"a": answer}) == [NOT_STARTED]
 
 
-def test_a_pathway_with_nothing_interactive_in_it_reports_no_progress_rather_than_dividing_by_zero():
-    hub = hub_for([section("first", blocks=[prose("intro")])], {}, completed=[])
-
-    assert (hub.answered, hub.total) == (0, 0)
+def test_prose_alone_does_not_start_a_section():
+    assert statuses([section("first", blocks=[prose("intro")])], {"intro": "Read"}) == [NOT_STARTED]
 
 
 def test_progress_counts_only_the_sections_it_is_given_so_a_track_counts_only_its_own():
     """✨ Tracks arrive in ticket 23; the hub already counts only the sections handed to it."""
-    hub = hub_for(A_CHAIN[:2], {"a": "Written", "c": "Written"}, completed=[])
+    hub = hub_for(A_CHAIN[:2], {}, completed=["first", "third"])
 
-    assert (hub.answered, hub.total) == (1, 2)
+    assert (hub.complete, hub.total) == (1, 2)
 
 
 # What a participant has reached within a section
