@@ -401,6 +401,9 @@ class Result(models.Model):
     # `{"framework", "constructs": [a, b], "round", "chosen"}`, `chosen` None for a skip. Kept beside the scores, which
     # they never change.
     tie_break_answers = models.JSONField(default=list)
+    # ✨ The scores re-weighted by those answers (ticket 30c), by their own named method, once every pair is answered or
+    # skipped; None until then, and for anyone with no tie-break. Kept beside the scores, never in their place.
+    reweighted = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -421,6 +424,18 @@ class Result(models.Model):
             locked.save(update_fields=["tie_break_answers"])
         self.tie_break_answers = locked.tie_break_answers
         return True
+
+    def keep_reweighted(self, reweighted):
+        """✨ Store the re-weighted result beside the scores (ticket 30c). Worked out from the stored scores and answers
+        alone, so storing it twice stores the same."""
+        self.reweighted = reweighted
+        self.save(update_fields=["reweighted"])
+
+    @property
+    def shown(self):
+        """✨ The result the participant's results page and comparison show: the re-weighted one once there is one,
+        otherwise the sort's as scored."""
+        return self.reweighted or self.scores
 
 
 class ObserverAssessments(NamedTuple):

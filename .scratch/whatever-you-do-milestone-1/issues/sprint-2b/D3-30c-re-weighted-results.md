@@ -4,16 +4,16 @@
 
 **Blocked by:** D2-30b (The tie-break's pairs after the sort)
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 2b (12–16 Oct)
 
 **Spec:** The instrument and scoring; The instrument and results; Open content and product items
 
-- [ ] Re-weighting is a second named scoring method beside the compositional score (ADR 0003), so the frozen method and its fixtures stay as they are. The re-weighted result is stored beside the sort's, never in its place
-- [ ] When the choices go in a circle, the result says the constructs are genuinely balanced rather than forcing a winner
-- [ ] The results page shows the re-weighted result, and how the tie-break changed it
-- [ ] The comparison sets the participant's re-weighted result beside the observers', so it agrees with their results page. Observers have no tie-break, so theirs are their sorts as sent
+- [x] Re-weighting is a second named scoring method beside the compositional score (ADR 0003), so the frozen method and its fixtures stay as they are. The re-weighted result is stored beside the sort's, never in its place
+- [x] When the choices go in a circle, the result says the constructs are genuinely balanced rather than forcing a winner
+- [x] The results page shows the re-weighted result, and how the tie-break changed it
+- [x] The comparison sets the participant's re-weighted result beside the observers', so it agrees with their results page. Observers have no tie-break, so theirs are their sorts as sent
 
 **Carried from 30b**
 

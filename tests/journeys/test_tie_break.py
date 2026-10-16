@@ -7,7 +7,8 @@ detection runs on the participant's own sort alone, never an observer's."""
 import pytest
 
 from tests.documents import complete_sort, sort_pathway, with_a_tie_break
-from engine.models import Result
+from engine.models import Response, Result
+from tests.journeys.pages import text_of
 from tests.journeys.test_answers import participant  # noqa: F401 (a fixture)
 from tests.journeys.test_comparison import comparison, observer_sort, with_observers
 from tests.journeys.test_consent import give_consent
@@ -16,7 +17,8 @@ from tests.journeys.test_hub import signed_in_client  # noqa: F401 (a fixture)
 from tests.journeys.test_invitations import issue_link, observer  # noqa: F401 (observer is a fixture)
 from tests.journeys.test_observer_assessment import observed_pathway, send
 from tests.journeys.test_observer_landing import claim
-from tests.journeys.test_results import results, submit_sort
+from tests.journeys.test_observer_responses import an_observer
+from tests.journeys.test_results import in_order, results, submit_sort
 
 GENERALIST = "Two flat profiles"
 
@@ -164,3 +166,64 @@ def test_an_observer_sending_a_tied_sort_is_never_offered_the_tie_break(observed
     sent = send(observer, TIED_ON_ONE)
 
     assert sent["Location"] == "/observe/"
+
+
+# ✨ The re-weighted result (ticket 30c). TIED_ON_ONE gives Apostle and Prophet 50 each, so both stand at an even share
+# ("Present") and Apostle leads by declaration order. Choosing Prophet in both rounds weighs Prophet 2 to Apostle's 1:
+# 67 to 33, well above and well below an even share of 50.
+CHOSE_PROPHET = ["prophet", "prophet"]
+
+
+def answer_every_pair(client, choices):
+    submit_sort(client, TIED_ON_ONE)
+    for place, chosen in enumerate(choices):
+        choose(client, place, chosen)
+
+
+@pytest.mark.django_db
+def test_the_re_weighted_result_is_stored_beside_the_sorts_once_every_pair_is_answered(marked):
+    submit_sort(marked, TIED_ON_ONE)
+    sent, _ = stored()
+    choose(marked, 0, "prophet")
+    assert Result.objects.get().reweighted is None
+
+    choose(marked, 1, "prophet")
+
+    result = Result.objects.get()
+    assert result.scores == sent
+    assert [construct["construct"] for construct in result.reweighted["frameworks"][0]["constructs"]] == [
+        "prophet",
+        "apostle",
+    ]
+
+
+@pytest.mark.django_db
+def test_the_results_page_shows_the_re_weighted_result_and_how_the_tie_break_changed_it(marked):
+    answer_every_pair(marked, CHOSE_PROPHET)
+
+    page = text_of(results(marked).content.decode())
+
+    assert in_order(page, "Your gifting", "The top changed", "Prophet", "Leading", "Apostle", "Less used", "Your energy")
+
+
+@pytest.mark.django_db
+def test_the_results_page_says_a_framework_is_balanced_when_the_choices_name_no_winner(marked):
+    answer_every_pair(marked, ["", ""])
+
+    page = text_of(results(marked).content.decode())
+
+    assert in_order(page, "Your gifting", "Genuinely balanced", "Apostle", "Present", "Prophet", "Present")
+    assert "The top changed" not in page
+
+
+@pytest.mark.django_db
+def test_the_comparison_sets_the_re_weighted_result_beside_the_observers_sorts_as_sent(marked, participant):
+    """✨ The observers sent TIED_ON_ONE too, so their mean is 50 each: Present, never re-weighted."""
+    answer_every_pair(marked, CHOSE_PROPHET)
+    response = Response.objects.get(participant=participant)
+    for _ in range(3):
+        an_observer(response, TIED_ON_ONE)
+
+    page = text_of(comparison(marked).content.decode())
+
+    assert in_order(page, "Prophet", "You: Leading", "Others: Present", "Apostle", "You: Less used", "Others: Present")
