@@ -383,7 +383,13 @@ main.container:has(> .ob) {
   border-radius: var(--radius-xl);
 }
 
+/* ✨ As tall as the wizard's first page, and no taller: a longer page (the ratings) scrolls past it while it stays in
+   view, as v3's photo fills the viewport, rather than stretching with the page and zooming its photo (fix-2). */
 .ob-photo {
+  position: sticky;
+  top: var(--space-2xs);
+  align-self: start;
+  height: min(760px, calc(100vh - 40px) - 2 * var(--space-2xs));
   display: grid;
   align-content: space-between;
   min-height: 420px;
@@ -532,6 +538,9 @@ main.container:has(> .ob) {
   }
 
   .ob-photo {
+    position: relative;
+    top: auto;
+    height: auto;
     min-height: 240px;
   }
 
@@ -824,6 +833,15 @@ main > .hub ~ .hub-consent {
   grid-column: 3;
 }
 
+/* ✨ The hub's section and side card headings take the heading face, as v3's h3 does (fix-2). */
+.srow h3,
+.card h3 {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.08;
+}
+
 .srow h3 {
   font-size: var(--text-lg);
 }
@@ -954,6 +972,15 @@ main > .hub ~ .hub-consent {
 
 .hub-side-card h3 a:hover {
   color: var(--green-deep);
+}
+
+/* ✨ On the dark card, its light text, and the lime accent when hovered, as v3's dark card reads (fix-2). */
+.card.dark h3 a {
+  color: var(--on-dark);
+}
+
+.card.dark h3 a:hover {
+  color: var(--green);
 }
 
 .hub-side-card.locked h3 {
@@ -1180,8 +1207,9 @@ form + .way-on,
   cursor: not-allowed;
 }
 
+/* ✨ On the cream, its pale fill, as the ghost button had before ticket 53a (fix-2); on a dark panel, none. */
 .pill.ghost {
-  background: transparent;
+  background: var(--paper);
   color: inherit;
   box-shadow: inset 0 0 0 1px currentColor;
 }
@@ -1239,9 +1267,11 @@ form + .way-on,
 /*
  * ✨ A single select, as the prototype's account screen draws it: the browser's own arrow replaced by a
  * small caret, drawn from two gradient halves so it takes --ink rather than a raw colour in an SVG.
- * 16px text also stops iOS zooming in on it.
+ * 16px text also stops iOS zooming in on it. A form panel's, such as the observer's optional relationship, takes the
+ * same look as the text inputs it sits among (fix-2), without the amber, since nothing needs choosing there.
  */
-.question-card select {
+.question-card select,
+.name-section select {
   width: 100%;
   padding: var(--space-md) var(--space-2xl) var(--space-md) var(--space-md);
   border: 1px solid var(--border);
@@ -1270,7 +1300,8 @@ form + .way-on,
   box-shadow: 0 0 0 3px var(--needs-choice-ring);
 }
 
-.question-card select:focus {
+.question-card select:focus,
+.name-section select:focus {
   outline: none;
   border-color: var(--green-deep);
   box-shadow: 0 0 0 3px var(--focus-ring);
@@ -1343,8 +1374,11 @@ form + .way-on,
   margin: var(--space-sm) var(--space-xs) 0 0;
 }
 
+/* ✨ A quiet label, at v3's tag size (fix-2). */
 .contact-need {
   flex: 0 0 auto;
+  font-size: 10px;
+  padding: 3px 8px;
 }
 
 .contact-num {
@@ -4692,6 +4726,7 @@ body > svg[aria-hidden="true"] {
 
 .atabs .top .pill.ghost {
   color: var(--on-dark);
+  background: transparent;
 }
 
 .atabs .tab {
@@ -4770,6 +4805,7 @@ body > svg[aria-hidden="true"] {
 
 .journey-coach .pill.ghost {
   color: var(--on-dark);
+  background: transparent;
   white-space: nowrap;
 }
 

@@ -179,6 +179,7 @@ if (document.querySelector("main.page") && !reducedMotion) {
     navigating = true;
     const wipe = document.createElement("div");
     wipe.setAttribute("aria-hidden", "true");
+    wipe.dataset.pageWipeOverlay = "";
     Object.assign(wipe.style, {
       position: "fixed",
       inset: "0",
@@ -193,6 +194,12 @@ if (document.querySelector("main.page") && !reducedMotion) {
       { duration: 500, easing: "cubic-bezier(.7,0,.3,1)", fill: "forwards" },
     );
     animation.onfinish = () => window.location.assign(destination.href);
+  });
+  // ✨ Back restores the page from the browser's cache as it was left, overlay and all: take it away (fix-2).
+  window.addEventListener("pageshow", (event) => {
+    if (!event.persisted) return;
+    document.querySelectorAll("[data-page-wipe-overlay]").forEach((wipe) => wipe.remove());
+    navigating = false;
   });
 }
 
