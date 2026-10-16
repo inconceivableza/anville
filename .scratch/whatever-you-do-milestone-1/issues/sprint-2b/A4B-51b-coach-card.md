@@ -22,3 +22,8 @@
 - Prototype reference: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`, the hub's coach card. Its name box on the card itself is not kept: the link is made at the end of the checklist
 - As merged from the `hackathon-ui` branch in A0-48, the card says "Invite a mentor"; the glossary says coach
 - Split from ticket 51 on 15 Oct
+
+**Carried from 50**
+
+- Walk with a coach is now the side card section `walk-with-a-coach`, holding the coach checklist on its one page. Its side-card sentence is authored already, without the briefing pack: "When you're ready, ask someone to walk this with you."
+- The hub's own "Walk with a mentor" card in the template still shows beside the side card, as 49a noted. With the coach on a page of its own, nothing in *Whatever You Do* now uses the way-on wording "I'll sort this later →" or "Continue with Sam →"

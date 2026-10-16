@@ -339,7 +339,7 @@
         "title": "Walk with a coach",
         "requires": ["onboarding"],
         "side_card": {
-          "sentence": "When you're ready, ask someone to walk this with you. We'll send them a short briefing pack."
+          "sentence": "When you're ready, ask someone to walk this with you."
         },
         "blocks": [
           {
@@ -427,7 +427,7 @@
         "title": "Five trusted voices",
         "requires": ["onboarding"],
         "side_card": {
-          "sentence": "Invite people who know you well. Their answers sit beside your own in Section 1."
+          "sentence": "Invite people who know you well. Their answers sit beside your own in Section 1, combined so you never see whose is whose."
         },
         "blocks": [
           {

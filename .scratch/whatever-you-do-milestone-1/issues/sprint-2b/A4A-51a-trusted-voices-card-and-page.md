@@ -25,3 +25,8 @@
 - Prototype reference: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`, the hub's trusted voices card. Its name box on the card itself is not kept: links are made on the section's page
 - As merged from the `hackathon-ui` branch in A0-48, the card counts a claimed link as a reply. Answered counts assessments sent
 - Split from ticket 51 on 15 Oct; 51b holds the coach's card
+
+**Carried from 50**
+
+- Five trusted voices is now the side card section `trusted-voices`, holding the contact list, last in the document after Walk with a coach. Its side-card sentence is already the one above. Its gate is still Before we begin's old clause ("Add at least 2 people, or leave the list empty to do this later."), and its "Who knows you best?" text still promises "a short, anonymous survey"
+- The hub's own Five trusted voices card in the template still shows beside the side card, as 49a noted
