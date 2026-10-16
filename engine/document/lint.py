@@ -27,6 +27,7 @@ def lint(document):
         *_unreadable_clauses(document),
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
+        *_unworded_generalist(document),
         *_sort_needs(document),
         *_ungated_sorts(document),
         *_undeclared_translations(document),
@@ -235,6 +236,17 @@ def _missing_constructs(document, construct_ids):
                 f"/presentation/constructs/{c}/construct",
                 f"There is no construct '{description['construct']}' in this pathway.",
             )
+
+
+def _unworded_generalist(document):
+    """✨ A tie-break tells a participant tied on both frameworks that they are a generalist (ticket 30a), so a pathway
+    with one needs the words to tell them in."""
+    if "tie_break" in document.get("measurement", {}) and "generalist" not in document.get("presentation", {}):
+        yield Problem(
+            "/measurement/tie_break",
+            "A pathway with a tie-break needs presentation.generalist, the words that tell a participant tied on both "
+            "frameworks they are a generalist.",
+        )
 
 
 # ✨ What a sort is scored by. Without any of these the document would load, and the participant's page
