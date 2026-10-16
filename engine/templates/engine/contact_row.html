@@ -5,14 +5,15 @@
   of its buttons sends back this row alone, which takes its place, so typing not yet saved in any other row is never
   lost; without, each leads to the list's page again, opened at this person (fix-2).
 
-  Someone listed is saved as their name or email changes, the Save button being for browsers without JavaScript. An
+  Someone listed is saved as their name or email is typed, only the row's status coming back, the Save button being
+  for browsers without JavaScript. An
   empty row stores nobody until "Get link", which adds them and makes their link in the same act, so nobody is listed
   without one. A link just made, or reissued, opens in a dialog to copy, this once (only its hash is kept); without
   JavaScript the dialog shows open, in the row. Remove, for someone whose link works, asks first: in a dialog here, or
   on a page of its own without JavaScript.
 
-  novalidate leaves the email addresses to the server, whose refusal says what is wrong under the fields; the row comes
-  back with what was typed, the field at fault marked.
+  novalidate leaves the email addresses to the server, whose refusal says what is wrong under the fields; without
+  JavaScript, or for a new row, the row comes back with what was typed, the field at fault marked.
 
   While answer collection is frozen (ticket 55) no empty row is offered, nor any way to issue or reissue a link; people
   can still be changed and their links revoked.
@@ -20,8 +21,11 @@
 {% if row.contact_id or not block.frozen %}
 <li class="contact-row"{% if row.contact_id %} id="person-{{ row.contact_id }}"{% endif %}>
   {% if row.contact_id %}
+    {# ✨ Saved as they type, once typing pauses, and as a field is left (fix-2). Only the row's status is swapped in #}
+    {# ✨ from the row sent back, never its fields, so nothing typed while a save is on its way is lost. #}
     <form class="contact-person" novalidate method="post" action="{% url 'contact' block.id row.contact_id %}"
-          hx-post="{% url 'contact' block.id row.contact_id %}" hx-trigger="change, submit" hx-target="closest li" hx-swap="outerHTML">
+          hx-post="{% url 'contact' block.id row.contact_id %}" hx-trigger="input delay:600ms, change, submit"
+          hx-sync="this:queue last" hx-target="find .save-status" hx-select=".save-status" hx-swap="outerHTML">
   {% else %}
     <form class="contact-person" novalidate method="post" action="{% url 'contacts' block.id %}"
           hx-post="{% url 'contacts' block.id %}" hx-target="closest li" hx-swap="outerHTML">

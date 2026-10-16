@@ -318,7 +318,7 @@ def test_a_change_to_someone_listed_is_saved_as_it_changes_with_no_save_button_t
     add_person(participant, JO)
     row = row_of(shown(participant, ONBOARDING), "Jo")
 
-    assert re.search(r'<form class="contact-person"[^>]*hx-trigger="change\b', row)
+    assert re.search(r'<form class="contact-person"[^>]*hx-trigger="input delay:\d+ms, change\b', row)
     assert all("save-fallback" in button for button in re.findall(r"<button[^>]*>\s*Save\s*</button>", row))
     saved = save_person(participant, "Jo", ("Joanne", "joanne@example.com"), htmx=True)
 
