@@ -164,7 +164,8 @@ def comparison_page(document, scores, sort, observer_average):
     Below the minimum the observer average holds a count and no numbers, and so does what comes out:
     not even the self-result's, nor any gap, standing or strip. Each construct's mean is read from the observer
     average, and its single observers' percents only for the agreement band and the distribution strip, in ascending
-    order. The self-result is ranked and the observer average keeps the declared order, so the two are paired by
+    order; the marks and standings use their unrounded shares (ADR 0018), the gaps and the agreement band their
+    percents. The self-result is ranked and the observer average keeps the declared order, so the two are paired by
     construct id. The largest gaps and the reflection prompts follow the drawings.
     """
     shown = {"observers": observer_average["observers"], "minimum": minimum_observers(document), "frameworks": None}
@@ -191,25 +192,26 @@ def comparison_page(document, scores, sort, observer_average):
         for bar, others in pairs:
             # ✨ The participant's dot is where the results page puts it, in the comparison's own colour, not theirs.
             del bar["colour"]
-            you_at, others_at = bar.pop("at"), _at(others["percent"], top)
+            # ✨ The observers' mean and each observer are drawn and worded from unrounded shares, as the participant is.
+            you_at, others_at = bar.pop("at"), _at(others["share"], top)
             bar["you_at"], bar["others_at"] = you_at, others_at
-            bar["others_past_end"] = others["percent"] > top
+            bar["others_past_end"] = others["share"] > top
             bar["you_x"], bar["others_x"] = _mark(you_at), _mark(others_at)
             bar["gap_from"], bar["gap_width"] = min(you_at, others_at), round(abs(you_at - others_at), 2)
-            bar["others_standing"] = worded(others["percent"])
+            bar["others_standing"] = worded(others["share"])
             bar["seen_by_others"] = text_for(seen_by_others(document, bar["percent"], others["percent"]), "participant")
             bar["agreement"] = text_for(agreement(document, others["per_observer"]), "participant")
             bar["agreement_at"] = _label_at(others_at)
             bar["strip"] = {
                 "dots": [
-                    {**dot, "past_end": percent > top}
-                    for dot, percent in zip(
-                        _stacked([_at(percent, top) for percent in others["per_observer"]], you_at),
-                        others["per_observer"],
+                    {**dot, "past_end": share > top}
+                    for dot, share in zip(
+                        _stacked([_at(share, top) for share in others["per_observer_shares"]], you_at),
+                        others["per_observer_shares"],
                     )
                 ],
-                # ✨ `per_observer` is already in ascending order, never the order observers answered (ADR 0005).
-                "standings": [worded(percent) for percent in others["per_observer"]],
+                # ✨ Already in ascending order, never the order observers answered (ADR 0005).
+                "standings": [worded(share) for share in others["per_observer_shares"]],
             }
     return {
         **shown,
@@ -346,8 +348,9 @@ def _framework(document, framework, presentation, ranked_constructs, shares, con
                 "percent": construct["percent"],
                 # ✨ From the unrounded share, so the words never round a construct into a band it is short of.
                 "standing": text_for(standing(document, shares[construct["construct"]], constructs), role),
-                "at": _at(construct["percent"], top),
-                "past_end": construct["percent"] > top,
+                # ✨ Drawn at the unrounded share too, so two constructs a fraction apart are never drawn as one.
+                "at": _at(shares[construct["construct"]], top),
+                "past_end": shares[construct["construct"]] > top,
                 "persona": _text(shown, "persona", role),
                 "description": _text(shown, "description", role),
                 "colour": f"rank-{rank}" if by_rank else _tone(shown),

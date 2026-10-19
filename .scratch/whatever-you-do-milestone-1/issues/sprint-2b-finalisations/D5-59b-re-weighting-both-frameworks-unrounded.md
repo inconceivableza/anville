@@ -12,13 +12,13 @@
 
 - [x] Each framework that had pairs is re-weighted from its own answers, with its own outcome: "Separated", genuinely balanced, or every pair skipped
 - [x] The re-weighted result keeps its unrounded shares beside the whole numbers it stores
-- [ ] Every dot and bar sits at its unrounded share: on the results page, Section 1's results, the comparison (observers' averages included) and the coach's view
+- [x] Every dot and bar sits at its unrounded share: on the results page, Section 1's results, the comparison (observers' averages included) and the coach's view
 - [ ] The generalist's wording says the profile is flat on both frameworks, never that its top results are too close to call; drafted from the prototype's balanced verdict, for the developer's review
 - [ ] What the results page says of a framework (its standings and any tie-break or generalist wording) never contradicts itself
 
 **Carried from 59a**
 
-- [ ] The observers' standings on the comparison (their mean and each observer's in the spread) are worked out from unrounded shares, as the participant's now are
+- [x] The observers' standings on the comparison (their mean and each observer's in the spread) are worked out from unrounded shares, as the participant's now are
 - Until this ticket, a participant with pairs on both frameworks has only the first framework re-weighted, by its own answers; the other keeps its sort's result
 - The participant's standings are read from the stored result's unrounded shares: a sort's are worked out again from the raw values it keeps; any other result's (a re-weighted one) are its whole numbers until it keeps its own
 
