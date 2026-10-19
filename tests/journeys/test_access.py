@@ -363,6 +363,18 @@ def test_with_the_client_pair_set_google_is_offered_and_a_google_sign_up_makes_a
 
 
 @pytest.mark.django_db
+def test_google_sign_ups_confirming_page_is_in_our_wording_not_allauths(client, settings):
+    """✨ allauth's stock sentence names the site by its `Site` record, which no deployment sets (ticket 53c)."""
+    require_the_code(settings)
+    give_google_a_client(settings)
+
+    confirming = client.get(come_back_from_google(client).url)
+
+    assert confirming.status_code == 200
+    assert "You are about to use your Google account to login to" not in confirming.content.decode()
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize("missing", ["the 18+ confirmation", "the enrolment code"])
 def test_a_google_sign_up_without_either_confirmation_makes_no_account(client, settings, django_user_model, missing):
     require_the_code(settings)

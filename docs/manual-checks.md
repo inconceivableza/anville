@@ -136,7 +136,46 @@ Page by page:
 - **The comparison:** the illustrative note is amber with its right-hand corners rounded. "You" is green and "Others" blue as before. The largest gaps and the questions to reflect on are cards, and "← Return to …" is at the foot. At phone width each construct stacks: its name, then the drawing, then the words.
 - **Removing a contact** (without JavaScript, a person's "Remove" on the contact list), **Your groups** and **Your organisations** (from the hub's foot): framed like the rest, with their forms and buttons as before.
 - **Credits:** signed in, framed with the header; signed out, plain cream with no frame and no header.
-- **Not framed:** the wizard (Before we begin as new), the observer's pages, the coach's link, sign in, sign up and consent all stay as they were, with no brown frame.
+- **Not framed:** the wizard (Before we begin as new), the observer's pages, the coach's link, sign in, sign up and consent all stay plain cream, with no brown frame (their look is checked below, ticket 53c).
+
+## The observer's, coach's and account pages in the new look (ticket 53c; each at a wide screen and at about 375px)
+
+On every page below, check:
+- The page is plain cream from edge to edge: no brown frame, no header. "Credits" is at the foot.
+- The page's title is in the heading face, light and large, as a participant page's title is (ticket 53b); a title that wraps breaks into lines of similar length.
+- On a phone the words sit about 16px in from the edges, the buttons fill the width and are easy to tap, and nothing scrolls sideways.
+
+The observer's pages (an observer's link, in a private window):
+- **The landing page:** "You've been invited" as the title, the privacy notice in its pale green box, then "I'm answering for …  →". With `ANVILLE_DEMO_NOTICE` set, the full amber notice is above the title.
+- **The observer's own page:** "Answering for …" as the title, the link to bookmark in its box with "Copy", then the relationship drop-down and the sort as before.
+- **The thank-you** (after sending): a card with "Thank you" in the heading face, then its sentence, then "Withdraw my answers" a line below it, not touching it.
+- **Withdrawal:** "Withdraw your answers" as the title; a card with its sentence and, with room above it, the button. After pressing it, "Your answers have been withdrawn" in the heading face, then its sentence.
+- **A dead link** (a wrong, expired or revoked link), **a used one** (the landing page's link again, after starting from it) and **a frozen one** (answer collection frozen, ticket 55): the first two are a title and a sentence; the frozen landing page and own page show the card with its heading in the heading face.
+- **Stop reminders** (a reminder's stop link): the title, then a card with the sentence and, with room above it, the button; once pressed, "Reminders stopped" in the heading face.
+- **An error page** (`/no-such-page/` with `DEBUG` off): the title, the message, then "Go to the homepage" a clear gap below it.
+
+The coach's page (the coach's link, in a private window):
+- Before answering: "… has asked you to be their coach" as the title, then the card of commitments, "What you'd be agreeing to" at the size of the participant's coach checklist headings, not as large as the title.
+- Accepted ("Thank you — … will be told", or later "You're …'s coach") and declined ("That's a good answer"): the green or amber box with its heading at that same card size.
+- Once shared: the guide, then "…'s results" and "How others experience …" as titles the size of the participant's results title, with the results and comparison beneath as the participant's own pages draw them, and at phone width the comparison stacks as theirs does.
+
+The account pages (signed out unless said):
+- **Sign in, sign up, password reset** (and its email's new-password page): the title, the line beneath it, the form in its pale box, the button across it.
+- **Sign out** (`/accounts/logout/` opened directly): the question, then "Sign Out" alone, with no empty box round it.
+- **Consent:** "Before you begin" as the title; "What is stored", "Who sees what" and "Your choice" smaller than it, each with room above. "I agree" and "I do not agree" as before. **Consent not given:** "Read the text again", then "Sign out" a line below it, not touching it.
+- **Joining a group** (`/join/<token>/`): "Join …?" as the title, what the admins see, "Join", then "Not now, go to your pathway" a line below. "You're already in this group" and "This link no longer works" are a title with their button or sentence.
+
+Google sign-in's own pages (needs the Google client pair, as above):
+- **Finishing a sign-up:** "Sign up with Google", then "You're signing up with your Google account. One last step: please fill in this form.", the form, and "Sign up". Not "You are about to use your Google account to login to example.com".
+- **Going on to Google** (`/accounts/google/login/` opened directly): "Sign in with Google", "You're about to sign in with your Google account.", then "Continue" alone, with no empty box round it.
+- **Cancelled** (cancel at Google's account chooser): "Sign-in cancelled", then "You cancelled signing in with your Google account. If you didn't mean to, you can sign in again.", "sign in" leading to sign in.
+- **Failed** (`/accounts/3rdparty/login/error/` opened directly): "Signing in with Google didn't work", then "Something went wrong while signing you in with your Google account. You can try again.", "try again" leading to sign in.
+
+The homepage (`/`):
+- The headline is "Everyone has a purpose. Do you know yours?", as v3's is; so is the heading of the callings carousel near the foot.
+- Beneath the hero, "Whatever You Do is a pathway for discerning your purpose." then a row of small cream pills: Scripture, Strengths assessment, Peer feedback, Mentor oversight, Workbook. At phone width they wrap onto two or three centred lines.
+- Nothing offers what does not exist yet: no newsletter card, no "Get in touch" card or email address, no "Support our work" section or donation, and no "Ask us about coaching", "Talk to us" or "Ask about supporting the work". The coach band in "How it works" is its icon and sentence alone, and the churches section ends with its three points.
+- "Ideas to explore" keeps its three pieces of writing, and the story from a parent follows it.
 
 ## Before we begin as a wizard (ticket 50; load the pathway again first, then sign up as someone new)
 

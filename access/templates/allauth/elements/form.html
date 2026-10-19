@@ -2,7 +2,8 @@
 {# For licensing information see ../../../../LICENSE.md #}
 {% load allauth %}
 {# ✨ allauth's form element, given the prototype's form-panel class so the stylesheet's existing rules apply. #}
-<form class="name-section" method="{{ attrs.method }}"
+{# ✨ A form with no fields to fill (signing out, going on to Google) is its button alone, with no empty panel round it (ticket 53c). #}
+<form{% if not attrs.no_visible_fields %} class="name-section"{% endif %} method="{{ attrs.method }}"
       {% if attrs.action %}action="{{ attrs.action }}"{% endif %}>
     {% slot body %}
     {% endslot %}
