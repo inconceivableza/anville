@@ -4,7 +4,7 @@
 
 **Blocked by:** C1A-53a (One set of styles); C1B-46 (The demo notice on every page); A5A-52 (Workbook and Section 1 gates); B1B-42 (Observers skip fine-tuning quickly); B2B-55 (Answer collection freezes once results are viewed)
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 2b (continued from 19 Oct)
 
