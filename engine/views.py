@@ -39,6 +39,7 @@ from engine.document.blocks import (
     break_after,
     coach_brief,
     landing_of,
+    link_shown,
     page_count,
     page_of,
     pages_of,
@@ -60,6 +61,7 @@ from engine.document.aggregation import aggregate
 from engine.document.gates import clauses_of, has_content, links_issued_key
 from engine.document.scoring import score
 from engine.hub import (
+    COMPLETE,
     block_ids_fixed_on_completion,
     complete_sections,
     hub_for,
@@ -1835,6 +1837,12 @@ def _block_for_participant(document, block, answers, fixed, states, issued=None,
         for passage, shown in zip(block["passages"], text["passages"]):
             shown["translation"] = translation_shown(document, passage)
     is_checklist = block["type"] == "coach_checklist"
+    link = states.get(block["section"]) if block["type"] == "section_link" else None
+    results = None
+    if link is not None:
+        linked = section_by_id(document, block["section"])
+        text, sort = link_shown(block, text, linked, link.status == COMPLETE, "participant")
+        results = reverse("results", args=[sort]) if sort else None
     return {
         "rows": _contact_rows(block, answers, issued) if block["type"] == "contact_list" else None,
         "checklist": _opening_checklist(text, _coach_kept(answers, block["id"]), issued) if is_checklist else None,
@@ -1847,7 +1855,8 @@ def _block_for_participant(document, block, answers, fixed, states, issued=None,
         "answer": answers.get(block["id"]),
         "is_fixed": block["id"] in fixed,
         "widget": widget(document, "participant", "") if widget else None,  # ✨ the participant's wording names no one
-        "link": states.get(block["section"]) if block["type"] == "section_link" else None,
+        "link": link,
+        "results": results,  # ✨ where a section link's button leads instead, once its section is complete (ticket 61)
         "frozen": RESULTS_SEEN if frozen and block["type"] == "contact_list" else None,
         "drawn": drawn,
     }

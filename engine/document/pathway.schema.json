@@ -789,6 +789,16 @@
           "description": "The wording of a button that leads there, such as 'Open Strengths Assessment →'. Without one, the section's title is the link.",
           "$ref": "#/$defs/text"
         },
+        "finished": {
+          "description": "What the link says once the linked section is complete, in place of its body and button label, such as 'View my results →'. Its button then leads to the results of the sort in that section, if it holds one, and otherwise to the section.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["button_label"],
+          "properties": {
+            "body": { "$ref": "#/$defs/text" },
+            "button_label": { "$ref": "#/$defs/text" }
+          }
+        },
         "holds_what_follows": {
           "description": "Hold the rest of this section shut until the linked section's gate passes, as a scripture reading does until it is confirmed.",
           "type": "boolean",
