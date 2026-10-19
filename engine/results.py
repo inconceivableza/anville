@@ -185,10 +185,7 @@ def comparison_page(document, scores, sort, observer_average):
         def worded(percent):
             return text_for(standing(document, percent, constructs), "participant")
 
-        pairs = [
-            (bar, observed[scored["framework"]][construct["construct"]])
-            for bar, construct in zip(framework["bars"], scored["constructs"])
-        ]
+        pairs = [(bar, observed[scored["framework"]][bar["construct"]]) for bar in framework["bars"]]
         # ✨ The results page's axis, so each mark of the participant's sits where it does there.
         top = _axis_top(constructs)
         for bar, others in pairs:
@@ -337,6 +334,12 @@ def _at(percent, top):
 
 def _framework(document, framework, presentation, ranked_constructs, shares, construct_presentation, items, sort, role):
     labels = {construct["id"]: text_for(construct["label"], role) for construct in framework["constructs"]}
+    # ✨ Listed by unrounded share, highest first, as they are drawn, so a shorter bar is never above a longer one;
+    # exact ties keep the order declared. Ordered here, never stored, so a result stored before is ordered so too.
+    declared = [construct["id"] for construct in framework["constructs"]]
+    ranked_constructs = sorted(
+        ranked_constructs, key=lambda c: (-shares[c["construct"]], declared.index(c["construct"]))
+    )
     by_rank = presentation.get("bars") == "rank"
     ranks = bar_ranks([construct["percent"] for construct in ranked_constructs])
     constructs = len(framework["constructs"])
@@ -346,6 +349,7 @@ def _framework(document, framework, presentation, ranked_constructs, shares, con
         shown = construct_presentation.get(construct["construct"], {})
         bars.append(
             {
+                "construct": construct["construct"],
                 "label": labels[construct["construct"]],
                 "percent": construct["percent"],
                 # ✨ From the unrounded share, so the words never round a construct into a band it is short of.

@@ -30,6 +30,19 @@ def test_two_constructs_a_fraction_apart_are_drawn_apart_on_the_results():
     assert (bars["Apostle"]["at"], bars["Prophet"]["at"]) == (50.25, 49.75)
 
 
+def test_constructs_on_the_same_rounded_percent_are_listed_by_unrounded_share_highest_first():
+    """✨ Prophet's 100 of 199 is 50.25% and Apostle's 99 is 49.75%: both 50, so the stored result keeps Apostle, declared
+    first, ahead. The page lists Prophet first, as it is drawn."""
+    document = sort_pathway()
+    sort = complete_sort(a5={"bucket": "strength", "value": 99}, p1={"bucket": "strength", "value": 100})
+    stored = score(document, sort)
+    assert [c["construct"] for c in stored["frameworks"][0]["constructs"]] == ["apostle", "prophet"]
+
+    bars = results_page(document, stored, sort, "Sam")["frameworks"][0]["bars"]
+
+    assert [(bar["label"], bar["at"]) for bar in bars] == [("Prophet", 50.25), ("Apostle", 49.75)]
+
+
 def test_a_re_weighted_result_is_drawn_at_its_unrounded_shares():
     """✨ A third item, on Prophet and Deliver, ties Apostle and Prophet at 50 each and leaves PEP clear. Prophet chosen
     twice takes 200/3 to Apostle's 100/3, so they sit at 66.67 and 33.33, not 67 and 33."""
