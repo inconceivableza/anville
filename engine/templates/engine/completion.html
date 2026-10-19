@@ -21,7 +21,7 @@
       {% include "engine/previous_page.html" %}
       <form method="post" action="{% url 'move_past_page' section.id page.number %}">
         {% csrf_token %}
-        <button type="submit" class="pill full"{% if unmet %} disabled{% endif %}>{{ page.continue_label }}</button>
+        <button type="submit" class="pill full"{% if unmet %} disabled{% endif %}>Continue →</button>
       </form>
     </div>
     {% include "engine/gate_checklist.html" %}

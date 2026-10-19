@@ -617,11 +617,6 @@ def _coach_link_state(contact_id, issued=None):
     }
 
 
-def _coach_declined(contact_id):
-    """✨ Whether the coach kept declined, through the link they still have an answer on."""
-    return Invitation.objects.filter(contact_id=contact_id, coach_answer=Invitation.CoachAnswer.DECLINED).exists()
-
-
 def _saved(request, state, section, block_id):
     """✨ What a stored answer sends back: with htmx, the status and its page's gate; without, its page again.
 
@@ -1699,7 +1694,6 @@ def _section_page(state, section, page=1, issued=None):
             "number": page,
             "count": page_count(section),
             "is_last": is_last,
-            "continue_label": _continue_label(section, page, answers),
         },
         "pathway": {
             "version_id": version.pk,
@@ -1780,19 +1774,6 @@ def _requirement_links(state, section):
             _block_address(document, block["id"]) if is_coach else reverse("invitations")
         )
     return links
-
-
-def _continue_label(section, page, answers):
-    """✨ "Continue →", or on a page holding a coach kept, "Continue with Sam →". Choosing someone else shows the
-    checklist's own "Continue →" just above, so the page's way on names the coach it goes on with, to read apart. A
-    coach who declined is not gone on with, so the way on is "Continue without a coach →"."""
-    for block in pages_of(section)[page - 1]:
-        coach = _coach_kept(answers, block["id"]) if block["type"] == "coach_checklist" else None
-        if coach and "id" in coach and _coach_declined(coach["id"]):
-            return "Continue without a coach →"
-        if coach:
-            return f"Continue with {coach['name']} →"
-    return "Continue →"
 
 
 def _published_version(posted):

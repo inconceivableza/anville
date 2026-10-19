@@ -17,7 +17,7 @@ import pytest
 from engine.models import Response
 from tests.documents import pathway_document, scripture_reading, sort_pathway, translated
 from tests.journeys.pages import gate_checklist, main_of, version_on
-from tests.journeys.test_coach_checklist import step, the_coach_checklist
+from tests.journeys.test_coach_checklist import choose, step, the_coach_checklist
 from tests.journeys.test_hub import hub_entry, signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_navigation import section_in, sidebar_of
 
@@ -291,6 +291,18 @@ def test_without_javascript_a_coach_checklist_step_returns_the_page_it_is_on(sig
     assert 'data-screen="questions"' in page
     assert WHY_PROMPT not in page
     assert way_on(page)[0] == "/sections/onboarding/pages/2/continue/"
+
+
+@pytest.mark.django_db
+def test_a_page_whose_coach_checklist_holds_a_coach_kept_goes_on_with_continue(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    """✨ Not "Continue with Sam →": every page's way on reads "Continue →" (ticket 60)."""
+    load_pathway(paged_onboarding(second_page=[the_coach_checklist()]))
+    through_to(signed_in_client, 2)
+    choose(signed_in_client)
+
+    assert way_on(shown(signed_in_client, SECOND))[:2] == ("/sections/onboarding/pages/2/continue/", "Continue →")
 
 
 @pytest.mark.django_db
