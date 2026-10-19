@@ -29,6 +29,12 @@ NOTICE = "This is a demo. Use made-up details, not your own: anything entered he
 FULL, SMALLER = 'class="demo-notice"', 'class="demo-strip"'
 
 
+@pytest.fixture(autouse=True)
+def no_notice_from_the_environment(settings):
+    """✨ Each test starts with no notice, whatever the developer's `.env` sets; `a_demo` turns it on."""
+    settings.ANVILLE_DEMO_NOTICE = ""
+
+
 @pytest.fixture
 def a_demo(settings):
     settings.ANVILLE_DEMO_NOTICE = NOTICE
