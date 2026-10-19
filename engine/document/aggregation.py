@@ -21,8 +21,8 @@ def aggregate(document, answers):
     however high they set their sliders. The mean averages each observer's unrounded share and rounds once. Each
     observer's percent is the one their own result would show, given in ascending order and never in the order they
     answered, so no value can be paired with a person. Beside them, the mean and each observer's share unrounded and
-    exact (`share`, `per_observer_shares`, ascending too), which the comparison draws and words (ADR 0018). Constructs keep the order they were declared in, so they line
-    up with the participant's.
+    exact (`share`, `per_observer_shares`, ascending too), which the comparison draws, words, and works its gaps and agreement band out from (ADR 0018). Constructs keep
+    the order they were declared in, so they line up with the participant's.
     """
     if len(answers) < minimum_observers(document):
         return {"observers": len(answers), "frameworks": None}
@@ -40,7 +40,7 @@ def aggregate(document, answers):
                         "construct": construct["id"],
                         "percent": round_half_up(fmean(each[framework["id"]][construct["id"]] for each in unrounded)),
                         "per_observer": sorted(each[framework["id"]][construct["id"]] for each in percents),
-                        # ✨ The same, unrounded and exact, for the comparison to draw and word (ADR 0018).
+                        # ✨ The same, unrounded and exact, for the comparison to draw, word and measure (ADR 0018).
                         "share": sum(each[framework["id"]][construct["id"]] for each in exact) / len(exact),
                         "per_observer_shares": sorted(each[framework["id"]][construct["id"]] for each in exact),
                     }

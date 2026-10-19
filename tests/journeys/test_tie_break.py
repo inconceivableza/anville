@@ -305,6 +305,33 @@ def test_a_result_re_weighted_before_its_shares_were_kept_still_renders_with_its
 
 
 @pytest.mark.django_db
+def test_a_result_re_weighted_before_its_shares_were_kept_still_shows_its_gaps_on_the_comparison(marked, participant):
+    """✨ Kept as whole numbers only, Prophet's 67 and Apostle's 33 are read as its shares: 17 from the observers' 50
+    each."""
+    answer_every_pair(marked, CHOSE_PROPHET)
+    result = Result.objects.get()
+    result.reweighted = {
+        **result.reweighted,
+        "frameworks": [
+            {
+                "framework": framework["framework"],
+                "constructs": [{k: v for k, v in c.items() if k != "share"} for c in framework["constructs"]],
+            }
+            for framework in result.reweighted["frameworks"]
+        ],
+    }
+    result.save()
+    response = Response.objects.get(participant=participant)
+    for _ in range(3):
+        an_observer(response, TIED_ON_ONE)
+
+    page = text_of(comparison(marked).content.decode())
+
+    assert in_order(page, "Prophet (APEST(d))", "You rate higher (+17)")
+    assert in_order(page, "Apostle (APEST(d))", "Others rate higher (+17)")
+
+
+@pytest.mark.django_db
 def test_the_comparison_sets_the_re_weighted_result_beside_the_observers_sorts_as_sent(marked, participant):
     """✨ The observers sent TIED_ON_ONE too, so their mean is 50 each: Present, never re-weighted."""
     answer_every_pair(marked, CHOSE_PROPHET)
