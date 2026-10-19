@@ -10,6 +10,7 @@ import tests.documents
 from engine.document import validate
 from engine.document.scoring import round_half_up, unrounded_shares
 from engine.document.tie_break import outcomes, pair_plan, reweigh, tie_break
+from engine.results import results_page
 from tests.documents import sort_pathway
 
 APEST = ["apostle", "prophet", "evangelist", "shepherd", "teacher", "deacon"]
@@ -357,6 +358,44 @@ def test_a_tied_framework_with_no_pairs_asked_is_left_as_sorted_with_no_outcome(
 
     assert outcomes(reweighted) == {"apest": "top_changed"}
     assert percents(reweighted, "pep") == percents(BOTH_TIED, "pep")
+
+
+# ✨ With the placeholder bands, an even share of 16.67 makes Leading 20.83, Strong 17.5 and Present 14.17. APEST(d):
+# Apostle 21 (Leading) and Prophet 20.5 (Strong) are too close to call, the rest Present; PEP is flat and not too
+# close to call (18 is just over 5% more than 17). Not a generalist, for Apostle leads.
+LEADING_ALONE = result([2100, 2050, 1475, 1475, 1450, 1450], [1800, 1700, 1650, 1650, 1600, 1600])
+
+
+def drawn_after(answers):
+    """✨ The results page's APEST(d), as `[(construct, standing), ...]` in its order, its tie-break wording and its
+    generalist's, after the tie-break's `answers` on LEADING_ALONE."""
+    pathway = planned()
+    pathway.update(title="Results", instrument={"items": []})
+    pathway["presentation"] = {
+        key: value for key, value in with_a_tie_break()["presentation"].items() if key in ("generalist", "tie_break")
+    }
+    page = results_page(pathway, reweigh(pathway, LEADING_ALONE, answers), {}, "Sam")
+    apest = page["frameworks"][0]
+    return [(bar["label"], bar["standing"]) for bar in apest["bars"]], apest["tie_break"], page["generalist"]
+
+
+def test_a_re_weighted_result_that_comes_out_flat_never_says_generalist_beside_its_outcome():
+    """✨ One choice each shares 41.5 equally: 20.75 each, Strong, so every APEST(d) construct now stands between."""
+    bars, said, generalist = drawn_after(answered(("apostle", "prophet", "apostle"), ("apostle", "prophet", "prophet")))
+
+    assert said["heading"] == "Genuinely balanced"
+    assert generalist is None
+    assert bars[:2] == [("apostle", "Strong"), ("prophet", "Strong")]
+
+
+def test_a_separated_frameworks_standings_put_the_construct_it_names_first():
+    """✨ Prophet chosen twice takes two thirds of 41.5: 27.67, Leading, to Apostle's 13.83, Less used."""
+    bars, said, generalist = drawn_after(answered(("apostle", "prophet", "prophet"), ("apostle", "prophet", "prophet")))
+
+    assert said["text"] == "The top changed."
+    assert generalist is None
+    assert bars[0] == ("prophet", "Leading")
+    assert ("apostle", "Less used") in bars
 
 
 def with_a_tie_break(**settings):

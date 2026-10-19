@@ -104,8 +104,10 @@ def results_page(document, scores, sort, name, role="participant"):
 
 def _generalist(document, scores, presentation, role):
     """✨ The document's words telling a participant flat on both frameworks that they are a generalist (ADR 0018), or
-    None for anyone else. Read from the participant's own stored result, the only one this page is given."""
-    if tie_break(document, scores)["outcome"] != GENERALIST:
+    None for anyone else. Read from the participant's own stored result, the only one this page is given. A result the
+    tie-break re-weighted never says it, even where re-weighting left it flat: a generalist is asked nothing, and its
+    frameworks already say how their pairs came out."""
+    if outcomes(scores) or tie_break(document, scores)["outcome"] != GENERALIST:
         return None
     wording = presentation["generalist"]
     return {"heading": text_for(wording["heading"], role), "text": text_for(wording["text"], role)}
