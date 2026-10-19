@@ -134,9 +134,9 @@ Page by page:
 - **Results:** each framework is a card. Each construct's name sits on the left and its standing on the right, with a gap between them even at phone width, where a long name wraps rather than running into its standing. Every drawing, the generalist's box and a framework's tie-break box are as D5-59b left them, in the construct colours as before. "Compare with how others see you →" is centred below.
 - **"Before you look"** (the freeze warning): its pale green box, then "Compare with how others see you →", centred.
 - **The comparison:** the illustrative note is amber with its right-hand corners rounded. "You" is green and "Others" blue as before. The largest gaps and the questions to reflect on are cards, and "← Return to …" is at the foot. At phone width each construct stacks: its name, then the drawing, then the words.
-- **Removing a contact** (without JavaScript, a person's "Remove" on the contact list), **Your groups** and **Your organisations** (from the hub's foot): framed like the rest, with their forms and buttons as before.
+- **Removing a contact** (without JavaScript, a person's "Remove" on the contact list): framed like the rest, with its form and buttons as before.
 - **Credits:** signed in, framed with the header; signed out, plain cream with no frame and no header.
-- **Not framed:** the wizard (Before we begin as new), the observer's pages, the coach's link, sign in, sign up and consent all stay plain cream, with no brown frame (their look is checked below, ticket 53c).
+- **Not framed:** the wizard (Before we begin as new), the observer's pages, the coach's link, sign in, sign up, consent, and the organisations pages (Your groups, Your organisations, leaving a group, replacing a join link, and "This page is for admins") all stay plain cream, with no brown frame (their look is checked below, ticket 53c).
 
 ## The observer's, coach's and account pages in the new look (ticket 53c; each at a wide screen and at about 375px)
 
@@ -164,6 +164,14 @@ The account pages (signed out unless said):
 - **Sign out** (`/accounts/logout/` opened directly): the question, then "Sign Out" alone, with no empty box round it.
 - **Consent:** "Before you begin" as the title; "What is stored", "Who sees what" and "Your choice" smaller than it, each with room above. "I agree" and "I do not agree" as before. **Consent not given:** "Read the text again", then "Sign out" a line below it, not touching it.
 - **Joining a group** (`/join/<token>/`): "Join …?" as the title, what the admins see, "Join", then "Not now, go to your pathway" a line below. "You're already in this group" and "This link no longer works" are a title with their button or sentence.
+
+The organisations pages (signed in; these keep the participant header, the one difference from the checks above):
+- **Your groups** (from the hub's foot): plain cream with the header and no brown frame; "Your groups" as the title, then each group's name, its organisation, what its admins see and "Leave this group". With none, "You're not in any groups."
+- **Leaving a group** ("Leave this group"): "Leave …?" as the title, its sentence, then "Leave this group" and "Stay in this group" across the width, one beneath the other.
+- **Your organisations** (signed in as an admin, from the hub's foot): "Your organisations" as the title, each organisation's groups with their join links, and the "New group" form as before.
+- **Replacing a join link** (an admin's "Replace link" under a group): "Replace the join link for …?" as the title, its sentence, then "Replace link" and "Keep this link" as leaving's buttons are.
+- **This page is for admins** (`/organisations/` opened directly, signed in as someone who is not an admin): the title, its sentence, then "Go to your pathway".
+- At about 375px, each of these: the header fits, the words sit about 16px in from the edges, the buttons fill the width, and nothing scrolls sideways.
 
 Google sign-in's own pages (needs the Google client pair, as above):
 - **Finishing a sign-up:** "Sign up with Google", then "You're signing up with your Google account. One last step: please fill in this form.", the form, and "Sign up". Not "You are about to use your Google account to login to example.com".

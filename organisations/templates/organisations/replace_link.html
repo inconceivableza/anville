@@ -1,5 +1,6 @@
 {% extends "engine/participant.html" %}
 {# ✨ The confirmation before an admin replaces a group's join link (ticket A5). Nothing changes until the form is sent. #}
+{% block body_class %}{% endblock body_class %}
 {% block head_title %}Replace the join link for {{ group.name }}{% endblock head_title %}
 
 {% block content %}
