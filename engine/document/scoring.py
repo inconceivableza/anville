@@ -39,10 +39,21 @@ def unrounded_shares(result):
     """✨ A stored result's shares before rounding, as `{framework: {construct: share}}` (ADR 0018).
 
     A result whose method keeps what its shares were made from has them worked out again from it, exactly; any other
-    result, such as one the tie-break re-weighted, gives its percents as stored.
+    result, such as one the tie-break re-weighted, gives the exact share it keeps beside each percent, or the percent
+    where it keeps none, as one re-weighted before ticket 59b.
     """
-    method = METHODS.get(result.get("method"), {}).get("stored_shares", percents_by_construct)
+    method = METHODS.get(result.get("method"), {}).get("stored_shares", _kept_shares)
     return method(result)
+
+
+def _kept_shares(result):
+    return {
+        framework["framework"]: {
+            construct["construct"]: Fraction(construct["share"]) if "share" in construct else construct["percent"]
+            for construct in framework["constructs"]
+        }
+        for framework in result["frameworks"]
+    }
 
 
 def _compositional_stored_shares(result):

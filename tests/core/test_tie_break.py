@@ -8,8 +8,8 @@ import pytest
 
 import tests.documents
 from engine.document import validate
-from engine.document.scoring import round_half_up
-from engine.document.tie_break import pair_plan, reweigh, tie_break
+from engine.document.scoring import round_half_up, unrounded_shares
+from engine.document.tie_break import outcomes, pair_plan, reweigh, tie_break
 from tests.documents import sort_pathway
 
 APEST = ["apostle", "prophet", "evangelist", "shepherd", "teacher", "deacon"]
@@ -252,8 +252,8 @@ def test_re_weighting_a_tied_framework_gives_a_clear_leader_where_the_choices_gi
         ("deacon", 11),
         ("evangelist", 9),
     ]
-    assert reweighted["tie_break"] == {"framework": "apest", "outcome": "top_changed"}
-    assert reweighted["frameworks"][1] == sent["frameworks"][1]
+    assert outcomes(reweighted) == {"apest": "top_changed"}
+    assert percents(reweighted, "pep") == percents(sent, "pep")
     assert reweighted["method"] != sent["method"]
 
 
@@ -267,7 +267,7 @@ def test_a_leader_the_choices_keep_is_kept_and_said_to_be_the_same():
     )
 
     assert percents(reweighted)[:2] == [("prophet", 31), ("shepherd", 20)]
-    assert reweighted["tie_break"]["outcome"] == "same_top"
+    assert outcomes(reweighted) == {"apest": "same_top"}
 
 
 # ✨ Of the four tied in FLAT (68 points between them), Apostle beats Prophet, Prophet beats Shepherd and Shepherd
@@ -281,6 +281,16 @@ IN_A_CIRCLE = answered(
     ("shepherd", "deacon", None),
 )
 ALL_SKIPPED = answered(*[(*answer["constructs"], None) for answer in IN_A_CIRCLE])
+# ✨ Apostle beats Prophet and Prophet beats Apostle, the rest skipped: no circle, but Apostle and Prophet share the
+# best weight.
+LEVEL_AT_THE_TOP = answered(
+    ("apostle", "prophet", "apostle"),
+    ("apostle", "shepherd", None),
+    ("apostle", "deacon", None),
+    ("prophet", "shepherd", None),
+    ("prophet", "deacon", None),
+    ("apostle", "prophet", "prophet"),
+)
 
 
 @pytest.mark.parametrize(
@@ -288,15 +298,65 @@ ALL_SKIPPED = answered(*[(*answer["constructs"], None) for answer in IN_A_CIRCLE
     [
         # ✨ Each of the three weighs 4/3 and Deacon 1, so 68 × (4/3) / 5 = 18.13 each and 13.6 for Deacon.
         (IN_A_CIRCLE, "circle", {"apostle": 18, "prophet": 18, "shepherd": 18, "deacon": 14}),
-        (ALL_SKIPPED, "level", {"apostle": 17, "prophet": 17, "shepherd": 17, "deacon": 17}),
+        # ✨ Apostle and Prophet each win 1 of 4 and weigh 1.25 to Shepherd's and Deacon's 1: 68 × 1.25 / 4.5 = 18.89
+        # and 68 / 4.5 = 15.11.
+        (LEVEL_AT_THE_TOP, "level", {"apostle": 19, "prophet": 19, "shepherd": 15, "deacon": 15}),
     ],
-    ids=["in a circle", "every pair skipped"],
+    ids=["in a circle", "level at the top"],
 )
-def test_choices_that_go_in_a_circle_or_pick_no_one_are_balanced_with_no_winner_forced(answers, outcome, shares):
+def test_choices_that_go_in_a_circle_or_leave_the_best_level_are_balanced_with_no_winner_forced(
+    answers, outcome, shares
+):
     reweighted = reweigh(planned(), result(FLAT, CLEAR_PEP), answers)
 
-    assert reweighted["tie_break"] == {"framework": "apest", "outcome": outcome}
+    assert outcomes(reweighted) == {"apest": outcome}
     assert {construct: percent for construct, percent in percents(reweighted) if construct in shares} == shares
+
+
+def test_every_pair_skipped_is_an_outcome_of_its_own_and_leaves_the_framework_as_sorted():
+    sent = result(FLAT, CLEAR_PEP)
+
+    reweighted = reweigh(planned(), sent, ALL_SKIPPED)
+
+    assert outcomes(reweighted) == {"apest": "skipped"}
+    assert percents(reweighted) == percents(sent)
+    assert unrounded_shares(reweighted) == unrounded_shares(sent)
+
+
+# ✨ ADR 0018's worked example on both frameworks: Deacon 2017 and Evangelist 1960 of 10001 on APEST(d), Deliver and
+# Assess on PEP.
+BOTH_TIED = result(REVIEW_WALK, REVIEW_WALK)
+CHOSE_EVANGELIST_TWICE = answered(("deacon", "evangelist", "evangelist"), ("deacon", "evangelist", "evangelist"))
+SKIPPED_ON_PEP = answered(("deliver", "assess", None), ("deliver", "assess", None), framework="pep")
+ASSESS_THEN_DELIVER = answered(("deliver", "assess", "assess"), ("deliver", "assess", "deliver"), framework="pep")
+
+
+def test_with_pairs_on_both_frameworks_each_is_re_weighted_from_its_own_answers_with_its_own_outcome():
+    """✨ Evangelist chosen twice weighs 2 to Deacon's 1, so takes two thirds of their 3977 / 10001: 26.51 to 13.26.
+    PEP, every pair skipped, is as the sort left it."""
+    reweighted = reweigh(planned(), BOTH_TIED, CHOSE_EVANGELIST_TWICE + SKIPPED_ON_PEP)
+
+    assert outcomes(reweighted) == {"apest": "top_changed", "pep": "skipped"}
+    assert percents(reweighted)[0] == ("evangelist", 27)
+    assert dict(percents(reweighted))["deacon"] == 13
+    assert percents(reweighted, "pep") == percents(BOTH_TIED, "pep")
+
+
+def test_one_frameworks_answers_never_change_the_other():
+    apest_alone = reweigh(planned(), BOTH_TIED, CHOSE_EVANGELIST_TWICE)
+    beside_pep = reweigh(planned(), BOTH_TIED, CHOSE_EVANGELIST_TWICE + ASSESS_THEN_DELIVER)
+
+    assert percents(beside_pep) == percents(apest_alone)
+    assert unrounded_shares(beside_pep)["apest"] == unrounded_shares(apest_alone)["apest"]
+    assert outcomes(beside_pep) == {"apest": "top_changed", "pep": "level"}
+
+
+def test_a_tied_framework_with_no_pairs_asked_is_left_as_sorted_with_no_outcome():
+    """✨ A budget of one asks only APEST(d)'s first pair."""
+    reweighted = reweigh(planned(budget=1), BOTH_TIED, CHOSE_EVANGELIST_TWICE[:1])
+
+    assert outcomes(reweighted) == {"apest": "top_changed"}
+    assert percents(reweighted, "pep") == percents(BOTH_TIED, "pep")
 
 
 def with_a_tie_break(**settings):

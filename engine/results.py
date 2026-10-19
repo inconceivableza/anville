@@ -17,7 +17,17 @@ from engine.document.observers import minimum_observers
 from engine.document.scoring import percents_by_construct, unrounded_shares
 from engine.document.standing import standing
 from engine.document.text import text_for
-from engine.document.tie_break import BALANCED, CIRCLE, GENERALIST, LEVEL, SAME_TOP, TOP_CHANGED, tie_break
+from engine.document.tie_break import (
+    BALANCED,
+    CIRCLE,
+    GENERALIST,
+    LEVEL,
+    SAME_TOP,
+    SKIPPED,
+    TOP_CHANGED,
+    outcomes,
+    tie_break,
+)
 
 # ✨ The stylesheet defines --rank-1 to --rank-6; every rank below the sixth takes the sixth colour.
 RANK_COLOURS = 6
@@ -102,16 +112,19 @@ def _generalist(document, scores, presentation, role):
 
 
 def _after_tie_break(presentation, scores, framework, role):
-    """✨ What the results page says of a framework the tie-break re-weighted (ticket 30c), in the document's words, or
-    None for any other: separated, with a new leader or the same one, or genuinely balanced, the choices having gone in
-    a circle or left the best of them level, with no winner named."""
-    broken = scores.get("tie_break")
-    if broken is None or broken["framework"] != framework:
+    """✨ What the results page says of a framework the tie-break re-weighted (ticket 30c, ADR 0018), in the document's
+    words, or None for any other: separated, with a new leader or the same one; genuinely balanced, the choices having
+    gone in a circle or left the best of them level, with no winner named; or every pair skipped. A pathway version
+    loaded before skipping had words of its own says it as it said it then, as level."""
+    outcome = outcomes(scores).get(framework)
+    if outcome is None:
         return None
     wording = presentation["tie_break"]
-    outcome = broken["outcome"]
-    said = wording["balanced"] if outcome in BALANCED else wording["separated"]
-    text = {TOP_CHANGED: "changed", SAME_TOP: "same", CIRCLE: "circle", LEVEL: "level"}[outcome]
+    if outcome == SKIPPED and "skipped" in wording:
+        said, text = wording["skipped"], "text"
+    else:
+        said = wording["balanced"] if outcome in (*BALANCED, SKIPPED) else wording["separated"]
+        text = {TOP_CHANGED: "changed", SAME_TOP: "same", CIRCLE: "circle", LEVEL: "level", SKIPPED: "level"}[outcome]
     return {"heading": text_for(said["heading"], role), "text": text_for(said[text], role)}
 
 

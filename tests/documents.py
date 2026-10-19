@@ -174,6 +174,7 @@ def with_a_tie_break(document, **settings):
         "frameworks": {"apest": "Your role among people", "pep": "How you work"},
         "separated": {"heading": "Separated", "changed": "The top changed.", "same": "The same one leads."},
         "balanced": {"heading": "Genuinely balanced", "circle": "They went in a circle.", "level": "None came ahead."},
+        "skipped": {"heading": "Every pair skipped", "text": "As your sort left them."},
     }
     return document
 
