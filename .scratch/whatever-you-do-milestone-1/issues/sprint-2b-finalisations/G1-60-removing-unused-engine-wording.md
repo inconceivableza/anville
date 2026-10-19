@@ -4,17 +4,17 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (continued from 19 Oct)
 
 **Spec:** Blocks; Open content and product items
 
-- [ ] A page break no longer takes a skip label: the schema and the linter refuse one, and the README no longer describes it
-- [ ] A page's way on is always "Continue →", whatever its coach checklist holds
-- [ ] The coach checklist's own steps are unchanged, its "Continue →" buttons and its "Keep Sam" included
-- [ ] Tests that set up a skip label, or the coach-named way on, are removed with them, and no test strips a skip label from a pathway any more
-- [ ] Both pathway files and the example still load and pass the linter
+- [x] A page break no longer takes a skip label: the schema and the linter refuse one, and the README no longer describes it
+- [x] A page's way on is always "Continue →", whatever its coach checklist holds
+- [x] The coach checklist's own steps are unchanged, its "Continue →" buttons and its "Keep Sam" included
+- [x] Tests that set up a skip label, or the coach-named way on, are removed with them, and no test strips a skip label from a pathway any more
+- [x] Both pathway files and the example still load and pass the linter
 
 **Context**
 
