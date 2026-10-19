@@ -101,13 +101,13 @@
           "properties": { "method": { "enum": ["compositional_share"] } }
         },
         "tie_break": {
-          "description": "When a participant's own sort leaves a framework's leaders too close to call (ticket 30a). A framework is tied when another construct's rounded percent is within threshold points of its leader's; at most cluster constructs, leader first, enter the tie-break. Tied on exactly one framework, the participant is marked for the tie-break; on both, they are told they are a generalist, in presentation.generalist's wording. With no tie_break, nobody is marked.",
+          "description": "When a participant's own sort leaves a framework's leaders too close to call (ticket 30a, ADR 0018). A framework is tied when its leader's unrounded share is at most percent more than another construct's; at most cluster constructs, leader first, enter the tie-break. A participant tied on one framework or both is marked for the tie-break, unless every construct on every framework stands in a band between the lowest and the highest (presentation.standing): then they are flat, and told they are a generalist in presentation.generalist's wording, with nothing asked. With no tie_break, nobody is marked.",
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "threshold": {
-              "description": "How many percentage points behind its leader a construct may be and still tie with it. 4 when left out.",
-              "type": "integer",
+            "percent": {
+              "description": "How much more than another construct's unrounded share, as a percent of it, a leader's may be and still be too close to call with it. 5 when left out.",
+              "type": "number",
               "minimum": 0,
               "maximum": 100
             },
@@ -254,7 +254,7 @@
         },
         "disclaimer": { "$ref": "#/$defs/text" },
         "generalist": {
-          "description": "What the results page tells a participant tied on both frameworks (measurement.tie_break): that they are a generalist. Needed whenever the pathway has a tie-break.",
+          "description": "What the results page tells a participant flat on both frameworks (measurement.tie_break): that they are a generalist. Needed whenever the pathway has a tie-break.",
           "type": "object",
           "additionalProperties": false,
           "required": ["heading", "text"],
@@ -784,6 +784,16 @@
         "button_label": {
           "description": "The wording of a button that leads there, such as 'Open Strengths Assessment →'. Without one, the section's title is the link.",
           "$ref": "#/$defs/text"
+        },
+        "finished": {
+          "description": "What the link says once the linked section is complete, in place of its body and button label, such as 'View my results →'. Its button then leads to the results of the sort in that section, if it holds one, and otherwise to the section.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["button_label"],
+          "properties": {
+            "body": { "$ref": "#/$defs/text" },
+            "button_label": { "$ref": "#/$defs/text" }
+          }
         },
         "holds_what_follows": {
           "description": "Hold the rest of this section shut until the linked section's gate passes, as a scripture reading does until it is confirmed.",

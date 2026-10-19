@@ -120,6 +120,26 @@ def test_the_results_page_greets_the_participant_and_ranks_both_profiles_in_word
 
 
 @pytest.mark.django_db
+def test_each_standing_comes_from_the_unrounded_share(client, participant, load_pathway):  # noqa: F811
+    """✨ Apostle's 37 of 87 is 42.53%, which rounds to 43, 86% of an even share of 50, but is 85.06% unrounded: below
+    a band that starts at 86 (ADR 0018)."""
+    document = sort_pathway()
+    document["presentation"]["standing"] = {
+        "bands": [{"at_least": 110, "label": "Strong"}, {"at_least": 86, "label": "Present"}],
+        "below": "Less used",
+    }
+    load_pathway(document)
+    client.force_login(participant)
+    give_consent(client)
+    client.post("/sections/onboarding/complete/")
+    submit_sort(client, complete_sort(a5={"bucket": "strength", "value": 37}, p1={"bucket": "strength", "value": 50}))
+
+    page = results(client).content.decode()
+
+    assert in_order(page, "Your gifting", "Prophet", "Strong", "Apostle", "Less used")
+
+
+@pytest.mark.django_db
 def test_each_profile_carries_its_subtitle_descriptions_and_personas(signed_in):
     submit_sort(signed_in, complete_sort())
 

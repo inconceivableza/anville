@@ -9,6 +9,7 @@ or a request.
 """
 
 import math
+from fractions import Fraction
 
 
 def score(document, answer):
@@ -32,6 +33,29 @@ def percents_by_construct(result):
         framework["framework"]: {construct["construct"]: construct["percent"] for construct in framework["constructs"]}
         for framework in result["frameworks"]
     }
+
+
+def unrounded_shares(result):
+    """✨ A stored result's shares before rounding, as `{framework: {construct: share}}` (ADR 0018).
+
+    A result whose method keeps what its shares were made from has them worked out again from it, exactly; any other
+    result, such as one the tie-break re-weighted, gives its percents as stored.
+    """
+    method = METHODS.get(result.get("method"), {}).get("stored_shares", percents_by_construct)
+    return method(result)
+
+
+def _compositional_stored_shares(result):
+    """✨ `_compositional_share`'s shares worked out again from the raw values its result keeps, as exact fractions,
+    so a share exactly on a boundary is never nudged off it by floating point."""
+    shares = {}
+    for framework in result["frameworks"]:
+        total = sum(Fraction(construct["raw"]) for construct in framework["constructs"])
+        shares[framework["framework"]] = {
+            construct["construct"]: Fraction(construct["raw"]) * 100 / total if total else Fraction(0)
+            for construct in framework["constructs"]
+        }
+    return shares
 
 
 def _compositional_share(document, answer):
@@ -83,5 +107,12 @@ def round_half_up(number):
     return math.floor(number + 0.5)
 
 
-# ✨ A method scores an answer and gives the same percents unrounded; a new method must supply both.
-METHODS = {"compositional_share": {"score": _compositional_share, "shares": _compositional_shares}}
+# ✨ A method scores an answer, gives the same percents unrounded, and works them out again from a result it made; a
+# new method must supply all three.
+METHODS = {
+    "compositional_share": {
+        "score": _compositional_share,
+        "shares": _compositional_shares,
+        "stored_shares": _compositional_stored_shares,
+    }
+}

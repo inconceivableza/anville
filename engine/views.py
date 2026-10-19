@@ -38,6 +38,7 @@ from engine.document.blocks import (
     blocks_of,
     coach_brief,
     landing_of,
+    link_shown,
     page_count,
     page_of,
     pages_of,
@@ -59,6 +60,7 @@ from engine.document.aggregation import aggregate
 from engine.document.gates import clauses_of, links_issued_key
 from engine.document.scoring import score
 from engine.hub import (
+    COMPLETE,
     block_ids_fixed_on_completion,
     complete_sections,
     hub_for,
@@ -436,7 +438,7 @@ def save_answer(request, block_id):
         except IntegrityError:
             refusal = "Your results are already in. Retaking the sort is not offered yet."
             return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
-        # ✨ A sort too close to call on one framework leads to the tie-break's pairs first (ticket 30b).
+        # ✨ A sort too close to call on one framework or both, and not flat, leads to the tie-break's pairs first.
         if pair_plan(state.version.document, scores):
             return _go_to(request, reverse("tie_break", args=[block_id]))
         return _to_results(request, block_id)
@@ -665,8 +667,8 @@ def _results_drawn(state, result, block_id):
 @consent_required
 @require_http_methods(["GET", "POST"])
 def tie_break(request, block_id):
-    """✨ The tie-break's next unanswered pair (ticket 30b), for a participant whose own sort left one framework too close
-    to call; anyone else, or one who has answered or skipped every pair, goes on to their results. Answering stores the
+    """✨ The tie-break's next unanswered pair (ticket 30b), for a participant whose own sort left one framework or both
+    too close to call; anyone else, or one who has answered or skipped every pair, goes on to their results. Answering stores the
     choice beside the sort's result and comes back here for the next. Only the participant's own result is read, so an
     observer's sort never leads here."""
     state, result, section = _own_result(request.user, block_id)
@@ -1802,6 +1804,12 @@ def _block_for_participant(document, block, answers, fixed, states, issued=None,
         for passage, shown in zip(block["passages"], text["passages"]):
             shown["translation"] = translation_shown(document, passage)
     is_checklist = block["type"] == "coach_checklist"
+    link = states.get(block["section"]) if block["type"] == "section_link" else None
+    results = None
+    if link is not None:
+        linked = section_by_id(document, block["section"])
+        text, sort = link_shown(block, text, linked, link.status == COMPLETE, "participant")
+        results = reverse("results", args=[sort]) if sort else None
     return {
         "rows": _contact_rows(block, answers, issued) if block["type"] == "contact_list" else None,
         "checklist": _opening_checklist(text, _coach_kept(answers, block["id"]), issued) if is_checklist else None,
@@ -1814,7 +1822,8 @@ def _block_for_participant(document, block, answers, fixed, states, issued=None,
         "answer": answers.get(block["id"]),
         "is_fixed": block["id"] in fixed,
         "widget": widget(document, "participant", "") if widget else None,  # ✨ the participant's wording names no one
-        "link": states.get(block["section"]) if block["type"] == "section_link" else None,
+        "link": link,
+        "results": results,  # ✨ where a section link's button leads instead, once its section is complete (ticket 61)
         "frozen": RESULTS_SEEN if frozen and block["type"] == "contact_list" else None,
         "drawn": drawn,
     }

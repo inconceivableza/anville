@@ -16,6 +16,12 @@
 - [ ] The generalist's wording says the profile is flat on both frameworks, never that its top results are too close to call; drafted from the prototype's balanced verdict, for the developer's review
 - [ ] What the results page says of a framework (its standings and any tie-break or generalist wording) never contradicts itself
 
+**Carried from 59a**
+
+- [ ] The observers' standings on the comparison (their mean and each observer's in the spread) are worked out from unrounded shares, as the participant's now are
+- Until this ticket, a participant with pairs on both frameworks has only the first framework re-weighted, by its own answers; the other keeps its sort's result
+- The participant's standings are read from the stored result's unrounded shares: a sort's are worked out again from the raw values it keeps; any other result's (a re-weighted one) are its whole numbers until it keeps its own
+
 **Context**
 
 - Decided in ADR 0018

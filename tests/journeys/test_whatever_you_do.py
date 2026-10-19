@@ -18,6 +18,7 @@ from django.utils.html import escape
 
 from engine.models import Contact, ObserverResponse, Response
 from tests.journeys.test_coach_checklist import choose
+from tests.journeys.pages import main_of
 from tests.journeys.test_hub import hub_entry, signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.prototype import js_string
 from tests.journeys.test_whatever_you_do_faithful_port import (
@@ -539,6 +540,27 @@ def through_to_section_2(client):
     assert complete(client, "designed").status_code == 303
     invite_everyone(client)
     return client
+
+
+@pytest.mark.django_db
+def test_section_1s_button_opens_the_assessment_until_it_is_done_and_then_the_results(participant):
+    """✨ As in the faithful port, whose wording this pathway's matches (ticket 61)."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+    answer(participant, "gifts-reading", "true")
+    button = r'href="{}"[^>]*>\s*{}\s*</a>'
+    assert re.search(button.format("/sections/strengths/", "Open Strengths Assessment →"), section_1(participant))
+
+    submit_the_sort(participant)
+
+    page = section_1(participant)
+    assert re.search(button.format("/results/strengths-sort/", "View my results →"), page)
+    assert 'href="/sections/strengths/"' not in page
+
+
+def section_1(client):
+    """✨ Section 1's own content, without the sidebar, which lists every section."""
+    return main_of(client.get("/sections/designed/").content.decode())
 
 
 @pytest.mark.django_db
