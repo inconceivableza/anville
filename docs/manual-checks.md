@@ -224,7 +224,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Without JavaScript: "Continue →" and "← Previous page" both work, and the coach checklist's buttons come back to the coach page, not the first.
 - Keyboard only: after the page's fields, Tab reaches "← Previous page", then "Continue →".
 - Screen reader: each page's heading is read on arrival, then "Page 2 of 3"; "← Previous page" is read as a link. A new coach checklist screen reads its heading.
-- Phone width: "← Previous page" and "Continue →" share a row at 375px, a longer label ("I'll sort this later →") wrapping within its button; at 320px "Continue →" drops to its own line beneath, still full width.
+- Phone width: "← Previous page" and "Continue →" share a row at 375px; at 320px "Continue →" drops to its own line beneath, still full width.
 
 ## Fixed ratings (after completing onboarding, or Section 5)
 
