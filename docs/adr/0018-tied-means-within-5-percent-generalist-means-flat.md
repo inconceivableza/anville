@@ -41,3 +41,12 @@ This replaces what tickets 30a–30c built: a 4-point threshold on rounded perce
 - Re-weighted results keep their unrounded shares, so a re-weighted profile is drawn as precisely as a sort's. Each re-weighted share is still rounded on its own where a whole number is stored, never by giving the leader what rounding lost.
 - The pair plan is worked out afresh from the stored result, so a participant told "generalist" under the old rule meets the pairs the next time they open their results.
 - Observers never get the tie-break; the comparison sets the participant's re-weighted result beside the observers' sorts as sent.
+
+## Amended
+
+19 Oct 2026, the developer's call.
+
+- **Circle by weights.** The weights decide the outcome. One construct alone on the best weight is "Separated", even where the answers went in a circle. Only a shared best weight is "Genuinely balanced", worded as a circle where the answers also went in one. For example, with Apostle, Prophet and Teacher tied, a first round of Apostle over Prophet, Prophet over Teacher and Teacher over Apostle, then a second of Apostle over both and Prophet over Teacher, weighs them 1.75, 1.5 and 1.25: Apostle is separated, though the first round went in a circle. Shares are re-weighted as before. A result stored before keeps the outcome stored with it.
+- **Generalist on the result shown.** The generalist's wording is judged on the result the participant is shown, sorted or re-weighted: flat on both frameworks, and never beside a framework the tie-break separated. A re-weighted result has wording of its own, saying the profiles are flat even after the pairs; a sort flat on both keeps the original wording and still gets no pairs. Coming out balanced is still not enough on its own: the whole of both profiles must be flat.
+- **Budget at least 2.** The pathway document's budget is never below 2, so every tied framework gets a pair when both are tied.
+- **Unrounded.** Besides standing words, ties, flatness and the drawings, the comparison's gaps and agreement band use unrounded shares. The observers' average keeps each observer's share unrounded only, with no rounded value of a single observer's.
