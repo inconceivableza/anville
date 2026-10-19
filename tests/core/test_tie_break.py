@@ -314,6 +314,29 @@ def test_choices_that_go_in_a_circle_or_leave_the_best_level_are_balanced_with_n
     assert {construct: percent for construct, percent in percents(reweighted) if construct in shares} == shares
 
 
+# ✨ Apostle, Prophet and Teacher level at the top, Evangelist, Shepherd and Deacon well below.
+THREE_LEVEL = [20, 20, 10, 10, 20, 10]
+
+
+def test_choices_that_go_in_a_circle_but_leave_one_weight_on_top_are_separated_by_the_weights():
+    """✨ The first round goes in a circle (Apostle beats Prophet, Prophet Teacher, Teacher Apostle); in the second
+    Apostle beats both and Prophet Teacher. Apostle wins 3 of 4, Prophet 2 and Teacher 1: weights of 1.75, 1.5 and
+    1.25, so Apostle leads on its own."""
+    circle_then_clear = answered(
+        ("apostle", "prophet", "apostle"),
+        ("prophet", "teacher", "prophet"),
+        ("apostle", "teacher", "teacher"),
+        ("apostle", "prophet", "apostle"),
+        ("apostle", "teacher", "apostle"),
+        ("prophet", "teacher", "prophet"),
+    )
+
+    reweighted = reweigh(planned(), result(THREE_LEVEL, CLEAR_PEP), circle_then_clear)
+
+    assert outcomes(reweighted) == {"apest": "same_top"}
+    assert [construct for construct, _ in percents(reweighted)[:3]] == ["apostle", "prophet", "teacher"]
+
+
 def test_every_pair_skipped_is_an_outcome_of_its_own_and_leaves_the_framework_as_sorted():
     sent = result(FLAT, CLEAR_PEP)
 
@@ -366,26 +389,51 @@ def test_a_tied_framework_with_no_pairs_asked_is_left_as_sorted_with_no_outcome(
 LEADING_ALONE = result([2100, 2050, 1475, 1475, 1450, 1450], [1800, 1700, 1650, 1650, 1600, 1600])
 
 
-def drawn_after(answers):
-    """✨ The results page's APEST(d), as `[(construct, standing), ...]` in its order, its tie-break wording and its
-    generalist's, after the tie-break's `answers` on LEADING_ALONE."""
+def results_pathway():
+    """✨ A pathway with a tie-break and the wording its results page needs, generalist's and tie-break's."""
     pathway = planned()
     pathway.update(title="Results", instrument={"items": []})
     pathway["presentation"] = {
         key: value for key, value in with_a_tie_break()["presentation"].items() if key in ("generalist", "tie_break")
     }
-    page = results_page(pathway, reweigh(pathway, LEADING_ALONE, answers), {}, "Sam")
+    return pathway
+
+
+def drawn(reweighted):
+    """✨ The results page's APEST(d) for a re-weighted result, as `[(construct, standing), ...]` in its order, its
+    tie-break wording and its generalist's."""
+    page = results_page(results_pathway(), reweighted, {}, "Sam")
     apest = page["frameworks"][0]
     return [(bar["label"], bar["standing"]) for bar in apest["bars"]], apest["tie_break"], page["generalist"]
 
 
-def test_a_re_weighted_result_that_comes_out_flat_never_says_generalist_beside_its_outcome():
-    """✨ One choice each shares 41.5 equally: 20.75 each, Strong, so every APEST(d) construct now stands between."""
-    bars, said, generalist = drawn_after(answered(("apostle", "prophet", "apostle"), ("apostle", "prophet", "prophet")))
+def drawn_after(answers):
+    """✨ `drawn`, after the tie-break's `answers` on LEADING_ALONE."""
+    return drawn(reweigh(results_pathway(), LEADING_ALONE, answers))
+
+
+# ✨ One choice each shares 41.5 equally: 20.75 each, Strong, so every APEST(d) construct now stands between.
+ONE_CHOICE_EACH = answered(("apostle", "prophet", "apostle"), ("apostle", "prophet", "prophet"))
+
+
+def test_a_re_weighted_result_that_comes_out_flat_on_both_and_balanced_says_generalist_after_the_pairs():
+    bars, said, generalist = drawn_after(ONE_CHOICE_EACH)
 
     assert said["heading"] == "Genuinely balanced"
-    assert generalist is None
+    assert generalist == {"heading": "A generalist", "text": "Two flat profiles, even after your pairs."}
     assert bars[:2] == [("apostle", "Strong"), ("prophet", "Strong")]
+
+
+def test_a_flat_result_beside_a_separated_outcome_never_says_generalist():
+    """✨ Under the placeholder bands, choices that separate a framework leave it a Leading construct or a Less used one,
+    so the outcome is set by hand on the flat result."""
+    reweighted = reweigh(results_pathway(), LEADING_ALONE, ONE_CHOICE_EACH)
+    reweighted["tie_break"] = [{"framework": "apest", "outcome": "same_top"}]
+
+    _, said, generalist = drawn(reweighted)
+
+    assert said["heading"] == "Separated"
+    assert generalist is None
 
 
 def test_a_separated_frameworks_standings_put_the_construct_it_names_first():
@@ -409,7 +457,16 @@ def test_a_pathway_may_set_the_percentage_and_cluster_size_and_word_the_generali
 
 @pytest.mark.parametrize(
     "setting, value",
-    [("percent", -1), ("percent", 101), ("percent", "5"), ("cluster", 1), ("cluster", "4")],
+    [
+        ("percent", -1),
+        ("percent", 101),
+        ("percent", "5"),
+        ("cluster", 1),
+        ("cluster", "4"),
+        # ✨ Every tied framework gets a pair, two when both are tied (ADR 0018).
+        ("budget", 0),
+        ("budget", 1),
+    ],
 )
 def test_a_percentage_or_cluster_size_that_could_not_work_is_refused_where_it_is(setting, value):
     problems = validate(with_a_tie_break(**{setting: value}))

@@ -117,9 +117,9 @@
               "minimum": 2
             },
             "budget": {
-              "description": "How many 'Which is more true of you?' pairs a participant marked for the tie-break answers, at most (ticket 30b). 10 when left out.",
+              "description": "How many 'Which is more true of you?' pairs a participant marked for the tie-break answers, at most (ticket 30b). At least 2, so every tied framework gets a pair when both are tied (ADR 0018). 10 when left out.",
               "type": "integer",
-              "minimum": 1
+              "minimum": 2
             },
             "statements": {
               "description": "Three statements for each construct, keyed by its id, that the tie-break's pairs set against each other (ticket 30b). Separate from the instrument's items. Every construct needs them.",
@@ -254,13 +254,14 @@
         },
         "disclaimer": { "$ref": "#/$defs/text" },
         "generalist": {
-          "description": "What the results page tells a participant flat on both frameworks (measurement.tie_break): that they are a generalist. Needed whenever the pathway has a tie-break.",
+          "description": "What the results page tells a participant whose result, as shown, is flat on both frameworks (measurement.tie_break): that they are a generalist. text for a sort flat on both, which asks no pairs; after_pairs for a result the tie-break's pairs re-weighted that is flat on both, with no framework separated (ADR 0018). Needed whenever the pathway has a tie-break.",
           "type": "object",
           "additionalProperties": false,
-          "required": ["heading", "text"],
+          "required": ["heading", "text", "after_pairs"],
           "properties": {
             "heading": { "$ref": "#/$defs/text" },
-            "text": { "$ref": "#/$defs/text" }
+            "text": { "$ref": "#/$defs/text" },
+            "after_pairs": { "$ref": "#/$defs/text" }
           }
         },
         "tie_break": {

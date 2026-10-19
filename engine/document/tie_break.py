@@ -30,12 +30,15 @@ GENERALIST = "generalist"
 
 # ✨ The re-weighting's name, stored on the result it makes (ticket 30c). A second named scoring method beside the
 # compositional score (ADR 0003): once a result is made with it, its behaviour is frozen, and a change is a new name.
+# Its shares are unchanged since; the outcome it names was amended to follow the weights alone (ADR 0018), and is
+# stored with each result, so one stored before keeps the outcome it was given.
 REWEIGHTING = "pairwise_reweighting"
 
 # ✨ What the tie-break's answers did to a tied framework: a new construct leads, the same one leads, or none does,
-# because the choices went in a circle or left the best of them level, or every pair was skipped (ADR 0018).
+# because the best weight is shared, the choices having gone in a circle or not, or every pair was skipped (ADR 0018).
 TOP_CHANGED = "top_changed"
 SAME_TOP = "same_top"
+SEPARATED = (TOP_CHANGED, SAME_TOP)
 CIRCLE = "circle"
 LEVEL = "level"
 BALANCED = (CIRCLE, LEVEL)
@@ -128,10 +131,11 @@ def reweigh(document, result, answers):
     ranked by the unrounded shares, which replace its fallback to declaration order; constructs level on them keep the
     sort's order. Every other construct and framework is as the sort scored it.
 
-    The choices went in a circle when some construct beat one that beat one that beat it, as the prototype checks for,
-    across both rounds; the prototype then says the constructs are genuinely balanced rather than forcing a winner.
-    Where no circle is found but the best weight is shared, there is no winner to name either, so that is balanced too
-    (LEVEL). Every pair skipped says nothing about the participant (SKIPPED), so that framework is left as sorted.
+    The weights decide the outcome: one construct alone on the best weight is separated (TOP_CHANGED or SAME_TOP), even
+    where the choices went in a circle. Where the best weight is shared there is no winner to name, so the constructs
+    are genuinely balanced: CIRCLE where the choices also went in a circle, some construct beating one that beat one
+    that beat it across both rounds, as the prototype checks for, and LEVEL otherwise. Every pair skipped says nothing
+    about the participant (SKIPPED), so that framework is left as sorted.
     """
     tied = tie_break(document, result)["tied"]
     sorted_shares = unrounded_shares(result)
@@ -176,11 +180,11 @@ def _reweighed(cluster, share, answers):
     total = sum(share[c] for c in cluster)
     reweighed = {**share, **{c: total * weights[c] / sum(weights.values()) for c in cluster}}
 
+    # ✨ The weights decide (ADR 0018, amended): one construct on the best weight is separated even where the answers
+    # went in a circle; only a best weight shared is balanced, worded as a circle where the answers also went in one.
     best = max(weights.values())
-    if _in_a_circle(beaten):
-        outcome = CIRCLE
-    elif sum(1 for weight in weights.values() if weight == best) > 1:
-        outcome = LEVEL
+    if sum(1 for weight in weights.values() if weight == best) > 1:
+        outcome = CIRCLE if _in_a_circle(beaten) else LEVEL
     elif max(cluster, key=lambda c: weights[c]) != cluster[0]:
         outcome = TOP_CHANGED
     else:

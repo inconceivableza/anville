@@ -627,7 +627,8 @@
     "disclaimer": "Important: This is a free, rapid, directional tool, designed to give you a useful starting point for reflection and conversation. It is not backed by extensive psychometric datasets or rigorous validation (yet). Please treat these results as indicative, not definitive.",
     "generalist": {
       "heading": "You’re a generalist",
-      "text": "Both your profiles are flat: every result reads Present or Strong, with none leading and none less used. That’s a real result rather than an error: you draw on all of these in much the same measure. Better to say so than force a winner."
+      "text": "Both your profiles are flat: every result reads Present or Strong, with none leading and none less used. That’s a real result rather than an error: you draw on all of these in much the same measure. Better to say so than force a winner.",
+      "after_pairs": "Both your profiles are flat, even after your answers to “Which is more true of you?”: every result reads Present or Strong, with none leading and none less used. That’s a real result rather than an error: you draw on all of these in much the same measure. Better to say so than force a winner."
     },
     "tie_break": {
       "question": "Which is more true of you?",
