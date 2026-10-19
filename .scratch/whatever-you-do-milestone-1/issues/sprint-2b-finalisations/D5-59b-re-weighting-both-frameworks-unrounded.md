@@ -4,7 +4,7 @@
 
 **Blocked by:** D4-59a (Too close to call within 5%, and a generalist only when flat)
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 2b (continued from 19 Oct)
 
