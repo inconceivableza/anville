@@ -1,0 +1,9 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "socialaccount/base_entrance.html" %}
+{# ✨ Replaces allauth's page for a Google sign-in that failed (ticket 53c), in Anville's words. #}
+{% block head_title %}Signing in with Google didn't work{% endblock head_title %}
+{% block content %}
+  <h1>Signing in with Google didn't work</h1>
+  <p>Something went wrong while signing you in with your Google account. You can <a href="{% url 'account_login' %}">try again</a>.</p>
+{% endblock content %}

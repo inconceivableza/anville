@@ -1,0 +1,9 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "socialaccount/base_entrance.html" %}
+{# ✨ Replaces allauth's page for a Google sign-in turned back at Google (ticket 53c), in Anville's words. #}
+{% block head_title %}Sign-in cancelled{% endblock head_title %}
+{% block content %}
+  <h1>Sign-in cancelled</h1>
+  <p>You cancelled signing in with your Google account. If you didn't mean to, you can <a href="{% url 'account_login' %}">sign in</a> again.</p>
+{% endblock content %}
