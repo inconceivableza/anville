@@ -118,6 +118,23 @@ def test_a_section_link_may_carry_a_button_label_and_hold_what_follows_by_a_yes_
     assert problem.path == "/content/sections/1/blocks/0/holds_what_follows"
 
 
+def test_a_section_links_finished_wording_needs_a_button_label_and_its_text_is_text():
+    """✨ The wording it shows once the linked section is complete (ticket 61)."""
+    document = pathway_document()
+    finished = {"body": "You've completed the assessment.", "button_label": "View my results →"}
+    link = {"id": "to-onboarding", "type": "section_link", "section": "onboarding", "finished": finished}
+    document["content"]["sections"][1]["blocks"].insert(0, link)
+    assert validate(document) == []
+
+    finished["button_label"] = 5
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/1/blocks/0/finished/button_label"
+
+    del finished["button_label"]
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/1/blocks/0/finished"
+
+
 def a_single_select(**fields):
     return {
         "id": "reason",

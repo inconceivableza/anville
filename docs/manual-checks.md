@@ -249,6 +249,8 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Keyboard only: Tab reaches the button, its focus is visible, and Enter opens the Strengths assessment.
 - Screen reader: Tab to the button. It is a link styled as a button, since it goes to another page, so VoiceOver reads "Open Strengths Assessment, right arrow, link" and tells you how to follow it. Control-Option-Right arrow then reads the status.
 - Phone width: the card's text and button wrap, and the status chip stays a small pill the width of its words rather than stretching across the card.
+- Once the sort is in, back on Section 1 the card reads "You've completed the assessment. You can review your results any time." in place of "Sort your strengths into buckets…", and the button reads "View my results →". Clicking it opens your results page (or, with tie-break pairs still to answer, the next pair), never the assessment's start page. The status chip reads "Complete". Same in both pathways.
+- Phone width: the finished sentence and the "View my results →" button wrap within the card.
 
 ## Sections 2–4 on paper (after Section 1, with a coach's link and three people's links made)
 

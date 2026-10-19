@@ -311,6 +311,23 @@ def authored_text(block, role):
     return text
 
 
+def link_shown(block, text, linked_section, is_complete, role):
+    """✨ A section link's wording and where its button leads, as `(text, sort)`. Once the linked section is complete, a
+    link with `finished` wording shows it in place of its own body and button label, and `sort` is the identifier of
+    the sort in that section, whose results the button then leads to, or None to lead to the section as before
+    (ticket 61). Otherwise `text` is the link's own and `sort` is None."""
+    finished = block.get("finished")
+    if not (finished and is_complete):
+        return text, None
+    text = {
+        **text,
+        "body": text_for(finished["body"], role) if "body" in finished else "",
+        "button_label": text_for(finished["button_label"], role),
+    }
+    sort = next((other["id"] for other in linked_section["blocks"] if BLOCK_TYPES[other["type"]].scored), None)
+    return text, sort
+
+
 def translation_shown(document, passage):
     """✨ The translation named beside a passage's reference: its own, unless that is the document's, which the
     credits page says is the one used unless otherwise indicated. None when nothing is to be named."""
