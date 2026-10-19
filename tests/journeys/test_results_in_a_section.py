@@ -71,7 +71,7 @@ def test_once_the_tie_break_is_answered_the_section_draws_the_re_weighted_result
 
 @pytest.mark.django_db
 def test_a_generalist_is_told_so_in_the_section_as_on_the_results_page(client, participant, load_pathway):  # noqa: F811
-    generalist = sign_in(client, participant, load_pathway, with_a_tie_break(sort_pathway(), threshold=4, cluster=4))
+    generalist = sign_in(client, participant, load_pathway, with_a_tie_break(sort_pathway(), percent=5, cluster=4))
     submit_sort(generalist, EVEN)
 
     in_section = drawn_results(generalist.get(CALLING).content.decode())

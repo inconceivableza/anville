@@ -554,7 +554,7 @@
     ],
     "scoring": { "method": "compositional_share" },
     "tie_break": {
-      "threshold": 4,
+      "percent": 5,
       "cluster": 4,
       "budget": 10,
       "statements": {

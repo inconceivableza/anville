@@ -1,19 +1,22 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
-"""✨ Whether a participant's sort leaves a framework's leaders too close to call (ticket 30a).
+"""✨ Whether a participant's sort leaves a framework's leaders too close to call (ticket 30a, ADR 0018).
 
-A framework is tied when one or more of its other constructs are within the document's threshold of its leader, on
-the stored result's rounded percents; at most the document's cluster size, leader first, enter the tie-break. Run on
-the participant's own result alone, never an observer's. Nothing here touches the database or a request.
+A framework is tied when its leader's unrounded share is at most the document's percentage more than one or more of
+its other constructs'; at most the document's cluster size, leader first, enter the tie-break. A participant flat on
+every framework is a generalist instead, and is asked nothing. Run on the participant's own result alone, never an
+observer's. Nothing here touches the database or a request.
 """
 
 from fractions import Fraction
+from itertools import zip_longest
 
-from engine.document.scoring import round_half_up
+from engine.document.scoring import round_half_up, unrounded_shares
+from engine.document.standing import flat
 
-# ✨ The content owner's prototype's: within four points of the leader, and at most the top four.
-DEFAULT_THRESHOLD = 4
+# ✨ ADR 0018's: a leader at most 5% more than another, and the content owner's prototype's at most the top four.
+DEFAULT_PERCENT = 5
 DEFAULT_CLUSTER = 4
 # ✨ The prototype's: at most ten pairs, a guess it asks to be checked against drop-off (ticket 30b).
 DEFAULT_BUDGET = 10
@@ -39,46 +42,49 @@ BALANCED = (CIRCLE, LEVEL)
 
 def tie_break(document, result):
     """✨ `{"tied": {framework: [construct, ...]}, "outcome": ...}`: each tied framework's constructs that enter the
-    tie-break, in the result's ranked order, and what follows. Tied on exactly one framework, the participant is marked
-    for the tie-break (TIE_BREAK); on both, they are a generalist (GENERALIST), with nothing asked of them; on neither,
-    there is nothing to break (None). A pathway without a tie-break marks no one."""
+    tie-break, leader first by unrounded share, and what follows. Flat on every framework, the participant is a
+    generalist (GENERALIST), with nothing tied and nothing asked of them; otherwise, tied on one framework or more,
+    they are marked for the tie-break (TIE_BREAK); on neither, there is nothing to break (None). A pathway without a
+    tie-break marks no one."""
     settings = document.get("measurement", {}).get("tie_break")
     if settings is None:
         return {"tied": {}, "outcome": None}
-    threshold = settings.get("threshold", DEFAULT_THRESHOLD)
+    shares = unrounded_shares(result)
+    if all(flat(document, list(shares[framework["framework"]].values())) for framework in result["frameworks"]):
+        return {"tied": {}, "outcome": GENERALIST}
+    # ✨ As a string first, so a percentage such as 2.5 is taken as written, not as its nearest binary fraction.
+    within = 1 + Fraction(str(settings.get("percent", DEFAULT_PERCENT))) / 100
     cluster = settings.get("cluster", DEFAULT_CLUSTER)
     tied = {}
     for framework in result["frameworks"]:
-        # ✨ Stable, so constructs on the same percent keep the order the result ranked them in.
-        ranked = sorted(framework["constructs"], key=lambda construct: -construct["percent"])
-        leader = ranked[0]["percent"]
-        close = [construct["construct"] for construct in ranked if leader - construct["percent"] <= threshold]
+        share = shares[framework["framework"]]
+        # ✨ Stable, so constructs on the same unrounded share keep the order the result ranked them in.
+        ranked = [c["construct"] for c in sorted(framework["constructs"], key=lambda c: -share[c["construct"]])]
+        leader = share[ranked[0]]
+        close = [construct for construct in ranked if leader <= share[construct] * within] if leader else []
         if len(close) > 1:
             tied[framework["framework"]] = close[:cluster]
-    outcome = GENERALIST if len(tied) > 1 else TIE_BREAK if tied else None
-    return {"tied": tied, "outcome": outcome}
+    return {"tied": tied, "outcome": TIE_BREAK if tied else None}
 
 
 def pair_plan(document, result):
     """✨ The "Which is more true of you?" pairs a participant marked for the tie-break answers, in order (ticket 30b), or
     [] for anyone else. Each is `{"framework", "constructs": [a, b], "statements": [a's, b's], "round"}`.
 
-    As the content owner's prototype plans them: every pair of the tied framework's constructs, never across
-    frameworks, those involving the higher-ranked first (by the sum of the two ranks, ties in the order made), then a
-    second round of the same pairs with the next statement of each, all cut to the document's budget from the end.
-    Construct a shows its statement at the round's place and b the one after, so no pair repeats a statement across the
-    two rounds. Worked out afresh from the stored result each time; the answers are stored, the plan is not.
+    As the content owner's prototype plans them, and as its notes share the budget (ADR 0018): every pair of each tied
+    framework's constructs, never across frameworks, those involving the higher-ranked first (by the sum of the two
+    ranks, ties in the order made), then a second round of the same pairs with the next statement of each. With two
+    frameworks tied, each round alternates between them, pair by pair. All of it is cut to the document's budget from
+    the end, so second rounds go first, then the least important pairs. Construct a shows its statement at the round's
+    place and b the one after, so no pair repeats a statement across the two rounds. Worked out afresh from the stored
+    result each time; the answers are stored, the plan is not.
     """
     detected = tie_break(document, result)
     if detected["outcome"] != TIE_BREAK:
         return []
     settings = document["measurement"]["tie_break"]
     statements = settings["statements"]
-    [(framework, cluster)] = detected["tied"].items()
-    ranked = [
-        (i + j, a, b) for i, a in enumerate(cluster) for j, b in enumerate(cluster) if i < j
-    ]
-    ranked.sort(key=lambda pair: pair[0])
+    by_framework = [_by_importance(framework, cluster) for framework, cluster in detected["tied"].items()]
     planned = [
         {
             "framework": framework,
@@ -90,9 +96,19 @@ def pair_plan(document, result):
             "round": round_,
         }
         for round_ in range(ROUNDS)
-        for _, a, b in ranked
+        # ✨ A framework with fewer pairs runs out first, and the other's go on alone.
+        for alongside in zip_longest(*by_framework)
+        for framework, a, b in filter(None, alongside)
     ]
     return planned[: settings.get("budget", DEFAULT_BUDGET)]
+
+
+def _by_importance(framework, cluster):
+    """✨ Every pair of a tied framework's cluster as `(framework, a, b)`, most important first: by the sum of the two
+    constructs' places, ties in the order made."""
+    pairs = [(i + j, a, b) for i, a in enumerate(cluster) for j, b in enumerate(cluster) if i < j]
+    pairs.sort(key=lambda pair: pair[0])
+    return [(framework, a, b) for _, a, b in pairs]
 
 
 def reweigh(document, result, answers):
@@ -112,7 +128,8 @@ def reweigh(document, result, answers):
     Where no circle is found but the best weight is shared, as when every pair is skipped, there is no winner to name
     either, so that is balanced too (LEVEL).
     """
-    [(framework_id, cluster)] = tie_break(document, result)["tied"].items()
+    # ✨ With both frameworks tied, only the first is re-weighted for now (ticket 59b re-weights each).
+    framework_id, cluster = next(iter(tie_break(document, result)["tied"].items()))
     answers = [answer for answer in answers if answer["framework"] == framework_id]
     wins = {construct: 0 for construct in cluster}
     appearances = {construct: 0 for construct in cluster}

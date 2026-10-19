@@ -1,8 +1,8 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
-"""✨ A participant tied on both frameworks is told on their results that they are a generalist (ticket 30a). The tie
-detection runs on the participant's own sort alone, never an observer's."""
+"""✨ A participant flat on both frameworks is told on their results that they are a generalist (ticket 30a, ADR 0018).
+The tie detection runs on the participant's own sort alone, never an observer's."""
 
 import pytest
 
@@ -23,14 +23,14 @@ from tests.journeys.test_results import in_order, results, submit_sort
 GENERALIST = "Two flat profiles"
 
 # ✨ The test pathway's two items each load onto one construct of each framework, so a sort splitting them evenly is
-# tied on both, and one leaning on either is tied on neither.
+# flat on both, every construct at an even share ("Present"), and one leaning on either is tied on neither.
 EVEN = complete_sort(a5={"bucket": "strength", "value": 50}, p1={"bucket": "strength", "value": 50})
 
 
 @pytest.fixture
 def signed_in(client, participant, load_pathway):
     """✨ A participant with onboarding complete, on a pathway with a tie-break and the generalist's wording."""
-    load_pathway(with_a_tie_break(sort_pathway(), threshold=4, cluster=4))
+    load_pathway(with_a_tie_break(sort_pathway(), percent=5, cluster=4))
     client.force_login(participant)
     give_consent(client)
     client.post("/sections/onboarding/complete/")
@@ -38,7 +38,7 @@ def signed_in(client, participant, load_pathway):
 
 
 @pytest.mark.django_db
-def test_a_participant_tied_on_both_frameworks_is_told_on_their_results_they_are_a_generalist(signed_in):
+def test_a_participant_flat_on_both_frameworks_is_told_on_their_results_they_are_a_generalist(signed_in):
     submit_sort(signed_in, EVEN)
 
     assert GENERALIST in results(signed_in).content.decode()
@@ -150,6 +150,49 @@ def test_leaving_part_way_comes_back_to_the_next_pair_and_the_last_leads_to_the_
     assert choose(marked, 1, "prophet")["Location"] == TIE_BREAK
     assert marked.get(TIE_BREAK)["Location"] == "/results/strengths-sort/"
     assert results(marked).status_code == 200
+
+
+def tied_on_both_pathway():
+    """✨ The test pathway with a third construct on each framework and an item loading onto both, Teacher and Assess."""
+    document = sort_pathway()
+    apest, pep = document["measurement"]["frameworks"]
+    apest["constructs"].append({"id": "teacher", "label": "Teacher"})
+    pep["constructs"].append({"id": "assess", "label": "Assess"})
+    document["instrument"]["items"].append({"id": "t1", "text": "Explaining it clearly", "loads": ["teacher", "assess"]})
+    return with_a_tie_break(document)
+
+
+# ✨ Apostle and Prophet 45 each, Teacher 10; Ponder and Deliver 45 each, Assess 10. Tied at the top of both, and far
+# from flat, as Teacher and Assess read "Less used".
+TIED_ON_BOTH = complete_sort(
+    a5={"bucket": "strength", "value": 45},
+    p1={"bucket": "strength", "value": 45},
+    t1={"bucket": "not-me", "value": 10},
+)
+
+
+@pytest.mark.django_db
+def test_a_sort_tied_on_both_frameworks_but_not_flat_asks_pairs_on_each_in_turn_and_never_says_generalist(
+    client, participant, load_pathway
+):
+    load_pathway(tied_on_both_pathway())
+    client.force_login(participant)
+    give_consent(client)
+    client.post("/sections/onboarding/complete/")
+
+    assert submit_sort(client, TIED_ON_BOTH)["HX-Redirect"] == TIE_BREAK
+    asked = []
+    for place in range(4):
+        page = text_of(client.get(TIE_BREAK).content.decode())
+        if "Your role among people" in page and "I am apostle" in page and "I am prophet" in page:
+            asked.append("apest")
+        elif "How you work" in page and "I am ponder" in page and "I am deliver" in page:
+            asked.append("pep")
+        choose(client, place, "")
+
+    assert asked == ["apest", "pep", "apest", "pep"]
+    assert client.get(TIE_BREAK)["Location"] == "/results/strengths-sort/"
+    assert GENERALIST not in results(client).content.decode()
 
 
 @pytest.fixture

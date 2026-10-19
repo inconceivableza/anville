@@ -8,6 +8,7 @@ import pytest
 
 import tests.documents
 from engine.document import validate
+from engine.document.scoring import round_half_up
 from engine.document.tie_break import pair_plan, reweigh, tie_break
 from tests.documents import sort_pathway
 
@@ -29,9 +30,14 @@ def document(**tie_break_settings):
     }
 
 
-def framework(framework_id, constructs, percents):
-    """✨ One framework of a stored result, ranked as scoring ranks it: by percent, ties in declaration order."""
-    scored = [{"construct": c, "raw": p, "percent": p} for c, p in zip(constructs, percents)]
+def framework(framework_id, constructs, raws):
+    """✨ One framework of a stored result as the compositional score makes it: each construct's raw value and its
+    rounded share of the framework's total, ranked by that rounded share, ties in declaration order."""
+    total = sum(raws)
+    scored = [
+        {"construct": c, "raw": raw, "percent": round_half_up(raw / total * 100) if total else 0}
+        for c, raw in zip(constructs, raws)
+    ]
     scored.sort(key=lambda construct: -construct["percent"])
     return {"framework": framework_id, "constructs": scored}
 
@@ -44,19 +50,37 @@ CLEAR_APEST = [9, 34, 8, 14, 24, 11]  # ✨ the prototype's "Both clear"
 CLEAR_PEP = [8, 33, 12, 10, 11, 26]
 
 
-def test_a_construct_four_points_behind_the_leader_ties_with_it_and_one_five_behind_does_not():
-    four_behind = result([10, 30, 26, 10, 14, 10], CLEAR_PEP)
-    five_behind = result([10, 30, 25, 10, 15, 10], CLEAR_PEP)
+def test_a_leader_at_most_five_percent_more_than_another_is_too_close_to_call_and_just_over_is_not():
+    """✨ Prophet's 105 is exactly 5% more than Apostle's 100, and 106 is 6% more."""
+    at_five = result([100, 105, 60, 40, 30, 20], CLEAR_PEP)
+    just_over = result([100, 106, 60, 40, 30, 20], CLEAR_PEP)
 
-    assert tie_break(document(), four_behind)["tied"] == {"apest": ["prophet", "evangelist"]}
-    assert tie_break(document(), five_behind)["tied"] == {}
+    assert tie_break(document(), at_five)["tied"] == {"apest": ["prophet", "apostle"]}
+    assert tie_break(document(), just_over)["tied"] == {}
 
 
-def test_at_most_the_top_four_enter_the_tie_break():
-    """✨ The prototype's "Both flat" APEST: all six within a point, so only the first four as ranked go on."""
-    flat = result([17, 17, 16, 17, 16, 17], CLEAR_PEP)
+def test_a_share_of_nothing_is_never_too_close_to_call():
+    assert tie_break(document(), result([0] * 6, CLEAR_PEP)) == {"tied": {}, "outcome": None}
 
-    assert tie_break(document(), flat)["tied"] == {"apest": ["apostle", "prophet", "shepherd", "deacon"]}
+
+def test_the_cluster_is_the_leader_on_its_unrounded_share_first_up_to_the_cluster_size():
+    """✨ All six are within 5% of Deacon, who leads on 21 to the others' 20; four go on by default, two when the
+    document says two. All six round to 17, and Deacon and Evangelist below to 20, so only the unrounded shares put
+    Deacon first."""
+    close = result([20, 20, 20, 20, 20, 21], CLEAR_PEP)
+    rounded_alike = result([1585, 1816, 1960, 1787, 836, 2017], CLEAR_PEP)
+
+    assert tie_break(document(), close)["tied"] == {"apest": ["deacon", "apostle", "prophet", "evangelist"]}
+    assert tie_break(document(cluster=2), close)["tied"] == {"apest": ["deacon", "apostle"]}
+    assert tie_break(document(), rounded_alike)["tied"] == {"apest": ["deacon", "evangelist"]}
+
+
+def test_the_percentage_comes_from_the_document():
+    """✨ Prophet's 109 is 9% more than Apostle's 100."""
+    nine_more = result([100, 109, 60, 40, 30, 20], CLEAR_PEP)
+
+    assert tie_break(document(), nine_more)["tied"] == {}
+    assert tie_break(document(percent=10), nine_more)["tied"] == {"apest": ["prophet", "apostle"]}
 
 
 def test_tied_on_exactly_one_framework_marks_the_participant_for_the_tie_break():
@@ -65,24 +89,29 @@ def test_tied_on_exactly_one_framework_marks_the_participant_for_the_tie_break()
     assert tie_break(document(), only_role_tied)["outcome"] == "tie_break"
 
 
-def test_tied_on_both_frameworks_is_a_generalist():
-    both_tied = result([21, 20, 11, 22, 14, 12], [12, 22, 21, 10, 13, 22])  # ✨ the prototype's "Both tied at top"
+# ✨ ADR 0018's worked example: Deacon 20.17, Evangelist 19.60, Prophet 18.16, Shepherd 17.87, Apostle 15.85 and
+# Teacher 8.36, in declaration order here; PEP the same shape. Teacher and Facilitate read "Less used".
+REVIEW_WALK = [1585, 1816, 1960, 1787, 836, 2017]
 
-    assert tie_break(document(), both_tied)["outcome"] == "generalist"
+
+def test_too_close_to_call_on_both_frameworks_but_not_flat_is_never_a_generalist_and_has_pairs_on_both():
+    both_tied = result(REVIEW_WALK, REVIEW_WALK)
+
+    detected = tie_break(document(), both_tied)
+    assert detected == {"tied": {"apest": ["deacon", "evangelist"], "pep": ["deliver", "assess"]}, "outcome": "tie_break"}
+    assert {pair["framework"] for pair in pair_plan(planned(), both_tied)} == {"apest", "pep"}
+
+
+def test_flat_on_both_frameworks_is_a_generalist_with_no_pairs_though_too_close_to_call():
+    """✨ An even share is 16.67: 17 is 102% of it and 16 is 96%, so every construct reads "Present"."""
+    flat = result([17, 17, 17, 17, 16, 16], [16, 17, 16, 17, 17, 17])
+
+    assert tie_break(document(), flat)["outcome"] == "generalist"
+    assert pair_plan(planned(), flat) == []
 
 
 def test_tied_on_neither_framework_leaves_nothing_to_break():
     assert tie_break(document(), result(CLEAR_APEST, CLEAR_PEP)) == {"tied": {}, "outcome": None}
-
-
-def test_the_threshold_and_cluster_size_come_from_the_document():
-    four_behind = result([10, 30, 26, 27, 14, 10], CLEAR_PEP)
-
-    assert tie_break(document(threshold=3), four_behind)["tied"] == {"apest": ["prophet", "shepherd"]}
-    assert tie_break(document(threshold=4, cluster=2), four_behind)["tied"] == {"apest": ["prophet", "shepherd"]}
-    assert tie_break(document(threshold=4, cluster=3), four_behind)["tied"] == {
-        "apest": ["prophet", "shepherd", "evangelist"]
-    }
 
 
 def test_a_pathway_without_a_tie_break_never_marks_anyone():
@@ -152,6 +181,45 @@ def test_a_second_round_asks_about_the_same_pair_with_different_statements():
         for pair in pairs
         for construct, statement in zip(pair["constructs"], pair["statements"])
     )
+
+
+def asked(pairs):
+    """✨ A pair plan as `[(framework, a, b, round), ...]`, in the order asked."""
+    return [(pair["framework"], *pair["constructs"], pair["round"]) for pair in pairs]
+
+
+def test_with_both_frameworks_too_close_to_call_the_pairs_alternate_between_them_each_in_two_rounds():
+    pairs = pair_plan(planned(), result(REVIEW_WALK, REVIEW_WALK))
+
+    assert asked(pairs) == [
+        ("apest", "deacon", "evangelist", 0),
+        ("pep", "deliver", "assess", 0),
+        ("apest", "deacon", "evangelist", 1),
+        ("pep", "deliver", "assess", 1),
+    ]
+
+
+# ✨ Four tied on each framework, so six pairs a round each: 24 questions in all, well past the budget of ten.
+FOUR_TIED = [21, 21, 21, 21, 10, 6]
+
+
+def test_past_the_budget_second_rounds_go_first_then_the_least_important_pairs():
+    """✨ Ranked first to fourth, a pair's importance is its places' sum: 1st against 2nd most, 3rd against 4th least."""
+    both = result(FOUR_TIED, FOUR_TIED)
+    apest = ["apostle", "prophet", "evangelist", "shepherd"]
+    pep = ["ponder", "ideate", "assess", "rally"]
+    by_importance = [(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)]
+    first_rounds = [
+        asked_pair
+        for i, j in by_importance
+        for asked_pair in (("apest", apest[i], apest[j], 0), ("pep", pep[i], pep[j], 0))
+    ]
+
+    assert asked(pair_plan(planned(), both)) == first_rounds[:10]
+    assert asked(pair_plan(planned(budget=14), both)) == first_rounds + [
+        ("apest", "apostle", "prophet", 1),
+        ("pep", "ponder", "ideate", 1),
+    ]
 
 
 def answered(*picks, framework="apest"):
@@ -236,15 +304,15 @@ def with_a_tie_break(**settings):
     return tests.documents.with_a_tie_break(sort_pathway(), **settings)
 
 
-def test_a_pathway_may_set_the_threshold_and_cluster_size_and_word_the_generalist():
-    assert validate(with_a_tie_break(threshold=3, cluster=2)) == []
+def test_a_pathway_may_set_the_percentage_and_cluster_size_and_word_the_generalist():
+    assert validate(with_a_tie_break(percent=2.5, cluster=2)) == []
 
 
 @pytest.mark.parametrize(
     "setting, value",
-    [("threshold", -1), ("threshold", 2.5), ("threshold", 101), ("cluster", 1), ("cluster", "4")],
+    [("percent", -1), ("percent", 101), ("percent", "5"), ("cluster", 1), ("cluster", "4")],
 )
-def test_a_threshold_or_cluster_size_that_could_not_work_is_refused_where_it_is(setting, value):
+def test_a_percentage_or_cluster_size_that_could_not_work_is_refused_where_it_is(setting, value):
     problems = validate(with_a_tie_break(**{setting: value}))
 
     assert [problem.path for problem in problems] == [f"/measurement/tie_break/{setting}"]
