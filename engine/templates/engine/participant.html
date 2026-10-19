@@ -4,4 +4,6 @@
 {# ✨ Every participant page: the engine's own, with the header and its pathway sidebar (ticket 41a). Observers' and #}
 {# the coach's pages extend engine/base.html instead: they have no account, so nothing to sign out of or find. The #}
 {# header needs someone signed in, so a public page extending this one (credits) shows it to them alone. #}
+{# ✨ Signed in, the page takes the hub's deep brown frame (ticket 53b); a public page seen signed out stays plain cream. #}
+{% block body_class %}{% if user.is_authenticated %} class="framed"{% endif %}{% endblock body_class %}
 {% block header %}{% if user.is_authenticated %}{% include "engine/participant_header.html" %}{% endif %}{% endblock header %}
