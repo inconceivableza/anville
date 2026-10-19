@@ -1,5 +1,8 @@
 {% extends "engine/participant.html" %}
 {# ✨ The groups a participant is in (ticket C1). Admins are not named, so nobody's details are shown to every member. #}
+{# ✨ The organisations app's pages stay plain cream, with the participant header but no frame, as its other pages and #}
+{# the account pages do. #}
+{% block body_class %}{% endblock body_class %}
 {% block head_title %}Your groups{% endblock head_title %}
 
 {% block content %}
