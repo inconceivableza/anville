@@ -20,7 +20,7 @@ This can start as soon as ticket 05 lands, so hosting surprises surface early.
 - [ ] Email on the instance starts as fake: nothing is delivered, and the operator can read what would have been sent
 - [ ] Later (part 2, below): the instance sends actual email from a temporary staging domain, so coach and observer links can be emailed on staging, and every message carries a disclaimer that it comes from a test system not intended for production use; a lasting email set-up for the real service is separate (2 Oct demo)
 - [ ] A smoke test passes on the deployed instance: sign up (with the enrolment code if the deployment turns it on), log in, complete a section, resume
-- [ ] Open, and not decided by this ticket: who the controller is, retention and the data protection impact assessment (see spec Further Notes). Confirm the arrangement works for everyone involved before any real participant is added
+- [ ] Open, and not decided by this ticket: who the controller is, retention and the data protection impact assessment (see spec Further Notes). Confirm the arrangement works for everyone involved before any real participant is added (carried to 62)
 
 **Carried from 13b**
 
@@ -71,6 +71,9 @@ Steps 1 to 3, 6, 9, 10, 12 and 12a have no dependency on the human steps and can
 - [ ] The backup's Storage Box sub-account, its password, and its key in the environment's secrets (the runbook lists them as still needed)
 - [ ] A restore tried once into a scratch namespace (step 15)
 - [ ] The smoke test's checks that the observer cookie is marked Secure, and that neither Traefik nor gunicorn logs request paths (step 16)
+- [ ] The criteria above ticked against `deploy/environments/runbook.md`
+
+**Progress, 19 Oct.** Actual email has been set up since 13 Oct (Mailjet, steps 19 and 20). Its send-and-receive test is a password reset to the developer's own address, made in the C3-54 walk. The privacy decisions left open above are now ticket 62, and what a production deployment still needs is ticket 63; neither is this ticket's.
 
 **Part 2: actual email, with a disclaimer**
 

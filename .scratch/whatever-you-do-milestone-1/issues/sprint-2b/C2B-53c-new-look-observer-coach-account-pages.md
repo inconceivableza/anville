@@ -6,18 +6,20 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** 2b (12–16 Oct)
+**Sprint:** 2b (continued from 19 Oct)
 
 **Spec:** Feedback from others; Operating and demonstrating
 
 - [ ] The observer's pages: the landing page, the thank-you, withdrawal, and the page a dead or frozen link shows
 - [ ] The coach's page, with the results and comparison it shows
 - [ ] Sign-up, sign-in, consent and the other account pages
+- [ ] Google sign-in's own pages (confirming, cancelled and the error page) say what allauth's stock English says, in our wording as well as our look
 - [ ] The homepage, keeping the words the hackathon took from the prototype, v3's where its earlier copy differs, and with nothing on it that is not yet true (a newsletter, donations, a contact address that does not exist)
 - [ ] Every one of these pages is readable at phone width, and none is left in the old look
 
 **Context**
 
-- Split from ticket 53 on 15 Oct. The deep brown frame follows 53b's call; if this ticket is done first, it makes the call and 53b follows it
+- Split from ticket 53 on 15 Oct. These pages stay plain cream: the deep brown frame is for the signed-in participant's pages only (53b; the developer's call, 19 Oct)
+- Google sign-in's wording: from the sprint 2b end report's open questions, the developer's call, 19 Oct
 - The observer's card sort and fine-tuning are 53b's, since the participant's share them
 - The pages password reset and Google sign-in add (E1A-28a, E1B-28b) are built in this look whichever lands first

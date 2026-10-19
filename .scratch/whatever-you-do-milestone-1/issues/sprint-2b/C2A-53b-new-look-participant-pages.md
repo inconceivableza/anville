@@ -6,7 +6,7 @@
 
 **Status:** ready-for-agent
 
-**Sprint:** 2b (12–16 Oct)
+**Sprint:** 2b (continued from 19 Oct)
 
 **Spec:** The instrument and results; Operating and demonstrating
 
@@ -14,9 +14,10 @@
 - [ ] The card sort and fine-tuning, which the observer's sort shares
 - [ ] Results, the comparison and the warning before answer collection freezes, with the construct colours as they are
 - [ ] Every one of these pages is readable at phone width, and none is left in the old look
-- [ ] Whether pages beyond the prototype's three take its deep brown frame, as A1-49a gives the hub, is decided by whichever of 53b and 53c lands first, and applied to both
+- [ ] Every signed-in participant page takes the hub's deep brown frame, as A1-49a gives the hub: the sections, results, the comparison and the assessment
 
 **Context**
 
 - Split from ticket 53 on 15 Oct
+- The frame is the developer's call, 19 Oct: the signed-in participant's pages take it; the observer's, coach's and account pages stay plain cream (53c)
 - The tie-break's pair screen (D2-30b) is built in this look whichever lands first
