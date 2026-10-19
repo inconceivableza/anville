@@ -3447,6 +3447,19 @@ html[data-javascript="loaded"] .save-fallback {
   }
 }
 
+/* ✨ v3's card for the sort's card, fine-tuning's groups and the results' and comparison's sections: paper, 12px
+   corners, 22px padding and no border, at every width, as on the hub (fix-3). These rules come after each card's
+   own, so they win over them; undoing fix-3 removes them alone. The card on show in the sort keeps its shadow, so
+   it still stands off the page while it flies to a bucket. */
+.sort-card,
+.score-section,
+.results-section {
+  background: var(--paper);
+  border: 0;
+  border-radius: var(--radius-lg);
+  padding: 22px;
+}
+
 /* ✨ The homepage (ticket 32a): the original prototype's landing page, with the content owner's newer
    "How it works" (its rules prefixed hiw-). Classes are the prototypes', prefixed so they cannot meet the
    engine's own (.section, .step). */
