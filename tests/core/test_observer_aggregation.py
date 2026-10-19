@@ -7,6 +7,8 @@ Over `sort_pathway()`'s two items, a5 (apostle, deliver) and p1 (prophet, ponder
 deliver share is a5's value over both values, and their prophet and ponder share is p1's.
 """
 
+from fractions import Fraction
+
 import pytest
 
 from engine.document.aggregation import aggregate
@@ -38,50 +40,38 @@ def test_each_observer_is_scored_on_their_own_before_averaging():
     [apest, _] = aggregate(sort_pathway(), THREE_OBSERVERS)["frameworks"]
     apostle = apest["constructs"][0]
 
-    # ✨ (90 + 50 + 20) / 3 = 53.3. Pooling the raw values first would give 120 / 220 = 54.5, so 55.
-    assert apostle["percent"] == 53
+    # ✨ (90 + 50 + 20) / 3 = 53.3. Pooling the raw values first would give 120 / 220 = 54.5.
+    assert apostle["share"] == Fraction(160, 3)
 
 
-def test_the_mean_is_rounded_once_not_from_each_observers_rounded_percent():
-    [apest, _] = aggregate(sort_pathway(), [observer(10, 70), observer(10, 70), observer(12, 88)])["frameworks"]
+def test_each_observers_share_is_kept_unrounded_but_never_in_the_order_they_answered():
+    [apest, _] = aggregate(sort_pathway(), [observer(10, 70), observer(12, 88), observer(10, 70)])["frameworks"]
     apostle = apest["constructs"][0]
 
-    # ✨ Shares of 12.5%, 12.5% and 12% average 12.3, so 12. Their rounded percents (13, 13, 12) would give 13.
-    assert apostle["percent"] == 12
-    assert apostle["per_observer"] == [12, 13, 13]
-
-
-def test_each_observers_value_is_kept_but_never_in_the_order_they_answered():
-    [apest, _] = aggregate(sort_pathway(), THREE_OBSERVERS)["frameworks"]
-    apostle = apest["constructs"][0]
-
-    assert apostle["per_observer"] == [20, 50, 90]
+    # ✨ 12%, 12.5% and 12.5%, never the 12, 13 and 13 they round to (ADR 0018), which nothing shows.
+    assert apostle["per_observer_shares"] == [12, Fraction(25, 2), Fraction(25, 2)]
+    assert set(apostle) == {"construct", "share", "per_observer_shares"}
 
 
 def test_both_frameworks_are_given_with_their_constructs_in_declaration_order():
     aggregated = aggregate(sort_pathway(), THREE_OBSERVERS)
-    # ✨ The unrounded shares beside each percent are the comparison's to draw (ADR 0018), and are left out here.
-    for framework in aggregated["frameworks"]:
-        framework["constructs"] = [
-            {key: construct[key] for key in ("construct", "percent", "per_observer")}
-            for construct in framework["constructs"]
-        ]
+
     assert aggregated == {
         "observers": 3,
         "frameworks": [
             {
                 "framework": "apest",
                 "constructs": [
-                    {"construct": "apostle", "percent": 53, "per_observer": [20, 50, 90]},
-                    {"construct": "prophet", "percent": 47, "per_observer": [10, 50, 80]},
+                    {"construct": "apostle", "share": Fraction(160, 3), "per_observer_shares": [20, 50, 90]},
+                    {"construct": "prophet", "share": Fraction(140, 3), "per_observer_shares": [10, 50, 80]},
                 ],
             },
             {
-                # ✨ Ranked, deliver (53) would come before ponder (47).
+                # ✨ Ranked, deliver (53.3) would come before ponder (46.7).
                 "framework": "pep",
                 "constructs": [
-                    {"construct": "ponder", "percent": 47, "per_observer": [10, 50, 80]},
-                    {"construct": "deliver", "percent": 53, "per_observer": [20, 50, 90]},
+                    {"construct": "ponder", "share": Fraction(140, 3), "per_observer_shares": [10, 50, 80]},
+                    {"construct": "deliver", "share": Fraction(160, 3), "per_observer_shares": [20, 50, 90]},
                 ],
             },
         ],

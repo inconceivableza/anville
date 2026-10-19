@@ -23,6 +23,7 @@ from engine.document.tie_break import (
     GENERALIST,
     LEVEL,
     SAME_TOP,
+    SEPARATED,
     SKIPPED,
     TOP_CHANGED,
     outcomes,
@@ -103,14 +104,17 @@ def results_page(document, scores, sort, name, role="participant"):
 
 
 def _generalist(document, scores, presentation, role):
-    """✨ The document's words telling a participant flat on both frameworks that they are a generalist (ADR 0018), or
-    None for anyone else. Read from the participant's own stored result, the only one this page is given. A result the
-    tie-break re-weighted never says it, even where re-weighting left it flat: a generalist is asked nothing, and its
-    frameworks already say how their pairs came out."""
-    if outcomes(scores) or tie_break(document, scores)["outcome"] != GENERALIST:
+    """✨ The document's words telling a participant that they are a generalist (ADR 0018, amended), or None. Judged on
+    the result shown, the participant's own stored result and the only one this page is given: it must be flat on both
+    frameworks, whether as sorted or as the tie-break re-weighted it, and never beside a framework the tie-break
+    separated. A re-weighted result says so in the document's words for after the pairs; a pathway version loaded
+    before it had them says it in the sort's."""
+    broken = outcomes(scores)
+    if any(outcome in SEPARATED for outcome in broken.values()) or tie_break(document, scores)["outcome"] != GENERALIST:
         return None
     wording = presentation["generalist"]
-    return {"heading": text_for(wording["heading"], role), "text": text_for(wording["text"], role)}
+    text = wording.get("after_pairs", wording["text"]) if broken else wording["text"]
+    return {"heading": text_for(wording["heading"], role), "text": text_for(text, role)}
 
 
 def _after_tie_break(presentation, scores, framework, role):

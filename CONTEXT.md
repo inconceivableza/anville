@@ -145,7 +145,7 @@ A framework in which every construct's standing is "Present" or "Strong": none l
 _Avoid_: even, balanced (the tie-break's word for an outcome).
 
 **Generalist**:
-A participant whose self-assessment is flat on both frameworks. They get no tie-break, and are told so in their results, after the prototype's "Two flat profiles is itself a finding".
+A participant whose result, as shown, is flat on both frameworks: a sort flat on both, which gets no tie-break, or a result the tie-break re-weighted flat on both with no framework separated. They are told so in their results, after the prototype's "Two flat profiles is itself a finding".
 _Avoid_: all-rounder, flat profile (for the person).
 
 ### People

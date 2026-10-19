@@ -167,7 +167,11 @@ def with_a_tie_break(document, **settings):
         **settings,
         "statements": {c: [f"I am {c}, first", f"I am {c}, second", f"I am {c}, third"] for c in constructs},
     }
-    document["presentation"]["generalist"] = {"heading": "A generalist", "text": "Two flat profiles is itself a finding."}
+    document["presentation"]["generalist"] = {
+        "heading": "A generalist",
+        "text": "Two flat profiles is itself a finding.",
+        "after_pairs": "Two flat profiles, even after your pairs.",
+    }
     document["presentation"]["tie_break"] = {
         "question": "Which is more true of you?",
         "skip": "Neither fits — skip",
