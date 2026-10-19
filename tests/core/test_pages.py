@@ -206,6 +206,16 @@ def test_a_page_break_carries_nothing_but_its_identifier():
     assert "'title' was unexpected" in problem.message
 
 
+def test_a_page_break_takes_no_skip_label():
+    """✨ The way on from every page reads "Continue →" (ticket 60), so a break cannot word it otherwise."""
+    skipping = {**page_break("to-2"), "skip_label": "I'll sort this later →"}
+    document = with_blocks(skipping, {"id": "more", "type": "rich_text", "body": "."})
+
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/0/blocks/1"
+    assert "'skip_label' was unexpected" in problem.message
+
+
 def test_a_page_break_ending_a_section_is_reported_since_it_leaves_an_empty_page():
     assert validate(with_blocks(page_break("to-2"))) == [
         Problem(path="/content/sections/0/blocks/1", message="A page break must come between blocks, not leave a page empty.")

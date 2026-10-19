@@ -36,7 +36,6 @@ from engine.document import (
 from engine.document.blocks import (
     CONTACTS,
     blocks_of,
-    break_after,
     coach_brief,
     landing_of,
     link_shown,
@@ -58,7 +57,7 @@ from engine.document.coach import (
 )
 from engine.document.contacts import LIST_FULL, MAX_CONTACTS, contact_from_form, needed, rows_of, voices_card
 from engine.document.aggregation import aggregate
-from engine.document.gates import clauses_of, has_content, links_issued_key
+from engine.document.gates import clauses_of, links_issued_key
 from engine.document.scoring import score
 from engine.hub import (
     COMPLETE,
@@ -501,8 +500,8 @@ def coach_checklist(request, block_id):
     checklist_block = next(on_page for on_page in shown["section"]["blocks"] if on_page["id"] == block_id)
     checklist_block["checklist"] = _checklist_screen(checklist_block["text"], **screen)
     if is_htmx:
-        # ✨ Keeping or removing a coach can change the page's way on (a skip label), so it comes too, as after an
-        # autosave; stepping through the checklist changes nothing stored, so the way on stays as it was.
+        # ✨ Keeping or removing a coach can change what the page's gate holds met (the coach's link issued), so its way
+        # on comes too, as after an autosave; stepping through the checklist changes nothing stored, so it stays.
         context = {**shown, "block": checklist_block, "stored": stored}
         result = render(request, "engine/coach_checklist_result.html", context, status=status)
         if coach is not None:
@@ -618,11 +617,6 @@ def _coach_link_state(contact_id, issued=None):
         "answer": answer or ("waiting" if live else None),
         "issued": issued["link"] if issued and issued["contact"] == contact_id else None,
     }
-
-
-def _coach_declined(contact_id):
-    """✨ Whether the coach kept declined, through the link they still have an answer on."""
-    return Invitation.objects.filter(contact_id=contact_id, coach_answer=Invitation.CoachAnswer.DECLINED).exists()
 
 
 def _saved(request, state, section, block_id):
@@ -1702,8 +1696,6 @@ def _section_page(state, section, page=1, issued=None):
             "number": page,
             "count": page_count(section),
             "is_last": is_last,
-            "skip_label": _skip_label(section, page, answers),
-            "continue_label": _continue_label(section, page, answers),
         },
         "pathway": {
             "version_id": version.pk,
@@ -1784,31 +1776,6 @@ def _requirement_links(state, section):
             _block_address(document, block["id"]) if is_coach else reverse("invitations")
         )
     return links
-
-
-def _skip_label(section, page, answers):
-    """✨ The way on from a page as its break words it for passing by, such as the original prototype's "I'll sort this
-    later →", while nothing on the page holds an answer; otherwise None, and the way on is "Continue →". A coach
-    checklist's answer is the coach kept, so choosing one turns the skip into "Continue →"."""
-    ends_in = break_after(section, page)
-    if ends_in is None or "skip_label" not in ends_in:
-        return None
-    if any(has_content(answers.get(block["id"])) for block in pages_of(section)[page - 1]):
-        return None
-    return text_for(ends_in["skip_label"], "participant")
-
-
-def _continue_label(section, page, answers):
-    """✨ "Continue →", or on a page holding a coach kept, "Continue with Sam →". Choosing someone else shows the
-    checklist's own "Continue →" just above, so the page's way on names the coach it goes on with, to read apart. A
-    coach who declined is not gone on with, so the way on is "Continue without a coach →"."""
-    for block in pages_of(section)[page - 1]:
-        coach = _coach_kept(answers, block["id"]) if block["type"] == "coach_checklist" else None
-        if coach and "id" in coach and _coach_declined(coach["id"]):
-            return "Continue without a coach →"
-        if coach:
-            return f"Continue with {coach['name']} →"
-    return "Continue →"
 
 
 def _published_version(posted):
