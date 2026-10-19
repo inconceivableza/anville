@@ -5,7 +5,8 @@
 version's wording, and on the comparison set beside the observer average.
 
 Nothing here touches the database or a request. The numbers come from the stored result and are never
-recomputed, and are shown only as words and places on an axis (ticket 38); the words, standings and tones come from
+recomputed from the answers, and are shown only as words and places on an axis (ticket 38); the standings are read
+from the stored result's unrounded shares (ADR 0018); the words, standings and tones come from
 the same pathway version the result was scored against.
 """
 
@@ -13,7 +14,7 @@ import random
 
 from engine.document.comparison import agreement, comparison_settings, largest_gaps, seen_by_others
 from engine.document.observers import minimum_observers
-from engine.document.scoring import percents_by_construct
+from engine.document.scoring import percents_by_construct, unrounded_shares
 from engine.document.standing import standing
 from engine.document.text import text_for
 from engine.document.tie_break import BALANCED, CIRCLE, GENERALIST, LEVEL, SAME_TOP, TOP_CHANGED, tie_break
@@ -66,6 +67,7 @@ def results_page(document, scores, sort, name, role="participant"):
     framework_presentation = {entry["framework"]: entry for entry in presentation.get("frameworks", [])}
     frameworks = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
     title = presentation.get("results_title", document["title"])
+    shares = unrounded_shares(scores)
     return {
         "title": text_for(title, role).replace("{name}", name),
         "frameworks": [
@@ -75,6 +77,7 @@ def results_page(document, scores, sort, name, role="participant"):
                     frameworks[scored["framework"]],
                     framework_presentation.get(scored["framework"], {}),
                     scored["constructs"],
+                    shares[scored["framework"]],
                     construct_presentation,
                     document["instrument"]["items"],
                     sort,
@@ -90,7 +93,7 @@ def results_page(document, scores, sort, name, role="participant"):
 
 
 def _generalist(document, scores, presentation, role):
-    """✨ The document's words telling a participant tied on both frameworks that they are a generalist (ticket 30a), or
+    """✨ The document's words telling a participant flat on both frameworks that they are a generalist (ADR 0018), or
     None for anyone else. Read from the participant's own stored result, the only one this page is given."""
     if tie_break(document, scores)["outcome"] != GENERALIST:
         return None
@@ -315,7 +318,7 @@ def _at(percent, top):
     return round(min(percent / top, 1) * 100, 2)
 
 
-def _framework(document, framework, presentation, ranked_constructs, construct_presentation, items, sort, role):
+def _framework(document, framework, presentation, ranked_constructs, shares, construct_presentation, items, sort, role):
     labels = {construct["id"]: text_for(construct["label"], role) for construct in framework["constructs"]}
     by_rank = presentation.get("bars") == "rank"
     ranks = bar_ranks([construct["percent"] for construct in ranked_constructs])
@@ -328,7 +331,8 @@ def _framework(document, framework, presentation, ranked_constructs, construct_p
             {
                 "label": labels[construct["construct"]],
                 "percent": construct["percent"],
-                "standing": text_for(standing(document, construct["percent"], constructs), role),
+                # ✨ From the unrounded share, so the words never round a construct into a band it is short of.
+                "standing": text_for(standing(document, shares[construct["construct"]], constructs), role),
                 "at": _at(construct["percent"], top),
                 "past_end": construct["percent"] > top,
                 "persona": _text(shown, "persona", role),

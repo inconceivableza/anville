@@ -261,12 +261,12 @@ def _missing_constructs(document, construct_ids):
 
 
 def _unworded_generalist(document):
-    """✨ A tie-break tells a participant tied on both frameworks that they are a generalist (ticket 30a), so a pathway
-    with one needs the words to tell them in."""
+    """✨ A tie-break tells a participant flat on both frameworks that they are a generalist (ticket 30a, ADR 0018), so a
+    pathway with one needs the words to tell them in."""
     if "tie_break" in document.get("measurement", {}) and "generalist" not in document.get("presentation", {}):
         yield Problem(
             "/measurement/tie_break",
-            "A pathway with a tie-break needs presentation.generalist, the words that tell a participant tied on both "
+            "A pathway with a tie-break needs presentation.generalist, the words that tell a participant flat on both "
             "frameworks they are a generalist.",
         )
 

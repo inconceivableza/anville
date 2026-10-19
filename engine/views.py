@@ -437,7 +437,7 @@ def save_answer(request, block_id):
         except IntegrityError:
             refusal = "Your results are already in. Retaking the sort is not offered yet."
             return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
-        # ✨ A sort too close to call on one framework leads to the tie-break's pairs first (ticket 30b).
+        # ✨ A sort too close to call on one framework or both, and not flat, leads to the tie-break's pairs first.
         if pair_plan(state.version.document, scores):
             return _go_to(request, reverse("tie_break", args=[block_id]))
         return _to_results(request, block_id)
@@ -671,8 +671,8 @@ def _results_drawn(state, result, block_id):
 @consent_required
 @require_http_methods(["GET", "POST"])
 def tie_break(request, block_id):
-    """✨ The tie-break's next unanswered pair (ticket 30b), for a participant whose own sort left one framework too close
-    to call; anyone else, or one who has answered or skipped every pair, goes on to their results. Answering stores the
+    """✨ The tie-break's next unanswered pair (ticket 30b), for a participant whose own sort left one framework or both
+    too close to call; anyone else, or one who has answered or skipped every pair, goes on to their results. Answering stores the
     choice beside the sort's result and comes back here for the next. Only the participant's own result is read, so an
     observer's sort never leads here."""
     state, result, section = _own_result(request.user, block_id)

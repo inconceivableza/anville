@@ -6,7 +6,7 @@
   comparison.
 {% endcomment %}
 <div class="own-results">
-  {% comment %}✨ A participant tied on both frameworks is told they are a generalist (ticket 30a), set off as a hint is. It speaks to them, so only their own results show it, not their coach's link.{% endcomment %}
+  {% comment %}✨ A participant flat on both frameworks is told they are a generalist (ticket 30a, ADR 0018), set off as a hint is. It speaks to them, so only their own results show it, not their coach's link.{% endcomment %}
   {% if drawn.results.generalist %}
     <div class="hint-box"><strong>{{ drawn.results.generalist.heading }}</strong>{{ drawn.results.generalist.text }}</div>
   {% endif %}
