@@ -97,6 +97,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Keyboard only: Tab reaches "Your pathway", Enter or Space opens it, and Tab then moves through its links, with the focus ring showing on each.
 - Screen reader: "Your pathway" is announced as collapsed or expanded, and the step you are on as the current page.
 - Phone width: the header fits on one line or wraps tidily, the panel fills most of the width without sideways scrolling, and a long list scrolls inside the panel.
+- Phone width (ticket 53b): every section in the panel that isn't locked is a link, and so are invitations, the coach page, results and the comparison below them; none is missing, as they were on a phone before. On the homepage, the menu still hides its links at phone width as before.
 - "Sign out" lands on the homepage, signed out.
 - The footer's "Credits" shows the header while signed in, and the plain page once signed out.
 - With `ANVILLE_SIDEBAR=false` in `.env` and the server restarted, "Your pathway" is gone; the pathway's name and "Sign out" remain.
@@ -112,6 +113,30 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Walk with a coach and Five trusted voices, side cards since ticket 50, show in the right column as cards with their title, sentence and status, and not in the list or "Your pathway"; each title leads to its page. The old "Walk with a mentor" card is gone (ticket 51b), and so is the hub's own "Five trusted voices" card (ticket 51a).
 - Walk with a coach's tag (ticket 51b): "Locked" before Before we begin is done, then "Not started"; once Sam is saved, "Link issued"; after Sam accepts or declines on the link, "Accepted" or "Declined"; reissuing the link goes back to "Link issued"; revoking it, "Not started". Its sentence is "When you're ready, ask someone to walk this with you.", with no briefing pack. At phone width the tag fits beside the title.
 - Five trusted voices (ticket 51a) is a dark card, as the prototype's, with no names and no name box: "Not started" before anyone is added; with one person, "2 more needed" and "You'll see how others see you once 3 people have answered."; with three, "Complete" (ticket 52), as the section completes once three people have links. "Invited" counts people with a working link (revoking one counts down) and "Answered" counts assessments sent (starting from a link does not count), each "n / 5". "Manage" and the title lead to the section's page. Once the section is complete the tag says "Complete" and never asks for more people. Phone width: the meters fill the card.
+
+## The participant's pages in the hub's look (ticket 53b; each page signed in, at a wide screen and at about 375px)
+
+On every page below, check:
+- The page is deep brown, as the hub is. The header and the page sit on cream with rounded corners, inset a thin brown border from every edge, and "Credits" is below them on the brown, easy to read. With `ANVILLE_DEMO_NOTICE` set, the thin amber strip is the top of the cream, its top corners rounded, and the header follows straight on beneath it.
+- The cream runs across the whole width of the frame, but the page's words keep the narrow column they had, centred. On a phone the words sit about 16px in from the cream's edges, and nothing scrolls sideways.
+- The page's title is in the heading face, light and large, as the hub's "Welcome" is; a title that wraps breaks into lines of similar length.
+- The hub itself looks exactly as it did before this ticket. That includes its wide layout and its "Welcome, …" heading.
+
+Page by page:
+- **A section page** (Section 1, then a paged section such as Before we begin opened from the hub): "← Back to the hub", the title, "Page 1 of 2" where it has pages, then "Whole section: …" and each activity's "This part: …" in small grey capitals, as the hub's "1 of 9 sections complete" is. The scripture reading, the 1–10 scales, the long-text questions and the contact list are the same cards as before, on the cream.
+- **The gate:** under "Mark complete" (or "Continue →"), each requirement still waiting is a pale box with a grey bar on its left; each one met is plain, with a green tick and bar. "← Previous page" sits beside the way on as before.
+- **Section 1's Strengths assessment card:** its status ("Not started", "Complete" …) is a small rounded tag in grey capitals, as the hub's tags are. Once the assessment is done, "View my results →" leads to the results as before (ticket 61).
+- **The Workbook's pages** (Sections 2, 3 and 4, on paper): "Download Section 2 (PDF)" and "I've finished Section 2" are in the same look as Section 1's buttons; the same for 3 and 4.
+- **Walk with a coach and Five trusted voices** (the hub's side cards, opened): what each waits on is listed as the gate's pale boxes are, with no "Mark complete".
+- **The hub's locked sections:** a locked section's row shows its title in grey and what opens it ("Opens once you've finished …") in grey beneath it, as before; a locked side card's title is grey and not a link.
+- **The card sort and fine-tuning** (Section 1's assessment): the thin progress bar, the card and the five buckets, "↩ Undo last", the all-sorted screen with its counts, and the sliders look as they did. They now sit on the cream inside the frame. At phone width the buckets stack one above another and nothing scrolls sideways, even as a card flies off. The observer's sort, in a private window, looks the same but stays plain cream, with no frame.
+- **The tie-break's pairs** (a participant tied on a framework): the pairs sit centred in the frame, and each option fills the column. At phone width the options are easy to tap.
+- **Results:** each framework is a card. Each construct's name sits on the left and its standing on the right, with a gap between them even at phone width, where a long name wraps rather than running into its standing. Every drawing, the generalist's box and a framework's tie-break box are as D5-59b left them, in the construct colours as before. "Compare with how others see you →" is centred below.
+- **"Before you look"** (the freeze warning): its pale green box, then "Compare with how others see you →", centred.
+- **The comparison:** the illustrative note is amber with its right-hand corners rounded. "You" is green and "Others" blue as before. The largest gaps and the questions to reflect on are cards, and "← Return to …" is at the foot. At phone width each construct stacks: its name, then the drawing, then the words.
+- **Removing a contact** (without JavaScript, a person's "Remove" on the contact list), **Your groups** and **Your organisations** (from the hub's foot): framed like the rest, with their forms and buttons as before.
+- **Credits:** signed in, framed with the header; signed out, plain cream with no frame and no header.
+- **Not framed:** the wizard (Before we begin as new), the observer's pages, the coach's link, sign in, sign up and consent all stay as they were, with no brown frame.
 
 ## Before we begin as a wizard (ticket 50; load the pathway again first, then sign up as someone new)
 

@@ -4,17 +4,17 @@
 
 **Blocked by:** C1A-53a (One set of styles); C1B-46 (The demo notice on every page); A5A-52 (Workbook and Section 1 gates); B1B-42 (Observers skip fine-tuning quickly); B2B-55 (Answer collection freezes once results are viewed)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (continued from 19 Oct)
 
 **Spec:** The instrument and results; Operating and demonstrating
 
-- [ ] Section pages, the Workbook's page, and the hub's messages for a locked section
-- [ ] The card sort and fine-tuning, which the observer's sort shares
-- [ ] Results, the comparison and the warning before answer collection freezes, with the construct colours as they are
-- [ ] Every one of these pages is readable at phone width, and none is left in the old look
-- [ ] Every signed-in participant page takes the hub's deep brown frame, as A1-49a gives the hub: the sections, results, the comparison and the assessment
+- [x] Section pages, the Workbook's page, and the hub's messages for a locked section
+- [x] The card sort and fine-tuning, which the observer's sort shares
+- [x] Results, the comparison and the warning before answer collection freezes, with the construct colours as they are
+- [x] Every one of these pages is readable at phone width, and none is left in the old look
+- [x] Every signed-in participant page takes the hub's deep brown frame, as A1-49a gives the hub: the sections, results, the comparison and the assessment
 
 **Context**
 
