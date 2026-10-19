@@ -140,6 +140,17 @@ def test_each_standing_comes_from_the_unrounded_share(client, participant, load_
 
 
 @pytest.mark.django_db
+def test_two_constructs_a_fraction_apart_are_drawn_apart(signed_in):
+    """✨ Apostle's 81 of 161 is 50.31% and Prophet's 80 is 49.69%: both 50 rounded, drawn where they are unrounded
+    (ADR 0018). Section 1, the comparison and the coach's view draw from the same results."""
+    submit_sort(signed_in, complete_sort(a5={"bucket": "strength", "value": 81}, p1={"bucket": "strength", "value": 80}))
+
+    page = results(signed_in).content.decode()
+
+    assert re.findall(r'class="result-dot[^"]*" cx="([\d.]+)"', page)[:2] == ["50.31", "49.69"]
+
+
+@pytest.mark.django_db
 def test_each_profile_carries_its_subtitle_descriptions_and_personas(signed_in):
     submit_sort(signed_in, complete_sort())
 

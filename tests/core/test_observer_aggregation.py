@@ -59,7 +59,14 @@ def test_each_observers_value_is_kept_but_never_in_the_order_they_answered():
 
 
 def test_both_frameworks_are_given_with_their_constructs_in_declaration_order():
-    assert aggregate(sort_pathway(), THREE_OBSERVERS) == {
+    aggregated = aggregate(sort_pathway(), THREE_OBSERVERS)
+    # ✨ The unrounded shares beside each percent are the comparison's to draw (ADR 0018), and are left out here.
+    for framework in aggregated["frameworks"]:
+        framework["constructs"] = [
+            {key: construct[key] for key in ("construct", "percent", "per_observer")}
+            for construct in framework["constructs"]
+        ]
+    assert aggregated == {
         "observers": 3,
         "frameworks": [
             {

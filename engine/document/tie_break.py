@@ -9,10 +9,11 @@ every framework is a generalist instead, and is asked nothing. Run on the partic
 observer's. Nothing here touches the database or a request.
 """
 
+import math
 from fractions import Fraction
 from itertools import zip_longest
 
-from engine.document.scoring import round_half_up, unrounded_shares
+from engine.document.scoring import unrounded_shares
 from engine.document.standing import flat
 
 # ✨ ADR 0018's: a leader at most 5% more than another, and the content owner's prototype's at most the top four.
@@ -31,13 +32,14 @@ GENERALIST = "generalist"
 # compositional score (ADR 0003): once a result is made with it, its behaviour is frozen, and a change is a new name.
 REWEIGHTING = "pairwise_reweighting"
 
-# ✨ What the tie-break's answers did to the tied framework: a new construct leads, the same one leads, or none does,
-# because the choices went in a circle or left the best of them level.
+# ✨ What the tie-break's answers did to a tied framework: a new construct leads, the same one leads, or none does,
+# because the choices went in a circle or left the best of them level, or every pair was skipped (ADR 0018).
 TOP_CHANGED = "top_changed"
 SAME_TOP = "same_top"
 CIRCLE = "circle"
 LEVEL = "level"
 BALANCED = (CIRCLE, LEVEL)
+SKIPPED = "skipped"
 
 
 def tie_break(document, result):
@@ -112,25 +114,53 @@ def _by_importance(framework, cluster):
 
 
 def reweigh(document, result, answers):
-    """✨ The result re-weighted by the tie-break's answers (ticket 30c), as the content owner's prototype's `rescore`
-    does it, for a participant marked for the tie-break who has answered or skipped every pair. The sort's result is
-    left as it is: this is a second result, kept beside it, with `tie_break` saying which framework was broken and how.
+    """✨ The result re-weighted by the tie-break's answers (ticket 30c, ADR 0018), as the content owner's prototype's
+    `rescore` does it, for a participant marked for the tie-break who has answered or skipped every pair. The sort's
+    result is left as it is: this is a second result, kept beside it, with `tie_break` listing each framework that had
+    pairs and how its answers came out.
 
-    Only the tied framework's answers count. Each construct that entered the tie-break weighs 1 plus the share of its
-    appearances it won, a skip being an appearance for both and a win for neither, and the points those constructs
-    had between them are shared out again by weight. Each share is rounded half up on its own, as the compositional
-    score rounds, where the prototype added what rounding lost to the leader, which could make a leader of one. The
-    framework is ranked by the unrounded shares, which replace its fallback to declaration order; constructs level on
-    them keep the sort's order. Every other construct and framework is as the sort scored it.
+    Each tied framework that had pairs is re-weighted from its own answers alone, so neither framework's answers
+    change the other. Each construct that entered its tie-break weighs 1 plus the share of its appearances it won, a
+    skip being an appearance for both and a win for neither, and the unrounded share those constructs had between them
+    is shared out again by weight. Every construct keeps its unrounded share, as an exact fraction written out, beside
+    its whole number: each re-weighted share is rounded half up on its own, as the compositional score rounds, where
+    the prototype added what rounding lost to the leader, which could make a leader of one. A re-weighted framework is
+    ranked by the unrounded shares, which replace its fallback to declaration order; constructs level on them keep the
+    sort's order. Every other construct and framework is as the sort scored it.
 
     The choices went in a circle when some construct beat one that beat one that beat it, as the prototype checks for,
     across both rounds; the prototype then says the constructs are genuinely balanced rather than forcing a winner.
-    Where no circle is found but the best weight is shared, as when every pair is skipped, there is no winner to name
-    either, so that is balanced too (LEVEL).
+    Where no circle is found but the best weight is shared, there is no winner to name either, so that is balanced too
+    (LEVEL). Every pair skipped says nothing about the participant (SKIPPED), so that framework is left as sorted.
     """
-    # ✨ With both frameworks tied, only the first is re-weighted for now (ticket 59b re-weights each).
-    framework_id, cluster = next(iter(tie_break(document, result)["tied"].items()))
-    answers = [answer for answer in answers if answer["framework"] == framework_id]
+    tied = tie_break(document, result)["tied"]
+    sorted_shares = unrounded_shares(result)
+    frameworks, broken = [], []
+    for framework in result["frameworks"]:
+        framework_id = framework["framework"]
+        share = sorted_shares[framework_id]
+        constructs = [{**construct, "share": str(share[construct["construct"]])} for construct in framework["constructs"]]
+        own_answers = [answer for answer in answers if answer["framework"] == framework_id]
+        if framework_id in tied and own_answers:
+            outcome, share = _reweighed(tied[framework_id], share, own_answers)
+            broken.append({"framework": framework_id, "outcome": outcome})
+            if outcome != SKIPPED:
+                constructs = [
+                    {**construct, "percent": _round_half_up(share[c]), "share": str(share[c])}
+                    if (c := construct["construct"]) in tied[framework_id]
+                    else construct
+                    for construct in constructs
+                ]
+                # ✨ Stable, so constructs level on their unrounded share keep the order the sort ranked them in.
+                constructs.sort(key=lambda construct: -share[construct["construct"]])
+        frameworks.append({"framework": framework_id, "constructs": constructs})
+    return {"method": REWEIGHTING, "frameworks": frameworks, "tie_break": broken}
+
+
+def _reweighed(cluster, share, answers):
+    """✨ One tied framework's outcome and its shares after its own answers: `(outcome, {construct: share})`."""
+    if all(answer["chosen"] is None for answer in answers):
+        return SKIPPED, share
     wins = {construct: 0 for construct in cluster}
     appearances = {construct: 0 for construct in cluster}
     beaten = {construct: set() for construct in cluster}
@@ -143,23 +173,8 @@ def reweigh(document, result, answers):
             beaten[answer["chosen"]].add(loser)
     # ✨ Fractions, so weights that are equal compare equal.
     weights = {c: 1 + (Fraction(wins[c], appearances[c]) if appearances[c] else 0) for c in cluster}
-
-    frameworks = []
-    for framework in result["frameworks"]:
-        if framework["framework"] != framework_id:
-            frameworks.append(framework)
-            continue
-        total = sum(construct["percent"] for construct in framework["constructs"] if construct["construct"] in cluster)
-        share = {c: total * weights[c] / sum(weights.values()) for c in cluster}
-        constructs = [
-            {**construct, "percent": round_half_up(share[construct["construct"]])}
-            if construct["construct"] in cluster
-            else construct
-            for construct in framework["constructs"]
-        ]
-        # ✨ Stable, so constructs level on their unrounded share keep the order the sort ranked them in.
-        constructs.sort(key=lambda construct: -share.get(construct["construct"], construct["percent"]))
-        frameworks.append({"framework": framework_id, "constructs": constructs})
+    total = sum(share[c] for c in cluster)
+    reweighed = {**share, **{c: total * weights[c] / sum(weights.values()) for c in cluster}}
 
     best = max(weights.values())
     if _in_a_circle(beaten):
@@ -170,11 +185,21 @@ def reweigh(document, result, answers):
         outcome = TOP_CHANGED
     else:
         outcome = SAME_TOP
-    return {
-        "method": REWEIGHTING,
-        "frameworks": frameworks,
-        "tie_break": {"framework": framework_id, "outcome": outcome},
-    }
+    return outcome, reweighed
+
+
+def _round_half_up(share):
+    """✨ `round_half_up` kept exact for a fraction: a half added as a float would turn it into one."""
+    return math.floor(share + Fraction(1, 2))
+
+
+def outcomes(result):
+    """✨ `{framework: outcome}` for each framework a re-weighted result broke, or {} for any other result. A result
+    re-weighted before ticket 59b names its one framework on its own, and is read the same way."""
+    broken = result.get("tie_break") or []
+    if isinstance(broken, dict):
+        broken = [broken]
+    return {entry["framework"]: entry["outcome"] for entry in broken}
 
 
 def _in_a_circle(beaten):

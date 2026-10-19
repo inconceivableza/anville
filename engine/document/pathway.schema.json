@@ -264,10 +264,10 @@
           }
         },
         "tie_break": {
-          "description": "The wording of the tie-break's pair screen (measurement.tie_break, ticket 30b): the question over each pair, the skip, and a quiet label naming each framework, keyed by its id (the framework's own label when left out). Then what the results page says on the framework the answers re-weighted (ticket 30c): separated, with a new leader (changed) or the same one (same), or genuinely balanced, the choices having gone in a circle (circle) or left the best of them level (level). Needed whenever the pathway has a tie-break.",
+          "description": "The wording of the tie-break's pair screen (measurement.tie_break, ticket 30b): the question over each pair, the skip, and a quiet label naming each framework, keyed by its id (the framework's own label when left out). Then what the results page says on each framework the answers re-weighted (ticket 30c, ADR 0018): separated, with a new leader (changed) or the same one (same), genuinely balanced, the choices having gone in a circle (circle) or left the best of them level (level), or every pair skipped (skipped), which says nothing about the participant. Needed whenever the pathway has a tie-break.",
           "type": "object",
           "additionalProperties": false,
-          "required": ["question", "skip", "separated", "balanced"],
+          "required": ["question", "skip", "separated", "balanced", "skipped"],
           "properties": {
             "question": { "$ref": "#/$defs/text" },
             "skip": { "$ref": "#/$defs/text" },
@@ -290,6 +290,15 @@
                 "heading": { "$ref": "#/$defs/text" },
                 "circle": { "$ref": "#/$defs/text" },
                 "level": { "$ref": "#/$defs/text" }
+              }
+            },
+            "skipped": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["heading", "text"],
+              "properties": {
+                "heading": { "$ref": "#/$defs/text" },
+                "text": { "$ref": "#/$defs/text" }
               }
             }
           }

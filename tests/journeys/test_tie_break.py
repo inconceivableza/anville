@@ -192,7 +192,9 @@ def test_a_sort_tied_on_both_frameworks_but_not_flat_asks_pairs_on_each_in_turn_
 
     assert asked == ["apest", "pep", "apest", "pep"]
     assert client.get(TIE_BREAK)["Location"] == "/results/strengths-sort/"
-    assert GENERALIST not in results(client).content.decode()
+    page = text_of(results(client).content.decode())
+    assert GENERALIST not in page
+    assert in_order(page, "Your gifting", "Every pair skipped", "Your energy", "Every pair skipped")
 
 
 @pytest.fixture
@@ -251,12 +253,55 @@ def test_the_results_page_shows_the_re_weighted_result_and_how_the_tie_break_cha
 
 @pytest.mark.django_db
 def test_the_results_page_says_a_framework_is_balanced_when_the_choices_name_no_winner(marked):
-    answer_every_pair(marked, ["", ""])
+    answer_every_pair(marked, ["apostle", "prophet"])
 
     page = text_of(results(marked).content.decode())
 
     assert in_order(page, "Your gifting", "Genuinely balanced", "Apostle", "Present", "Prophet", "Present")
     assert "The top changed" not in page
+
+
+@pytest.mark.django_db
+def test_the_results_page_says_every_pair_was_skipped_in_words_of_its_own(marked):
+    answer_every_pair(marked, ["", ""])
+
+    page = text_of(results(marked).content.decode())
+
+    assert in_order(page, "Your gifting", "Every pair skipped", "As your sort left them.", "Apostle", "Prophet")
+    assert "Genuinely balanced" not in page and GENERALIST not in page
+
+
+@pytest.mark.django_db
+def test_the_re_weighted_result_keeps_each_unrounded_share_beside_its_whole_number(marked):
+    """✨ Prophet weighs 2 to Apostle's 1, so takes two thirds of their 100: 200/3, stored as 67."""
+    answer_every_pair(marked, CHOSE_PROPHET)
+
+    apest = Result.objects.get().reweighted["frameworks"][0]["constructs"]
+
+    assert [(c["construct"], c["percent"], c["share"]) for c in apest] == [("prophet", 67, "200/3"), ("apostle", 33, "100/3")]
+
+
+@pytest.mark.django_db
+def test_a_result_re_weighted_before_its_shares_were_kept_still_renders_with_its_outcome(marked):
+    """✨ As 30c stored it: one framework named on its own, whole numbers only."""
+    answer_every_pair(marked, CHOSE_PROPHET)
+    result = Result.objects.get()
+    result.reweighted = {
+        "method": "pairwise_reweighting",
+        "frameworks": [
+            {
+                "framework": framework["framework"],
+                "constructs": [{k: v for k, v in c.items() if k != "share"} for c in framework["constructs"]],
+            }
+            for framework in result.reweighted["frameworks"]
+        ],
+        "tie_break": {"framework": "apest", "outcome": "top_changed"},
+    }
+    result.save()
+
+    page = text_of(results(marked).content.decode())
+
+    assert in_order(page, "Your gifting", "The top changed", "Prophet", "Leading", "Apostle", "Less used", "Your energy")
 
 
 @pytest.mark.django_db
