@@ -331,12 +331,12 @@
           "additionalProperties": false,
           "properties": {
             "significant_gap": {
-              "description": "A gap of this many percentage points or more is significant; less is a modest gap. 5 when left out.",
+              "description": "A gap of this many percentage points or more, unrounded, is significant; less is a modest gap. 5 when left out.",
               "type": "integer",
               "minimum": 1
             },
             "agreement": {
-              "description": "How far the observers agree, by the range of their percents. A range falls in the narrowest band whose up_to it doesn't pass, in whatever order the bands are written; above them all it takes the above label. The prototype's when left out.",
+              "description": "How far the observers agree, by the range of their unrounded shares. A range falls in the narrowest band whose up_to it doesn't pass, in whatever order the bands are written; above them all it takes the above label. The prototype's when left out.",
               "type": "object",
               "additionalProperties": false,
               "required": ["bands", "above"],

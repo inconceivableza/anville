@@ -14,7 +14,7 @@ import random
 
 from engine.document.comparison import agreement, comparison_settings, largest_gaps, seen_by_others
 from engine.document.observers import minimum_observers
-from engine.document.scoring import percents_by_construct, unrounded_shares
+from engine.document.scoring import unrounded_shares
 from engine.document.standing import standing
 from engine.document.text import text_for
 from engine.document.tie_break import (
@@ -165,9 +165,8 @@ def comparison_page(document, scores, sort, observer_average):
     on the same axis, for the page to reveal on request. The axis is the results page's, its even share in the middle.
     Below the minimum the observer average holds a count and no numbers, and so does what comes out:
     not even the self-result's, nor any gap, standing or strip. Each construct's mean is read from the observer
-    average, and its single observers' percents only for the agreement band and the distribution strip, in ascending
-    order; the marks and standings use their unrounded shares (ADR 0018), the gaps and the agreement band their
-    percents. The self-result is ranked and the observer average keeps the declared order, so the two are paired by
+    average, and its single observers' shares only for the agreement band and the distribution strip, in ascending
+    order; the marks, standings, gaps and agreement band all use unrounded shares (ADR 0018). The self-result is ranked and the observer average keeps the declared order, so the two are paired by
     construct id. The largest gaps and the reflection prompts follow the drawings.
     """
     shown = {"observers": observer_average["observers"], "minimum": minimum_observers(document), "frameworks": None}
@@ -178,6 +177,7 @@ def comparison_page(document, scores, sort, observer_average):
         for framework in observer_average["frameworks"]
     }
     page = results_page(document, scores, sort, name="")
+    shares = unrounded_shares(scores)
     declared = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
     for framework, scored in zip(page["frameworks"], scores["frameworks"]):
         constructs = len(declared[scored["framework"]]["constructs"])
@@ -198,8 +198,10 @@ def comparison_page(document, scores, sort, observer_average):
             bar["you_x"], bar["others_x"] = _mark(you_at), _mark(others_at)
             bar["gap_from"], bar["gap_width"] = min(you_at, others_at), round(abs(you_at - others_at), 2)
             bar["others_standing"] = worded(others["share"])
-            bar["seen_by_others"] = text_for(seen_by_others(document, bar["percent"], others["percent"]), "participant")
-            bar["agreement"] = text_for(agreement(document, others["per_observer"]), "participant")
+            bar["seen_by_others"] = text_for(
+                seen_by_others(document, shares[scored["framework"]][bar["construct"]], others["share"]), "participant"
+            )
+            bar["agreement"] = text_for(agreement(document, others["per_observer_shares"]), "participant")
             bar["agreement_at"] = _label_at(others_at)
             bar["strip"] = {
                 "dots": [
@@ -283,10 +285,11 @@ def _reflection(document, scores, observed):
     if "gaps" not in wording:
         return shown
     gap_wording = wording["gaps"]
-    yours = percents_by_construct(scores)
-    # ✨ Paired in the order the constructs were declared, so tied gaps keep it.
+    yours = unrounded_shares(scores)
+    # ✨ Paired in the order the constructs were declared, so tied gaps keep it, and unrounded (ADR 0018), so each gap
+    # is rounded once, where it is shown.
     pairs = [
-        {"framework": framework, "construct": construct, "you": yours[framework][construct], "others": others["percent"]}
+        {"framework": framework, "construct": construct, "you": yours[framework][construct], "others": others["share"]}
         for framework, constructs in observed.items()
         for construct, others in constructs.items()
     ]
@@ -298,8 +301,8 @@ def _reflection(document, scores, observed):
     }
     for gap in largest_gaps(document, pairs):
         # ✨ No gap at all has no direction, so no badge, and reads as a modest gap (the prototype said "You rate
-        # higher (+0)").
-        direction = gap_wording[gap["direction"]] if gap["direction"] else None
+        # higher (+0)"); nor does one too small to show as a whole number, which would read as that too.
+        direction = gap_wording[gap["direction"]] if gap["direction"] and gap["gap"] else None
         shown["gaps"].append(
             {
                 "label": labels[(gap["framework"], gap["construct"])],
