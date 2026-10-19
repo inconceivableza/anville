@@ -2,7 +2,7 @@
 
 **What to build:** A walk through the whole app on staging, by a person, to check it feels like one coherent thing after this sprint's changes, fixing what is small and ticketing what is not.
 
-**Blocked by:** C2A-53b (New look for the participant's pages); C2B-53c (New look for the observer's, coach's and account pages); A5B-13d (Removing a contact); B2A-45 (Withdrawn consent closes observers' and the coach's links); D3-30c (Re-weighted results); E1A-28a (Password reset); E1B-28b (Google sign-in); F1A-47a (Deployment hardening: the admin's sign-in, error pages and a shared cache)
+**Blocked by:** C2A-53b (New look for the participant's pages); C2B-53c (New look for the observer's, coach's and account pages); A5B-13d (Removing a contact); B2A-45 (Withdrawn consent closes observers' and the coach's links); D3-30c (Re-weighted results); D5-59b (Re-weighting both frameworks, drawn unrounded); E1A-28a (Password reset); E1B-28b (Google sign-in); F1A-47a (Deployment hardening: the admin's sign-in, error pages and a shared cache)
 
 **Status:** ready-for-human
 

@@ -133,11 +133,19 @@ A score expressed as a share of a grand total, so only relative shape survives a
 _Avoid_: normalised score, percentage score.
 
 **Tie-break**:
-The few "Which is more true of you?" pairs a participant answers straight after their self-assessment, before their results, when it leaves one framework's leading constructs too close to call. Any pair may be skipped. Observers never get one.
+The few "Which is more true of you?" pairs a participant answers straight after their self-assessment, before their results, when it leaves the leading constructs of one framework or both too close to call. Any pair may be skipped. Observers never get one.
 _Avoid_: tiebreaker, decider, play-off.
 
+**Too close to call**:
+A framework whose leader's share is no more than a small percentage above another construct's share. Only a framework too close to call gets a tie-break.
+_Avoid_: tied (alone, for the whole profile), level.
+
+**Flat**:
+A framework in which every construct's standing is "Present" or "Strong": none leads and none is little used.
+_Avoid_: even, balanced (the tie-break's word for an outcome).
+
 **Generalist**:
-A participant whose self-assessment leaves both frameworks too close to call. They get no tie-break, and are told so in their results, after the prototype's "Two flat profiles is itself a finding".
+A participant whose self-assessment is flat on both frameworks. They get no tie-break, and are told so in their results, after the prototype's "Two flat profiles is itself a finding".
 _Avoid_: all-rounder, flat profile (for the person).
 
 ### People
