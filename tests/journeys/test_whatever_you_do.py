@@ -486,8 +486,9 @@ def a_download_in_place_of_each_of_sections_2_to_4(document):
     the faithful port's sections, their ids, titles and order, and offers a PDF in each in place of its in-app blocks
     (ticket 58). What each holds and requires is new, with nothing in the faithful port to compare it with, so it is
     taken as it is; the tests below say what it does. Section 1 is completed on the participant's own work, without the
-    comparison visited (ticket 52); Section 2 opens once it and both side cards are complete, each section after it
-    once the one before is finished, and the letter waits for Section 4."""
+    comparison visited (ticket 52); Section 2 opens once the Strengths assessment and both side cards are complete,
+    Section 3 once Sections 1 and 2 are finished (ADR 0019), Section 4 once Section 3 is, and the letter waits for
+    Section 4."""
     sections = document["content"]["sections"]
     ours = {section["id"]: section for section in without_estimates(the_pathway())["content"]["sections"]}
     for index, section in enumerate(sections):
@@ -625,7 +626,7 @@ def test_section_1_completes_without_the_comparison_visited_and_without_any_link
 
 
 @pytest.mark.django_db
-def test_section_2_stays_locked_until_section_1_and_both_cards_are_complete_and_names_those_still_open(
+def test_section_2_stays_locked_until_both_cards_are_complete_and_names_those_still_open(
     participant,
 ):
     client = through_section_1(participant)
@@ -645,16 +646,74 @@ def test_section_2_stays_locked_until_section_1_and_both_cards_are_complete_and_
     assert client.get(SECTION_2).status_code == 200
 
 
+def do_the_sort(client):
+    """✨ Section 1's reading confirmed, which opens the Strengths assessment, then the sort sent."""
+    answer(client, "gifts-reading", "true")
+    submit_the_sort(client)
+
+
+# ✨ What Section 2 requires in place of Section 1 (ADR 0019): the Strengths assessment and both side cards.
+SECTION_2_NEEDS = {"the sort": do_the_sort, "a coach": choose, "three people": lambda client: add_people(client, 3)}
+
+
 @pytest.mark.django_db
-def test_section_2_waits_for_section_1_even_once_both_cards_are_complete(participant):
+@pytest.mark.parametrize("missing", SECTION_2_NEEDS)
+def test_section_2_opens_on_the_strengths_assessment_and_both_cards_with_section_1_unfinished(participant, missing):
     answer_onboarding(participant)
     complete(participant, "onboarding")
-    invite_everyone(participant)
-
+    for need, do in SECTION_2_NEEDS.items():
+        if need != missing:
+            do(participant)
     assert participant.get(SECTION_2).status_code == 302
-    assert escape("Opens once you've finished How you've been designed.") in hub_entry(
-        participant.get("/hub/").content.decode(), TITLES["shape"]
+
+    SECTION_2_NEEDS[missing](participant)
+
+    assert participant.get(SECTION_2).status_code == 200
+    assert "designed" not in Response.objects.get().completed_sections
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("unfinished", ["designed", "shape"])
+def test_section_3_is_refused_until_both_section_1_and_section_2_are_complete(participant, unfinished):
+    client = through_section_1(participant)
+    invite_everyone(client)
+    for finished in {"designed", "shape"} - {unfinished}:
+        assert complete(client, finished).status_code == 303
+    assert client.get("/sections/calling/").status_code == 302
+
+    assert complete(client, unfinished).status_code == 303
+
+    assert client.get("/sections/calling/").status_code == 200
+
+
+def title_of(section_id):
+    """✨ A section's title as the document gives it, which is what the hub names it by."""
+    return next(section["title"] for section in the_pathway()["content"]["sections"] if section["id"] == section_id)
+
+
+@pytest.mark.django_db
+def test_each_lock_note_names_exactly_the_sections_still_unfinished(participant):
+    """✨ The Strengths assessment by its title on the hub, as Section 2 now requires it in place of Section 1."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+
+    def note_under(section_id):
+        return hub_entry(participant.get("/hub/").content.decode(), TITLES[section_id])
+
+    finished = "Opens once you've finished {}."
+    strengths, coach, voices, designed, shape = map(
+        title_of, ["strengths", "walk-with-a-coach", "trusted-voices", "designed", "shape"]
     )
+    assert escape(finished.format(f"{strengths}, {coach} and {voices}")) in note_under("shape")
+    assert escape(finished.format(f"{designed} and {shape}")) in note_under("calling")
+
+    do_the_sort(participant)
+    choose(participant)
+    assert escape(finished.format(voices)) in note_under("shape")
+
+    add_people(participant, 3)
+    complete(participant, "shape")
+    assert escape(finished.format(designed)) in note_under("calling")
 
 
 @pytest.mark.django_db

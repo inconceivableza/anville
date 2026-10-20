@@ -241,6 +241,16 @@ def test_a_section_may_be_a_part_of_another_section():
     assert validate(document) == []
 
 
+def test_a_section_may_require_a_part_of_another_section():
+    """✨ As Section 2 requires the Strengths assessment, a part of Section 1 (ADR 0019). A requirement naming no section
+    is still refused (above)."""
+    document = sort_pathway()
+    document["content"]["sections"][2]["part_of"] = "onboarding"
+    document["content"]["sections"][1]["requires"] = ["strengths"]
+
+    assert validate(document) == []
+
+
 def test_a_part_with_no_gate_is_reported():
     """✨ A part is complete once its gate passes, so without one it would be complete before it was ever opened."""
     document = sort_pathway()
