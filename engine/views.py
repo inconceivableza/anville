@@ -679,7 +679,8 @@ def results(request, block_id):
     if _pairs_left(state.version.document, result):
         return redirect("tie_break", block_id)
     drawn = _results_drawn(state, result, block_id)
-    return render(request, "engine/results.html", {"drawn": drawn, "results": drawn["results"], "section": section})
+    context = {"drawn": drawn, "results": drawn["results"], "section": section, "retake": _demo_tools_on()}
+    return render(request, "engine/results.html", context)
 
 
 def _results_drawn(state, result, block_id):
@@ -876,6 +877,49 @@ def visit_comparison(request, block_id):
         response.freeze_collection()
     response.visit_comparison(block_id)
     return _see_other("comparison", block_id)
+
+
+def _demo_tools_on():
+    """✨ Whether this is a development or demo system, where tools that write made-up data or take back a
+    participant's answers are offered: DEBUG on, or a demo notice set, as for `seed_tie_break` (fix-15). A production
+    deployment has neither."""
+    return bool(settings.DEBUG or settings.ANVILLE_DEMO_NOTICE)
+
+
+@login_required
+@consent_required
+@require_http_methods(["GET", "POST"])
+def retake(request, block_id):
+    """✨ Demo only (fix-19): the results page's quiet "Retake the assessment (demo only)" asks first, saying what will
+    be cleared; only its button clears the participant's own sort and everything worked out from it, then opens the
+    sort afresh. Off a development or demo system it is a 404; before there is a result to clear, it leads to the sort.
+
+    A section completed whose gate needed the sort is no longer complete, so the hub never shows it complete beside an
+    assessment not started; the participant's other answers in it stay, and completing it again needs the new sort."""
+    if not _demo_tools_on():
+        raise Http404("Retaking the assessment is offered only on a development or demo system.")
+    state, result, section = _own_result(request.user, block_id)
+    if result is None:
+        return redirect(page_url(section["id"], section["page"]))
+    response = state.response
+    reopened = [
+        shown
+        for shown in state.sections
+        if shown["id"] in response.completed_sections
+        and _reopens(shown)
+        and any(clause["block"] == block_id for clause in clauses_of(shown))
+    ]
+    if request.method == "POST":
+        response.clear_sort(block_id, reopened=[shown["id"] for shown in reopened])
+        return _see_other(page_url(section["id"], section["page"]))
+    context = {
+        "block_id": block_id,
+        "reopened": [text_for(shown["title"], "participant") for shown in reopened],
+        "tie_break": bool(result.tie_break_answers),
+        "frozen": response.collection_frozen_at is not None,
+        "coach_shown": bool((_coach_of(response) or {}).get("shared")),
+    }
+    return render(request, "engine/retake.html", context)
 
 
 def _own_result(user, block_id):
