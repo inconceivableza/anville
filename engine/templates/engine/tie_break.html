@@ -6,13 +6,12 @@
   naming the framework, the question, one statement for each construct as a button, and a quiet skip. A plain form, so
   it works without JavaScript; each button sends its construct.
 
-  Demo only (fix-23): after a demo profile's sort, `demo`, its guide is beside the pair, and the form's address names
+  Demo only (fix-23): after a demo profile's sort, `demo`, its guide is below the pair (fix-24), and the form's address names
   it, so the next pair shows it too.
 {% endcomment %}
 {% block head_title %}{{ pair.question }}{% endblock head_title %}
 
 {% block content %}
-  {% if demo %}<div class="demo-guided">{% include "engine/demo_guide.html" with guide=demo.guide %}{% endif %}
   <div class="pair-screen">
     <ol class="pair-steps" aria-hidden="true">
       {% for done in pair.steps %}<li class="pair-step{% if done %} done{% elif forloop.counter0 == pair.place %} now{% endif %}"></li>{% endfor %}
@@ -30,6 +29,6 @@
       <button type="submit" class="pair-skip" name="chosen" value="">{{ pair.skip }}</button>
     </form>
     <p class="pair-count">{{ pair.number }} of {{ pair.count }}</p>
+    {% if demo %}{% include "engine/demo_guide.html" with guide=demo.guide %}{% endif %}
   </div>
-  {% if demo %}</div>{% endif %}
 {% endblock content %}
