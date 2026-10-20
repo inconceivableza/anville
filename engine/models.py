@@ -177,6 +177,29 @@ class Response(models.Model):
             if _submitted_count(self) < minimum:
                 Response.objects.filter(pk=self.pk).update(collection_frozen_at=None)
 
+    def clear_sort(self, block_id, reopened=()):
+        """✨ Demo only (fix-19): take back the participant's sort for `block_id` and everything worked out from it, so
+        they can sort again from the start. Its answer and result go, and the tie-break's answers and re-weighted result
+        with it; so does the visit to its comparison, and with it the freeze and the coach's sight of the results, both
+        of which rest on that visit. Each section in `reopened`, whose gate needed the sort, is no longer complete.
+        Observers' assessments, the coach's link and every other answer stay. Done together or not at all."""
+        with transaction.atomic():
+            Result.objects.filter(response=self, block_id=block_id).delete()
+            completed = F("completed_sections")
+            for section_id in reopened:
+                completed = _WithoutKey(completed, Value(section_id))
+            Response.objects.filter(pk=self.pk).update(
+                answers=_WithoutKey(F("answers"), Value(block_id)),
+                fixed_answers=_WithoutKey(F("fixed_answers"), Value(block_id)),
+                comparisons_visited=_WithoutKey(F("comparisons_visited"), Value(block_id)),
+                completed_sections=completed,
+                collection_frozen_at=None,
+                updated_at=timezone.now(),
+            )
+            Invitation.objects.filter(contact__response=self, contact__role=Contact.Role.COACH).update(
+                results_shared_at=None
+            )
+
     def moved_past_by_section(self):
         """✨ The pages moved past, as {section identifier: set of page numbers}, as the hub reads them."""
         moved_past = {}

@@ -44,6 +44,7 @@ from engine.views import (
     photo,
     reopen_section,
     results,
+    retake,
     revoke_invitation,
     save_answer,
     section,
@@ -67,6 +68,7 @@ urlpatterns = [
     path("coach/<slug:block_id>/", coach_checklist, name="coach_checklist"),
     path("results/<slug:block_id>/", results, name="results"),
     path("results/<slug:block_id>/tie-break/", tie_break, name="tie_break"),
+    path("results/<slug:block_id>/retake/", retake, name="retake"),  # ✨ demo only (fix-19)
     path("results/<slug:block_id>/comparison/", comparison, name="comparison"),
     path("results/<slug:block_id>/comparison/visit/", visit_comparison, name="visit_comparison"),
     path("results/<slug:block_id>/comparison/coach/", share_with_coach, name="share_with_coach"),
