@@ -30,6 +30,13 @@ def standing(document, percent, constructs):
     return band["label"] if band else _settings(document)["below"]
 
 
+def place(document, percent, constructs):
+    """✨ Where a share's standing comes among the document's bands, highest first: 0 for the highest, or None below
+    them all. The results colour a standing by its place, so a pathway's own labels take the same colours."""
+    band = _band(document, percent, constructs)
+    return _bands_highest_first(document).index(band) if band else None
+
+
 def flat(document, shares):
     """✨ Whether a framework's `shares` are flat (ADR 0018): every one reaches the lowest band and none the highest, as
     "Present" and "Strong" are the in-between bands of *Whatever You Do*."""
@@ -40,10 +47,14 @@ def flat(document, shares):
 def _band(document, percent, constructs):
     """✨ The highest band a share reaches, or None below them all."""
     of_even = percent * constructs
-    for band in sorted(_settings(document)["bands"], key=lambda band: band["at_least"], reverse=True):
+    for band in _bands_highest_first(document):
         if of_even >= band["at_least"]:
             return band
     return None
+
+
+def _bands_highest_first(document):
+    return sorted(_settings(document)["bands"], key=lambda band: band["at_least"], reverse=True)
 
 
 def _settings(document):

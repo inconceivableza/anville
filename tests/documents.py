@@ -134,8 +134,8 @@ def sort_pathway():
     presentation = document["presentation"]
     presentation["results_title"] = "{name}, here’s your profile"
     presentation["frameworks"] = [
-        {"framework": "apest", "heading": "Your gifting", "subtitle": "Fivefold and more", "bars": "tone"},
-        {"framework": "pep", "heading": "Your energy", "subtitle": "What energises you", "bars": "rank"},
+        {"framework": "apest", "heading": "Your gifting", "subtitle": "Fivefold and more"},
+        {"framework": "pep", "heading": "Your energy", "subtitle": "What energises you"},
     ]
     presentation["constructs"] = [
         {"construct": "apostle", "description": "Pioneers new things.", "tone": "violet"},
