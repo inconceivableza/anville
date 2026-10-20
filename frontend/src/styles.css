@@ -373,7 +373,7 @@ main.container:has(> .ob) {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   gap: var(--space-2xs);
-  min-height: min(760px, calc(100vh - 40px));
+  min-height: 100vh;
   margin: calc(-1 * var(--space-xl)) calc(-1 * var(--space-2xl)) 0;
   padding: var(--space-2xs);
   background: var(--brown);
@@ -386,9 +386,15 @@ main.container:has(> .ob) {
   border-radius: var(--radius-xl);
 }
 
-/* ✨ The photo fills its whole column, however long the page, as v3's does; its image is cropped to fit (object-fit:
-   cover below) rather than stretched. A height capped to the viewport left a bare dark strip beneath it (fix-7). */
+/* ✨ As tall as the window, as v3's photo fills the viewport: a longer page (the ratings) scrolls past it while it stays
+   in view, rather than stretching with the page and zooming its photo (the hackathon review's fix-2). Its old 760px
+   cap left a bare dark strip beneath it on a taller window, and stretching it with the page instead brought the zoom
+   back, so neither (fix-10, 20 Oct). */
 .ob-photo {
+  position: sticky;
+  top: var(--space-2xs);
+  align-self: start;
+  height: calc(100vh - 2 * var(--space-2xs));
   display: grid;
   align-content: space-between;
   min-height: 420px;
@@ -537,6 +543,9 @@ main.container:has(> .ob) {
   }
 
   .ob-photo {
+    position: relative;
+    top: auto;
+    height: auto;
     min-height: 240px;
   }
 

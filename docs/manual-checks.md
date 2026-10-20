@@ -191,7 +191,7 @@ The homepage (`/`):
 - Going to `/hub/` part-way lands on the page reached. The last "Continue →" lands on the hub, Before we begin listed as complete, and the hub never sends you back. Its entry opens it as an ordinary section page, header and sidebar included, the ratings fixed.
 - `/credits/` lists "Photograph of a figure facing the sun from Unsplash.".
 - Phone width: the photo sits above the page, the ratings fit without scrolling sideways.
-- The photo fills its dark column to the bottom on both pages, scrolled to the end of the ratings included, at a wide screen, at a tall one (over 900px high) and at about 375px: no bare dark strip beneath it, and the photo cropped, never stretched (fix-7).
+- The photo is as tall as the window on both pages, at a wide screen and at a tall one (over 900px high): no bare dark strip beneath it, whether at the top of the ratings or scrolled to their end, and the photo the same size and crop on page 2 as on page 1, never zoomed. At about 375px it sits above the page as before (fix-10).
 - Pressing Enter in an answer (with a rating's point focused, chosen or not, or in the reason drop-down) does nothing: the page stays as it was, never "Not saved. No answer was sent." on a page of its own (fix-7).
 
 ## The hub's next step and its photo (load the pathway again first; ticket 49b)
