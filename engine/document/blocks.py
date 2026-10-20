@@ -182,6 +182,8 @@ SORT_WORDING = {
     # ✨ Shown to observers only, who may send once every card is placed (see `left_at_seeds`).
     "send_or_fine_tune": "You can send your assessment now, or fine-tune how strong each one is in {name} first.",
     "fine_tune_label": "Continue to fine-tuning →",
+    # ✨ Observers only too: sending without fine-tuning, apart from `submit_label`, which sends after it.
+    "send_now_label": "Skip fine-tuning and send →",
     "fine_tune_heading": {"participant": "How strong is each one?", "observer": "How strong is each one in {name}?"},
     "fine_tune_intro": "Grouped by how you sorted them. Adjust the sliders to fine-tune.",
     "slider_min": {"participant": "Not me", "observer": "Not {name}"},

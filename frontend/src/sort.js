@@ -157,11 +157,10 @@ function mountSort(form) {
         el(
           "div",
           { class: "sort-done-actions" },
-          ...(sends_before_fine_tuning ? [sendNowButton()] : []),
           on(
             el(
               "button",
-              { type: "button", class: sends_before_fine_tuning ? "pill ghost" : "pill", "data-focus": "continue" },
+              { type: "button", class: "pill", "data-focus": "continue" },
               wording.fine_tune_label,
             ),
             "click",
@@ -170,6 +169,7 @@ function mountSort(form) {
               writeAnswer();
             },
           ),
+          ...(sends_before_fine_tuning ? [sendNowButton()] : []),
         ),
         undoButton(),
       ),
@@ -177,10 +177,11 @@ function mountSort(form) {
   }
 
   // ✨ An observer may send as soon as every card is placed. Only the buckets are sent: the server gives each item its
-  // bucket's seed, exactly as an untouched slider would have kept it.
+  // bucket's seed, exactly as an untouched slider would have kept it. Fine-tuning stays the default, the green button,
+  // so this one is a quiet link beneath it.
   function sendNowButton() {
     return on(
-      el("button", { type: "submit", class: "pill sort-submit", "data-focus": "send" }, wording.submit_label),
+      el("button", { type: "submit", class: "sort-skip sort-submit", "data-focus": "send" }, wording.send_now_label),
       "click",
       () => {
         const sort = Object.fromEntries(history.map(({ item, bucket }) => [item.id, { bucket: bucket.id }]));

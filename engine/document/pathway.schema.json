@@ -407,6 +407,10 @@
               "$ref": "#/$defs/text"
             },
             "fine_tune_label": { "$ref": "#/$defs/text" },
+            "send_now_label": {
+              "description": "Shown to observers only, beneath fine-tuning: sending without it. submit_label sends after it.",
+              "$ref": "#/$defs/text"
+            },
             "fine_tune_heading": { "$ref": "#/$defs/text" },
             "fine_tune_intro": { "$ref": "#/$defs/text" },
             "slider_min": { "$ref": "#/$defs/text" },

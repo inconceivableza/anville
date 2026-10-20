@@ -3373,7 +3373,10 @@ html[data-javascript="loaded"] .sort-progress {
   padding: var(--space-xs) 0;
 }
 
+/* ✨ Room for two digits, so every row is as wide as the rest and the labels and counts each line up. */
 .sort-done-counts strong {
+  min-width: 2ch;
+  text-align: left;
   font-size: var(--text-lg);
 }
 
@@ -3382,16 +3385,36 @@ html[data-javascript="loaded"] .sort-progress {
   margin: 0 auto 16px;
 }
 
-/* ✨ Sending now and fine-tuning first, side by side, wrapping one above the other on a narrow screen. */
+/* ✨ Fine-tuning first, the green button, and for an observer sending now as a quiet link centred beneath it. */
 .sort-done-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-sm);
+  display: inline-grid;
+  justify-items: center;
+  gap: var(--space-xs);
 }
 
 .sort-done-actions .sort-submit {
   margin-top: 0;
+}
+
+.sort-skip {
+  padding: var(--space-2xs) 0;
+  background: none;
+  border: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.sort-skip:hover {
+  color: var(--ink);
+}
+
+.sort-skip:focus-visible {
+  outline: 2px solid var(--green-deep);
+  outline-offset: 2px;
 }
 
 .bucket-name {
