@@ -15,7 +15,15 @@ from engine.document.blocks import BLOCK_TYPES, CHOICE, CONFIRMATION, SCALE_POIN
 from engine.hub import block_ids_fixed_on_completion, section_by_id, track_sections
 from engine.models import Publication, Response
 from engine.results import pair_page
-from engine.tie_break_scenarios import SCENARIOS, ScenarioDoesNotHold, seeding
+from engine.tie_break_scenarios import (
+    DEFAULT_ON,
+    SCENARIOS,
+    TAKES_ON,
+    NoSuchVariant,
+    ScenarioDoesNotHold,
+    scenario_for,
+    seeding,
+)
 
 SEED_PASSWORD = "information."
 DISPLAY_NAME = "Robin"
@@ -33,9 +41,21 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("scenario", choices=list(SCENARIOS), help="Which way through the tie-break to seed.")
+        parser.add_argument(
+            "--on",
+            help=(
+                f"Only for {', '.join(TAKES_ON)}: the framework's id, apest or pep (default {DEFAULT_ON}). For "
+                "separated and balanced it is the one framework tied, the other having a clear leader; for mixed it is "
+                "the one that comes out Separated while the other is skipped."
+            ),
+        )
         parser.add_argument("--password", default=SEED_PASSWORD, help="The made-up participant's password.")
 
-    def handle(self, *args, scenario, password, **options):
+    def handle(self, *args, scenario, on, password, **options):
+        try:
+            summary = scenario_for(scenario, on).summary
+        except NoSuchVariant as problem:
+            raise CommandError(str(problem)) from problem
         if not (settings.DEBUG or settings.ANVILLE_DEMO_NOTICE):
             raise CommandError(
                 "seed_tie_break makes a made-up participant, so it runs only with DEBUG on or ANVILLE_DEMO_NOTICE set."
@@ -48,7 +68,7 @@ class Command(BaseCommand):
         if block_id is None:
             raise CommandError("The published pathway has no assessment block, so there is nothing to seed.")
         try:
-            seeded = seeding(document, scenario)
+            seeded = seeding(document, scenario, on)
         except ScenarioDoesNotHold as problem:
             raise CommandError(f"The published pathway no longer gives this scenario: {problem}") from problem
 
@@ -66,7 +86,7 @@ class Command(BaseCommand):
         # ✨ Straight to the pairs once signed in; with none left, that page leads on to the results.
         next_page = urlencode({"next": reverse("tie_break", args=[block_id])}, safe="/")
         sign_in = f"{reverse('account_login')}?{next_page}"
-        self.stdout.write(self.style.SUCCESS(f"Seeded {scenario}: {SCENARIOS[scenario].summary}"))
+        self.stdout.write(self.style.SUCCESS(f"Seeded {scenario}: {summary}"))
         self.stdout.write(f"Email: {email}\nPassword: {password}\nSign in at: {sign_in}\n")
         self.stdout.write("\n".join(_what_to_do(document, seeded)))
 
