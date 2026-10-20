@@ -83,8 +83,8 @@ def largest_gaps(document, pairs):
 
 
 def agreement(document, per_observer):
-    """✨ The label of the band the range of the observers' unrounded shares falls in: the narrowest band whose `up_to` the range doesn't pass,
-    whatever order the bands are written in, or the label for above them all."""
+    """✨ The label of the band the range of the observers' unrounded shares falls in: the narrowest band whose `up_to`
+    the range doesn't pass, whatever order the bands are written in, or the label for above them all."""
     spread = max(per_observer) - min(per_observer)
     agreement_bands = comparison_settings(document).get("agreement", DEFAULT_AGREEMENT)
     for band in sorted(agreement_bands["bands"], key=lambda band: band["up_to"]):

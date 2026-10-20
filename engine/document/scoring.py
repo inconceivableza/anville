@@ -39,6 +39,8 @@ def unrounded_shares(result):
 
 
 def _kept_shares(result):
+    """✨ The exact share a result keeps beside each percent, as a fraction, or the percent where it keeps none, for a
+    result whose method cannot work its shares out again."""
     return {
         framework["framework"]: {
             construct["construct"]: Fraction(construct["share"]) if "share" in construct else construct["percent"]

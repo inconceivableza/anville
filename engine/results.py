@@ -167,11 +167,12 @@ def comparison_page(document, scores, sort, observer_average):
     the gap between them shaded, a person icon above the one and a group icon below the other, each with its standing
     in words and whether others see it higher, lower or much the same, in two colours only. Each observer's own dot is
     on the same axis, for the page to reveal on request. The axis is the results page's, its even share in the middle.
-    Below the minimum the observer average holds a count and no numbers, and so does what comes out:
-    not even the self-result's, nor any gap, standing or strip. Each construct's mean is read from the observer
-    average, and its single observers' shares only for the agreement band and the distribution strip, in ascending
-    order; the marks, standings, gaps and agreement band all use unrounded shares (ADR 0018). The self-result is ranked and the observer average keeps the declared order, so the two are paired by
-    construct id. The largest gaps and the reflection prompts follow the drawings.
+    Below the minimum the observer average holds a count and no numbers, and so does what comes out: not even the
+    self-result's, nor any gap, standing or strip. Each construct's mean is read from the observer average, and its
+    single observers' shares only for the agreement band and the distribution strip, in ascending order; the marks,
+    standings, gaps and agreement band all use unrounded shares (ADR 0018). The self-result is ranked and the observer
+    average keeps the declared order, so the two are paired by construct id. The largest gaps and the reflection
+    prompts follow the drawings.
     """
     shown = {"observers": observer_average["observers"], "minimum": minimum_observers(document), "frameworks": None}
     if observer_average["frameworks"] is None:
