@@ -191,6 +191,8 @@ The homepage (`/`):
 - Going to `/hub/` part-way lands on the page reached. The last "Continue →" lands on the hub, Before we begin listed as complete, and the hub never sends you back. Its entry opens it as an ordinary section page, header and sidebar included, the ratings fixed.
 - `/credits/` lists "Photograph of a figure facing the sun from Unsplash.".
 - Phone width: the photo sits above the page, the ratings fit without scrolling sideways.
+- The photo fills its dark column to the bottom on both pages, scrolled to the end of the ratings included, at a wide screen, at a tall one (over 900px high) and at about 375px: no bare dark strip beneath it, and the photo cropped, never stretched (fix-7).
+- Pressing Enter in an answer (with a rating's point focused, chosen or not, or in the reason drop-down) does nothing: the page stays as it was, never "Not saved. No answer was sent." on a page of its own (fix-7).
 
 ## The hub's next step and its photo (load the pathway again first; ticket 49b)
 
@@ -216,6 +218,7 @@ The homepage (`/`):
 - A refused answer shows its reason where "Saved" would be.
 - Near the 20,000-character limit, the text box says how many characters are left.
 - Without JavaScript, a Save button appears and saves the answer. With JavaScript it is hidden.
+- Without JavaScript, pressing Save (or Enter) on a 1–10 scale with no point chosen comes back to the same page, "Not saved. No answer was sent." beside the button. With JavaScript, Enter in an answer never reloads the page (fix-7).
 - Screen reader: "Saved" and a refusal are announced.
 - Ghost text (Section 1's reflection, the letter): it shows in grey in the empty box, is readable against the background, and disappears as you type. A screen reader names the box by its prompt, not by the ghost text.
 - The reason in onboarding: it looks like the prototype's account-screen drop-down (a small dark caret at the right, not the browser's arrow), and is amber while "Select..." is showing, turning white once a reason is chosen, with or without JavaScript. The drop-down shows "Select..." until a reason is chosen, and choosing one shows "Saved" with no button press. Going back to "Select..." shows "Saved", turns the drop-down amber again, and unticks "Choose what's bringing you to the course" beneath the button; a reload still shows "Select...". Keyboard only: Tab reaches it, and the arrow keys change it (each change saves). It fills the card's width at phone width.

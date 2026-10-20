@@ -57,6 +57,13 @@ function notSaved(event) {
 document.addEventListener("htmx:responseError", notSaved);
 document.addEventListener("htmx:sendError", notSaved);
 
+// ✨ An autosaved answer is saved as it changes, so its form is never submitted as a page while JavaScript runs:
+// Enter in it would otherwise send it through the hidden fallback button and reload the page (fix-7). Without
+// JavaScript, that button and Enter still save it.
+document.addEventListener("submit", (event) => {
+  if (event.target.querySelector(".save-fallback")) event.preventDefault();
+});
+
 // ✨ Near a text box's length limit, say how much room is left; the browser stops typing at the limit itself.
 const SHOW_LENGTH_LEFT_BELOW = 0.1;
 
