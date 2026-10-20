@@ -9,11 +9,10 @@ every framework is a generalist instead, and is asked nothing. Run on the partic
 observer's. Nothing here touches the database or a request.
 """
 
-import math
 from fractions import Fraction
 from itertools import zip_longest
 
-from engine.document.scoring import unrounded_shares
+from engine.document.scoring import round_half_up, unrounded_shares
 from engine.document.standing import flat
 
 # ✨ ADR 0018's: a leader at most 5% more than another, and the content owner's prototype's at most the top four.
@@ -150,7 +149,7 @@ def reweigh(document, result, answers):
             broken.append({"framework": framework_id, "outcome": outcome})
             if outcome != SKIPPED:
                 constructs = [
-                    {**construct, "percent": _round_half_up(share[c]), "share": str(share[c])}
+                    {**construct, "percent": round_half_up(share[c]), "share": str(share[c])}
                     if (c := construct["construct"]) in tied[framework_id]
                     else construct
                     for construct in constructs
@@ -190,11 +189,6 @@ def _reweighed(cluster, share, answers):
     else:
         outcome = SAME_TOP
     return outcome, reweighed
-
-
-def _round_half_up(share):
-    """✨ `round_half_up` kept exact for a fraction: a half added as a float would turn it into one."""
-    return math.floor(share + Fraction(1, 2))
 
 
 def outcomes(result):

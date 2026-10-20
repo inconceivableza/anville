@@ -105,9 +105,10 @@ def _share_of_total(raw):
 def round_half_up(number):
     """✨ JavaScript's Math.round, which the prototype used, frozen with the methods that use it.
 
-    Python's round() takes 0.5 to 0, not 1.
+    Python's round() takes 0.5 to 0, not 1. A fraction is rounded exactly, with a half of its own: a float's half would
+    turn it into a float, which could round one a hair under a half up. A float or an int rounds as it always has.
     """
-    return math.floor(number + 0.5)
+    return math.floor(number + (Fraction(1, 2) if isinstance(number, Fraction) else 0.5))
 
 
 # ✨ A method scores an answer, gives the same percents unrounded, and works them out again from a result it made; a
