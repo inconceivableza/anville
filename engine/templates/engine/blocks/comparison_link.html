@@ -1,0 +1,18 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../../LICENSE.md #}
+{% comment %}
+  ✨ The way to a sort's comparison (ticket 67a), drawn as a section link is: its title, its button, then where it stands.
+  The button is the results page's "Compare with how others see you →", a form posting to the same address, so it
+  warns before collection freezes as that one does and works without JavaScript; a browser never loads a POST ahead of
+  time. Before there is a result, nothing is shown.
+{% endcomment %}
+{% if block.comparison %}
+  <div id="block-{{ block.id }}" class="section-link comparison-link">
+    <p class="section-link-title">{{ block.text.title }}</p>
+    <form method="post" action="{% url 'visit_comparison' block.comparison.sort %}">
+      {% csrf_token %}
+      <button type="submit" class="pill">Compare with how others see you →</button>
+    </form>
+    <span class="status-chip status-{{ block.comparison.status }}">{{ block.comparison.label }}</span>
+  </div>
+{% endif %}

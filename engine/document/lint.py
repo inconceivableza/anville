@@ -174,11 +174,13 @@ def _unknown_linked_sections(document, section_ids):
 
 
 def _results_of_no_sort(document):
-    """✨ A `sort_results` block shows the results of the sort it names (ticket 57), so it must name one."""
+    """✨ A `sort_results` block shows the results of the sort it names (ticket 57), and a `comparison_link` leads to its
+    comparison (ticket 67a), so each must name one."""
     types = block_types_by_id(document)
     for s, section in enumerate(document["content"]["sections"]):
         for b, block in enumerate(section["blocks"]):
-            if block["type"] == "sort_results" and not (block["sort"] in types and types[block["sort"]].scored):
+            naming_a_sort = block["type"] in ("sort_results", "comparison_link")
+            if naming_a_sort and not (block["sort"] in types and types[block["sort"]].scored):
                 yield Problem(
                     f"/content/sections/{s}/blocks/{b}/sort", f"There is no sort '{block['sort']}' in this pathway."
                 )
