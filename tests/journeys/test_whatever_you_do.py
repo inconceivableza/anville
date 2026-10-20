@@ -572,6 +572,19 @@ def test_once_the_assessment_is_done_section_1_shows_no_results_below_its_card(p
     assert "Compare with how others see you" not in page
 
 
+@pytest.mark.django_db
+def test_once_the_sort_is_in_opening_the_strengths_assessment_opens_the_results(participant):
+    """✨ As in the faithful port (fix-13)."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+    answer(participant, "gifts-reading", "true")
+    submit_the_sort(participant)
+
+    shown = participant.get("/sections/strengths/")
+
+    assert (shown.status_code, shown.url) == (302, "/results/strengths-sort/")
+
+
 def section_1(client):
     """✨ Section 1's own content, without the sidebar, which lists every section."""
     return main_of(client.get("/sections/designed/").content.decode())

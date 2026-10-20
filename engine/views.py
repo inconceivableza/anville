@@ -312,6 +312,9 @@ def section(request, section_id, page=1):
     _page_or_404(section, page)
     if page > reached:
         return redirect(page_url(section_id, reached))
+    sort_done = _sort_done_with(state, section)
+    if sort_done is not None:
+        return redirect("results", sort_done)
     # ✨ A link just issued, a coach's or an observer's, shown this once. Read only on a page holding a coach checklist or
     # a contact list, whose address is the path the cookie was set for, so deleting it here reaches it; the section's
     # later pages sit under that path too when the block is on its first.
@@ -322,6 +325,21 @@ def section(request, section_id, page=1):
         shown["Cache-Control"] = "no-store"
         shown.delete_cookie(ISSUED_COOKIE, path=request.path)
     return shown
+
+
+def _sort_done_with(state, section):
+    """✨ The identifier of the sort a section's page would only point past, or None: a part of a section holding its
+    sort and nothing else, once the sort is in (fix-13). The page would show no more than a link to the results, so
+    every way into it leads there instead; the results page itself goes on to any tie-break pair left, as "View my
+    results →" does (ticket 61). A section with anything beside its sort is still shown, and so is a part whose
+    section is not open, or a section that is no part: the results page's way back leads to such a section itself,
+    and one that is no part keeps its own completion there."""
+    if len(section["blocks"]) != 1:
+        return None
+    [block] = section["blocks"]
+    if not BLOCK_TYPES[block["type"]].scored or block["id"] not in state.answers:
+        return None
+    return block["id"] if _section_this_is_part_of(state, section) else None
 
 
 # ✨ The blocks whose people are listed with their links: a coach checklist's coach, and a contact list's people.

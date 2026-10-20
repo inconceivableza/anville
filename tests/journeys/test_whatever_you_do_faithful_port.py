@@ -451,13 +451,13 @@ def test_the_sort_is_shut_until_section_1s_passages_are_read(participant):
 
 @pytest.mark.django_db
 def test_a_finished_sort_leads_to_its_results_and_offers_no_retake(participant):
+    """✨ Its page holds only the sort, so once the sort is in, opening it opens the results instead (fix-13)."""
     client = through_to_section_1s_activity(participant)
     submit_the_sort(client)
 
-    page = client.get(STRENGTHS).content.decode()
+    shown = client.get(STRENGTHS)
 
-    assert 'href="/results/strengths-sort/"' in page
-    assert "data-sort=" not in page
+    assert (shown.status_code, shown.url) == (302, "/results/strengths-sort/")
 
 
 @pytest.mark.django_db
