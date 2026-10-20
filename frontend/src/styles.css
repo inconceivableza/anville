@@ -386,13 +386,9 @@ main.container:has(> .ob) {
   border-radius: var(--radius-xl);
 }
 
-/* ✨ As tall as the wizard's first page, and no taller: a longer page (the ratings) scrolls past it while it stays in
-   view, as v3's photo fills the viewport, rather than stretching with the page and zooming its photo (fix-2). */
+/* ✨ The photo fills its whole column, however long the page, as v3's does; its image is cropped to fit (object-fit:
+   cover below) rather than stretched. A height capped to the viewport left a bare dark strip beneath it (fix-7). */
 .ob-photo {
-  position: sticky;
-  top: var(--space-2xs);
-  align-self: start;
-  height: min(760px, calc(100vh - 40px) - 2 * var(--space-2xs));
   display: grid;
   align-content: space-between;
   min-height: 420px;
@@ -541,9 +537,6 @@ main.container:has(> .ob) {
   }
 
   .ob-photo {
-    position: relative;
-    top: auto;
-    height: auto;
     min-height: 240px;
   }
 

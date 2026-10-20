@@ -421,12 +421,12 @@ def save_answer(request, block_id):
         return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
     if block_id in state.fixed:
         # ✨ Refused here, not only disabled on the page, so a page left open from before completing cannot change it.
-        return _refuse_fixed(request)
+        return _answer_refused(request, state, section, block_id, FIXED_REFUSAL, status=409)
     block_type = BLOCK_TYPES[block["type"]]
     try:
         value = answer_from_form(state.version.document, block, request.POST.get("value"))
     except AnswerRefused as refused:
-        return render(request, "engine/save_status.html", {"refusal": str(refused)}, status=400)
+        return _answer_refused(request, state, section, block_id, str(refused), status=400)
 
     participant_response = state.stored_response(request.user)
     # ✨ The row is updated in place, so the answers read before are a step behind what is about to be stored.
@@ -437,14 +437,27 @@ def save_answer(request, block_id):
             participant_response.submit_sort(block_id, value, scores)
         except IntegrityError:
             refusal = "Your results are already in. Retaking the sort is not offered yet."
-            return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
+            return _answer_refused(request, state, section, block_id, refusal, status=409)
         # ✨ A sort too close to call on one framework or both, and not flat, leads to the tie-break's pairs first.
         if pair_plan(state.version.document, scores):
             return _go_to(request, reverse("tie_break", args=[block_id]))
         return _to_results(request, block_id)
     if not participant_response.save_answer(block_id, value):
-        return _refuse_fixed(request)  # ✨ a completion fixed it after the check above, and the UPDATE saw that
+        # ✨ a completion fixed it after the check above, and the UPDATE saw that
+        return _answer_refused(request, state, section, block_id, FIXED_REFUSAL, status=409)
     return _saved(request, saved, section, block_id)
+
+
+def _answer_refused(request, state, section, block_id, refusal, status):
+    """✨ An answer not saved, and why: with htmx, the status line beside it; without, its page again, the reason shown
+    at the answer. A form submitted as a full page (Enter in an answer field does that) never lands the participant on
+    the bare status line (fix-7)."""
+    if _is_htmx(request):
+        return render(request, "engine/save_status.html", {"refusal": refusal}, status=status)
+    shown = _section_page(state, section, page_of(section, block_id))
+    on_page = next(block for block in shown["section"]["blocks"] if block["id"] == block_id)
+    on_page["refusal"] = refusal
+    return _section_shown(request, state, section, shown, status=status)
 
 
 @sensitive_post_parameters()
@@ -1652,9 +1665,11 @@ def _page_or_404(section, page):
     return page
 
 
+FIXED_REFUSAL = "This answer was fixed when you completed this section."
+
+
 def _refuse_fixed(request):
-    refusal = "This answer was fixed when you completed this section."
-    return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
+    return render(request, "engine/save_status.html", {"refusal": FIXED_REFUSAL}, status=409)
 
 
 def _block_of_type(version, block_id, block_type):
