@@ -2,7 +2,7 @@
 
 **What to build:** Section 1's reflection is shown but cannot be written until the participant has seen their comparison with enough answers in, with a message saying so. While that is all Section 1 waits on, the hub's next step passes over it to whatever else is open, and with nothing else open says it is waiting on answers.
 
-**Blocked by:** B2-67a ("How others see you" card in Section 1); B1-66 (Section 2 opens on the Strengths assessment)
+**Blocked by:** B1B-67a ("How others see you" card in Section 1); B1A-66 (Section 2 opens on the Strengths assessment)
 
 **Status:** ready-for-agent
 
