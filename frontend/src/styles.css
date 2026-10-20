@@ -790,16 +790,45 @@ main > .hub ~ .hub-consent {
   font-size: 1em;
 }
 
+/* ✨ The side cards share the next step's row and stretch with it, so together they stand as tall as it does, the
+   section list below; on a narrow screen, one column in the page's own order. */
 .hub-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  grid-template-areas:
+    "next side"
+    "list .";
   gap: var(--space-md);
   align-items: start;
+}
+
+.hub-grid > .next {
+  grid-area: next;
+  align-self: stretch;
+}
+
+.hub-grid > .side {
+  grid-area: side;
+  align-self: stretch;
+}
+
+.hub-grid > .slist {
+  grid-area: list;
+  margin-top: 0;
+}
+
+/* ✨ A stretched card keeps its contents together at the top rather than spreading them over its height. */
+.hub-grid > .side > .card {
+  align-content: start;
 }
 
 @media (max-width: 900px) {
   .hub-grid {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "next"
+      "list"
+      "side";
   }
 }
 

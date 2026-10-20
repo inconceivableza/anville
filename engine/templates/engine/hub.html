@@ -19,39 +19,38 @@
           <h1>Welcome, <i>{{ name }}</i></h1>
           <span class="label hub-progress">{{ hub.complete }} of {{ hub.total }} sections complete</span>
         </div>
+        {# ✨ The next step, the section list and the side cards are the grid's own items, so the side cards can share the next step's row and its height. #}
         <div class="hub-grid">
-          <div>
-            {% if hub.next_step %}
-              {# ✨ What it says is the document's: the section's own heading and sentence, or its title and estimate (ticket 49b). #}
-              {% with step=hub.next_step %}
-                <section class="panel next">
-                  {% if photo %}<img src="{{ photo }}" alt="">{% endif %}
-                  <p class="label">Your next step</p>
-                  {% if step.next_step %}
-                    <h2>{{ step.next_step.heading }}</h2>
-                    <p>{{ step.next_step.sentence }}</p>
-                  {% else %}
-                    <h2>{{ step.title }}</h2>
-                    {% if step.estimate %}<p>{{ step.estimate }}</p>{% endif %}
-                  {% endif %}
-                  <a class="pill" data-magnetic href="{% page_url step.id step.page %}">
-                    {% if step.status == 'in-progress' %}Carry on{% else %}Begin{% endif %}
-                    <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span>
-                  </a>
-                </section>
-              {% endwith %}
-            {% else %}
-              <div class="panel next">
-                <h2>Nothing is waiting for you right now.</h2>
-                <p>You've completed everything that's open. Check back soon.</p>
-              </div>
-            {% endif %}
-            <ol class="slist">
-              {% for entry in hub.outline %}
-                {% include "engine/hub_section.html" with section=entry.section parts=entry.parts %}
-              {% endfor %}
-            </ol>
-          </div>
+          {% if hub.next_step %}
+            {# ✨ What it says is the document's: the section's own heading and sentence, or its title and estimate (ticket 49b). #}
+            {% with step=hub.next_step %}
+              <section class="panel next">
+                {% if photo %}<img src="{{ photo }}" alt="">{% endif %}
+                <p class="label">Your next step</p>
+                {% if step.next_step %}
+                  <h2>{{ step.next_step.heading }}</h2>
+                  <p>{{ step.next_step.sentence }}</p>
+                {% else %}
+                  <h2>{{ step.title }}</h2>
+                  {% if step.estimate %}<p>{{ step.estimate }}</p>{% endif %}
+                {% endif %}
+                <a class="pill" data-magnetic href="{% page_url step.id step.page %}">
+                  {% if step.status == 'in-progress' %}Carry on{% else %}Begin{% endif %}
+                  <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span>
+                </a>
+              </section>
+            {% endwith %}
+          {% else %}
+            <div class="panel next">
+              <h2>Nothing is waiting for you right now.</h2>
+              <p>You've completed everything that's open. Check back soon.</p>
+            </div>
+          {% endif %}
+          <ol class="slist">
+            {% for entry in hub.outline %}
+              {% include "engine/hub_section.html" with section=entry.section parts=entry.parts %}
+            {% endfor %}
+          </ol>
           <aside class="side">
             {% for section in side_cards %}
               {% if section.id == voices.section %}
