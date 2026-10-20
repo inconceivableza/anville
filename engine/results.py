@@ -61,10 +61,10 @@ LABEL_EDGE = 20
 GAP_CLASSES = {"others_higher": "gap-others-higher", "you_higher": "gap-you-higher"}
 
 
-def bar_ranks(percents):
+def bar_ranks(scores):
     """✨ Each score's rank among the distinct scores, strongest first, so tied scores share a colour."""
-    distinct = sorted(set(percents), reverse=True)
-    return [min(distinct.index(percent) + 1, RANK_COLOURS) for percent in percents]
+    distinct = sorted(set(scores), reverse=True)
+    return [min(distinct.index(score) + 1, RANK_COLOURS) for score in scores]
 
 
 def results_page(document, scores, sort, name, role="participant"):
@@ -349,7 +349,8 @@ def _framework(document, framework, presentation, ranked_constructs, shares, con
         ranked_constructs, key=lambda c: (-shares[c["construct"]], declared.index(c["construct"]))
     )
     by_rank = presentation.get("bars") == "rank"
-    ranks = bar_ranks([construct["percent"] for construct in ranked_constructs])
+    # ✨ Ranked by unrounded share too, so only exact ties share a colour, never two bars drawn apart (ADR 0018).
+    ranks = bar_ranks([shares[construct["construct"]] for construct in ranked_constructs])
     constructs = len(framework["constructs"])
     top = _axis_top(constructs)
     bars = []
