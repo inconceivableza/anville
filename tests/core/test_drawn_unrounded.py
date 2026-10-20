@@ -45,7 +45,7 @@ def test_constructs_on_the_same_rounded_percent_are_listed_by_unrounded_share_hi
 
 def test_a_re_weighted_result_is_drawn_at_its_unrounded_shares():
     """✨ A third item, on Prophet and Deliver, ties Apostle and Prophet at 50 each and leaves PEP clear. Prophet chosen
-    twice takes 200/3 to Apostle's 100/3, so they sit at 66.67 and 33.33, not 67 and 33."""
+    twice leads by just over 5%, 51.22 to Apostle's 48.78, so they sit there, not at 51 and 49."""
     document = with_a_tie_break(sort_pathway())
     document["instrument"]["items"].append({"id": "x1", "text": "Seeing it through", "loads": ["prophet", "deliver"]})
     sort = complete_sort(
@@ -58,7 +58,7 @@ def test_a_re_weighted_result_is_drawn_at_its_unrounded_shares():
 
     bars = drawn(results_page(document, reweigh(document, sent, answers), sort, "Sam"))
 
-    assert (bars["Prophet"]["at"], bars["Apostle"]["at"]) == (66.67, 33.33)
+    assert (bars["Prophet"]["at"], bars["Apostle"]["at"]) == (51.22, 48.78)
 
 
 def test_the_comparison_draws_the_participant_the_observers_mean_and_each_observer_at_unrounded_shares():

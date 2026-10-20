@@ -214,9 +214,29 @@ def test_an_observer_sending_a_tied_sort_is_never_offered_the_tie_break(observed
 
 
 # ✨ The re-weighted result (ticket 30c). TIED_ON_ONE gives Apostle and Prophet 50 each, so both stand at an even share
-# ("Present") and Apostle leads by declaration order. Choosing Prophet in both rounds weighs Prophet 2 to Apostle's 1:
-# 67 to 33, well above and well below an even share of 50.
+# ("Present") and Apostle leads by declaration order. Choosing Prophet in both rounds weighs Prophet 2 to Apostle's 1,
+# so Prophet leads by just over 5% (fix-22): 51.22 to 48.78, both still "Present".
 CHOSE_PROPHET = ["prophet", "prophet"]
+# ✨ What 30c stored for those answers, sharing the 100 out by weight: whole numbers only, well above and well below an
+# even share of 50.
+AS_30C_STORED = {"prophet": 67, "apostle": 33}
+
+
+def as_30c_stored(reweighted):
+    """✨ A re-weighted result's frameworks as 30c stored them: AS_30C_STORED's whole numbers, no unrounded shares."""
+    return [
+        {
+            "framework": framework["framework"],
+            "constructs": [
+                {
+                    **{k: v for k, v in c.items() if k != "share"},
+                    "percent": AS_30C_STORED.get(c["construct"], c["percent"]),
+                }
+                for c in framework["constructs"]
+            ],
+        }
+        for framework in reweighted["frameworks"]
+    ]
 
 
 def answer_every_pair(client, choices):
@@ -248,7 +268,7 @@ def test_the_results_page_shows_the_re_weighted_result_and_how_the_tie_break_cha
 
     page = text_of(results(marked).content.decode())
 
-    assert in_order(page, "Your gifting", "The top changed", "Prophet", "Leading", "Apostle", "Less used", "Your energy")
+    assert in_order(page, "Your gifting", "The top changed", "Prophet", "Present", "Apostle", "Present", "Your energy")
 
 
 @pytest.mark.django_db
@@ -273,12 +293,15 @@ def test_the_results_page_says_every_pair_was_skipped_in_words_of_its_own(marked
 
 @pytest.mark.django_db
 def test_the_re_weighted_result_keeps_each_unrounded_share_beside_its_whole_number(marked):
-    """✨ Prophet weighs 2 to Apostle's 1, so takes two thirds of their 100: 200/3, stored as 67."""
+    """✨ Prophet weighs 2 to Apostle's 1, so leads by 5.01% of their 100: 1050100/20501, stored as 51."""
     answer_every_pair(marked, CHOSE_PROPHET)
 
     apest = Result.objects.get().reweighted["frameworks"][0]["constructs"]
 
-    assert [(c["construct"], c["percent"], c["share"]) for c in apest] == [("prophet", 67, "200/3"), ("apostle", 33, "100/3")]
+    assert [(c["construct"], c["percent"], c["share"]) for c in apest] == [
+        ("prophet", 51, "1050100/20501"),
+        ("apostle", 49, "1000000/20501"),
+    ]
 
 
 @pytest.mark.django_db
@@ -288,13 +311,7 @@ def test_a_result_re_weighted_before_its_shares_were_kept_still_renders_with_its
     result = Result.objects.get()
     result.reweighted = {
         "method": "pairwise_reweighting",
-        "frameworks": [
-            {
-                "framework": framework["framework"],
-                "constructs": [{k: v for k, v in c.items() if k != "share"} for c in framework["constructs"]],
-            }
-            for framework in result.reweighted["frameworks"]
-        ],
+        "frameworks": as_30c_stored(result.reweighted),
         "tie_break": {"framework": "apest", "outcome": "top_changed"},
     }
     result.save()
@@ -310,16 +327,7 @@ def test_a_result_re_weighted_before_its_shares_were_kept_still_shows_its_gaps_o
     each."""
     answer_every_pair(marked, CHOSE_PROPHET)
     result = Result.objects.get()
-    result.reweighted = {
-        **result.reweighted,
-        "frameworks": [
-            {
-                "framework": framework["framework"],
-                "constructs": [{k: v for k, v in c.items() if k != "share"} for c in framework["constructs"]],
-            }
-            for framework in result.reweighted["frameworks"]
-        ],
-    }
+    result.reweighted = {**result.reweighted, "frameworks": as_30c_stored(result.reweighted)}
     result.save()
     response = Response.objects.get(participant=participant)
     for _ in range(3):
@@ -333,7 +341,8 @@ def test_a_result_re_weighted_before_its_shares_were_kept_still_shows_its_gaps_o
 
 @pytest.mark.django_db
 def test_the_comparison_sets_the_re_weighted_result_beside_the_observers_sorts_as_sent(marked, participant):
-    """✨ The observers sent TIED_ON_ONE too, so their mean is 50 each: Present, never re-weighted."""
+    """✨ The observers sent TIED_ON_ONE too, so their mean is 50 each, never re-weighted: the participant's 51.22 and
+    48.78 are a point either side of it."""
     answer_every_pair(marked, CHOSE_PROPHET)
     response = Response.objects.get(participant=participant)
     for _ in range(3):
@@ -341,4 +350,6 @@ def test_the_comparison_sets_the_re_weighted_result_beside_the_observers_sorts_a
 
     page = text_of(comparison(marked).content.decode())
 
-    assert in_order(page, "Prophet", "You: Leading", "Others: Present", "Apostle", "You: Less used", "Others: Present")
+    assert in_order(page, "Prophet", "You: Present", "Others: Present", "Apostle", "You: Present", "Others: Present")
+    assert in_order(page, "Prophet (APEST(d))", "You rate higher (+1)")
+    assert in_order(page, "Apostle (APEST(d))", "Others rate higher (+1)")

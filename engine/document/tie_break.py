@@ -29,9 +29,14 @@ GENERALIST = "generalist"
 
 # ✨ The re-weighting's name, stored on the result it makes (ticket 30c). A second named scoring method beside the
 # compositional score (ADR 0003): once a result is made with it, its behaviour is frozen, and a change is a new name.
-# Its shares are unchanged since; the outcome it names was amended to follow the weights alone (ADR 0018), and is
-# stored with each result, so one stored before keeps the outcome it was given.
+# The outcome it names was amended to follow the weights alone, and its shares to open only a gap just past the
+# threshold (fix-22), both before any real participant's result, so it keeps its name (ADR 0018, amended). Each
+# result stores its outcome and shares, so one stored before keeps what it was given.
 REWEIGHTING = "pairwise_reweighting"
+# ✨ How far past the threshold the re-weighting sets one weight's constructs ahead of the next's: a hundredth of a
+# percent, so 5.01% for a document's 5%. The test for too close to call counts exactly 5% as tied, so the gap must be
+# more than that; a hundredth is past it while adding next to nothing.
+JUST_PAST = Fraction(1, 100)
 
 # ✨ What the tie-break's answers did to a tied framework: a new construct leads, the same one leads, or none does,
 # because the best weight is shared, the choices having gone in a circle or not, or every pair was skipped (ADR 0018).
@@ -56,8 +61,7 @@ def tie_break(document, result):
     shares = unrounded_shares(result)
     if all(flat(document, list(shares[framework["framework"]].values())) for framework in result["frameworks"]):
         return {"tied": {}, "outcome": GENERALIST}
-    # ✨ As a string first, so a percentage such as 2.5 is taken as written, not as its nearest binary fraction.
-    within = 1 + Fraction(str(settings.get("percent", DEFAULT_PERCENT))) / 100
+    within = _within(settings)
     cluster = settings.get("cluster", DEFAULT_CLUSTER)
     tied = {}
     for framework in result["frameworks"]:
@@ -69,6 +73,12 @@ def tie_break(document, result):
         if len(close) > 1:
             tied[framework["framework"]] = close[:cluster]
     return {"tied": tied, "outcome": TIE_BREAK if tied else None}
+
+
+def _within(settings):
+    """✨ How many times another's share a leader's may be and still be too close to call: 1.05 for 5%."""
+    # ✨ As a string first, so a percentage such as 2.5 is taken as written, not as its nearest binary fraction.
+    return 1 + Fraction(str(settings.get("percent", DEFAULT_PERCENT))) / 100
 
 
 def pair_plan(document, result):
@@ -117,18 +127,26 @@ def _by_importance(framework, cluster):
 
 def reweigh(document, result, answers):
     """✨ The result re-weighted by the tie-break's answers (ticket 30c, ADR 0018), as the content owner's prototype's
-    `rescore` does it, for a participant marked for the tie-break who has answered or skipped every pair. The sort's
+    `rescore` weighs it, for a participant marked for the tie-break who has answered or skipped every pair. The sort's
     result is left as it is: this is a second result, kept beside it, with `tie_break` listing each framework that had
     pairs and how its answers came out.
 
     Each tied framework that had pairs is re-weighted from its own answers alone, so neither framework's answers
     change the other. Each construct that entered its tie-break weighs 1 plus the share of its appearances it won, a
-    skip being an appearance for both and a win for neither, and the unrounded share those constructs had between them
-    is shared out again by weight. Every construct keeps its unrounded share, as an exact fraction written out, beside
-    its whole number: each re-weighted share is rounded half up on its own, as the compositional score rounds, where
-    the prototype added what rounding lost to the leader, which could make a leader of one. A re-weighted framework is
-    ranked by the unrounded shares, which replace its fallback to declaration order; constructs level on them keep the
-    sort's order. Every other construct and framework is as the sort scored it.
+    skip being an appearance for both and a win for neither. The weights decide the order of those constructs, and the
+    gap opens only enough to settle it (the developer's call, fix-22, ADR 0018 amended), where the prototype shared
+    their total out by weight, so that a lead of under a point could become one of fourteen. Constructs on the same
+    weight end level; each weight's constructs end just past the document's percentage ahead of the next weight's
+    (JUST_PAST), so they are no longer too close to call; and the unrounded share they had between them is kept. A
+    tied construct the gap pushes below one outside the cluster is listed below it, by its unrounded share like any
+    other: the answers put it last of the cluster, and keeping the cluster's total means its last falls as its first
+    rises.
+
+    Every construct keeps its unrounded share, as an exact fraction written out, beside its whole number: each
+    re-weighted share is rounded half up on its own, as the compositional score rounds, where the prototype added what
+    rounding lost to the leader, which could make a leader of one. A re-weighted framework is ranked by the unrounded
+    shares, which replace its fallback to declaration order; constructs level on them keep the sort's order. Every
+    other construct and framework is as the sort scored it.
 
     The weights decide the outcome: one construct alone on the best weight is separated (TOP_CHANGED or SAME_TOP), even
     where the choices went in a circle. Where the best weight is shared there is no winner to name, so the constructs
@@ -137,6 +155,7 @@ def reweigh(document, result, answers):
     about the participant (SKIPPED), so that framework is left as sorted.
     """
     tied = tie_break(document, result)["tied"]
+    apart = _within(document["measurement"]["tie_break"]) + JUST_PAST / 100
     sorted_shares = unrounded_shares(result)
     frameworks, broken = [], []
     for framework in result["frameworks"]:
@@ -145,7 +164,7 @@ def reweigh(document, result, answers):
         constructs = [{**construct, "share": str(share[construct["construct"]])} for construct in framework["constructs"]]
         own_answers = [answer for answer in answers if answer["framework"] == framework_id]
         if framework_id in tied and own_answers:
-            outcome, share = _reweighed(tied[framework_id], share, own_answers)
+            outcome, share = _reweighed(tied[framework_id], share, own_answers, apart)
             broken.append({"framework": framework_id, "outcome": outcome})
             if outcome != SKIPPED:
                 constructs = [
@@ -160,8 +179,9 @@ def reweigh(document, result, answers):
     return {"method": REWEIGHTING, "frameworks": frameworks, "tie_break": broken}
 
 
-def _reweighed(cluster, share, answers):
-    """✨ One tied framework's outcome and its shares after its own answers: `(outcome, {construct: share})`."""
+def _reweighed(cluster, share, answers, apart):
+    """✨ One tied framework's outcome and its shares after its own answers: `(outcome, {construct: share})`, each
+    weight's constructs `apart` times the share of the next weight's."""
     if all(answer["chosen"] is None for answer in answers):
         return SKIPPED, share
     wins = {construct: 0 for construct in cluster}
@@ -176,8 +196,12 @@ def _reweighed(cluster, share, answers):
             beaten[answer["chosen"]].add(loser)
     # ✨ Fractions, so weights that are equal compare equal.
     weights = {c: 1 + (Fraction(wins[c], appearances[c]) if appearances[c] else 0) for c in cluster}
-    total = sum(share[c] for c in cluster)
-    reweighed = {**share, **{c: total * weights[c] / sum(weights.values()) for c in cluster}}
+    # ✨ The cluster's total in parts: each of the lowest weight's constructs takes one, each of the next weight's
+    # `apart` parts, and so on up, one more factor of `apart` for every weight below its own.
+    below = {weight: sum(1 for other in set(weights.values()) if other < weight) for weight in weights.values()}
+    parts = {c: apart ** below[weights[c]] for c in cluster}
+    part = sum(share[c] for c in cluster) / sum(parts.values())
+    reweighed = {**share, **{c: part * parts[c] for c in cluster}}
 
     # ✨ The weights decide (ADR 0018, amended): one construct on the best weight is separated even where the answers
     # went in a circle; only a best weight shared is balanced, worded as a circle where the answers also went in one.
