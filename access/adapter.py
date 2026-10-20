@@ -13,8 +13,19 @@ from django.http import Http404
 # a longer one short to fit, leaving a username that is not the email, and that a second long email could clash with.
 USERNAME_MAX_LENGTH = get_user_model()._meta.get_field("username").max_length
 
+# ✨ Signing in leads to the hub and signing out to the homepage, and neither page shows messages, so allauth's
+# "Successfully signed in as …" and "You have signed out." waited and showed on the next account page instead, such as
+# sign-up. They are not added at all: landing on the hub, with "Sign out" in its header, says the sign-in worked, and
+# landing on the homepage says the sign-out did.
+UNSHOWN_MESSAGES = {"account/messages/logged_in.txt", "account/messages/logged_out.txt"}
+
 
 class AccountAdapter(DefaultAccountAdapter):
+    def add_message(self, request, level, message_template=None, message_context=None, extra_tags="", message=None):
+        if message_template in UNSHOWN_MESSAGES:
+            return
+        super().add_message(request, level, message_template, message_context, extra_tags, message)
+
     def clean_email(self, email):
         email = super().clean_email(email)
         if len(email) > USERNAME_MAX_LENGTH:
