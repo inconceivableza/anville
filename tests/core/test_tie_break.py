@@ -4,6 +4,8 @@
 """✨ Whether a participant's sort leaves a framework's leaders too close to call (ticket 30a): from a stored result and
 the pathway document alone, with no request or database."""
 
+from fractions import Fraction
+
 import pytest
 
 import tests.documents
@@ -238,7 +240,8 @@ def percents(reweighted, framework_id="apest"):
 
 def test_re_weighting_a_tied_framework_gives_a_clear_leader_where_the_choices_give_one():
     """✨ Prophet 26 and Shepherd 25 share 51 points. Shepherd chosen in both rounds wins 2 of 2, so weighs 2 to
-    Prophet's 1, and takes two thirds of the 51: 34 to 17. Everyone else, and the other framework, keep the sort's."""
+    Prophet's 1, and leads by just over 5% of the 51: 26.12 to 24.88. Everyone else, and the other framework, keep the
+    sort's."""
     sent = result(ONLY_ROLE_TIED, CLEAR_PEP)
 
     chose_shepherd_twice = answered(("prophet", "shepherd", "shepherd"), ("prophet", "shepherd", "shepherd"))
@@ -246,8 +249,8 @@ def test_re_weighting_a_tied_framework_gives_a_clear_leader_where_the_choices_gi
     reweighted = reweigh(planned(), sent, chose_shepherd_twice)
 
     assert percents(reweighted) == [
-        ("shepherd", 34),
-        ("prophet", 17),
+        ("shepherd", 26),
+        ("prophet", 25),
         ("teacher", 16),
         ("apostle", 13),
         ("deacon", 11),
@@ -260,15 +263,61 @@ def test_re_weighting_a_tied_framework_gives_a_clear_leader_where_the_choices_gi
 
 def test_a_leader_the_choices_keep_is_kept_and_said_to_be_the_same():
     """✨ A skip counts as an appearance for both and a win for neither: Prophet wins 1 of 2 and weighs 1.5 to
-    Shepherd's 1, so takes three fifths of the 51 points, 30.6 to 20.4."""
+    Shepherd's 1, so leads by just over 5% of the 51 points, 26.12 to 24.88."""
     reweighted = reweigh(
         planned(),
         result(ONLY_ROLE_TIED, CLEAR_PEP),
         answered(("prophet", "shepherd", "prophet"), ("prophet", "shepherd", None)),
     )
 
-    assert percents(reweighted)[:2] == [("prophet", 31), ("shepherd", 20)]
+    assert percents(reweighted)[:2] == [("prophet", 26), ("shepherd", 25)]
     assert outcomes(reweighted) == {"apest": "same_top"}
+
+
+# ✨ The re-weighting opens a gap of 5.01% between one weight and the next (fix-22): a hundredth of a percent past the
+# document's 5%, so the two are no longer too close to call.
+JUST_OVER = Fraction(10501, 10000)
+
+
+def test_the_answers_put_the_tied_constructs_in_order_just_over_the_threshold_apart_keeping_their_total():
+    """✨ The seeded `separated` sort: Deacon 22.0% and Evangelist 21.2% are tied, and Evangelist chosen in both rounds
+    now leads by just over 5%, about 22.1% to 21.1%, where sharing out by weight made it 28.8% to 14.4%."""
+    sent = result([234, 324, 382, 297, 167, 396], CLEAR_PEP)
+    chose_evangelist_twice = answered(("deacon", "evangelist", "evangelist"), ("deacon", "evangelist", "evangelist"))
+
+    reweighted = reweigh(planned(), sent, chose_evangelist_twice)
+
+    before, after = unrounded_shares(sent)["apest"], unrounded_shares(reweighted)["apest"]
+    assert after["evangelist"] / after["deacon"] == JUST_OVER
+    assert after["evangelist"] + after["deacon"] == before["evangelist"] + before["deacon"]
+    assert {c: s for c, s in after.items() if c not in ("evangelist", "deacon")} == {
+        c: s for c, s in before.items() if c not in ("evangelist", "deacon")
+    }
+    assert tie_break(planned(), reweighted)["tied"] == {}
+
+
+def test_three_tied_constructs_end_in_the_order_of_their_weights_each_just_over_the_threshold_ahead_of_the_next():
+    """✨ Teacher beats both in both rounds and Prophet beats Apostle in both: weights of 2, 1.5 and 1."""
+    teacher_then_prophet = answered(
+        *[("apostle", "prophet", "prophet"), ("apostle", "teacher", "teacher"), ("prophet", "teacher", "teacher")] * 2
+    )
+
+    reweighted = reweigh(planned(), result(THREE_LEVEL, CLEAR_PEP), teacher_then_prophet)
+
+    after = unrounded_shares(reweighted)["apest"]
+    assert [construct for construct, _ in percents(reweighted)[:3]] == ["teacher", "prophet", "apostle"]
+    assert after["teacher"] / after["prophet"] == after["prophet"] / after["apostle"] == JUST_OVER
+    assert after["teacher"] + after["prophet"] + after["apostle"] == Fraction(6000, 90)
+
+
+def test_constructs_sharing_the_top_weight_stay_level_with_each_other():
+    """✨ Apostle and Prophet share the best weight, Shepherd and Deacon the one below."""
+    reweighted = reweigh(planned(), result(FLAT, CLEAR_PEP), LEVEL_AT_THE_TOP)
+
+    after = unrounded_shares(reweighted)["apest"]
+    assert after["apostle"] == after["prophet"]
+    assert after["shepherd"] == after["deacon"]
+    assert after["apostle"] / after["shepherd"] == JUST_OVER
 
 
 # ✨ Of the four tied in FLAT (68 points between them), Apostle beats Prophet, Prophet beats Shepherd and Shepherd
@@ -297,11 +346,12 @@ LEVEL_AT_THE_TOP = answered(
 @pytest.mark.parametrize(
     "answers, outcome, shares",
     [
-        # ✨ Each of the three weighs 4/3 and Deacon 1, so 68 × (4/3) / 5 = 18.13 each and 13.6 for Deacon.
-        (IN_A_CIRCLE, "circle", {"apostle": 18, "prophet": 18, "shepherd": 18, "deacon": 14}),
-        # ✨ Apostle and Prophet each win 1 of 4 and weigh 1.25 to Shepherd's and Deacon's 1: 68 × 1.25 / 4.5 = 18.89
-        # and 68 / 4.5 = 15.11.
-        (LEVEL_AT_THE_TOP, "level", {"apostle": 19, "prophet": 19, "shepherd": 15, "deacon": 15}),
+        # ✨ Each of the three weighs 4/3 and Deacon 1, so each is just over 5% ahead of Deacon: 17.21 each and 16.38
+        # for Deacon, of the 68.
+        (IN_A_CIRCLE, "circle", {"apostle": 17, "prophet": 17, "shepherd": 17, "deacon": 16}),
+        # ✨ Apostle and Prophet each win 1 of 4 and weigh 1.25 to Shepherd's and Deacon's 1, so are just over 5% ahead
+        # of them: 17.42 and 16.58, all 17 when rounded.
+        (LEVEL_AT_THE_TOP, "level", {"apostle": 17, "prophet": 17, "shepherd": 17, "deacon": 17}),
     ],
     ids=["in a circle", "level at the top"],
 )
@@ -356,13 +406,13 @@ ASSESS_THEN_DELIVER = answered(("deliver", "assess", "assess"), ("deliver", "ass
 
 
 def test_with_pairs_on_both_frameworks_each_is_re_weighted_from_its_own_answers_with_its_own_outcome():
-    """✨ Evangelist chosen twice weighs 2 to Deacon's 1, so takes two thirds of their 3977 / 10001: 26.51 to 13.26.
-    PEP, every pair skipped, is as the sort left it."""
+    """✨ Evangelist chosen twice weighs 2 to Deacon's 1, so leads by just over 5% of their 3977 / 10001: 20.37 to
+    19.40. PEP, every pair skipped, is as the sort left it."""
     reweighted = reweigh(planned(), BOTH_TIED, CHOSE_EVANGELIST_TWICE + SKIPPED_ON_PEP)
 
     assert outcomes(reweighted) == {"apest": "top_changed", "pep": "skipped"}
-    assert percents(reweighted)[0] == ("evangelist", 27)
-    assert dict(percents(reweighted))["deacon"] == 13
+    assert percents(reweighted)[0] == ("evangelist", 20)
+    assert dict(percents(reweighted))["deacon"] == 19
     assert percents(reweighted, "pep") == percents(BOTH_TIED, "pep")
 
 
@@ -425,8 +475,8 @@ def test_a_re_weighted_result_that_comes_out_flat_on_both_and_balanced_says_gene
 
 
 def test_a_flat_result_beside_a_separated_outcome_never_says_generalist():
-    """✨ Under the placeholder bands, choices that separate a framework leave it a Leading construct or a Less used one,
-    so the outcome is set by hand on the flat result."""
+    """✨ Under the placeholder bands, choices that separate this framework leave it a Leading construct, so the
+    outcome is set by hand on the flat result."""
     reweighted = reweigh(results_pathway(), LEADING_ALONE, ONE_CHOICE_EACH)
     reweighted["tie_break"] = [{"framework": "apest", "outcome": "same_top"}]
 
@@ -437,13 +487,12 @@ def test_a_flat_result_beside_a_separated_outcome_never_says_generalist():
 
 
 def test_a_separated_frameworks_standings_put_the_construct_it_names_first():
-    """✨ Prophet chosen twice takes two thirds of 41.5: 27.67, Leading, to Apostle's 13.83, Less used."""
+    """✨ Prophet chosen twice leads by just over 5% of 41.5: 21.26, Leading, to Apostle's 20.24, Strong."""
     bars, said, generalist = drawn_after(answered(("apostle", "prophet", "prophet"), ("apostle", "prophet", "prophet")))
 
     assert said["text"] == "The top changed."
     assert generalist is None
-    assert bars[0] == ("prophet", "Leading")
-    assert ("apostle", "Less used") in bars
+    assert bars[:2] == [("prophet", "Leading"), ("apostle", "Strong")]
 
 
 def with_a_tie_break(**settings):
