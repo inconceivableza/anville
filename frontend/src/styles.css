@@ -969,8 +969,11 @@ main > .hub ~ .hub-consent {
   gap: var(--space-sm);
 }
 
+/* ✨ The hub's paper cards carry the outline the question cards and results' sections have (fix-8); the dark card's
+   is clear, so it keeps the same size without a pale line round the brown. */
 .card {
   background: var(--paper);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   display: grid;
@@ -979,6 +982,7 @@ main > .hub ~ .hub-consent {
 
 .card.dark {
   background: var(--brown);
+  border-color: transparent;
   color: var(--on-dark);
 }
 
@@ -3448,14 +3452,14 @@ html[data-javascript="loaded"] .save-fallback {
 }
 
 /* ✨ v3's card for the sort's card, fine-tuning's groups and the results' and comparison's sections: paper, 12px
-   corners, 22px padding and no border, at every width, as on the hub (fix-3). These rules come after each card's
-   own, so they win over them; undoing fix-3 removes them alone. The card on show in the sort keeps its shadow, so
-   it still stands off the page while it flies to a bucket. */
+   corners and 22px padding, at every width, as on the hub (fix-3). These rules come after each card's own, so they
+   win over them; undoing fix-3 removes them alone. Each keeps its own border, as the hub's paper cards now have one
+   too (fix-8). The card on show in the sort keeps its shadow, so it still stands off the page while it flies to a
+   bucket. */
 .sort-card,
 .score-section,
 .results-section {
   background: var(--paper);
-  border: 0;
   border-radius: var(--radius-lg);
   padding: 22px;
 }

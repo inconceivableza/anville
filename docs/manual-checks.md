@@ -507,12 +507,13 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - Five trusted voices' page (fix 13): "Needed" and "Optional" are small quiet labels, as v3's tags.
 - Observer's assessment (fix 14): the relationship drop-down has the same border, corners, padding and font as the page's text inputs, its caret at the right, and the focus ring when focused.
 
-## Review fixes (fix-3)
+## Review fixes (fix-3, cards outlined again in fix-8)
 
-- Cards as v3's (beside v3's hub cards, `whatever-you-do-site-hackethon-artifact-v3/index.html`): the sort's card on show, fine-tuning's groups of sliders, each section of the results page and each of the comparison's sections ("Biggest Gaps", "Questions to sit with" and each framework's) are on the paper with 12px corners and no outline, as the hub's side cards are. The bucket buttons, the bucket headings above fine-tuning's groups, the results' construct colours and the comparison's marks and gap badges keep their colours; the gap cards inside "Biggest Gaps" keep their outline.
-- The sort, framed (a participant's Section 1) and on the cream (an observer's link, in a private window): the card on show stands out from the page, with its soft shadow, before and while it flies to a bucket, and reads as easily as before. Keyboard only: each bucket button, Undo and each fine-tuning slider still shows its ring when focused.
-- The coach's view of the results and comparison (the coach's link, once shared): the sections look the same as the participant's.
-- Phone width: on the sort, fine-tuning, results and the comparison, each card fits with a margin each side, its words clear of its edges, and nothing scrolls sideways.
+- Cards outlined: the sort's card on show, fine-tuning's groups of sliders, each section of the results page and each of the comparison's sections ("Biggest Gaps", "Questions to sit with" and each framework's) are on the paper with 12px corners and a thin pale outline, as the onboarding question cards and the account form card have. The sort's card's outline is a little heavier, as it was before fix-3. The bucket buttons, the bucket headings above fine-tuning's groups, the results' construct colours and the comparison's marks and gap badges keep their colours; the gap cards inside "Biggest Gaps" keep their own outline.
+- Hub (signed in, framed): the paper side cards (the strengths assessment's and any other's on the right) have the same thin outline; Five trusted voices' dark card has no pale line round it and is the same width as the cards beside it. The section list and "Your next step" are unchanged.
+- The sort, framed (a participant's Section 1) and on the cream (an observer's link, in a private window): the card on show stands out from the page, with its outline and soft shadow, before and while it flies to a bucket, and reads as easily as before. Keyboard only: each bucket button, Undo and each fine-tuning slider still shows its ring when focused.
+- The coach's view of the results and comparison (the coach's link, once shared): the sections look the same as the participant's, outline included.
+- Phone width: on the hub, the sort, fine-tuning, results and the comparison, each card fits with a margin each side, its outline whole, its words clear of its edges, and nothing scrolls sideways.
 - Homepage (signed out): the header's "Coaches", the hero's "For coaches" and the footer's "For coaches" each scroll to the coach panel in "How it works"; the pillars read "Coach oversight". No "mentor" shows on the page.
 
 ## Review fixes (fix-6)
