@@ -55,6 +55,20 @@ def test_a_gap_is_sized_and_directed_by_the_unrounded_shares_not_the_rounded_per
     assert seen == words
 
 
+def test_a_gap_card_names_its_construct_by_its_text_label_and_its_drawing_by_its_label():
+    """✨ As Whatever You Do labels deacon in lower case beside its drawing and capitalised in text (fix-27)."""
+    document = sort_pathway()
+    [apostle] = [c for c in document["measurement"]["frameworks"][0]["constructs"] if c["id"] == "apostle"]
+    apostle.update(label="apostle", text_label="Apostle")
+    sent = complete_sort(a5={"bucket": "strength", "value": 59}, p1={"bucket": "strength", "value": 49})
+
+    page = comparison_page(document, score(document, YOURS), YOURS, aggregate(document, [sent] * 3))
+
+    named = [gap["label"] for gap in page["gaps"]]
+    assert "Apostle" in named and "apostle" not in named
+    assert sorted(bar["label"] for bar in page["frameworks"][0]["bars"]) == ["Prophet", "apostle"]
+
+
 def pair(construct, you, others, framework="apest"):
     """✨ One construct's self-result percent beside the observers' mean."""
     return {"framework": framework, "construct": construct, "you": you, "others": others}

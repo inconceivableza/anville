@@ -406,7 +406,7 @@
           { "id": "evangelist", "label": "Evangelist" },
           { "id": "shepherd", "label": "Shepherd" },
           { "id": "teacher", "label": "Teacher" },
-          { "id": "deacon", "label": "deacon" }
+          { "id": "deacon", "label": "deacon", "text_label": "Deacon" }
         ]
       },
       {
