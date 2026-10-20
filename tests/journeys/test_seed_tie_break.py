@@ -38,6 +38,16 @@ def test_it_refuses_with_debug_off_and_no_demo_notice(published, settings):
 
 
 @pytest.mark.django_db
+def test_it_refuses_on_for_a_scenario_that_does_not_take_it(published, settings):
+    settings.DEBUG = True
+
+    with pytest.raises(CommandError, match="tied-both does not take --on"):
+        call_command("seed_tie_break", "tied-both", "--on", "pep", stdout=StringIO())
+
+    assert not get_user_model().objects.exists()
+
+
+@pytest.mark.django_db
 def test_the_tied_on_both_participant_signs_in_to_the_first_pair(published, client, settings):
     settings.DEBUG = True
     out = StringIO()
