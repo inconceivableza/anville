@@ -1,0 +1,14 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/participant.html" %}
+{% comment %}
+  ✨ A press refused without JavaScript where the page it was pressed on cannot be drawn again, being shut too (ticket
+  71): why, in the participant's frame, with the way back to the hub. Never the bare status line htmx gets (fix-7).
+{% endcomment %}
+{% block head_title %}Not saved{% endblock head_title %}
+
+{% block content %}
+  <p class="back-to-hub"><a href="{% url 'hub' %}">← Back to the hub</a></p>
+  <h1>Not saved</h1>
+  <p>{{ refusal }}</p>
+{% endblock content %}
