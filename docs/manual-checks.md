@@ -514,3 +514,8 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - The coach's view of the results and comparison (the coach's link, once shared): the sections look the same as the participant's.
 - Phone width: on the sort, fine-tuning, results and the comparison, each card fits with a margin each side, its words clear of its edges, and nothing scrolls sideways.
 - Homepage (signed out): the header's "Coaches", the hero's "For coaches" and the footer's "For coaches" each scroll to the coach panel in "How it works"; the pillars read "Coach oversight". No "mentor" shows on the page.
+
+## Review fixes (fix-6)
+
+- Signing in and out leaves no message behind: sign in (by email, and by Google where its pair is set), then "Sign out" in the header, then "Begin your journey" on the homepage. The sign-up page shows the demo notice, if on, and no green box: no "Successfully signed in as …" and no "You have signed out.". "Sign in" from there shows none either. Phone width: the same.
+- A message still shows where it belongs: "Forgot your password?" from sign-in, follow the emailed link, set a new password: the page after says "Password successfully changed." in the green box; the sign-in page after it does not.
