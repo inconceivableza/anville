@@ -47,4 +47,5 @@ def _band(document, percent, constructs):
 
 
 def _settings(document):
+    """✨ The document's `presentation.standing`: its bands and the label below them, or variant F's placeholders."""
     return document.get("presentation", {}).get("standing", DEFAULT_STANDING)

@@ -8,11 +8,12 @@ written in the prototype's terms, and translated to the new identifiers here and
 """
 
 import json
+from fractions import Fraction
 
 import pytest
 
 from engine.document.blocks import left_at_seeds
-from engine.document.scoring import score
+from engine.document.scoring import round_half_up, score
 from tests.prototype import APEST, PEP, ROOT, whatever_you_do
 
 GOLDEN = json.loads((ROOT / "tests/core/golden/prototype_scoring.json").read_text(encoding="utf-8"))
@@ -83,3 +84,12 @@ def test_the_score_is_compositional_so_all_strongest_and_all_weakest_give_the_sa
         return [[(c["construct"], c["percent"]) for c in f["constructs"]] for f in result["frameworks"]]
 
     assert shape(strongest) == shape(weakest)
+
+
+def test_rounding_half_up_is_exact_for_a_fraction_and_javascripts_for_a_float():
+    """✨ A hair under a half, as a fraction, is never rounded up by a float it was turned into; a float rounds as
+    Math.round did, the golden sorts holding it to the prototype."""
+    hair_under = Fraction(5, 2) - Fraction(1, 10**20)
+
+    assert round_half_up(hair_under) == 2
+    assert [round_half_up(number) for number in (2.5, 0.5, 49.75, 50.25)] == [3, 1, 50, 50]

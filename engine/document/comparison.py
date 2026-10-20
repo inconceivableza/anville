@@ -46,12 +46,12 @@ def _direction(you, others):
     return "others_higher" if others > you else "you_higher" if others < you else None
 
 
-def seen_by_others(document, you, others, constructs):
+def seen_by_others(document, you, others, construct_count):
     """✨ Whether others see a construct higher or lower than the participant, in the document's words; much the same
-    only when both shares have the same standing among the framework's `constructs` and the gap is under the
-    significant gap (fix-11), so the words never contradict the standings shown beside them."""
+    only when both shares have the same standing among the framework's `construct_count` constructs and the gap is
+    under the significant gap (fix-11), so the words never contradict the standings shown beside them."""
     wording = comparison_settings(document).get("seen_by_others", DEFAULT_SEEN_BY_OTHERS)
-    same_standing = standing(document, you, constructs) == standing(document, others, constructs)
+    same_standing = standing(document, you, construct_count) == standing(document, others, construct_count)
     if same_standing and abs(others - you) < _significant_gap(document):
         return wording["much_the_same"]
     return wording[_direction(you, others)]
@@ -83,8 +83,8 @@ def largest_gaps(document, pairs):
 
 
 def agreement(document, per_observer):
-    """✨ The label of the band the range of the observers' unrounded shares falls in: the narrowest band whose `up_to` the range doesn't pass,
-    whatever order the bands are written in, or the label for above them all."""
+    """✨ The label of the band the range of the observers' unrounded shares falls in: the narrowest band whose `up_to`
+    the range doesn't pass, whatever order the bands are written in, or the label for above them all."""
     spread = max(per_observer) - min(per_observer)
     agreement_bands = comparison_settings(document).get("agreement", DEFAULT_AGREEMENT)
     for band in sorted(agreement_bands["bands"], key=lambda band: band["up_to"]):
