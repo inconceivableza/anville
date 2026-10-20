@@ -73,12 +73,16 @@ def results_page(document, scores, sort, name, role="participant"):
     `{name}` in the authored title is replaced as plain text, never through `format()`, so an author's
     braces can reach nothing. The template escapes whatever comes out.
     """
+    return _results(document, scores, unrounded_shares(scores), sort, name, role)
+
+
+def _results(document, scores, shares, sort, name, role):
+    """✨ `results_page`, given the result's unrounded `shares`, so the comparison works them out only once."""
     presentation = document.get("presentation", {})
     construct_presentation = {entry["construct"]: entry for entry in presentation.get("constructs", [])}
     framework_presentation = {entry["framework"]: entry for entry in presentation.get("frameworks", [])}
     frameworks = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
     title = presentation.get("results_title", document["title"])
-    shares = unrounded_shares(scores)
     return {
         "title": text_for(title, role).replace("{name}", name),
         "frameworks": [
@@ -181,18 +185,18 @@ def comparison_page(document, scores, sort, observer_average):
         framework["framework"]: {construct["construct"]: construct for construct in framework["constructs"]}
         for framework in observer_average["frameworks"]
     }
-    page = results_page(document, scores, sort, name="")
     shares = unrounded_shares(scores)
+    page = _results(document, scores, shares, sort, name="", role="participant")
     declared = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
     for framework, scored in zip(page["frameworks"], scores["frameworks"]):
-        constructs = len(declared[scored["framework"]]["constructs"])
+        construct_count = len(declared[scored["framework"]]["constructs"])
 
         def worded(percent):
-            return text_for(standing(document, percent, constructs), "participant")
+            return text_for(standing(document, percent, construct_count), "participant")
 
         pairs = [(bar, observed[scored["framework"]][bar["construct"]]) for bar in framework["bars"]]
         # ✨ The results page's axis, so each mark of the participant's sits where it does there.
-        top = _axis_top(constructs)
+        top = _axis_top(construct_count)
         for bar, others in pairs:
             # ✨ The participant's dot is where the results page puts it, in the comparison's own colour, not theirs.
             del bar["colour"]
@@ -204,7 +208,9 @@ def comparison_page(document, scores, sort, observer_average):
             bar["gap_from"], bar["gap_width"] = min(you_at, others_at), round(abs(you_at - others_at), 2)
             bar["others_standing"] = worded(others["share"])
             bar["seen_by_others"] = text_for(
-                seen_by_others(document, shares[scored["framework"]][bar["construct"]], others["share"], constructs),
+                seen_by_others(
+                    document, shares[scored["framework"]][bar["construct"]], others["share"], construct_count
+                ),
                 "participant",
             )
             bar["agreement"] = text_for(agreement(document, others["per_observer_shares"]), "participant")
@@ -230,7 +236,7 @@ def comparison_page(document, scores, sort, observer_average):
             "you_y": round(LINE_Y - DOT_RADIUS - MARK_CLEARANCE - MARK_SIZE, 2),
             "others_y": round(LINE_Y + DOT_RADIUS + MARK_CLEARANCE, 2),
         },
-        **_reflection(document, scores, observed),
+        **_reflection(document, shares, observed),
     }
 
 
@@ -270,8 +276,9 @@ def _mark(centre):
     return round(centre - MARK_SIZE / 2, 2)
 
 
-def _reflection(document, scores, observed):
-    """✨ Below the drawings: the largest gaps, worded, and the questions to reflect on, all from the document.
+def _reflection(document, yours, observed):
+    """✨ Below the drawings: the largest gaps between the participant's unrounded shares, `yours`, and the observers',
+    worded, and the questions to reflect on, all from the document.
 
     Only the participant sees the comparison, so it is worded for them. A document with no gaps wording lists no gaps,
     since there would be nothing to say about them; the schema asks for all of it or none.
@@ -291,7 +298,6 @@ def _reflection(document, scores, observed):
     if "gaps" not in wording:
         return shown
     gap_wording = wording["gaps"]
-    yours = unrounded_shares(scores)
     # ✨ Paired in the order the constructs were declared, so tied gaps keep it, and unrounded (ADR 0018), so each gap
     # is rounded once, where it is shown.
     pairs = [

@@ -45,4 +45,4 @@ def test_others_see_a_construct_higher_lower_or_much_the_same_from_its_standing_
         "much_the_same": "About the same",
     }
 
-    assert seen_by_others(document, you, others, constructs=6) == words
+    assert seen_by_others(document, you, others, construct_count=6) == words

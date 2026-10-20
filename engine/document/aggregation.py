@@ -24,7 +24,7 @@ def aggregate(document, answers):
     """
     if len(answers) < minimum_observers(document):
         return {"observers": len(answers), "frameworks": None}
-    exact = [unrounded_shares(score(document, answer)) for answer in answers]
+    per_observer = [unrounded_shares(score(document, answer)) for answer in answers]  # ✨ each observer's shares
     return {
         "observers": len(answers),
         "frameworks": [
@@ -33,8 +33,9 @@ def aggregate(document, answers):
                 "constructs": [
                     {
                         "construct": construct["id"],
-                        "share": sum(each[framework["id"]][construct["id"]] for each in exact) / len(exact),
-                        "per_observer_shares": sorted(each[framework["id"]][construct["id"]] for each in exact),
+                        "share": sum(each[framework["id"]][construct["id"]] for each in per_observer)
+                        / len(per_observer),
+                        "per_observer_shares": sorted(each[framework["id"]][construct["id"]] for each in per_observer),
                     }
                     for construct in framework["constructs"]
                 ],
