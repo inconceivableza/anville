@@ -1,8 +1,8 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
-"""✨ `seed_tie_break` makes a made-up participant ready for the tie-break's pairs, and only on a development or demo
-system (fix-15)."""
+"""✨ `seed_tie_break` makes a made-up participant ready for the tie-break's pairs, from a starting profile and a way of
+answering them (fix-25), and only on a development or demo system (fix-15)."""
 
 import re
 from io import StringIO
@@ -32,26 +32,26 @@ def test_it_refuses_with_debug_off_and_no_demo_notice(published, settings):
     settings.ANVILLE_DEMO_NOTICE = ""
 
     with pytest.raises(CommandError):
-        call_command("seed_tie_break", "tied-both", stdout=StringIO())
+        call_command("seed_tie_break", "--profile", "tied-both", "--answers", "one-each-way", stdout=StringIO())
 
     assert not get_user_model().objects.exists()
 
 
 @pytest.mark.django_db
-def test_it_refuses_on_for_a_scenario_that_does_not_take_it(published, settings):
+def test_it_refuses_answers_that_do_not_fit_the_profile(published, settings):
     settings.DEBUG = True
 
-    with pytest.raises(CommandError, match="tied-both does not take --on"):
-        call_command("seed_tie_break", "tied-both", "--on", "pep", stdout=StringIO())
+    with pytest.raises(CommandError, match="flat has no pairs, so it takes no answers"):
+        call_command("seed_tie_break", "--profile", "flat", "--answers", "skip", stdout=StringIO())
 
     assert not get_user_model().objects.exists()
 
 
 @pytest.mark.django_db
-def test_the_tied_on_both_participant_signs_in_to_the_first_pair(published, client, settings):
+def test_tied_on_both_answered_one_each_way_signs_in_to_the_first_pair(published, client, settings):
     settings.DEBUG = True
     out = StringIO()
-    call_command("seed_tie_break", "tied-both", stdout=out)
+    call_command("seed_tie_break", "--profile", "tied-both", "--answers", "one-each-way", stdout=out)
     text = out.getvalue()
     first_answer = re.search(r"^  1\. .+: choose “(.+)”$", text, re.MULTILINE)[1]
 

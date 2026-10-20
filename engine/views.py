@@ -4,7 +4,6 @@
 import json
 import mimetypes
 from typing import NamedTuple
-from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
@@ -898,11 +897,12 @@ def retake(request, block_id):
     be cleared; only its button clears the participant's own sort and everything worked out from it, then opens the
     sort afresh. Off a development or demo system it is a 404.
 
-    It also offers a demo profile (fix-21): one of `seed_tie_break`'s scenarios that holds on this pathway. Once the old
-    sort is cleared, the sort opens with the profile's cards placed and its sliders set, beside its guide, and nothing is
-    stored until the participant sends it (fix-23). Before any sort, from the sort page's hidden link, the same choice
-    clears nothing, and only for a participant the sort is open to. A profile not offered is refused with nothing
-    cleared.
+    It also offers a demo profile (fix-21): one of `seed_tie_break`'s starting profiles, and how to answer its pairs,
+    chosen apart (fix-25), as a combination that holds on this pathway. Once the old sort is cleared, the sort opens
+    with the profile's cards placed and its sliders set, beside its guide to those answers, and nothing is stored until
+    the participant sends it (fix-23). Before any sort, from the sort page's hidden link, the same choice clears
+    nothing, and only for a participant the sort is open to. A combination not offered is refused with its reason and
+    nothing cleared.
 
     A section completed whose gate needed the sort is no longer complete, so the hub never shows it complete beside an
     assessment not started; the participant's other answers in it stay, and completing it again needs the new sort."""
@@ -914,8 +914,8 @@ def retake(request, block_id):
     # ✨ Before any sort, only a participant the sort is open to may have one loaded for them (fix-21).
     if result is None and not _is_open(state, section_of(document, block_id), answerable_block(document, block_id)):
         return redirect(sort_page)
-    # ✨ Worked out on every visit, so a scenario that does not hold on this pathway is never offered (fix-21).
-    profiles = scenario_loading.offered(document)
+    # ✨ Worked out on every visit, so a combination that does not hold on this pathway is never offered (fix-21).
+    offer = scenario_loading.offered(document)
     response = state.response
     reopened = []
     if result is not None:
@@ -927,22 +927,22 @@ def retake(request, block_id):
             and any(clause["block"] == block_id for clause in clauses_of(shown))
         ]
     if request.method == "POST":
-        chosen = request.POST.get("profile", MYSELF)
-        profile = next((profile for profile in profiles if profile.key == chosen), None)
-        if chosen != MYSELF and profile is None:
-            refusal = "That demo profile is not offered on this pathway."
+        profile = request.POST.get(scenario_loading.PROFILE_FIELD, MYSELF)
+        answers = request.POST.get(scenario_loading.ANSWERS_FIELD) or None
+        refusal = None if profile == MYSELF else scenario_loading.refusal(offer, profile, answers)
+        if refusal is not None:
             return render(request, "engine/save_status.html", {"refusal": refusal}, status=400)
         if result is not None:
             response.clear_sort(block_id, reopened=[shown["id"] for shown in reopened])
-        if profile is None:
+        if profile == MYSELF:
             return _see_other(sort_page)
         # ✨ Nothing stored: the sort starts from the profile, and the participant sends it themselves (fix-23).
-        return _see_other(f"{sort_page}?{urlencode({DEMO_PROFILE: profile.key})}")
+        return _see_other(f"{sort_page}?{scenario_loading.demo_query(profile, answers)}")
     context = {
         "block_id": block_id,
         "clearing": result is not None,
         "sort_page": sort_page,
-        "profiles": profiles,
+        "offer": offer,
         "myself": MYSELF,
         "reopened": [text_for(shown["title"], "participant") for shown in reopened],
         "tie_break": bool(result and result.tie_break_answers),
@@ -955,24 +955,23 @@ def retake(request, block_id):
 # ✨ The retake page's "Sort the cards myself", as its choice sends it (fix-21).
 MYSELF = "myself"
 
-# ✨ The address's field naming the demo profile the sort starts from and the pairs are guided by (fix-23).
-DEMO_PROFILE = "profile"
-
-
 def _demo_prefill(request, document):
-    """✨ Demo only (fix-23): the demo profile the address names, as `scenario_loading.prefill` gives it, or None: off a
-    development or demo system, with none named, or with one not offered on this pathway."""
-    key = request.GET.get(DEMO_PROFILE)
-    if not key or not _demo_tools_on():
+    """✨ Demo only (fix-23): the demo profile and answers the address names (fix-25), as `scenario_loading.prefill`
+    gives them, or None: off a development or demo system, with no profile named, or with a combination not offered on
+    this pathway."""
+    profile = request.GET.get(scenario_loading.PROFILE_FIELD)
+    if not profile or not _demo_tools_on():
         return None
-    return scenario_loading.prefill(document, key)
+    return scenario_loading.prefill(document, profile, request.GET.get(scenario_loading.ANSWERS_FIELD) or None)
 
 
 def _with_demo_profile(request, url):
-    """✨ `url` naming the same demo profile as this request's address, on a development or demo system (fix-23), so the
-    pairs that follow a demo profile's sort show its guide too."""
-    key = request.GET.get(DEMO_PROFILE)
-    return f"{url}?{urlencode({DEMO_PROFILE: key})}" if key and _demo_tools_on() else url
+    """✨ `url` naming the same demo profile and answers as this request's address, on a development or demo system
+    (fix-23), so the pairs that follow a demo profile's sort show its guide too."""
+    profile = request.GET.get(scenario_loading.PROFILE_FIELD)
+    if not profile or not _demo_tools_on():
+        return url
+    return f"{url}?{scenario_loading.demo_query(profile, request.GET.get(scenario_loading.ANSWERS_FIELD) or None)}"
 
 
 def _own_result(user, block_id):
@@ -1851,7 +1850,7 @@ def _section_page(state, section, page=1, issued=None, demo=None):
         },
         "is_complete": section["id"] in state.completed,
         # ✨ Demo only (fix-21): a sort not yet in offers a hidden "Load a demo profile (demo only)", where one holds.
-        "demo_profile": sort_pending and _demo_tools_on() and bool(scenario_loading.offered(version.document)),
+        "demo_profile": sort_pending and _demo_tools_on() and bool(scenario_loading.offered(version.document).profiles),
         # ✨ Over the whole section, since the ratings it fixed may be on an earlier page than its completion.
         "holds_fixed_answers": any(block["id"] in fixed for block in section["blocks"]),
         # ✨ The way on, "Continue →" or completion. Going on from a page is refused on exactly these and `unmet`.

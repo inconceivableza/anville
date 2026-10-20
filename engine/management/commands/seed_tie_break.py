@@ -15,7 +15,7 @@ from engine.document.blocks import BLOCK_TYPES, CHOICE, CONFIRMATION, SCALE_POIN
 from engine.hub import block_ids_fixed_on_completion, section_by_id, track_sections
 from engine.models import Publication, Response
 from engine.scenario_loading import load
-from engine.tie_break_scenarios import DEFAULT_ON, SCENARIOS, TAKES_ON, NoSuchVariant, ScenarioDoesNotHold, scenario_for
+from engine.tie_break_scenarios import ANSWERS, PROFILES, DoesNotFit, ScenarioDoesNotHold, fit, summary
 
 SEED_PASSWORD = "information."
 DISPLAY_NAME = "Robin"
@@ -25,28 +25,28 @@ SEEDED_TEXT = "A seeded answer, written for a demonstration."
 # ✨ Written with AI assistance.
 class Command(BaseCommand):
     help = (
-        "Create a made-up participant on the published pathway whose stored sort puts them on one of the tie-break's "
-        "ways through, ready for its pairs (or the results) on signing in, and print what to answer and what the "
-        "results should then show. It writes made-up data, so it runs only with DEBUG on or ANVILLE_DEMO_NOTICE set "
+        "Create a made-up participant on the published pathway whose stored sort is the starting profile chosen, ready "
+        "for its pairs (or the results) on signing in, and print what to answer each pair, as the way of answering "
+        "chosen says, and what the results should then show. It writes made-up data, so it runs only with DEBUG on or ANVILLE_DEMO_NOTICE set "
         "(a demo system such as staging). It never touches an existing participant."
     )
 
     def add_arguments(self, parser):
-        parser.add_argument("scenario", choices=list(SCENARIOS), help="Which way through the tie-break to seed.")
+        parser.add_argument("--profile", required=True, choices=list(PROFILES), help="The sort to start from.")
         parser.add_argument(
-            "--on",
+            "--answers",
+            choices=list(ANSWERS),
             help=(
-                f"Only for {', '.join(TAKES_ON)}: the framework's id, apest or pep (default {DEFAULT_ON}). For "
-                "separated and balanced it is the one framework tied, the other having a clear leader; for mixed it is "
-                "the one that comes out Separated while the other is skipped."
+                "How to answer the pairs; left out only for flat, which has none. separate-apest-skip-pep and "
+                "separate-pep-skip-apest fit only tied-both."
             ),
         )
         parser.add_argument("--password", default=SEED_PASSWORD, help="The made-up participant's password.")
 
-    def handle(self, *args, scenario, on, password, **options):
+    def handle(self, *args, profile, answers, password, **options):
         try:
-            summary = scenario_for(scenario, on).summary
-        except NoSuchVariant as problem:
+            fit(profile, answers)
+        except DoesNotFit as problem:
             raise CommandError(str(problem)) from problem
         if not (settings.DEBUG or settings.ANVILLE_DEMO_NOTICE):
             raise CommandError(
@@ -69,15 +69,16 @@ class Command(BaseCommand):
                 response = Response.objects.create(participant=participant, version=version, is_test_data=True)
                 for section in _required_before(document, block_id):
                     _complete(response, section)
-                # ✨ A scenario that does not hold raises before storing its sort, so nothing above is kept either.
-                loaded = load(response, block_id, scenario, on)
+                # ✨ A combination that does not hold raises before storing its sort, so nothing above is kept either.
+                loaded = load(response, block_id, profile, answers)
         except ScenarioDoesNotHold as problem:
-            raise CommandError(f"The published pathway no longer gives this scenario: {problem}") from problem
+            raise CommandError(f"The published pathway no longer gives this combination: {problem}") from problem
 
         # ✨ Straight to the pairs once signed in; with none left, that page leads on to the results.
         next_page = urlencode({"next": reverse("tie_break", args=[block_id])}, safe="/")
         sign_in = f"{reverse('account_login')}?{next_page}"
-        self.stdout.write(self.style.SUCCESS(f"Seeded {scenario}: {summary}"))
+        seeded = f"{profile} with {answers}" if answers else profile
+        self.stdout.write(self.style.SUCCESS(f"Seeded {seeded}: {summary(profile, answers)}"))
         self.stdout.write(f"Email: {email}\nPassword: {password}\nSign in at: {sign_in}\n")
         self.stdout.write("\n".join(_what_to_do(loaded)))
 
