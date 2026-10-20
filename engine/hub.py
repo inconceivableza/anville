@@ -197,7 +197,8 @@ def is_locked(section, completed, answers=None, sections=(), moved_past=None):
 
 
 def _requires_met(section, completed):
-    """✨ Whether every section this one requires has been completed."""
+    """✨ Whether every section this one requires has been completed. A part of a section counts once its gate passes, as
+    `complete_sections` works it out, so Section 2 may require the Strengths assessment alone (ADR 0019)."""
     return set(section.get("requires", [])) <= set(completed)
 
 

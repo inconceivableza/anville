@@ -29,6 +29,7 @@ from tests.journeys.test_invitations import (  # noqa: F401  (observer is a fixt
     observer,
     token_of,
 )
+from tests.journeys.pages import text_of
 from tests.journeys.test_observer_landing import claim, the_observers_page
 from tests.journeys.test_results import SORT, submit_sort, widget_data
 
@@ -459,6 +460,49 @@ def test_once_frozen_the_participant_can_neither_add_people_nor_issue_or_reissue
     revoked = participant.post(invitation_action(participant, "Sam", "revoke"))
     assert revoked.status_code == 303
     assert not Invitation.objects.filter(contact__name="Sam").exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("pressed", ["add", "issue"])
+def test_once_frozen_without_javascript_adding_or_issuing_is_refused_on_the_lists_page(
+    participant, three_answered, pressed
+):
+    """✨ The list's page again in the participant's frame, its own line saying why, never a bare status (ticket 71)."""
+    freeze(participant)
+    contacts_before = Contact.objects.count()
+    links_before = set(Invitation.objects.values_list("token_hash", flat=True))
+
+    if pressed == "add":
+        refused = add(participant, ("Kim", "kim@example.com"))
+    else:
+        refused = participant.post(f"/invitations/{Contact.objects.get(name='Sam').pk}/issue/")
+
+    page = refused.content.decode()
+    assert refused.status_code == 403
+    assert '<body class="framed">' in page
+    assert 'class="question-card contact-list"' in page
+    assert RESULTS_SEEN in text_of(page)
+    assert Contact.objects.count() == contacts_before
+    assert set(Invitation.objects.values_list("token_hash", flat=True)) == links_before
+
+
+@pytest.mark.django_db
+def test_once_frozen_with_htmx_adding_or_issuing_gets_the_short_status(participant, three_answered):
+    freeze(participant)
+    htmx = {"HTTP_HX_REQUEST": "true"}
+    version = Response.objects.get().version_id
+
+    kim = {"name": "Kim", "email": "kim@example.com", "version": version}
+    added = participant.post("/contacts/contacts/", kim, **htmx)
+    issued = participant.post(f"/invitations/{Contact.objects.get(name='Sam').pk}/issue/", **htmx)
+
+    for refused in (added, issued):
+        assert refused.status_code == 403
+        assert text_of(refused.content.decode()) == f"Not saved. {RESULTS_SEEN}"
+
+
+# ✨ The engine's wording for a list frozen (ticket 55), as the list's page and a refusal give it.
+RESULTS_SEEN = "You've seen your results, so no more answers are added."
 
 
 @pytest.mark.django_db
