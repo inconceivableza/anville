@@ -437,7 +437,7 @@ def save_answer(request, block_id):
     # both would be decoration again, which is exactly the prototype's mistake.
     section = section_of(state.version.document, block_id)
     if not _is_open(state, section, block):
-        return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
+        return _refuse_shut(request)
     if block_id in state.fixed:
         # ✨ Refused here, not only disabled on the page, so a page left open from before completing cannot change it.
         return _answer_refused(request, state, section, block_id, FIXED_REFUSAL, status=409)
@@ -471,12 +471,14 @@ def _answer_refused(request, state, section, block_id, refusal, status):
     """✨ An answer not saved, and why: with htmx, the status line beside it; without, its page again, the reason shown
     at the answer. A form submitted as a full page (Enter in an answer field does that) never lands the participant on
     the bare status line (fix-7)."""
-    if _is_htmx(request):
-        return render(request, "engine/save_status.html", {"refusal": refusal}, status=status)
-    shown = _section_page(state, section, page_of(section, block_id))
-    on_page = next(block for block in shown["section"]["blocks"] if block["id"] == block_id)
-    on_page["refusal"] = refusal
-    return _section_shown(request, state, section, shown, status=status)
+
+    def its_page(status):
+        shown = _section_page(state, section, page_of(section, block_id))
+        on_page = next(block for block in shown["section"]["blocks"] if block["id"] == block_id)
+        on_page["refusal"] = refusal
+        return _section_shown(request, state, section, shown, status=status)
+
+    return _refused(request, refusal, status, page=its_page)
 
 
 @sensitive_post_parameters()
@@ -497,7 +499,7 @@ def coach_checklist(request, block_id):
     block = _block_of_type(state.version, block_id, "coach_checklist")
     section = section_of(state.version.document, block_id)
     if not _is_open(state, section, block):
-        return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
+        return _refuse_shut(request)
     to = request.POST.get("step")
     if to not in CHECKLIST_STEPS:
         return HttpResponseBadRequest("The coach checklist has no such step.")
@@ -1049,7 +1051,7 @@ def contacts(request, block_id):
     if shut is not None:
         return shut
     if _frozen(state.response):
-        return _refuse_frozen(request)
+        return _refuse_frozen(request, state, block)
     try:
         person = contact_from_form(request.POST.get("name"), request.POST.get("email"))
     except AnswerRefused as refused:
@@ -1140,7 +1142,7 @@ def _list_shut(request, state, block):
     """✨ The refusal for a change to a contact list the participant has not reached, or None while it is open to change.
     A completion never fixes a contact list: only an agreement scale can be marked `fixed_once_complete`."""
     if not _is_open(state, section_of(state.version.document, block["id"]), block):
-        return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
+        return _refuse_shut(request)
     return None
 
 
@@ -1234,7 +1236,8 @@ def issue_invitation(request, contact_id):
     """
     contact = _own_contact_or_404(request.user, contact_id)
     if contact.role == Contact.Role.CONTACT and _frozen(contact.response):
-        return _refuse_frozen(request)
+        state = _participant(request.user)
+        return _refuse_frozen(request, state, _block_of_type(state.version, contact.block_id, "contact_list"))
     link = _issue_link(request, contact)
     if contact.role == Contact.Role.CONTACT and _is_htmx(request):
         return _person_row_sent_back(request, contact, issued=link)  # ✨ with the link in it (fix-2)
@@ -1246,8 +1249,40 @@ def _frozen(response):
     return response is not None and response.collection_frozen_at is not None
 
 
-def _refuse_frozen(request):
-    return render(request, "engine/save_status.html", {"refusal": RESULTS_SEEN}, status=403)
+def _refuse_frozen(request, state, block):
+    """✨ Someone added, or an observer's link issued, while answer collection is frozen: with htmx, the short status;
+    without, the list's page again, whose own line says why (ticket 71)."""
+    return _refused(request, RESULTS_SEEN, status=403, page=lambda status: _list_page(request, state, block, status))
+
+
+def _list_page(request, state, block, status):
+    """✨ The page a contact list is on, as it now stands."""
+    section = section_of(state.version.document, block["id"])
+    shown = _section_page(state, section, page_of(section, block["id"]))
+    return _section_shown(request, state, section, shown, status=status)
+
+
+def _refuse_shut(request):
+    """✨ A press on something the participant has not reached (an answer, a coach checklist step, a change to a contact
+    list): with htmx, the short status line beside it; without, a page saying why, since the page it was on is shut
+    too (ticket 71)."""
+    return _refused(request, NOT_OPEN, status=403)
+
+
+def _refused(request, refusal, status, page=None):
+    """✨ The one way a press is refused: with htmx, the short status line beside what was pressed; without, `page` (a
+    callable drawing the page it was pressed on again, the refusal shown there, with the same status) or, with none,
+    a page of its own in the participant's frame saying why, with the way back to the hub. A form submitted as a full
+    page never lands the participant on the bare status line (fix-7, ticket 71)."""
+    if _is_htmx(request):
+        return render(request, "engine/save_status.html", {"refusal": refusal}, status=status)
+    if page is not None:
+        return page(status)
+    return render(request, "engine/refused.html", {"refusal": refusal}, status=status)
+
+
+# ✨ Why a press on something not reached is refused: a lock, an unconfirmed reading or a page not yet gone through.
+NOT_OPEN = "This is not open yet."
 
 
 # ✨ Why the participant can add nobody while answer collection is frozen: the Five trusted voices card's wording (ticket
