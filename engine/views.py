@@ -37,6 +37,7 @@ from engine.document.blocks import (
     CONTACTS,
     blocks_of,
     coach_brief,
+    comparison_status,
     landing_of,
     link_shown,
     page_count,
@@ -875,19 +876,24 @@ def visit_comparison(request, block_id):
 
     With at least the minimum number of observer assessments in, and collection not yet frozen, the press first asks:
     how many of the people invited have answered, and that once they look no more answers are added. Its button
-    confirms, which freezes collection, then goes on as before (ticket 55). Below the minimum nothing is asked."""
+    confirms, which freezes collection, then goes on as before (ticket 55). Below the minimum nothing is asked.
+
+    A press with the minimum in, confirmed or with collection already frozen, is also the view a comparison link's
+    "Viewed" reads (ticket 67a), kept once withdrawals unfreeze collection."""
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return _see_other(page_url(section["id"], section["page"]))
     response = state.response
     answered = len(ObserverResponse.assessments_for(response).assessments)
-    if response.collection_frozen_at is None and answered >= minimum_observers(state.version.document):
+    viewed = answered >= minimum_observers(state.version.document)
+    if response.collection_frozen_at is None and viewed:
         if request.POST.get("confirmed") != "yes":
             invited = response.contacts.filter(role=Contact.Role.CONTACT).count()
             context = {"block_id": block_id, "answered": answered, "invited": invited, "everyone": answered >= invited}
             return render(request, "engine/comparison_confirm.html", context)
-        response.freeze_collection()
-    response.visit_comparison(block_id)
+        # ✨ Counted again under the freeze's lock: a withdrawal since may have left fewer than the minimum.
+        viewed = response.freeze_collection()
+    response.visit_comparison(block_id, viewed=viewed)
     return _see_other("comparison", block_id)
 
 
@@ -1886,6 +1892,7 @@ def _section_page(state, section, page=1, issued=None, demo=None):
                     _frozen(state.response),
                     drawn=_sort_results_drawn(state, block),
                     demo=demo,
+                    comparison=_comparison_link_shown(state, block),
                 )
                 for block in blocks
             ],
@@ -1961,12 +1968,29 @@ def _sort_results_drawn(state, block):
     return _results_drawn(state, result, block["sort"])
 
 
-def _block_for_participant(document, block, answers, fixed, states, issued=None, frozen=False, drawn=None, demo=None):
+def _comparison_link_shown(state, block):
+    """✨ For a `comparison_link` block, its sort and where the way to that sort's comparison stands, as
+    `comparison_status` words it, once there is a result; None before, and for any other block (ticket 67a)."""
+    if block["type"] != "comparison_link":
+        return None
+    sort = block["sort"]
+    if not Result.objects.filter(response=state.response, block_id=sort).exists():
+        return None
+    answered = len(ObserverResponse.assessments_for(state.response).assessments)
+    viewed = sort in state.response.comparisons_viewed
+    status, label = comparison_status(answered, minimum_observers(state.version.document), viewed)
+    return {"sort": sort, "status": status, "label": label}
+
+
+def _block_for_participant(
+    document, block, answers, fixed, states, issued=None, frozen=False, drawn=None, demo=None, comparison=None
+):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
     identifier; a link to a section outside the participant's track has no state and shows nothing. `issued` is a
     link just issued, a coach's or an observer's. While answer collection is `frozen`, a contact list says why it adds
-    nobody (ticket 55). `drawn` is a `sort_results` block's results, from `_sort_results_drawn`. A sort not yet in
-    starts from `demo`, a demo profile, with its guide beside it (fix-23)."""
+    nobody (ticket 55). `drawn` is a `sort_results` block's results, from `_sort_results_drawn`, and `comparison` a
+    `comparison_link`'s status, from `_comparison_link_shown`. A sort not yet in starts from `demo`, a demo profile,
+    with its guide beside it (fix-23)."""
     widget = BLOCK_TYPES[block["type"]].widget
     shown_widget = widget(document, "participant", "") if widget else None  # ✨ the participant's wording names no one
     if demo is not None and BLOCK_TYPES[block["type"]].scored and block["id"] not in answers:
@@ -2002,6 +2026,7 @@ def _block_for_participant(document, block, answers, fixed, states, issued=None,
         "results": results,  # ✨ where a section link's button leads instead, once its section is complete (ticket 61)
         "frozen": RESULTS_SEEN if frozen and block["type"] == "contact_list" else None,
         "drawn": drawn,
+        "comparison": comparison,
     }
 
 

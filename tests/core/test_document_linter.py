@@ -177,6 +177,17 @@ def test_a_sort_results_block_naming_anything_but_a_sort_is_reported(named):
     ]
 
 
+@pytest.mark.parametrize("named", ["statement", "nowhere"])
+def test_a_comparison_link_naming_anything_but_a_sort_is_reported(named):
+    document = sort_pathway()
+    card = {"id": "compare", "type": "comparison_link", "sort": named, "title": "How others see you"}
+    document["content"]["sections"][1]["blocks"].append(card)
+
+    assert validate(document) == [
+        Problem(path="/content/sections/1/blocks/1/sort", message=f"There is no sort '{named}' in this pathway.")
+    ]
+
+
 def test_a_pathway_without_a_sort_needs_no_scoring_method():
     document = pathway_document()
     assert "scoring" not in document["measurement"]
