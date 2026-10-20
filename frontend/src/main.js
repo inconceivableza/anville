@@ -354,7 +354,7 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
     stage.append(ring);
     const controls = document.createElement("div");
     controls.className = "ring-controls";
-    controls.innerHTML = '<button type="button" class="ring-control" data-ring-step="-1" aria-label="Previous calling">←</button><button type="button" class="ring-control" data-ring-step="1" aria-label="Next calling">→</button>';
+    controls.innerHTML = '<button type="button" class="ring-control" data-ring-step="-1" aria-label="Previous calling">←</button><button type="button" class="ring-control ring-toggle" data-ring-toggle></button><button type="button" class="ring-control" data-ring-step="1" aria-label="Next calling">→</button>';
     stage.append(controls);
   }
 
@@ -363,8 +363,18 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   let radius = 0;
   let rotation = 0;
   let drag;
-  // ✨ No pause button (fix-14): the ring stops while a pointer or focus is on it, and reduced motion keeps the plain cards.
-  let interactionPaused = false;
+  // ✨ Only the pause button between the arrows stops the ring (fix-17): hovering or focusing it no longer does, so it
+  // never stops or starts unasked. The button's name says what pressing it will do. Reduced motion keeps the plain
+  // cards, returning above before any button is made.
+  let paused = false;
+  const toggle = stage.querySelector("[data-ring-toggle]");
+  const pauseIcon = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><rect x="3" y="2" width="3.5" height="12" rx="1" fill="currentColor"/><rect x="9.5" y="2" width="3.5" height="12" rx="1" fill="currentColor"/></svg>';
+  const playIcon = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M4 2.2v11.6a.8.8 0 0 0 1.2.7l9-5.8a.8.8 0 0 0 0-1.4l-9-5.8A.8.8 0 0 0 4 2.2z" fill="currentColor"/></svg>';
+  const showToggle = () => {
+    if (!toggle) return;
+    toggle.innerHTML = paused ? playIcon : pauseIcon;
+    toggle.setAttribute("aria-label", paused ? "Play carousel" : "Pause carousel");
+  };
   let lastFrame;
   let transitionUntil = 0;
   let transitionTimer;
@@ -385,7 +395,7 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   const tick = (now) => {
     const elapsed = lastFrame === undefined ? 0 : Math.min(now - lastFrame, 64);
     lastFrame = now;
-    if (!interactionPaused && !drag && now >= transitionUntil) {
+    if (!paused && !drag && now >= transitionUntil) {
       rotation -= angle * elapsed / cardInterval;
       draw();
     }
@@ -404,12 +414,11 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   const stopDrag = () => { drag = undefined; };
   stage.addEventListener("pointerup", stopDrag);
   stage.addEventListener("pointercancel", stopDrag);
-  stage.addEventListener("pointerenter", () => { interactionPaused = true; });
-  stage.addEventListener("pointerleave", () => { interactionPaused = false; });
-  stage.addEventListener("focusin", () => { interactionPaused = true; });
-  stage.addEventListener("focusout", (event) => {
-    if (!stage.contains(event.relatedTarget)) interactionPaused = false;
+  toggle?.addEventListener("click", () => {
+    paused = !paused;
+    showToggle();
   });
+  showToggle();
   stage.querySelectorAll("[data-ring-step]").forEach((button) => {
     button.addEventListener("click", () => {
       rotation += Number(button.dataset.ringStep) * angle;
