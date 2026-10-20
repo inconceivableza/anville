@@ -32,16 +32,19 @@ def apostle_beside(observers):
 
 
 @pytest.mark.parametrize(
-    "observers, gap, badge, description",
+    "observers, gap, badge, description, words",
     [
-        # ✨ 59 of 108 is 54.63%: 55 against 50 when rounded, a significant 5; 4.38 unrounded, a modest 4.
-        ((59, 49), 4, "Others rate higher", "A modest gap."),
+        # ✨ 59 of 108 is 54.63%: 55 against 50 when rounded, a significant 5; 4.38 unrounded, a modest 4. Still
+        # higher in words: 54.63 is Strong beside the participant's Present 50.25 (fix-11).
+        ((59, 49), 4, "Others rate higher", "A modest gap.", "Others place this higher"),
         # ✨ 99 of 199 is 49.75%: 50 against 50 when rounded, no gap at all; 0.5 unrounded, 1, the participant higher.
-        ((99, 100), 1, "You rate higher", "A modest gap."),
+        ((99, 100), 1, "You rate higher", "A modest gap.", "Much the same"),
     ],
     ids=["significant when rounded, modest unrounded", "none when rounded, the participant's unrounded"],
 )
-def test_a_gap_is_sized_and_directed_by_the_unrounded_shares_not_the_rounded_percents(observers, gap, badge, description):
+def test_a_gap_is_sized_and_directed_by_the_unrounded_shares_not_the_rounded_percents(
+    observers, gap, badge, description, words
+):
     sent = complete_sort(
         a5={"bucket": "strength", "value": observers[0]}, p1={"bucket": "strength", "value": observers[1]}
     )
@@ -49,7 +52,7 @@ def test_a_gap_is_sized_and_directed_by_the_unrounded_shares_not_the_rounded_per
     card, seen = apostle_beside(sent)
 
     assert (card["gap"], card["badge"], card["description"]) == (gap, badge, description)
-    assert seen == "Much the same"
+    assert seen == words
 
 
 def pair(construct, you, others, framework="apest"):

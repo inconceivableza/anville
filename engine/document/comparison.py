@@ -10,6 +10,7 @@ none judges a value rounding has moved across a threshold (ADR 0018). Nothing he
 """
 
 from engine.document.scoring import round_half_up
+from engine.document.standing import standing
 
 # ✨ The prototype's: a gap of five points or more is worth reflecting on; less is a modest gap.
 DEFAULT_SIGNIFICANT_GAP = 5
@@ -45,11 +46,13 @@ def _direction(you, others):
     return "others_higher" if others > you else "you_higher" if others < you else None
 
 
-def seen_by_others(document, you, others):
-    """✨ Whether others see a construct higher or lower than the participant, in the document's words, when the gap
-    is significant; otherwise much the same."""
+def seen_by_others(document, you, others, constructs):
+    """✨ Whether others see a construct higher or lower than the participant, in the document's words; much the same
+    only when both shares have the same standing among the framework's `constructs` and the gap is under the
+    significant gap (fix-11), so the words never contradict the standings shown beside them."""
     wording = comparison_settings(document).get("seen_by_others", DEFAULT_SEEN_BY_OTHERS)
-    if abs(others - you) < _significant_gap(document):
+    same_standing = standing(document, you, constructs) == standing(document, others, constructs)
+    if same_standing and abs(others - you) < _significant_gap(document):
         return wording["much_the_same"]
     return wording[_direction(you, others)]
 
