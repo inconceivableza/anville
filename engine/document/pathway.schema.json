@@ -510,7 +510,7 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "section_link", "download", "page_break"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "comparison_link", "section_link", "download", "page_break"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
@@ -521,6 +521,7 @@
         { "if": { "properties": { "type": { "const": "contact_list" } } }, "then": { "$ref": "#/$defs/contact_list" } },
         { "if": { "properties": { "type": { "const": "coach_checklist" } } }, "then": { "$ref": "#/$defs/coach_checklist" } },        { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } },
         { "if": { "properties": { "type": { "const": "sort_results" } } }, "then": { "$ref": "#/$defs/sort_results" } },
+        { "if": { "properties": { "type": { "const": "comparison_link" } } }, "then": { "$ref": "#/$defs/comparison_link" } },
         { "if": { "properties": { "type": { "const": "section_link" } } }, "then": { "$ref": "#/$defs/section_link" } },
         { "if": { "properties": { "type": { "const": "download" } } }, "then": { "$ref": "#/$defs/download" } },
         { "if": { "properties": { "type": { "const": "page_break" } } }, "then": { "$ref": "#/$defs/page_break" } }
@@ -827,6 +828,25 @@
         "sort": {
           "description": "The identifier of the sort whose results these are.",
           "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "comparison_link": {
+      "description": "A card for the way to a sort's comparison with the participant's observers, once there is a result: its title, where it stands (waiting for answers, ready to view, or viewed) and the results page's 'Compare with how others see you →', which warns before answer collection freezes as that one does.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "sort", "title"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "comparison_link" },
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "sort": {
+          "description": "The identifier of the sort whose comparison this leads to.",
+          "$ref": "#/$defs/identifier"
+        },
+        "title": {
+          "description": "The card's title, such as 'How others see you'.",
+          "$ref": "#/$defs/text"
         }
       }
     },

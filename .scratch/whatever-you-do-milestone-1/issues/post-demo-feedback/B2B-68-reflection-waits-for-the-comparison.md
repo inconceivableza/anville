@@ -16,6 +16,10 @@
 - [ ] With nothing else open, the panel reads "Waiting on answers" / "{section}'s reflection opens once at least {minimum} of the people you invited have answered and you've seen how others see you.", with a button to Section 1
 - [ ] The waiting is authored on the block in *Whatever You Do* only; the faithful port shows the reflection once the sort is done, as the original prototype does
 
+**Carried from 67a**
+
+- "Viewed" is kept on the response per sort, beside the visits; either "Compare with how others see you →" (the results page's or the card's) records it when pressed with the minimum in, and only the demo retake takes it back
+
 **Context**
 
 - ADR 0019 records why, and that the press that unlocks the reflection is the one that freezes collection
