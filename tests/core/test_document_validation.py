@@ -309,9 +309,12 @@ def test_a_coach_checklists_questions_may_not_share_an_identifier():
 
 
 def test_every_section_and_every_kind_of_block_shown_may_carry_a_time_estimate():
-    """✨ The Whatever You Do pathway holds a block of every kind, so each gets one here. A page break is never
-    shown, so it takes no time of its own."""
+    """✨ The Whatever You Do pathway holds a block of every kind but a sort's results shown in a section, which it
+    stopped showing (fix-5) and is added here, so each gets one. A page break is never shown, so it takes no time of
+    its own."""
     document = json.loads(WHATEVER_YOU_DO.read_text(encoding="utf-8"))
+    shown = {"id": "strengths-results", "type": "sort_results", "sort": "strengths-sort"}
+    document["content"]["sections"][1]["blocks"].append(shown)
     for section in document["content"]["sections"]:
         section["estimate"] = "About 15 minutes"
         for block in section["blocks"]:
