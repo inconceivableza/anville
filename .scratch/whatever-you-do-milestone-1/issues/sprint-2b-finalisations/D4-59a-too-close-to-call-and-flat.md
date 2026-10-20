@@ -13,7 +13,7 @@
 **Spec:** The instrument and scoring; The instrument and results
 
 - [x] A framework is too close to call when its leader's unrounded share is at most the document's percentage (5% in *Whatever You Do*) more than another construct's, up to the document's cluster size, leader first; a share of 0 is never too close to call
-- [ ] Standings are worked out from unrounded shares, wherever a standing is shown (the participant's are; the observers' mean and each observer's on the comparison carried to 59b)
+- [x] Standings are worked out from unrounded shares, wherever a standing is shown (the participant's here; the observers' mean and each observer's on the comparison finished by 59b)
 - [x] A participant flat on both frameworks is told they are a generalist and gets no pairs; one too close to call on both but not flat is never told it, and gets pairs on both
 - [x] With both frameworks too close to call, the pairs alternate between them, every pair in two rounds while the budget allows; past it, second rounds go first, then the least important pairs (3rd against 4th before 1st against 2nd)
 - [x] With one framework too close to call, its pairs are planned as today
