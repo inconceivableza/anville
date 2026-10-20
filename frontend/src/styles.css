@@ -1722,6 +1722,11 @@ body:not(.framed) .question-card > p + form {
   justify-content: center;
 }
 
+/* ✨ Shown first, though it follows "Continue →" in the markup so that Enter goes on (fix-12). */
+.coach-back {
+  order: -1;
+}
+
 .coach-outcome {
   border-radius: var(--radius-lg);
   padding: var(--space-lg) var(--space-lg);

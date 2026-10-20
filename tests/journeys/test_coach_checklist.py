@@ -152,6 +152,16 @@ def test_each_question_is_answered_yes_not_sure_or_no(participant):
 
 
 @pytest.mark.django_db
+def test_enter_on_the_questions_goes_on_never_back(participant):
+    """✨ Enter presses a form's first submit button, so "Continue →" comes before "Back" in the markup (fix-12);
+    the stylesheet still shows "Back" on the left."""
+    page = step(participant, "questions").content.decode()
+
+    first = re.search(r'<button type="submit" name="step" value="(\w+)"', checklist_of(page)).group(1)
+    assert first == "outcome"
+
+
+@pytest.mark.django_db
 def test_the_candidates_name_is_shown_as_typed_never_as_markup(participant):
     page = step(participant, "questions", name="<b>Sam</b>").content.decode()
 
