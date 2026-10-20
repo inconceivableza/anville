@@ -64,6 +64,26 @@ def test_with_debug_off_and_no_demo_notice_there_is_no_retake_and_no_link_to_it(
 
 
 @pytest.mark.django_db
+def test_on_a_demo_system_the_link_is_hidden_until_revealed(sorted_in):
+    """✨ fix-20: the link is in the page but `hidden` (not seen, not in the tab order, not read out) until the
+    participant holds Option/Alt or presses and holds the title; those reveals are hand checks."""
+    page = results(sorted_in).content.decode()
+
+    assert f'<p class="back-to-hub" data-demo-reveal hidden><a href="{RETAKE}">' in page
+    assert "<h1 data-demo-reveal-hold>" in page
+
+
+@pytest.mark.django_db
+def test_off_a_demo_system_neither_the_hidden_link_nor_its_reveal_is_in_the_page(sorted_in, settings):
+    settings.DEBUG = False
+    settings.ANVILLE_DEMO_NOTICE = ""
+
+    page = results(sorted_in).content.decode()
+
+    assert "data-demo-reveal" not in page  # ✨ nor data-demo-reveal-hold, which starts the same
+
+
+@pytest.mark.django_db
 def test_retaking_clears_the_sort_its_result_and_its_tie_break_and_the_assessment_shows_the_sort_again(sorted_in):
     answer(sorted_in, "statement", "To build things that last.")
     sorted_in.post("/sections/calling/complete/")
