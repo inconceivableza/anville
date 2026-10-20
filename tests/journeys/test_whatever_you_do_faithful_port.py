@@ -180,6 +180,17 @@ def test_onboarding_is_not_complete_without_a_reason(participant):
 
 
 @pytest.mark.django_db
+def test_onboarding_stays_listed_in_the_hub_once_complete(participant):
+    """✨ Before we begin is once-only in *Whatever You Do* alone (ticket 69); the faithful port keeps it listed."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+
+    hub = participant.get("/hub/").content.decode()
+
+    assert '<a class="hub-section-title" href="/sections/onboarding/">' in hub
+
+
+@pytest.mark.django_db
 def test_the_reason_can_be_corrected_after_onboarding_is_complete(participant):
     """✨ Unlike the baseline ratings, which are fixed on completion so the closing ratings have something to meet."""
     answer_onboarding(participant)

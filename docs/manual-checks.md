@@ -603,3 +603,11 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - A section not open yet: open a page of a section that another section's completion opens, then in another tab press "Mark as not complete" on that other section, so the first is locked again. In the first tab type an answer and press Enter (or "Save"), or press a coach checklist button where the page has one: a page in the participant's dark frame with "← Back to the hub", "Not saved" and "This is not open yet."; the link leads to the hub, and the hub shows nothing saved from that press.
 - With JavaScript on, the same presses show only the short "Not saved. …" line beside what was pressed, as before.
 - Phone width: the refusal page and the list's page fit with no sideways scroll.
+
+## Before we begin once only (ticket 69; load both pathways again, then a participant started after that)
+
+- *Whatever You Do*: a new participant is taken through Before we begin's two pages, as before. Once "Continue →" on the ratings page completes it, the hub neither lists Before we begin nor counts it ("0 of 8 sections complete"), and nor does the sidebar.
+- Typing `/sections/onboarding/` or `/sections/onboarding/pages/2/` in the address bar lands on the hub. So does pressing Back to a ratings page left open from before completing and changing a rating, with JavaScript on and off; the reason and ratings stay as they were.
+- An organisation's admin sees the same count for that member as the participant's hub shows.
+- The faithful port: once Before we begin is complete it is still listed on the hub and in the sidebar, and its pages open as before.
+- Phone width: the hub and the sidebar list the sections as above, with no sideways scroll.

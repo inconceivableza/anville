@@ -4,14 +4,14 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 3a (from 20 Oct)
 
 **Spec:** Engine: sections, tracks, gates, progress
 
-- [ ] Once a once-only section is complete, it is not listed on the hub or in the sidebar, and not counted in "x of y sections complete"
-- [ ] Opening any of its pages, saving an answer to it, or completing it again sends the participant to the hub, with or without JavaScript, and changes nothing stored
-- [ ] Before it is complete it behaves as now, as a wizard
-- [ ] The linter refuses a once-only section that is not a wizard
-- [ ] Before we begin is once-only in *Whatever You Do*; the faithful port keeps it listed
+- [x] Once a once-only section is complete, it is not listed on the hub or in the sidebar, and not counted in "x of y sections complete"
+- [x] Opening any of its pages, saving an answer to it, or completing it again sends the participant to the hub, with or without JavaScript, and changes nothing stored
+- [x] Before it is complete it behaves as now, as a wizard
+- [x] The linter refuses a once-only section that is not a wizard
+- [x] Before we begin is once-only in *Whatever You Do*; the faithful port keeps it listed

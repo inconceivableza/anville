@@ -25,6 +25,7 @@
         "id": "onboarding",
         "title": "Before we begin",
         "wizard": true,
+        "once_only": true,
         "estimate": "About 10 minutes",
         "complete_label": "Continue →",
         "blocks": [
