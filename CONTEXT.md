@@ -83,11 +83,19 @@ A section the hub shows as a card beside its list of sections (below it on a pho
 _Avoid_: hub card, side section, right column, sidebar (the pathway's list beside a page).
 
 **Wizard**:
-A section a participant completes before first seeing the hub, shown page by page without the hub or the sidebar, and afterwards listed in the hub as any other section.
+A section a participant completes before first seeing the hub, shown page by page without the hub or the sidebar. Unless it is also once-only, it is afterwards listed in the hub as any other section.
 _Avoid_: opening section, onboarding (one section's identifier), steps.
 
+**Once-only section**:
+A section a participant completes once and never sees again: once complete, it leaves the hub, the sidebar and the count of sections, and its answers can be neither seen nor changed there. Before we begin is one.
+_Avoid_: hidden section, one-time section, locked (it is not waiting on anything).
+
+**Opening condition**:
+Something other than a required section that must hold before a section first opens, such as the participant's coach having accepted, each with its own authored message. Once the section has opened it stays open, whatever happens to the condition later.
+_Avoid_: gate (which governs completing a section, not opening it), prerequisite, unlock rule.
+
 **Locked section**:
-A section whose required sections are not yet complete, so it cannot be opened. Being locked comes from section order; gates come from a section's own requirements.
+A section whose required sections are not yet complete, or whose opening conditions do not yet hold, so it cannot be opened. Being locked comes from section order and opening conditions; gates come from a section's own requirements for completing it.
 _Avoid_: lock (as a noun), gate, padlock, block.
 
 **Gate**:
