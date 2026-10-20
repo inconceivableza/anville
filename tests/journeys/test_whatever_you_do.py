@@ -449,13 +449,12 @@ def without_the_wizard(document):
 
 
 def without_the_next_step_and_photos(document):
-    """✨ The hub's next-step wording, its photos and their credits' setting are this pathway's alone (ticket 49b), and
-    so are the Strengths assessment's results shown in Section 1 (ticket 57): the faithful port takes none."""
+    """✨ The hub's next-step wording, its photos and their credits' setting are this pathway's alone (ticket 49b): the
+    faithful port takes none."""
     document.pop("photos", None)
     document.pop("show_courtesy_credits", None)
     for section in document["content"]["sections"]:
         section.pop("next_step", None)
-        section["blocks"] = [block for block in section["blocks"] if block["type"] != "sort_results"]
     return document
 
 
@@ -556,6 +555,21 @@ def test_section_1s_button_opens_the_assessment_until_it_is_done_and_then_the_re
     page = section_1(participant)
     assert re.search(button.format("/results/strengths-sort/", "View my results →"), page)
     assert 'href="/sections/strengths/"' not in page
+
+
+@pytest.mark.django_db
+def test_once_the_assessment_is_done_section_1_shows_no_results_below_its_card(participant):
+    """✨ "View my results →" is the way to them, as in the faithful port (fix-5, reversing ticket 57)."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+    answer(participant, "gifts-reading", "true")
+    submit_the_sort(participant)
+
+    page = section_1(participant)
+
+    assert "View my results →" in page
+    assert "own-results" not in page
+    assert "Compare with how others see you" not in page
 
 
 def section_1(client):
