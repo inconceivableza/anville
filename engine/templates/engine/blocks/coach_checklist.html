@@ -62,9 +62,10 @@
       </fieldset>
     {% endfor %}
     {% if checklist.refusal %}<p class="coach-refusal" role="alert">{{ checklist.refusal }}</p>{% endif %}
+    {# ✨ "Continue →" first, since Enter presses a form's first submit button; the stylesheet puts "Back" on the left (fix-12). #}
     <div class="coach-buttons">
-      <button type="submit" name="step" value="intro" class="pill ghost">Back</button>
       <button type="submit" name="step" value="outcome" class="pill coach-grow">Continue →</button>
+      <button type="submit" name="step" value="intro" class="pill ghost coach-back">Back</button>
     </div>
 
   {% elif checklist.screen == "proceed" %}
