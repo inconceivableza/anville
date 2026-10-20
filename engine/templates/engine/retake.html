@@ -1,0 +1,39 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/participant.html" %}
+{% comment %}
+  ✨ Demo only (fix-19): asking before the participant's sort and everything worked out from it are cleared. Offered
+  only on a development or demo system, so its wording is written here rather than in the pathway document. Opening the
+  page clears nothing; only its button does.
+{% endcomment %}
+{% block head_title %}Retake the assessment{% endblock head_title %}
+
+{% block content %}
+  <p class="back-to-hub"><a href="{% url 'results' block_id %}">← Back to results</a></p>
+  <div class="section-header">
+    <h2>Retake the assessment?</h2>
+  </div>
+  <div class="question-card">
+    <p class="fixed-note">Demo only: this is offered only on a demo or development system.</p>
+    {% if tie_break %}
+      <p>Your card sort, your results and your answers to “Which is more true of you?” will be cleared, so you can sort the cards again from the start.</p>
+    {% else %}
+      <p>Your card sort and your results will be cleared, so you can sort the cards again from the start.</p>
+    {% endif %}
+    {% for title in reopened %}
+      <p>“{{ title }}” will no longer be marked complete, since it needs the assessment. What you wrote there stays.</p>
+    {% endfor %}
+    {% if frozen %}
+      <p>The people you invited will be able to send their answers again, until you next compare.</p>
+    {% endif %}
+    {% if coach_shown %}
+      <p>Your coach will no longer see your results until you choose to show them again.</p>
+    {% endif %}
+    <p>What the people you invited have sent, your coach’s link and your other answers stay as they are.</p>
+    <form method="post" action="{% url 'retake' block_id %}" class="consent-choices">
+      {% csrf_token %}
+      <button type="submit" class="pill full">Clear and retake</button>
+      <a class="pill ghost full" href="{% url 'results' block_id %}">Keep my results</a>
+    </form>
+  </div>
+{% endblock content %}

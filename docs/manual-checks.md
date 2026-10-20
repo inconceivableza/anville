@@ -559,3 +559,13 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - With reduced motion on, reload the homepage: plain cards, nothing turning, and no pause button or arrows.
 - Results colours, Whatever You Do and the faithful port (a fresh participant whose sort gives a spread, a few cards in "Definitely not me"): on APEST(d) and on PEP, the dots and their lines are Leading dark green, Strong green, Present a lighter green and Less used orange, so only "Less used" is warm. Each standing word is a darker shade of its dot's colour and easy to read on the card; "Present" is a mid green rather than its pale dot's, "Less used" a deep brown-orange. Phone width: the same, nothing scrolling sideways.
 - The coach's view (a coach's link, once the results are shared): the same dot and word colours as the participant's page.
+
+## Retaking the assessment, demo only (fix-19; `DJANGO_DEBUG` on or `ANVILLE_DEMO_NOTICE` set)
+
+- A participant with their results in (`seed_tie_break tied-both`, pairs answered, is quickest): at the foot of the results page, below "Compare with how others see you →", a small grey "Retake the assessment (demo only)". It is not on the comparison, Section 1, the hub or the coach's view of the results.
+- The link opens "Retake the assessment?", in the participant's frame, with "Demo only: …" first, what will be cleared, what stays, "Clear and retake" and "Keep my results". "Keep my results" and "← Back to results" go back to the results with nothing changed.
+- With Section 1 marked complete, the page also says "“How you've been designed” will no longer be marked complete …"; with collection frozen (three observers answered, compared), that the people invited can send again; with the results shown to the coach, that the coach will no longer see them. Each line shows only when it applies.
+- "Clear and retake" opens the Strengths assessment's sort with no cards placed. On the hub, the Strengths assessment and Section 1 are no longer "Complete"; Section 1's card shows "Open Strengths Assessment →" again, and the gifts summary written there is still there. "View my results" from a bookmark leads back to the sort. The invitations page still lists everyone, with their answers counted, and the coach page still has the coach.
+- Sorting again leads to the results (or the pairs) as a first sort does; pressing "Compare with how others see you →" with three answers in asks "Before you look" again.
+- With `DJANGO_DEBUG` off and no demo notice: no link on the results page, and typing `/results/strengths-sort/retake/` shows the not-found page.
+- Phone width: the link and the page's buttons fit, nothing scrolls sideways.
