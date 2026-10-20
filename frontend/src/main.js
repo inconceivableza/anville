@@ -140,6 +140,72 @@ document.addEventListener("change", (event) => {
   shown.classList.remove("unset");
 });
 
+// ✨ Demo only (fix-20): a demo-only element marked data-demo-reveal (the results page's "Retake the assessment (demo
+// only)") comes `hidden`, and only a demo system's markup carries one. Option/Alt held on its own for a second shows
+// it, or on a phone the element marked data-demo-reveal-hold (the page's title) pressed and held for a second; another
+// key, a click, letting go early or a scroll cancels. Once shown it stays until the page is left, so the participant
+// can let go and click it. On a page without one no listener is added.
+(() => {
+  const hidden = [...document.querySelectorAll("[data-demo-reveal]")];
+  if (!hidden.length) return;
+  const HOLD_MS = 1000;
+  const MOVE_PX = 10;
+  let timer = null;
+  let start = null;
+  let revealed = false;
+
+  const cancel = () => {
+    clearTimeout(timer);
+    timer = null;
+    start = null;
+  };
+  const show = (shown) => {
+    revealed = shown;
+    hidden.forEach((element) => (element.hidden = !shown));
+  };
+  const hold = () => {
+    cancel();
+    timer = setTimeout(() => {
+      show(true);
+      cancel();
+    }, HOLD_MS);
+  };
+  const typing = (target) => target.closest?.("input, textarea, select, [contenteditable]");
+
+  document.addEventListener("keydown", (event) => {
+    if (revealed) return;
+    if (event.key === "Alt" && !typing(event.target)) {
+      if (!event.repeat) hold();
+    } else {
+      cancel();
+    }
+  });
+  document.addEventListener("keyup", cancel);
+  document.addEventListener("pointerdown", cancel);
+  window.addEventListener("blur", cancel); // ✨ Alt-Tab away never sends the keyup
+
+  const title = document.querySelector("[data-demo-reveal-hold]");
+  title?.addEventListener("pointerdown", (event) => {
+    if (event.pointerType !== "touch" || revealed) return;
+    event.stopPropagation(); // ✨ not the document's, which would cancel the hold this starts
+    hold();
+    start = { x: event.clientX, y: event.clientY };
+  });
+  title?.addEventListener("pointermove", (event) => {
+    if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > MOVE_PX) cancel();
+  });
+  title?.addEventListener("pointerup", cancel);
+  title?.addEventListener("pointercancel", cancel); // ✨ the browser has taken the touch to scroll
+  title?.addEventListener("contextmenu", (event) => {
+    if (start) event.preventDefault(); // ✨ a long press would open the menu part way through the hold
+  });
+
+  // ✨ Back to the page from the browser's cache counts as arriving again: hidden until revealed.
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) show(false);
+  });
+})();
+
 // ✨ Whether the visitor has asked their device for less motion; every movement below is skipped if so.
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
