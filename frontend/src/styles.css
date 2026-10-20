@@ -53,7 +53,10 @@
      the original prototype's, not the new look's (ticket 48).
      ✨ The bars are no longer coloured by rank or tone but by their standing, from the highest band down and then
      below them all, in the prototype's first four rank colours (developer's call, 20 Oct). The tones colour only the
-     item scores. */
+     item scores.
+     ✨ Present is a light green, so only Less used is warm (fix-17). The standing's word beside each bar takes the
+     -text shade of its colour, darker so it reads at WCAG AA on the results' paper and the cream; the dots and lines
+     keep the bright colours. Leading's own green falls just short on the cream, so its word takes a deeper green. */
   --tone-violet: #7b68ee;
   --tone-rose: #c25b56;
   --tone-green: #1a7a4c;
@@ -62,8 +65,12 @@
   --tone-brown: #8b7355;
   --standing-1: #2e7d32;
   --standing-2: #4caf50;
-  --standing-3: #f9a825;
+  --standing-3: #81c784;
   --standing-below: #ff9800;
+  --standing-1-text: #1b5e20;
+  --standing-2-text: #347837;
+  --standing-3-text: #367939;
+  --standing-below-text: #9c5d00;
   /* ✨ The participant's own marks on the comparison, in the original prototype's green (ticket 48). */
   --comparison-you: #1a7a4c;
   /* ✨ Error and warning text, darker than the red and amber they go with, so it reads at WCAG AA on the cream. */
@@ -3057,6 +3064,10 @@ html[data-javascript="loaded"] .invitation-copy {
 .standing-2 { color: var(--standing-2); fill: var(--standing-2); }
 .standing-3 { color: var(--standing-3); fill: var(--standing-3); }
 .standing-below { color: var(--standing-below); fill: var(--standing-below); }
+.result-standing.standing-1 { color: var(--standing-1-text); }
+.result-standing.standing-2 { color: var(--standing-2-text); }
+.result-standing.standing-3 { color: var(--standing-3-text); }
+.result-standing.standing-below { color: var(--standing-below-text); }
 
 /* The sort: one card at a time into buckets, then a slider per item. Ported from the prototype's card sort. */
 
@@ -4549,7 +4560,8 @@ body > svg[aria-hidden="true"] {
   position: absolute;
   z-index: 1;
   right: 0;
-  bottom: 0;
+  /* ✨ Off the stage's foot, so a focused button's ring is not clipped by its overflow (fix-17). */
+  bottom: 8px;
   left: 0;
   display: flex;
   justify-content: center;
@@ -4557,6 +4569,9 @@ body > svg[aria-hidden="true"] {
 }
 
 .ring-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 44px;
   min-height: 44px;
   padding: 0 var(--space-md);
@@ -4565,6 +4580,16 @@ body > svg[aria-hidden="true"] {
   background: var(--brown);
   color: var(--on-dark);
   cursor: pointer;
+}
+
+/* ✨ The pause and play button between the arrows is round and as small as a tap allows (fix-17). */
+.ring-toggle {
+  padding: 0;
+}
+
+.ring-control:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
 }
 
 .mc {
