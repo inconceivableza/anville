@@ -495,6 +495,69 @@ def test_a_separated_frameworks_standings_put_the_construct_it_names_first():
     assert bars[:2] == [("prophet", "Leading"), ("apostle", "Strong")]
 
 
+# ✨ The results page's tie-break sentences naming the constructs (fix-26), one placeholder or two each.
+NAMING = {
+    "separated": {"heading": "Separated", "changed": "{top} in place of {previous}.", "same": "{top} ahead of {next}."},
+    "balanced": {"heading": "Genuinely balanced", "circle": "Circle: {names}.", "level": "Level: {names}."},
+    "skipped": {"heading": "Every pair skipped", "text": "Skipped: {names}."},
+}
+
+
+def naming_pathway():
+    pathway = results_pathway()
+    pathway["presentation"]["tie_break"].update(NAMING)
+    return pathway
+
+
+# ✨ Apostle beats both in both rounds and Prophet beats Teacher: weights of 2, 1.5 and 1, with the sort's leader kept.
+APOSTLE_THEN_PROPHET = answered(
+    *[("apostle", "prophet", "apostle"), ("apostle", "teacher", "apostle"), ("prophet", "teacher", "prophet")] * 2
+)
+
+
+@pytest.mark.parametrize(
+    "sorted_as, answers, said",
+    [
+        (LEADING_ALONE, answered(("apostle", "prophet", "prophet")) * 2, "prophet in place of apostle."),
+        (result(THREE_LEVEL, CLEAR_PEP), APOSTLE_THEN_PROPHET, "apostle ahead of prophet."),
+        (result(FLAT, CLEAR_PEP), IN_A_CIRCLE, "Circle: apostle, prophet, shepherd and deacon."),
+        (result(FLAT, CLEAR_PEP), LEVEL_AT_THE_TOP, "Level: apostle, prophet, shepherd and deacon."),
+        (
+            result(ONLY_ROLE_TIED, CLEAR_PEP),
+            answered(("prophet", "shepherd", None), ("prophet", "shepherd", None)),
+            "Skipped: prophet and shepherd.",
+        ),
+    ],
+    ids=["top changed", "same top", "circle", "level", "skipped"],
+)
+def test_each_outcomes_sentence_names_the_constructs_it_is_about(sorted_as, answers, said):
+    page = results_page(naming_pathway(), reweigh(naming_pathway(), sorted_as, answers), {}, "Sam")
+
+    assert page["frameworks"][0]["tie_break"]["text"] == said
+
+
+def test_a_result_and_pathway_version_from_before_the_names_still_say_their_sentence():
+    """✨ A result re-weighted before fix-26 kept no tied constructs, and its pathway version's words named none."""
+    reweighted = reweigh(results_pathway(), LEADING_ALONE, answered(("apostle", "prophet", "prophet")) * 2)
+    for entry in reweighted["tie_break"]:
+        del entry["tied"]
+
+    _, said, _ = drawn(reweighted)
+
+    assert said == {"heading": "Separated", "text": "The top changed."}
+
+
+def test_a_tie_break_sentence_with_a_placeholder_the_page_cannot_fill_is_refused_where_it_is():
+    pathway = with_a_tie_break()
+    pathway["presentation"]["tie_break"]["separated"]["changed"] = "{top} beat {winner}."
+    pathway["presentation"]["tie_break"]["skipped"]["text"] = {"participant": "As sorted: {names}.", "observer": "{you}"}
+
+    assert [problem.path for problem in validate(pathway)] == [
+        "/presentation/tie_break/separated/changed",
+        "/presentation/tie_break/skipped/text/observer",
+    ]
+
+
 def with_a_tie_break(**settings):
     """✨ The test pathway with a tie-break, its statements and its wording."""
     return tests.documents.with_a_tie_break(sort_pathway(), **settings)

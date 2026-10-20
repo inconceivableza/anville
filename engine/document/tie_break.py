@@ -9,6 +9,7 @@ every framework is a generalist instead, and is asked nothing. Run on the partic
 observer's. Nothing here touches the database or a request.
 """
 
+import re
 from fractions import Fraction
 from itertools import zip_longest
 
@@ -31,7 +32,8 @@ GENERALIST = "generalist"
 # compositional score (ADR 0003): once a result is made with it, its behaviour is frozen, and a change is a new name.
 # The outcome it names was amended to follow the weights alone, and its shares to open only a gap just past the
 # threshold (fix-22), both before any real participant's result, so it keeps its name (ADR 0018, amended). Each
-# result stores its outcome and shares, so one stored before keeps what it was given.
+# result stores its outcome and shares, so one stored before keeps what it was given. Since fix-26 it also stores the
+# constructs each framework tied, which changes no outcome or share, only what the results page can name.
 REWEIGHTING = "pairwise_reweighting"
 # ✨ How far past the threshold the re-weighting sets one weight's constructs ahead of the next's: a hundredth of a
 # percent, so 5.01% for a document's 5%. The test for too close to call counts exactly 5% as tied, so the gap must be
@@ -47,6 +49,11 @@ CIRCLE = "circle"
 LEVEL = "level"
 BALANCED = (CIRCLE, LEVEL)
 SKIPPED = "skipped"
+
+# ✨ What the results page's tie-break sentences may name (fix-26), each by a construct's label: the leader after the
+# answers (top), the sort's leader among the tied (previous), the closest behind the top after the answers (next), and
+# the constructs that entered the tie-break, in the order shown (names). The linter refuses any other.
+PLACEHOLDERS = ("top", "previous", "next", "names")
 
 
 def tie_break(document, result):
@@ -129,7 +136,8 @@ def reweigh(document, result, answers):
     """✨ The result re-weighted by the tie-break's answers (ticket 30c, ADR 0018), as the content owner's prototype's
     `rescore` weighs it, for a participant marked for the tie-break who has answered or skipped every pair. The sort's
     result is left as it is: this is a second result, kept beside it, with `tie_break` listing each framework that had
-    pairs and how its answers came out.
+    pairs, how its answers came out and the constructs that entered its tie-break, leader first as the sort ranked them
+    (fix-26), so the results page can name them.
 
     Each tied framework that had pairs is re-weighted from its own answers alone, so neither framework's answers
     change the other. Each construct that entered its tie-break weighs 1 plus the share of its appearances it won, a
@@ -165,7 +173,7 @@ def reweigh(document, result, answers):
         own_answers = [answer for answer in answers if answer["framework"] == framework_id]
         if framework_id in tied and own_answers:
             outcome, share = _reweighed(tied[framework_id], share, own_answers, apart)
-            broken.append({"framework": framework_id, "outcome": outcome})
+            broken.append({"framework": framework_id, "outcome": outcome, "tied": tied[framework_id]})
             if outcome != SKIPPED:
                 constructs = [
                     {**construct, "percent": round_half_up(share[c]), "share": str(share[c])}
@@ -222,6 +230,28 @@ def outcomes(result):
     if isinstance(broken, dict):
         broken = [broken]
     return {entry["framework"]: entry["outcome"] for entry in broken}
+
+
+def named(text, names):
+    """✨ `text` with each of the results page's tie-break placeholders (PLACEHOLDERS) replaced by `names[placeholder]`,
+    as plain text in one pass, never through `format()`, so a label holding braces is never itself filled in. The
+    template escapes whatever comes out."""
+    return re.sub(r"\{(\w+)\}", lambda found: names.get(found[1], found[0]), text)
+
+
+def joined(labels):
+    """✨ Labels as a sentence lists them: "A and B", "A, B and C"."""
+    return " and ".join(filter(None, [", ".join(labels[:-1]), *labels[-1:]]))
+
+
+def tied_in(result):
+    """✨ `{framework: [construct, ...]}`: the constructs that entered each broken framework's tie-break, leader first as
+    the sort ranked them (fix-26). A result re-weighted before fix-26 did not keep them, so names none; its pathway
+    version's wording, from before then too, names none either."""
+    broken = result.get("tie_break") or []
+    if isinstance(broken, dict):
+        broken = [broken]
+    return {entry["framework"]: entry.get("tied", []) for entry in broken}
 
 
 def _in_a_circle(beaten):
