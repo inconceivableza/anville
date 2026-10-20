@@ -19,7 +19,7 @@
   can still be changed and their links revoked.
 {% endcomment %}
 {% if row.contact_id or not block.frozen %}
-<li class="contact-row"{% if row.contact_id %} id="person-{{ row.contact_id }}"{% endif %}>
+<li class="contact-row" id="{% if row.contact_id %}person-{{ row.contact_id }}{% else %}{{ block.id }}-row-{{ row.number }}{% endif %}">
   {% if row.contact_id %}
     {# ✨ Saved as they type, once typing pauses, and as a field is left (fix-2). Only the row's status is swapped in #}
     {# ✨ from the row sent back, never its fields, so nothing typed while a save is on its way is lost. #}

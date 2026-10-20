@@ -23,6 +23,7 @@ from django.urls import include, path
 from access.views import consent
 from config.health import healthz
 from engine.views import (
+    another_row,
     answer_coaching,
     coach_checklist,
     coaching,
@@ -79,6 +80,8 @@ urlpatterns = [
     path("contacts/<slug:block_id>/<int:contact_id>/", contact, name="contact"),
     # ✨ Taking one person off the list, asking first while their link works (ticket 13d).
     path("contacts/<slug:block_id>/<int:contact_id>/remove/", contact_removal, name="contact_removal"),
+    # ✨ One more empty row, below the rest, storing nobody (ticket 70).
+    path("contacts/<slug:block_id>/rows/", another_row, name="another_row"),
     path("invitations/", invitations, name="invitations"),
     path("invitations/<int:contact_id>/issue/", issue_invitation, name="issue_invitation"),
     path("invitations/<int:contact_id>/revoke/", revoke_invitation, name="revoke_invitation"),

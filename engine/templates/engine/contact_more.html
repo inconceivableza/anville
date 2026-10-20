@@ -1,0 +1,20 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ "Add another person", below a contact list's rows (ticket 70), offered until the list shows the most rows it may
+  hold, and not while answer collection is frozen. It posts how many rows the page shows, so the next comes after them.
+
+  With JavaScript the empty row it sends back goes after the others, touching none of them, and this control comes back
+  too (`oob`), out of band, counting it, or gone once the list shows the most it may. Without, the list's page comes
+  back with one more row.
+{% endcomment %}
+{% if block.adds_rows %}
+<form class="contact-more" id="more-{{ block.id }}" method="post" action="{% url 'another_row' block.id %}"
+      hx-post="{% url 'another_row' block.id %}" hx-target="#rows-{{ block.id }}" hx-swap="beforeend"{% if oob %} hx-swap-oob="true"{% endif %}>
+  {% csrf_token %}
+  <input type="hidden" name="rows" value="{{ block.rows_shown }}">
+  <button type="submit" class="pill ghost small">Add another person</button>
+</form>
+{% elif oob %}
+<div id="more-{{ block.id }}" hx-swap-oob="delete"></div>
+{% endif %}

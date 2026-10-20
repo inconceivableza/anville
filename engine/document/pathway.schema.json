@@ -654,7 +654,7 @@
       }
     },
     "contact_list": {
-      "description": "People who know the participant, a first name and an email address per row, each added with their observer's link or changed on their own. Once its rows are filled, one more is offered. They are kept as contacts, apart from the participant's answers. At most 50.",
+      "description": "People who know the participant, a first name and an email address per row, each added with their observer's link or changed on their own. 'Add another person' below the rows adds one more row at a time. They are kept as contacts, apart from the participant's answers. At most 50.",
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "type"],
@@ -675,6 +675,10 @@
           "minimum": 0,
           "maximum": 50,
           "default": 5
+        },
+        "more_note": {
+          "description": "One sentence above 'Add another person', saying more people can be added than the rows ask for.",
+          "$ref": "#/$defs/text"
         }
       }
     },

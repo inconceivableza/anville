@@ -1438,6 +1438,17 @@ body:not(.framed) .question-card > p + form {
   padding: 0;
 }
 
+/* ✨ Below the rows, the authored sentence and "Add another person" (ticket 70). */
+.contact-more-note {
+  margin: var(--space-sm) 0 var(--space-xs);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.contact-more {
+  margin: var(--space-xs) 0 0;
+}
+
 .contact-row {
   display: flex;
   flex-wrap: wrap;
