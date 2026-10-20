@@ -327,6 +327,18 @@ The homepage (`/`):
 - Once the sort is in, back on Section 1 the card reads "You've completed the assessment. You can review your results any time." in place of "Sort your strengths into buckets…", and the button reads "View my results →". Clicking it opens your results page (or, with tie-break pairs still to answer, the next pair), never the assessment's start page. The status chip reads "Complete". Same in both pathways.
 - Phone width: the finished sentence and the "View my results →" button wrap within the card.
 
+## How others see you (Section 1's card under the Strengths assessment; after `migrate`, rebuild the frontend and load the pathway again, with a participant started after that)
+
+- Before the sort is in, Section 1 shows no "How others see you" card. Once it is in, the card sits under the Strengths assessment card and above the reflection, drawn as that card is: its title, the "Compare with how others see you →" button, then its status chip on a line of its own.
+- With fewer than three observers answered, the chip reads "Waiting for answers (2 of 3)" (the count as it stands). Pressing the button opens "Not enough answers yet", as the results page's button does, and back on Section 1 the chip still says waiting.
+- With three answered, the chip reads "Ready to view". Pressing the button opens "Before you look", exactly as from the results page; "← Back to results" changes nothing, and back on Section 1 the chip still reads "Ready to view". Confirming opens the comparison, and back on Section 1 the chip reads "Viewed".
+- Typing the comparison's address (`/results/strengths-sort/comparison/`) before pressing anything shows it, but the chip stays "Ready to view".
+- An observer withdraws after "Viewed", leaving two: the chip still reads "Viewed".
+- With JavaScript turned off, the button still opens "Before you look" and confirming still opens the comparison.
+- Keyboard only: Tab reaches the button, its focus is visible, and Enter presses it. Screen reader: VoiceOver reads it as a button, then the status after it.
+- Phone width: the title and button wrap within the card, and the chip stays a small pill the width of its words.
+- On the faithful port (load `pathways/whatever-you-do-faithful-port.json`): Section 1 has no such card.
+
 ## Sections 2–4 on paper (after Section 1, with a coach's link and three people's links made)
 
 - The hub lists onboarding, Section 1, the Strengths assessment, "The shape of your life", "Putting your calling into words", "Growth plan" and Section 5, and no "The Workbook".

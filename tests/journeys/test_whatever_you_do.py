@@ -427,7 +427,8 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     one document and not the other fails, and so does a slip in the fifth rating itself (its place, its anchors,
     its gate clause, or a message still saying four). The minimum-length messages are reworded the same way,
     the time estimates, checked above, the hub's section numbers, next-step wording and photos and Section 1's results
-    are set aside, and so are the downloads in place of Sections 2–4's own blocks."""
+    are set aside, and so are the downloads in place of Sections 2–4's own blocks and Section 1's way to the
+    comparison."""
     expected = the_faithful_port()
     for section in expected["content"]["sections"]:
         for clause in section.get("gate", {}).get("clauses", []):
@@ -447,11 +448,21 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     a_download_in_place_of_each_of_sections_2_to_4(expected)
     no_relationship_question(expected)
 
-    assert without_the_next_step_and_photos(
-        without_numbers(
-            without_the_tie_break(without_the_coach_step(without_estimates(without_the_wizard(the_pathway()))))
+    assert without_the_comparison_link(
+        without_the_next_step_and_photos(
+            without_numbers(
+                without_the_tie_break(without_the_coach_step(without_estimates(without_the_wizard(the_pathway()))))
+            )
         )
     ) == (without_numbers(expected))
+
+
+def without_the_comparison_link(document):
+    """✨ The way to the comparison under Section 1's Strengths assessment card is this pathway's alone (ticket 67a): the
+    faithful port reaches the comparison from the results page only, as the original prototype does."""
+    for section in document["content"]["sections"]:
+        section["blocks"] = [block for block in section["blocks"] if block["type"] != "comparison_link"]
+    return document
 
 
 def without_the_wizard(document):
@@ -591,8 +602,11 @@ def test_section_1s_button_opens_the_assessment_until_it_is_done_and_then_the_re
 
 
 @pytest.mark.django_db
-def test_once_the_assessment_is_done_section_1_shows_no_results_below_its_card(participant):
-    """✨ "View my results →" is the way to them, as in the faithful port (fix-5, reversing ticket 57)."""
+def test_once_the_assessment_is_done_section_1_shows_no_results_below_its_card_but_the_way_to_the_comparison(
+    participant,
+):
+    """✨ "View my results →" is the way to them, as in the faithful port (fix-5, reversing ticket 57). Under the card,
+    the way to the comparison (ticket 67a)."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
     answer(participant, "gifts-reading", "true")
@@ -602,7 +616,8 @@ def test_once_the_assessment_is_done_section_1_shows_no_results_below_its_card(p
 
     assert "View my results →" in page
     assert "own-results" not in page
-    assert "Compare with how others see you" not in page
+    assert page.index('id="block-strengths-link"') < page.index('id="block-how-others-see-you"')
+    assert page.index('id="block-how-others-see-you"') < page.index('id="block-gifts-summary"')
 
 
 @pytest.mark.django_db
