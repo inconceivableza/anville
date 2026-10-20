@@ -5,12 +5,16 @@
 clear their own sort and everything worked out from it, and sort the cards again from the start. Nothing else of
 theirs is touched, and nothing of anyone else's."""
 
+import json
+import re
 from datetime import timedelta
 
 import pytest
 from django.test import Client
 
 from engine.models import Contact, Invitation, ObserverResponse, Response, Result
+from engine.tie_break_scenarios import SCENARIOS, seeding
+from tests.journeys.pages import version_on
 from tests.journeys.test_answers import answer, participant  # noqa: F401 (participant is a fixture)
 from tests.journeys.test_comparison import THREE_OBSERVERS, press_compare
 from tests.journeys.test_consent import give_consent
@@ -175,14 +179,29 @@ def on_whatever_you_do(demo, client, django_user_model, load_pathway):
 
 
 def load_profile(client, profile):
-    """✨ The choice's button pressed with `profile` chosen, then on from the page it leads to by its one link on."""
+    """✨ The choice's button pressed with `profile` chosen, then on to the sort it leads to (fix-23)."""
     loaded = client.post(WYD_RETAKE, {"profile": profile})
     assert loaded.status_code == 303
+    assert loaded["Location"].startswith(f"{WYD_SORT_PAGE}?")
     return client.get(loaded["Location"])
 
 
+def widget_of(page):
+    """✨ What the sort page hands its widget, as `json_script` writes it beside the form."""
+    found = re.search(rf'<script id="sort-{WYD_SORT}" type="application/json">(.*?)</script>', page, re.S)
+    return json.loads(found.group(1))
+
+
+def send_as_shown(client, page):
+    """✨ The sort sent as the widget would send it untouched: every item in the bucket and at the value it was handed,
+    to the address the form posts to."""
+    sort = widget_of(page)["placed"]
+    action = re.search(r'hx-post="([^"]+)"', page).group(1).replace("&amp;", "&")
+    return client.post(action, {"value": json.dumps(sort), "version": version_on(page)}, HTTP_HX_REQUEST="true")
+
+
 @pytest.mark.django_db
-def test_before_any_sort_a_demo_profile_loads_and_leads_to_its_pairs(on_whatever_you_do, settings):
+def test_before_any_sort_a_demo_profile_leads_to_the_sort_with_its_cards_placed(on_whatever_you_do, settings):
     settings.DEBUG, settings.ANVILLE_DEMO_NOTICE = False, ""
     assert "data-demo-reveal" not in on_whatever_you_do.get(WYD_SORT_PAGE).content.decode()
     settings.ANVILLE_DEMO_NOTICE = "This is a demo."
@@ -190,23 +209,55 @@ def test_before_any_sort_a_demo_profile_loads_and_leads_to_its_pairs(on_whatever
     assert f'<p class="back-to-hub" data-demo-reveal hidden><a href="{WYD_RETAKE}">' in sort_page
     assert "<h1 data-demo-reveal-hold>" in sort_page
 
-    guide = load_profile(on_whatever_you_do, "tied-both")
+    shown = load_profile(on_whatever_you_do, "tied-both")
 
-    assert f'href="/results/{WYD_SORT}/tie-break/"' in guide.content.decode()
-    assert "1 of 4" in on_whatever_you_do.get(f"/results/{WYD_SORT}/tie-break/").content.decode()
+    assert widget_of(shown.content.decode())["placed"]
 
 
 @pytest.mark.django_db
-def test_choosing_a_demo_profile_on_retake_clears_the_sort_and_loads_it_at_its_first_pair(on_whatever_you_do):
-    load_profile(on_whatever_you_do, "generalist")
-    generalist = Result.objects.get()
+def test_choosing_a_demo_profile_on_retake_clears_the_sort_and_leads_to_the_sort_with_its_cards_placed(
+    on_whatever_you_do,
+):
+    send_as_shown(on_whatever_you_do, load_profile(on_whatever_you_do, "generalist").content.decode())
+    assert Result.objects.exists()
 
-    guide = load_profile(on_whatever_you_do, "tied-both")
+    shown = load_profile(on_whatever_you_do, "tied-both")
 
-    result = Result.objects.get()
-    assert result.pk != generalist.pk and result.scores != generalist.scores
-    assert f'href="/results/{WYD_SORT}/tie-break/"' in guide.content.decode()
-    assert "1 of 4" in on_whatever_you_do.get(f"/results/{WYD_SORT}/tie-break/").content.decode()
+    assert not Result.objects.exists()
+    assert widget_of(shown.content.decode())["placed"] == seeding(wyd_pathway(), "tied-both").sort
+
+
+@pytest.mark.django_db
+def test_a_demo_profile_hands_the_sort_its_placements_and_values_and_stores_nothing(on_whatever_you_do):
+    """✨ fix-23: the widget starts at "All 36 sorted!" from these, with fine-tuning's sliders at their values; that it
+    does is a hand check."""
+    shown = load_profile(on_whatever_you_do, "separated:pep")
+
+    page = shown.content.decode()
+    assert widget_of(page)["placed"] == seeding(wyd_pathway(), "separated", "pep").sort
+    assert SCENARIOS["separated"]["pep"].summary in page
+    assert not Result.objects.exists()
+    assert WYD_SORT not in Response.objects.get().answers
+
+
+@pytest.mark.django_db
+def test_sending_a_demo_profile_s_sort_unchanged_leads_to_its_first_pair_with_its_guide(on_whatever_you_do):
+    sent = send_as_shown(on_whatever_you_do, load_profile(on_whatever_you_do, "tied-both").content.decode())
+
+    pair = on_whatever_you_do.get(sent["HX-Redirect"]).content.decode()
+    assert Result.objects.get().scores == seeding(wyd_pathway(), "tied-both").scores
+    assert "1 of 4" in pair
+    assert SCENARIOS["tied-both"][None].summary in pair
+
+
+@pytest.mark.django_db
+def test_off_a_demo_system_no_demo_profile_reaches_the_sort(on_whatever_you_do, settings):
+    settings.DEBUG, settings.ANVILLE_DEMO_NOTICE = False, ""
+
+    page = on_whatever_you_do.get(f"{WYD_SORT_PAGE}?profile=tied-both").content.decode()
+
+    assert "placed" not in widget_of(page)
+    assert SCENARIOS["tied-both"][None].summary not in page
 
 
 @pytest.mark.django_db

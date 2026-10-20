@@ -32,7 +32,6 @@ from engine.views import (
     contact_removal,
     contacts,
     credits_page,
-    demo_profile,
     download,
     fresh_link,
     home,
@@ -70,7 +69,6 @@ urlpatterns = [
     path("results/<slug:block_id>/", results, name="results"),
     path("results/<slug:block_id>/tie-break/", tie_break, name="tie_break"),
     path("results/<slug:block_id>/retake/", retake, name="retake"),  # ✨ demo only (fix-19)
-    path("results/<slug:block_id>/demo-profile/<slug:scenario>/", demo_profile, name="demo_profile"),  # ✨ fix-21
     path("results/<slug:block_id>/comparison/", comparison, name="comparison"),
     path("results/<slug:block_id>/comparison/visit/", visit_comparison, name="visit_comparison"),
     path("results/<slug:block_id>/comparison/coach/", share_with_coach, name="share_with_coach"),
