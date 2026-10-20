@@ -191,6 +191,8 @@ The homepage (`/`):
 - Going to `/hub/` part-way lands on the page reached. The last "Continue →" lands on the hub, Before we begin listed as complete, and the hub never sends you back. Its entry opens it as an ordinary section page, header and sidebar included, the ratings fixed.
 - `/credits/` lists "Photograph of a figure facing the sun from Unsplash.".
 - Phone width: the photo sits above the page, the ratings fit without scrolling sideways.
+- The photo fills its dark column to the bottom on both pages, scrolled to the end of the ratings included, at a wide screen, at a tall one (over 900px high) and at about 375px: no bare dark strip beneath it, and the photo cropped, never stretched (fix-7).
+- Pressing Enter in an answer (with a rating's point focused, chosen or not, or in the reason drop-down) does nothing: the page stays as it was, never "Not saved. No answer was sent." on a page of its own (fix-7).
 
 ## The hub's next step and its photo (load the pathway again first; ticket 49b)
 
@@ -216,6 +218,7 @@ The homepage (`/`):
 - A refused answer shows its reason where "Saved" would be.
 - Near the 20,000-character limit, the text box says how many characters are left.
 - Without JavaScript, a Save button appears and saves the answer. With JavaScript it is hidden.
+- Without JavaScript, pressing Save (or Enter) on a 1–10 scale with no point chosen comes back to the same page, "Not saved. No answer was sent." beside the button. With JavaScript, Enter in an answer never reloads the page (fix-7).
 - Screen reader: "Saved" and a refusal are announced.
 - Ghost text (Section 1's reflection, the letter): it shows in grey in the empty box, is readable against the background, and disappears as you type. A screen reader names the box by its prompt, not by the ghost text.
 - The reason in onboarding: it looks like the prototype's account-screen drop-down (a small dark caret at the right, not the browser's arrow), and is amber while "Select..." is showing, turning white once a reason is chosen, with or without JavaScript. The drop-down shows "Select..." until a reason is chosen, and choosing one shows "Saved" with no button press. Going back to "Select..." shows "Saved", turns the drop-down amber again, and unticks "Choose what's bringing you to the course" beneath the button; a reload still shows "Select...". Keyboard only: Tab reaches it, and the arrow keys change it (each change saves). It fills the card's width at phone width.
@@ -507,10 +510,16 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - Five trusted voices' page (fix 13): "Needed" and "Optional" are small quiet labels, as v3's tags.
 - Observer's assessment (fix 14): the relationship drop-down has the same border, corners, padding and font as the page's text inputs, its caret at the right, and the focus ring when focused.
 
-## Review fixes (fix-3)
+## Review fixes (fix-3, cards outlined again in fix-8)
 
-- Cards as v3's (beside v3's hub cards, `whatever-you-do-site-hackethon-artifact-v3/index.html`): the sort's card on show, fine-tuning's groups of sliders, each section of the results page and each of the comparison's sections ("Biggest Gaps", "Questions to sit with" and each framework's) are on the paper with 12px corners and no outline, as the hub's side cards are. The bucket buttons, the bucket headings above fine-tuning's groups, the results' construct colours and the comparison's marks and gap badges keep their colours; the gap cards inside "Biggest Gaps" keep their outline.
-- The sort, framed (a participant's Section 1) and on the cream (an observer's link, in a private window): the card on show stands out from the page, with its soft shadow, before and while it flies to a bucket, and reads as easily as before. Keyboard only: each bucket button, Undo and each fine-tuning slider still shows its ring when focused.
-- The coach's view of the results and comparison (the coach's link, once shared): the sections look the same as the participant's.
-- Phone width: on the sort, fine-tuning, results and the comparison, each card fits with a margin each side, its words clear of its edges, and nothing scrolls sideways.
+- Cards outlined: the sort's card on show, fine-tuning's groups of sliders, each section of the results page and each of the comparison's sections ("Biggest Gaps", "Questions to sit with" and each framework's) are on the paper with 12px corners and a thin pale outline, as the onboarding question cards and the account form card have. The sort's card's outline is a little heavier, as it was before fix-3. The bucket buttons, the bucket headings above fine-tuning's groups, the results' construct colours and the comparison's marks and gap badges keep their colours; the gap cards inside "Biggest Gaps" keep their own outline.
+- Hub (signed in, framed): the paper side cards (the strengths assessment's and any other's on the right) have the same thin outline; Five trusted voices' dark card has no pale line round it and is the same width as the cards beside it. The section list and "Your next step" are unchanged.
+- The sort, framed (a participant's Section 1) and on the cream (an observer's link, in a private window): the card on show stands out from the page, with its outline and soft shadow, before and while it flies to a bucket, and reads as easily as before. Keyboard only: each bucket button, Undo and each fine-tuning slider still shows its ring when focused.
+- The coach's view of the results and comparison (the coach's link, once shared): the sections look the same as the participant's, outline included.
+- Phone width: on the hub, the sort, fine-tuning, results and the comparison, each card fits with a margin each side, its outline whole, its words clear of its edges, and nothing scrolls sideways.
 - Homepage (signed out): the header's "Coaches", the hero's "For coaches" and the footer's "For coaches" each scroll to the coach panel in "How it works"; the pillars read "Coach oversight". No "mentor" shows on the page.
+
+## Review fixes (fix-6)
+
+- Signing in and out leaves no message behind: sign in (by email, and by Google where its pair is set), then "Sign out" in the header, then "Begin your journey" on the homepage. The sign-up page shows the demo notice, if on, and no green box: no "Successfully signed in as …" and no "You have signed out.". "Sign in" from there shows none either. Phone width: the same.
+- A message still shows where it belongs: "Forgot your password?" from sign-in, follow the emailed link, set a new password: the page after says "Password successfully changed." in the green box; the sign-in page after it does not.

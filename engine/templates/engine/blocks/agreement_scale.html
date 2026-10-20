@@ -5,7 +5,8 @@
   points below the one chosen filled in, and the value chosen beside the prompt. The two anchor labels describe the
   scale's ends. Until a point is chosen nothing is checked, so nothing is sent.
 
-  A fixed rating shows the point chosen, with every point disabled and nothing to save; the server refuses it anyway.
+  A fixed rating shows the point chosen, with every point disabled and nothing to save; the server refuses it anyway,
+  and a page left open from before that sends one anyway, without JavaScript, comes back saying so (fix-7).
 {% endcomment %}
 <form id="block-{{ block.id }}" class="baseline-q" method="post" action="{% url 'save_answer' block.id %}">
   {% csrf_token %}
@@ -29,7 +30,11 @@
     </div>
   </fieldset>
   {% if block.is_fixed %}
-    <p class="fixed-note">Fixed when you completed this section.</p>
+    {% if block.refusal %}
+      <p class="fixed-note" role="alert"><span class="save-refused">Not saved. {{ block.refusal }}</span></p>
+    {% else %}
+      <p class="fixed-note">Fixed when you completed this section.</p>
+    {% endif %}
   {% else %}
     {% include "engine/save_row.html" %}
   {% endif %}
