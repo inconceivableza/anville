@@ -4,12 +4,13 @@
 import json
 import mimetypes
 from typing import NamedTuple
+from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.humanize.templatetags.humanize import apnumber
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -89,7 +90,7 @@ from engine.models import (
     Response,
     Result,
 )
-from engine import reminders
+from engine import reminders, scenario_loading
 from engine.document.tie_break import pair_plan, reweigh
 from engine.results import comparison_page, pair_page, results_page
 
@@ -892,34 +893,90 @@ def _demo_tools_on():
 def retake(request, block_id):
     """✨ Demo only (fix-19): the results page's quiet "Retake the assessment (demo only)" asks first, saying what will
     be cleared; only its button clears the participant's own sort and everything worked out from it, then opens the
-    sort afresh. Off a development or demo system it is a 404; before there is a result to clear, it leads to the sort.
+    sort afresh. Off a development or demo system it is a 404.
+
+    It also offers a demo profile (fix-21): one of `seed_tie_break`'s scenarios that holds on this pathway, loaded as
+    the participant's sort once the old one is cleared, leading to `demo_profile`. Before any sort, from the sort page's
+    hidden link, the same choice clears nothing, and only for a participant the sort is open to. A profile not offered
+    is refused with nothing cleared.
 
     A section completed whose gate needed the sort is no longer complete, so the hub never shows it complete beside an
     assessment not started; the participant's other answers in it stay, and completing it again needs the new sort."""
     if not _demo_tools_on():
         raise Http404("Retaking the assessment is offered only on a development or demo system.")
     state, result, section = _own_result(request.user, block_id)
-    if result is None:
-        return redirect(page_url(section["id"], section["page"]))
+    sort_page = page_url(section["id"], section["page"])
+    document = state.version.document
+    # ✨ Before any sort, only a participant the sort is open to may have one loaded for them (fix-21).
+    if result is None and not _is_open(state, section_of(document, block_id), answerable_block(document, block_id)):
+        return redirect(sort_page)
+    # ✨ Worked out on every visit, so a scenario that does not hold on this pathway is never offered (fix-21).
+    profiles = scenario_loading.offered(document)
     response = state.response
-    reopened = [
-        shown
-        for shown in state.sections
-        if shown["id"] in response.completed_sections
-        and _reopens(shown)
-        and any(clause["block"] == block_id for clause in clauses_of(shown))
-    ]
+    reopened = []
+    if result is not None:
+        reopened = [
+            shown
+            for shown in state.sections
+            if shown["id"] in response.completed_sections
+            and _reopens(shown)
+            and any(clause["block"] == block_id for clause in clauses_of(shown))
+        ]
     if request.method == "POST":
-        response.clear_sort(block_id, reopened=[shown["id"] for shown in reopened])
-        return _see_other(page_url(section["id"], section["page"]))
+        chosen = request.POST.get("profile", MYSELF)
+        profile = next((profile for profile in profiles if profile.key == chosen), None)
+        if chosen != MYSELF and profile is None:
+            refusal = "That demo profile is not offered on this pathway."
+            return render(request, "engine/save_status.html", {"refusal": refusal}, status=400)
+        with transaction.atomic():
+            if result is not None:
+                response.clear_sort(block_id, reopened=[shown["id"] for shown in reopened])
+            if profile is not None:
+                scenario_loading.load(state.stored_response(request.user), block_id, profile.name, profile.on)
+        if profile is None:
+            return _see_other(sort_page)
+        return _see_other(_demo_profile_url(block_id, profile))
     context = {
         "block_id": block_id,
+        "clearing": result is not None,
+        "sort_page": sort_page,
+        "profiles": profiles,
+        "myself": MYSELF,
         "reopened": [text_for(shown["title"], "participant") for shown in reopened],
-        "tie_break": bool(result.tie_break_answers),
-        "frozen": response.collection_frozen_at is not None,
-        "coach_shown": bool((_coach_of(response) or {}).get("shared")),
+        "tie_break": bool(result and result.tie_break_answers),
+        "frozen": result is not None and response.collection_frozen_at is not None,
+        "coach_shown": result is not None and bool((_coach_of(response) or {}).get("shared")),
     }
     return render(request, "engine/retake.html", context)
+
+
+# ✨ The retake page's "Sort the cards myself", as its choice sends it (fix-21).
+MYSELF = "myself"
+
+
+def _demo_profile_url(block_id, profile):
+    url = reverse("demo_profile", args=[block_id, profile.name])
+    return f"{url}?{urlencode({'on': profile.on})}" if profile.on else url
+
+
+@login_required
+@consent_required
+def demo_profile(request, block_id, scenario):
+    """✨ Demo only (fix-21): where loading a demo profile leads, saying which answer to give each pair and what the
+    results should then show, in `seed_tie_break`'s words, then on to the first pair or, with none, the results. It is
+    worked out again from the pathway, storing nothing; a scenario not offered on this pathway is a 404."""
+    if not _demo_tools_on():
+        raise Http404("Demo profiles are offered only on a development or demo system.")
+    state, result, section = _own_result(request.user, block_id)
+    if result is None:
+        return redirect(page_url(section["id"], section["page"]))
+    document = state.version.document
+    on = request.GET.get("on") or None
+    profile = scenario_loading.offered_by_key(document, f"{scenario}:{on}" if on else scenario)
+    if profile is None:
+        raise Http404("That demo profile is not offered on this pathway.")
+    shown = scenario_loading.guide(document, profile.name, profile.on)
+    return render(request, "engine/demo_profile.html", {"block_id": block_id, "guide": shown})
 
 
 def _own_result(user, block_id):
@@ -1795,6 +1852,8 @@ def _section_page(state, section, page=1, issued=None):
             ],
         },
         "is_complete": section["id"] in state.completed,
+        # ✨ Demo only (fix-21): a sort not yet in offers a hidden "Load a demo profile (demo only)", where one holds.
+        "demo_profile": sort_pending and _demo_tools_on() and bool(scenario_loading.offered(version.document)),
         # ✨ Over the whole section, since the ratings it fixed may be on an earlier page than its completion.
         "holds_fixed_answers": any(block["id"] in fixed for block in section["blocks"]),
         # ✨ The way on, "Continue →" or completion. Going on from a page is refused on exactly these and `unmet`.

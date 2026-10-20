@@ -17,6 +17,11 @@ from tests.journeys.test_consent import give_consent
 from tests.journeys.test_observer_responses import an_observer
 from tests.journeys.test_results import SORT, STRENGTHS, results, submit_sort
 from tests.journeys.test_tie_break import CLEAR, TIED_ON_ONE, choose, tie_breaking_pathway
+from tests.journeys.test_whatever_you_do import answer_onboarding as wyd_onboarding
+from tests.journeys.test_whatever_you_do import the_pathway as wyd_pathway
+from tests.journeys.test_whatever_you_do_faithful_port import answer as answer_published
+from tests.journeys.test_whatever_you_do_faithful_port import answer_onboarding as faithful_onboarding
+from tests.journeys.test_whatever_you_do_faithful_port import the_pathway as faithful_port
 
 RETAKE = f"/results/{SORT}/retake/"
 
@@ -143,3 +148,76 @@ def test_a_participant_can_clear_only_their_own_assessment(sorted_in, django_use
 
     assert Result.objects.get().tie_break_answers
     assert SORT in Response.objects.get(participant__username="participant").answers
+
+
+# ✨ Demo profiles (fix-21): one of `seed_tie_break`'s scenarios loaded into the participant's own sort, from the
+# retake page or, before any sort, from the sort page. The scenarios are made for Whatever You Do.
+WYD_SORT = "strengths-sort"
+WYD_SORT_PAGE = "/sections/strengths/"
+WYD_RETAKE = f"/results/{WYD_SORT}/retake/"
+
+
+def on_the_sort(client, django_user_model, load_pathway, document, onboard):
+    """✨ A participant of `document` signed in, consent given, onboarding done and Section 1's reading confirmed, so its
+    sort is open to them."""
+    load_pathway(document)
+    client.force_login(django_user_model.objects.create_user(username="demo", email="demo@example.com"))
+    give_consent(client)
+    onboard(client)
+    client.post("/sections/onboarding/complete/")
+    answer_published(client, "gifts-reading", "true")
+    return client
+
+
+@pytest.fixture
+def on_whatever_you_do(demo, client, django_user_model, load_pathway):
+    return on_the_sort(client, django_user_model, load_pathway, wyd_pathway(), wyd_onboarding)
+
+
+def load_profile(client, profile):
+    """✨ The choice's button pressed with `profile` chosen, then on from the page it leads to by its one link on."""
+    loaded = client.post(WYD_RETAKE, {"profile": profile})
+    assert loaded.status_code == 303
+    return client.get(loaded["Location"])
+
+
+@pytest.mark.django_db
+def test_before_any_sort_a_demo_profile_loads_and_leads_to_its_pairs(on_whatever_you_do, settings):
+    settings.DEBUG, settings.ANVILLE_DEMO_NOTICE = False, ""
+    assert "data-demo-reveal" not in on_whatever_you_do.get(WYD_SORT_PAGE).content.decode()
+    settings.ANVILLE_DEMO_NOTICE = "This is a demo."
+    sort_page = on_whatever_you_do.get(WYD_SORT_PAGE).content.decode()
+    assert f'<p class="back-to-hub" data-demo-reveal hidden><a href="{WYD_RETAKE}">' in sort_page
+    assert "<h1 data-demo-reveal-hold>" in sort_page
+
+    guide = load_profile(on_whatever_you_do, "tied-both")
+
+    assert f'href="/results/{WYD_SORT}/tie-break/"' in guide.content.decode()
+    assert "1 of 4" in on_whatever_you_do.get(f"/results/{WYD_SORT}/tie-break/").content.decode()
+
+
+@pytest.mark.django_db
+def test_choosing_a_demo_profile_on_retake_clears_the_sort_and_loads_it_at_its_first_pair(on_whatever_you_do):
+    load_profile(on_whatever_you_do, "generalist")
+    generalist = Result.objects.get()
+
+    guide = load_profile(on_whatever_you_do, "tied-both")
+
+    result = Result.objects.get()
+    assert result.pk != generalist.pk and result.scores != generalist.scores
+    assert f'href="/results/{WYD_SORT}/tie-break/"' in guide.content.decode()
+    assert "1 of 4" in on_whatever_you_do.get(f"/results/{WYD_SORT}/tie-break/").content.decode()
+
+
+@pytest.mark.django_db
+def test_on_the_faithful_port_no_demo_profile_is_offered_and_naming_one_is_refused(
+    demo, client, django_user_model, load_pathway
+):
+    on_the_sort(client, django_user_model, load_pathway, faithful_port(), faithful_onboarding)
+    assert WYD_RETAKE not in client.get(WYD_SORT_PAGE).content.decode()
+    assert "<option" not in client.get(WYD_RETAKE).content.decode()
+
+    refused = client.post(WYD_RETAKE, {"profile": "tied-both"})
+
+    assert refused.status_code == 400
+    assert not Result.objects.exists()

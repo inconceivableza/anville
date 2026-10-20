@@ -16,7 +16,8 @@
   {% else %}
     <p class="back-to-hub"><a href="{% url 'hub' %}">← Back to the hub</a></p>
   {% endif %}
-  <h1>{{ section.title }}</h1>
+  {# ✨ On a demo system the title is where a press-and-hold reveals the sort's demo-profile link, on a phone (fix-21). #}
+  <h1{% if demo_profile %} data-demo-reveal-hold{% endif %}>{{ section.title }}</h1>
   {# ✨ Only for a section split into pages, so the participant knows where they are in it (ticket 41e). #}
   {% if page.count > 1 %}<p class="page-count">Page {{ page.number }} of {{ page.count }}</p>{% endif %}
   {# ✨ The lead-ins are the engine's wording, so the section's figure and an activity's just beneath it read apart. #}

@@ -27,4 +27,11 @@
       <noscript><p>The sort needs JavaScript. Turn it on in your browser, then reload this page.</p></noscript>
     </form>
   {% endwith %}
+  {% comment %}
+    ✨ Demo only (fix-21): the sort filled in with one of seed_tie_break's scenarios instead, on a development or demo
+    system alone. Hidden until revealed, as the results page's retake link is (data-demo-reveal, in main.js).
+  {% endcomment %}
+  {% if demo_profile %}
+    <p class="back-to-hub" data-demo-reveal hidden><a href="{% url 'retake' block.id %}">Load a demo profile (demo only)</a></p>
+  {% endif %}
 {% endif %}
