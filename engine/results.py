@@ -5,7 +5,8 @@
 version's wording, and on the comparison set beside the observer average.
 
 Nothing here touches the database or a request. The numbers come from the stored result and are never
-recomputed, and are shown only as words and places on an axis (ticket 38); the words, standings and tones come from
+recomputed from the answers, and are shown only as words and places on an axis (ticket 38); the standings are read
+from the stored result's unrounded shares (ADR 0018); the words, standings and tones come from
 the same pathway version the result was scored against.
 """
 
@@ -13,13 +14,29 @@ import random
 
 from engine.document.comparison import agreement, comparison_settings, largest_gaps, seen_by_others
 from engine.document.observers import minimum_observers
-from engine.document.scoring import percents_by_construct
-from engine.document.standing import standing
+from engine.document.scoring import unrounded_shares
+from engine.document.standing import place, standing
 from engine.document.text import text_for
-from engine.document.tie_break import BALANCED, CIRCLE, GENERALIST, LEVEL, SAME_TOP, TOP_CHANGED, tie_break
+from engine.document.tie_break import (
+    BALANCED,
+    CIRCLE,
+    GENERALIST,
+    LEVEL,
+    SAME_TOP,
+    SEPARATED,
+    SKIPPED,
+    TOP_CHANGED,
+    joined,
+    named,
+    outcomes,
+    tie_break,
+    tied_in,
+)
 
-# ✨ The stylesheet defines --rank-1 to --rank-6; every rank below the sixth takes the sixth colour.
-RANK_COLOURS = 6
+# ✨ The stylesheet defines --standing-1 to --standing-3, for the document's bands from the highest down, and
+# --standing-below for the label below them all; any band below the third takes the third's colour, so the less-used
+# colour only ever goes with the label below (developer's call, 20 Oct).
+STANDING_COLOURS = 3
 
 # ✨ How the comparison draws a construct, in its axis's view box's units, where the line runs along y = 3: a dot of
 # DOT_RADIUS at each of the participant's and the observers' places, as variant F drew them, with the person icon,
@@ -49,10 +66,11 @@ LABEL_EDGE = 20
 GAP_CLASSES = {"others_higher": "gap-others-higher", "you_higher": "gap-you-higher"}
 
 
-def bar_ranks(percents):
-    """✨ Each score's rank among the distinct scores, strongest first, so tied scores share a colour."""
-    distinct = sorted(set(percents), reverse=True)
-    return [min(distinct.index(percent) + 1, RANK_COLOURS) for percent in percents]
+def standing_colour(document, percent, constructs):
+    """✨ The stylesheet class of a share's standing, by the standing's place among the document's bands, never its
+    label, so a colour never disagrees with the word beside it and another pathway's labels take the same colours."""
+    shown = place(document, percent, constructs)
+    return "standing-below" if shown is None else f"standing-{min(shown + 1, STANDING_COLOURS)}"
 
 
 def results_page(document, scores, sort, name, role="participant"):
@@ -61,55 +79,80 @@ def results_page(document, scores, sort, name, role="participant"):
     `{name}` in the authored title is replaced as plain text, never through `format()`, so an author's
     braces can reach nothing. The template escapes whatever comes out.
     """
+    return _results(document, scores, unrounded_shares(scores), sort, name, role)
+
+
+def _results(document, scores, shares, sort, name, role):
+    """✨ `results_page`, given the result's unrounded `shares`, so the comparison works them out only once."""
     presentation = document.get("presentation", {})
     construct_presentation = {entry["construct"]: entry for entry in presentation.get("constructs", [])}
     framework_presentation = {entry["framework"]: entry for entry in presentation.get("frameworks", [])}
     frameworks = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
     title = presentation.get("results_title", document["title"])
+    shown = []
+    for scored in scores["frameworks"]:
+        framework = _framework(
+            document,
+            frameworks[scored["framework"]],
+            framework_presentation.get(scored["framework"], {}),
+            scored["constructs"],
+            shares[scored["framework"]],
+            construct_presentation,
+            document["instrument"]["items"],
+            sort,
+            role,
+        )
+        framework["tie_break"] = _after_tie_break(presentation, scores, scored["framework"], framework["bars"], role)
+        shown.append(framework)
     return {
         "title": text_for(title, role).replace("{name}", name),
-        "frameworks": [
-            {
-                **_framework(
-                    document,
-                    frameworks[scored["framework"]],
-                    framework_presentation.get(scored["framework"], {}),
-                    scored["constructs"],
-                    construct_presentation,
-                    document["instrument"]["items"],
-                    sort,
-                    role,
-                ),
-                "tie_break": _after_tie_break(presentation, scores, scored["framework"], role),
-            }
-            for scored in scores["frameworks"]
-        ],
+        "frameworks": shown,
         "disclaimer": _text(presentation, "disclaimer", role),
         "generalist": _generalist(document, scores, presentation, role),
     }
 
 
 def _generalist(document, scores, presentation, role):
-    """✨ The document's words telling a participant tied on both frameworks that they are a generalist (ticket 30a), or
-    None for anyone else. Read from the participant's own stored result, the only one this page is given."""
-    if tie_break(document, scores)["outcome"] != GENERALIST:
+    """✨ The document's words telling a participant that they are a generalist (ADR 0018, amended), or None. Judged on
+    the result shown, the participant's own stored result and the only one this page is given: it must be flat on both
+    frameworks, whether as sorted or as the tie-break re-weighted it, and never beside a framework the tie-break
+    separated. A re-weighted result says so in the document's words for after the pairs; a pathway version loaded
+    before it had them says it in the sort's."""
+    broken = outcomes(scores)
+    if any(outcome in SEPARATED for outcome in broken.values()) or tie_break(document, scores)["outcome"] != GENERALIST:
         return None
     wording = presentation["generalist"]
-    return {"heading": text_for(wording["heading"], role), "text": text_for(wording["text"], role)}
+    text = wording.get("after_pairs", wording["text"]) if broken else wording["text"]
+    return {"heading": text_for(wording["heading"], role), "text": text_for(text, role)}
 
 
-def _after_tie_break(presentation, scores, framework, role):
-    """✨ What the results page says of a framework the tie-break re-weighted (ticket 30c), in the document's words, or
-    None for any other: separated, with a new leader or the same one, or genuinely balanced, the choices having gone in
-    a circle or left the best of them level, with no winner named."""
-    broken = scores.get("tie_break")
-    if broken is None or broken["framework"] != framework:
+def _after_tie_break(presentation, scores, framework, bars, role):
+    """✨ What the results page says of a framework the tie-break re-weighted (ticket 30c, ADR 0018), in the document's
+    words, or None for any other: separated, with a new leader or the same one; genuinely balanced, the choices having
+    gone in a circle or left the best of them level, with no winner named; or every pair skipped. A pathway version
+    loaded before skipping had words of its own says it as it said it then, as level.
+
+    The words may name the constructs (fix-26, PLACEHOLDERS), each as text names it (fix-27): the top and the next from
+    the framework's `bars`, in the order drawn; the previous leader and the tied constructs from the stored result, the
+    tied in the order drawn. A pathway version loaded before fix-26 names none, so its words are shown as written."""
+    outcome = outcomes(scores).get(framework)
+    if outcome is None:
         return None
     wording = presentation["tie_break"]
-    outcome = broken["outcome"]
-    said = wording["balanced"] if outcome in BALANCED else wording["separated"]
-    text = {TOP_CHANGED: "changed", SAME_TOP: "same", CIRCLE: "circle", LEVEL: "level"}[outcome]
-    return {"heading": text_for(said["heading"], role), "text": text_for(said[text], role)}
+    if outcome == SKIPPED and "skipped" in wording:
+        said, text = wording["skipped"], "text"
+    else:
+        said = wording["balanced"] if outcome in (*BALANCED, SKIPPED) else wording["separated"]
+        text = {TOP_CHANGED: "changed", SAME_TOP: "same", CIRCLE: "circle", LEVEL: "level", SKIPPED: "level"}[outcome]
+    labels = {bar["construct"]: bar["text_label"] for bar in bars}
+    tied = tied_in(scores)[framework]
+    names = {
+        "top": bars[0]["text_label"],
+        "next": bars[1]["text_label"] if len(bars) > 1 else "",
+        "previous": labels[tied[0]] if tied else "",
+        "names": joined([bar["text_label"] for bar in bars if bar["construct"] in tied]),
+    }
+    return {"heading": text_for(said["heading"], role), "text": named(text_for(said[text], role), names)}
 
 
 def pair_page(document, plan, place):
@@ -145,11 +188,12 @@ def comparison_page(document, scores, sort, observer_average):
     the gap between them shaded, a person icon above the one and a group icon below the other, each with its standing
     in words and whether others see it higher, lower or much the same, in two colours only. Each observer's own dot is
     on the same axis, for the page to reveal on request. The axis is the results page's, its even share in the middle.
-    Below the minimum the observer average holds a count and no numbers, and so does what comes out:
-    not even the self-result's, nor any gap, standing or strip. Each construct's mean is read from the observer
-    average, and its single observers' percents only for the agreement band and the distribution strip, in ascending
-    order. The self-result is ranked and the observer average keeps the declared order, so the two are paired by
-    construct id. The largest gaps and the reflection prompts follow the drawings.
+    Below the minimum the observer average holds a count and no numbers, and so does what comes out: not even the
+    self-result's, nor any gap, standing or strip. Each construct's mean is read from the observer average, and its
+    single observers' shares only for the agreement band and the distribution strip, in ascending order; the marks,
+    standings, gaps and agreement band all use unrounded shares (ADR 0018). The self-result is ranked and the observer
+    average keeps the declared order, so the two are paired by construct id. The largest gaps and the reflection
+    prompts follow the drawings.
     """
     shown = {"observers": observer_average["observers"], "minimum": minimum_observers(document), "frameworks": None}
     if observer_average["frameworks"] is None:
@@ -158,42 +202,46 @@ def comparison_page(document, scores, sort, observer_average):
         framework["framework"]: {construct["construct"]: construct for construct in framework["constructs"]}
         for framework in observer_average["frameworks"]
     }
-    page = results_page(document, scores, sort, name="")
+    shares = unrounded_shares(scores)
+    page = _results(document, scores, shares, sort, name="", role="participant")
     declared = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
     for framework, scored in zip(page["frameworks"], scores["frameworks"]):
-        constructs = len(declared[scored["framework"]]["constructs"])
+        construct_count = len(declared[scored["framework"]]["constructs"])
 
         def worded(percent):
-            return text_for(standing(document, percent, constructs), "participant")
+            return text_for(standing(document, percent, construct_count), "participant")
 
-        pairs = [
-            (bar, observed[scored["framework"]][construct["construct"]])
-            for bar, construct in zip(framework["bars"], scored["constructs"])
-        ]
+        pairs = [(bar, observed[scored["framework"]][bar["construct"]]) for bar in framework["bars"]]
         # ✨ The results page's axis, so each mark of the participant's sits where it does there.
-        top = _axis_top(constructs)
+        top = _axis_top(construct_count)
         for bar, others in pairs:
             # ✨ The participant's dot is where the results page puts it, in the comparison's own colour, not theirs.
             del bar["colour"]
-            you_at, others_at = bar.pop("at"), _at(others["percent"], top)
+            # ✨ The observers' mean and each observer are drawn and worded from unrounded shares, as the participant is.
+            you_at, others_at = bar.pop("at"), _at(others["share"], top)
             bar["you_at"], bar["others_at"] = you_at, others_at
-            bar["others_past_end"] = others["percent"] > top
+            bar["others_past_end"] = others["share"] > top
             bar["you_x"], bar["others_x"] = _mark(you_at), _mark(others_at)
             bar["gap_from"], bar["gap_width"] = min(you_at, others_at), round(abs(you_at - others_at), 2)
-            bar["others_standing"] = worded(others["percent"])
-            bar["seen_by_others"] = text_for(seen_by_others(document, bar["percent"], others["percent"]), "participant")
-            bar["agreement"] = text_for(agreement(document, others["per_observer"]), "participant")
+            bar["others_standing"] = worded(others["share"])
+            bar["seen_by_others"] = text_for(
+                seen_by_others(
+                    document, shares[scored["framework"]][bar["construct"]], others["share"], construct_count
+                ),
+                "participant",
+            )
+            bar["agreement"] = text_for(agreement(document, others["per_observer_shares"]), "participant")
             bar["agreement_at"] = _label_at(others_at)
             bar["strip"] = {
                 "dots": [
-                    {**dot, "past_end": percent > top}
-                    for dot, percent in zip(
-                        _stacked([_at(percent, top) for percent in others["per_observer"]], you_at),
-                        others["per_observer"],
+                    {**dot, "past_end": share > top}
+                    for dot, share in zip(
+                        _stacked([_at(share, top) for share in others["per_observer_shares"]], you_at),
+                        others["per_observer_shares"],
                     )
                 ],
-                # ✨ `per_observer` is already in ascending order, never the order observers answered (ADR 0005).
-                "standings": [worded(percent) for percent in others["per_observer"]],
+                # ✨ Already in ascending order, never the order observers answered (ADR 0005).
+                "standings": [worded(share) for share in others["per_observer_shares"]],
             }
     return {
         **shown,
@@ -205,7 +253,7 @@ def comparison_page(document, scores, sort, observer_average):
             "you_y": round(LINE_Y - DOT_RADIUS - MARK_CLEARANCE - MARK_SIZE, 2),
             "others_y": round(LINE_Y + DOT_RADIUS + MARK_CLEARANCE, 2),
         },
-        **_reflection(document, scores, observed),
+        **_reflection(document, shares, observed),
     }
 
 
@@ -245,8 +293,9 @@ def _mark(centre):
     return round(centre - MARK_SIZE / 2, 2)
 
 
-def _reflection(document, scores, observed):
-    """✨ Below the drawings: the largest gaps, worded, and the questions to reflect on, all from the document.
+def _reflection(document, yours, observed):
+    """✨ Below the drawings: the largest gaps between the participant's unrounded shares, `yours`, and the observers',
+    worded, and the questions to reflect on, all from the document.
 
     Only the participant sees the comparison, so it is worded for them. A document with no gaps wording lists no gaps,
     since there would be nothing to say about them; the schema asks for all of it or none.
@@ -266,23 +315,23 @@ def _reflection(document, scores, observed):
     if "gaps" not in wording:
         return shown
     gap_wording = wording["gaps"]
-    yours = percents_by_construct(scores)
-    # ✨ Paired in the order the constructs were declared, so tied gaps keep it.
+    # ✨ Paired in the order the constructs were declared, so tied gaps keep it, and unrounded (ADR 0018), so each gap
+    # is rounded once, where it is shown.
     pairs = [
-        {"framework": framework, "construct": construct, "you": yours[framework][construct], "others": others["percent"]}
+        {"framework": framework, "construct": construct, "you": yours[framework][construct], "others": others["share"]}
         for framework, constructs in observed.items()
         for construct, others in constructs.items()
     ]
     frameworks = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
     labels = {
-        (framework["id"], construct["id"]): text_for(construct["label"], role)
+        (framework["id"], construct["id"]): _text_label(construct, role)
         for framework in frameworks.values()
         for construct in framework["constructs"]
     }
     for gap in largest_gaps(document, pairs):
         # ✨ No gap at all has no direction, so no badge, and reads as a modest gap (the prototype said "You rate
-        # higher (+0)").
-        direction = gap_wording[gap["direction"]] if gap["direction"] else None
+        # higher (+0)"); nor does one too small to show as a whole number, which would read as that too.
+        direction = gap_wording[gap["direction"]] if gap["direction"] and gap["gap"] else None
         shown["gaps"].append(
             {
                 "label": labels[(gap["framework"], gap["construct"])],
@@ -315,25 +364,35 @@ def _at(percent, top):
     return round(min(percent / top, 1) * 100, 2)
 
 
-def _framework(document, framework, presentation, ranked_constructs, construct_presentation, items, sort, role):
+def _framework(document, framework, presentation, ranked_constructs, shares, construct_presentation, items, sort, role):
     labels = {construct["id"]: text_for(construct["label"], role) for construct in framework["constructs"]}
-    by_rank = presentation.get("bars") == "rank"
-    ranks = bar_ranks([construct["percent"] for construct in ranked_constructs])
+    in_text = {construct["id"]: _text_label(construct, role) for construct in framework["constructs"]}
+    # ✨ Listed by unrounded share, highest first, as they are drawn, so a shorter bar is never above a longer one;
+    # exact ties keep the order declared. Ordered here, never stored, so a result stored before is ordered so too.
+    declared = [construct["id"] for construct in framework["constructs"]]
+    ranked_constructs = sorted(
+        ranked_constructs, key=lambda c: (-shares[c["construct"]], declared.index(c["construct"]))
+    )
     constructs = len(framework["constructs"])
     top = _axis_top(constructs)
     bars = []
-    for construct, rank in zip(ranked_constructs, ranks):
+    for construct in ranked_constructs:
         shown = construct_presentation.get(construct["construct"], {})
         bars.append(
             {
+                "construct": construct["construct"],
                 "label": labels[construct["construct"]],
+                "text_label": in_text[construct["construct"]],
                 "percent": construct["percent"],
-                "standing": text_for(standing(document, construct["percent"], constructs), role),
-                "at": _at(construct["percent"], top),
-                "past_end": construct["percent"] > top,
+                # ✨ From the unrounded share, so the words never round a construct into a band it is short of.
+                "standing": text_for(standing(document, shares[construct["construct"]], constructs), role),
+                # ✨ Drawn at the unrounded share too, so two constructs a fraction apart are never drawn as one.
+                "at": _at(shares[construct["construct"]], top),
+                "past_end": shares[construct["construct"]] > top,
                 "persona": _text(shown, "persona", role),
                 "description": _text(shown, "description", role),
-                "colour": f"rank-{rank}" if by_rank else _tone(shown),
+                # ✨ The standing's colour, from the same unrounded share, on every framework (developer's call, 20 Oct).
+                "colour": standing_colour(document, shares[construct["construct"]], constructs),
             }
         )
     return {
@@ -342,10 +401,11 @@ def _framework(document, framework, presentation, ranked_constructs, construct_p
         # ✨ The dashed tick: an even share of the framework, 100 divided among its constructs.
         "even_at": _at(100 / constructs, top),
         "bars": bars,
-        # ✨ The item scores, grouped by construct in the order they were declared, as the prototype listed them.
+        # ✨ The item scores, grouped by construct in the order they were declared, as the prototype listed them, each
+        # under a heading that names its construct as text does (fix-27).
         "groups": [
             {
-                "label": labels[construct["id"]],
+                "label": in_text[construct["id"]],
                 "colour": _tone(construct_presentation.get(construct["id"], {})),
                 "items": [
                     {"text": text_for(item["text"], role), "value": sort[item["id"]]["value"]}
@@ -356,6 +416,12 @@ def _framework(document, framework, presentation, ranked_constructs, construct_p
             for construct in framework["constructs"]
         ],
     }
+
+
+def _text_label(construct, role):
+    """✨ A construct's name wherever text names it: its text label, or its label where the pathway version gives none
+    (fix-27). Its label alone is for beside its drawing, so Whatever You Do's "deacon" is "Deacon" in a sentence."""
+    return text_for(construct.get("text_label", construct["label"]), role)
 
 
 def _text(entry, field, role):

@@ -6,9 +6,21 @@
 Runs only on a document that has already passed the schema, so it relies on the document's shape.
 """
 
+import re
+
 from engine.document.blocks import BLOCK_TYPES, block_types_by_id
 from engine.document.gates import CLAUSE_ANSWER_KINDS, CLAUSE_BLOCK_TYPES, clauses_of
 from engine.document.problem import Problem
+from engine.document.tie_break import PLACEHOLDERS
+
+# ✨ The tie-break's results sentences, as (group, key) in presentation.tie_break: the ones that may hold placeholders.
+TIE_BREAK_SENTENCES = [
+    ("separated", "changed"),
+    ("separated", "same"),
+    ("balanced", "circle"),
+    ("balanced", "level"),
+    ("skipped", "text"),
+]
 
 
 def lint(document):
@@ -31,6 +43,7 @@ def lint(document):
         *_loads_per_framework(document, construct_ids),
         *_unworded_generalist(document),
         *_unworded_pairs(document),
+        *_unknown_tie_break_placeholders(document),
         *_constructs_without_statements(document),
         *_sort_needs(document),
         *_ungated_sorts(document),
@@ -261,12 +274,12 @@ def _missing_constructs(document, construct_ids):
 
 
 def _unworded_generalist(document):
-    """✨ A tie-break tells a participant tied on both frameworks that they are a generalist (ticket 30a), so a pathway
-    with one needs the words to tell them in."""
+    """✨ A tie-break tells a participant flat on both frameworks that they are a generalist (ticket 30a, ADR 0018), so a
+    pathway with one needs the words to tell them in."""
     if "tie_break" in document.get("measurement", {}) and "generalist" not in document.get("presentation", {}):
         yield Problem(
             "/measurement/tie_break",
-            "A pathway with a tie-break needs presentation.generalist, the words that tell a participant tied on both "
+            "A pathway with a tie-break needs presentation.generalist, the words that tell a participant flat on both "
             "frameworks they are a generalist.",
         )
 
@@ -278,6 +291,25 @@ def _unworded_pairs(document):
             "/measurement/tie_break",
             "A pathway with a tie-break needs presentation.tie_break, the question and skip its pairs are asked with.",
         )
+
+
+def _unknown_tie_break_placeholders(document):
+    """✨ What the results page says after the tie-break may name constructs by placeholder (fix-26), and only by those
+    it fills in; any other would reach the participant as written."""
+    wording = document.get("presentation", {}).get("tie_break", {})
+    for group, key in TIE_BREAK_SENTENCES:
+        text = wording.get(group, {}).get(key)
+        if text is None:
+            continue
+        for role, said in (text.items() if isinstance(text, dict) else [(None, text)]):
+            unknown = sorted(set(re.findall(r"\{(\w*)\}", said)) - set(PLACEHOLDERS))
+            if unknown:
+                path = f"/presentation/tie_break/{group}/{key}" + (f"/{role}" if role else "")
+                yield Problem(
+                    path,
+                    f"Unknown placeholder {', '.join('{' + name + '}' for name in unknown)}: the tie-break's results "
+                    f"sentences may use only {', '.join('{' + name + '}' for name in PLACEHOLDERS)}.",
+                )
 
 
 def _constructs_without_statements(document):

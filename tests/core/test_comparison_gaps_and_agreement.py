@@ -7,10 +7,66 @@ Both rules read their numbers from the pathway document: a gap of `significant_g
 and agreement is banded by the range of the observers' percents.
 """
 
+from fractions import Fraction as F
+
 import pytest
 
+from engine.document.aggregation import aggregate
 from engine.document.comparison import agreement, largest_gaps
-from tests.documents import sort_pathway
+from engine.document.scoring import score
+from engine.results import comparison_page
+from tests.documents import complete_sort, sort_pathway
+
+# ✨ Apostle's 100 of 199: 50.25%, which rounds to 50.
+YOURS = complete_sort(a5={"bucket": "strength", "value": 100}, p1={"bucket": "strength", "value": 99})
+
+
+def apostle_beside(observers):
+    """✨ The comparison's Apostle beside three observers who each sent `observers`: its gap card and its words for how
+    others see it."""
+    document = sort_pathway()
+    page = comparison_page(document, score(document, YOURS), YOURS, aggregate(document, [observers] * 3))
+    [card] = [gap for gap in page["gaps"] if gap["label"] == "Apostle"]
+    [bar] = [bar for bar in page["frameworks"][0]["bars"] if bar["label"] == "Apostle"]
+    return card, bar["seen_by_others"]
+
+
+@pytest.mark.parametrize(
+    "observers, gap, badge, description, words",
+    [
+        # ✨ 59 of 108 is 54.63%: 55 against 50 when rounded, a significant 5; 4.38 unrounded, a modest 4. Still
+        # higher in words: 54.63 is Strong beside the participant's Present 50.25 (fix-11).
+        ((59, 49), 4, "Others rate higher", "A modest gap.", "Others place this higher"),
+        # ✨ 99 of 199 is 49.75%: 50 against 50 when rounded, no gap at all; 0.5 unrounded, 1, the participant higher.
+        ((99, 100), 1, "You rate higher", "A modest gap.", "Much the same"),
+    ],
+    ids=["significant when rounded, modest unrounded", "none when rounded, the participant's unrounded"],
+)
+def test_a_gap_is_sized_and_directed_by_the_unrounded_shares_not_the_rounded_percents(
+    observers, gap, badge, description, words
+):
+    sent = complete_sort(
+        a5={"bucket": "strength", "value": observers[0]}, p1={"bucket": "strength", "value": observers[1]}
+    )
+
+    card, seen = apostle_beside(sent)
+
+    assert (card["gap"], card["badge"], card["description"]) == (gap, badge, description)
+    assert seen == words
+
+
+def test_a_gap_card_names_its_construct_by_its_text_label_and_its_drawing_by_its_label():
+    """✨ As Whatever You Do labels deacon in lower case beside its drawing and capitalised in text (fix-27)."""
+    document = sort_pathway()
+    [apostle] = [c for c in document["measurement"]["frameworks"][0]["constructs"] if c["id"] == "apostle"]
+    apostle.update(label="apostle", text_label="Apostle")
+    sent = complete_sort(a5={"bucket": "strength", "value": 59}, p1={"bucket": "strength", "value": 49})
+
+    page = comparison_page(document, score(document, YOURS), YOURS, aggregate(document, [sent] * 3))
+
+    named = [gap["label"] for gap in page["gaps"]]
+    assert "Apostle" in named and "apostle" not in named
+    assert sorted(bar["label"] for bar in page["frameworks"][0]["bars"]) == ["Prophet", "apostle"]
 
 
 def pair(construct, you, others, framework="apest"):
@@ -36,6 +92,30 @@ def test_the_five_largest_gaps_across_both_frameworks_come_largest_first_ties_in
         ("ponder", 12, "you_higher"),
         ("apostle", 10, "others_higher"),
         ("deliver", 10, "others_higher"),
+    ]
+
+
+def test_the_largest_gaps_are_chosen_and_ordered_by_their_unrounded_size():
+    """✨ Rounded first, the gaps would be apostle 10, prophet 9, evangelist 12, shepherd 11, ponder 11 and deliver 10,
+    listing deliver fifth and leaving prophet out. Unrounded, prophet's 9.99 passes apostle's 9.95, and deliver's 10.8
+    passes ponder's 10.2."""
+    pairs = [
+        pair("apostle", F("0.45"), F("10.4")),
+        pair("prophet", F("0.5"), F("10.49")),
+        pair("evangelist", 0, 12),
+        pair("shepherd", 0, 11),
+        pair("ponder", F("0.4"), F("10.6"), framework="pep"),
+        pair("deliver", F("0.6"), F("11.4"), framework="pep"),
+    ]
+
+    gaps = largest_gaps(sort_pathway(), pairs)
+
+    assert [(gap["construct"], gap["gap"]) for gap in gaps] == [
+        ("evangelist", 12),
+        ("shepherd", 11),
+        ("deliver", 11),
+        ("ponder", 10),
+        ("prophet", 10),
     ]
 
 
@@ -67,6 +147,25 @@ def test_a_gap_is_significant_from_the_documents_threshold_or_five(threshold, ga
 )
 def test_agreement_is_banded_by_the_range_of_the_observers_percents(per_observer, band):
     assert agreement(sort_pathway(), per_observer) == band
+
+
+@pytest.mark.parametrize(
+    "highest, band",
+    [((56, 44), "Strong agreement"), ((57, 44), "Some variation")],
+    ids=["range exactly 6", "range 6.44, 6 when rounded"],
+)
+def test_agreement_is_banded_by_the_range_of_the_observers_unrounded_shares(highest, band):
+    """✨ Two observers put Apostle at 50; the third at 56 of 100, or 57 of 101, which is 56.44%: 56 when rounded."""
+    document = sort_pathway()
+    sent = [
+        complete_sort(a5={"bucket": "strength", "value": a5}, p1={"bucket": "strength", "value": p1})
+        for a5, p1 in [(50, 50), (50, 50), highest]
+    ]
+
+    page = comparison_page(document, score(document, YOURS), YOURS, aggregate(document, sent))
+
+    [apostle] = [bar for bar in page["frameworks"][0]["bars"] if bar["label"] == "Apostle"]
+    assert apostle["agreement"] == band
 
 
 @pytest.mark.parametrize(

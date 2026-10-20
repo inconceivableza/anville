@@ -9,6 +9,7 @@ or a request.
 """
 
 import math
+from fractions import Fraction
 
 
 def score(document, answer):
@@ -26,12 +27,40 @@ def shares(document, answer):
     return METHODS[method]["shares"](document, answer)
 
 
-def percents_by_construct(result):
-    """✨ A result's rounded percents as `{framework: {construct: percent}}`, so they are found by id, not position."""
+def unrounded_shares(result):
+    """✨ A stored result's shares before rounding, as `{framework: {construct: share}}` (ADR 0018).
+
+    A result whose method keeps what its shares were made from has them worked out again from it, exactly; any other
+    result, such as one the tie-break re-weighted, gives the exact share it keeps beside each percent, or the percent
+    where it keeps none, as one re-weighted before ticket 59b.
+    """
+    method = METHODS.get(result.get("method"), {}).get("stored_shares", _kept_shares)
+    return method(result)
+
+
+def _kept_shares(result):
+    """✨ The exact share a result keeps beside each percent, as a fraction, or the percent where it keeps none, for a
+    result whose method cannot work its shares out again."""
     return {
-        framework["framework"]: {construct["construct"]: construct["percent"] for construct in framework["constructs"]}
+        framework["framework"]: {
+            construct["construct"]: Fraction(construct["share"]) if "share" in construct else construct["percent"]
+            for construct in framework["constructs"]
+        }
         for framework in result["frameworks"]
     }
+
+
+def _compositional_stored_shares(result):
+    """✨ `_compositional_share`'s shares worked out again from the raw values its result keeps, as exact fractions,
+    so a share exactly on a boundary is never nudged off it by floating point."""
+    shares = {}
+    for framework in result["frameworks"]:
+        total = sum(Fraction(construct["raw"]) for construct in framework["constructs"])
+        shares[framework["framework"]] = {
+            construct["construct"]: Fraction(construct["raw"]) * 100 / total if total else Fraction(0)
+            for construct in framework["constructs"]
+        }
+    return shares
 
 
 def _compositional_share(document, answer):
@@ -78,10 +107,18 @@ def _share_of_total(raw):
 def round_half_up(number):
     """✨ JavaScript's Math.round, which the prototype used, frozen with the methods that use it.
 
-    Python's round() takes 0.5 to 0, not 1.
+    Python's round() takes 0.5 to 0, not 1. A fraction is rounded exactly, with a half of its own: a float's half would
+    turn it into a float, which could round one a hair under a half up. A float or an int rounds as it always has.
     """
-    return math.floor(number + 0.5)
+    return math.floor(number + (Fraction(1, 2) if isinstance(number, Fraction) else 0.5))
 
 
-# ✨ A method scores an answer and gives the same percents unrounded; a new method must supply both.
-METHODS = {"compositional_share": {"score": _compositional_share, "shares": _compositional_shares}}
+# ✨ A method scores an answer, gives the same percents unrounded, and works them out again from a result it made; a
+# new method must supply all three.
+METHODS = {
+    "compositional_share": {
+        "score": _compositional_share,
+        "shares": _compositional_shares,
+        "stored_shares": _compositional_stored_shares,
+    }
+}

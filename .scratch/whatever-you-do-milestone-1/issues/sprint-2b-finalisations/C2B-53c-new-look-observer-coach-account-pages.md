@@ -4,18 +4,18 @@
 
 **Blocked by:** C1A-53a (One set of styles); C1B-46 (The demo notice on every page); B2B-55 (Answer collection freezes once results are viewed)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 2b (continued from 19 Oct)
 
 **Spec:** Feedback from others; Operating and demonstrating
 
-- [ ] The observer's pages: the landing page, the thank-you, withdrawal, and the page a dead or frozen link shows
-- [ ] The coach's page, with the results and comparison it shows
-- [ ] Sign-up, sign-in, consent and the other account pages
-- [ ] Google sign-in's own pages (confirming, cancelled and the error page) say what allauth's stock English says, in our wording as well as our look
-- [ ] The homepage, keeping the words the hackathon took from the prototype, v3's where its earlier copy differs, and with nothing on it that is not yet true (a newsletter, donations, a contact address that does not exist)
-- [ ] Every one of these pages is readable at phone width, and none is left in the old look
+- [x] The observer's pages: the landing page, the thank-you, withdrawal, and the page a dead or frozen link shows
+- [x] The coach's page, with the results and comparison it shows
+- [x] Sign-up, sign-in, consent and the other account pages
+- [x] Google sign-in's own pages (confirming, cancelled and the error page) say what allauth's stock English says, in our wording as well as our look
+- [x] The homepage, keeping the words the hackathon took from the prototype, v3's where its earlier copy differs, and with nothing on it that is not yet true (a newsletter, donations, a contact address that does not exist)
+- [x] Every one of these pages is readable at phone width, and none is left in the old look
 
 **Context**
 

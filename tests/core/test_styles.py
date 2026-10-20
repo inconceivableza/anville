@@ -99,6 +99,9 @@ def test_body_text_and_buttons_meet_wcag_aa_contrast():
     pairs = {selector: _rule_colours(css, selector) for selector in selectors}
     pairs["muted text on the page"] = ("--muted", "--cream")
     pairs["text on the dark panels"] = ("--on-dark", "--brown")
+    # ✨ Each standing's word on the results' paper cards, in its darker text shade (fix-17).
+    for standing in ("1", "2", "3", "below"):
+        pairs[f"standing {standing}'s word on the results"] = (f"--standing-{standing}-text", "--paper")
 
     ratios = {name: round(_contrast(colours[text], colours[background]), 2) for name, (text, background) in pairs.items()}
 
@@ -106,9 +109,10 @@ def test_body_text_and_buttons_meet_wcag_aa_contrast():
 
 
 # ✨ Colours made to be read on the dark panels, and the results' and comparison's colours, which the prototype fixes
-# and ticket 48 keeps unchanged; every other text colour is read on the page's cream.
+# and ticket 48 keeps unchanged; every other text colour is read on the page's cream. ✨ Of the standings' colours, only
+# the bright ones the dots and lines take are exempt: the -text shades their words take are checked (fix-17).
 ON_DARK = re.compile(r"--(on-dark[\w-]*|cream[\w-]*|snow|paper|green)$")
-FIXED_BY_THE_RESULTS = re.compile(r"--(tone-[\w-]+|rank-\d|comparison-[\w-]+|blue-soft)$")
+FIXED_BY_THE_RESULTS = re.compile(r"--(tone-[\w-]+|standing-(?:\d+|below)|comparison-[\w-]+|blue-soft)$")
 
 
 def test_every_text_colour_set_without_its_own_background_is_readable_on_the_page():

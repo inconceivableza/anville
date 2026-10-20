@@ -57,6 +57,13 @@ function notSaved(event) {
 document.addEventListener("htmx:responseError", notSaved);
 document.addEventListener("htmx:sendError", notSaved);
 
+// ✨ An autosaved answer is saved as it changes, so its form is never submitted as a page while JavaScript runs:
+// Enter in it would otherwise send it through the hidden fallback button and reload the page (fix-7). Without
+// JavaScript, that button and Enter still save it.
+document.addEventListener("submit", (event) => {
+  if (event.target.querySelector(".save-fallback")) event.preventDefault();
+});
+
 // ✨ Near a text box's length limit, say how much room is left; the browser stops typing at the limit itself.
 const SHOW_LENGTH_LEFT_BELOW = 0.1;
 
@@ -132,6 +139,93 @@ document.addEventListener("change", (event) => {
   shown.textContent = event.target.value;
   shown.classList.remove("unset");
 });
+
+// ✨ Demo only (fix-20): a demo-only element marked data-demo-reveal (the results page's "Retake the assessment (demo
+// only)") comes `hidden`, and only a demo system's markup carries one. Option/Alt held on its own for a second shows
+// it, or on a phone the element marked data-demo-reveal-hold (the page's title) pressed and held for a second; another
+// key, a click, letting go early or a scroll cancels. Once shown it stays until the page is left, so the participant
+// can let go and click it. On a page without one no listener is added.
+(() => {
+  const hidden = [...document.querySelectorAll("[data-demo-reveal]")];
+  if (!hidden.length) return;
+  const HOLD_MS = 1000;
+  const MOVE_PX = 10;
+  let timer = null;
+  let start = null;
+  let revealed = false;
+
+  const cancel = () => {
+    clearTimeout(timer);
+    timer = null;
+    start = null;
+  };
+  const show = (shown) => {
+    revealed = shown;
+    hidden.forEach((element) => (element.hidden = !shown));
+  };
+  const hold = () => {
+    cancel();
+    timer = setTimeout(() => {
+      show(true);
+      cancel();
+    }, HOLD_MS);
+  };
+  const typing = (target) => target.closest?.("input, textarea, select, [contenteditable]");
+
+  document.addEventListener("keydown", (event) => {
+    if (revealed) return;
+    if (event.key === "Alt" && !typing(event.target)) {
+      if (!event.repeat) hold();
+    } else {
+      cancel();
+    }
+  });
+  document.addEventListener("keyup", cancel);
+  document.addEventListener("pointerdown", cancel);
+  window.addEventListener("blur", cancel); // ✨ Alt-Tab away never sends the keyup
+
+  const title = document.querySelector("[data-demo-reveal-hold]");
+  title?.addEventListener("pointerdown", (event) => {
+    if (event.pointerType !== "touch" || revealed) return;
+    event.stopPropagation(); // ✨ not the document's, which would cancel the hold this starts
+    hold();
+    start = { x: event.clientX, y: event.clientY };
+  });
+  title?.addEventListener("pointermove", (event) => {
+    if (start && Math.hypot(event.clientX - start.x, event.clientY - start.y) > MOVE_PX) cancel();
+  });
+  title?.addEventListener("pointerup", cancel);
+  title?.addEventListener("pointercancel", cancel); // ✨ the browser has taken the touch to scroll
+  title?.addEventListener("contextmenu", (event) => {
+    if (start) event.preventDefault(); // ✨ a long press would open the menu part way through the hold
+  });
+
+  // ✨ Back to the page from the browser's cache counts as arriving again: hidden until revealed.
+  window.addEventListener("pageshow", (event) => {
+    if (event.persisted) show(false);
+  });
+})();
+
+// ✨ Demo only (fix-25): the demo-profile choice's "How to answer the pairs" offers only the ways of answering that
+// hold with the starting profile chosen, the rest disabled, so a profile without pairs offers only "No pairs"; with
+// "Sort the cards myself" nothing is offered. A choice the change disables gives way to the first one left. Without
+// JavaScript every one is offered, and the server refuses one that does not fit, saying why.
+(() => {
+  const profile = document.querySelector("[data-demo-profile]");
+  const answers = document.querySelector("[data-demo-answers]");
+  if (!profile || !answers) return;
+  const fit = () => {
+    const options = [...answers.options];
+    options.forEach((option) => (option.disabled = !option.dataset.fits.split(" ").includes(profile.value)));
+    answers.disabled = options.every((option) => option.disabled);
+    if (answers.selectedOptions[0]?.disabled) {
+      const first = options.find((option) => !option.disabled);
+      if (first) answers.value = first.value;
+    }
+  };
+  profile.addEventListener("change", fit);
+  fit();
+})();
 
 // ✨ Whether the visitor has asked their device for less motion; every movement below is skipped if so.
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -347,7 +441,7 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
     stage.append(ring);
     const controls = document.createElement("div");
     controls.className = "ring-controls";
-    controls.innerHTML = '<button type="button" class="ring-control" data-ring-step="-1" aria-label="Previous calling">←</button><button type="button" class="ring-control" data-ring-toggle aria-label="Pause carousel">Pause</button><button type="button" class="ring-control" data-ring-step="1" aria-label="Next calling">→</button>';
+    controls.innerHTML = '<button type="button" class="ring-control" data-ring-step="-1" aria-label="Previous calling">←</button><button type="button" class="ring-control ring-toggle" data-ring-toggle></button><button type="button" class="ring-control" data-ring-step="1" aria-label="Next calling">→</button>';
     stage.append(controls);
   }
 
@@ -356,17 +450,27 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   let radius = 0;
   let rotation = 0;
   let drag;
-  let pausedByUser = false;
-  let interactionPaused = false;
+  // ✨ Only the pause button between the arrows stops the ring (fix-17): hovering or focusing it no longer does, so it
+  // never stops or starts unasked. The button's name says what pressing it will do. Reduced motion keeps the plain
+  // cards, returning above before any button is made.
+  let paused = false;
+  const toggle = stage.querySelector("[data-ring-toggle]");
+  const pauseIcon = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><rect x="3" y="2" width="3.5" height="12" rx="1" fill="currentColor"/><rect x="9.5" y="2" width="3.5" height="12" rx="1" fill="currentColor"/></svg>';
+  const playIcon = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M4 2.2v11.6a.8.8 0 0 0 1.2.7l9-5.8a.8.8 0 0 0 0-1.4l-9-5.8A.8.8 0 0 0 4 2.2z" fill="currentColor"/></svg>';
+  const showToggle = () => {
+    if (!toggle) return;
+    toggle.innerHTML = paused ? playIcon : pauseIcon;
+    toggle.setAttribute("aria-label", paused ? "Play carousel" : "Pause carousel");
+  };
   let lastFrame;
   let transitionUntil = 0;
   let transitionTimer;
-  const toggle = stage.querySelector("[data-ring-toggle]");
   const layout = () => {
     const width = stage.clientWidth;
     const cardWidth = Math.min(280, Math.max(220, width * 0.55));
     radius = (cardWidth + Math.max(16, width * 0.025)) * cards.length / (2 * Math.PI);
-    stage.style.height = `${Math.max(360, Math.min(500, cardWidth * 1.35))}px`;
+    const controlsSpace = parseFloat(getComputedStyle(stage).getPropertyValue("--ring-controls-space")) || 0;
+    stage.style.height = `${Math.max(360, Math.min(500, cardWidth * 1.35)) + controlsSpace}px`;
     cards.forEach((card, index) => {
       card.style.width = `${cardWidth}px`;
       card.style.transform = `translate(-50%, -50%) rotateY(${index * angle}deg) translateZ(${radius}px)`;
@@ -378,7 +482,7 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   const tick = (now) => {
     const elapsed = lastFrame === undefined ? 0 : Math.min(now - lastFrame, 64);
     lastFrame = now;
-    if (!pausedByUser && !interactionPaused && !drag && now >= transitionUntil) {
+    if (!paused && !drag && now >= transitionUntil) {
       rotation -= angle * elapsed / cardInterval;
       draw();
     }
@@ -397,12 +501,11 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   const stopDrag = () => { drag = undefined; };
   stage.addEventListener("pointerup", stopDrag);
   stage.addEventListener("pointercancel", stopDrag);
-  stage.addEventListener("pointerenter", () => { interactionPaused = true; });
-  stage.addEventListener("pointerleave", () => { interactionPaused = false; });
-  stage.addEventListener("focusin", () => { interactionPaused = true; });
-  stage.addEventListener("focusout", (event) => {
-    if (!stage.contains(event.relatedTarget)) interactionPaused = false;
+  toggle?.addEventListener("click", () => {
+    paused = !paused;
+    showToggle();
   });
+  showToggle();
   stage.querySelectorAll("[data-ring-step]").forEach((button) => {
     button.addEventListener("click", () => {
       rotation += Number(button.dataset.ringStep) * angle;
@@ -412,11 +515,6 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
       clearTimeout(transitionTimer);
       transitionTimer = window.setTimeout(() => { ring.style.transition = "none"; }, 750);
     });
-  });
-  toggle?.addEventListener("click", () => {
-    pausedByUser = !pausedByUser;
-    toggle.textContent = pausedByUser ? "Resume" : "Pause";
-    toggle.setAttribute("aria-label", pausedByUser ? "Resume carousel" : "Pause carousel");
   });
   window.addEventListener("resize", layout);
   layout();

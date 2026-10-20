@@ -3,7 +3,9 @@
 {% comment %}
   ✨ A way to another section, shown as the hub shows it: its title, then its status. A locked section is named
   but not linked, as on the hub. A section outside the participant's track has no state, so nothing is shown.
-  With an authored button label the button is the way there, as in the prototype, and the title is plain.
+  With an authored button label the button is the way there, as in the prototype, and the title is plain. Once the
+  section is complete, a link with finished wording shows it, and its button leads to the results of the section's
+  sort, if it has one, rather than back to its start (ticket 61).
 {% endcomment %}
 {% load section_pages %}
 {% if block.link %}
@@ -17,7 +19,7 @@
     </p>
     {{ block.text.body|linebreaks }}
     {% if block.text.button_label and not block.link.is_locked %}
-      <p><a class="pill" href="{% page_url block.link.id block.link.page %}">{{ block.text.button_label }}</a></p>
+      <p><a class="pill" href="{% if block.results %}{{ block.results }}{% else %}{% page_url block.link.id block.link.page %}{% endif %}">{{ block.text.button_label }}</a></p>
     {% endif %}
     <span class="status-chip status-{{ block.link.status }}">{{ block.link.label }}</span>
   </div>

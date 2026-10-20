@@ -451,13 +451,13 @@ def test_the_sort_is_shut_until_section_1s_passages_are_read(participant):
 
 @pytest.mark.django_db
 def test_a_finished_sort_leads_to_its_results_and_offers_no_retake(participant):
+    """✨ Its page holds only the sort, so once the sort is in, opening it opens the results instead (fix-13)."""
     client = through_to_section_1s_activity(participant)
     submit_the_sort(client)
 
-    page = client.get(STRENGTHS).content.decode()
+    shown = client.get(STRENGTHS)
 
-    assert 'href="/results/strengths-sort/"' in page
-    assert "data-sort=" not in page
+    assert (shown.status_code, shown.url) == (302, "/results/strengths-sort/")
 
 
 @pytest.mark.django_db
@@ -495,6 +495,25 @@ def test_after_the_reading_section_1_links_to_the_strengths_assessment_by_the_pr
     assert "status-chip status-not-started" in page
 
 
+# ✨ The prototype's step once the assessment is done, its label and sentence kept as they are (ticket 61).
+REVIEW_ANY_TIME = "You've completed the assessment. You can review your results any time."
+RESULTS_BUTTON = r'href="/results/strengths-sort/"[^>]*>\s*View my results →\s*</a>'
+
+
+@pytest.mark.django_db
+def test_once_the_assessment_is_done_section_1s_button_leads_to_the_results_and_never_back_to_its_start(participant):
+    client = through_to_section_1s_activity(participant)
+    submit_the_sort(client)
+
+    page = main_of(client.get(SECTION_1).content.decode())
+
+    assert re.search(RESULTS_BUTTON, page)
+    assert escape(REVIEW_ANY_TIME) in page
+    assert "Sort your strengths into buckets" not in page
+    assert STRENGTHS_LINK not in page
+    assert "Open Strengths Assessment →" not in page
+
+
 @pytest.mark.django_db
 def test_section_1s_reflection_waits_for_the_sort_as_in_the_prototype(participant):
     client = through_to_section_1s_activity(participant)
@@ -503,7 +522,7 @@ def test_section_1s_reflection_waits_for_the_sort_as_in_the_prototype(participan
     submit_the_sort(client)
 
     page = client.get(SECTION_1).content.decode()
-    assert page.index(STRENGTHS_LINK) < page.index(GIFTS_REFLECTION)
+    assert page.index('id="block-strengths-link"') < page.index(GIFTS_REFLECTION)
 
 
 @pytest.mark.django_db

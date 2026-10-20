@@ -154,9 +154,12 @@
             "section": "strengths",
             "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 3 trusted people to assess you too.",
             "button_label": "Open Strengths Assessment →",
+            "finished": {
+              "body": "You've completed the assessment. You can review your results any time.",
+              "button_label": "View my results →"
+            },
             "holds_what_follows": true
           },
-          { "id": "strengths-results", "type": "sort_results", "sort": "strengths-sort" },
           {
             "id": "gifts-summary",
             "type": "long_text",
@@ -532,7 +535,7 @@
           { "id": "evangelist", "label": "Evangelist" },
           { "id": "shepherd", "label": "Shepherd" },
           { "id": "teacher", "label": "Teacher" },
-          { "id": "deacon", "label": "deacon" }
+          { "id": "deacon", "label": "deacon", "text_label": "Deacon" }
         ]
       },
       {
@@ -550,7 +553,7 @@
     ],
     "scoring": { "method": "compositional_share" },
     "tie_break": {
-      "threshold": 4,
+      "percent": 5,
       "cluster": 4,
       "budget": 10,
       "statements": {
@@ -596,14 +599,12 @@
       {
         "framework": "apest",
         "heading": "✨ Your APEST(d) Profile",
-        "subtitle": "Fivefold ministry gifting plus diaconal service",
-        "bars": "tone"
+        "subtitle": "Fivefold ministry gifting plus diaconal service"
       },
       {
         "framework": "pep",
         "heading": "⚡ Your Professional Energy Profile (PEP)",
-        "subtitle": "Which types of work energise you most, and which drain you?",
-        "bars": "rank"
+        "subtitle": "Which types of work energise you most, and which drain you?"
       }
     ],
     "constructs": [
@@ -623,7 +624,8 @@
     "disclaimer": "Important: This is a free, rapid, directional tool, designed to give you a useful starting point for reflection and conversation. It is not backed by extensive psychometric datasets or rigorous validation (yet). Please treat these results as indicative, not definitive.",
     "generalist": {
       "heading": "You’re a generalist",
-      "text": "Your top results are too close to call in both profiles, so neither has one clear leader. That is itself a finding: you draw on several of these strengths in much the same measure."
+      "text": "Both your profiles are flat: every result reads Present or Strong, with none leading and none less used. That’s a real result rather than an error: you draw on all of these in much the same measure. Better to say so than force a winner.",
+      "after_pairs": "Both your profiles are flat, even after your answers to “Which is more true of you?”: every result reads Present or Strong, with none leading and none less used. That’s a real result rather than an error: you draw on all of these in much the same measure. Better to say so than force a winner."
     },
     "tie_break": {
       "question": "Which is more true of you?",
@@ -631,13 +633,17 @@
       "frameworks": { "apest": "Your role among people", "pep": "How you work" },
       "separated": {
         "heading": "Separated",
-        "changed": "The top changed after your answers to “Which is more true of you?”.",
-        "same": "The same one leads, now ahead of the others after your answers to “Which is more true of you?”."
+        "changed": "{top} now sits on top, in place of {previous}, after your answers to “Which is more true of you?”.",
+        "same": "{top} stays on top, still ahead of {next}, after your answers to “Which is more true of you?”."
       },
       "balanced": {
         "heading": "Genuinely balanced",
-        "circle": "Your answers went in a circle — each option beat one and lost to another. That’s a real result rather than an error: these sit equally in you.",
-        "level": "Your answers put none of these ahead of the others. That’s a real result rather than an error: these sit equally in you."
+        "circle": "Your answers went in a circle — each option beat one and lost to another. That’s a real result rather than an error: {names} sit equally in you.",
+        "level": "{names} came out level after your answers to “Which is more true of you?”. That’s a real result rather than an error: they sit equally in you."
+      },
+      "skipped": {
+        "heading": "Skipped",
+        "text": "You skipped every “Which is more true of you?” pair here, so {names} stay as your sort placed them."
       }
     },
     "standing": {

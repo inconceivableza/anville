@@ -5,6 +5,9 @@
   ✨ One of the tie-break's pairs (ticket 30b), as the content owner's prototype draws it: how far through, a quiet label
   naming the framework, the question, one statement for each construct as a button, and a quiet skip. A plain form, so
   it works without JavaScript; each button sends its construct.
+
+  Demo only (fix-23): after a demo profile's sort, `demo`, its guide is below the pair (fix-24), and the form's address names
+  it and its answers (fix-25), so the next pair shows it too.
 {% endcomment %}
 {% block head_title %}{{ pair.question }}{% endblock head_title %}
 
@@ -15,7 +18,7 @@
     </ol>
     <p class="pair-framework">{{ pair.framework }}</p>
     <h1 class="pair-question">{{ pair.question }}</h1>
-    <form method="post" action="{% url 'tie_break' block_id %}">
+    <form method="post" action="{% url 'tie_break' block_id %}{% if demo %}?{{ demo.query }}{% endif %}">
       {% csrf_token %}
       <input type="hidden" name="pair" value="{{ pair.place }}">
       <div class="pair-options">
@@ -26,5 +29,6 @@
       <button type="submit" class="pair-skip" name="chosen" value="">{{ pair.skip }}</button>
     </form>
     <p class="pair-count">{{ pair.number }} of {{ pair.count }}</p>
+    {% if demo %}{% include "engine/demo_guide.html" with guide=demo.guide %}{% endif %}
   </div>
 {% endblock content %}

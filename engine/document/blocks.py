@@ -284,8 +284,8 @@ BLOCK_TYPES = {
         BlockType("sort_results"),
         BlockType("section_link", text_fields=("body", "button_label")),
         BlockType("download", text_fields=("body", "button_label")),
-        # ✨ Never shown: it splits its section into pages (`pages_of`), and may word the way on from the page it ends.
-        BlockType("page_break", text_fields=("skip_label",)),
+        # ✨ Never shown: it splits its section into pages (`pages_of`).
+        BlockType("page_break"),
     ]
 }
 
@@ -309,6 +309,23 @@ def authored_text(block, role):
             for entry in block.get(field, [])
         ]
     return text
+
+
+def link_shown(block, text, linked_section, is_complete, role):
+    """✨ A section link's wording and where its button leads, as `(text, sort)`. Once the linked section is complete, a
+    link with `finished` wording shows it in place of its own body and button label, and `sort` is the identifier of
+    the sort in that section, whose results the button then leads to, or None to lead to the section as before
+    (ticket 61). Otherwise `text` is the link's own and `sort` is None."""
+    finished = block.get("finished")
+    if not (finished and is_complete):
+        return text, None
+    text = {
+        **text,
+        "body": text_for(finished["body"], role) if "body" in finished else "",
+        "button_label": text_for(finished["button_label"], role),
+    }
+    sort = next((other["id"] for other in linked_section["blocks"] if BLOCK_TYPES[other["type"]].scored), None)
+    return text, sort
 
 
 def translation_shown(document, passage):
@@ -354,12 +371,6 @@ def pages_of(section):
         else:
             pages[-1].append(block)
     return pages
-
-
-def break_after(section, page):
-    """✨ The `page_break` that ends a page of a section, counting from 1, or None for the last page."""
-    breaks = [block for block in section["blocks"] if block["type"] == "page_break"]
-    return breaks[page - 1] if page <= len(breaks) else None
 
 
 def page_count(section):

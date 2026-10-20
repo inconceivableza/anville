@@ -36,9 +36,9 @@ from engine.document import (
 from engine.document.blocks import (
     CONTACTS,
     blocks_of,
-    break_after,
     coach_brief,
     landing_of,
+    link_shown,
     page_count,
     page_of,
     pages_of,
@@ -57,9 +57,10 @@ from engine.document.coach import (
 )
 from engine.document.contacts import LIST_FULL, MAX_CONTACTS, contact_from_form, needed, rows_of, voices_card
 from engine.document.aggregation import aggregate
-from engine.document.gates import clauses_of, has_content, links_issued_key
+from engine.document.gates import clauses_of, links_issued_key
 from engine.document.scoring import score
 from engine.hub import (
+    COMPLETE,
     block_ids_fixed_on_completion,
     complete_sections,
     hub_for,
@@ -88,7 +89,7 @@ from engine.models import (
     Response,
     Result,
 )
-from engine import reminders
+from engine import reminders, scenario_loading
 from engine.document.tie_break import pair_plan, reweigh
 from engine.results import comparison_page, pair_page, results_page
 
@@ -311,16 +312,35 @@ def section(request, section_id, page=1):
     _page_or_404(section, page)
     if page > reached:
         return redirect(page_url(section_id, reached))
+    sort_done = _sort_done_with(state, section)
+    if sort_done is not None:
+        return redirect("results", sort_done)
     # ✨ A link just issued, a coach's or an observer's, shown this once. Read only on a page holding a coach checklist or
     # a contact list, whose address is the path the cookie was set for, so deleting it here reaches it; the section's
     # later pages sit under that path too when the block is on its first.
     shows_links = any(block["type"] in LISTED_WITH_LINKS for block in pages_of(section)[page - 1])
     issued = _issued_link(request) if shows_links else None
-    shown = _section_shown(request, state, section, _section_page(state, section, page, issued=issued))
+    demo = _demo_prefill(request, state.version.document)
+    shown = _section_shown(request, state, section, _section_page(state, section, page, issued=issued, demo=demo))
     if issued is not None:
         shown["Cache-Control"] = "no-store"
         shown.delete_cookie(ISSUED_COOKIE, path=request.path)
     return shown
+
+
+def _sort_done_with(state, section):
+    """✨ The identifier of the sort a section's page would only point past, or None: a part of a section holding its
+    sort and nothing else, once the sort is in (fix-13). The page would show no more than a link to the results, so
+    every way into it leads there instead; the results page itself goes on to any tie-break pair left, as "View my
+    results →" does (ticket 61). A section with anything beside its sort is still shown, and so is a part whose
+    section is not open, or a section that is no part: the results page's way back leads to such a section itself,
+    and one that is no part keeps its own completion there."""
+    if len(section["blocks"]) != 1:
+        return None
+    [block] = section["blocks"]
+    if not BLOCK_TYPES[block["type"]].scored or block["id"] not in state.answers:
+        return None
+    return block["id"] if _section_this_is_part_of(state, section) else None
 
 
 # ✨ The blocks whose people are listed with their links: a coach checklist's coach, and a contact list's people.
@@ -420,12 +440,12 @@ def save_answer(request, block_id):
         return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
     if block_id in state.fixed:
         # ✨ Refused here, not only disabled on the page, so a page left open from before completing cannot change it.
-        return _refuse_fixed(request)
+        return _answer_refused(request, state, section, block_id, FIXED_REFUSAL, status=409)
     block_type = BLOCK_TYPES[block["type"]]
     try:
         value = answer_from_form(state.version.document, block, request.POST.get("value"))
     except AnswerRefused as refused:
-        return render(request, "engine/save_status.html", {"refusal": str(refused)}, status=400)
+        return _answer_refused(request, state, section, block_id, str(refused), status=400)
 
     participant_response = state.stored_response(request.user)
     # ✨ The row is updated in place, so the answers read before are a step behind what is about to be stored.
@@ -436,14 +456,27 @@ def save_answer(request, block_id):
             participant_response.submit_sort(block_id, value, scores)
         except IntegrityError:
             refusal = "Your results are already in. Retaking the sort is not offered yet."
-            return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
-        # ✨ A sort too close to call on one framework leads to the tie-break's pairs first (ticket 30b).
+            return _answer_refused(request, state, section, block_id, refusal, status=409)
+        # ✨ A sort too close to call on one framework or both, and not flat, leads to the tie-break's pairs first.
         if pair_plan(state.version.document, scores):
-            return _go_to(request, reverse("tie_break", args=[block_id]))
+            return _go_to(request, _with_demo_profile(request, reverse("tie_break", args=[block_id])))
         return _to_results(request, block_id)
     if not participant_response.save_answer(block_id, value):
-        return _refuse_fixed(request)  # ✨ a completion fixed it after the check above, and the UPDATE saw that
+        # ✨ a completion fixed it after the check above, and the UPDATE saw that
+        return _answer_refused(request, state, section, block_id, FIXED_REFUSAL, status=409)
     return _saved(request, saved, section, block_id)
+
+
+def _answer_refused(request, state, section, block_id, refusal, status):
+    """✨ An answer not saved, and why: with htmx, the status line beside it; without, its page again, the reason shown
+    at the answer. A form submitted as a full page (Enter in an answer field does that) never lands the participant on
+    the bare status line (fix-7)."""
+    if _is_htmx(request):
+        return render(request, "engine/save_status.html", {"refusal": refusal}, status=status)
+    shown = _section_page(state, section, page_of(section, block_id))
+    on_page = next(block for block in shown["section"]["blocks"] if block["id"] == block_id)
+    on_page["refusal"] = refusal
+    return _section_shown(request, state, section, shown, status=status)
 
 
 @sensitive_post_parameters()
@@ -499,8 +532,8 @@ def coach_checklist(request, block_id):
     checklist_block = next(on_page for on_page in shown["section"]["blocks"] if on_page["id"] == block_id)
     checklist_block["checklist"] = _checklist_screen(checklist_block["text"], **screen)
     if is_htmx:
-        # ✨ Keeping or removing a coach can change the page's way on (a skip label), so it comes too, as after an
-        # autosave; stepping through the checklist changes nothing stored, so the way on stays as it was.
+        # ✨ Keeping or removing a coach can change what the page's gate holds met (the coach's link issued), so its way
+        # on comes too, as after an autosave; stepping through the checklist changes nothing stored, so it stays.
         context = {**shown, "block": checklist_block, "stored": stored}
         result = render(request, "engine/coach_checklist_result.html", context, status=status)
         if coach is not None:
@@ -618,11 +651,6 @@ def _coach_link_state(contact_id, issued=None):
     }
 
 
-def _coach_declined(contact_id):
-    """✨ Whether the coach kept declined, through the link they still have an answer on."""
-    return Invitation.objects.filter(contact_id=contact_id, coach_answer=Invitation.CoachAnswer.DECLINED).exists()
-
-
 def _saved(request, state, section, block_id):
     """✨ What a stored answer sends back: with htmx, the status and its page's gate; without, its page again.
 
@@ -652,7 +680,8 @@ def results(request, block_id):
     if _pairs_left(state.version.document, result):
         return redirect("tie_break", block_id)
     drawn = _results_drawn(state, result, block_id)
-    return render(request, "engine/results.html", {"drawn": drawn, "results": drawn["results"], "section": section})
+    context = {"drawn": drawn, "results": drawn["results"], "section": section, "retake": _demo_tools_on()}
+    return render(request, "engine/results.html", context)
 
 
 def _results_drawn(state, result, block_id):
@@ -671,8 +700,8 @@ def _results_drawn(state, result, block_id):
 @consent_required
 @require_http_methods(["GET", "POST"])
 def tie_break(request, block_id):
-    """✨ The tie-break's next unanswered pair (ticket 30b), for a participant whose own sort left one framework too close
-    to call; anyone else, or one who has answered or skipped every pair, goes on to their results. Answering stores the
+    """✨ The tie-break's next unanswered pair (ticket 30b), for a participant whose own sort left one framework or both
+    too close to call; anyone else, or one who has answered or skipped every pair, goes on to their results. Answering stores the
     choice beside the sort's result and comes back here for the next. Only the participant's own result is read, so an
     observer's sort never leads here."""
     state, result, section = _own_result(request.user, block_id)
@@ -691,12 +720,14 @@ def tie_break(request, block_id):
         # ✨ A pair already answered (a form sent twice, or from a stale tab) stores nothing; either way the next is shown.
         result.answer_pair(place, plan[place], chosen)
         _scores_shown_storing_reweighted(state.version.document, result)  # ✨ the last answer re-weights the result
-        return _see_other("tie_break", block_id)
+        return _see_other(_with_demo_profile(request, reverse("tie_break", args=[block_id])))
     place = len(result.tie_break_answers)
     if place >= len(plan):
         return redirect("results", block_id)
     shown = pair_page(state.version.document, plan, place)
-    return render(request, "engine/tie_break.html", {"pair": shown, "block_id": block_id})
+    # ✨ Demo only (fix-23): after a demo profile's sort, its guide beside the pair.
+    demo = _demo_prefill(request, state.version.document)
+    return render(request, "engine/tie_break.html", {"pair": shown, "block_id": block_id, "demo": demo})
 
 
 def _pairs_left(document, result):
@@ -849,6 +880,98 @@ def visit_comparison(request, block_id):
         response.freeze_collection()
     response.visit_comparison(block_id)
     return _see_other("comparison", block_id)
+
+
+def _demo_tools_on():
+    """✨ Whether this is a development or demo system, where tools that write made-up data or take back a
+    participant's answers are offered: DEBUG on, or a demo notice set, as for `seed_tie_break` (fix-15). A production
+    deployment has neither."""
+    return bool(settings.DEBUG or settings.ANVILLE_DEMO_NOTICE)
+
+
+@login_required
+@consent_required
+@require_http_methods(["GET", "POST"])
+def retake(request, block_id):
+    """✨ Demo only (fix-19): the results page's quiet "Retake the assessment (demo only)" asks first, saying what will
+    be cleared; only its button clears the participant's own sort and everything worked out from it, then opens the
+    sort afresh. Off a development or demo system it is a 404.
+
+    It also offers a demo profile (fix-21): one of `seed_tie_break`'s starting profiles, and how to answer its pairs,
+    chosen apart (fix-25), as a combination that holds on this pathway. Once the old sort is cleared, the sort opens
+    with the profile's cards placed and its sliders set, beside its guide to those answers, and nothing is stored until
+    the participant sends it (fix-23). Before any sort, from the sort page's hidden link, the same choice clears
+    nothing, and only for a participant the sort is open to. A combination not offered is refused with its reason and
+    nothing cleared.
+
+    A section completed whose gate needed the sort is no longer complete, so the hub never shows it complete beside an
+    assessment not started; the participant's other answers in it stay, and completing it again needs the new sort."""
+    if not _demo_tools_on():
+        raise Http404("Retaking the assessment is offered only on a development or demo system.")
+    state, result, section = _own_result(request.user, block_id)
+    sort_page = page_url(section["id"], section["page"])
+    document = state.version.document
+    # ✨ Before any sort, only a participant the sort is open to may have one loaded for them (fix-21).
+    if result is None and not _is_open(state, section_of(document, block_id), answerable_block(document, block_id)):
+        return redirect(sort_page)
+    # ✨ Worked out on every visit, so a combination that does not hold on this pathway is never offered (fix-21).
+    offer = scenario_loading.offered(document)
+    response = state.response
+    reopened = []
+    if result is not None:
+        reopened = [
+            shown
+            for shown in state.sections
+            if shown["id"] in response.completed_sections
+            and _reopens(shown)
+            and any(clause["block"] == block_id for clause in clauses_of(shown))
+        ]
+    if request.method == "POST":
+        profile = request.POST.get(scenario_loading.PROFILE_FIELD, MYSELF)
+        answers = request.POST.get(scenario_loading.ANSWERS_FIELD) or None
+        refusal = None if profile == MYSELF else scenario_loading.refusal(offer, profile, answers)
+        if refusal is not None:
+            return render(request, "engine/save_status.html", {"refusal": refusal}, status=400)
+        if result is not None:
+            response.clear_sort(block_id, reopened=[shown["id"] for shown in reopened])
+        if profile == MYSELF:
+            return _see_other(sort_page)
+        # ✨ Nothing stored: the sort starts from the profile, and the participant sends it themselves (fix-23).
+        return _see_other(f"{sort_page}?{scenario_loading.demo_query(profile, answers)}")
+    context = {
+        "block_id": block_id,
+        "clearing": result is not None,
+        "sort_page": sort_page,
+        "offer": offer,
+        "myself": MYSELF,
+        "reopened": [text_for(shown["title"], "participant") for shown in reopened],
+        "tie_break": bool(result and result.tie_break_answers),
+        "frozen": result is not None and response.collection_frozen_at is not None,
+        "coach_shown": result is not None and bool((_coach_of(response) or {}).get("shared")),
+    }
+    return render(request, "engine/retake.html", context)
+
+
+# ✨ The retake page's "Sort the cards myself", as its choice sends it (fix-21).
+MYSELF = "myself"
+
+def _demo_prefill(request, document):
+    """✨ Demo only (fix-23): the demo profile and answers the address names (fix-25), as `scenario_loading.prefill`
+    gives them, or None: off a development or demo system, with no profile named, or with a combination not offered on
+    this pathway."""
+    profile = request.GET.get(scenario_loading.PROFILE_FIELD)
+    if not profile or not _demo_tools_on():
+        return None
+    return scenario_loading.prefill(document, profile, request.GET.get(scenario_loading.ANSWERS_FIELD) or None)
+
+
+def _with_demo_profile(request, url):
+    """✨ `url` naming the same demo profile and answers as this request's address, on a development or demo system
+    (fix-23), so the pairs that follow a demo profile's sort show its guide too."""
+    profile = request.GET.get(scenario_loading.PROFILE_FIELD)
+    if not profile or not _demo_tools_on():
+        return url
+    return f"{url}?{scenario_loading.demo_query(profile, request.GET.get(scenario_loading.ANSWERS_FIELD) or None)}"
 
 
 def _own_result(user, block_id):
@@ -1014,12 +1137,10 @@ def _listed_person(request, block_id, contact_id):
 
 
 def _list_shut(request, state, block):
-    """✨ The refusal for a change to a contact list the participant has not reached, or whose people a completion
-    fixed, or None while it is open to change."""
+    """✨ The refusal for a change to a contact list the participant has not reached, or None while it is open to change.
+    A completion never fixes a contact list: only an agreement scale can be marked `fixed_once_complete`."""
     if not _is_open(state, section_of(state.version.document, block["id"]), block):
         return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
-    if block["id"] in state.fixed:
-        return _refuse_fixed(request)
     return None
 
 
@@ -1058,7 +1179,6 @@ def _rows_sent_back(request, state, block, rows, status=200):
     just issued."""
     shown_block = {
         "id": block["id"],
-        "is_fixed": block["id"] in state.fixed,
         "frozen": RESULTS_SEEN if _frozen(state.response) else None,
     }
     context = {"rows": rows, "block": shown_block, "pathway": {"version_id": state.version.pk}}
@@ -1656,9 +1776,7 @@ def _page_or_404(section, page):
     return page
 
 
-def _refuse_fixed(request):
-    refusal = "This answer was fixed when you completed this section."
-    return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
+FIXED_REFUSAL = "This answer was fixed when you completed this section."
 
 
 def _block_of_type(version, block_id, block_type):
@@ -1676,10 +1794,11 @@ def _section_or_404(version, section_id):
     return section
 
 
-def _section_page(state, section, page=1, issued=None):
+def _section_page(state, section, page=1, issued=None, demo=None):
     """✨ One page of a section as its template needs it. Every page but the last ends in "Continue →", held by that
     page's own clauses; the last ends in the section's completion, held by the whole gate. `issued` is a link just
-    issued, a coach's or an observer's, which the page shows this once beside the person it is for."""
+    issued, a coach's or an observer's, which the page shows this once beside the person it is for. `demo` is a demo
+    profile, from `_demo_prefill`, that a sort not yet in starts from (fix-23)."""
     version, answers, fixed = state.version, state.answers, state.fixed
     opened, activity_open = open_blocks(section, answers, state.sections, up_to_page=page)
     on_page = {block["id"] for block in pages_of(section)[page - 1]}
@@ -1700,8 +1819,6 @@ def _section_page(state, section, page=1, issued=None):
             "number": page,
             "count": page_count(section),
             "is_last": is_last,
-            "skip_label": _skip_label(section, page, answers),
-            "continue_label": _continue_label(section, page, answers),
         },
         "pathway": {
             "version_id": version.pk,
@@ -1726,11 +1843,14 @@ def _section_page(state, section, page=1, issued=None):
                     issued,
                     _frozen(state.response),
                     drawn=_sort_results_drawn(state, block),
+                    demo=demo,
                 )
                 for block in blocks
             ],
         },
         "is_complete": section["id"] in state.completed,
+        # ✨ Demo only (fix-21): a sort not yet in offers a hidden "Load a demo profile (demo only)", where one holds.
+        "demo_profile": sort_pending and _demo_tools_on() and bool(scenario_loading.offered(version.document).profiles),
         # ✨ Over the whole section, since the ratings it fixed may be on an earlier page than its completion.
         "holds_fixed_answers": any(block["id"] in fixed for block in section["blocks"]),
         # ✨ The way on, "Continue →" or completion. Going on from a page is refused on exactly these and `unmet`.
@@ -1784,31 +1904,6 @@ def _requirement_links(state, section):
     return links
 
 
-def _skip_label(section, page, answers):
-    """✨ The way on from a page as its break words it for passing by, such as the original prototype's "I'll sort this
-    later →", while nothing on the page holds an answer; otherwise None, and the way on is "Continue →". A coach
-    checklist's answer is the coach kept, so choosing one turns the skip into "Continue →"."""
-    ends_in = break_after(section, page)
-    if ends_in is None or "skip_label" not in ends_in:
-        return None
-    if any(has_content(answers.get(block["id"])) for block in pages_of(section)[page - 1]):
-        return None
-    return text_for(ends_in["skip_label"], "participant")
-
-
-def _continue_label(section, page, answers):
-    """✨ "Continue →", or on a page holding a coach kept, "Continue with Sam →". Choosing someone else shows the
-    checklist's own "Continue →" just above, so the page's way on names the coach it goes on with, to read apart. A
-    coach who declined is not gone on with, so the way on is "Continue without a coach →"."""
-    for block in pages_of(section)[page - 1]:
-        coach = _coach_kept(answers, block["id"]) if block["type"] == "coach_checklist" else None
-        if coach and "id" in coach and _coach_declined(coach["id"]):
-            return "Continue without a coach →"
-        if coach:
-            return f"Continue with {coach['name']} →"
-    return "Continue →"
-
-
 def _published_version(posted):
     """✨ The pathway version a form names, provided it has been published; otherwise None."""
     if not (posted or "").isdigit():
@@ -1824,17 +1919,30 @@ def _sort_results_drawn(state, block):
     return _results_drawn(state, result, block["sort"])
 
 
-def _block_for_participant(document, block, answers, fixed, states, issued=None, frozen=False, drawn=None):
+def _block_for_participant(document, block, answers, fixed, states, issued=None, frozen=False, drawn=None, demo=None):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
     identifier; a link to a section outside the participant's track has no state and shows nothing. `issued` is a
     link just issued, a coach's or an observer's. While answer collection is `frozen`, a contact list says why it adds
-    nobody (ticket 55). `drawn` is a `sort_results` block's results, from `_sort_results_drawn`."""
+    nobody (ticket 55). `drawn` is a `sort_results` block's results, from `_sort_results_drawn`. A sort not yet in
+    starts from `demo`, a demo profile, with its guide beside it (fix-23)."""
     widget = BLOCK_TYPES[block["type"]].widget
+    shown_widget = widget(document, "participant", "") if widget else None  # ✨ the participant's wording names no one
+    if demo is not None and BLOCK_TYPES[block["type"]].scored and block["id"] not in answers:
+        # ✨ Each item already in its bucket at its value, so the widget opens at "All sorted" (`placed` in sort.js).
+        shown_widget = {**shown_widget, "placed": demo.sort}
+    else:
+        demo = None
     text = authored_text(block, "participant")
     if block["type"] == "scripture_reading":
         for passage, shown in zip(block["passages"], text["passages"]):
             shown["translation"] = translation_shown(document, passage)
     is_checklist = block["type"] == "coach_checklist"
+    link = states.get(block["section"]) if block["type"] == "section_link" else None
+    results = None
+    if link is not None:
+        linked = section_by_id(document, block["section"])
+        text, sort = link_shown(block, text, linked, link.status == COMPLETE, "participant")
+        results = reverse("results", args=[sort]) if sort else None
     return {
         "rows": _contact_rows(block, answers, issued) if block["type"] == "contact_list" else None,
         "checklist": _opening_checklist(text, _coach_kept(answers, block["id"]), issued) if is_checklist else None,
@@ -1846,8 +1954,10 @@ def _block_for_participant(document, block, answers, fixed, states, issued=None,
         "text": text,
         "answer": answers.get(block["id"]),
         "is_fixed": block["id"] in fixed,
-        "widget": widget(document, "participant", "") if widget else None,  # ✨ the participant's wording names no one
-        "link": states.get(block["section"]) if block["type"] == "section_link" else None,
+        "widget": shown_widget,
+        "demo": demo,
+        "link": link,
+        "results": results,  # ✨ where a section link's button leads instead, once its section is complete (ticket 61)
         "frozen": RESULTS_SEEN if frozen and block["type"] == "contact_list" else None,
         "drawn": drawn,
     }

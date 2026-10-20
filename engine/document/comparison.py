@@ -5,13 +5,17 @@
 see each construct higher, lower or much the same, and how far the observers agree with each other (ADR 0005).
 
 Each rule reads its numbers and words from the pathway document's `presentation.comparison`, falling back to the
-prototype's. Nothing here touches the database or a request.
+prototype's. Every rule is given unrounded shares, the participant's, the observers' mean and each observer's, so
+none judges a value rounding has moved across a threshold (ADR 0018). Nothing here touches the database or a request.
 """
+
+from engine.document.scoring import round_half_up
+from engine.document.standing import standing
 
 # ✨ The prototype's: a gap of five points or more is worth reflecting on; less is a modest gap.
 DEFAULT_SIGNIFICANT_GAP = 5
 
-# ✨ The prototype's bands, by the range of the observers' percents, and the label for a range above them all.
+# ✨ The prototype's bands, by the range of the observers' shares, and the label for a range above them all.
 DEFAULT_AGREEMENT = {
     "bands": [{"up_to": 6, "label": "Strong agreement"}, {"up_to": 14, "label": "Some variation"}],
     "above": "Divided views",
@@ -42,40 +46,45 @@ def _direction(you, others):
     return "others_higher" if others > you else "you_higher" if others < you else None
 
 
-def seen_by_others(document, you, others):
-    """✨ Whether others see a construct higher or lower than the participant, in the document's words, when the gap
-    is significant; otherwise much the same."""
+def seen_by_others(document, you, others, construct_count):
+    """✨ Whether others see a construct higher or lower than the participant, in the document's words; much the same
+    only when both shares have the same standing among the framework's `construct_count` constructs and the gap is
+    under the significant gap (fix-11), so the words never contradict the standings shown beside them."""
     wording = comparison_settings(document).get("seen_by_others", DEFAULT_SEEN_BY_OTHERS)
-    if abs(others - you) < _significant_gap(document):
+    same_standing = standing(document, you, construct_count) == standing(document, others, construct_count)
+    if same_standing and abs(others - you) < _significant_gap(document):
         return wording["much_the_same"]
     return wording[_direction(you, others)]
 
 
 def largest_gaps(document, pairs):
-    """✨ The largest gaps between the participant's percent and the observers' mean, largest first.
+    """✨ The largest gaps between the participant's share and the observers' mean, largest first.
 
     `pairs` holds each construct as `{framework, construct, you, others}` in the order declared, so ties keep that
-    order. A gap's `direction` is `others_higher`, `you_higher`, or None when there is no gap at all.
+    order, `you` and `others` unrounded (ADR 0018). Each gap is chosen, ordered, directed and judged significant by
+    its unrounded size, and rounded once only for the whole number shown (`gap`). A gap's `direction` is
+    `others_higher`, `you_higher`, or None when there is no gap at all.
     """
     significant_gap = _significant_gap(document)
     gaps = []
     for pair in pairs:
-        gap = abs(pair["others"] - pair["you"])
+        exact = abs(pair["others"] - pair["you"])
         gaps.append(
             {
                 **pair,
-                "gap": gap,
+                "exact": exact,
+                "gap": round_half_up(exact),
                 "direction": _direction(pair["you"], pair["others"]),
-                "significant": gap >= significant_gap,
+                "significant": exact >= significant_gap,
             }
         )
-    gaps.sort(key=lambda gap: -gap["gap"])  # ✨ stable, so ties keep declaration order
+    gaps.sort(key=lambda gap: -gap["exact"])  # ✨ stable, so ties keep declaration order
     return gaps[:LARGEST_GAPS]
 
 
 def agreement(document, per_observer):
-    """✨ The label of the band the observers' range falls in: the narrowest band whose `up_to` the range doesn't pass,
-    whatever order the bands are written in, or the label for above them all."""
+    """✨ The label of the band the range of the observers' unrounded shares falls in: the narrowest band whose `up_to`
+    the range doesn't pass, whatever order the bands are written in, or the label for above them all."""
     spread = max(per_observer) - min(per_observer)
     agreement_bands = comparison_settings(document).get("agreement", DEFAULT_AGREEMENT)
     for band in sorted(agreement_bands["bands"], key=lambda band: band["up_to"]):

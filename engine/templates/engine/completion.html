@@ -16,17 +16,12 @@
 {% endcomment %}
 <div id="completion"{% if offers_way_on %} class="completion"{% endif %}{% if out_of_band %} hx-swap-oob="true"{% endif %}>
   {% if offers_way_on and not page.is_last %}
-    {# ✨ Every page but the last goes on to the next, held by that page's own requirements, listed as below. While #}
-    {# ✨ nothing on it is answered, a break with a skip label words it as a way past, and it steps back from primary. #}
+    {# ✨ Every page but the last goes on to the next, held by that page's own requirements, listed as below. #}
     <div class="way-on">
       {% include "engine/previous_page.html" %}
       <form method="post" action="{% url 'move_past_page' section.id page.number %}">
         {% csrf_token %}
-        {% if page.skip_label %}
-          <button type="submit" class="pill ghost full"{% if unmet %} disabled{% endif %}>{{ page.skip_label }}</button>
-        {% else %}
-          <button type="submit" class="pill full"{% if unmet %} disabled{% endif %}>{{ page.continue_label }}</button>
-        {% endif %}
+        <button type="submit" class="pill full"{% if unmet %} disabled{% endif %}>Continue →</button>
       </form>
     </div>
     {% include "engine/gate_checklist.html" %}

@@ -196,6 +196,41 @@ def test_a_participant_resets_a_forgotten_password_by_the_emailed_link_and_signs
 
 
 @pytest.mark.django_db
+def test_signing_in_and_out_leaves_no_message_for_a_later_page(client, settings):
+    """✨ The hub and the homepage, where signing in and out lead, show no messages, so a message added for them waited
+    and showed on the next account page instead, such as sign-up after "Begin my journey" (hand-check finding)."""
+    require_the_code(settings)
+    sign_up(client)
+    client.post("/accounts/logout/")
+    client.post("/accounts/login/", {"login": "participant@example.com", "password": PASSWORD})
+    client.post("/accounts/logout/")
+
+    page = client.get("/accounts/signup/").content.decode()
+
+    assert "Successfully signed in" not in page
+    assert "You have signed out." not in page
+
+
+@pytest.mark.django_db
+def test_a_reset_password_is_confirmed_on_the_page_the_reset_leads_to(client, settings, mailoutbox):
+    require_the_code(settings)
+    sign_up(client)
+    client.logout()
+    client.post("/accounts/password/reset/", {"email": "participant@example.com"})
+    [email] = mailoutbox
+    link = re.search(r"http://testserver(/accounts/password/reset/key/\S+/)", email.body).group(1)
+    form = client.get(link, follow=True)
+    new_password = "a-new-and-different-passphrase"
+
+    done = client.post(
+        form.redirect_chain[-1][0], {"password1": new_password, "password2": new_password}, follow=True
+    )
+
+    assert "Password successfully changed." in done.content.decode()
+    assert "Password successfully changed." not in client.get("/accounts/login/").content.decode()
+
+
+@pytest.mark.django_db
 def test_asking_to_reset_an_unknown_address_looks_the_same_and_sends_nothing(client, settings, mailoutbox):
     require_the_code(settings)
     sign_up(client)
@@ -360,6 +395,18 @@ def test_with_the_client_pair_set_google_is_offered_and_a_google_sign_up_makes_a
     assert participant.is_authenticated
     assert participant.email == "sam.google@example.com"
     assert participant.account.display_name == "Sam"
+
+
+@pytest.mark.django_db
+def test_google_sign_ups_confirming_page_is_in_our_wording_not_allauths(client, settings):
+    """✨ allauth's stock sentence names the site by its `Site` record, which no deployment sets (ticket 53c)."""
+    require_the_code(settings)
+    give_google_a_client(settings)
+
+    confirming = client.get(come_back_from_google(client).url)
+
+    assert confirming.status_code == 200
+    assert "You are about to use your Google account to login to" not in confirming.content.decode()
 
 
 @pytest.mark.django_db

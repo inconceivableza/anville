@@ -5,6 +5,10 @@
   beside the form; the widget's only output is the form's hidden value, the whole sort as JSON, which the
   server checks, scores and answers by sending the browser to the results. The sort cannot be done without
   JavaScript, so the page says so.
+
+  Demo only (fix-23): with a demo profile, `block.demo`, the widget starts from its placements and values, its guide is
+  below the sort (fix-24), and the form's address names it and its answers (fix-25), so the pairs that follow show the
+  guide too.
 {% endcomment %}
 {% if block.answer %}
   <div id="block-{{ block.id }}" class="question-card">
@@ -13,9 +17,10 @@
 {% else %}
   {% with script_id="sort-"|add:block.id %}
     {{ block.widget|json_script:script_id }}
-    <form id="block-{{ block.id }}" class="sort" method="post" action="{% url 'save_answer' block.id %}"
-          hx-post="{% url 'save_answer' block.id %}" hx-target="find .save-status"
-          hx-disabled-elt="find .sort-submit" data-sort="{{ script_id }}">
+    <form id="block-{{ block.id }}" class="sort" method="post"
+          action="{% url 'save_answer' block.id %}{% if block.demo %}?{{ block.demo.query }}{% endif %}"
+          hx-post="{% url 'save_answer' block.id %}{% if block.demo %}?{{ block.demo.query }}{% endif %}"
+          hx-target="find .save-status" hx-disabled-elt="find .sort-submit" data-sort="{{ script_id }}">
       {% csrf_token %}
       <input type="hidden" name="value">
       <input type="hidden" name="version" value="{{ pathway.version_id }}">
@@ -27,4 +32,12 @@
       <noscript><p>The sort needs JavaScript. Turn it on in your browser, then reload this page.</p></noscript>
     </form>
   {% endwith %}
+  {% if block.demo %}{% include "engine/demo_guide.html" with guide=block.demo.guide on_sort=True %}{% endif %}
+  {% comment %}
+    ✨ Demo only (fix-21): the sort started from one of seed_tie_break's profiles instead (fix-23), on a development or
+    demo system alone. Hidden until revealed, as the results page's retake link is (data-demo-reveal, in main.js).
+  {% endcomment %}
+  {% if demo_profile %}
+    <p class="back-to-hub" data-demo-reveal hidden><a href="{% url 'retake' block.id %}">Load a demo profile (demo only)</a></p>
+  {% endif %}
 {% endif %}

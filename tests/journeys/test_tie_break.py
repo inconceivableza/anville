@@ -1,8 +1,8 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
-"""✨ A participant tied on both frameworks is told on their results that they are a generalist (ticket 30a). The tie
-detection runs on the participant's own sort alone, never an observer's."""
+"""✨ A participant flat on both frameworks is told on their results that they are a generalist (ticket 30a, ADR 0018).
+The tie detection runs on the participant's own sort alone, never an observer's."""
 
 import pytest
 
@@ -23,14 +23,14 @@ from tests.journeys.test_results import in_order, results, submit_sort
 GENERALIST = "Two flat profiles"
 
 # ✨ The test pathway's two items each load onto one construct of each framework, so a sort splitting them evenly is
-# tied on both, and one leaning on either is tied on neither.
+# flat on both, every construct at an even share ("Present"), and one leaning on either is tied on neither.
 EVEN = complete_sort(a5={"bucket": "strength", "value": 50}, p1={"bucket": "strength", "value": 50})
 
 
 @pytest.fixture
 def signed_in(client, participant, load_pathway):
     """✨ A participant with onboarding complete, on a pathway with a tie-break and the generalist's wording."""
-    load_pathway(with_a_tie_break(sort_pathway(), threshold=4, cluster=4))
+    load_pathway(with_a_tie_break(sort_pathway(), percent=5, cluster=4))
     client.force_login(participant)
     give_consent(client)
     client.post("/sections/onboarding/complete/")
@@ -38,7 +38,7 @@ def signed_in(client, participant, load_pathway):
 
 
 @pytest.mark.django_db
-def test_a_participant_tied_on_both_frameworks_is_told_on_their_results_they_are_a_generalist(signed_in):
+def test_a_participant_flat_on_both_frameworks_is_told_on_their_results_they_are_a_generalist(signed_in):
     submit_sort(signed_in, EVEN)
 
     assert GENERALIST in results(signed_in).content.decode()
@@ -152,6 +152,51 @@ def test_leaving_part_way_comes_back_to_the_next_pair_and_the_last_leads_to_the_
     assert results(marked).status_code == 200
 
 
+def tied_on_both_pathway():
+    """✨ The test pathway with a third construct on each framework and an item loading onto both, Teacher and Assess."""
+    document = sort_pathway()
+    apest, pep = document["measurement"]["frameworks"]
+    apest["constructs"].append({"id": "teacher", "label": "Teacher"})
+    pep["constructs"].append({"id": "assess", "label": "Assess"})
+    document["instrument"]["items"].append({"id": "t1", "text": "Explaining it clearly", "loads": ["teacher", "assess"]})
+    return with_a_tie_break(document)
+
+
+# ✨ Apostle and Prophet 45 each, Teacher 10; Ponder and Deliver 45 each, Assess 10. Tied at the top of both, and far
+# from flat, as Teacher and Assess read "Less used".
+TIED_ON_BOTH = complete_sort(
+    a5={"bucket": "strength", "value": 45},
+    p1={"bucket": "strength", "value": 45},
+    t1={"bucket": "not-me", "value": 10},
+)
+
+
+@pytest.mark.django_db
+def test_a_sort_tied_on_both_frameworks_but_not_flat_asks_pairs_on_each_in_turn_and_never_says_generalist(
+    client, participant, load_pathway
+):
+    load_pathway(tied_on_both_pathway())
+    client.force_login(participant)
+    give_consent(client)
+    client.post("/sections/onboarding/complete/")
+
+    assert submit_sort(client, TIED_ON_BOTH)["HX-Redirect"] == TIE_BREAK
+    asked = []
+    for place in range(4):
+        page = text_of(client.get(TIE_BREAK).content.decode())
+        if "Your role among people" in page and "I am apostle" in page and "I am prophet" in page:
+            asked.append("apest")
+        elif "How you work" in page and "I am ponder" in page and "I am deliver" in page:
+            asked.append("pep")
+        choose(client, place, "")
+
+    assert asked == ["apest", "pep", "apest", "pep"]
+    assert client.get(TIE_BREAK)["Location"] == "/results/strengths-sort/"
+    page = text_of(results(client).content.decode())
+    assert GENERALIST not in page
+    assert in_order(page, "Your gifting", "Every pair skipped", "Your energy", "Every pair skipped")
+
+
 @pytest.fixture
 def observed(signed_in_client, load_pathway):  # noqa: F811
     load_pathway(tie_breaking_pathway(observed_pathway()))
@@ -169,9 +214,29 @@ def test_an_observer_sending_a_tied_sort_is_never_offered_the_tie_break(observed
 
 
 # ✨ The re-weighted result (ticket 30c). TIED_ON_ONE gives Apostle and Prophet 50 each, so both stand at an even share
-# ("Present") and Apostle leads by declaration order. Choosing Prophet in both rounds weighs Prophet 2 to Apostle's 1:
-# 67 to 33, well above and well below an even share of 50.
+# ("Present") and Apostle leads by declaration order. Choosing Prophet in both rounds weighs Prophet 2 to Apostle's 1,
+# so Prophet leads by just over 5% (fix-22): 51.22 to 48.78, both still "Present".
 CHOSE_PROPHET = ["prophet", "prophet"]
+# ✨ What 30c stored for those answers, sharing the 100 out by weight: whole numbers only, well above and well below an
+# even share of 50.
+AS_30C_STORED = {"prophet": 67, "apostle": 33}
+
+
+def as_30c_stored(reweighted):
+    """✨ A re-weighted result's frameworks as 30c stored them: AS_30C_STORED's whole numbers, no unrounded shares."""
+    return [
+        {
+            "framework": framework["framework"],
+            "constructs": [
+                {
+                    **{k: v for k, v in c.items() if k != "share"},
+                    "percent": AS_30C_STORED.get(c["construct"], c["percent"]),
+                }
+                for c in framework["constructs"]
+            ],
+        }
+        for framework in reweighted["frameworks"]
+    ]
 
 
 def answer_every_pair(client, choices):
@@ -203,12 +268,12 @@ def test_the_results_page_shows_the_re_weighted_result_and_how_the_tie_break_cha
 
     page = text_of(results(marked).content.decode())
 
-    assert in_order(page, "Your gifting", "The top changed", "Prophet", "Leading", "Apostle", "Less used", "Your energy")
+    assert in_order(page, "Your gifting", "The top changed", "Prophet", "Present", "Apostle", "Present", "Your energy")
 
 
 @pytest.mark.django_db
 def test_the_results_page_says_a_framework_is_balanced_when_the_choices_name_no_winner(marked):
-    answer_every_pair(marked, ["", ""])
+    answer_every_pair(marked, ["apostle", "prophet"])
 
     page = text_of(results(marked).content.decode())
 
@@ -217,8 +282,86 @@ def test_the_results_page_says_a_framework_is_balanced_when_the_choices_name_no_
 
 
 @pytest.mark.django_db
+def test_the_results_page_says_every_pair_was_skipped_in_words_of_its_own(marked):
+    answer_every_pair(marked, ["", ""])
+
+    page = text_of(results(marked).content.decode())
+
+    assert in_order(page, "Your gifting", "Every pair skipped", "As your sort left them.", "Apostle", "Prophet")
+    assert "Genuinely balanced" not in page and GENERALIST not in page
+
+
+@pytest.mark.django_db
+def test_a_construct_named_in_the_tie_break_sentence_is_escaped(client, participant, load_pathway):
+    """✨ fix-26: the sentence names the constructs by their labels, escaped as every label is."""
+    document = tie_breaking_pathway()
+    [prophet] = [c for c in document["measurement"]["frameworks"][0]["constructs"] if c["id"] == "prophet"]
+    prophet["label"] = "<b>Prophet</b>"
+    document["presentation"]["tie_break"]["separated"]["changed"] = "{top} now sits on top, in place of {previous}."
+    load_pathway(document)
+    client.force_login(participant)
+    give_consent(client)
+    client.post("/sections/onboarding/complete/")
+    answer_every_pair(client, CHOSE_PROPHET)
+
+    page = results(client).content.decode()
+
+    assert "&lt;b&gt;Prophet&lt;/b&gt; now sits on top, in place of Apostle." in page
+    assert "<b>Prophet</b>" not in page
+
+
+@pytest.mark.django_db
+def test_the_re_weighted_result_keeps_each_unrounded_share_beside_its_whole_number(marked):
+    """✨ Prophet weighs 2 to Apostle's 1, so leads by 5.01% of their 100: 1050100/20501, stored as 51."""
+    answer_every_pair(marked, CHOSE_PROPHET)
+
+    apest = Result.objects.get().reweighted["frameworks"][0]["constructs"]
+
+    assert [(c["construct"], c["percent"], c["share"]) for c in apest] == [
+        ("prophet", 51, "1050100/20501"),
+        ("apostle", 49, "1000000/20501"),
+    ]
+
+
+@pytest.mark.django_db
+def test_a_result_re_weighted_before_its_shares_were_kept_still_renders_with_its_outcome(marked):
+    """✨ As 30c stored it: one framework named on its own, whole numbers only."""
+    answer_every_pair(marked, CHOSE_PROPHET)
+    result = Result.objects.get()
+    result.reweighted = {
+        "method": "pairwise_reweighting",
+        "frameworks": as_30c_stored(result.reweighted),
+        "tie_break": {"framework": "apest", "outcome": "top_changed"},
+    }
+    result.save()
+
+    page = text_of(results(marked).content.decode())
+
+    assert in_order(page, "Your gifting", "The top changed", "Prophet", "Leading", "Apostle", "Less used", "Your energy")
+
+
+@pytest.mark.django_db
+def test_a_result_re_weighted_before_its_shares_were_kept_still_shows_its_gaps_on_the_comparison(marked, participant):
+    """✨ Kept as whole numbers only, Prophet's 67 and Apostle's 33 are read as its shares: 17 from the observers' 50
+    each."""
+    answer_every_pair(marked, CHOSE_PROPHET)
+    result = Result.objects.get()
+    result.reweighted = {**result.reweighted, "frameworks": as_30c_stored(result.reweighted)}
+    result.save()
+    response = Response.objects.get(participant=participant)
+    for _ in range(3):
+        an_observer(response, TIED_ON_ONE)
+
+    page = text_of(comparison(marked).content.decode())
+
+    assert in_order(page, "Prophet (APEST(d))", "You rate higher (+17)")
+    assert in_order(page, "Apostle (APEST(d))", "Others rate higher (+17)")
+
+
+@pytest.mark.django_db
 def test_the_comparison_sets_the_re_weighted_result_beside_the_observers_sorts_as_sent(marked, participant):
-    """✨ The observers sent TIED_ON_ONE too, so their mean is 50 each: Present, never re-weighted."""
+    """✨ The observers sent TIED_ON_ONE too, so their mean is 50 each, never re-weighted: the participant's 51.22 and
+    48.78 are a point either side of it."""
     answer_every_pair(marked, CHOSE_PROPHET)
     response = Response.objects.get(participant=participant)
     for _ in range(3):
@@ -226,4 +369,6 @@ def test_the_comparison_sets_the_re_weighted_result_beside_the_observers_sorts_a
 
     page = text_of(comparison(marked).content.decode())
 
-    assert in_order(page, "Prophet", "You: Leading", "Others: Present", "Apostle", "You: Less used", "Others: Present")
+    assert in_order(page, "Prophet", "You: Present", "Others: Present", "Apostle", "You: Present", "Others: Present")
+    assert in_order(page, "Prophet (APEST(d))", "You rate higher (+1)")
+    assert in_order(page, "Apostle (APEST(d))", "Others rate higher (+1)")

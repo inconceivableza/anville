@@ -120,6 +120,37 @@ def test_the_results_page_greets_the_participant_and_ranks_both_profiles_in_word
 
 
 @pytest.mark.django_db
+def test_each_standing_comes_from_the_unrounded_share(client, participant, load_pathway):  # noqa: F811
+    """✨ Apostle's 37 of 87 is 42.53%, which rounds to 43, 86% of an even share of 50, but is 85.06% unrounded: below
+    a band that starts at 86 (ADR 0018)."""
+    document = sort_pathway()
+    document["presentation"]["standing"] = {
+        "bands": [{"at_least": 110, "label": "Strong"}, {"at_least": 86, "label": "Present"}],
+        "below": "Less used",
+    }
+    load_pathway(document)
+    client.force_login(participant)
+    give_consent(client)
+    client.post("/sections/onboarding/complete/")
+    submit_sort(client, complete_sort(a5={"bucket": "strength", "value": 37}, p1={"bucket": "strength", "value": 50}))
+
+    page = results(client).content.decode()
+
+    assert in_order(page, "Your gifting", "Prophet", "Strong", "Apostle", "Less used")
+
+
+@pytest.mark.django_db
+def test_two_constructs_a_fraction_apart_are_drawn_apart(signed_in):
+    """✨ Apostle's 81 of 161 is 50.31% and Prophet's 80 is 49.69%: both 50 rounded, drawn where they are unrounded
+    (ADR 0018). Section 1, the comparison and the coach's view draw from the same results."""
+    submit_sort(signed_in, complete_sort(a5={"bucket": "strength", "value": 81}, p1={"bucket": "strength", "value": 80}))
+
+    page = results(signed_in).content.decode()
+
+    assert re.findall(r'class="result-dot[^"]*" cx="([\d.]+)"', page)[:2] == ["50.31", "49.69"]
+
+
+@pytest.mark.django_db
 def test_each_profile_carries_its_subtitle_descriptions_and_personas(signed_in):
     submit_sort(signed_in, complete_sort())
 
@@ -148,15 +179,16 @@ def test_the_validity_disclaimer_is_shown_with_the_results(signed_in):
 
 
 @pytest.mark.django_db
-def test_apest_bars_take_their_constructs_tone_and_tied_pep_bars_share_a_rank_colour(signed_in):
-    submit_sort(signed_in, complete_sort(a5={"bucket": "strength", "value": 50}, p1={"bucket": "not-me", "value": 50}))
+def test_each_dot_and_standing_on_both_frameworks_takes_its_standings_colour(signed_in):
+    """✨ 90 and 10: Apostle and Deliver lead, Prophet and Ponder are less used (developer's call, 20 Oct)."""
+    submit_sort(signed_in, complete_sort())
 
     page = results(signed_in).content.decode()
 
-    assert 'class="result-dot tone-violet"' in page
-    assert 'class="result-dot tone-rose"' in page
-    assert page.count('class="result-dot rank-1"') == 2
-    assert "rank-2" not in page
+    assert page.count('class="result-dot standing-1"') == 2
+    assert page.count('class="result-dot standing-below"') == 2
+    assert page.count('class="result-standing standing-1">Leading<') == 2
+    assert page.count('class="result-standing standing-below">Less used<') == 2
 
 
 @pytest.mark.django_db

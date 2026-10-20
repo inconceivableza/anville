@@ -134,8 +134,8 @@ def sort_pathway():
     presentation = document["presentation"]
     presentation["results_title"] = "{name}, here’s your profile"
     presentation["frameworks"] = [
-        {"framework": "apest", "heading": "Your gifting", "subtitle": "Fivefold and more", "bars": "tone"},
-        {"framework": "pep", "heading": "Your energy", "subtitle": "What energises you", "bars": "rank"},
+        {"framework": "apest", "heading": "Your gifting", "subtitle": "Fivefold and more"},
+        {"framework": "pep", "heading": "Your energy", "subtitle": "What energises you"},
     ]
     presentation["constructs"] = [
         {"construct": "apostle", "description": "Pioneers new things.", "tone": "violet"},
@@ -167,13 +167,18 @@ def with_a_tie_break(document, **settings):
         **settings,
         "statements": {c: [f"I am {c}, first", f"I am {c}, second", f"I am {c}, third"] for c in constructs},
     }
-    document["presentation"]["generalist"] = {"heading": "A generalist", "text": "Two flat profiles is itself a finding."}
+    document["presentation"]["generalist"] = {
+        "heading": "A generalist",
+        "text": "Two flat profiles is itself a finding.",
+        "after_pairs": "Two flat profiles, even after your pairs.",
+    }
     document["presentation"]["tie_break"] = {
         "question": "Which is more true of you?",
         "skip": "Neither fits — skip",
         "frameworks": {"apest": "Your role among people", "pep": "How you work"},
         "separated": {"heading": "Separated", "changed": "The top changed.", "same": "The same one leads."},
         "balanced": {"heading": "Genuinely balanced", "circle": "They went in a circle.", "level": "None came ahead."},
+        "skipped": {"heading": "Every pair skipped", "text": "As your sort left them."},
     }
     return document
 

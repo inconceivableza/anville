@@ -1,0 +1,26 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "socialaccount/base_entrance.html" %}
+{% load allauth %}
+{% comment %}
+  ✨ Replaces allauth's page asking before it leaves for Google (ticket 53c), in Anville's words. Sign in and sign up
+  post straight to Google, so this shows only to someone who opens its address.
+{% endcomment %}
+{% block head_title %}{% if process == "connect" %}Connect {{ provider.name }}{% else %}Sign in with {{ provider.name }}{% endif %}{% endblock head_title %}
+{% block content %}
+  {% if process == "connect" %}
+    <h1>Connect {{ provider.name }}</h1>
+    <p>You're about to connect your {{ provider.name }} account to this one.</p>
+  {% else %}
+    <h1>Sign in with {{ provider.name }}</h1>
+    <p>You're about to sign in with your {{ provider.name }} account.</p>
+  {% endif %}
+  {% element form method="post" no_visible_fields=True %}
+    {% slot actions %}
+      {% csrf_token %}
+      {% element button type="submit" %}
+        Continue
+      {% endelement %}
+    {% endslot %}
+  {% endelement %}
+{% endblock content %}

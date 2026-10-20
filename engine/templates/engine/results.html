@@ -8,7 +8,17 @@
 
 {% block content %}
   <p class="back-to-hub"><a href="{{ section.back.href }}">← Back to {{ section.back.title }}</a></p>
-  <h1>{{ results.title }}</h1>
+  {% comment %}✨ On a demo system the title is where a press-and-hold reveals the retake link below, on a phone (fix-20).{% endcomment %}
+  <h1{% if retake %} data-demo-reveal-hold{% endif %}>{{ results.title }}</h1>
 
   {% include "engine/own_results.html" %}
+
+  {% comment %}
+    ✨ Demo only (fix-19): a quiet way to sort again, on a development or demo system alone, and only on the participant's
+    own results page. Hidden until revealed (fix-20): Option/Alt held for a second, or the title pressed and held, shows
+    it (data-demo-reveal and data-demo-reveal-hold, in main.js); without JavaScript it never shows.
+  {% endcomment %}
+  {% if retake %}
+    <p class="back-to-hub" data-demo-reveal hidden><a href="{% url 'retake' drawn.block_id %}">Retake the assessment (demo only)</a></p>
+  {% endif %}
 {% endblock content %}

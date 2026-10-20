@@ -18,6 +18,7 @@ from django.utils.html import escape
 
 from engine.models import Contact, ObserverResponse, Response
 from tests.journeys.test_coach_checklist import choose
+from tests.journeys.pages import main_of
 from tests.journeys.test_hub import hub_entry, signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.prototype import js_string
 from tests.journeys.test_whatever_you_do_faithful_port import (
@@ -365,9 +366,9 @@ SHOWN_TO_THE_COACH = " {name} may also choose to show this to a trusted third pa
 
 def without_the_coach_step(document):
     """✨ Only this pathway asks for a coach the mock-up's way; the faithful port's own mentor screen is ticket 10b.
-    The coach page goes with it, so the break that opened that page goes too, and the skip label of the break that
-    closed it, and the privacy notice's sentence saying the participant may show their coach what they see. So does
-    the sort's coach brief (ticket 25a), as the faithful port has no coach to read it."""
+    The coach page goes with it, so the break that opened that page goes too, and so does the privacy notice's sentence
+    saying the participant may show their coach what they see. So does the sort's coach brief (ticket 25a), as the
+    faithful port has no coach to read it."""
     observers = document["observers"]
     observers["privacy_notice"] = observers["privacy_notice"].replace(SHOWN_TO_THE_COACH, "")
     for section in document["content"]["sections"]:
@@ -379,9 +380,6 @@ def without_the_coach_step(document):
             for block, after in zip(blocks, [*blocks[1:], None])
             if not (block["type"] == "page_break" and after and after["type"] == "page_break")
         ]
-        for block in section["blocks"]:
-            if block["id"] == "to-contacts":
-                block.pop("skip_label", None)
     return document
 
 
@@ -451,13 +449,12 @@ def without_the_wizard(document):
 
 
 def without_the_next_step_and_photos(document):
-    """✨ The hub's next-step wording, its photos and their credits' setting are this pathway's alone (ticket 49b), and
-    so are the Strengths assessment's results shown in Section 1 (ticket 57): the faithful port takes none."""
+    """✨ The hub's next-step wording, its photos and their credits' setting are this pathway's alone (ticket 49b): the
+    faithful port takes none."""
     document.pop("photos", None)
     document.pop("show_courtesy_credits", None)
     for section in document["content"]["sections"]:
         section.pop("next_step", None)
-        section["blocks"] = [block for block in section["blocks"] if block["type"] != "sort_results"]
     return document
 
 
@@ -542,6 +539,55 @@ def through_to_section_2(client):
     assert complete(client, "designed").status_code == 303
     invite_everyone(client)
     return client
+
+
+@pytest.mark.django_db
+def test_section_1s_button_opens_the_assessment_until_it_is_done_and_then_the_results(participant):
+    """✨ As in the faithful port, whose wording this pathway's matches (ticket 61)."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+    answer(participant, "gifts-reading", "true")
+    button = r'href="{}"[^>]*>\s*{}\s*</a>'
+    assert re.search(button.format("/sections/strengths/", "Open Strengths Assessment →"), section_1(participant))
+
+    submit_the_sort(participant)
+
+    page = section_1(participant)
+    assert re.search(button.format("/results/strengths-sort/", "View my results →"), page)
+    assert 'href="/sections/strengths/"' not in page
+
+
+@pytest.mark.django_db
+def test_once_the_assessment_is_done_section_1_shows_no_results_below_its_card(participant):
+    """✨ "View my results →" is the way to them, as in the faithful port (fix-5, reversing ticket 57)."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+    answer(participant, "gifts-reading", "true")
+    submit_the_sort(participant)
+
+    page = section_1(participant)
+
+    assert "View my results →" in page
+    assert "own-results" not in page
+    assert "Compare with how others see you" not in page
+
+
+@pytest.mark.django_db
+def test_once_the_sort_is_in_opening_the_strengths_assessment_opens_the_results(participant):
+    """✨ As in the faithful port (fix-13)."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+    answer(participant, "gifts-reading", "true")
+    submit_the_sort(participant)
+
+    shown = participant.get("/sections/strengths/")
+
+    assert (shown.status_code, shown.url) == (302, "/results/strengths-sort/")
+
+
+def section_1(client):
+    """✨ Section 1's own content, without the sidebar, which lists every section."""
+    return main_of(client.get("/sections/designed/").content.decode())
 
 
 @pytest.mark.django_db

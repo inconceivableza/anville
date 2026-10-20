@@ -3,6 +3,7 @@
 {% extends "engine/base.html" %}
 {% load static %}
 {# ✨ The public homepage, copied from the original prototype's, with the content owner's newer "How it works" (ticket 32a). Static until ticket 32b generates it from content. #}
+{# ✨ v3's heading and pillars where the hackathon's earlier copy differed; no newsletter, donations or contact address, which do not exist yet (ticket 53c). #}
 
 {% block head_title %}Whatever You Do{% endblock head_title %}
 
@@ -17,14 +18,14 @@
       <nav class="nav" aria-label="Main">
         <div class="nav-left"><a href="#top">Home</a><a href="#how">How it works</a><a href="#journey">The assessment</a></div>
         <a class="brand" href="#top" aria-label="Whatever You Do home"><svg class="mark"><use href="#mark"/></svg><span>Whatever You Do</span></a>
-        <div class="nav-right"><a href="#impact">Impact</a><a href="#mentor">Mentors</a><a href="{{ begin }}">Begin</a></div>
+        <div class="nav-right"><a href="#impact">Impact</a><a href="#coach">Coaches</a><a href="{{ begin }}">Begin</a></div>
       </nav>
       <div class="hero-copy">
-        <h1>Everyone has a calling. Do you know yours?</h1>
+        <h1>Everyone has a purpose. Do you know yours?</h1>
         <p class="hero-summary">A guided workbook for discerning your calling through scripture, a strengths assessment, feedback from people you trust, and a coach. For adults aged 18 and over.</p>
         <div class="hero-cta">
           <a class="pill" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
-          <a class="pill ghost" data-magnetic href="#mentor">For mentors</a>
+          <a class="pill ghost" data-magnetic href="#coach">For coaches</a>
         </div>
         {% include "access/demo_notice.html" %}
       </div>
@@ -36,7 +37,8 @@
     <!-- =================== MISSION =================== -->
     <section class="panel mission" id="mission">
       <div class="in">
-        <p class="reveal" id="reveal">Whatever You Do is a pathway for discerning your calling, drawing on scripture, a strengths assessment, feedback from trusted peers, and a mentor to help you unpack your gifting.</p>
+        <p class="reveal" id="reveal">Whatever You Do is a pathway for discerning your purpose.</p>
+        <ul class="pillars" aria-label="What it draws on"><li>Scripture</li><li>Strengths assessment</li><li>Peer feedback</li><li>Coach oversight</li><li>Workbook</li></ul>
         <div class="sign"><svg><use href="#mark"/></svg><span>A calling workbook for every season of life</span></div>
       </div>
     </section>
@@ -61,10 +63,9 @@
           <div class="tp-text" id="aText" role="tabpanel"></div>
           <div class="tp-img" id="aImgs" aria-hidden="true"></div>
         </div>
-        <div class="journey-coach" id="mentor">
+        <div class="journey-coach" id="coach">
           <svg aria-hidden="true"><use href="#mark"/></svg>
           <p><b>A coach can walk alongside you throughout.</b> Invite a pastor, colleague or wise friend when you’re ready.</p>
-          <a class="pill ghost" data-magnetic href="#contact">Ask us about coaching</a>
         </div>
       </div>
     </section>
@@ -96,7 +97,6 @@
           <li><b>Invite trusted voices</b><span>Participants can ask people who know them well to share their perspective.</span></li>
           <li><b>Walk alongside someone</b><span>Coaches can support reflection at a participant’s pace.</span></li>
         </ul>
-        <a class="pill" data-magnetic href="#contact">Talk to us <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
       </div>
     </section>
 
@@ -110,20 +110,6 @@
         <article class="post"><div class="post-art post-art-2" aria-hidden="true"></div><h3>The gap between how you see yourself and how others see you</h3><p>Most people overestimate some gifts and underestimate others. The comparison is where the real insight lives.</p></article>
         <article class="post"><div class="post-art post-art-3" aria-hidden="true"></div><h3>What the early church actually believed about work</h3><p>The sacred-secular divide is a modern invention. The first Christians had a radically different view.</p></article>
       </div>
-      <div class="cn-row">
-        <div class="cn-card news">
-          <svg class="ic"><use href="#leaf"/></svg>
-          <h3>Stay in touch</h3>
-          <p>Thoughtful writing on vocation, faith and work. Newsletter sign-up is not available yet.</p>
-          <a class="pill" data-magnetic href="#contact">Get in touch</a>
-        </div>
-        <div class="cn-card contact" id="contact">
-          <svg class="ic"><use href="#mark"/></svg>
-          <h3>Get in touch</h3>
-          <p>We’d love to hear from you, whether you’re an individual, a church leader, or just curious.</p>
-          <span class="mail">hello@whateveryoudo.org</span>
-        </div>
-      </div>
     </section>
 
     <section class="panel story-sec" aria-label="A participant’s story">
@@ -135,18 +121,9 @@
       </figure>
     </section>
 
-    <section class="panel support" aria-labelledby="supportTitle">
-      <div class="support-copy">
-        <span class="label">Support our work</span>
-        <h2 id="supportTitle">Help more people make space to reflect on their calling.</h2>
-        <p>Whatever You Do is free for participants. Get in touch to learn more about supporting the work.</p>
-        <a class="pill" data-magnetic href="#contact">Ask us about supporting the work <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
-      </div>
-    </section>
-
     <!-- =================== MEET =================== -->
     <section class="panel meet" id="about">
-      <h2>Everyone has a calling. Do you know yours?</h2>
+      <h2>Everyone has a purpose. Do you know yours?</h2>
       <div class="meet-cards">
         <div class="mc"><span class="mc-ic"><svg><use href="#mark"/></svg></span><h3>Teacher</h3><p>Seeing the classroom as a place of formation.</p></div>
         <div class="mc"><span class="mc-ic"><svg><use href="#leaf"/></svg></span><h3>Electrician</h3><p>Finding meaning in the work of your hands.</p></div>
@@ -162,7 +139,7 @@
       <div class="cols">
         <div><b>Whatever You Do</b><span>A guided calling workbook</span></div>
         <div><b>Explore</b><a href="#how">How it works</a><a href="#journey">The assessment</a><a href="#impact">Impact</a><a href="#connect">Writing</a></div>
-        <div><b>For churches</b><a href="#churches">Run it in a group</a><a href="#mentor">For mentors</a><a href="#contact">Ask about supporting the work</a></div>
+        <div><b>For churches</b><a href="#churches">Run it in a group</a><a href="#coach">For coaches</a></div>
         <div><b>Note</b><span>“Whatever you do, work at it with all your heart, as working for the Lord.”<br>Colossians 3:23 (NIV)</span></div>
       </div>
       <div class="hp-footer-links">

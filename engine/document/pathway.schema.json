@@ -101,13 +101,13 @@
           "properties": { "method": { "enum": ["compositional_share"] } }
         },
         "tie_break": {
-          "description": "When a participant's own sort leaves a framework's leaders too close to call (ticket 30a). A framework is tied when another construct's rounded percent is within threshold points of its leader's; at most cluster constructs, leader first, enter the tie-break. Tied on exactly one framework, the participant is marked for the tie-break; on both, they are told they are a generalist, in presentation.generalist's wording. With no tie_break, nobody is marked.",
+          "description": "When a participant's own sort leaves a framework's leaders too close to call (ticket 30a, ADR 0018). A framework is tied when its leader's unrounded share is at most percent more than another construct's; at most cluster constructs, leader first, enter the tie-break. A participant tied on one framework or both is marked for the tie-break, unless every construct on every framework stands in a band between the lowest and the highest (presentation.standing): then they are flat, and told they are a generalist in presentation.generalist's wording, with nothing asked. With no tie_break, nobody is marked.",
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "threshold": {
-              "description": "How many percentage points behind its leader a construct may be and still tie with it. 4 when left out.",
-              "type": "integer",
+            "percent": {
+              "description": "How much more than another construct's unrounded share, as a percent of it, a leader's may be and still be too close to call with it. 5 when left out.",
+              "type": "number",
               "minimum": 0,
               "maximum": 100
             },
@@ -117,9 +117,9 @@
               "minimum": 2
             },
             "budget": {
-              "description": "How many 'Which is more true of you?' pairs a participant marked for the tie-break answers, at most (ticket 30b). 10 when left out.",
+              "description": "How many 'Which is more true of you?' pairs a participant marked for the tie-break answers, at most (ticket 30b). At least 2, so every tied framework gets a pair when both are tied (ADR 0018). 10 when left out.",
               "type": "integer",
-              "minimum": 1
+              "minimum": 2
             },
             "statements": {
               "description": "Three statements for each construct, keyed by its id, that the tie-break's pairs set against each other (ticket 30b). Separate from the instrument's items. Every construct needs them.",
@@ -224,7 +224,7 @@
                 "$ref": "#/$defs/text"
               },
               "tone": {
-                "description": "The colour of the construct's bar and item scores, from the stylesheet's named tones.",
+                "description": "The colour of the construct's item scores, from the stylesheet's named tones. Its drawing takes its standing's colour.",
                 "enum": ["violet", "rose", "green", "moss", "blue", "brown"]
               }
             }
@@ -239,12 +239,7 @@
             "properties": {
               "framework": { "$ref": "#/$defs/identifier" },
               "heading": { "$ref": "#/$defs/text" },
-              "subtitle": { "$ref": "#/$defs/text" },
-              "bars": {
-                "description": "How the framework's bars are coloured: by each construct's tone, or by rank so tied scores share a colour.",
-                "enum": ["tone", "rank"],
-                "default": "tone"
-              }
+              "subtitle": { "$ref": "#/$defs/text" }
             }
           }
         },
@@ -254,20 +249,21 @@
         },
         "disclaimer": { "$ref": "#/$defs/text" },
         "generalist": {
-          "description": "What the results page tells a participant tied on both frameworks (measurement.tie_break): that they are a generalist. Needed whenever the pathway has a tie-break.",
+          "description": "What the results page tells a participant whose result, as shown, is flat on both frameworks (measurement.tie_break): that they are a generalist. text for a sort flat on both, which asks no pairs; after_pairs for a result the tie-break's pairs re-weighted that is flat on both, with no framework separated (ADR 0018). Needed whenever the pathway has a tie-break.",
           "type": "object",
           "additionalProperties": false,
-          "required": ["heading", "text"],
+          "required": ["heading", "text", "after_pairs"],
           "properties": {
             "heading": { "$ref": "#/$defs/text" },
-            "text": { "$ref": "#/$defs/text" }
+            "text": { "$ref": "#/$defs/text" },
+            "after_pairs": { "$ref": "#/$defs/text" }
           }
         },
         "tie_break": {
-          "description": "The wording of the tie-break's pair screen (measurement.tie_break, ticket 30b): the question over each pair, the skip, and a quiet label naming each framework, keyed by its id (the framework's own label when left out). Then what the results page says on the framework the answers re-weighted (ticket 30c): separated, with a new leader (changed) or the same one (same), or genuinely balanced, the choices having gone in a circle (circle) or left the best of them level (level). Needed whenever the pathway has a tie-break.",
+          "description": "The wording of the tie-break's pair screen (measurement.tie_break, ticket 30b): the question over each pair, the skip, and a quiet label naming each framework, keyed by its id (the framework's own label when left out). Then what the results page says on each framework the answers re-weighted (ticket 30c, ADR 0018): separated, with a new leader (changed) or the same one (same), genuinely balanced, the choices having gone in a circle (circle) or left the best of them level (level), or every pair skipped (skipped), which says nothing about the participant. In those sentences {top} is replaced with the leader after the answers, {previous} with the sort's leader among the tied, {next} with the closest behind the top after the answers, and {names} with the tied constructs as shown, joined \"A, B and C\", each by its text_label (its label when it has none); no other placeholder is allowed. Needed whenever the pathway has a tie-break.",
           "type": "object",
           "additionalProperties": false,
-          "required": ["question", "skip", "separated", "balanced"],
+          "required": ["question", "skip", "separated", "balanced", "skipped"],
           "properties": {
             "question": { "$ref": "#/$defs/text" },
             "skip": { "$ref": "#/$defs/text" },
@@ -291,11 +287,20 @@
                 "circle": { "$ref": "#/$defs/text" },
                 "level": { "$ref": "#/$defs/text" }
               }
+            },
+            "skipped": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["heading", "text"],
+              "properties": {
+                "heading": { "$ref": "#/$defs/text" },
+                "text": { "$ref": "#/$defs/text" }
+              }
             }
           }
         },
         "standing": {
-          "description": "Where a construct's share stands, in words, on the results page and the comparison, by how far it sits from an even share of its framework (an even share is 100 divided among the framework's constructs). A share takes the highest band whose at_least, a percent of an even share, it reaches, in whatever order the bands are written; below them all it takes the below label. Placeholders (Leading 125, Strong 105, Present 85, Less used) when left out.",
+          "description": "Where a construct's share stands, in words, on the results page and the comparison, by how far it sits from an even share of its framework (an even share is 100 divided among the framework's constructs). A share takes the highest band whose at_least, a percent of an even share, it reaches, in whatever order the bands are written; below them all it takes the below label. The results colour each standing by its band's place, highest first, and the below label in the less-used colour, whatever the labels say. Placeholders (Leading 125, Strong 105, Present 85, Less used) when left out.",
           "type": "object",
           "additionalProperties": false,
           "required": ["bands", "below"],
@@ -322,12 +327,12 @@
           "additionalProperties": false,
           "properties": {
             "significant_gap": {
-              "description": "A gap of this many percentage points or more is significant; less is a modest gap. 5 when left out.",
+              "description": "A gap of this many percentage points or more, unrounded, is significant; less is a modest gap. 5 when left out.",
               "type": "integer",
               "minimum": 1
             },
             "agreement": {
-              "description": "How far the observers agree, by the range of their percents. A range falls in the narrowest band whose up_to it doesn't pass, in whatever order the bands are written; above them all it takes the above label. The prototype's when left out.",
+              "description": "How far the observers agree, by the range of their unrounded shares. A range falls in the narrowest band whose up_to it doesn't pass, in whatever order the bands are written; above them all it takes the above label. The prototype's when left out.",
               "type": "object",
               "additionalProperties": false,
               "required": ["bands", "above"],
@@ -524,11 +529,7 @@
       "required": ["id", "type"],
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
-        "type": { "const": "page_break" },
-        "skip_label": {
-          "description": "The way on from the page before, while nothing on that page holds an answer, set apart as a way past it, such as 'I'll sort this later →'. 'Continue →' once anything is answered.",
-          "$ref": "#/$defs/text"
-        }
+        "type": { "const": "page_break" }
       }
     },
     "rich_text": {
@@ -789,6 +790,16 @@
           "description": "The wording of a button that leads there, such as 'Open Strengths Assessment →'. Without one, the section's title is the link.",
           "$ref": "#/$defs/text"
         },
+        "finished": {
+          "description": "What the link says once the linked section is complete, in place of its body and button label, such as 'View my results →'. Its button then leads to the results of the sort in that section, if it holds one, and otherwise to the section.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["button_label"],
+          "properties": {
+            "body": { "$ref": "#/$defs/text" },
+            "button_label": { "$ref": "#/$defs/text" }
+          }
+        },
         "holds_what_follows": {
           "description": "Hold the rest of this section shut until the linked section's gate passes, as a scripture reading does until it is confirmed.",
           "type": "boolean",
@@ -1028,7 +1039,14 @@
             "required": ["id", "label"],
             "properties": {
               "id": { "$ref": "#/$defs/identifier" },
-              "label": { "$ref": "#/$defs/text" }
+              "label": {
+                "description": "The construct's name beside its drawing: on the results page, the comparison and a coach's view of the results.",
+                "$ref": "#/$defs/text"
+              },
+              "text_label": {
+                "description": "The construct's name wherever text names it, such as the tie-break's sentences, the comparison's largest gaps and the heading over its item scores, when it is written otherwise than beside its drawing (Whatever You Do's \"deacon\" is \"Deacon\" in text). The label when left out.",
+                "$ref": "#/$defs/text"
+              }
             }
           }
         }

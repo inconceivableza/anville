@@ -14,7 +14,8 @@
     <title>{% block head_title %}Anville{% endblock head_title %}</title>
     {% vite_asset 'src/main.js' %}
   </head>
-  <body>
+  {# ✨ A page sets `body_class` for a look the whole page takes, such as the participant's frame (ticket 53b). #}
+  <body{% block body_class %}{% endblock body_class %}>
     <svg aria-hidden="true">
       <symbol id="mark" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="16" cy="16" r="4"/><ellipse cx="16" cy="8" rx="3.4" ry="5.5"/><ellipse cx="16" cy="24" rx="3.4" ry="5.5"/><ellipse cx="8" cy="16" rx="5.5" ry="3.4"/><ellipse cx="24" cy="16" rx="5.5" ry="3.4"/><ellipse cx="10.3" cy="10.3" rx="3" ry="5" transform="rotate(-45 10.3 10.3)"/><ellipse cx="21.7" cy="21.7" rx="3" ry="5" transform="rotate(-45 21.7 21.7)"/><ellipse cx="21.7" cy="10.3" rx="3" ry="5" transform="rotate(45 21.7 10.3)"/><ellipse cx="10.3" cy="21.7" rx="3" ry="5" transform="rotate(45 10.3 21.7)"/></g></symbol>
       <symbol id="arrow" viewBox="0 0 12 12"><path d="M3 9L9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.4"/></symbol>

@@ -176,6 +176,23 @@ def test_without_javascript_saving_returns_the_participant_to_the_section_they_w
 
 
 @pytest.mark.django_db
+def test_without_javascript_a_refused_answer_comes_back_on_its_page_never_as_a_bare_status(signed_in):
+    """✨ Pressing Enter in an answer submits its form as a full page (fix-7). A refusal then shows the page around the
+    answer, saying why, rather than leaving the participant on the status line meant for autosave."""
+    version = version_on(shown(signed_in, ONBOARDING))
+    signed_in.post("/answers/baseline-bible/", {"value": "6", "version": version})
+
+    refused = signed_in.post("/answers/baseline-bible/", {"version": version})
+
+    page = refused.content.decode()
+    assert refused.status_code == 400
+    assert "<html" in page
+    assert 'id="block-baseline-bible"' in page
+    assert "Not saved. No answer was sent." in page
+    assert _chosen_point(shown(signed_in, ONBOARDING), "baseline-bible") == "6"
+
+
+@pytest.mark.django_db
 def test_a_participant_in_progress_stays_on_the_version_they_started(signed_in, client, load_pathway):
     answer(signed_in, "statement", "Started on the first version.")
     edited = pathway_document()

@@ -118,6 +118,41 @@ def test_a_section_link_may_carry_a_button_label_and_hold_what_follows_by_a_yes_
     assert problem.path == "/content/sections/1/blocks/0/holds_what_follows"
 
 
+def test_a_section_links_finished_wording_needs_a_button_label_and_its_text_is_text():
+    """✨ The wording it shows once the linked section is complete (ticket 61)."""
+    document = pathway_document()
+    finished = {"body": "You've completed the assessment.", "button_label": "View my results →"}
+    link = {"id": "to-onboarding", "type": "section_link", "section": "onboarding", "finished": finished}
+    document["content"]["sections"][1]["blocks"].insert(0, link)
+    assert validate(document) == []
+
+    finished["button_label"] = 5
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/1/blocks/0/finished/button_label"
+
+    del finished["button_label"]
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/1/blocks/0/finished"
+
+
+def test_a_construct_may_be_named_in_text_otherwise_than_beside_its_drawing_by_authored_text():
+    """✨ Both Whatever You Do pathways label deacon "deacon" beside its drawing and "Deacon" in text (fix-27)."""
+    for name in ("whatever-you-do.json", "whatever-you-do-faithful-port.json"):
+        pathway = json.loads((WHATEVER_YOU_DO.parent / name).read_text(encoding="utf-8"))
+        [apest] = [framework for framework in pathway["measurement"]["frameworks"] if framework["id"] == "apest"]
+        [deacon] = [construct for construct in apest["constructs"] if construct["id"] == "deacon"]
+        assert (deacon["label"], deacon["text_label"]) == ("deacon", "Deacon")
+
+    document = pathway_document()
+    apostle = document["measurement"]["frameworks"][0]["constructs"][0]
+    apostle["text_label"] = {"participant": "Apostle"}
+    assert validate(document) == []
+
+    apostle["text_label"] = 5
+    [problem] = validate(document)
+    assert problem.path == "/measurement/frameworks/0/constructs/0/text_label"
+
+
 def a_single_select(**fields):
     return {
         "id": "reason",
@@ -292,9 +327,12 @@ def test_a_coach_checklists_questions_may_not_share_an_identifier():
 
 
 def test_every_section_and_every_kind_of_block_shown_may_carry_a_time_estimate():
-    """✨ The Whatever You Do pathway holds a block of every kind, so each gets one here. A page break is never
-    shown, so it takes no time of its own."""
+    """✨ The Whatever You Do pathway holds a block of every kind but a sort's results shown in a section, which it
+    stopped showing (fix-5) and is added here, so each gets one. A page break is never shown, so it takes no time of
+    its own."""
     document = json.loads(WHATEVER_YOU_DO.read_text(encoding="utf-8"))
+    shown = {"id": "strengths-results", "type": "sort_results", "sort": "strengths-sort"}
+    document["content"]["sections"][1]["blocks"].append(shown)
     for section in document["content"]["sections"]:
         section["estimate"] = "About 15 minutes"
         for block in section["blocks"]:
