@@ -260,7 +260,7 @@
           }
         },
         "tie_break": {
-          "description": "The wording of the tie-break's pair screen (measurement.tie_break, ticket 30b): the question over each pair, the skip, and a quiet label naming each framework, keyed by its id (the framework's own label when left out). Then what the results page says on each framework the answers re-weighted (ticket 30c, ADR 0018): separated, with a new leader (changed) or the same one (same), genuinely balanced, the choices having gone in a circle (circle) or left the best of them level (level), or every pair skipped (skipped), which says nothing about the participant. Needed whenever the pathway has a tie-break.",
+          "description": "The wording of the tie-break's pair screen (measurement.tie_break, ticket 30b): the question over each pair, the skip, and a quiet label naming each framework, keyed by its id (the framework's own label when left out). Then what the results page says on each framework the answers re-weighted (ticket 30c, ADR 0018): separated, with a new leader (changed) or the same one (same), genuinely balanced, the choices having gone in a circle (circle) or left the best of them level (level), or every pair skipped (skipped), which says nothing about the participant. In those sentences {top} is replaced with the leader after the answers, {previous} with the sort's leader among the tied, {next} with the closest behind the top after the answers, and {names} with the tied constructs as shown, joined \"A, B and C\", each by its label; no other placeholder is allowed. Needed whenever the pathway has a tie-break.",
           "type": "object",
           "additionalProperties": false,
           "required": ["question", "skip", "separated", "balanced", "skipped"],
