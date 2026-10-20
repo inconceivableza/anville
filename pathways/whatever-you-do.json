@@ -639,7 +639,7 @@
       "balanced": {
         "heading": "Genuinely balanced",
         "circle": "Your answers went in a circle — each option beat one and lost to another. That’s a real result rather than an error: {names} sit equally in you.",
-        "level": "Your answers put none of {names} ahead of the others. That’s a real result rather than an error: they sit equally in you."
+        "level": "{names} came out level after your answers to “Which is more true of you?”. That’s a real result rather than an error: they sit equally in you."
       },
       "skipped": {
         "heading": "Skipped",
