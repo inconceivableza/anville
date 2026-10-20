@@ -450,10 +450,11 @@ main.container:has(> .ob) {
   line-height: 1.2;
 }
 
+/* ✨ The reference in the verse's own colour: the softer one was hard to read over the photo (fix-14). */
 .ob-photo .q cite {
   display: block;
   margin-top: var(--space-md);
-  color: var(--on-dark-2);
+  color: inherit;
   font-style: normal;
 }
 
@@ -3925,10 +3926,12 @@ body > svg[aria-hidden="true"] {
   padding: clamp(64px, 9vw, 120px) clamp(20px, 5vw, 72px);
 }
 
+/* ✨ A minmax(0, 1fr) column: an auto one took the tab strip's full width on a phone and pushed the panel off screen (fix-14). */
 .atabs .in {
   max-width: 1240px;
   margin-inline: auto;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(28px, 4vw, 48px);
 }
 
@@ -4146,9 +4149,11 @@ body > svg[aria-hidden="true"] {
   animation: tpin 0.55s ease both;
 }
 
+/* ✨ No tpin animation on the photos: its fill held every one at full opacity, so the last covered the step's own (fix-14). */
 #aImgs .tp-anim {
   position: absolute;
   inset: 0;
+  animation: none;
   opacity: 0;
   transition: opacity 0.5s ease;
 }
@@ -4512,6 +4517,7 @@ body > svg[aria-hidden="true"] {
 }
 
 .ring-stage {
+  --ring-controls-space: 64px;
   position: relative;
   width: 100%;
   margin: 28px auto 0;
@@ -4520,9 +4526,10 @@ body > svg[aria-hidden="true"] {
   touch-action: pan-y;
 }
 
+/* ✨ The ring stops short of the stage's foot, which main.js makes taller by as much, so the arrows sit below the cards (fix-14). */
 .meet-cards.ring {
   position: absolute;
-  inset: 0;
+  inset: 0 0 var(--ring-controls-space);
   display: block;
   margin: 0;
   padding: 0;
@@ -4696,6 +4703,7 @@ body > svg[aria-hidden="true"] {
 }
 
 .atabs .tab {
+  padding: 8px 6px 14px;
   color: var(--on-dark-2);
 }
 
@@ -4707,12 +4715,25 @@ body > svg[aria-hidden="true"] {
   background: var(--green-45);
 }
 
+/* ✨ The selected tab in light text, its number green, as v3's are; dark text here vanished into the brown (fix-14). */
+.atabs .tab:hover,
 .atabs .tab[aria-selected="true"] {
-  color: var(--ink);
+  color: var(--on-dark);
 }
 
-.atabs .tab[aria-selected="true"] .bar {
-  background: var(--cream-2);
+.atabs .tab[aria-selected="true"] .tab-number {
+  color: var(--green);
+}
+
+/* ✨ The tab's ring sits inside it, as the strip scrolls on a phone and would clip one outside. */
+.atabs .tab:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: -2px;
+}
+
+.atabs .tabnav button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
 }
 
 .atabs .tabpanel {
@@ -4886,8 +4907,9 @@ body > svg[aria-hidden="true"] {
   color: var(--on-dark-2);
 }
 
+/* ✨ No position here: the ring's position: absolute above places each card on the ring and anchors its photo.
+   A position: relative here stacked the cards below the stage, so only the first ever showed (fix-14). */
 .ring-stage .mc {
-  position: relative;
   overflow: hidden;
   padding-top: 170px;
   background: var(--brown-78);
