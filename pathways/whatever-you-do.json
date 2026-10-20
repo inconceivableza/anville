@@ -225,14 +225,14 @@
         "title": "The shape of your life",
         "number": "02",
         "estimate": "About 30–40 minutes",
-        "requires": ["designed", "walk-with-a-coach", "trusted-voices"],
+        "requires": ["strengths", "walk-with-a-coach", "trusted-voices"],
         "complete_label": "I've finished Section 2",
         "blocks": [
           {
             "id": "shape-pdf",
             "type": "download",
             "file": "whatever-you-do-workbook-section-2.pdf",
-            "body": "Section two, to work through on paper: mapping your story, and what has happened in each season of it.\n\nSections two to four make up the middle of the course, which works better on paper, so each is a booklet of its own. When you've finished this one, come back here to say so, and Section 3 opens.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their assessments of you – don’t let that stop you making progress on the workbook.",
+            "body": "Section two, to work through on paper: mapping your story, and what has happened in each season of it.\n\nSections two to four make up the middle of the course, which works better on paper, so each is a booklet of its own. When you've finished this one, come back here to say so.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their assessments of you – don’t let that stop you making progress on the workbook.",
             "button_label": "Download Section 2 (PDF)"
           }
         ]
@@ -242,7 +242,7 @@
         "title": "Putting your calling into words",
         "number": "03",
         "estimate": "About 30–40 minutes",
-        "requires": ["shape"],
+        "requires": ["designed", "shape"],
         "opens_when": {
           "clauses": [
             {

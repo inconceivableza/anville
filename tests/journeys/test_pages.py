@@ -14,9 +14,9 @@ from html import unescape
 
 import pytest
 
-from engine.models import Response
+from engine.models import Contact, Response
 from tests.documents import pathway_document, scripture_reading, sort_pathway, translated
-from tests.journeys.pages import gate_checklist, main_of, version_on
+from tests.journeys.pages import gate_checklist, main_of, text_of, version_on
 from tests.journeys.test_coach_checklist import choose, step, the_coach_checklist
 from tests.journeys.test_hub import hub_entry, signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_navigation import section_in, sidebar_of
@@ -279,6 +279,29 @@ def test_a_coach_checklist_on_a_page_not_reached_cannot_be_stepped_through(signe
     save(signed_in_client, "why", "To find out.")
 
     assert step(signed_in_client, "questions", htmx=False).status_code == 403
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("pressed", ["answer", "checklist step"])
+def test_without_javascript_a_press_on_a_page_not_reached_is_refused_on_a_page_of_its_own_leading_to_the_hub(
+    signed_in_client, load_pathway, pressed  # noqa: F811
+):
+    """✨ The page it was pressed on is shut too, so the refusal is a page in the participant's frame (ticket 71)."""
+    load_pathway(paged_onboarding(second_page=[{"id": "story", "type": "long_text", "prompt": STORY_PROMPT}, the_coach_checklist()]))
+    save(signed_in_client, "why", "To find out.")
+
+    if pressed == "answer":
+        refused = save(signed_in_client, "story", "Written ahead.", htmx=False)
+    else:
+        refused = step(signed_in_client, "questions", htmx=False)
+
+    page = refused.content.decode()
+    assert refused.status_code == 403
+    assert '<body class="framed">' in page
+    assert "This is not open yet." in text_of(main_of(page))
+    assert 'href="/hub/"' in main_of(page)
+    assert set(Response.objects.get().answers) == {"why"}
+    assert not Contact.objects.exists()
 
 
 @pytest.mark.django_db

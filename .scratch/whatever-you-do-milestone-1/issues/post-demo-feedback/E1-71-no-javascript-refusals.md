@@ -4,13 +4,13 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 3a (from 20 Oct)
 
 **Spec:** Engine: sections, tracks, gates, progress
 
-- [ ] Adding a person or issuing a link while collection is frozen, without JavaScript, shows the list's page with "You've seen your results, so no more answers are added."
-- [ ] An answer or coach checklist step to a section not open yet, without JavaScript, shows a page in the participant's frame with "This is not open yet." and a link to the hub
-- [ ] The same requests with htmx still get the short status they get now
-- [ ] Each refusal keeps its status code, and nothing is stored
+- [x] Adding a person or issuing a link while collection is frozen, without JavaScript, shows the list's page with "You've seen your results, so no more answers are added."
+- [x] An answer or coach checklist step to a section not open yet, without JavaScript, shows a page in the participant's frame with "This is not open yet." and a link to the hub
+- [x] The same requests with htmx still get the short status they get now
+- [x] Each refusal keeps its status code, and nothing is stored
