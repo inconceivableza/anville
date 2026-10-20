@@ -2,9 +2,10 @@
 # For licensing information see ../LICENSE.md
 
 """✨ Loading one of the tie-break's made-up scenarios (`engine/tie_break_scenarios.py`) into a participant's stored
-sort, and what to show beside it: the answer to give each pair, and what the results should then show. Both
-`seed_tie_break` and the demo-only choice of a demo profile (fix-21) load through here, so each loads the same sort,
-worked forward and checked exactly as the other does."""
+sort, or handing it to the sort to start from, and what to show beside it: the answer to give each pair, and what the
+results should then show. `seed_tie_break` stores it (`load`); the demo-only choice of a demo profile hands it to the
+sort, storing nothing until the participant sends it themselves (`prefill`, fix-23). Both work it forward and check it
+exactly as the other does."""
 
 from dataclasses import dataclass
 
@@ -64,9 +65,24 @@ def load(response, block_id, name, on=None):
     return _guide(document, scenario_for(name, on).summary, seeded)
 
 
-def guide(document, name, on=None):
-    """✨ The Guide for the scenario `name`'s variant for `on` on `document`, storing nothing; as `load` raises."""
-    return _guide(document, scenario_for(name, on).summary, seeding(document, name, on))
+@dataclass(frozen=True)
+class Prefill:
+    """✨ A demo profile as the sort starts from it: its `key`, the sort it would send untouched (each item's bucket and
+    value), and its Guide."""
+
+    key: str
+    sort: dict
+    guide: Guide
+
+
+def prefill(document, key):
+    """✨ The variant a form's `key` names as the sort should start from, storing nothing, provided it holds on
+    `document`; otherwise None."""
+    profile = offered_by_key(document, key)
+    if profile is None:
+        return None
+    seeded = seeding(document, profile.name, profile.on)
+    return Prefill(key=key, sort=seeded.sort, guide=_guide(document, profile.summary, seeded))
 
 
 def _guide(document, summary, seeded):

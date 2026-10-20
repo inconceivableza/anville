@@ -1,0 +1,39 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ Demo only: a demo profile's guide, beside the sort it starts from (fix-23) and the pairs that follow, with
+  seed_tie_break's own lines: the answer to give each pair, in the pair screen's words, and what the results should then
+  show. `guide` is the profile's; `on_sort` says it is beside the sort. Offered only on a development or demo system, so
+  its wording is written here rather than in the pathway document.
+{% endcomment %}
+<aside class="demo-guide" aria-labelledby="demo-guide-heading">
+  <h2 id="demo-guide-heading">Demo profile</h2>
+  <p class="fixed-note">Demo only: this is offered only on a demo or development system.</p>
+  <p>{{ guide.summary }}</p>
+  {% if on_sort %}
+    <p>Every card is placed and every slider set for this profile. Go on to fine-tuning and send the sort as it is.</p>
+    <p>If you change a card or a slider, the profile may no longer come out as below.</p>
+  {% endif %}
+  {% if guide.pairs %}
+    <p>Answer the {{ guide.pairs|length }} pairs, in order:</p>
+    <ol>
+      {% for framework, answer in guide.pairs %}<li>{{ framework }}: {{ answer }}</li>{% endfor %}
+    </ol>
+  {% else %}
+    <p>No pairs: the results show straight away.</p>
+  {% endif %}
+  <p>The results should then show:</p>
+  <ul>
+    {% for framework in guide.results %}
+      <li>
+        {{ framework.heading }}: {{ framework.leaders }}
+        {% if framework.tie_break %}<br>{{ framework.tie_break.heading }}: {{ framework.tie_break.text }}{% endif %}
+      </li>
+    {% endfor %}
+    {% if guide.generalist %}
+      <li>{{ guide.generalist.heading }}: {{ guide.generalist.text }}</li>
+    {% else %}
+      <li>No generalist box.</li>
+    {% endif %}
+  </ul>
+</aside>
