@@ -354,7 +354,7 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
     stage.append(ring);
     const controls = document.createElement("div");
     controls.className = "ring-controls";
-    controls.innerHTML = '<button type="button" class="ring-control" data-ring-step="-1" aria-label="Previous calling">←</button><button type="button" class="ring-control" data-ring-toggle aria-label="Pause carousel">Pause</button><button type="button" class="ring-control" data-ring-step="1" aria-label="Next calling">→</button>';
+    controls.innerHTML = '<button type="button" class="ring-control" data-ring-step="-1" aria-label="Previous calling">←</button><button type="button" class="ring-control" data-ring-step="1" aria-label="Next calling">→</button>';
     stage.append(controls);
   }
 
@@ -363,17 +363,17 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   let radius = 0;
   let rotation = 0;
   let drag;
-  let pausedByUser = false;
+  // ✨ No pause button (fix-14): the ring stops while a pointer or focus is on it, and reduced motion keeps the plain cards.
   let interactionPaused = false;
   let lastFrame;
   let transitionUntil = 0;
   let transitionTimer;
-  const toggle = stage.querySelector("[data-ring-toggle]");
   const layout = () => {
     const width = stage.clientWidth;
     const cardWidth = Math.min(280, Math.max(220, width * 0.55));
     radius = (cardWidth + Math.max(16, width * 0.025)) * cards.length / (2 * Math.PI);
-    stage.style.height = `${Math.max(360, Math.min(500, cardWidth * 1.35))}px`;
+    const controlsSpace = parseFloat(getComputedStyle(stage).getPropertyValue("--ring-controls-space")) || 0;
+    stage.style.height = `${Math.max(360, Math.min(500, cardWidth * 1.35)) + controlsSpace}px`;
     cards.forEach((card, index) => {
       card.style.width = `${cardWidth}px`;
       card.style.transform = `translate(-50%, -50%) rotateY(${index * angle}deg) translateZ(${radius}px)`;
@@ -385,7 +385,7 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   const tick = (now) => {
     const elapsed = lastFrame === undefined ? 0 : Math.min(now - lastFrame, 64);
     lastFrame = now;
-    if (!pausedByUser && !interactionPaused && !drag && now >= transitionUntil) {
+    if (!interactionPaused && !drag && now >= transitionUntil) {
       rotation -= angle * elapsed / cardInterval;
       draw();
     }
@@ -419,11 +419,6 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
       clearTimeout(transitionTimer);
       transitionTimer = window.setTimeout(() => { ring.style.transition = "none"; }, 750);
     });
-  });
-  toggle?.addEventListener("click", () => {
-    pausedByUser = !pausedByUser;
-    toggle.textContent = pausedByUser ? "Resume" : "Pause";
-    toggle.setAttribute("aria-label", pausedByUser ? "Resume carousel" : "Pause carousel");
   });
   window.addEventListener("resize", layout);
   layout();
