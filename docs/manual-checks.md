@@ -596,3 +596,10 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - Beside the lines, deacon stays in lower case, as the prototype wrote it: the results page's APEST(d) profile, the comparison's rows and a coach's link all read "deacon".
 - Wherever text names it, it is "Deacon": the tie-break boxes (`seed_tie_break --profile tied-apest --answers behind` reads "Evangelist now sits on top, in place of Deacon, after your answers to “Which is more true of you?”."), the heading over its item scores under "Show item scores", a largest-gaps card on the comparison that names it ("Deacon (APEST(d))"; `seed_observers`, until deacon is among the largest gaps), and the leaders listed under "The results should then show:", in the "Demo profile" guide and in `seed_tie_break`'s output.
 - The faithful port reads the same, beside its lines and in its item scores and largest gaps. A result scored against a pathway version loaded before this change still reads "deacon" everywhere, as before. Same at phone width.
+
+## Section 3 waits on the coach (A1-64; migrate, load both pathways again, and use a participant started after that)
+
+- With the sections Section 3 requires unfinished and the coach not yet accepted, the hub's note under Section 3 reads "Opens once you've finished {those sections} and your coach has accepted." Finish them: it reads "Opens once your coach has accepted. If they decline, choose someone else." Section 3 shows "Locked" on the hub and in the sidebar, with no link, and typing `/sections/calling/` leads back to the hub.
+- From the coach page, open the coach's link in a private window and decline: Section 3 stays locked. Reissue the link and accept: Section 3 opens on the hub and in the sidebar.
+- Then revoke or reissue the coach's link, or choose another coach: Section 3 stays open.
+- On the faithful port, Section 3 opens as before, with no coach. Same at phone width: the longer note wraps under the section's title, nothing scrolls sideways.

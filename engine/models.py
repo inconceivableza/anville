@@ -11,7 +11,7 @@ from django.db.models import F, Func, Value
 from django.utils import timezone
 
 from access.consent import withdrawn_participants
-from engine.document.gates import comparison_visit_key, links_issued_key
+from engine.document.gates import coach_answer_key, comparison_visit_key, links_issued_key, opened_key
 from engine.document.observers import minimum_observers
 
 
@@ -72,6 +72,10 @@ class Response(models.Model):
     # minimum number of observer assessments in (ticket 55). Empty while it is open, and again once withdrawals leave
     # fewer than the minimum.
     collection_frozen_at = models.DateTimeField(null=True, blank=True)
+    # ✨ When each section with opening conditions first opened, keyed by section (ADR 0019). Recorded, as a hub side
+    # card's completion is, so a section once open stays open whatever later happens to its conditions, such as the
+    # coach's link revoked. Empty on a response from before opening conditions, whose sections carry none.
+    sections_opened = models.JSONField(default=dict)
     is_test_data = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -152,6 +156,16 @@ class Response(models.Model):
         visited = Value({block_id: now.isoformat()}, output_field=models.JSONField())
         Response.objects.filter(pk=self.pk).exclude(comparisons_visited__has_key=block_id).update(
             comparisons_visited=_MergeJson(visited, F("comparisons_visited")),
+            updated_at=now,
+        )
+
+    def open_section(self, section_id):
+        """✨ Record that a section with opening conditions has opened, in one UPDATE that merges it in. The first time
+        is kept, and a later one writes nothing."""
+        now = timezone.now()
+        opened = Value({section_id: now.isoformat()}, output_field=models.JSONField())
+        Response.objects.filter(pk=self.pk).exclude(sections_opened__has_key=section_id).update(
+            sections_opened=_MergeJson(opened, F("sections_opened")),
             updated_at=now,
         )
 
@@ -274,8 +288,10 @@ class Response(models.Model):
         """✨ The stored answers, with each block's contacts read in as its answer, as the gate and progress read it.
         Each contact carries its id, which a contact list's rows send back so a save can tell them apart. Each visit to
         a sort's comparison is read in too, under a key no block can have, for a `comparison_visited` clause, and so is
-        how many of each block's people have a working link, for a `links_issued` clause."""
-        kept, links = {}, {}
+        how many of each block's people have a working link, for a `links_issued` clause, the coach's answer on their
+        current link, expired or not, for a `coach_accepted` clause, and when each section with opening conditions first
+        opened, for the hub."""
+        kept, links, coach_answers = {}, {}, {}
         now = timezone.now()
         for contact in self.contacts.select_related("invitation").order_by("block_id", "position"):
             person = {"name": contact.name, "email": contact.email, "id": contact.pk}
@@ -283,8 +299,14 @@ class Response(models.Model):
             if contact.live_invitation(now) is not None:
                 key = links_issued_key(contact.block_id)
                 links[key] = links.get(key, 0) + 1
+            invitation = getattr(contact, "invitation", None)
+            if contact.role == Contact.Role.COACH and invitation is not None:
+                # ✨ Expired or not, as the coach card shows it; a revoked link has no record, and a reissued one
+                # starts unanswered (ADR 0019).
+                coach_answers[coach_answer_key(contact.block_id)] = invitation.coach_answer
         visits = {comparison_visit_key(block_id): at for block_id, at in self.comparisons_visited.items()}
-        return {**self.answers, **kept, **visits, **links}
+        opened = {opened_key(section_id): at for section_id, at in self.sections_opened.items()}
+        return {**self.answers, **kept, **visits, **links, **coach_answers, **opened}
 
 
 class Contact(models.Model):

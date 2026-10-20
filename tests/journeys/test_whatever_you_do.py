@@ -13,12 +13,19 @@ import json
 import re
 from pathlib import Path
 
+from datetime import timedelta
+
 import pytest
+import time_machine
+from django.test import Client
+from django.utils import timezone
 from django.utils.html import escape
 
 from engine.document.observers import relationship_question
 from engine.models import Contact, ObserverResponse, Response
-from tests.journeys.test_coach_checklist import choose
+from tests.journeys.test_coach_checklist import choose, step
+from tests.journeys.test_coach_link import answer_as_coach, coach_link_action, link_shown
+from tests.journeys.test_navigation import section_in, sidebar_of
 from tests.journeys.pages import main_of
 from tests.journeys.test_hub import hub_entry, signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.prototype import js_string
@@ -91,9 +98,10 @@ def answer_onboarding(client):
 
 
 def through_to_the_letter(client):
-    """✨ Section 1 done with everyone invited, then Sections 2, 3 and 4 finished in turn, which is what opens the
-    letter."""
+    """✨ Section 1 done with everyone invited and the coach accepted, then Sections 2, 3 and 4 finished in turn, which
+    is what opens the letter."""
     through_to_section_2(client)
+    coach_accepts(client)
     for section_id in ON_PAPER:
         complete(client, section_id)
     return client
@@ -689,6 +697,7 @@ def test_each_sections_pdf_is_refused_until_it_is_reached_then_served_from_its_p
     before = ON_PAPER[: ON_PAPER.index(section_id)]
     if before:
         invite_everyone(client)
+        coach_accepts(client)  # ✨ Section 3 opens once the coach has accepted (ADR 0019)
         for earlier in before[:-1]:
             complete(client, earlier)
     assert client.get(PDFS[section_id]).status_code == 403
@@ -708,8 +717,10 @@ def test_each_sections_pdf_is_refused_until_it_is_reached_then_served_from_its_p
 @pytest.mark.django_db
 def test_sections_3_and_4_and_the_letter_each_open_once_the_one_before_is_finished(participant):
     """✨ In place of the letter after the whole workbook (ticket 58). None of Sections 2–4 has a gate: the participant
-    says when each is done, with its own button, and the hub counts it."""
+    says when each is done, with its own button, and the hub counts it. The coach has accepted, which Section 3 also
+    waits on (ADR 0019)."""
     client = through_to_section_2(participant)
+    coach_accepts(client)
     in_order = [*ON_PAPER, "letter"]
 
     for finished, following in zip(in_order, in_order[1:]):
@@ -719,3 +730,108 @@ def test_sections_3_and_4_and_the_letter_each_open_once_the_one_before_is_finish
         assert set(Response.objects.get().completed_sections) - done_before == {finished}
         assert client.get(f"/sections/{following}/").status_code == 200
     assert "8 of 9 sections complete" in client.get("/hub/").content.decode()
+
+
+# Section 3 waits on the coach's acceptance (ADR 0019)
+
+SECTION_3 = "/sections/calling/"
+
+
+def reissue_coach_link(client):
+    """✨ The coach's link made again on the coach page, as the participant does, and its path as shown to copy."""
+    issued = client.post(coach_link_action(client, "issue", section="walk-with-a-coach"), follow=True)
+    return link_shown(issued.content.decode())
+
+
+def coach_accepts(client, answer="accept"):
+    """✨ The coach answering on a fresh link of theirs, from their own browser."""
+    assert answer_as_coach(Client(), reissue_coach_link(client), answer).status_code == 303
+
+
+def opening_condition():
+    """✨ Section 3's opening condition, as authored."""
+    calling = next(section for section in the_pathway()["content"]["sections"] if section["id"] == "calling")
+    return calling["opens_when"]
+
+
+def section_3_is_locked(client):
+    """✨ Refused at its address, and locked, with no address, on the hub and in its sidebar."""
+    hub = client.get("/hub/").content.decode()
+    sidebar = sidebar_of(hub)
+    return (
+        client.get(SECTION_3).status_code == 302
+        and "Locked" in hub_entry(hub, TITLES["calling"])
+        and "Locked" in section_in(sidebar, TITLES["calling"])
+        and SECTION_3 not in sidebar
+    )
+
+
+def change_the_coach(client, change):
+    """✨ What takes a coach's acceptance away: the link revoked or made again, or another coach chosen."""
+    if change == "revoked":
+        client.post(coach_link_action(client, "revoke", section="walk-with-a-coach"))
+    elif change == "reissued":
+        reissue_coach_link(client)
+    else:
+        assert choose(client, name="Alex", email="alex@example.com").status_code == 200
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "coach", ["no link", "unanswered", "declined", "accepted then revoked", "accepted then reissued", "changed"]
+)
+def test_with_sections_1_and_2_complete_section_3_stays_locked_until_the_coach_has_accepted(participant, coach):
+    client = through_to_section_2(participant)
+    if coach == "no link":
+        step(client, "remove")
+    elif coach == "declined":
+        coach_accepts(client, "decline")
+    elif coach.startswith("accepted"):
+        coach_accepts(client)
+        change_the_coach(client, coach.split()[-1])
+    elif coach == "changed":
+        coach_accepts(client)
+        change_the_coach(client, coach)
+
+    complete(client, "shape")
+
+    assert section_3_is_locked(client)
+
+
+@pytest.mark.django_db
+def test_an_acceptance_on_the_coachs_current_link_opens_section_3_even_once_that_link_has_expired(participant):
+    client = through_to_section_2(participant)
+    coach_accepts(client)
+
+    with time_machine.travel(timezone.now() + timedelta(days=31), tick=False):
+        client.force_login(Response.objects.get().participant)  # ✨ a session lasts two weeks
+        complete(client, "shape")
+
+        assert client.get(SECTION_3).status_code == 200
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("change", ["revoked", "reissued", "changed"])
+def test_once_section_3_has_opened_it_stays_open_whatever_happens_to_the_coach(participant, change):
+    client = through_to_section_2(participant)
+    coach_accepts(client)
+    complete(client, "shape")
+    assert client.get(SECTION_3).status_code == 200
+
+    change_the_coach(client, change)
+
+    assert client.get(SECTION_3).status_code == 200
+    assert "Locked" not in hub_entry(client.get("/hub/").content.decode(), TITLES["calling"])
+
+
+@pytest.mark.django_db
+def test_section_3s_lock_note_names_the_unfinished_sections_and_the_coach_then_the_coach_alone(participant):
+    client = through_to_section_2(participant)
+    authored = opening_condition()
+    with_sections = authored["with_sections"].format(sections=TITLES["shape"])
+    assert escape(with_sections) in hub_entry(client.get("/hub/").content.decode(), TITLES["calling"])
+
+    complete(client, "shape")
+
+    coach_only = authored["clauses"][0]["message"]
+    assert escape(coach_only) in hub_entry(client.get("/hub/").content.decode(), TITLES["calling"])
