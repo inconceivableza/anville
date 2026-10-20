@@ -14,16 +14,8 @@ from access.models import Account, Consent
 from engine.document.blocks import BLOCK_TYPES, CHOICE, CONFIRMATION, SCALE_POINT, SCALE_POINTS, TEXT, blocks_of
 from engine.hub import block_ids_fixed_on_completion, section_by_id, track_sections
 from engine.models import Publication, Response
-from engine.results import pair_page
-from engine.tie_break_scenarios import (
-    DEFAULT_ON,
-    SCENARIOS,
-    TAKES_ON,
-    NoSuchVariant,
-    ScenarioDoesNotHold,
-    scenario_for,
-    seeding,
-)
+from engine.scenario_loading import load
+from engine.tie_break_scenarios import DEFAULT_ON, SCENARIOS, TAKES_ON, NoSuchVariant, ScenarioDoesNotHold, scenario_for
 
 SEED_PASSWORD = "information."
 DISPLAY_NAME = "Robin"
@@ -67,28 +59,27 @@ class Command(BaseCommand):
         block_id = next((block["id"] for block in blocks_of(document) if BLOCK_TYPES[block["type"]].scored), None)
         if block_id is None:
             raise CommandError("The published pathway has no assessment block, so there is nothing to seed.")
+        email = _unused_seed_email()
         try:
-            seeded = seeding(document, scenario, on)
+            with transaction.atomic():
+                # ✨ The reserved example.com address marks the account as made up; its response is marked as test data.
+                participant = get_user_model().objects.create_user(username=email, email=email, password=password)
+                Account.objects.create(participant=participant, display_name=DISPLAY_NAME)
+                Consent.objects.create(participant=participant, text_version=current_text_version())
+                response = Response.objects.create(participant=participant, version=version, is_test_data=True)
+                for section in _required_before(document, block_id):
+                    _complete(response, section)
+                # ✨ A scenario that does not hold raises before storing its sort, so nothing above is kept either.
+                loaded = load(response, block_id, scenario, on)
         except ScenarioDoesNotHold as problem:
             raise CommandError(f"The published pathway no longer gives this scenario: {problem}") from problem
-
-        email = _unused_seed_email()
-        with transaction.atomic():
-            # ✨ The reserved example.com address marks the account as made up; its response is marked as test data.
-            participant = get_user_model().objects.create_user(username=email, email=email, password=password)
-            Account.objects.create(participant=participant, display_name=DISPLAY_NAME)
-            Consent.objects.create(participant=participant, text_version=current_text_version())
-            response = Response.objects.create(participant=participant, version=version, is_test_data=True)
-            for section in _required_before(document, block_id):
-                _complete(response, section)
-            response.submit_sort(block_id, seeded.sort, seeded.scores)
 
         # ✨ Straight to the pairs once signed in; with none left, that page leads on to the results.
         next_page = urlencode({"next": reverse("tie_break", args=[block_id])}, safe="/")
         sign_in = f"{reverse('account_login')}?{next_page}"
         self.stdout.write(self.style.SUCCESS(f"Seeded {scenario}: {summary}"))
         self.stdout.write(f"Email: {email}\nPassword: {password}\nSign in at: {sign_in}\n")
-        self.stdout.write("\n".join(_what_to_do(document, seeded)))
+        self.stdout.write("\n".join(_what_to_do(loaded)))
 
 
 def _required_before(document, block_id):
@@ -134,28 +125,21 @@ def _answer_of(kind, block, number):
     raise CommandError(f"seed_tie_break cannot answer a {kind.name} block before the sort.")
 
 
-def _what_to_do(document, seeded):
+def _what_to_do(loaded):
     """✨ The lines saying which answer to give each pair, and what the results should then show."""
     lines = []
-    if seeded.questions:
-        lines.append(f"Answer the {len(seeded.questions)} pairs, in order:")
-        for number, (pair, chosen) in enumerate(seeded.questions, start=1):
-            # ✨ The pair screen's own words, so each line matches what the participant sees.
-            shown = pair_page(document, [pair], 0)
-            if chosen is None:
-                answer = f"skip (“{shown['skip']}”)"
-            else:
-                answer = f"choose “{next(o['text'] for o in shown['options'] if o['construct'] == chosen)}”"
-            lines.append(f"  {number}. {shown['framework']}: {answer}")
+    if loaded.pairs:
+        lines.append(f"Answer the {len(loaded.pairs)} pairs, in order:")
+        for number, (framework, answer) in enumerate(loaded.pairs, start=1):
+            lines.append(f"  {number}. {framework}: {answer}")
     else:
         lines.append("No pairs: the results show straight away.")
     lines.append("The results should then show:")
-    for framework in seeded.shown["frameworks"]:
-        leaders = ", ".join(f"{bar['label']} {bar['standing']}" for bar in framework["bars"][:2])
-        lines.append(f"  {framework['heading']}: {leaders}")
+    for framework in loaded.results:
+        lines.append(f"  {framework['heading']}: {framework['leaders']}")
         if framework["tie_break"]:
             lines.append(f"    {framework['tie_break']['heading']}: {framework['tie_break']['text']}")
-    generalist = seeded.shown["generalist"]
+    generalist = loaded.generalist
     lines.append(f"  {generalist['heading']}: {generalist['text']}" if generalist else "  No generalist box.")
     return lines
 
