@@ -387,6 +387,13 @@ The homepage (`/`):
   - The re-weighted results: `--profile tied-apest --answers behind` for the "Separated" box with the top changed (Evangelist now first and Deacon second, both still "Leading", where Deacon used to drop to "Present"), `--answers leader` for "Separated" with the same top, `--answers one-each-way` for "Genuinely balanced", `--profile tied-both --answers skip` for "Skipped" (on both frameworks). With `--profile tied-pep`, the box is under the PEP profile instead, and the APEST(d) profile has none.
   - Both frameworks re-weighted: `--profile tied-both --answers separate-apest-skip-pep`; `--answers separate-pep-skip-apest` gives the "Separated" box under the PEP profile and "Skipped" under the APEST(d) profile.
   - A generalist after the pairs: `--profile just-leading --answers one-each-way`; `--answers leader` instead for the "Separated" box and no generalist box.
+- The tie-break boxes name the roles and energies (fix-26; load the pathway again first, then a fresh participant for each, seeded or sorted by hand as above). Each box keeps its heading and its sentence names the constructs by the labels the profile shows (so "deacon" in lower case, as the pathway writes it):
+  - A new leader ("Separated"): "Evangelist now sits on top, in place of deacon, after your answers to “Which is more true of you?”." for `seed_tie_break --profile tied-apest --answers behind`; whichever role is chosen, the first name is the one now listed first and the second the one that led after the sort.
+  - The same leader ("Separated"): choose the sort's leader in every pair; the box reads "<leader> stays on top, still ahead of <next>, after your answers to “Which is more true of you?”.", the second name the one listed just below it.
+  - A circle ("Genuinely balanced"): "Your answers went in a circle — each option beat one and lost to another. That’s a real result rather than an error: <names> sit equally in you.", naming the tied roles in the order listed, "A and B" for two, "A, B and C" for more.
+  - Level ("Genuinely balanced"): "Your answers put none of <names> ahead of the others. That’s a real result rather than an error: they sit equally in you."
+  - Every pair skipped ("Skipped", on each framework skipped): "You skipped every “Which is more true of you?” pair here, so <names> stay as your sort placed them."
+  - With both frameworks re-weighted, each box names only its own profile's constructs. A coach given the results, and the comparison, show no box. At phone width a longer sentence still wraps inside its card without sideways scrolling.
 
 ## The comparison (the results page's "Compare with how others see you →")
 

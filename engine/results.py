@@ -26,8 +26,11 @@ from engine.document.tie_break import (
     SEPARATED,
     SKIPPED,
     TOP_CHANGED,
+    joined,
+    named,
     outcomes,
     tie_break,
+    tied_in,
 )
 
 # ✨ The stylesheet defines --standing-1 to --standing-3, for the document's bands from the highest down, and
@@ -86,25 +89,24 @@ def _results(document, scores, shares, sort, name, role):
     framework_presentation = {entry["framework"]: entry for entry in presentation.get("frameworks", [])}
     frameworks = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
     title = presentation.get("results_title", document["title"])
+    shown = []
+    for scored in scores["frameworks"]:
+        framework = _framework(
+            document,
+            frameworks[scored["framework"]],
+            framework_presentation.get(scored["framework"], {}),
+            scored["constructs"],
+            shares[scored["framework"]],
+            construct_presentation,
+            document["instrument"]["items"],
+            sort,
+            role,
+        )
+        framework["tie_break"] = _after_tie_break(presentation, scores, scored["framework"], framework["bars"], role)
+        shown.append(framework)
     return {
         "title": text_for(title, role).replace("{name}", name),
-        "frameworks": [
-            {
-                **_framework(
-                    document,
-                    frameworks[scored["framework"]],
-                    framework_presentation.get(scored["framework"], {}),
-                    scored["constructs"],
-                    shares[scored["framework"]],
-                    construct_presentation,
-                    document["instrument"]["items"],
-                    sort,
-                    role,
-                ),
-                "tie_break": _after_tie_break(presentation, scores, scored["framework"], role),
-            }
-            for scored in scores["frameworks"]
-        ],
+        "frameworks": shown,
         "disclaimer": _text(presentation, "disclaimer", role),
         "generalist": _generalist(document, scores, presentation, role),
     }
@@ -124,11 +126,15 @@ def _generalist(document, scores, presentation, role):
     return {"heading": text_for(wording["heading"], role), "text": text_for(text, role)}
 
 
-def _after_tie_break(presentation, scores, framework, role):
+def _after_tie_break(presentation, scores, framework, bars, role):
     """✨ What the results page says of a framework the tie-break re-weighted (ticket 30c, ADR 0018), in the document's
     words, or None for any other: separated, with a new leader or the same one; genuinely balanced, the choices having
     gone in a circle or left the best of them level, with no winner named; or every pair skipped. A pathway version
-    loaded before skipping had words of its own says it as it said it then, as level."""
+    loaded before skipping had words of its own says it as it said it then, as level.
+
+    The words may name the constructs by their labels as shown (fix-26, PLACEHOLDERS): the top and the next from the
+    framework's `bars`, in the order drawn; the previous leader and the tied constructs from the stored result, the
+    tied in the order drawn. A pathway version loaded before fix-26 names none, so its words are shown as written."""
     outcome = outcomes(scores).get(framework)
     if outcome is None:
         return None
@@ -138,7 +144,15 @@ def _after_tie_break(presentation, scores, framework, role):
     else:
         said = wording["balanced"] if outcome in (*BALANCED, SKIPPED) else wording["separated"]
         text = {TOP_CHANGED: "changed", SAME_TOP: "same", CIRCLE: "circle", LEVEL: "level", SKIPPED: "level"}[outcome]
-    return {"heading": text_for(said["heading"], role), "text": text_for(said[text], role)}
+    labels = {bar["construct"]: bar["label"] for bar in bars}
+    tied = tied_in(scores)[framework]
+    names = {
+        "top": bars[0]["label"],
+        "next": bars[1]["label"] if len(bars) > 1 else "",
+        "previous": labels[tied[0]] if tied else "",
+        "names": joined([bar["label"] for bar in bars if bar["construct"] in tied]),
+    }
+    return {"heading": text_for(said["heading"], role), "text": named(text_for(said[text], role), names)}
 
 
 def pair_page(document, plan, place):

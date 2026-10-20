@@ -292,6 +292,25 @@ def test_the_results_page_says_every_pair_was_skipped_in_words_of_its_own(marked
 
 
 @pytest.mark.django_db
+def test_a_construct_named_in_the_tie_break_sentence_is_escaped(client, participant, load_pathway):
+    """✨ fix-26: the sentence names the constructs by their labels, escaped as every label is."""
+    document = tie_breaking_pathway()
+    [prophet] = [c for c in document["measurement"]["frameworks"][0]["constructs"] if c["id"] == "prophet"]
+    prophet["label"] = "<b>Prophet</b>"
+    document["presentation"]["tie_break"]["separated"]["changed"] = "{top} now sits on top, in place of {previous}."
+    load_pathway(document)
+    client.force_login(participant)
+    give_consent(client)
+    client.post("/sections/onboarding/complete/")
+    answer_every_pair(client, CHOSE_PROPHET)
+
+    page = results(client).content.decode()
+
+    assert "&lt;b&gt;Prophet&lt;/b&gt; now sits on top, in place of Apostle." in page
+    assert "<b>Prophet</b>" not in page
+
+
+@pytest.mark.django_db
 def test_the_re_weighted_result_keeps_each_unrounded_share_beside_its_whole_number(marked):
     """✨ Prophet weighs 2 to Apostle's 1, so leads by 5.01% of their 100: 1050100/20501, stored as 51."""
     answer_every_pair(marked, CHOSE_PROPHET)
