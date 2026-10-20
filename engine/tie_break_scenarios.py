@@ -48,6 +48,11 @@ TIED_ON_APEST = {
     # ✨ Ideate 24% clearly ahead of Rally 19%.
     "ideate": 432, "rally": 342, "ponder": 320, "assess": 288, "facilitate": 234, "deliver": 184,
 }  # fmt: skip
+TIED_ON_PEP = {
+    **TIED_ON_BOTH,
+    # ✨ Deacon 24% clearly ahead of Evangelist 19%.
+    "deacon": 432, "evangelist": 342, "prophet": 320, "shepherd": 288, "apostle": 234, "teacher": 184,
+}  # fmt: skip
 FLAT_PEP = {
     # ✨ Every one "Present" or "Strong", and Assess 19.5% clear of Ponder 17%, so not tied.
     "assess": 351, "ponder": 306, "ideate": 297, "rally": 288, "facilitate": 282, "deliver": 276,
@@ -77,54 +82,108 @@ class Scenario:
     generalist: bool = False
 
 
+# ✨ Each scenario's variants by the framework `--on` names, keyed by the pathway's own framework ids; one that takes
+# no `--on` has a single variant under None. For separated and balanced, `--on` is the one framework tied (the other
+# has a clear leader); for mixed, it is the one that comes out Separated while the other is skipped.
+DEFAULT_ON = "apest"
 SCENARIOS = {
-    "tied-both": Scenario(
-        "Tied on both frameworks, not flat: pairs on both, alternating.",
-        TIED_ON_BOTH,
-        answers={"apest": LEADER, "pep": LEADER},
-        outcomes={"apest": SAME_TOP, "pep": SAME_TOP},
-    ),
-    "separated": Scenario(
-        "Tied on APEST(d) alone; answering for the one behind makes its top change.",
-        TIED_ON_APEST,
-        answers={"apest": CHALLENGER},
-        outcomes={"apest": TOP_CHANGED},
-    ),
-    "balanced": Scenario(
-        "Tied on APEST(d) alone; one answer each way leaves the best weight shared.",
-        TIED_ON_APEST,
-        answers={"apest": SPLIT},
-        outcomes={"apest": LEVEL},
-    ),
-    "skipped": Scenario(
-        "Tied on both frameworks; every pair skipped.",
-        TIED_ON_BOTH,
-        answers={"apest": SKIP, "pep": SKIP},
-        outcomes={"apest": SKIPPED, "pep": SKIPPED},
-    ),
-    "mixed": Scenario(
-        "Tied on both frameworks; APEST(d) separated, PEP skipped.",
-        TIED_ON_BOTH,
-        answers={"apest": CHALLENGER, "pep": SKIP},
-        outcomes={"apest": TOP_CHANGED, "pep": SKIPPED},
-    ),
-    "generalist-after-pairs": Scenario(
-        "One role just Leading, another just behind; balanced answers leave both profiles flat.",
-        LEADING_BY_A_HAIR,
-        answers={"apest": SPLIT},
-        outcomes={"apest": LEVEL},
-        generalist=True,
-    ),
-    "generalist": Scenario(
-        "Flat on both frameworks from the sort: no pairs, the generalist's box straight away.",
-        FLAT_ON_BOTH,
-        generalist=True,
-    ),
+    "tied-both": {
+        None: Scenario(
+            "Tied on both frameworks, not flat: pairs on both, alternating.",
+            TIED_ON_BOTH,
+            answers={"apest": LEADER, "pep": LEADER},
+            outcomes={"apest": SAME_TOP, "pep": SAME_TOP},
+        ),
+    },
+    "separated": {
+        "apest": Scenario(
+            "Tied on APEST(d) alone; answering for the one behind makes its top change.",
+            TIED_ON_APEST,
+            answers={"apest": CHALLENGER},
+            outcomes={"apest": TOP_CHANGED},
+        ),
+        "pep": Scenario(
+            "Tied on PEP alone; answering for the one behind makes its top change.",
+            TIED_ON_PEP,
+            answers={"pep": CHALLENGER},
+            outcomes={"pep": TOP_CHANGED},
+        ),
+    },
+    "balanced": {
+        "apest": Scenario(
+            "Tied on APEST(d) alone; one answer each way leaves the best weight shared.",
+            TIED_ON_APEST,
+            answers={"apest": SPLIT},
+            outcomes={"apest": LEVEL},
+        ),
+        "pep": Scenario(
+            "Tied on PEP alone; one answer each way leaves the best weight shared.",
+            TIED_ON_PEP,
+            answers={"pep": SPLIT},
+            outcomes={"pep": LEVEL},
+        ),
+    },
+    "skipped": {
+        None: Scenario(
+            "Tied on both frameworks; every pair skipped.",
+            TIED_ON_BOTH,
+            answers={"apest": SKIP, "pep": SKIP},
+            outcomes={"apest": SKIPPED, "pep": SKIPPED},
+        ),
+    },
+    "mixed": {
+        "apest": Scenario(
+            "Tied on both frameworks; APEST(d) separated, PEP skipped.",
+            TIED_ON_BOTH,
+            answers={"apest": CHALLENGER, "pep": SKIP},
+            outcomes={"apest": TOP_CHANGED, "pep": SKIPPED},
+        ),
+        "pep": Scenario(
+            "Tied on both frameworks; PEP separated, APEST(d) skipped.",
+            TIED_ON_BOTH,
+            answers={"apest": SKIP, "pep": CHALLENGER},
+            outcomes={"apest": SKIPPED, "pep": TOP_CHANGED},
+        ),
+    },
+    "generalist-after-pairs": {
+        None: Scenario(
+            "One role just Leading, another just behind; balanced answers leave both profiles flat.",
+            LEADING_BY_A_HAIR,
+            answers={"apest": SPLIT},
+            outcomes={"apest": LEVEL},
+            generalist=True,
+        ),
+    },
+    "generalist": {
+        None: Scenario(
+            "Flat on both frameworks from the sort: no pairs, the generalist's box straight away.",
+            FLAT_ON_BOTH,
+            generalist=True,
+        ),
+    },
 }
+TAKES_ON = [name for name, variants in SCENARIOS.items() if None not in variants]
 
 
 class ScenarioDoesNotHold(ValueError):
     """✨ The pathway's sort, scoring or tie-break no longer lets a scenario come out as it says."""
+
+
+class NoSuchVariant(ValueError):
+    """✨ `--on` given to a scenario that takes none, or naming a framework the scenario has no variant for."""
+
+
+def scenario_for(name, on=None):
+    """✨ The scenario `name`'s variant for `on` (DEFAULT_ON when it takes one and none is given), or NoSuchVariant."""
+    variants = SCENARIOS[name]
+    if None in variants:
+        if on is not None:
+            raise NoSuchVariant(f"{name} does not take --on; only {', '.join(TAKES_ON)} do.")
+        return variants[None]
+    on = on or DEFAULT_ON
+    if on not in variants:
+        raise NoSuchVariant(f"{name} takes --on {' or '.join(variants)}, not {on}.")
+    return variants[on]
 
 
 @dataclass(frozen=True)
@@ -138,10 +197,10 @@ class Seeding:
     shown: dict
 
 
-def seeding(document, name):
-    """✨ The scenario `name` worked forward on `document`, or ScenarioDoesNotHold where any step comes out otherwise
-    than it promises."""
-    scenario = SCENARIOS[name]
+def seeding(document, name, on=None):
+    """✨ The scenario `name`'s variant for `on` worked forward on `document`; NoSuchVariant where it has none, or
+    ScenarioDoesNotHold where any step comes out otherwise than it promises."""
+    scenario = scenario_for(name, on)
     sort = sort_with_totals(document, scenario.totals)
     scores = score(document, sort)
     detected = tie_break(document, scores)

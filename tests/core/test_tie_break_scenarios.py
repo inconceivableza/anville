@@ -18,20 +18,23 @@ def whatever_you_do():
 
 
 @pytest.mark.parametrize(
-    "scenario, tied, outcome",
+    "scenario, on, tied, outcome",
     [
-        ("tied-both", {"apest", "pep"}, TIE_BREAK),
-        ("separated", {"apest"}, TIE_BREAK),
-        ("balanced", {"apest"}, TIE_BREAK),
-        ("skipped", {"apest", "pep"}, TIE_BREAK),
-        ("mixed", {"apest", "pep"}, TIE_BREAK),
-        ("generalist-after-pairs", {"apest"}, TIE_BREAK),
-        ("generalist", set(), GENERALIST),
+        ("tied-both", None, {"apest", "pep"}, TIE_BREAK),
+        ("separated", None, {"apest"}, TIE_BREAK),
+        ("separated", "pep", {"pep"}, TIE_BREAK),
+        ("balanced", None, {"apest"}, TIE_BREAK),
+        ("balanced", "pep", {"pep"}, TIE_BREAK),
+        ("skipped", None, {"apest", "pep"}, TIE_BREAK),
+        ("mixed", None, {"apest", "pep"}, TIE_BREAK),
+        ("mixed", "pep", {"apest", "pep"}, TIE_BREAK),
+        ("generalist-after-pairs", None, {"apest"}, TIE_BREAK),
+        ("generalist", None, set(), GENERALIST),
     ],
 )
-def test_each_scenarios_sort_is_detected_as_it_promises(scenario, tied, outcome):
+def test_each_scenarios_sort_is_detected_as_it_promises(scenario, on, tied, outcome):
     document = whatever_you_do()
 
-    detected = tie_break(document, score(document, seeding(document, scenario).sort))
+    detected = tie_break(document, score(document, seeding(document, scenario, on).sort))
 
     assert (set(detected["tied"]), detected["outcome"]) == (tied, outcome)
