@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 from django.utils.html import escape
 
+from engine.document.observers import relationship_question
 from engine.models import Contact, ObserverResponse, Response
 from tests.journeys.test_coach_checklist import choose
 from tests.journeys.pages import main_of
@@ -360,6 +361,18 @@ def test_a_chosen_coach_is_kept_on_the_coach_page_and_apart_from_the_contacts(pa
     assert "sam@example.com" not in participant.get(CONTACTS_PAGE).content.decode()
 
 
+def test_observers_are_not_asked_how_they_know_the_participant():
+    """✨ The faithful port's relationship question (ticket 15b) is not asked here, so nothing is kept of it."""
+    assert relationship_question(the_pathway(), "Sam") is None
+
+
+def test_the_observers_privacy_notice_keeps_nothing_of_how_they_know_the_participant():
+    notice = the_pathway()["observers"]["privacy_notice"]
+
+    assert "What we keep: your answers." in notice
+    assert "how you know" not in notice
+
+
 # ✨ The observers' notice's one sentence about the coach (ticket 27), whom the faithful port never asks for.
 SHOWN_TO_THE_COACH = " {name} may also choose to show this to a trusted third party."
 
@@ -424,6 +437,7 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
         clauses.insert(plan_clause + 1, {"type": "has_answer", "block": f"{prefix}-peace", "message": ANSWER_ALL_FIVE})
     three_people_each_with_their_link(expected)
     a_download_in_place_of_each_of_sections_2_to_4(expected)
+    no_relationship_question(expected)
 
     assert without_the_next_step_and_photos(
         without_numbers(
@@ -484,6 +498,16 @@ def a_download_in_place_of_each_of_sections_2_to_4(document):
         clause for clause in designed["gate"]["clauses"] if clause["message"] != VIEW_THE_COMPARISON
     ]
     next(section for section in sections if section["id"] == "letter")["requires"] = ["growth"]
+
+
+def no_relationship_question(document):
+    """✨ The faithful port asks observers how they know the participant (ticket 15b); this pathway does not, so its
+    privacy notice keeps only their answers."""
+    observers = document["observers"]
+    del observers["relationship"]
+    observers["privacy_notice"] = observers["privacy_notice"].replace(
+        "What we keep: your answers, and how you know {name}.", "What we keep: your answers."
+    )
 
 
 def three_people_each_with_their_link(document):
