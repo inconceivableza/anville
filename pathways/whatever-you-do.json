@@ -599,14 +599,12 @@
       {
         "framework": "apest",
         "heading": "✨ Your APEST(d) Profile",
-        "subtitle": "Fivefold ministry gifting plus diaconal service",
-        "bars": "tone"
+        "subtitle": "Fivefold ministry gifting plus diaconal service"
       },
       {
         "framework": "pep",
         "heading": "⚡ Your Professional Energy Profile (PEP)",
-        "subtitle": "Which types of work energise you most, and which drain you?",
-        "bars": "rank"
+        "subtitle": "Which types of work energise you most, and which drain you?"
       }
     ],
     "constructs": [

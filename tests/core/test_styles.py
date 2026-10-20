@@ -108,7 +108,7 @@ def test_body_text_and_buttons_meet_wcag_aa_contrast():
 # ✨ Colours made to be read on the dark panels, and the results' and comparison's colours, which the prototype fixes
 # and ticket 48 keeps unchanged; every other text colour is read on the page's cream.
 ON_DARK = re.compile(r"--(on-dark[\w-]*|cream[\w-]*|snow|paper|green)$")
-FIXED_BY_THE_RESULTS = re.compile(r"--(tone-[\w-]+|rank-\d|comparison-[\w-]+|blue-soft)$")
+FIXED_BY_THE_RESULTS = re.compile(r"--(tone-[\w-]+|standing-[\w-]+|comparison-[\w-]+|blue-soft)$")
 
 
 def test_every_text_colour_set_without_its_own_background_is_readable_on_the_page():

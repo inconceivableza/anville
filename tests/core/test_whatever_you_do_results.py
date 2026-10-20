@@ -78,13 +78,9 @@ def test_the_results_title_greets_the_participant_as_the_prototype_did():
     assert whatever_you_do()["presentation"]["results_title"] == "{name}, here’s your profile"
 
 
-def test_apest_bars_take_a_fixed_colour_per_construct_and_pep_bars_a_colour_by_rank():
-    assert framework_presentation("apest")["bars"] == "tone"
-    assert framework_presentation("pep")["bars"] == "rank"
-
-
 def test_each_construct_has_the_prototypes_colour_through_its_tone():
-    """✨ APEST(d) constructs colour their bars and item groups (aC); PEP constructs only their item groups (pepC)."""
+    """✨ Each construct's item group takes its tone: APEST(d)'s the prototype's aC, PEP's its pepC. The bars take their
+    standing's colour instead (developer's call, 20 Oct)."""
     apest_colours = {APEST[key]: colour.lower() for key, colour in prototype_object("aC").items()}
     pep_colours = {PEP[key]: colour.lower() for key, colour in prototype_object("pepC").items()}
 
@@ -94,7 +90,11 @@ def test_each_construct_has_the_prototypes_colour_through_its_tone():
     } == {**apest_colours, **pep_colours}
 
 
-def test_the_rank_colours_are_the_prototypes_from_strongest_to_weakest():
+def test_the_standing_colours_are_the_prototypes_pep_rank_colours_from_the_highest_band_to_less_used():
+    """✨ Leading, Strong and Present take the prototype's first three PEP rank colours, darkest green first, and Less
+    used its orange, the fourth (developer's call, 20 Oct)."""
     rag = re.findall(r"'(#[0-9A-Fa-f]{6})'", re.search(r"var ragColors=\[(.*?)\]", PROTOTYPE).group(1))
 
-    assert [stylesheet_colour(f"rank-{rank}") for rank in range(1, 7)] == [colour.lower() for colour in rag]
+    assert [stylesheet_colour(name) for name in ("standing-1", "standing-2", "standing-3", "standing-below")] == [
+        colour.lower() for colour in rag[:4]
+    ]

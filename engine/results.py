@@ -15,7 +15,7 @@ import random
 from engine.document.comparison import agreement, comparison_settings, largest_gaps, seen_by_others
 from engine.document.observers import minimum_observers
 from engine.document.scoring import unrounded_shares
-from engine.document.standing import standing
+from engine.document.standing import place, standing
 from engine.document.text import text_for
 from engine.document.tie_break import (
     BALANCED,
@@ -30,8 +30,10 @@ from engine.document.tie_break import (
     tie_break,
 )
 
-# ✨ The stylesheet defines --rank-1 to --rank-6; every rank below the sixth takes the sixth colour.
-RANK_COLOURS = 6
+# ✨ The stylesheet defines --standing-1 to --standing-3, for the document's bands from the highest down, and
+# --standing-below for the label below them all; any band below the third takes the third's colour, so the less-used
+# colour only ever goes with the label below (developer's call, 20 Oct).
+STANDING_COLOURS = 3
 
 # ✨ How the comparison draws a construct, in its axis's view box's units, where the line runs along y = 3: a dot of
 # DOT_RADIUS at each of the participant's and the observers' places, as variant F drew them, with the person icon,
@@ -61,10 +63,11 @@ LABEL_EDGE = 20
 GAP_CLASSES = {"others_higher": "gap-others-higher", "you_higher": "gap-you-higher"}
 
 
-def bar_ranks(scores):
-    """✨ Each score's rank among the distinct scores, strongest first, so tied scores share a colour."""
-    distinct = sorted(set(scores), reverse=True)
-    return [min(distinct.index(score) + 1, RANK_COLOURS) for score in scores]
+def standing_colour(document, percent, constructs):
+    """✨ The stylesheet class of a share's standing, by the standing's place among the document's bands, never its
+    label, so a colour never disagrees with the word beside it and another pathway's labels take the same colours."""
+    shown = place(document, percent, constructs)
+    return "standing-below" if shown is None else f"standing-{min(shown + 1, STANDING_COLOURS)}"
 
 
 def results_page(document, scores, sort, name, role="participant"):
@@ -355,13 +358,10 @@ def _framework(document, framework, presentation, ranked_constructs, shares, con
     ranked_constructs = sorted(
         ranked_constructs, key=lambda c: (-shares[c["construct"]], declared.index(c["construct"]))
     )
-    by_rank = presentation.get("bars") == "rank"
-    # ✨ Ranked by unrounded share too, so only exact ties share a colour, never two bars drawn apart (ADR 0018).
-    ranks = bar_ranks([shares[construct["construct"]] for construct in ranked_constructs])
     constructs = len(framework["constructs"])
     top = _axis_top(constructs)
     bars = []
-    for construct, rank in zip(ranked_constructs, ranks):
+    for construct in ranked_constructs:
         shown = construct_presentation.get(construct["construct"], {})
         bars.append(
             {
@@ -375,7 +375,8 @@ def _framework(document, framework, presentation, ranked_constructs, shares, con
                 "past_end": shares[construct["construct"]] > top,
                 "persona": _text(shown, "persona", role),
                 "description": _text(shown, "description", role),
-                "colour": f"rank-{rank}" if by_rank else _tone(shown),
+                # ✨ The standing's colour, from the same unrounded share, on every framework (developer's call, 20 Oct).
+                "colour": standing_colour(document, shares[construct["construct"]], constructs),
             }
         )
     return {

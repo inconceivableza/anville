@@ -224,7 +224,7 @@
                 "$ref": "#/$defs/text"
               },
               "tone": {
-                "description": "The colour of the construct's bar and item scores, from the stylesheet's named tones.",
+                "description": "The colour of the construct's item scores, from the stylesheet's named tones. Its drawing takes its standing's colour.",
                 "enum": ["violet", "rose", "green", "moss", "blue", "brown"]
               }
             }
@@ -239,12 +239,7 @@
             "properties": {
               "framework": { "$ref": "#/$defs/identifier" },
               "heading": { "$ref": "#/$defs/text" },
-              "subtitle": { "$ref": "#/$defs/text" },
-              "bars": {
-                "description": "How the framework's bars are coloured: by each construct's tone, or by rank so tied scores share a colour.",
-                "enum": ["tone", "rank"],
-                "default": "tone"
-              }
+              "subtitle": { "$ref": "#/$defs/text" }
             }
           }
         },
@@ -305,7 +300,7 @@
           }
         },
         "standing": {
-          "description": "Where a construct's share stands, in words, on the results page and the comparison, by how far it sits from an even share of its framework (an even share is 100 divided among the framework's constructs). A share takes the highest band whose at_least, a percent of an even share, it reaches, in whatever order the bands are written; below them all it takes the below label. Placeholders (Leading 125, Strong 105, Present 85, Less used) when left out.",
+          "description": "Where a construct's share stands, in words, on the results page and the comparison, by how far it sits from an even share of its framework (an even share is 100 divided among the framework's constructs). A share takes the highest band whose at_least, a percent of an even share, it reaches, in whatever order the bands are written; below them all it takes the below label. The results colour each standing by its band's place, highest first, and the below label in the less-used colour, whatever the labels say. Placeholders (Leading 125, Strong 105, Present 85, Less used) when left out.",
           "type": "object",
           "additionalProperties": false,
           "required": ["bands", "below"],

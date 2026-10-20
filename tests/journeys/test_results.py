@@ -179,15 +179,16 @@ def test_the_validity_disclaimer_is_shown_with_the_results(signed_in):
 
 
 @pytest.mark.django_db
-def test_apest_bars_take_their_constructs_tone_and_tied_pep_bars_share_a_rank_colour(signed_in):
-    submit_sort(signed_in, complete_sort(a5={"bucket": "strength", "value": 50}, p1={"bucket": "not-me", "value": 50}))
+def test_each_dot_and_standing_on_both_frameworks_takes_its_standings_colour(signed_in):
+    """✨ 90 and 10: Apostle and Deliver lead, Prophet and Ponder are less used (developer's call, 20 Oct)."""
+    submit_sort(signed_in, complete_sort())
 
     page = results(signed_in).content.decode()
 
-    assert 'class="result-dot tone-violet"' in page
-    assert 'class="result-dot tone-rose"' in page
-    assert page.count('class="result-dot rank-1"') == 2
-    assert "rank-2" not in page
+    assert page.count('class="result-dot standing-1"') == 2
+    assert page.count('class="result-dot standing-below"') == 2
+    assert page.count('class="result-standing standing-1">Leading<') == 2
+    assert page.count('class="result-standing standing-below">Less used<') == 2
 
 
 @pytest.mark.django_db
