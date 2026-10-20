@@ -391,7 +391,7 @@ The homepage (`/`):
   - A new leader ("Separated"): "Evangelist now sits on top, in place of Deacon, after your answers to “Which is more true of you?”." for `seed_tie_break --profile tied-apest --answers behind`; whichever role is chosen, the first name is the one now listed first and the second the one that led after the sort.
   - The same leader ("Separated"): choose the sort's leader in every pair; the box reads "<leader> stays on top, still ahead of <next>, after your answers to “Which is more true of you?”.", the second name the one listed just below it.
   - A circle ("Genuinely balanced"): "Your answers went in a circle — each option beat one and lost to another. That’s a real result rather than an error: <names> sit equally in you.", naming the tied roles in the order listed, "A and B" for two, "A, B and C" for more.
-  - Level ("Genuinely balanced"): "Your answers put none of <names> ahead of the others. That’s a real result rather than an error: they sit equally in you."
+  - Level ("Genuinely balanced"): "<names> came out level after your answers to “Which is more true of you?”. That’s a real result rather than an error: they sit equally in you." (fix-28: reads the same for two or more, e.g. "Evangelist and Deacon came out level…")
   - Every pair skipped ("Skipped", on each framework skipped): "You skipped every “Which is more true of you?” pair here, so <names> stay as your sort placed them."
   - With both frameworks re-weighted, each box names only its own profile's constructs. A coach given the results, and the comparison, show no box. At phone width a longer sentence still wraps inside its card without sideways scrolling.
 
