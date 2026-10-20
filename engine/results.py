@@ -203,7 +203,8 @@ def comparison_page(document, scores, sort, observer_average):
             bar["gap_from"], bar["gap_width"] = min(you_at, others_at), round(abs(you_at - others_at), 2)
             bar["others_standing"] = worded(others["share"])
             bar["seen_by_others"] = text_for(
-                seen_by_others(document, shares[scored["framework"]][bar["construct"]], others["share"]), "participant"
+                seen_by_others(document, shares[scored["framework"]][bar["construct"]], others["share"], constructs),
+                "participant",
             )
             bar["agreement"] = text_for(agreement(document, others["per_observer_shares"]), "participant")
             bar["agreement_at"] = _label_at(others_at)
