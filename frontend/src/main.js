@@ -206,6 +206,27 @@ document.addEventListener("change", (event) => {
   });
 })();
 
+// ✨ Demo only (fix-25): the demo-profile choice's "How to answer the pairs" offers only the ways of answering that
+// hold with the starting profile chosen, the rest disabled, so a profile without pairs offers only "No pairs"; with
+// "Sort the cards myself" nothing is offered. A choice the change disables gives way to the first one left. Without
+// JavaScript every one is offered, and the server refuses one that does not fit, saying why.
+(() => {
+  const profile = document.querySelector("[data-demo-profile]");
+  const answers = document.querySelector("[data-demo-answers]");
+  if (!profile || !answers) return;
+  const fit = () => {
+    const options = [...answers.options];
+    options.forEach((option) => (option.disabled = !option.dataset.fits.split(" ").includes(profile.value)));
+    answers.disabled = options.every((option) => option.disabled);
+    if (answers.selectedOptions[0]?.disabled) {
+      const first = options.find((option) => !option.disabled);
+      if (first) answers.value = first.value;
+    }
+  };
+  profile.addEventListener("change", fit);
+  fit();
+})();
+
 // ✨ Whether the visitor has asked their device for less motion; every movement below is skipped if so.
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 

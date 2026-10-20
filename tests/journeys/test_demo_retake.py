@@ -11,9 +11,11 @@ from datetime import timedelta
 
 import pytest
 from django.test import Client
+from django.utils.html import escape
 
 from engine.models import Contact, Invitation, ObserverResponse, Response, Result
-from engine.tie_break_scenarios import SCENARIOS, seeding
+from engine.scenario_loading import prefill
+from engine.tie_break_scenarios import seeding, summary
 from tests.journeys.pages import version_on
 from tests.journeys.test_answers import answer, participant  # noqa: F401 (participant is a fixture)
 from tests.journeys.test_comparison import THREE_OBSERVERS, press_compare
@@ -154,8 +156,9 @@ def test_a_participant_can_clear_only_their_own_assessment(sorted_in, django_use
     assert SORT in Response.objects.get(participant__username="participant").answers
 
 
-# ✨ Demo profiles (fix-21): one of `seed_tie_break`'s scenarios loaded into the participant's own sort, from the
-# retake page or, before any sort, from the sort page. The scenarios are made for Whatever You Do.
+# ✨ Demo profiles (fix-21): one of `seed_tie_break`'s starting profiles, with a way of answering its pairs (fix-25),
+# loaded into the participant's own sort, from the retake page or, before any sort, from the sort page. The profiles
+# are made for Whatever You Do.
 WYD_SORT = "strengths-sort"
 WYD_SORT_PAGE = "/sections/strengths/"
 WYD_RETAKE = f"/results/{WYD_SORT}/retake/"
@@ -178,9 +181,9 @@ def on_whatever_you_do(demo, client, django_user_model, load_pathway):
     return on_the_sort(client, django_user_model, load_pathway, wyd_pathway(), wyd_onboarding)
 
 
-def load_profile(client, profile):
-    """✨ The choice's button pressed with `profile` chosen, then on to the sort it leads to (fix-23)."""
-    loaded = client.post(WYD_RETAKE, {"profile": profile})
+def load_profile(client, profile, answers=None):
+    """✨ The choice's button pressed with `profile` and `answers` chosen, then on to the sort it leads to (fix-23)."""
+    loaded = client.post(WYD_RETAKE, {"profile": profile, "answers": answers or ""})
     assert loaded.status_code == 303
     assert loaded["Location"].startswith(f"{WYD_SORT_PAGE}?")
     return client.get(loaded["Location"])
@@ -209,7 +212,7 @@ def test_before_any_sort_a_demo_profile_leads_to_the_sort_with_its_cards_placed(
     assert f'<p class="back-to-hub" data-demo-reveal hidden><a href="{WYD_RETAKE}">' in sort_page
     assert "<h1 data-demo-reveal-hold>" in sort_page
 
-    shown = load_profile(on_whatever_you_do, "tied-both")
+    shown = load_profile(on_whatever_you_do, "tied-both", "leader")
 
     assert widget_of(shown.content.decode())["placed"]
 
@@ -218,46 +221,60 @@ def test_before_any_sort_a_demo_profile_leads_to_the_sort_with_its_cards_placed(
 def test_choosing_a_demo_profile_on_retake_clears_the_sort_and_leads_to_the_sort_with_its_cards_placed(
     on_whatever_you_do,
 ):
-    send_as_shown(on_whatever_you_do, load_profile(on_whatever_you_do, "generalist").content.decode())
+    send_as_shown(on_whatever_you_do, load_profile(on_whatever_you_do, "flat").content.decode())
     assert Result.objects.exists()
 
-    shown = load_profile(on_whatever_you_do, "tied-both")
+    shown = load_profile(on_whatever_you_do, "tied-both", "skip")
 
     assert not Result.objects.exists()
-    assert widget_of(shown.content.decode())["placed"] == seeding(wyd_pathway(), "tied-both").sort
+    assert widget_of(shown.content.decode())["placed"] == prefill(wyd_pathway(), "tied-both", "skip").sort
 
 
 @pytest.mark.django_db
-def test_a_demo_profile_hands_the_sort_its_placements_and_values_and_stores_nothing(on_whatever_you_do):
+def test_a_demo_profile_hands_the_sort_its_placements_and_values_its_guide_those_answers_and_stores_nothing(
+    on_whatever_you_do,
+):
     """✨ fix-23: the widget starts at "All 36 sorted!" from these, with fine-tuning's sliders at their values; that it
-    does is a hand check."""
-    shown = load_profile(on_whatever_you_do, "separated:pep")
+    does is a hand check. fix-25: the guide gives the answers chosen."""
+    shown = load_profile(on_whatever_you_do, "tied-pep", "behind")
 
     page = shown.content.decode()
-    assert widget_of(page)["placed"] == seeding(wyd_pathway(), "separated", "pep").sort
-    assert SCENARIOS["separated"]["pep"].summary in page
+    expected = prefill(wyd_pathway(), "tied-pep", "behind")
+    assert widget_of(page)["placed"] == expected.sort
+    assert summary("tied-pep", "behind") in page
+    for framework, answer in expected.guide.pairs:
+        assert f"<li>{escape(framework)}: {escape(answer)}</li>" in page
     assert not Result.objects.exists()
     assert WYD_SORT not in Response.objects.get().answers
 
 
 @pytest.mark.django_db
+def test_a_starting_profile_and_answers_that_do_not_fit_are_refused_with_the_reason(on_whatever_you_do):
+    refused = on_whatever_you_do.post(WYD_RETAKE, {"profile": "tied-apest", "answers": "separate-apest-skip-pep"})
+
+    assert refused.status_code == 400
+    assert "separate-apest-skip-pep fits only tied-both." in refused.content.decode()
+
+
+@pytest.mark.django_db
 def test_sending_a_demo_profile_s_sort_unchanged_leads_to_its_first_pair_with_its_guide(on_whatever_you_do):
-    sent = send_as_shown(on_whatever_you_do, load_profile(on_whatever_you_do, "tied-both").content.decode())
+    page = load_profile(on_whatever_you_do, "tied-both", "one-each-way").content.decode()
+    sent = send_as_shown(on_whatever_you_do, page)
 
     pair = on_whatever_you_do.get(sent["HX-Redirect"]).content.decode()
-    assert Result.objects.get().scores == seeding(wyd_pathway(), "tied-both").scores
+    assert Result.objects.get().scores == seeding(wyd_pathway(), "tied-both", "one-each-way").scores
     assert "1 of 4" in pair
-    assert SCENARIOS["tied-both"][None].summary in pair
+    assert summary("tied-both", "one-each-way") in pair
 
 
 @pytest.mark.django_db
 def test_off_a_demo_system_no_demo_profile_reaches_the_sort(on_whatever_you_do, settings):
     settings.DEBUG, settings.ANVILLE_DEMO_NOTICE = False, ""
 
-    page = on_whatever_you_do.get(f"{WYD_SORT_PAGE}?profile=tied-both").content.decode()
+    page = on_whatever_you_do.get(f"{WYD_SORT_PAGE}?profile=tied-both&answers=leader").content.decode()
 
     assert "placed" not in widget_of(page)
-    assert SCENARIOS["tied-both"][None].summary not in page
+    assert summary("tied-both", "leader") not in page
 
 
 @pytest.mark.django_db
@@ -268,7 +285,7 @@ def test_on_the_faithful_port_no_demo_profile_is_offered_and_naming_one_is_refus
     assert WYD_RETAKE not in client.get(WYD_SORT_PAGE).content.decode()
     assert "<option" not in client.get(WYD_RETAKE).content.decode()
 
-    refused = client.post(WYD_RETAKE, {"profile": "tied-both"})
+    refused = client.post(WYD_RETAKE, {"profile": "tied-both", "answers": "leader"})
 
     assert refused.status_code == 400
     assert not Result.objects.exists()

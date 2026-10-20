@@ -7,7 +7,8 @@
   JavaScript, so the page says so.
 
   Demo only (fix-23): with a demo profile, `block.demo`, the widget starts from its placements and values, its guide is
-  below the sort (fix-24), and the form's address names it, so the pairs that follow show the guide too.
+  below the sort (fix-24), and the form's address names it and its answers (fix-25), so the pairs that follow show the
+  guide too.
 {% endcomment %}
 {% if block.answer %}
   <div id="block-{{ block.id }}" class="question-card">
@@ -17,8 +18,8 @@
   {% with script_id="sort-"|add:block.id %}
     {{ block.widget|json_script:script_id }}
     <form id="block-{{ block.id }}" class="sort" method="post"
-          action="{% url 'save_answer' block.id %}{% if block.demo %}?profile={{ block.demo.key|urlencode }}{% endif %}"
-          hx-post="{% url 'save_answer' block.id %}{% if block.demo %}?profile={{ block.demo.key|urlencode }}{% endif %}"
+          action="{% url 'save_answer' block.id %}{% if block.demo %}?{{ block.demo.query }}{% endif %}"
+          hx-post="{% url 'save_answer' block.id %}{% if block.demo %}?{{ block.demo.query }}{% endif %}"
           hx-target="find .save-status" hx-disabled-elt="find .sort-submit" data-sort="{{ script_id }}">
       {% csrf_token %}
       <input type="hidden" name="value">
@@ -33,7 +34,7 @@
   {% endwith %}
   {% if block.demo %}{% include "engine/demo_guide.html" with guide=block.demo.guide on_sort=True %}{% endif %}
   {% comment %}
-    ✨ Demo only (fix-21): the sort started from one of seed_tie_break's scenarios instead (fix-23), on a development or
+    ✨ Demo only (fix-21): the sort started from one of seed_tie_break's profiles instead (fix-23), on a development or
     demo system alone. Hidden until revealed, as the results page's retake link is (data-demo-reveal, in main.js).
   {% endcomment %}
   {% if demo_profile %}

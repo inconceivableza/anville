@@ -7,7 +7,7 @@
   it works without JavaScript; each button sends its construct.
 
   Demo only (fix-23): after a demo profile's sort, `demo`, its guide is below the pair (fix-24), and the form's address names
-  it, so the next pair shows it too.
+  it and its answers (fix-25), so the next pair shows it too.
 {% endcomment %}
 {% block head_title %}{{ pair.question }}{% endblock head_title %}
 
@@ -18,7 +18,7 @@
     </ol>
     <p class="pair-framework">{{ pair.framework }}</p>
     <h1 class="pair-question">{{ pair.question }}</h1>
-    <form method="post" action="{% url 'tie_break' block_id %}{% if demo %}?profile={{ demo.key|urlencode }}{% endif %}">
+    <form method="post" action="{% url 'tie_break' block_id %}{% if demo %}?{{ demo.query }}{% endif %}">
       {% csrf_token %}
       <input type="hidden" name="pair" value="{{ pair.place }}">
       <div class="pair-options">

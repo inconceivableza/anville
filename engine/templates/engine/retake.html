@@ -6,9 +6,10 @@
   only on a development or demo system, so its wording is written here rather than in the pathway document. Opening the
   page clears nothing; only its button does.
 
-  It also offers a demo profile, one of seed_tie_break's scenarios loaded as the sort (fix-21). Before any sort
-  (`clearing` false, reached from the sort page) there is nothing to clear: the page offers only the profiles, and
-  "Sort the cards myself" goes back to the sort. A pathway no scenario holds on offers no profile.
+  It also offers a demo profile, one of seed_tie_break's starting profiles loaded as the sort (fix-21), with how to
+  answer its pairs (fix-25). Before any sort (`clearing` false, reached from the sort page) there is nothing to clear:
+  the page offers only the profiles, and "Sort the cards myself" goes back to the sort. A pathway no combination holds
+  on offers no profile.
 {% endcomment %}
 {% block head_title %}{% if clearing %}Retake the assessment{% else %}Load a demo profile{% endif %}{% endblock head_title %}
 
@@ -40,35 +41,39 @@
       {% endif %}
       <p>What the people you invited have sent, your coach’s link and your other answers stay as they are.</p>
     {% endif %}
-    {% if profiles %}
-      <p>A demo profile places the cards for you, made up to lead to one of the ways through “Which is more true of you?” and the results.</p>
+    {% if offer.profiles %}
+      <p>A demo profile places the cards for you, made up to lead to one of the ways through “Which is more true of you?” and the results. Choose where the sort starts and how you will answer the pairs.</p>
     {% elif not clearing %}
       <p>No demo profile fits this pathway.</p>
     {% endif %}
     <form method="post" action="{% url 'retake' block_id %}" class="consent-choices">
       {% csrf_token %}
+      {% if offer.profiles %}
+        {% comment %}
+          ✨ fix-25: the starting profile and how to answer its pairs, chosen apart. Each way of answering lists the
+          profiles it holds with, so main.js can disable the rest; without JavaScript a pair that does not fit is
+          refused with its reason.
+        {% endcomment %}
+        <label for="retake-profile">Starting profile</label>
+        <select id="retake-profile" name="profile" data-demo-profile>
+          {% if clearing %}<option value="{{ myself }}">Sort the cards myself</option>{% endif %}
+          {% for profile in offer.profiles %}
+            <option value="{{ profile.name }}">{{ profile.summary }}</option>
+          {% endfor %}
+        </select>
+        <label for="retake-answers">How to answer the pairs</label>
+        <select id="retake-answers" name="answers" data-demo-answers>
+          {% for answers in offer.answers %}
+            <option value="{{ answers.name }}" data-fits="{{ answers.fits|join:' ' }}">{{ answers.summary }}</option>
+          {% endfor %}
+          {% if offer.no_pairs %}<option value="" data-fits="{{ offer.no_pairs|join:' ' }}">No pairs</option>{% endif %}
+        </select>
+      {% endif %}
       {% if clearing %}
-        {% if profiles %}
-          <label for="retake-profile">After clearing</label>
-          <select id="retake-profile" name="profile">
-            <option value="{{ myself }}">Sort the cards myself</option>
-            {% for profile in profiles %}
-              <option value="{{ profile.key }}">{{ profile.summary }}</option>
-            {% endfor %}
-          </select>
-        {% endif %}
         <button type="submit" class="pill full">Clear and retake</button>
         <a class="pill ghost full" href="{% url 'results' block_id %}">Keep my results</a>
       {% else %}
-        {% if profiles %}
-          <label for="retake-profile">Demo profile</label>
-          <select id="retake-profile" name="profile">
-            {% for profile in profiles %}
-              <option value="{{ profile.key }}">{{ profile.summary }}</option>
-            {% endfor %}
-          </select>
-          <button type="submit" class="pill full">Load this profile</button>
-        {% endif %}
+        {% if offer.profiles %}<button type="submit" class="pill full">Load this profile</button>{% endif %}
         <a class="pill ghost full" href="{{ sort_page }}">Sort the cards myself</a>
       {% endif %}
     </form>

@@ -1,13 +1,18 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../LICENSE.md
 
-"""✨ Made-up sorts that put a participant on each of the tie-break's ways through (ADR 0018), for `seed_tie_break`.
+"""✨ Made-up demos that put a participant on each of the tie-break's ways through (ADR 0018), for `seed_tie_break` and
+the demo-only choice of a demo profile.
 
-Each scenario names what every construct of *Whatever You Do* should add up to in the sort, the answers to give its
-"Which is more true of you?" pairs, and what the results should then show. The sort is built to those totals and then
-worked forward through the real scoring, detection, re-weighting and results page; a scenario that no longer holds,
-such as on a pathway whose bands or threshold changed, stops with an error rather than seeding something misleading.
-Nothing here touches the database or a request.
+A demo is two choices made apart (fix-25): a starting profile, what every construct of *Whatever You Do* should add up
+to in the sort, and how to answer its "Which is more true of you?" pairs. What the pairs and the results should then
+show is worked out from the two, never written for each combination: each way of answering comes out the same on every
+tied framework it is given to, and a profile says which frameworks it ties and whether the participant is flat once
+they come out level. The sort is built to the profile's totals and worked forward through the real scoring, detection,
+pair plan, re-weighting and results page. A combination that does not fit (answers for a profile with no pairs, none
+for one with pairs, or answers for frameworks the profile does not tie) is refused with its reason, and one that no
+longer holds, such as on a pathway whose bands or threshold changed, stops with an error rather than seeding something
+misleading. Nothing here touches the database or a request.
 """
 
 from collections import defaultdict
@@ -28,12 +33,14 @@ from engine.document.tie_break import (
 )
 from engine.results import results_page
 
-# ✨ How a tied framework's pairs are answered: always its leader, always the one just behind, the leader in the first
-# round and the other in the second, or every pair skipped. Every scenario's cluster is two constructs, so one pair.
+# ✨ How a tied framework's pairs are answered, and what its re-weighting then comes out as: always its leader (the same
+# one on top), always the one just behind (a new one on top), the leader in the first round and the other in the second
+# (the best weight shared), or every pair skipped. Every profile's cluster is two constructs, so one pair a round.
 LEADER = "leader"
-CHALLENGER = "challenger"
-SPLIT = "split"
+BEHIND = "behind"
+EACH_WAY = "each-way"
 SKIP = "skip"
+COMES_OUT = {LEADER: SAME_TOP, BEHIND: TOP_CHANGED, EACH_WAY: LEVEL, SKIP: SKIPPED}
 
 # ✨ Each sort's totals are out of 1800 on each framework, 36 items at an average of 50, so a construct's share is its
 # total ÷ 18: 375 is 20.83%, the edge of "Leading", 315 is 17.5%, of "Strong", and 255 is 14.17%, of "Present".
@@ -71,124 +78,96 @@ FLAT_ON_BOTH = {
 
 
 @dataclass(frozen=True)
-class Scenario:
-    """✨ A sort's totals, how each tied framework's pairs are answered, what each comes out as, and whether the
-    results then say the participant is a generalist. A framework not in `answers` is not tied."""
+class Profile:
+    """✨ A starting profile: the sort's totals, the frameworks it ties by the pathway's ids (none where it is flat on
+    both, a generalist with no pairs), and whether the participant is a generalist once every tied framework comes out
+    level."""
 
     summary: str
     totals: dict
-    answers: dict = field(default_factory=dict)
-    outcomes: dict = field(default_factory=dict)
-    generalist: bool = False
+    tied: frozenset = frozenset()
+    flat_once_level: bool = False
 
 
-# ✨ Each scenario's variants by the framework `--on` names, keyed by the pathway's own framework ids; one that takes
-# no `--on` has a single variant under None. For separated and balanced, `--on` is the one framework tied (the other
-# has a clear leader); for mixed, it is the one that comes out Separated while the other is skipped.
-DEFAULT_ON = "apest"
-SCENARIOS = {
-    "tied-both": {
-        None: Scenario(
-            "Tied on both frameworks, not flat: pairs on both, alternating.",
-            TIED_ON_BOTH,
-            answers={"apest": LEADER, "pep": LEADER},
-            outcomes={"apest": SAME_TOP, "pep": SAME_TOP},
-        ),
-    },
-    "separated": {
-        "apest": Scenario(
-            "Tied on APEST(d) alone; answering for the one behind makes its top change.",
-            TIED_ON_APEST,
-            answers={"apest": CHALLENGER},
-            outcomes={"apest": TOP_CHANGED},
-        ),
-        "pep": Scenario(
-            "Tied on PEP alone; answering for the one behind makes its top change.",
-            TIED_ON_PEP,
-            answers={"pep": CHALLENGER},
-            outcomes={"pep": TOP_CHANGED},
-        ),
-    },
-    "balanced": {
-        "apest": Scenario(
-            "Tied on APEST(d) alone; one answer each way leaves the best weight shared.",
-            TIED_ON_APEST,
-            answers={"apest": SPLIT},
-            outcomes={"apest": LEVEL},
-        ),
-        "pep": Scenario(
-            "Tied on PEP alone; one answer each way leaves the best weight shared.",
-            TIED_ON_PEP,
-            answers={"pep": SPLIT},
-            outcomes={"pep": LEVEL},
-        ),
-    },
-    "skipped": {
-        None: Scenario(
-            "Tied on both frameworks; every pair skipped.",
-            TIED_ON_BOTH,
-            answers={"apest": SKIP, "pep": SKIP},
-            outcomes={"apest": SKIPPED, "pep": SKIPPED},
-        ),
-    },
-    "mixed": {
-        "apest": Scenario(
-            "Tied on both frameworks; APEST(d) separated, PEP skipped.",
-            TIED_ON_BOTH,
-            answers={"apest": CHALLENGER, "pep": SKIP},
-            outcomes={"apest": TOP_CHANGED, "pep": SKIPPED},
-        ),
-        "pep": Scenario(
-            "Tied on both frameworks; PEP separated, APEST(d) skipped.",
-            TIED_ON_BOTH,
-            answers={"apest": SKIP, "pep": CHALLENGER},
-            outcomes={"apest": SKIPPED, "pep": TOP_CHANGED},
-        ),
-    },
-    "generalist-after-pairs": {
-        None: Scenario(
-            "One role just Leading, another just behind; balanced answers leave both profiles flat.",
-            LEADING_BY_A_HAIR,
-            answers={"apest": SPLIT},
-            outcomes={"apest": LEVEL},
-            generalist=True,
-        ),
-    },
-    "generalist": {
-        None: Scenario(
-            "Flat on both frameworks from the sort: no pairs, the generalist's box straight away.",
-            FLAT_ON_BOTH,
-            generalist=True,
-        ),
-    },
+PROFILES = {
+    "tied-apest": Profile(
+        "Tied on APEST(d) only: two roles level, PEP clear.", TIED_ON_APEST, frozenset({"apest"})
+    ),
+    "tied-pep": Profile("Tied on PEP only: two energies level, APEST(d) clear.", TIED_ON_PEP, frozenset({"pep"})),
+    "tied-both": Profile(
+        "Tied on both frameworks, not flat: pairs on both, alternating.", TIED_ON_BOTH, frozenset({"apest", "pep"})
+    ),
+    "just-leading": Profile(
+        "One role just Leading, another just behind it, the rest Present or Strong.",
+        LEADING_BY_A_HAIR,
+        frozenset({"apest"}),
+        flat_once_level=True,
+    ),
+    "flat": Profile("Flat on both frameworks: no pairs, the generalist's box straight away.", FLAT_ON_BOTH),
 }
-TAKES_ON = [name for name, variants in SCENARIOS.items() if None not in variants]
+
+
+@dataclass(frozen=True)
+class Answers:
+    """✨ How to answer a profile's pairs: one way on every framework it ties (`each`), or a way for each framework by its
+    id (`by_framework`), which fits only a profile that ties exactly those."""
+
+    summary: str
+    each: str | None = None
+    by_framework: dict = field(default_factory=dict)
+
+    def way_for(self, framework):
+        return self.each or self.by_framework[framework]
+
+
+ANSWERS = {
+    "leader": Answers("Choose the leader each time: separated, the same one on top.", each=LEADER),
+    "behind": Answers("Choose the one behind each time: separated, a new one on top.", each=BEHIND),
+    "one-each-way": Answers("One answer each way: genuinely balanced.", each=EACH_WAY),
+    "skip": Answers("Skip every pair.", each=SKIP),
+    "separate-apest-skip-pep": Answers(
+        "APEST(d) separated, choosing the one behind each time; PEP skipped.", by_framework={"apest": BEHIND, "pep": SKIP}
+    ),
+    "separate-pep-skip-apest": Answers(
+        "PEP separated, choosing the one behind each time; APEST(d) skipped.", by_framework={"apest": SKIP, "pep": BEHIND}
+    ),
+}
 
 
 class ScenarioDoesNotHold(ValueError):
-    """✨ The pathway's sort, scoring or tie-break no longer lets a scenario come out as it says."""
+    """✨ The pathway's sort, scoring or tie-break no longer lets a combination come out as it says."""
 
 
-class NoSuchVariant(ValueError):
-    """✨ `--on` given to a scenario that takes none, or naming a framework the scenario has no variant for."""
+class DoesNotFit(ValueError):
+    """✨ A profile or answers not known, or answers that do not suit the profile; its message says why."""
 
 
-def scenario_for(name, on=None):
-    """✨ The scenario `name`'s variant for `on` (DEFAULT_ON when it takes one and none is given), or NoSuchVariant."""
-    variants = SCENARIOS[name]
-    if None in variants:
-        if on is not None:
-            raise NoSuchVariant(f"{name} does not take --on; only {', '.join(TAKES_ON)} do.")
-        return variants[None]
-    on = on or DEFAULT_ON
-    if on not in variants:
-        raise NoSuchVariant(f"{name} takes --on {' or '.join(variants)}, not {on}.")
-    return variants[on]
+def fit(profile, answers=None):
+    """✨ Raise DoesNotFit, saying why, unless `profile` names a profile and `answers` (None for none) a way of
+    answering that suits it."""
+    if profile not in PROFILES:
+        raise DoesNotFit(f"There is no starting profile called {profile}.")
+    if answers is not None and answers not in ANSWERS:
+        raise DoesNotFit(f"There is no way of answering the pairs called {answers}.")
+    tied = PROFILES[profile].tied
+    if not tied and answers is not None:
+        raise DoesNotFit(f"{profile} has no pairs, so it takes no answers.")
+    if tied and answers is None:
+        raise DoesNotFit(f"{profile} has pairs, so it needs a way of answering them.")
+    own = ANSWERS[answers].by_framework if answers else {}
+    if own and set(own) != tied:
+        fitting = [name for name, other in PROFILES.items() if other.tied == set(own)]
+        raise DoesNotFit(f"{answers} fits only {' or '.join(fitting)}.")
+
+
+def summary(profile, answers=None):
+    """✨ What a combination is, in a line: the profile's summary and the answers'."""
+    return " ".join([PROFILES[profile].summary, *([ANSWERS[answers].summary] if answers else [])])
 
 
 @dataclass(frozen=True)
 class Seeding:
-    """✨ What a scenario seeds and promises: the sort and its result, each pair with the construct to choose (None to
+    """✨ What a combination seeds and promises: the sort and its result, each pair with the construct to choose (None to
     skip), and the results page the participant should then see."""
 
     sort: dict
@@ -197,42 +176,79 @@ class Seeding:
     shown: dict
 
 
-def seeding(document, name, on=None):
-    """✨ The scenario `name`'s variant for `on` worked forward on `document`; NoSuchVariant where it has none, or
-    ScenarioDoesNotHold where any step comes out otherwise than it promises."""
-    scenario = scenario_for(name, on)
-    sort = sort_with_totals(document, scenario.totals)
+def seeding(document, profile, answers=None):
+    """✨ The profile `profile` answered as `answers` says, worked forward on `document`; DoesNotFit where the two do
+    not suit each other, or ScenarioDoesNotHold where any step comes out otherwise than they promise."""
+    fit(profile, answers)
+    return _answered(document, profile, _sorted(document, profile), answers)
+
+
+def holding(document):
+    """✨ Every combination that fits and holds on `document`, as `(profile, answers)` in the order PROFILES and ANSWERS
+    list them, answers None for a profile with no pairs; none on a pathway the profiles were not made for, such as one
+    with no tie-break. Each profile's sort is built once."""
+    found = []
+    for profile in PROFILES:
+        try:
+            sorted_ = _sorted(document, profile)
+        except ScenarioDoesNotHold:
+            continue
+        for answers in [None, *ANSWERS]:
+            try:
+                fit(profile, answers)
+                _answered(document, profile, sorted_, answers)
+            except (DoesNotFit, ScenarioDoesNotHold):
+                continue
+            found.append((profile, answers))
+    return found
+
+
+def _sorted(document, name):
+    """✨ The profile's sort, its result and what the tie-break detects in it, `(sort, scores, detected)`, provided it
+    ties exactly the frameworks the profile says, two constructs each; otherwise ScenarioDoesNotHold."""
+    profile = PROFILES[name]
+    sort = sort_with_totals(document, profile.totals)
     scores = score(document, sort)
     detected = tie_break(document, scores)
-    expected = GENERALIST if not scenario.answers else TIE_BREAK
-    if detected["outcome"] != expected or set(detected["tied"]) != set(scenario.answers):
-        raise ScenarioDoesNotHold(f"{name}: the sort is detected as {detected}, not as the scenario needs.")
+    expected = TIE_BREAK if profile.tied else GENERALIST
+    if detected["outcome"] != expected or set(detected["tied"]) != profile.tied:
+        raise ScenarioDoesNotHold(f"{name}: the sort is detected as {detected}, not as the profile needs.")
     if any(len(cluster) != 2 for cluster in detected["tied"].values()):
         raise ScenarioDoesNotHold(f"{name}: each tied framework should have two constructs tied, not {detected}.")
+    return sort, scores, detected
+
+
+def _answered(document, name, sorted_, answers_name):
+    """✨ The profile's sort answered as `answers_name` says, checked against what the two promise: each tied framework
+    comes out as its way of answering does, and the generalist's box shows for a profile flat on both, or for one flat
+    once level whose every tied framework comes out level."""
+    profile = PROFILES[name]
+    sort, scores, detected = sorted_
+    answers = ANSWERS.get(answers_name)
+    called = f"{name} with {answers_name}" if answers_name else name
+    expected = {framework: COMES_OUT[answers.way_for(framework)] for framework in profile.tied}
+    generalist = not profile.tied or (profile.flat_once_level and set(expected.values()) == {LEVEL})
 
     questions = [
-        (pair, _chosen(scenario.answers[pair["framework"]], pair, detected["tied"][pair["framework"]]))
+        (pair, _chosen(answers.way_for(pair["framework"]), pair, detected["tied"][pair["framework"]]))
         for pair in pair_plan(document, scores)
     ]
-    shown = scores
-    if questions:
-        answers = [{**pair, "chosen": chosen} for pair, chosen in questions]
-        shown = reweigh(document, scores, answers)
-        if outcomes(shown) != scenario.outcomes:
-            raise ScenarioDoesNotHold(f"{name}: the answers come out as {outcomes(shown)}, not {scenario.outcomes}.")
+    shown = reweigh(document, scores, [{**pair, "chosen": chosen} for pair, chosen in questions]) if questions else scores
+    if outcomes(shown) != expected:
+        raise ScenarioDoesNotHold(f"{called}: the answers come out as {outcomes(shown)}, not {expected}.")
     page = results_page(document, shown, sort, "")
-    if (page["generalist"] is not None) != scenario.generalist:
-        raise ScenarioDoesNotHold(f"{name}: the generalist's box would {'not ' * scenario.generalist}show.")
+    if (page["generalist"] is not None) != generalist:
+        raise ScenarioDoesNotHold(f"{called}: the generalist's box would {'not ' * generalist}show.")
     return Seeding(sort=sort, scores=scores, questions=questions, shown=page)
 
 
-def _chosen(answer, pair, cluster):
-    """✨ The construct a scenario's answer chooses in `pair`, or None to skip it."""
-    if answer == SKIP:
+def _chosen(way, pair, cluster):
+    """✨ The construct a way of answering chooses in `pair`, or None to skip it."""
+    if way == SKIP:
         return None
-    if answer == SPLIT:
+    if way == EACH_WAY:
         return cluster[pair["round"] % 2]
-    return cluster[0] if answer == LEADER else cluster[1]
+    return cluster[0] if way == LEADER else cluster[1]
 
 
 def sort_with_totals(document, totals):
@@ -245,7 +261,7 @@ def sort_with_totals(document, totals):
     comes out exact."""
     frameworks = [[c["id"] for c in framework["constructs"]] for framework in document["measurement"]["frameworks"]]
     if len(frameworks) != 2 or set(totals) != {c for constructs in frameworks for c in constructs}:
-        raise ScenarioDoesNotHold("The scenarios are made for two frameworks with Whatever You Do's constructs.")
+        raise ScenarioDoesNotHold("The profiles are made for two frameworks with Whatever You Do's constructs.")
     if sum(totals[c] for c in frameworks[0]) != sum(totals[c] for c in frameworks[1]):
         raise ScenarioDoesNotHold("A sort's two frameworks always add up to the same total.")
     edges = {}
@@ -255,13 +271,13 @@ def sort_with_totals(document, totals):
             raise ScenarioDoesNotHold(f"Item {item['id']} does not load onto both frameworks.")
         edges[item["id"]] = tuple(ends)
 
-    fit = {construct: 0.0 for construct in totals}
+    best = {construct: 0.0 for construct in totals}
     for _ in range(200):
         for side in (0, 1):
             for construct in frameworks[side]:
                 own = [ends for ends in edges.values() if ends[side] == construct]
-                fit[construct] = (totals[construct] - sum(fit[ends[1 - side]] for ends in own)) / len(own)
-    values = {item: round(fit[a] + fit[p]) for item, (a, p) in edges.items()}
+                best[construct] = (totals[construct] - sum(best[ends[1 - side]] for ends in own)) / len(own)
+    values = {item: round(best[a] + best[p]) for item, (a, p) in edges.items()}
 
     left = dict(totals)
     for item, (a, p) in edges.items():
@@ -272,7 +288,7 @@ def sort_with_totals(document, totals):
         left[towards] -= left[construct]
         left[construct] = 0
     if any(left.values()) or not all(0 <= value <= 100 for value in values.values()):
-        raise ScenarioDoesNotHold("No sort of whole values from 0 to 100 adds up to the scenario's totals.")
+        raise ScenarioDoesNotHold("No sort of whole values from 0 to 100 adds up to the profile's totals.")
 
     buckets = document["instrument"]["buckets"]
     return {
