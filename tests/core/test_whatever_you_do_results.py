@@ -91,10 +91,14 @@ def test_each_construct_has_the_prototypes_colour_through_its_tone():
 
 
 def test_the_standing_colours_are_the_prototypes_pep_rank_colours_from_the_highest_band_to_less_used():
-    """✨ Leading, Strong and Present take the prototype's first three PEP rank colours, darkest green first, and Less
-    used its orange, the fourth (developer's call, 20 Oct)."""
+    """✨ Leading and Strong take the prototype's first two PEP rank colours, darkest green first, and Less used its
+    orange, the fourth (developer's call, 20 Oct). Present takes a light green in place of the third, its amber, so only
+    Less used is warm (fix-17)."""
     rag = re.findall(r"'(#[0-9A-Fa-f]{6})'", re.search(r"var ragColors=\[(.*?)\]", PROTOTYPE).group(1))
 
     assert [stylesheet_colour(name) for name in ("standing-1", "standing-2", "standing-3", "standing-below")] == [
-        colour.lower() for colour in rag[:4]
+        rag[0].lower(),
+        rag[1].lower(),
+        "#81c784",
+        rag[3].lower(),
     ]
