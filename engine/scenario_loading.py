@@ -150,7 +150,7 @@ def _guide(document, summary, seeded):
     results = [
         {
             "heading": framework["heading"],
-            "leaders": ", ".join(f"{bar['label']} {bar['standing']}" for bar in framework["bars"][:2]),
+            "leaders": ", ".join(f"{bar['text_label']} {bar['standing']}" for bar in framework["bars"][:2]),
             "tie_break": framework["tie_break"],
         }
         for framework in seeded.shown["frameworks"]

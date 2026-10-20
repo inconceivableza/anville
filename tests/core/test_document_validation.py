@@ -135,6 +135,24 @@ def test_a_section_links_finished_wording_needs_a_button_label_and_its_text_is_t
     assert problem.path == "/content/sections/1/blocks/0/finished"
 
 
+def test_a_construct_may_be_named_in_text_otherwise_than_beside_its_drawing_by_authored_text():
+    """✨ Both Whatever You Do pathways label deacon "deacon" beside its drawing and "Deacon" in text (fix-27)."""
+    for name in ("whatever-you-do.json", "whatever-you-do-faithful-port.json"):
+        pathway = json.loads((WHATEVER_YOU_DO.parent / name).read_text(encoding="utf-8"))
+        [apest] = [framework for framework in pathway["measurement"]["frameworks"] if framework["id"] == "apest"]
+        [deacon] = [construct for construct in apest["constructs"] if construct["id"] == "deacon"]
+        assert (deacon["label"], deacon["text_label"]) == ("deacon", "Deacon")
+
+    document = pathway_document()
+    apostle = document["measurement"]["frameworks"][0]["constructs"][0]
+    apostle["text_label"] = {"participant": "Apostle"}
+    assert validate(document) == []
+
+    apostle["text_label"] = 5
+    [problem] = validate(document)
+    assert problem.path == "/measurement/frameworks/0/constructs/0/text_label"
+
+
 def a_single_select(**fields):
     return {
         "id": "reason",

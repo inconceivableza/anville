@@ -132,8 +132,8 @@ def _after_tie_break(presentation, scores, framework, bars, role):
     gone in a circle or left the best of them level, with no winner named; or every pair skipped. A pathway version
     loaded before skipping had words of its own says it as it said it then, as level.
 
-    The words may name the constructs by their labels as shown (fix-26, PLACEHOLDERS): the top and the next from the
-    framework's `bars`, in the order drawn; the previous leader and the tied constructs from the stored result, the
+    The words may name the constructs (fix-26, PLACEHOLDERS), each as text names it (fix-27): the top and the next from
+    the framework's `bars`, in the order drawn; the previous leader and the tied constructs from the stored result, the
     tied in the order drawn. A pathway version loaded before fix-26 names none, so its words are shown as written."""
     outcome = outcomes(scores).get(framework)
     if outcome is None:
@@ -144,13 +144,13 @@ def _after_tie_break(presentation, scores, framework, bars, role):
     else:
         said = wording["balanced"] if outcome in (*BALANCED, SKIPPED) else wording["separated"]
         text = {TOP_CHANGED: "changed", SAME_TOP: "same", CIRCLE: "circle", LEVEL: "level", SKIPPED: "level"}[outcome]
-    labels = {bar["construct"]: bar["label"] for bar in bars}
+    labels = {bar["construct"]: bar["text_label"] for bar in bars}
     tied = tied_in(scores)[framework]
     names = {
-        "top": bars[0]["label"],
-        "next": bars[1]["label"] if len(bars) > 1 else "",
+        "top": bars[0]["text_label"],
+        "next": bars[1]["text_label"] if len(bars) > 1 else "",
         "previous": labels[tied[0]] if tied else "",
-        "names": joined([bar["label"] for bar in bars if bar["construct"] in tied]),
+        "names": joined([bar["text_label"] for bar in bars if bar["construct"] in tied]),
     }
     return {"heading": text_for(said["heading"], role), "text": named(text_for(said[text], role), names)}
 
@@ -324,7 +324,7 @@ def _reflection(document, yours, observed):
     ]
     frameworks = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
     labels = {
-        (framework["id"], construct["id"]): text_for(construct["label"], role)
+        (framework["id"], construct["id"]): _text_label(construct, role)
         for framework in frameworks.values()
         for construct in framework["constructs"]
     }
@@ -366,6 +366,7 @@ def _at(percent, top):
 
 def _framework(document, framework, presentation, ranked_constructs, shares, construct_presentation, items, sort, role):
     labels = {construct["id"]: text_for(construct["label"], role) for construct in framework["constructs"]}
+    in_text = {construct["id"]: _text_label(construct, role) for construct in framework["constructs"]}
     # ✨ Listed by unrounded share, highest first, as they are drawn, so a shorter bar is never above a longer one;
     # exact ties keep the order declared. Ordered here, never stored, so a result stored before is ordered so too.
     declared = [construct["id"] for construct in framework["constructs"]]
@@ -381,6 +382,7 @@ def _framework(document, framework, presentation, ranked_constructs, shares, con
             {
                 "construct": construct["construct"],
                 "label": labels[construct["construct"]],
+                "text_label": in_text[construct["construct"]],
                 "percent": construct["percent"],
                 # ✨ From the unrounded share, so the words never round a construct into a band it is short of.
                 "standing": text_for(standing(document, shares[construct["construct"]], constructs), role),
@@ -399,10 +401,11 @@ def _framework(document, framework, presentation, ranked_constructs, shares, con
         # ✨ The dashed tick: an even share of the framework, 100 divided among its constructs.
         "even_at": _at(100 / constructs, top),
         "bars": bars,
-        # ✨ The item scores, grouped by construct in the order they were declared, as the prototype listed them.
+        # ✨ The item scores, grouped by construct in the order they were declared, as the prototype listed them, each
+        # under a heading that names its construct as text does (fix-27).
         "groups": [
             {
-                "label": labels[construct["id"]],
+                "label": in_text[construct["id"]],
                 "colour": _tone(construct_presentation.get(construct["id"], {})),
                 "items": [
                     {"text": text_for(item["text"], role), "value": sort[item["id"]]["value"]}
@@ -413,6 +416,12 @@ def _framework(document, framework, presentation, ranked_constructs, shares, con
             for construct in framework["constructs"]
         ],
     }
+
+
+def _text_label(construct, role):
+    """✨ A construct's name wherever text names it: its text label, or its label where the pathway version gives none
+    (fix-27). Its label alone is for beside its drawing, so Whatever You Do's "deacon" is "Deacon" in a sentence."""
+    return text_for(construct.get("text_label", construct["label"]), role)
 
 
 def _text(entry, field, role):

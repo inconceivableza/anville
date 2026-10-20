@@ -547,6 +547,26 @@ def test_a_result_and_pathway_version_from_before_the_names_still_say_their_sent
     assert said == {"heading": "Separated", "text": "The top changed."}
 
 
+def deacon_in_text():
+    """✨ The naming pathway with deacon labelled in lower case beside its bar and capitalised wherever text names it,
+    as Whatever You Do writes it (fix-27), on the "Both flat" sort answered in a circle."""
+    pathway = naming_pathway()
+    [deacon] = [c for c in pathway["measurement"]["frameworks"][0]["constructs"] if c["id"] == "deacon"]
+    deacon["text_label"] = "Deacon"
+    return results_page(pathway, reweigh(pathway, result(FLAT, CLEAR_PEP), IN_A_CIRCLE), {}, "Sam")["frameworks"][0]
+
+
+def test_a_tie_break_box_names_a_construct_by_its_text_label():
+    assert deacon_in_text()["tie_break"]["text"] == "Circle: apostle, prophet, shepherd and Deacon."
+
+
+def test_the_bars_keep_the_label_and_the_item_scores_heading_takes_the_text_label():
+    apest = deacon_in_text()
+
+    assert [bar["label"] for bar in apest["bars"] if bar["construct"] == "deacon"] == ["deacon"]
+    assert [group["label"] for group in apest["groups"]][-1] == "Deacon"
+
+
 def test_a_tie_break_sentence_with_a_placeholder_the_page_cannot_fill_is_refused_where_it_is():
     pathway = with_a_tie_break()
     pathway["presentation"]["tie_break"]["separated"]["changed"] = "{top} beat {winner}."
