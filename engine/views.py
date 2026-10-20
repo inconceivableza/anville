@@ -1041,12 +1041,10 @@ def _listed_person(request, block_id, contact_id):
 
 
 def _list_shut(request, state, block):
-    """✨ The refusal for a change to a contact list the participant has not reached, or whose people a completion
-    fixed, or None while it is open to change."""
+    """✨ The refusal for a change to a contact list the participant has not reached, or None while it is open to change.
+    A completion never fixes a contact list: only an agreement scale can be marked `fixed_once_complete`."""
     if not _is_open(state, section_of(state.version.document, block["id"]), block):
         return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
-    if block["id"] in state.fixed:
-        return _refuse_fixed(request)
     return None
 
 
@@ -1085,7 +1083,6 @@ def _rows_sent_back(request, state, block, rows, status=200):
     just issued."""
     shown_block = {
         "id": block["id"],
-        "is_fixed": block["id"] in state.fixed,
         "frozen": RESULTS_SEEN if _frozen(state.response) else None,
     }
     context = {"rows": rows, "block": shown_block, "pathway": {"version_id": state.version.pk}}
@@ -1684,10 +1681,6 @@ def _page_or_404(section, page):
 
 
 FIXED_REFUSAL = "This answer was fixed when you completed this section."
-
-
-def _refuse_fixed(request):
-    return render(request, "engine/save_status.html", {"refusal": FIXED_REFUSAL}, status=409)
 
 
 def _block_of_type(version, block_id, block_type):
