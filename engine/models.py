@@ -68,6 +68,9 @@ class Response(models.Model):
     # ✨ When the participant first visited each sort's comparison with their observers, keyed by the sort's block, in
     # either state. Recorded, since a visit leaves no answer behind, and Section 1's gate waits on it (ticket 16c).
     comparisons_visited = models.JSONField(default=dict)
+    # ✨ When the participant first viewed each sort's comparison, keyed by the sort's block: visited it with at least the
+    # minimum number of observer assessments in (ticket 67a). Kept once withdrawals leave fewer, as a fixed answer is.
+    comparisons_viewed = models.JSONField(default=dict)
     # ✨ When answer collection froze: the participant confirmed "Compare with how others see you →" with at least the
     # minimum number of observer assessments in (ticket 55). Empty while it is open, and again once withdrawals leave
     # fewer than the minimum.
@@ -145,15 +148,21 @@ class Response(models.Model):
             updated_at=now,
         )
 
-    def visit_comparison(self, block_id):
-        """✨ Record that the participant visited a sort's comparison, in one UPDATE that merges it in. The first visit
-        keeps its time, as a fixed answer does, and a later one writes nothing."""
+    def visit_comparison(self, block_id, viewed=False):
+        """✨ Record that the participant visited a sort's comparison, and if `viewed`, with the minimum in, that they
+        viewed it, each in one UPDATE that merges it in. The first of each keeps its time, as a fixed answer does, and a
+        later one writes nothing."""
         now = timezone.now()
-        visited = Value({block_id: now.isoformat()}, output_field=models.JSONField())
+        stamp = Value({block_id: now.isoformat()}, output_field=models.JSONField())
         Response.objects.filter(pk=self.pk).exclude(comparisons_visited__has_key=block_id).update(
-            comparisons_visited=_MergeJson(visited, F("comparisons_visited")),
+            comparisons_visited=_MergeJson(stamp, F("comparisons_visited")),
             updated_at=now,
         )
+        if viewed:
+            Response.objects.filter(pk=self.pk).exclude(comparisons_viewed__has_key=block_id).update(
+                comparisons_viewed=_MergeJson(stamp, F("comparisons_viewed")),
+                updated_at=now,
+            )
 
     def freeze_collection(self):
         """✨ Freeze answer collection, if at least the minimum number of observer assessments are in, counted under a
@@ -180,8 +189,8 @@ class Response(models.Model):
     def clear_sort(self, block_id, reopened=()):
         """✨ Demo only (fix-19): take back the participant's sort for `block_id` and everything worked out from it, so
         they can sort again from the start. Its answer and result go, and the tie-break's answers and re-weighted result
-        with it; so does the visit to its comparison, and with it the freeze and the coach's sight of the results, both
-        of which rest on that visit. Each section in `reopened`, whose gate needed the sort, is no longer complete.
+        with it; so does the visit to its comparison and the view of it, and with them the freeze and the coach's sight
+        of the results, both of which rest on that visit. Each section in `reopened`, whose gate needed the sort, is no longer complete.
         Observers' assessments, the coach's link and every other answer stay. Done together or not at all."""
         with transaction.atomic():
             Result.objects.filter(response=self, block_id=block_id).delete()
@@ -192,6 +201,7 @@ class Response(models.Model):
                 answers=_WithoutKey(F("answers"), Value(block_id)),
                 fixed_answers=_WithoutKey(F("fixed_answers"), Value(block_id)),
                 comparisons_visited=_WithoutKey(F("comparisons_visited"), Value(block_id)),
+                comparisons_viewed=_WithoutKey(F("comparisons_viewed"), Value(block_id)),
                 completed_sections=completed,
                 collection_frozen_at=None,
                 updated_at=timezone.now(),
