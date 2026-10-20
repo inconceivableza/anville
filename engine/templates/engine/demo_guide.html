@@ -1,13 +1,14 @@
 {# Copyright (C) New Community Church SE London 2026. #}
 {# For licensing information see ../../../LICENSE.md #}
 {% comment %}
-  ✨ Demo only: a demo profile's guide, beside the sort it starts from (fix-23) and the pairs that follow, with
+  ✨ Demo only: a demo profile's guide, below the sort it starts from (fix-23) and each pair that follows, with
   seed_tie_break's own lines: the answer to give each pair, in the pair screen's words, and what the results should then
-  show. `guide` is the profile's; `on_sort` says it is beside the sort. Offered only on a development or demo system, so
-  its wording is written here rather than in the pathway document.
+  show. `guide` is the profile's; `on_sort` says it is below the sort. Kept quiet and closed until opened (fix-24), so
+  the sort and the pairs keep their full width and stay what the eye goes to. Offered only on a development or demo
+  system, so its wording is written here rather than in the pathway document.
 {% endcomment %}
-<aside class="demo-guide" aria-labelledby="demo-guide-heading">
-  <h2 id="demo-guide-heading">Demo profile</h2>
+<details class="demo-guide">
+  <summary>Demo profile</summary>
   <p class="fixed-note">Demo only: this is offered only on a demo or development system.</p>
   <p>{{ guide.summary }}</p>
   {% if on_sort %}
@@ -36,4 +37,4 @@
       <li>No generalist box.</li>
     {% endif %}
   </ul>
-</aside>
+</details>

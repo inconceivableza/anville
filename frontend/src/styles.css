@@ -2074,58 +2074,24 @@ body:not(.framed) .question-card > p + form {
   white-space: nowrap;
 }
 
-/* ✨ Demo only (fix-23): a demo profile's guide beside the sort and the pairs, in a page widened to hold it. Narrower,
-   the guide comes first, above them. */
-
-main.container:has(.demo-guided) {
-  max-width: 1100px;
-}
-
-.demo-guided {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
-  gap: var(--space-xl);
-  align-items: start;
-}
-
-.demo-guided > :not(.demo-guide) {
-  grid-column: 1;
-  grid-row: 1;
-}
+/* ✨ Demo only (fix-24): a demo profile's guide, quiet and closed, below the sort and each pair, so they keep their
+   full width (fix-23's side column squashed them). */
 
 .demo-guide {
-  grid-column: 2;
-  grid-row: 1;
-  position: sticky;
-  top: var(--space-md);
-  max-height: calc(100vh - 2 * var(--space-md));
-  overflow-y: auto;
-  background: var(--paper);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-md);
-  font-size: var(--text-sm);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+  font-size: var(--text-xs);
+  color: var(--muted);
+  overflow-wrap: anywhere;
 }
 
-.demo-guide h2 {
-  margin-top: 0;
+.demo-guide summary {
+  cursor: pointer;
 }
 
-@media (max-width: 900px) {
-  .demo-guided {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .demo-guided > :not(.demo-guide),
-  .demo-guide {
-    grid-column: 1;
-    grid-row: auto;
-  }
-
-  .demo-guide {
-    position: static;
-    max-height: none;
-  }
+.demo-guide .fixed-note {
+  font-size: inherit;
 }
 
 /* ✨ The tie-break's pairs (ticket 30b), as the content owner's prototype draws them */
