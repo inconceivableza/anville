@@ -98,12 +98,27 @@ def rows_shown(page):
     ]
 
 
+def another_row_form(page):
+    """✨ The list's "Add another person" (ticket 70), as (where it posts, its fields), or None while it is not offered."""
+    found = re.search(r'<form(?=[^>]*class="contact-more")[^>]*\baction="([^"]+)"[^>]*>(.*?)</form>', page, re.S)
+    if not found:
+        return None
+    return found.group(1), dict(re.findall(r'<input[^>]*\bname="([^"]+)"[^>]*\bvalue="([^"]*)"', found.group(2)))
+
+
+def add_another_row(client, section=ONBOARDING, page=None, htmx=False):
+    """✨ Press "Add another person" on the page given or as it is now; `htmx` as the page's JavaScript sends it."""
+    action, fields = another_row_form(page or shown(client, section))
+    return client.post(action, fields, **(HTMX if htmx else {}))
+
+
 def add_person(client, person, section=ONBOARDING, page=None, htmx=False):
-    """✨ Add one person as the participant does, in the list's first empty row, on the page given or as it is now;
-    `htmx` as the page's JavaScript sends it."""
-    action, fields = next(
-        form for form in forms_of(page or shown(client, section)) if "name" in form[1] and not form[1]["name"]
-    )
+    """✨ Add one person as the participant does, in the list's first empty row, on the page given or as it is now,
+    first pressing "Add another person" if every row is filled; `htmx` as the page's JavaScript sends it."""
+    page = page or shown(client, section)
+    if not any("name" in fields and not fields["name"] for _, fields in forms_of(page)):
+        page = client.get(add_another_row(client, section, page).url).content.decode()
+    action, fields = next(form for form in forms_of(page) if "name" in form[1] and not form[1]["name"])
     name, email = person
     return client.post(action, {**fields, "name": name, "email": email}, **(HTMX if htmx else {}))
 
@@ -206,10 +221,76 @@ def test_each_row_asks_for_a_first_name_and_an_email_address_as_the_prototype_do
 
 
 @pytest.mark.django_db
-def test_once_every_row_is_filled_one_more_is_offered(participant):
+def test_once_every_row_is_filled_no_more_appear_until_another_is_asked_for(participant):
+    """✨ "Add another person" is always offered below the rows instead (ticket 70)."""
+    save_contacts(participant, JO, PRIYA)
+    page = shown(participant, ONBOARDING)
+
+    assert rows_shown(page) == [JO, PRIYA]
+    assert another_row_form(page)
+
+
+# More than the rows ask for (ticket 70)
+
+
+@pytest.mark.django_db
+def test_without_javascript_add_another_person_adds_one_empty_row_keeping_everyone_in_theirs(participant):
     save_contacts(participant, JO, PRIYA)
 
-    assert rows_shown(shown(participant, ONBOARDING)) == [JO, PRIYA, BLANK]
+    added = add_another_row(participant)
+
+    assert added.status_code == 303
+    assert rows_shown(participant.get(added.url).content.decode()) == [JO, PRIYA, BLANK]
+    assert stored() == [JO, PRIYA]
+
+
+@pytest.mark.django_db
+def test_with_javascript_add_another_person_sends_back_one_empty_row_to_go_after_the_others(participant):
+    save_contacts(participant, JO, PRIYA)
+    page = shown(participant, ONBOARDING)
+    form = re.search(r'<form[^>]*class="contact-more"[^>]*>', page).group()
+    rows_list = re.search(r'<ol[^>]*class="contact-rows"[^>]*>', page).group()
+
+    sent = add_another_row(participant, page=page, htmx=True)
+
+    assert sent.status_code == 200
+    assert rows_sent_back(sent) == [None]
+    assert 'hx-swap="beforeend"' in form
+    assert re.search(r'hx-target="#([\w-]+)"', form).group(1) == re.search(r'id="([\w-]+)"', rows_list).group(1)
+    assert stored() == [JO, PRIYA]
+
+
+@pytest.mark.django_db
+def test_at_the_most_a_list_holds_another_row_is_not_offered_and_one_asked_for_is_refused(participant):
+    add_person(participant, JO)
+    left_open = shown(participant, ONBOARDING)
+    fifty = [{"name": f"Person {number}", "email": f"person{number}@example.com"} for number in range(50)]
+    Response.objects.get().replace_contacts("contacts", fifty, Contact.Role.CONTACT)  # ✨ quicker than 50 requests
+
+    assert another_row_form(shown(participant, ONBOARDING)) is None
+    refused = add_another_row(participant, page=left_open)
+
+    assert refused.status_code == 400
+    assert "Add no more than 50 people." in refused.content.decode()
+    assert Contact.objects.count() == 50
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("htmx", [False, True])
+def test_a_row_added_with_add_another_person_stores_nobody_until_its_get_link(participant, htmx):
+    save_contacts(participant, JO, PRIYA)
+
+    added = add_another_row(participant, htmx=htmx)
+    page = added.content.decode() if htmx else participant.get(added.url).content.decode()
+    row = re.findall(r'<li class="contact-row".*?</li>', page, re.S)[-1]
+
+    assert stored() == [JO, PRIYA]
+    assert "hx-trigger" not in row
+    assert re.search(r"<button[^>]*>\s*Get link\s*</button>", row)
+    action = re.search(r'<form[^>]*\baction="([^"]+)"', row).group(1)
+    fields = dict(re.findall(r'<input[^>]*\bname="([^"]+)"[^>]*\bvalue="([^"]*)"', row))
+    assert participant.post(action, {**fields, "name": CHRIS[0], "email": CHRIS[1]}).status_code == 303
+    assert stored() == [JO, PRIYA, CHRIS]
 
 
 # Adding and saving
@@ -257,7 +338,7 @@ def test_space_around_each_entry_is_trimmed(participant):
 def test_saved_contacts_survive_a_reload(participant):
     save_contacts(participant, JO, PRIYA, CHRIS)
 
-    assert rows_shown(shown(participant, ONBOARDING)) == [JO, PRIYA, CHRIS, BLANK]
+    assert rows_shown(shown(participant, ONBOARDING)) == [JO, PRIYA, CHRIS]
 
 
 @pytest.mark.django_db
@@ -361,8 +442,7 @@ def test_each_action_with_javascript_sends_back_its_own_row_alone(participant, a
         assert rows_sent_back(sent) == ["Joanne"]
     elif action == "get link":
         sent = add_person(participant, CHRIS, htmx=True)
-        assert rows_sent_back(sent)[0] == "Chris"
-        assert set(rows_sent_back(sent)[1:]) <= {None}  # ✨ and the next empty row, now that every row is filled
+        assert rows_sent_back(sent) == ["Chris"]  # ✨ in a row "Add another person" added (ticket 70)
         assert link_shown(sent.content.decode())
     elif action in ("reissue", "revoke"):
         path = r"/invitations/\d+/issue/" if action == "reissue" else r"/invitations/\d+/revoke/"

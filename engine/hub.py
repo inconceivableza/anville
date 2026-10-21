@@ -12,7 +12,7 @@ serves the hub page, the guard on a section page and the re-check when a section
 from typing import NamedTuple
 
 from engine.document.blocks import BLOCK_TYPES, page_count, page_of, pages_of
-from engine.document.gates import gate_passes, has_content, opened_key, unmet
+from engine.document.gates import clause_passes, gate_passes, has_content, opened_key, unmet
 from engine.document.text import text_for
 
 LOCKED = "locked"
@@ -34,6 +34,22 @@ COACH_ANSWER_LABELS = {
     "waiting": "Link issued",
     "accepted": "Accepted",
     "declined": "Declined",
+}
+
+
+# ✨ Engine wording for a section waiting on the coach's acceptance (ADR 0019), by the coach's answer as the coach page
+# tells it: "waiting" while a working link is unanswered, "declined", or None with no working link (none made, expired
+# unanswered, or revoked). The next-step panel's heading and sentence, while nothing else is open (ticket 65).
+COACH_WAIT_PANEL = {
+    "waiting": ("Waiting on your coach to respond", "{section} opens once {coach} has accepted."),
+    "declined": ("{coach} has said no", "Choose someone else to walk with you. {section} opens once they accept."),
+    None: ("Choose a coach", "{section} opens once your coach has accepted."),
+}
+# ✨ The coach card's line under its tag, by the same answer, while the section waits on the coach at all.
+COACH_WAIT_LINE = {
+    "waiting": "{section} opens once your coach accepts",
+    "declined": "Choose another coach to open {section}",
+    None: "{section} opens once your coach accepts",
 }
 
 
@@ -87,14 +103,39 @@ class OutlineEntry(NamedTuple):
     parts: tuple
 
 
+class CoachWait(NamedTuple):
+    """✨ A section not yet opened whose opening conditions wait on the coach's acceptance (ADR 0019), and whether that
+    is `only` what holds it shut, with the sections it requires done (ticket 65)."""
+
+    section: SectionState
+    only: bool
+
+    def called(self):
+        """✨ What the wording calls the section: "Section 3" for one numbered "03", as the pathway's own sentences
+        call it, or its title for one without a number."""
+        number = self.section.number
+        return f"Section {int(number)}" if number and number.isdigit() else self.section.title
+
+    def panel(self, answer, coach):
+        """✨ The next-step panel's heading and sentence, as a `NextStepWording`, by the coach's `answer` as the coach
+        page tells it, naming the `coach`."""
+        heading, sentence = COACH_WAIT_PANEL.get(answer, COACH_WAIT_PANEL[None])
+        return NextStepWording(heading.format(coach=coach), sentence.format(section=self.called(), coach=coach))
+
+    def line(self, answer):
+        """✨ The coach card's line under its tag, by the coach's `answer` as the coach page tells it."""
+        return COACH_WAIT_LINE.get(answer, COACH_WAIT_LINE[None]).format(section=self.called())
+
+
 class Hub(NamedTuple):
-    """✨ A participant's whole hub: their track's sections, the one to do next, and how many of the sections are
-    complete, out of `total`."""
+    """✨ A participant's whole hub: their track's sections, the one to do next, how many of the sections are
+    complete, out of `total`, and the first section waiting on the coach, as a `CoachWait`, if any."""
 
     sections: tuple
     next_step: SectionState | None
     complete: int
     total: int
+    coach_wait: CoachWait | None = None
 
     def outline(self):
         """✨ The sections as the hub and the sidebar list them, as `OutlineEntry`s, each with the parts listed under it.
@@ -317,18 +358,37 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None):
     by section, the pages moved past."""
     moved_past = moved_past or {}
     completed = complete_sections(sections, answers, completed)
-    states = [
-        _state(section, answers, completed, role, moved_past, sections)
-        for section in listed_sections(sections, completed)
-    ]
+    listed = listed_sections(sections, completed)
+    states = [_state(section, answers, completed, role, moved_past, sections) for section in listed]
     next_step = next((state for state in states if state.status in (NOT_STARTED, IN_PROGRESS)), None)
     states = [state._replace(is_next=state is next_step) for state in states]
+    coach_wait = next(
+        (
+            CoachWait(
+                state,
+                only=_requires_met(section, completed)
+                and _waiting_on(section, completed, answers, sections, moved_past) is None,
+            )
+            for section, state in zip(listed, states)
+            if state.is_locked and _waits_on_coach(section, answers)
+        ),
+        None,
+    )
     return Hub(
         sections=tuple(states),
         next_step=next((state for state in states if state.is_next), None),
         complete=sum(1 for state in states if state.status == COMPLETE),
         total=len(states),
+        coach_wait=coach_wait,
     )
+
+
+def _waits_on_coach(section, answers):
+    """✨ Whether a section not yet opened has a `coach_accepted` opening condition that fails (ADR 0019)."""
+    if has_content(answers.get(opened_key(section["id"]))):
+        return False
+    clauses = section.get("opens_when", {}).get("clauses", [])
+    return any(clause["type"] == "coach_accepted" and not clause_passes(clause, answers) for clause in clauses)
 
 
 def _state(section, answers, completed, role, moved_past, sections):

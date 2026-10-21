@@ -261,7 +261,7 @@ BLOCK_TYPES = {
             text_lists=(("options", ("label",)),),
             captures=CHOICE,
         ),
-        BlockType("contact_list", captures=CONTACTS),
+        BlockType("contact_list", text_fields=("more_note",), captures=CONTACTS),
         # ✨ Captures nothing: its answers are opinions about another person, never kept (see `coach.py`).
         BlockType(
             "coach_checklist",

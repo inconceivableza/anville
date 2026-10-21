@@ -483,7 +483,8 @@
             "id": "contacts",
             "type": "contact_list",
             "needed": 3,
-            "optional": 2
+            "optional": 2,
+            "more_note": "Five is a good number, but you can add more."
           }
         ],
         "gate": {

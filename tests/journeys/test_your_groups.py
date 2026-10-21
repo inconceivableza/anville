@@ -121,3 +121,26 @@ def test_a_participant_in_no_group_is_told_so(client, participant):
     page = text_of(main_of(client.get(YOUR_GROUPS).content.decode()))
 
     assert "You're not in any groups." in page
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "address",
+    ["/groups/", "/groups/{group}/leave/", "/organisations/", "/groups/{group}/replace-link/", "not an admin"],
+)
+def test_an_organisations_page_keeps_the_participant_header_in_plain_cream_not_the_participants_frame(
+    client, participant, address
+):
+    """✨ The organisations pages stay plain cream for a signed-in participant, as the account pages do (fix-4, ticket
+    72b)."""
+    cohort = a_group("Example Church", "Autumn cohort")
+    Membership.objects.create(participant=participant, group=cohort)
+    if address == "not an admin":
+        address = "/organisations/"
+    else:
+        Permission.objects.create(holder=participant, capability=Permission.Capability.MANAGE, group=cohort)
+
+    page = client.get(address.format(group=cohort.pk)).content.decode()
+
+    assert "<body>" in page and "framed" not in page
+    assert '<header class="site-header"' in page

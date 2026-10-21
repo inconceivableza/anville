@@ -53,10 +53,16 @@ def rows_to_fill(block):
     return needed(block) + block.get("optional", DEFAULT_OPTIONAL)
 
 
-def rows_of(block, held):
-    """✨ How many rows the list shows while it holds `held` people: the rows to fill, or, once those are all filled,
-    one more for the next person, never past the most it may hold."""
-    return min(max(rows_to_fill(block), held + 1), MAX_CONTACTS)
+def rows_of(block, held, asked=0):
+    """✨ How many rows the list shows while it holds `held` people: the rows to fill, or a row for each person once
+    there are more, or the `asked` rows once "Add another person" has asked for more than either, never past the most
+    it may hold. Filling every row adds none: "Add another person" does, below them (ticket 70)."""
+    return min(max(rows_to_fill(block), held, asked), MAX_CONTACTS)
+
+
+def can_add_row(shown):
+    """✨ Whether "Add another person" is offered below `shown` rows: until the list shows the most it may hold."""
+    return shown < MAX_CONTACTS
 
 
 def voices_card(block, card, invited, answered, minimum, frozen=False):

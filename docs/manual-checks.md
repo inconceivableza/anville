@@ -623,6 +623,27 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - With JavaScript on, the same presses show only the short "Not saved. …" line beside what was pressed, as before.
 - Phone width: the refusal page and the list's page fit with no sideways scroll.
 
+## More than five trusted voices (ticket 70; rebuild the frontend and load the pathway again, then start a new participant)
+
+- Five trusted voices' page: below the five rows, "Five is a good number, but you can add more." and an "Add another person" button, from the start, before any row is filled.
+- With JavaScript: type a name in an empty row without pressing "Get link", and change someone listed without waiting for "Saved", then press "Add another person". A sixth, empty row appears below the others marked "Optional", and what you typed in the other rows is still there. Press it again: a seventh. Give the sixth a name and email and press "Get link": the link dialog opens, and the hub's card counts 6 invited.
+- Fill all five rows: no sixth row appears until "Add another person" is pressed.
+- Without JavaScript (switched off in the browser's developer tools): "Add another person" brings the page back, at the new empty row, with everyone listed still in their rows. What was typed and not yet saved in another row is not kept: each row saves by its own button. An invalid email in the new row comes back in that row with the refusal, the row still there.
+- Removing the sixth person takes their row away, back to five.
+- Collection frozen (as in ticket 71's check): no sentence and no "Add another person".
+- The faithful port's contact list shows "Add another person" below its five rows, with no sentence.
+- Phone width: the sentence and the button sit below the rows with no sideways scroll.
+
+## The hub while Section 3 waits on the coach (ticket 65; rebuild the frontend, load both pathways again, and use a participant started after that)
+
+- Walk with a coach card, with no coach chosen: a small light "Manage" pill under its sentence, at its own width, leading to the coach page; and above the sentence, in darker type, "Section 3 opens once your coach accepts". Choose a coach: the same line and button.
+- Five trusted voices card: its "Manage" is now the same small pill, at its own width rather than across the card.
+- Finish Section 1 and Section 2 with the coach's link unanswered: the next-step panel reads "Waiting on your coach to respond" / "Section 3 opens once {coach} has accepted.", with a "Your coach" button to the coach page, in place of "Nothing is waiting for you right now."
+- Decline from the coach's link in a private window: the panel reads "{coach} has said no" / "Choose someone else to walk with you. Section 3 opens once they accept.", and the card's line "Choose another coach to open Section 3". Revoke the link, or remove the coach: "Choose a coach" / "Section 3 opens once your coach has accepted.", and the card's line is back to "Section 3 opens once your coach accepts".
+- Issue a link again and accept: Section 3 is the next step, and the card has no line, as it has none once Section 3 has opened, whatever happens to the link after.
+- The faithful port's hub, which has no coach and no side cards: its next step is as before.
+- Phone width: both cards' pills stay small and on one line, the cards below the list with no sideways scroll; the panel's button sits under its sentence.
+
 ## Before we begin once only (ticket 69; load both pathways again, then a participant started after that)
 
 - *Whatever You Do*: a new participant is taken through Before we begin's two pages, as before. Once "Continue →" on the ratings page completes it, the hub neither lists Before we begin nor counts it ("0 of 8 sections complete"), and nor does the sidebar.
