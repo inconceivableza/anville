@@ -6,12 +6,12 @@
 
   With JavaScript the empty row it sends back goes after the others, touching none of them, and this control comes back
   too (`oob`), out of band, counting it, or gone once the list shows the most it may. Without, the list's page comes
-  back with one more row, at it. The button belongs to the list's one form for new people (`blocks/contact_list.html`),
-  so without JavaScript what is typed in every empty row comes back in it too (fix-1).
+  back with one more row, at it. The button belongs to the list's one form (`blocks/contact_list.html`), so without
+  JavaScript it saves the edits typed to people listed, and what is typed in every empty row comes back in it (fix-1).
 {% endcomment %}
 {% if block.adds_rows %}
 <div class="contact-more" id="more-{{ block.id }}"{% if oob %} hx-swap-oob="true"{% endif %}>
-  <button type="submit" class="pill ghost small" form="new-people-{{ block.id }}" name="rows" value="{{ block.rows_shown }}"
+  <button type="submit" class="pill ghost small" form="list-{{ block.id }}" name="rows" value="{{ block.rows_shown }}"
           formaction="{% url 'another_row' block.id %}#{{ block.id }}-row-{{ block.rows_shown|add:1 }}"
           hx-post="{% url 'another_row' block.id %}" hx-target="#rows-{{ block.id }}" hx-swap="beforeend">Add another person</button>
 </div>

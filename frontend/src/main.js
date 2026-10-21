@@ -61,19 +61,24 @@ document.addEventListener("htmx:sendError", notSaved);
 // ✨ An autosaved answer is saved as it changes, so its form is never submitted as a page while JavaScript runs:
 // Enter in it would otherwise send it through the hidden fallback button and reload the page (fix-7). Without
 // JavaScript, that button and Enter still save it.
+// ✨ A contact list's Save belongs to the list's one form, not its row's (fix-1), hence the submitter too.
 document.addEventListener("submit", (event) => {
-  if (event.target.querySelector(".save-fallback")) event.preventDefault();
+  const fallback = event.target.querySelector(".save-fallback") || event.submitter?.matches(".save-fallback");
+  if (fallback) event.preventDefault();
 });
 
-// ✨ A contact list's empty rows all belong to its one form for new people (fix-1), whose Enter presses the first
-// empty row's "Get link", wherever it was typed. Press the row's own instead, as when each row was a form of its own.
-// Without JavaScript, Enter still presses the first empty row's, and every row's typing comes back.
+// ✨ A contact list's rows all belong to its one form (fix-1), whose Enter presses the first row's button, wherever it
+// was typed. Do as when each row was a form of its own instead: an empty row's Enter presses its own "Get link", and a
+// person's saves their row now, as its autosave does. Without JavaScript, Enter presses the first row's button, which
+// saves every edit and brings every row's typing back.
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Enter" || event.isComposing || !event.target.matches?.("input")) return;
-  const getsLink = event.target.closest(".contact-row")?.querySelector("[data-gets-link]");
-  if (!getsLink) return;
+  const row = event.target.closest(".contact-row");
+  if (!row) return;
   event.preventDefault();
-  getsLink.click();
+  const getsLink = row.querySelector("[data-gets-link]");
+  if (getsLink) getsLink.click();
+  else row.querySelector("form.contact-person")?.requestSubmit();
 });
 
 // ✨ Near a text box's length limit, say how much room is left; the browser stops typing at the limit itself.

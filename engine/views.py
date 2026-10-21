@@ -1,6 +1,7 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../LICENSE.md
 
+import hashlib
 import json
 import mimetypes
 from typing import NamedTuple
@@ -9,7 +10,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.humanize.templatetags.humanize import apnumber
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -1120,7 +1121,8 @@ def invitations(request):
 def contacts(request, block_id):
     """✨ Add one person to a contact list, and make their observer's link in the same act (ticket 51a), so nobody is
     listed without having had one. Then back to the list at them, which shows the link this once. Nobody else on the
-    list is touched, so a page left open since someone else was added never drops them."""
+    list is touched, so a page left open since someone else was added never drops them. Without JavaScript the press
+    carries the whole list, and saves edits to people listed with it (fix-1, `_link_with_the_list`)."""
     state = _participant(request.user, first_version=lambda: _published_version(request.POST.get("version")))
     block = _block_of_type(state.version, block_id, "contact_list")
     shut = _list_shut(request, state, block)
@@ -1128,6 +1130,9 @@ def contacts(request, block_id):
         return shut
     if _frozen(state.response):
         return _refuse_frozen(request, state, block)
+    typed = [] if _is_htmx(request) else _typed_rows(request)
+    if typed:
+        return _link_with_the_list(request, state, block, typed)
     try:
         person = contact_from_form(*_typed_for_new(request))
     except AnswerRefused as refused:
@@ -1145,30 +1150,180 @@ def contacts(request, block_id):
         rows = _contact_rows(block, state.answers, {"contact": person.pk, "link": link})
         added_row = _as_typed_in(request, block, next(row for row in rows if row["contact_id"] == person.pk))
         return _rows_sent_back(request, state, block, [added_row])
-    pressed = request.POST.get("row")
-    kept = [typed for typed in _typed_rows(request) if str(typed["number"]) != pressed]
-    return _back_with_issued(request, person, link, kept=kept)
+    return _back_with_issued(request, person, link)
+
+
+def _link_with_the_list(request, state, block, typed):
+    """✨ "Get link" pressed without JavaScript, the whole list sent with it (fix-1): the edits typed to people listed
+    are saved, as their own Save would, and the person typed in the row pressed is added with their link, all or none.
+    A refusal, theirs or an edit's, comes back in its row with every row as typed. Then back to the list at them, as
+    ever, with what was typed in the other empty rows in the cookie that carries their link (ADR 0020).
+
+    Too much typing to fit in that cookie, and the list's page is drawn here instead, with their link and every row as
+    typed, never cached. A reload sends the press again, so the list's form carries a `press` (`_press_of`), and a press
+    that already added that person (`_repeated_press`) adds nobody again: the page comes back with them listed."""
+    pressed = request.POST.get("row", "")
+    new = next((row for row in typed if row["person"] is None and str(row["number"]) == pressed), None)
+    others = [row for row in typed if row["person"] is None and row is not new]
+    repeated = _repeated_press(request, block, new)
+    if repeated is not None:
+        return _list_page(request, _participant(request.user), block, 200, kept=others)
+    edits, refusals = _edits_of(state, block, typed)
+    try:
+        person = contact_from_form(new["name"] if new else "", new["email"] if new else "")
+    except AnswerRefused as refused:
+        if new is None:
+            return _press_refused(request, state, block, typed, refusals, refusal=str(refused))
+        refusals[new["number"]] = refused
+    if refusals:
+        return _press_refused(request, state, block, typed, refusals)
+    with transaction.atomic():
+        _save_edits(edits)
+        added = state.stored_response(request.user).add_contact(
+            block["id"], person, link_lifetime(state.version.document), MAX_CONTACTS
+        )
+        if added is None:
+            transaction.set_rollback(True)
+    if added is None:
+        return _press_refused(request, state, block, typed, {}, refusal=LIST_FULL)
+    person, token = added
+    _remember_press(request, person)
+    link = _link_of(request, person, token)
+    kept = [{"name": row["name"], "email": row["email"]} for row in others]
+    if len(json.dumps({"contact": person.pk, "link": link, "kept": kept})) <= ISSUED_COOKIE_MOST:
+        return _back_with_issued(request, person, link, kept=kept)
+    issued = {"contact": person.pk, "link": link}
+    drawn = _list_page(request, _participant(request.user), block, 200, kept=others, issued=issued)
+    drawn["Cache-Control"] = "no-store"
+    return drawn
 
 
 def _typed_rows(request):
-    """✨ What a press of the list's form for new people sent from each of its empty rows, in order, as {"number",
-    "name", "email"} (fix-1): none for a press that sent one person alone."""
-    numbers, names, emails = (request.POST.getlist(key) for key in ("number", "name", "email"))
+    """✨ What a press of the list's one form sent from each of its rows, in order, as {"number", "person" (None for an
+    empty row), "drawn", "name", "email"} (fix-1): none for a press that sent one person alone."""
+    keys = ("number", "person", "drawn", "name", "email")
     return [
-        {"number": int(number), "name": name, "email": email}
-        for number, name, email in zip(numbers, names, emails)
+        {
+            "number": int(number),
+            "person": int(person) if person.isdigit() else None,
+            "drawn": drawn,
+            "name": name,
+            "email": email,
+        }
+        for number, person, drawn, name, email in zip(*(request.POST.getlist(key) for key in keys))
         if number.isdigit()
     ]
 
 
 def _typed_for_new(request):
     """✨ The name and email address typed for someone new: in the row whose "Get link" was pressed (`row`), among all
-    the empty rows sent, or else the one person sent."""
+    the rows sent, or else the one person sent."""
     pressed = request.POST.get("row")
     typed = next((typed for typed in _typed_rows(request) if str(typed["number"]) == pressed), None)
     if typed is not None:
         return typed["name"], typed["email"]
     return request.POST.get("name"), request.POST.get("email")
+
+
+def _drawn(name, email):
+    """✨ A short fingerprint of a person as a row showed them, sent back with it, so a press saves only the rows
+    changed since the page was drawn: a page left open never puts back what another tab has since saved (fix-1)."""
+    return hashlib.sha256(f"{name}\0{email}".encode()).hexdigest()[:16]
+
+
+def _edits_of(state, block, typed):
+    """✨ The edits typed to people listed, sent with a press of the list's one form (fix-1), as ([(their identifier,
+    what to save)], {row number: why it is refused}): only rows changed since the page was drawn, each checked as their
+    own Save checks it. Someone taken off the list since is passed over."""
+    changed = [row for row in typed if row["person"] is not None and _drawn(row["name"], row["email"]) != row["drawn"]]
+    on_list = set(
+        Contact.objects.filter(
+            response=state.response,
+            block_id=block["id"],
+            role=Contact.Role.CONTACT,
+            pk__in=[row["person"] for row in changed],
+        ).values_list("pk", flat=True)
+    )
+    edits, refusals = [], {}
+    for row in changed:
+        if row["person"] not in on_list:
+            continue
+        try:
+            edits.append((row["person"], contact_from_form(row["name"], row["email"])))
+        except AnswerRefused as refused:
+            refusals[row["number"]] = refused
+    return edits, refusals
+
+
+def _save_edits(edits):
+    """✨ Save each edit from `_edits_of`, the person's link still working."""
+    for contact_id, fields in edits:
+        Contact.objects.filter(pk=contact_id).update(**fields)
+
+
+def _saved_with_the_list(request, state, block, typed, asked=0, back=None):
+    """✨ A press of the list's one form without JavaScript that adds nobody (fix-1): the edits typed to people listed
+    saved, all or none, then the list's page drawn here, at least `asked` rows, with what was typed in the empty rows
+    back in them, since it is kept nowhere. Sending it again saves the same again. With nothing typed in them, a
+    redirect to `back`, if given, as Save made before: only empty rows are left behind."""
+    edits, refusals = _edits_of(state, block, typed)
+    if refusals:
+        return _press_refused(request, state, block, typed, refusals)
+    _save_edits(edits)
+    state = _participant(request.user)
+    kept = [row for row in typed if row["person"] is None]
+    if back and not any(row["name"] or row["email"] for row in kept):
+        return _see_other(back)
+    return _list_page(request, state, block, 200, asked=asked, kept=kept)
+
+
+def _press_refused(request, state, block, typed, refusals, refusal=None):
+    """✨ The list's page again after a press of its one form was refused, nothing from it stored (fix-1): every row as
+    typed, each refused one with why and the field at fault, or `refusal` on the list's own line."""
+    kept = [
+        {**row, "refusal": str(refusals[row["number"]]), "invalid": refusals[row["number"]].field}
+        if row["number"] in refusals
+        else row
+        for row in typed
+    ]
+    return _list_page(request, state, block, 400, refusal=refusal, kept=kept)
+
+
+# ✨ Where the session remembers which person each recent press of a contact list's form added, by its `press`, and
+# how many it remembers: a press is one page drawn, so a handful covers any reload.
+PRESSES_KEY = "contact_presses"
+PRESSES_KEPT = 20
+
+
+def _press_of(block, rows):
+    """✨ What a contact list's form sends as `press`: a fingerprint of who it lists, so it changes as soon as a press
+    adds anyone, and a press sent again by a reload is told from a new one (fix-1, `_repeated_press`). The same list
+    draws the same page."""
+    listed = ",".join(str(row["contact_id"]) for row in rows if row["contact_id"])
+    return hashlib.sha256(f"{block['id']}:{listed}".encode()).hexdigest()[:16]
+
+
+def _repeated_press(request, block, new):
+    """✨ The person this press already added, if it is one sent again (a reload of the page it drew), or None: its
+    `press` added them, and they are on this list still, as the row pressed has them (fix-1)."""
+    added = request.session.get(PRESSES_KEY, {}).get(request.POST.get("press") or "")
+    if added is None or new is None:
+        return None
+    try:
+        person = contact_from_form(new["name"], new["email"])
+    except AnswerRefused:
+        return None
+    return Contact.objects.filter(pk=added, block_id=block["id"], **person).first()
+
+
+def _remember_press(request, person):
+    """✨ Remember that this press added `person`, for `_repeated_press`: only identifiers, never their details."""
+    press = request.POST.get("press")
+    if not press:
+        return
+    presses = request.session.get(PRESSES_KEY, {})
+    presses[press] = person.pk
+    request.session[PRESSES_KEY] = dict(list(presses.items())[-PRESSES_KEPT:])
 
 
 @login_required
@@ -1177,11 +1332,15 @@ def _typed_for_new(request):
 def contact(request, block_id, contact_id):
     """✨ Change one person's name or email address, and theirs alone (ticket 51a), as the row saves on a change with
     JavaScript, or by its Save button without (fix-2). Their link keeps working. Another participant's contact, or one
-    from another list, is a 404 that says nothing of whether it exists."""
+    from another list, is a 404 that says nothing of whether it exists. Save without JavaScript sends the whole list,
+    and saves every edit typed to it, the empty rows' typing coming back (fix-1, `_saved_with_the_list`)."""
     state, block, person = _listed_person(request, block_id, contact_id)
     shut = _list_shut(request, state, block)
     if shut is not None:
         return shut
+    typed = [] if _is_htmx(request) else _typed_rows(request)
+    if typed:
+        return _saved_with_the_list(request, state, block, typed, back=_listed_at(person))
     try:
         changed = contact_from_form(request.POST.get("name"), request.POST.get("email"))
     except AnswerRefused as refused:
@@ -1232,10 +1391,9 @@ def another_row(request, block_id):
     """✨ "Add another person" below a contact list's rows (ticket 70): one more empty row, storing nobody, since its
     "Get link" adds the person as any empty row's does. With JavaScript, that row alone, to go after the others, with
     the control again counting it, so nothing typed in any other row is touched; without, the list's page again
-    showing one more row than the page it was pressed on (`rows`), each person in theirs and what was typed in each
-    empty row back in it (fix-1). That page is drawn here rather than redirected to, since what was typed is kept
-    nowhere; pressing again from it stores nothing either. Refused once the list shows the most it may hold, and while
-    answer collection is frozen, when nobody can be added."""
+    showing one more row than the page it was pressed on (`rows`), with the edits typed to people listed saved and
+    what was typed in each empty row back in it (fix-1, `_saved_with_the_list`). Refused, with nothing saved, once the
+    list shows the most it may hold, and while answer collection is frozen, when nobody can be added."""
     state = _participant(request.user)
     block = _block_of_type(state.version, block_id, "contact_list")
     shut = _list_shut(request, state, block)
@@ -1260,7 +1418,7 @@ def another_row(request, block_id):
             "pathway": {"version_id": state.version.pk},
         }
         return render(request, "engine/contact_row_added.html", context)
-    return _list_page(request, state, block, 200, asked=number, kept=_typed_rows(request))
+    return _saved_with_the_list(request, state, block, _typed_rows(request), asked=number)
 
 
 def _listed_person(request, block_id, contact_id):
@@ -1284,8 +1442,8 @@ def _list_shut(request, state, block):
 
 def _person_refused(request, state, block, refused, contact_id=None):
     """✨ The list's page again, saying why one person was not saved, with what was typed in their row (or, for someone
-    new, the row they typed in, or else the first empty one) and the field at fault marked, so nothing typed is lost.
-    Someone new comes back among what was typed in every other empty row, each in its own (fix-1)."""
+    new, the first empty one) and the field at fault marked, so nothing typed is lost. A press that sent the whole list
+    without JavaScript is refused by `_press_refused` instead (fix-1)."""
     name, email = (request.POST.get("name"), request.POST.get("email")) if contact_id else _typed_for_new(request)
     typed = {
         "contact_id": contact_id,
@@ -1300,17 +1458,12 @@ def _person_refused(request, state, block, refused, contact_id=None):
         row = next((row for row in rows if row["contact_id"] == contact_id), None) or _empty_row(block, 0)
         row = _as_typed_in(request, block, {**row, **{key: typed[key] for key in typed if key != "contact_id"}})
         return _rows_sent_back(request, state, block, [row], status=400)
-    pressed = request.POST.get("row", "")
-    kept = [] if contact_id else _typed_rows(request)
-    if kept:
-        refusal = {"refusal": typed["refusal"], "invalid": typed["invalid"]}
-        kept = [{**row, **refusal} if str(row["number"]) == pressed else row for row in kept]
-        typed = None
     # ✨ As many rows as the page they typed in had shown, so a row "Add another person" added is still there
     # (ticket 70).
+    pressed = request.POST.get("row", "")
     asked = int(pressed) if pressed.isdigit() else 0
     section = section_of(state.version.document, block["id"])
-    rows_back = {block["id"]: {"typed": typed, "asked": asked, "kept": kept}}
+    rows_back = {block["id"]: {"typed": typed, "asked": asked}}
     shown = _section_page(state, section, page_of(section, block["id"]), rows_back=rows_back)
     on_page = next(shown_block for shown_block in shown["section"]["blocks"] if shown_block["id"] == block["id"])
     if not any(row.get("refusal") for row in on_page["rows"]):
@@ -1402,12 +1555,12 @@ def _refuse_frozen(request, state, block):
     return _refused(request, RESULTS_SEEN, status=403, page=lambda status: _list_page(request, state, block, status))
 
 
-def _list_page(request, state, block, status, refusal=None, asked=0, kept=()):
+def _list_page(request, state, block, status, refusal=None, asked=0, kept=(), issued=None):
     """✨ The page a contact list is on, as it now stands, with `refusal`, if given, on the list's own line, at least
-    `asked` rows, and `kept`, what was typed in its empty rows, back in them (fix-1)."""
+    `asked` rows, `kept`, what was typed in its rows, back in them, and `issued`, a link just issued (fix-1)."""
     section = section_of(state.version.document, block["id"])
     rows_back = {block["id"]: {"asked": asked, "kept": kept}}
-    shown = _section_page(state, section, page_of(section, block["id"]), rows_back=rows_back)
+    shown = _section_page(state, section, page_of(section, block["id"]), issued=issued, rows_back=rows_back)
     if refusal is not None:
         on_page = next(shown_block for shown_block in shown["section"]["blocks"] if shown_block["id"] == block["id"])
         on_page["refusal"] = refusal
@@ -1457,15 +1610,13 @@ def _link_of(request, contact, token):
 def _back_with_issued(request, contact, link, kept=None):
     """✨ A redirect to where the contact is listed, carrying the link just issued for that page to show this once, and
     `kept`, what was typed in the list's other empty rows, for that page to put back in them (fix-1). That travels as
-    the link does, in the participant's own cookie, so it is kept nowhere of ours; too much to fit in one, and only the
-    empty rows themselves come back."""
+    the link does, in the participant's own cookie, so it is kept nowhere of ours (ADR 0020); a caller with more than
+    fits (`ISSUED_COOKIE_MOST`) draws the page itself instead."""
     listed_at = _listed_at(contact)
     back = _see_other(listed_at)
     issued = {"contact": contact.pk, "link": link}
     if kept:
-        issued["kept"] = [{"name": row["name"], "email": row["email"]} for row in kept]
-        if len(json.dumps(issued)) > ISSUED_COOKIE_MOST:
-            issued["kept"] = [{"name": "", "email": ""} for _ in kept]
+        issued["kept"] = kept
     back.set_signed_cookie(
         ISSUED_COOKIE,
         json.dumps(issued),
@@ -1482,8 +1633,8 @@ def _back_with_issued(request, contact, link, kept=None):
 # ✨ Where a link just issued waits for the page that shows it, and for how long at most.
 ISSUED_COOKIE = "issued_link"
 ISSUED_COOKIE_SECONDS = 60
-# ✨ The most its contents may run to: quoting can double them, and a browser drops a cookie past 4096 bytes, signature
-# and attributes included.
+# ✨ The most its contents may run to, as JSON: quoting can double them, and a browser drops a cookie past 4096 bytes,
+# signature and attributes included.
 ISSUED_COOKIE_MOST = 1800
 
 
@@ -2191,6 +2342,7 @@ def _block_for_participant(
         "rows": rows,
         "rows_shown": len(rows) if rows is not None else None,
         "adds_rows": rows is not None and not frozen and can_add_row(len(rows)),
+        "press": _press_of(block, rows) if rows is not None else None,
         "checklist": _opening_checklist(text, _coach_kept(answers, block["id"]), issued) if is_checklist else None,
         "id": block["id"],
         "landing": landing_of(block),  # ✨ where saving it without JavaScript comes back to
@@ -2227,16 +2379,18 @@ def _contact_rows(block, answers, issued=None, typed=None, asked=0, kept=()):
     itself if it was just issued (`issued`, shown this once), then empty rows for the next people, as many as `asked`
     for in all if that is more (ticket 70). Each row is marked needed or optional by its place. `typed` is a person
     whose save was refused, shown as typed in their row, or for someone new in the first empty one, with why and the
-    field at fault. `kept` is what was typed in the empty rows of the page pressed without JavaScript, in order, any
-    refusal with it, or else what the link just issued brought back: each goes in the next empty row, with a row for
-    each (fix-1)."""
+    field at fault. `kept` is what was typed in the rows of the page pressed without JavaScript, any refusal with it,
+    or else what the link just issued brought back: a person's in their row, and the empty rows' in order, each in the
+    next empty row, with a row for each (fix-1). Each person's row carries `drawn`, their fingerprint as stored."""
     people = answers.get(block["id"]) or []
     if not kept and issued and any(person["id"] == issued["contact"] for person in people):
         kept = issued.get("kept", ())
+    for_people = {typed_in["person"]: typed_in for typed_in in kept if typed_in.get("person") is not None}
+    for_new = [typed_in for typed_in in kept if typed_in.get("person") is None]
     links = Invitation.objects.filter(contact_id__in=[person["id"] for person in people], expires_at__gt=timezone.now())
     working = {invitation.contact_id: invitation for invitation in links}
     rows = []
-    for number in range(1, rows_of(block, len(people), max(asked, len(people) + len(kept))) + 1):
+    for number in range(1, rows_of(block, len(people), max(asked, len(people) + len(for_new))) + 1):
         person = people[number - 1] if number <= len(people) else {"name": "", "email": "", "id": None}
         just_issued = issued and issued["contact"] == person["id"]
         rows.append(
@@ -2248,9 +2402,12 @@ def _contact_rows(block, answers, issued=None, typed=None, asked=0, kept=()):
                 "email": person["email"],
                 "invitation": working.get(person["id"]),
                 "issued": issued["link"] if just_issued else None,
+                "drawn": _drawn(person["name"], person["email"]) if person["id"] else "",
             }
         )
-    for row, typed_in in zip((row for row in rows if row["contact_id"] is None), kept):
+    empty = (row for row in rows if row["contact_id"] is None)
+    pairs = [(row, for_people[row["contact_id"]]) for row in rows if row["contact_id"] in for_people]
+    for row, typed_in in [*pairs, *zip(empty, for_new)]:
         row.update(name=typed_in["name"], email=typed_in["email"])
         row.update({mark: typed_in[mark] for mark in ("refusal", "invalid") if mark in typed_in})
     if typed is not None:
