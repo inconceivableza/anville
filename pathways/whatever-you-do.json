@@ -249,6 +249,16 @@
         "number": "03",
         "estimate": "About 30–40 minutes",
         "requires": ["designed", "shape"],
+        "opens_when": {
+          "clauses": [
+            {
+              "type": "coach_accepted",
+              "block": "coach",
+              "message": "Opens once your coach has accepted. If they decline, choose someone else."
+            }
+          ],
+          "with_sections": "Opens once you've finished {sections} and your coach has accepted."
+        },
         "complete_label": "I've finished Section 3",
         "blocks": [
           {

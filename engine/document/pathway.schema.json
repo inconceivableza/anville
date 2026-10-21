@@ -500,6 +500,7 @@
         },
         "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } },
         "gate": { "$ref": "#/$defs/gate" },
+        "opens_when": { "$ref": "#/$defs/opens_when" },
         "complete_label": {
           "description": "The wording of the button that completes the section, such as 'Continue →'. Without one, it reads 'Mark complete'.",
           "$ref": "#/$defs/text"
@@ -894,6 +895,19 @@
         "clauses": { "type": "array", "items": { "$ref": "#/$defs/clause" } }
       }
     },
+    "opens_when": {
+      "description": "What must be true before this section first opens, beside the sections it requires, such as the coach having accepted. Every clause must pass; while one fails the section is locked and the hub's note under it gives that clause's message. Once the section has opened it stays open, whatever later happens to these clauses.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clauses"],
+      "properties": {
+        "clauses": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/clause" } },
+        "with_sections": {
+          "description": "The hub's note while sections this one requires are unfinished too, naming them where it says {sections}, such as 'Opens once you've finished {sections} and your coach has accepted.' Without it, the note names only the sections.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
     "clause": {
       "description": "One requirement, chosen from a fixed set and configured. Never an expression (ADR 0003).",
       "type": "object",
@@ -907,7 +921,8 @@
             "distinct_value_count",
             "every_entry_has",
             "comparison_visited",
-            "links_issued"
+            "links_issued",
+            "coach_accepted"
           ]
         }
       },
@@ -918,7 +933,8 @@
         { "if": { "properties": { "type": { "const": "distinct_value_count" } } }, "then": { "$ref": "#/$defs/distinct_value_count" } },
         { "if": { "properties": { "type": { "const": "every_entry_has" } } }, "then": { "$ref": "#/$defs/every_entry_has" } },
         { "if": { "properties": { "type": { "const": "comparison_visited" } } }, "then": { "$ref": "#/$defs/comparison_visited" } },
-        { "if": { "properties": { "type": { "const": "links_issued" } } }, "then": { "$ref": "#/$defs/links_issued" } }
+        { "if": { "properties": { "type": { "const": "links_issued" } } }, "then": { "$ref": "#/$defs/links_issued" } },
+        { "if": { "properties": { "type": { "const": "coach_accepted" } } }, "then": { "$ref": "#/$defs/coach_accepted" } }
       ]
     },
     "clause_message": {
@@ -1015,6 +1031,17 @@
         "type": { "const": "links_issued" },
         "block": { "$ref": "#/$defs/identifier" },
         "min": { "type": "integer", "minimum": 1 },
+        "message": { "$ref": "#/$defs/clause_message" }
+      }
+    },
+    "coach_accepted": {
+      "description": "The coach chosen through this coach checklist has accepted on their current link, even if that link has since expired. A decline, no link, a revoked or reissued link, or another coach chosen since, does not count.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "block", "message"],
+      "properties": {
+        "type": { "const": "coach_accepted" },
+        "block": { "$ref": "#/$defs/identifier" },
         "message": { "$ref": "#/$defs/clause_message" }
       }
     },

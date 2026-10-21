@@ -161,6 +161,45 @@ def test_a_gate_cannot_ask_anything_of_a_coach_checklist_since_none_of_it_is_kep
     ]
 
 
+# Opening conditions (ADR 0019)
+
+A_COACH_CHECKLIST = {
+    "id": "coach",
+    "type": "coach_checklist",
+    "heading": "Walking with a coach",
+    "name_prompt": "Who are you thinking of asking?",
+    "questions": [{"id": "faith", "question": "Shares your faith", "why": "It is rooted in scripture."}],
+}
+
+
+def document_whose_section_opens_when(clause):
+    """✨ The test pathway with a coach checklist in onboarding, and the calling section opening on `clause`."""
+    document = pathway_document()
+    document["content"]["sections"][0]["blocks"].append(A_COACH_CHECKLIST)
+    document["content"]["sections"][1]["opens_when"] = {"clauses": [clause]}
+    return document
+
+
+def test_an_opening_condition_must_be_a_clause_from_the_fixed_set():
+    document = document_whose_section_opens_when({"type": "coach_is_free", "block": "coach", "message": "Wait."})
+
+    assert [problem.path for problem in validate(document)] == ["/content/sections/1/opens_when/clauses/0/type"]
+
+
+def test_coach_accepted_must_name_a_coach_checklist_and_may_name_one_in_another_section():
+    accepted = {"type": "coach_accepted", "block": "coach", "message": "Opens once your coach has accepted."}
+    assert validate(document_whose_section_opens_when(accepted)) == []
+
+    document = document_whose_section_opens_when({**accepted, "block": "statement"})
+
+    assert validate(document) == [
+        Problem(
+            path="/content/sections/1/opens_when/clauses/0/block",
+            message="A 'coach_accepted' clause cannot be checked against block 'statement', which is a long_text.",
+        )
+    ]
+
+
 def test_has_answer_may_be_asked_of_any_block_that_captures_an_answer():
     document = document_whose_gate_names({"type": "has_answer", "block": "statement", "message": "Answer this."})
 

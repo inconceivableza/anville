@@ -28,6 +28,7 @@ CLAUSE_ANSWER_KINDS = {
 # ✨ A clause that reads something other than a block's answer names the block types it can read instead.
 CLAUSE_BLOCK_TYPES = {
     "links_issued": ("contact_list", "coach_checklist"),
+    "coach_accepted": ("coach_checklist",),
 }
 
 
@@ -41,6 +42,18 @@ def links_issued_key(block_id):
     """✨ Where the answers the gate reads hold how many of a block's people have a working link: a contact list's
     observers, or a coach checklist's coach. Like `comparison_visit_key`, never a block's own answer."""
     return f"{block_id}/links"
+
+
+def coach_answer_key(block_id):
+    """✨ Where the answers the gate reads hold the coach's answer on their current link, through a coach checklist,
+    whether or not that link has since expired (ADR 0019). Like `comparison_visit_key`, never a block's own answer."""
+    return f"{block_id}/coach_answer"
+
+
+def opened_key(section_id):
+    """✨ Where the answers the hub reads hold when a section with opening conditions first opened, after which they are
+    never asked again (ADR 0019). Section and block identifiers are told apart by what follows the "/"."""
+    return f"{section_id}/opened"
 
 
 def gate_passes(section, answers):
@@ -85,12 +98,14 @@ def _passes(clause, answers):
 
 
 def _reads(clause):
-    """✨ What a clause reads: the named block's answer, for `comparison_visited` the visit to its comparison, and for
-    `links_issued` how many of its people have a working link."""
+    """✨ What a clause reads: the named block's answer, for `comparison_visited` the visit to its comparison, for
+    `links_issued` how many of its people have a working link, and for `coach_accepted` the coach's answer."""
     if clause["type"] == "comparison_visited":
         return comparison_visit_key(clause["block"])
     if clause["type"] == "links_issued":
         return links_issued_key(clause["block"])
+    if clause["type"] == "coach_accepted":
+        return coach_answer_key(clause["block"])
     return clause["block"]
 
 
@@ -142,6 +157,11 @@ def _links_issued(clause, issued):
     return (issued or 0) >= clause["min"]
 
 
+def _coach_accepted(clause, answer):
+    # ✨ Answered, unlike `links_issued`: Section 3 waits on the coach (ADR 0019, reversing ticket 40 there).
+    return answer == "accepted"
+
+
 CLAUSES = {
     "has_answer": _has_answer,
     "min_text_length": _min_text_length,
@@ -150,6 +170,7 @@ CLAUSES = {
     "every_entry_has": _every_entry_has,
     "comparison_visited": _comparison_visited,
     "links_issued": _links_issued,
+    "coach_accepted": _coach_accepted,
 }
 
 
