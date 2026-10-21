@@ -286,6 +286,26 @@ def lock_note(sections, completed=(), title_of="last"):
     return next(state for state in hub_for(sections, {}, completed).sections if state.id == title_of).lock_note
 
 
+def test_with_a_once_only_section_complete_and_left_out_the_waits_on_answers_and_on_the_coach_name_the_right_sections():
+    """✨ The hub pairs each section it lists with its own state, not with the section before it (ticket 69, fix-2)."""
+    onboarding = {**section("onboarding"), "wizard": True, "once_only": True}
+    reflection = {
+        **long_text("reflection"),
+        "after_comparison": {"sort": "sort", "message": "This opens once you've seen how others see you."},
+    }
+    designed = {**section("designed", requires=["onboarding"], blocks=[reflection])}
+    designed["gate"] = {"clauses": [{"type": "has_answer", "block": "reflection", "message": "Write it."}]}
+    calling = section("calling", requires=["onboarding"], blocks=[long_text("statement")])
+    calling["opens_when"] = {"clauses": [{"type": "coach_accepted", "block": "coach", "message": "Wait for your coach."}]}
+
+    hub = hub_for([onboarding, designed, calling], {}, completed=["onboarding"])
+
+    assert [state.id for state in hub.sections] == ["designed", "calling"]
+    assert hub.next_step is None
+    assert hub.waiting_on_answers.id == "designed"
+    assert hub.coach_wait.section.id == "calling"
+
+
 def test_a_locked_section_names_the_sections_it_still_waits_for():
     """✨ As Section 2 names Walk with a coach and Five trusted voices once Section 1 is complete (ticket 52)."""
     sections = [section("a"), section("b"), section("c"), section("last", requires=["a", "b", "c"])]
