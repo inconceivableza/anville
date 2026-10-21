@@ -12,7 +12,7 @@ serves the hub page, the guard on a section page and the re-check when a section
 from typing import NamedTuple
 
 from engine.document.blocks import BLOCK_TYPES, page_count, page_of, pages_of
-from engine.document.gates import gate_passes, has_content
+from engine.document.gates import gate_passes, has_content, opened_key, unmet
 from engine.document.text import text_for
 
 LOCKED = "locked"
@@ -183,23 +183,33 @@ def block_ids_fixed_on_completion(section, answers):
 
 
 def is_locked(section, completed, answers=None, sections=(), moved_past=None):
-    """✨ Whether a section is still shut, because a section it requires has not been completed, or, for a part of a
-    section in the track's `sections`, because the participant has not yet reached that section's link to it.
+    """✨ Whether a section is still shut, because a section it requires has not been completed, because one of its
+    opening conditions fails, or, for a part of a section in the track's `sections`, because the participant has not
+    yet reached that section's link to it.
 
     A section the participant has already completed is never shut again, whatever happens to the sections
     it required. Otherwise the hub would show it as complete, link to it, and bounce them back here.
     """
     if section["id"] in completed:
         return False
-    if not _requires_met(section, completed):
+    answers = answers or {}
+    if not _requires_met(section, completed) or opening_conditions_unmet(section, answers):
         return True
-    return _waiting_on(section, completed, answers or {}, sections, moved_past or {}) is not None
+    return _waiting_on(section, completed, answers, sections, moved_past or {}) is not None
 
 
 def _requires_met(section, completed):
     """✨ Whether every section this one requires has been completed. A part of a section counts once its gate passes, as
     `complete_sections` works it out, so Section 2 may require the Strengths assessment alone (ADR 0019)."""
     return set(section.get("requires", [])) <= set(completed)
+
+
+def opening_conditions_unmet(section, answers, role="participant"):
+    """✨ The authored message of each of a section's opening conditions that fails, in the order authored, said once
+    each (ADR 0019). None fail once the section has opened, since that is stored and they are never asked again."""
+    if has_content(answers.get(opened_key(section["id"]))):
+        return []
+    return unmet({"gate": section.get("opens_when", {})}, answers, role)
 
 
 class WaitingOn(NamedTuple):
@@ -219,7 +229,7 @@ def _waiting_on(part, completed, answers, sections, moved_past):
     parent = next((section for section in sections if section["id"] == part.get("part_of")), None)
     if parent is None:
         return None
-    if is_locked(parent, completed):
+    if is_locked(parent, completed, answers):
         return WaitingOn(parent, None)
     link = next(
         (block for block in parent["blocks"] if block["type"] == "section_link" and block["section"] == part["id"]),
@@ -235,10 +245,19 @@ def _waiting_on(part, completed, answers, sections, moved_past):
 
 
 def _lock_note(section, completed, answers, sections, moved_past, role):
-    """✨ What the hub says under a locked section: for a part waiting on its section, where it opens from and, while a
-    reading there is unconfirmed, what opens it; otherwise the engine's general note."""
+    """✨ What the hub says under a locked section: the sections it requires still unfinished, and with them its
+    opening conditions in the sentence it carries for that; once those sections are done, the message of each failing
+    opening condition (ADR 0019); for a part waiting on its section, where it opens from and, while a reading there is
+    unconfirmed, what opens it; otherwise the engine's general note."""
+    conditions = opening_conditions_unmet(section, answers, role)
     if not _requires_met(section, completed):
-        return _sections_still_open(section, completed, sections, role)
+        named = _unfinished_named(section, completed, sections, role)
+        with_sections = section.get("opens_when", {}).get("with_sections")
+        if named and conditions and with_sections:
+            return text_for(with_sections, role).replace("{sections}", named)
+        return f"Opens once you've finished {named}." if named else "Complete what comes before this to open it."
+    if conditions:
+        return " ".join(conditions)
     waiting = _waiting_on(section, completed, answers, sections, moved_past)
     if waiting is None:
         return "Complete what comes before this to open it."
@@ -248,18 +267,18 @@ def _lock_note(section, completed, answers, sections, moved_past, role):
     return f"Opens from {title}."
 
 
-def _sections_still_open(section, completed, sections, role):
-    """✨ The lock note naming, by title, the sections a section requires that are not yet complete, as Section 2
-    names Walk with a coach and Five trusted voices (ticket 52). A required section outside the track is not named."""
+def _unfinished_named(section, completed, sections, role):
+    """✨ The titles of the sections a section requires that are not yet complete, joined as the lock note names them,
+    as Section 2 names Walk with a coach and Five trusted voices (ticket 52), or None. A required section outside the
+    track is not named."""
     titles = [
         text_for(other["title"], role)
         for other in sections
         if other["id"] in section.get("requires", []) and other["id"] not in completed
     ]
     if not titles:
-        return "Complete what comes before this to open it."
-    named = titles[0] if len(titles) == 1 else f"{', '.join(titles[:-1])} and {titles[-1]}"
-    return f"Opens once you've finished {named}."
+        return None
+    return titles[0] if len(titles) == 1 else f"{', '.join(titles[:-1])} and {titles[-1]}"
 
 
 def complete_sections(sections, answers, completed):
