@@ -643,3 +643,14 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - Issue a link again and accept: Section 3 is the next step, and the card has no line, as it has none once Section 3 has opened, whatever happens to the link after.
 - The faithful port's hub, which has no coach and no side cards: its next step is as before.
 - Phone width: both cards' pills stay small and on one line, the cards below the list with no sideways scroll; the panel's button sits under its sentence.
+
+## How others see you on the hub (ticket 67b; rebuild the frontend, load the pathway again, and use a participant started after that)
+
+- Before the sort is in, the hub lists no "How others see you" row within Section 1, and the Five trusted voices card has only "Manage".
+- Once the sort is in: within Section 1, after the Strengths assessment, a row "How others see you" with its status as the row's tag; on the Five trusted voices card, beside "Manage", a small ringed "How others see you →" pill, with the same status after it in small capitals. Each reads the same as Section 1's card: "Waiting for answers (2 of 3)" with two answered, "Ready to view" with three, "Viewed" once confirmed.
+- With three answered, pressing the row's title, and pressing the card's pill, each open "Before you look", exactly as Section 1's card and the results page do; "← Back to results" changes nothing. With fewer than three, each opens "Not enough answers yet".
+- With JavaScript turned off, both still open "Before you look", and confirming opens the comparison.
+- Once confirmed (collection frozen): the voices card still reads "You've seen your results, so no more answers are added." under its tag, and its pill still opens the comparison, with nothing asked.
+- Keyboard only: Tab reaches the row's title and the card's pill, each with visible focus, and Enter presses it. Screen reader: each reads as a button.
+- The faithful port's hub has no such row and no side cards.
+- Phone width: the row stays one line high beside its tag, as the Strengths assessment's does; on the card, "Manage" and the comparison's pill share a line where they fit, the status wrapping under them, with no sideways scroll.

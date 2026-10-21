@@ -1089,6 +1089,45 @@ main > .hub ~ .hub-consent {
   height: 18px;
 }
 
+/* ✨ The comparison's press beside Manage on the dark Five trusted voices card (ticket 67b): its ring in the card's
+   light text, no fill, so Manage stays the one to press first; its status after it, quiet, wrapping under on a phone. */
+.card.dark .hub-side-actions .pill.ghost {
+  background: none;
+  color: var(--on-dark);
+  box-shadow: inset 0 0 0 1px var(--on-dark-55);
+}
+
+.hub-side-status {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--on-dark-2);
+  white-space: nowrap;
+}
+
+/* ✨ The comparison's row on the hub (ticket 67b): its title is a button, the press, drawn as the other rows' title
+   links are. */
+.hub-comparison h3 button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.hub-comparison h3 button:hover {
+  color: var(--green-deep);
+}
+
+.hub-comparison h3 button:focus-visible {
+  outline: 2px solid var(--green-deep);
+  outline-offset: 2px;
+}
+
 .meter {
   display: grid;
   gap: var(--space-2xs);
