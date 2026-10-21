@@ -4,12 +4,12 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 3a (from 20 Oct)
 
 **Spec:** Shape and stack
 
-- [ ] No organisations template sets the body's class itself
-- [ ] Every organisations page still shows the cream frame, signed in or not
-- [ ] The participant's brown frame and the other cream pages are unchanged
+- [x] No organisations template sets the body's class itself
+- [x] Every organisations page still shows the cream frame, signed in or not
+- [x] The participant's brown frame and the other cream pages are unchanged
