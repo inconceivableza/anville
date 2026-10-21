@@ -44,7 +44,6 @@ JUST_PAST = Fraction(1, 100)
 # because the best weight is shared, the choices having gone in a circle or not, or every pair was skipped (ADR 0018).
 TOP_CHANGED = "top_changed"
 SAME_TOP = "same_top"
-SEPARATED = (TOP_CHANGED, SAME_TOP)
 CIRCLE = "circle"
 LEVEL = "level"
 SKIPPED = "skipped"
