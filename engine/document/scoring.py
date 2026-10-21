@@ -38,13 +38,24 @@ def unrounded_shares(result):
     return method(result)
 
 
+def stored_share(share):
+    """✨ An exact share as a result keeps it beside its percent: written out as text, since a stored result is JSON,
+    which holds no fractions. `_kept_share` alone turns it back into a number."""
+    return str(share)
+
+
+def _kept_share(construct):
+    """✨ The exact share a result keeps beside a construct's percent, as a fraction, or the percent where it keeps
+    none, as one re-weighted before ticket 59b."""
+    return Fraction(construct["share"]) if "share" in construct else construct["percent"]
+
+
 def _kept_shares(result):
-    """✨ The exact share a result keeps beside each percent, as a fraction, or the percent where it keeps none, for a
-    result whose method cannot work its shares out again."""
+    """✨ The exact share a result keeps beside each percent (`_kept_share`), for a result whose method cannot work its
+    shares out again."""
     return {
         framework["framework"]: {
-            construct["construct"]: Fraction(construct["share"]) if "share" in construct else construct["percent"]
-            for construct in framework["constructs"]
+            construct["construct"]: _kept_share(construct) for construct in framework["constructs"]
         }
         for framework in result["frameworks"]
     }

@@ -13,7 +13,7 @@ import re
 from fractions import Fraction
 from itertools import zip_longest
 
-from engine.document.scoring import round_half_up, unrounded_shares
+from engine.document.scoring import round_half_up, stored_share, unrounded_shares
 from engine.document.standing import flat
 
 # ✨ ADR 0018's: a leader at most 5% more than another, and the content owner's prototype's at most the top four.
@@ -47,7 +47,6 @@ SAME_TOP = "same_top"
 SEPARATED = (TOP_CHANGED, SAME_TOP)
 CIRCLE = "circle"
 LEVEL = "level"
-BALANCED = (CIRCLE, LEVEL)
 SKIPPED = "skipped"
 
 # ✨ What the results page's tie-break sentences may name (fix-26), each by a construct's label: the leader after the
@@ -169,14 +168,16 @@ def reweigh(document, result, answers):
     for framework in result["frameworks"]:
         framework_id = framework["framework"]
         share = sorted_shares[framework_id]
-        constructs = [{**construct, "share": str(share[construct["construct"]])} for construct in framework["constructs"]]
+        constructs = [
+            {**construct, "share": stored_share(share[construct["construct"]])} for construct in framework["constructs"]
+        ]
         own_answers = [answer for answer in answers if answer["framework"] == framework_id]
         if framework_id in tied and own_answers:
             outcome, share = _reweighed(tied[framework_id], share, own_answers, apart)
             broken.append({"framework": framework_id, "outcome": outcome, "tied": tied[framework_id]})
             if outcome != SKIPPED:
                 constructs = [
-                    {**construct, "percent": round_half_up(share[c]), "share": str(share[c])}
+                    {**construct, "percent": round_half_up(share[c]), "share": stored_share(share[c])}
                     if (c := construct["construct"]) in tied[framework_id]
                     else construct
                     for construct in constructs
@@ -225,11 +226,8 @@ def _reweighed(cluster, share, answers, apart):
 
 def outcomes(result):
     """✨ `{framework: outcome}` for each framework a re-weighted result broke, or {} for any other result. A result
-    re-weighted before ticket 59b names its one framework on its own, and is read the same way."""
-    broken = result.get("tie_break") or []
-    if isinstance(broken, dict):
-        broken = [broken]
-    return {entry["framework"]: entry["outcome"] for entry in broken}
+    re-weighted before ticket 59b names its one framework on its own, and is read the same way (`_broken`)."""
+    return {entry["framework"]: entry["outcome"] for entry in _broken(result)}
 
 
 def named(text, names):
@@ -248,10 +246,14 @@ def tied_in(result):
     """✨ `{framework: [construct, ...]}`: the constructs that entered each broken framework's tie-break, leader first as
     the sort ranked them (fix-26). A result re-weighted before fix-26 did not keep them, so names none; its pathway
     version's wording, from before then too, names none either."""
+    return {entry["framework"]: entry.get("tied", []) for entry in _broken(result)}
+
+
+def _broken(result):
+    """✨ A re-weighted result's entry for each framework it broke, or [] for any other result. A result re-weighted
+    before ticket 59b stored its one framework's entry on its own, not in a list."""
     broken = result.get("tie_break") or []
-    if isinstance(broken, dict):
-        broken = [broken]
-    return {entry["framework"]: entry.get("tied", []) for entry in broken}
+    return [broken] if isinstance(broken, dict) else broken
 
 
 def _in_a_circle(beaten):
