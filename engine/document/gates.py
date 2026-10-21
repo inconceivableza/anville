@@ -77,6 +77,14 @@ def waits_on_comparison(block, answers):
     return waits is not None and not comparison_viewed(answers, waits["sort"])
 
 
+def comparison_wait_message(block, answers, role="participant"):
+    """✨ What a block says while it waits on the comparison (`waits_on_comparison`): its authored `after_comparison`
+    message, or None once it no longer waits, or for a block that never does."""
+    if not waits_on_comparison(block, answers):
+        return None
+    return text_for(block["after_comparison"]["message"], role)
+
+
 def opened_key(section_id):
     """✨ Where the answers the hub reads hold when a section with opening conditions first opened, after which they are
     never asked again (ADR 0019). Section and block identifiers are told apart by what follows the "/"."""
@@ -101,7 +109,7 @@ def unmet(section, answers, role="participant"):
 
 def unmet_clauses(section, answers):
     """✨ Every clause of the whole gate this response does not satisfy, in the order authored."""
-    return [clause for clause in clauses_of(section) if not _passes(clause, answers)]
+    return [clause for clause in clauses_of(section) if not clause_passes(clause, answers)]
 
 
 def checklist(section, answers, role="participant", page=None):
@@ -117,20 +125,17 @@ def checklist(section, answers, role="participant", page=None):
     clauses = clauses_of(section, page)
     if page is not None and page == page_count(section):
         # ✨ The whole gate's clauses on this page or left unmet on an earlier one, still in the order authored.
-        clauses = [clause for clause in clauses_of(section) if clause in clauses or not _passes(clause, answers)]
+        clauses = [clause for clause in clauses_of(section) if clause in clauses or not clause_passes(clause, answers)]
     met = {}
     for clause in clauses:
         message = text_for(clause["message"], role)
-        met[message] = met.get(message, True) and _passes(clause, answers)
+        met[message] = met.get(message, True) and clause_passes(clause, answers)
     return list(met.items())
 
 
 def clause_passes(clause, answers):
-    """✨ Whether one clause holds, as the hub asks of a section's opening conditions to tell which it waits on."""
-    return _passes(clause, answers)
-
-
-def _passes(clause, answers):
+    """✨ Whether one clause holds, as the gate asks of each of its clauses and the hub of a section's opening
+    conditions to tell which it waits on."""
     return CLAUSES[clause["type"]](clause, answers.get(_reads(clause)))
 
 
