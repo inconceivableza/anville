@@ -13,9 +13,13 @@
 - [ ] The participant's journey from the homepage and sign-up to the Workbook, the observer's from their link to a sent assessment, and the coach's from their link to seeing the comparison, each walked at desktop and phone width
 - [ ] Along the way: the tie-break, password reset, Google sign-in, removing a contact, a withdrawn participant's links, and an error page
 - [ ] Google sign-in with a second test-user address; an address that already has a password account is refused; and deleting an account to repeat the demo
-- [ ] A password reset sent to the developer's own address arrives, as ticket 26's send-and-receive test of real email
+- [x] A password reset sent to the developer's own address arrives, as ticket 26's send-and-receive test of real email
 - [ ] Small fixes found on the walk go in under this ticket; anything larger becomes a ticket of its own
 - [ ] The walk is recorded in the manual checks
+
+**Carried from 26**
+
+- [ ] Onboarding has no way to log out: its "Exit" only goes back to the homepage, still signed in. It should probably read "Log out" and log the participant out
 
 **Context**
 

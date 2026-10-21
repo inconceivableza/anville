@@ -4,7 +4,9 @@
 
 **Blocked by:** 05 (Slice 1 content: baseline and calling-statement section)
 
-**Status:** ready-for-human
+**Status:** resolved
+
+**Handed over:** 62, 76
 
 **Sprint:** 2a (ends 8 Oct, before FaithTech)
 
@@ -12,32 +14,32 @@
 
 This can start as soon as ticket 05 lands, so hosting surprises surface early.
 
-- [ ] A Hetzner project exists in an EU region and holds the staging host. One operator holds the project, the repository and its secrets for now; an account owned by the content owner with the developer deploying into it is deferred, and not handled by this ticket
-- [ ] The application runs there behind HTTPS at `anville.vabl.dev`, configured entirely from the environment, and deployed only by the deploy workflow
-- [ ] The database has backups and a restore has been tried once
-- [ ] The instance holds fake data only, using reserved example domains; nothing real is ever loaded. Since sign-up is open (ticket 37), sign-up and the homepage say plainly that this is a demo, that visitors should use made-up details, and that data may be wiped
-- [ ] A short runbook records how the instance was stood up, so another deployment can be created the same way (ADR 0002)
-- [ ] Email on the instance starts as fake: nothing is delivered, and the operator can read what would have been sent
-- [ ] Later (part 2, below): the instance sends actual email from a temporary staging domain, so coach and observer links can be emailed on staging, and every message carries a disclaimer that it comes from a test system not intended for production use; a lasting email set-up for the real service is separate (2 Oct demo)
-- [ ] A smoke test passes on the deployed instance: sign up (with the enrolment code if the deployment turns it on), log in, complete a section, resume
+- [x] A Hetzner project exists in an EU region and holds the staging host. One operator holds the project, the repository and its secrets for now; an account owned by the content owner with the developer deploying into it is deferred, and not handled by this ticket
+- [x] The application runs there behind HTTPS at `anville.vabl.dev`, configured entirely from the environment, and deployed only by the deploy workflow
+- [ ] The database has backups and a restore has been tried once (carried to 76)
+- [ ] The instance holds fake data only, using reserved example domains; nothing real is ever loaded. Since sign-up is open (ticket 37), sign-up and the homepage say plainly that this is a demo, that visitors should use made-up details, and that data may be wiped (the check that no real address is held carried to 76)
+- [ ] A short runbook records how the instance was stood up, so another deployment can be created the same way (ADR 0002) (its backup and restore, and the corrections it found, carried to 76)
+- [x] Email on the instance starts as fake: nothing is delivered, and the operator can read what would have been sent
+- [x] Later (part 2, below): the instance sends actual email from a temporary staging domain, so coach and observer links can be emailed on staging, and every message carries a disclaimer that it comes from a test system not intended for production use; a lasting email set-up for the real service is separate (2 Oct demo)
+- [x] A smoke test passes on the deployed instance: sign up (with the enrolment code if the deployment turns it on), log in, complete a section, resume
 - [ ] Open, and not decided by this ticket: who the controller is, retention and the data protection impact assessment (see spec Further Notes). Confirm the arrangement works for everyone involved before any real participant is added (carried to 62)
 
 **Carried from 13b**
 
-- [ ] Behind the TLS proxy, set `SECURE_PROXY_SSL_HEADER` so the observer cookie is marked Secure
-- [ ] Observers' links carry their token or secret in the path: keep them out of the web server's access logs
+- [x] Behind the TLS proxy, set `SECURE_PROXY_SSL_HEADER` so the observer cookie is marked Secure
+- [x] Observers' links carry their token or secret in the path: keep them out of the web server's access logs
 
 **Carried from 37**
 
-- [ ] The enrolment code is required unless the environment turns it off: staging's environment and the runbook turn it off, or nobody can sign up
+- [x] The enrolment code is required unless the environment turns it off: staging's environment and the runbook turn it off, or nobody can sign up
 
 **Carried from 32a**
 
-- [ ] The deployment builds the frontend (`npm run build` in `frontend/`) before collecting static files: the homepage's forest video and its still frame reach the served files only through that build
+- [x] The deployment builds the frontend (`npm run build` in `frontend/`) before collecting static files: the homepage's forest video and its still frame reach the served files only through that build
 
 **Carried from 03**
 
-- [ ] Password reset stays hidden and refused on staging until ticket 28a, even once staging sends email; the runbook says how the operator resets a password (`manage.py changepassword`). Re-enabling reset is ticket 28a
+- [x] Password reset stays hidden and refused on staging until ticket 28a, even once staging sends email; the runbook says how the operator resets a password (`manage.py changepassword`). Re-enabling reset is ticket 28a
 
 **Steps**
 
@@ -68,10 +70,10 @@ Steps 1 to 3, 6, 9, 10, 12 and 12a have no dependency on the human steps and can
 
 **Progress, 13 Oct.** The human steps have since been run on the staging host, and `deploy/environments/runbook.md` records them: the host, DNS, the first deploy, the pathway published, the operator's account, and actual email set up and tested (steps 4 to 14, 19 and 20). The criteria above have not been ticked against it yet. The runbook does not record these, so they are still to do:
 
-- [ ] The backup's Storage Box sub-account, its password, and its key in the environment's secrets (the runbook lists them as still needed)
-- [ ] A restore tried once into a scratch namespace (step 15)
-- [ ] The smoke test's checks that the observer cookie is marked Secure, and that neither Traefik nor gunicorn logs request paths (step 16)
-- [ ] The criteria above ticked against `deploy/environments/runbook.md`
+- [ ] The backup's Storage Box sub-account, its password, and its key in the environment's secrets (the runbook lists them as still needed) (carried to 76)
+- [ ] A restore tried once into a scratch namespace (step 15) (carried to 76)
+- [x] The smoke test's checks that the observer cookie is marked Secure, and that neither Traefik nor gunicorn logs request paths (step 16)
+- [x] The criteria above ticked against `deploy/environments/runbook.md`
 
 **Progress, 19 Oct.** Actual email has been set up since 13 Oct (Mailjet, steps 19 and 20). Its send-and-receive test is a password reset to the developer's own address, made in the C3-54 walk. The privacy decisions left open above are now ticket 62, and what a production deployment still needs is ticket 63; neither is this ticket's.
 

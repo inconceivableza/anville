@@ -19,3 +19,7 @@
 
 - Listed in the sprint 2b end report and the spec's Delivery and hosting, 19 Oct
 - Staging's `anville.vabl.dev` needs no HSTS change: `.dev` is preloaded
+
+**Carried from 26**
+
+- [ ] Every management command in the image warns `staticfiles.W004`: `STATICFILES_DIRS` names `frontend/img`, which the image does not hold. Nothing is missing, since the stylesheet's images reach the served files through the frontend build, but a check that fails on a warning would fail on this one. Drop the entry, or keep it only where the directory exists
