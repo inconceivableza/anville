@@ -26,7 +26,7 @@
   {% for block in section.blocks %}
     {# ✨ Where a section has several activities, the block that starts each one says how long it takes. #}
     {% if block.text.estimate %}<p class="time-estimate">This part: {{ block.text.estimate }}</p>{% endif %}
-    {% include block.template %}
+    {% include "engine/block_drawn.html" %}
   {% endfor %}
 
   {# ✨ With the way back to the page before, beside the way on (ticket 41e). #}

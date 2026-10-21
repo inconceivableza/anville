@@ -1,0 +1,15 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ One block on a section's page. A block waiting on the comparison (`block.waiting`, its authored message; ticket 68)
+  is shown inside a disabled fieldset, which disables every control in it, with or without JavaScript, and the message
+  above it. The server refuses its saves all the same.
+{% endcomment %}
+{% if block.waiting %}
+  <fieldset class="waits-on-comparison" disabled aria-describedby="waiting-{{ block.id }}">
+    <p class="waiting-note" id="waiting-{{ block.id }}">{{ block.waiting }}</p>
+    {% include block.template %}
+  </fieldset>
+{% else %}
+  {% include block.template %}
+{% endif %}

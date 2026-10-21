@@ -66,7 +66,7 @@ from engine.document.contacts import (
     voices_card,
 )
 from engine.document.aggregation import aggregate
-from engine.document.gates import clauses_of, links_issued_key, opened_key
+from engine.document.gates import clauses_of, links_issued_key, opened_key, waits_on_comparison
 from engine.document.scoring import score
 from engine.hub import (
     COMPLETE,
@@ -168,6 +168,7 @@ def hub(request):
     if wizard is not None:
         return redirect(wizard)
     hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    coach = _coach_of(state.response)
     return render(
         request,
         "engine/hub.html",
@@ -175,23 +176,53 @@ def hub(request):
             "title": text_for(state.version.document["title"], "participant"),
             "hub": hub,
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
-            "side_cards": _side_cards(state, hub),
+            "coach_wait": _coach_wait_panel(state, hub, coach),
+            "side_cards": _side_cards(state, hub, coach),
+            "coach_card": _coach_card(state, hub, coach),
             "voices": _hub_voices(state, hub),
+            "minimum": minimum_observers(state.version.document),
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
 
 
-def _side_cards(state, hub):
-    """✨ The hub's side cards, the coach's section's tagged with where the coach stands (ticket 51b)."""
-    document = state.version.document
-    coach = _coach_of(state.response)
+def _coach_section_of(document):
+    """✨ The identifier of the section holding the document's coach checklist, or None for a document without one."""
     checklists = [block["id"] for block in blocks_of(document) if block["type"] == "coach_checklist"]
-    coach_section = section_of(document, checklists[0])["id"] if checklists else None
+    return section_of(document, checklists[0])["id"] if checklists else None
+
+
+def _side_cards(state, hub, coach):
+    """✨ The hub's side cards, the coach's section's tagged with where the `coach` stands (ticket 51b)."""
+    coach_section = _coach_section_of(state.version.document)
     return [
         with_coach_answer(card, coach["answer"] if coach else None) if card.id == coach_section else card
         for card in hub.side_cards()
     ]
+
+
+def _coach_card(state, hub, coach):
+    """✨ What the Walk with a coach card adds to a side card's own (ticket 65): {"section", "manage", "line"}, its
+    "Manage" leading to the coach page, None while the card is locked, and its line while a section waits on the
+    `coach` at all, None otherwise."""
+    wait = hub.coach_wait
+    return {
+        "section": _coach_section_of(state.version.document),
+        "manage": _coach_page_of(state.version.document, hub),
+        "line": wait.line(coach["answer"] if coach else None) if wait is not None else None,
+    }
+
+
+def _coach_wait_panel(state, hub, coach):
+    """✨ What the hub's next-step panel says in place of "Nothing is waiting for you right now" while nothing is next
+    and a section waits on nothing but the coach's acceptance (ticket 65): {"heading", "sentence", "coach_page"}, by
+    the `coach`'s answer, or None otherwise, or with no coach page to lead to."""
+    wait = hub.coach_wait
+    coach_page = _coach_page_of(state.version.document, hub)
+    if hub.next_step is not None or wait is None or not wait.only or coach_page is None:
+        return None
+    wording = wait.panel(coach["answer"] if coach else None, coach["name"] if coach else "")
+    return {**wording._asdict(), "coach_page": coach_page}
 
 
 def _photo_of(document, section_id):
@@ -462,6 +493,11 @@ def save_answer(request, block_id):
     if block_id in state.fixed:
         # ✨ Refused here, not only disabled on the page, so a page left open from before completing cannot change it.
         return _answer_refused(request, state, section, block_id, FIXED_REFUSAL, status=409)
+    if waits_on_comparison(block, state.answers):
+        # ✨ Refused here, not only disabled on the page, so the reflection is written only once its comparison has been
+        # seen (ADR 0019).
+        refusal = text_for(block["after_comparison"]["message"], "participant")
+        return _answer_refused(request, state, section, block_id, refusal, status=403)
     block_type = BLOCK_TYPES[block["type"]]
     try:
         value = answer_from_form(state.version.document, block, request.POST.get("value"))
@@ -2108,6 +2144,10 @@ def _block_for_participant(
         "frozen": RESULTS_SEEN if frozen and block["type"] == "contact_list" else None,
         "drawn": drawn,
         "comparison": comparison,
+        # ✨ While it waits on the comparison, its authored message, and it is drawn disabled (ticket 68).
+        "waiting": text_for(block["after_comparison"]["message"], "participant")
+        if waits_on_comparison(block, answers)
+        else None,
     }
 
 

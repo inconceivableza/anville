@@ -534,6 +534,17 @@ def test_section_1s_reflection_cannot_be_written_before_the_sort_is_in(participa
 
 
 @pytest.mark.django_db
+def test_section_1s_reflection_saves_once_the_sort_is_in_with_no_comparison_seen(participant):
+    """✨ As in the original prototype: *Whatever You Do*'s reflection waits on the comparison too (ticket 68), and this
+    one does not."""
+    client = through_to_section_1s_activity(participant)
+    submit_the_sort(client)
+
+    assert answer(client, "gifts-summary", A_REFLECTION).status_code == 303
+    assert Response.objects.get().answers["gifts-summary"] == A_REFLECTION
+
+
+@pytest.mark.django_db
 def test_section_1s_reflection_box_carries_the_prototypes_ghost_text(participant):
     client = through_to_section_1s_activity(participant)
     submit_the_sort(client)

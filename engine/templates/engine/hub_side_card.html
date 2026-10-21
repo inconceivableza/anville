@@ -3,6 +3,8 @@
 {% load section_pages %}
 {# ✨ A section the pathway document marks as a hub side card (ticket 49a): its title, its authored sentence and its #}
 {# status, the hub's own. Nothing on it is written here. A locked one is named but not linked, as in the list. #}
+{# ✨ The coach's card adds, from `coach_card`, the engine's line while a section waits on the coach and a small #}
+{# "Manage" to the coach page once unlocked, as Five trusted voices has (ticket 65). #}
 <section class="card hub-side-card{% if section.is_locked %} locked{% endif %}">
   <div class="row">
     {% if section.is_locked %}
@@ -12,5 +14,11 @@
     {% endif %}
     <span class="tag{% if section.is_next %} up-next{% endif %}">{{ section.label }}</span>
   </div>
+  {% if section.id == coach_card.section and coach_card.line %}<p class="hub-side-line">{{ coach_card.line }}</p>{% endif %}
   <p>{{ section.side_card }}</p>
+  {% if section.id == coach_card.section and coach_card.manage %}
+    <div class="hub-side-actions">
+      <a class="pill ghost small" data-magnetic href="{{ coach_card.manage }}">Manage <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span></a>
+    </div>
+  {% endif %}
 </section>

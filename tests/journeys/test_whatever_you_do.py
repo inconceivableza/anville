@@ -22,12 +22,21 @@ from django.utils import timezone
 from django.utils.html import escape
 
 from engine.document.observers import relationship_question
+from engine.hub import COACH_WAIT_LINE, COACH_WAIT_PANEL
 from engine.models import Contact, ObserverResponse, Response
 from tests.journeys.test_coach_checklist import choose, step
 from tests.journeys.test_coach_link import answer_as_coach, coach_link_action, link_shown
 from tests.journeys.test_navigation import section_in, sidebar_of
 from tests.journeys.pages import main_of
-from tests.journeys.test_hub import hub_entry, signed_in_client  # noqa: F401  (a fixture, used by name)
+from tests.journeys.test_hub import (  # noqa: F401  (signed_in_client is a fixture, used by name)
+    hub_entry,
+    next_step,
+    side_card,
+    signed_in_client,
+)
+from tests.journeys.test_invitations import issue_link
+from tests.journeys.test_observer_assessment import send, withdraw
+from tests.journeys.test_observer_landing import claim
 from tests.prototype import js_string
 from tests.journeys.test_whatever_you_do_faithful_port import (
     A_LETTER,
@@ -36,6 +45,7 @@ from tests.journeys.test_whatever_you_do_faithful_port import (
     ANSWER_ALL_FOUR,
     BASELINE_STATEMENTS,
     VIEW_THE_COMPARISON,
+    a_whole_sort,
     add_people,
     answer,
     complete,
@@ -459,9 +469,12 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
 
 def without_the_comparison_link(document):
     """✨ The way to the comparison under Section 1's Strengths assessment card is this pathway's alone (ticket 67a): the
-    faithful port reaches the comparison from the results page only, as the original prototype does."""
+    faithful port reaches the comparison from the results page only, as the original prototype does. Nor does the faithful
+    port's reflection wait on the comparison (ticket 68)."""
     for section in document["content"]["sections"]:
         section["blocks"] = [block for block in section["blocks"] if block["type"] != "comparison_link"]
+        for block in section["blocks"]:
+            block.pop("after_comparison", None)
     return document
 
 
@@ -561,13 +574,15 @@ SECTION_2 = "/sections/shape/"
 
 
 def through_section_1(client):
-    """✨ Onboarding done, then everything Section 1 asks: the participant's own work alone, the reading, the sort and
-    the reflection (ticket 52)."""
+    """✨ Onboarding done, then everything Section 1 asks: the reading, the sort, three people's answers and the
+    comparison seen, which opens the reflection (ADR 0019), then the reflection."""
     answer_onboarding(client)
     complete(client, "onboarding")
     answer(client, "gifts-reading", "true")
     submit_the_sort(client)
-    answer(client, "gifts-summary", A_REFLECTION)
+    people_answer(client)
+    assert press_compare(client).status_code == 303
+    assert answer(client, "gifts-summary", A_REFLECTION).status_code == 303
     return client
 
 
@@ -639,21 +654,11 @@ def section_1(client):
 
 
 @pytest.mark.django_db
-def test_section_1_completes_without_the_comparison_visited_and_without_any_link(participant):
-    """✨ Reversing ticket 16c (ticket 52): Section 1 is completed on the participant's own work."""
-    client = through_section_1(participant)
-
-    assert complete(client, "designed").status_code == 303
-    assert not Contact.objects.exists()
-    assert Response.objects.get().comparisons_visited == {}
-
-
-@pytest.mark.django_db
 def test_section_2_stays_locked_until_both_cards_are_complete_and_names_those_still_open(
     participant,
 ):
-    client = through_section_1(participant)
-    complete(client, "designed")
+    """✨ With the Strengths assessment done, which Section 2 requires in place of Section 1 (ADR 0019)."""
+    client = to_the_reflection(participant)
     assert client.get(SECTION_2).status_code == 302
     assert escape("Opens once you've finished Walk with a coach and Five trusted voices.") in hub_entry(
         client.get("/hub/").content.decode(), TITLES["shape"]
@@ -744,8 +749,10 @@ def test_each_lock_note_names_exactly_the_sections_still_unfinished(participant)
 
 @pytest.mark.django_db
 def test_everything_that_opens_section_2_is_done_with_no_observer_answers_at_all(participant):
-    """✨ Nothing a participant must do to reach Section 2 waits on an observer (ticket 52)."""
-    client = through_to_section_2(participant)
+    """✨ Nothing a participant must do to reach Section 2 waits on an observer (ticket 52), now that it requires the
+    Strengths assessment in place of Section 1, whose reflection does (ADR 0019)."""
+    client = to_the_reflection(participant)
+    invite_everyone(client)
 
     assert client.get(SECTION_2).status_code == 200
     assert not ObserverResponse.objects.exists()
@@ -912,3 +919,225 @@ def test_section_3s_lock_note_names_the_unfinished_sections_and_the_coach_then_t
 
     coach_only = authored["clauses"][0]["message"]
     assert escape(coach_only) in hub_entry(client.get("/hub/").content.decode(), TITLES["calling"])
+
+
+# Section 1's reflection waits for the comparison (ADR 0019)
+
+
+def people_answer(client, count=3):
+    """✨ Three people on the list, each with a link, then the first `count` of them claiming a fresh one and sending the
+    whole sort from their own browser; returns each one's browser."""
+    add_people(client, 3)
+    browsers = []
+    for number in range(count):
+        browsers.append(Client())
+        claim(browsers[-1], issue_link(client, f"Person {number}"))
+        assert send(browsers[-1], a_whole_sort()).status_code == 303
+    return browsers
+
+
+def press_compare(client):
+    """✨ "Compare with how others see you →", confirmed through the freeze warning where there is one."""
+    return client.post("/results/strengths-sort/comparison/visit/", {"confirmed": "yes"})
+
+
+def to_the_reflection(client):
+    """✨ Onboarding done, Section 1's reading confirmed and the sort sent, so the reflection is shown."""
+    answer_onboarding(client)
+    complete(client, "onboarding")
+    do_the_sort(client)
+    return client
+
+
+def save_the_reflection(client, htmx=False):
+    return client.post(
+        "/answers/gifts-summary/", {"value": A_REFLECTION}, headers={"HX-Request": "true"} if htmx else {}
+    )
+
+
+def reflection_stored():
+    return "gifts-summary" in Response.objects.get().answers
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("htmx", [False, True], ids=["without JavaScript", "with htmx"])
+def test_until_the_comparison_is_viewed_a_save_to_the_reflection_is_refused_and_nothing_is_stored(participant, htmx):
+    client = to_the_reflection(participant)
+    people_answer(client)
+
+    refused = save_the_reflection(client, htmx)
+
+    assert refused.status_code == 403
+    assert not reflection_stored()
+    if not htmx:
+        assert refused.templates[0].name == "engine/section.html"
+
+
+@pytest.mark.django_db
+def test_once_viewed_the_reflection_saves_and_still_does_after_withdrawals_unfreeze_collection(participant):
+    client = to_the_reflection(participant)
+    browsers = people_answer(client)
+    assert press_compare(client).status_code == 303
+    assert save_the_reflection(client).status_code < 400
+    assert reflection_stored()
+
+    withdraw(browsers[0])
+    assert Response.objects.get().collection_frozen_at is None
+
+    assert save_the_reflection(client).status_code < 400
+
+
+@pytest.mark.django_db
+def test_a_press_below_the_minimum_does_not_open_the_reflection(participant):
+    client = to_the_reflection(participant)
+    people_answer(client, count=2)
+    press_compare(client)
+
+    assert save_the_reflection(client).status_code == 403
+    assert not reflection_stored()
+
+
+@pytest.mark.django_db
+def test_while_section_1_waits_only_on_the_comparison_the_hubs_next_step_is_the_next_open_section(participant):
+    client = to_the_reflection(participant)
+    invite_everyone(client)
+
+    panel = next_step(client.get("/hub/").content.decode())
+
+    assert f'href="{SECTION_2}"' in panel
+
+
+@pytest.mark.django_db
+def test_with_nothing_else_open_the_next_step_waits_on_answers_with_a_button_to_section_1(participant):
+    client = to_the_reflection(participant)
+    invite_everyone(client)
+    complete(client, "shape")
+
+    panel = next_step(client.get("/hub/").content.decode())
+
+    assert "Waiting on answers" in panel
+    assert 'href="/sections/designed/"' in panel
+
+
+# The hub while Section 3 waits on the coach (ticket 65)
+
+COACH_CARD = "Walk with a coach"
+
+
+def next_step_panel(client):
+    """✨ The hub's next-step panel, whichever it is."""
+    page = client.get("/hub/").content.decode()
+    return re.search(r'<(section|div) class="panel next">.*?</\1>', page, re.S).group()
+
+
+def button_to(html, label):
+    """✨ Where the button or link with this label leads, or None."""
+    found = re.search(rf'href="([^"]*)"[^>]*>\s*{label}\b', html)
+    return found.group(1) if found else None
+
+
+def the_coach_page(client):
+    """✨ The coach page's address, as the sidebar's "Your coach" gives it."""
+    return button_to(sidebar_of(client.get("/hub/").content.decode()), "Your coach")
+
+
+def revoke_coach_link(client):
+    client.post(coach_link_action(client, "revoke", section="walk-with-a-coach"))
+
+
+# ✨ Each way Section 3 can wait on the coach, as the coach's answer the panel's wording is chosen by and how to get
+# there from a coach given a working link: unanswered, declined, and no working link (none made, expired unanswered,
+# revoked).
+COACH_WAITS = {
+    "unanswered": ("waiting", lambda client: None),
+    "declined": ("declined", lambda client: coach_accepts(client, "decline")),
+    "no link made": (None, lambda client: step(client, "remove")),
+    "expired unanswered": (None, lambda client: None),
+    "revoked": (None, revoke_coach_link),
+}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("wait", COACH_WAITS)
+def test_with_nothing_next_and_section_3_waiting_only_on_the_coach_the_panel_names_the_wait(participant, wait):
+    client = through_to_section_2(participant)
+    answer, do = COACH_WAITS[wait]
+    do(client)
+    complete(client, "shape")
+    later = timezone.now() + timedelta(days=31) if wait == "expired unanswered" else timezone.now()
+
+    with time_machine.travel(later, tick=False):
+        client.force_login(Response.objects.get().participant)  # ✨ a session lasts two weeks
+        panel = next_step_panel(client)
+
+        heading, sentence = COACH_WAIT_PANEL[answer]
+        assert escape(heading.format(coach="Sam")) in panel
+        assert escape(sentence.format(section="Section 3", coach="Sam")) in panel
+        assert button_to(panel, "Your coach") == the_coach_page(client)
+
+
+@pytest.mark.django_db
+def test_the_panel_is_as_before_while_something_else_is_next(participant):
+    client = through_to_section_2(participant)
+
+    panel = next_step_panel(client)
+
+    assert button_to(panel, "Begin") == SECTION_2
+    assert button_to(panel, "Your coach") is None
+
+
+@pytest.mark.django_db
+def test_the_panel_is_as_before_while_section_3_also_waits_on_a_section_unfinished(signed_in_client, load_pathway):
+    """✨ Section 3 made to require a section that can never open, as a section stands that the hub passes over while it
+    waits on others (ADR 0019): nothing is next, and Section 3 waits on more than the coach."""
+    document = the_pathway()
+    calling = next(section for section in document["content"]["sections"] if section["id"] == "calling")
+    calling["requires"].append("growth")  # ✨ which requires Section 3 in turn
+    load_pathway(document)
+    client = through_to_section_2(signed_in_client)
+    complete(client, "shape")
+
+    panel = next_step_panel(client)
+
+    assert "Nothing is waiting for you right now." in panel
+    assert button_to(panel, "Your coach") is None
+
+
+def coach_card(client):
+    """✨ The hub's Walk with a coach card."""
+    return side_card(client.get("/hub/").content.decode(), COACH_CARD)
+
+
+# ✨ Where the coach can stand once the card is unlocked: none chosen, a link unanswered, declined, accepted.
+COACH_STATES = {
+    "no coach": lambda client: None,
+    "unanswered": choose,
+    "declined": lambda client: (choose(client), coach_accepts(client, "decline")),
+    "accepted": lambda client: (choose(client), coach_accepts(client)),
+}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("coach", COACH_STATES)
+def test_the_coach_card_has_manage_to_the_coach_page_in_every_state_once_unlocked(participant, coach):
+    client = to_the_coach_page(participant)
+    COACH_STATES[coach](client)
+
+    assert button_to(coach_card(client), "Manage") == the_coach_page(client)
+
+
+@pytest.mark.django_db
+def test_the_coach_cards_line_shows_while_section_3_waits_on_the_coach_and_not_once_it_is_open(participant):
+    client = through_to_section_2(participant)
+    assert escape(COACH_WAIT_LINE["waiting"].format(section="Section 3")) in coach_card(client)
+
+    coach_accepts(client, "decline")
+    assert escape(COACH_WAIT_LINE["declined"].format(section="Section 3")) in coach_card(client)
+
+    coach_accepts(client)
+    complete(client, "shape")
+    assert client.get(SECTION_3).status_code == 200
+    revoke_coach_link(client)  # ✨ which never locks Section 3 again, once open
+
+    card = coach_card(client)
+    assert not any(escape(line.format(section="Section 3")) in card for line in COACH_WAIT_LINE.values())
