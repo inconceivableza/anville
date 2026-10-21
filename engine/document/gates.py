@@ -50,17 +50,31 @@ def coach_answer_key(block_id):
     return f"{block_id}/coach_answer"
 
 
+def coach_answer(answers, block_id):
+    """✨ The coach's answer through a coach checklist, as the hub tells it, read from the answers the gate reads so that
+    the hub and a `coach_accepted` clause never disagree: their answer on their current link, expired or not (ADR 0019);
+    "waiting" while a working link is unanswered; None with no link, one expired unanswered, or one revoked."""
+    answer = answers.get(coach_answer_key(block_id))
+    return answer or ("waiting" if answers.get(links_issued_key(block_id)) else None)
+
+
 def comparison_viewed_key(block_id):
     """✨ Where the answers the gate reads hold that the participant viewed a sort's comparison: pressed "Compare with how
     others see you →" with the minimum in (ticket 67a). Like `comparison_visit_key`, never a block's own answer."""
     return f"{block_id}/viewed"
 
 
+def comparison_viewed(answers, sort):
+    """✨ Whether the participant has viewed a sort's comparison (ticket 67a), as the answers the gate reads hold it: the
+    one place both a block waiting on the comparison and a comparison link's "Viewed" read it."""
+    return has_content(answers.get(comparison_viewed_key(sort)))
+
+
 def waits_on_comparison(block, answers):
     """✨ Whether a block is still waiting on the comparison (ticket 68): it carries `after_comparison` and its sort's
     comparison has not been viewed. Once viewed it never waits again, since "Viewed" outlasts an unfreeze (ADR 0019)."""
     waits = block.get("after_comparison")
-    return waits is not None and not has_content(answers.get(comparison_viewed_key(waits["sort"])))
+    return waits is not None and not comparison_viewed(answers, waits["sort"])
 
 
 def opened_key(section_id):

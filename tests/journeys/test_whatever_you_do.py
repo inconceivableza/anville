@@ -899,6 +899,23 @@ def test_an_acceptance_on_the_coachs_current_link_opens_section_3_even_once_that
 
 
 @pytest.mark.django_db
+def test_once_an_accepting_coachs_link_has_expired_the_hub_shows_section_3_open_and_no_coach_wait(participant):
+    """✨ The hub reads the coach's answer as Section 3's opening condition does, expired or not (fix-2)."""
+    client = through_to_section_2(participant)
+    coach_accepts(client)
+
+    with time_machine.travel(timezone.now() + timedelta(days=31), tick=False):
+        client.force_login(Response.objects.get().participant)  # ✨ a session lasts two weeks
+        complete(client, "shape")
+        hub = client.get("/hub/").content.decode()
+        panel = next_step_panel(client)
+
+        assert "Locked" not in hub_entry(hub, TITLES["calling"])
+        assert not any(escape(heading.format(coach="Sam")) in panel for heading, _ in COACH_WAIT_PANEL.values())
+        assert client.get(SECTION_3).status_code == 200
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize("change", ["revoked", "reissued", "changed"])
 def test_once_section_3_has_opened_it_stays_open_whatever_happens_to_the_coach(participant, change):
     client = through_to_section_2(participant)
@@ -1078,6 +1095,7 @@ def test_with_nothing_next_and_section_3_waiting_only_on_the_coach_the_panel_nam
         assert escape(heading.format(coach="Sam")) in panel
         assert escape(sentence.format(section="Section 3", coach="Sam")) in panel
         assert button_to(panel, "Your coach") == the_coach_page(client)
+        assert section_3_is_locked(client)
 
 
 @pytest.mark.django_db

@@ -67,7 +67,14 @@ from engine.document.contacts import (
     voices_card,
 )
 from engine.document.aggregation import aggregate
-from engine.document.gates import clauses_of, links_issued_key, opened_key, waits_on_comparison
+from engine.document.gates import (
+    clauses_of,
+    coach_answer,
+    comparison_viewed,
+    links_issued_key,
+    opened_key,
+    waits_on_comparison,
+)
 from engine.document.scoring import score
 from engine.hub import (
     COMPLETE,
@@ -173,7 +180,7 @@ def hub(request):
     if wizard is not None:
         return redirect(wizard)
     hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
-    coach = _coach_of(state.response)
+    coach = _coach_of(state.response, state.answers)
     return render(
         request,
         "engine/hub.html",
@@ -893,18 +900,21 @@ def _coach_sharing(response, block_id):
     return {**coach, "offer": offer} if offer else None
 
 
-def _coach_of(response):
+def _coach_of(response, answers=None):
     """✨ The coach kept, as the hub and the comparison read them, or None: their name, the coach page, their answer as
     the coach page tells it, whether they can be shown the results (accepted through a working link) and whether they
-    are."""
+    are. The answer is read from the `answers` the gate reads (the response's own, if not given), as a `coach_accepted`
+    clause reads it, so the hub's wording and Section 3's lock never disagree (fix-2)."""
     coach = response.contacts.filter(role=Contact.Role.COACH).first() if response is not None else None
     if coach is None:
         return None
+    if answers is None:
+        answers = response.answers_with_contacts_and_visits()
     accepted = Invitation.accepted_coach_of(response)
     return {
         "name": coach.name,
         "coach_page": _listed_at(coach),
-        "answer": _coach_link_state(coach.pk)["answer"],
+        "answer": coach_answer(answers, coach.block_id),
         "can_see": accepted is not None,
         "shared": accepted is not None and accepted.results_shared_at is not None,
     }
@@ -2175,6 +2185,8 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
     links = _requirement_links(state, section)
     gate_checklist = [(message, met, links.get(message)) for message, met in checklist(section, answers, page=page)]
     states = {other.id: other for other in hub.sections}
+    # ✨ A section the hub does not list, a once-only section once complete (ticket 69), has no state, so no estimate.
+    shown_state = states.get(section["id"])
     return {
         # ✨ Where "← Back" at the top leads: the section this is a part of, or else the hub.
         "back": _section_this_is_part_of(state, section),
@@ -2191,7 +2203,7 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
         "section": {
             "id": section["id"],
             "title": text_for(section["title"], "participant"),
-            "estimate": states[section["id"]].estimate,
+            "estimate": shown_state.estimate if shown_state is not None else None,
             "complete_label": text_for(section.get("complete_label", "Mark complete"), "participant"),
             "is_part": "part_of" in section,
             "is_side_card": "side_card" in section,
@@ -2293,7 +2305,7 @@ def _comparison_link_shown(state, block):
     if not Result.objects.filter(response=state.response, block_id=sort).exists():
         return None
     answered = len(ObserverResponse.assessments_for(state.response).assessments)
-    viewed = sort in state.response.comparisons_viewed
+    viewed = comparison_viewed(state.answers, sort)
     status, label = comparison_status(answered, minimum_observers(state.version.document), viewed)
     return {"sort": sort, "status": status, "label": label}
 
