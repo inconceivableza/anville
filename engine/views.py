@@ -180,10 +180,29 @@ def hub(request):
             "side_cards": _side_cards(state, hub, coach),
             "coach_card": _coach_card(state, hub, coach),
             "voices": _hub_voices(state, hub),
+            "comparison": _hub_comparison(state),
             "minimum": minimum_observers(state.version.document),
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
+
+
+def _hub_comparison(state):
+    """✨ The document's comparison link as the hub shows it, in a row and beside Manage on the Five trusted voices card
+    (ticket 67b): its status and press as its section's card has them (`_comparison_link_shown`), with its title, the
+    section it is in and the part of that section holding its sort, after which its row is listed. None before there
+    is a result, and for a pathway without one."""
+    document = state.version.document
+    for block in blocks_of(document):
+        shown = _comparison_link_shown(state, block)
+        if shown is not None:
+            return {
+                **shown,
+                "title": authored_text(block, "participant")["title"],
+                "section": section_of(document, block["id"])["id"],
+                "after": section_of(document, block["sort"])["id"],
+            }
+    return None
 
 
 def _coach_section_of(document):

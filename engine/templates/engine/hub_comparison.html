@@ -1,0 +1,17 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ The comparison link's row on the hub (ticket 67b), listed within its section after the part holding its sort, with
+  the status its section's card shows as the row's tag. Its title is the card's press, the results page's "Compare with
+  how others see you →": a form posting to the same address, so it warns before collection freezes and works without
+  JavaScript. A row's title is a link elsewhere; a link here could be loaded ahead of time without the press.
+{% endcomment %}
+<li class="hub-section srow hub-part hub-comparison">
+  <div class="srow-body">
+    <form method="post" action="{% url 'visit_comparison' comparison.sort %}">
+      {% csrf_token %}
+      <h3><button type="submit" class="hub-section-title">{{ comparison.title }}</button></h3>
+    </form>
+  </div>
+  <span class="tag status-{{ comparison.status }}">{{ comparison.label }}</span>
+</li>

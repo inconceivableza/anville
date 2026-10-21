@@ -2,6 +2,7 @@
 {# For licensing information see ../../../LICENSE.md #}
 {% load section_pages %}
 {# ✨ One section's entry on the hub, with any `parts` of it listed within it (ticket 41b). A part is given no parts. #}
+{# ✨ The `comparison` link in this section is listed after the part holding its sort (ticket 67b). #}
 <li class="hub-section srow{% if section.part_of %} hub-part{% endif %}{% if section.is_locked %} locked{% endif %}{% if section.is_next %} up-next{% endif %}">
   {% if section.number and not section.part_of %}<span class="srow-number">{{ section.number }}</span>{% endif %}
   <div class="srow-body">
@@ -17,6 +18,9 @@
       <ol class="hub-parts">
         {% for part in parts %}
           {% include "engine/hub_section.html" with section=part parts=None %}
+          {% if comparison.section == section.id and comparison.after == part.id %}
+            {% include "engine/hub_comparison.html" %}
+          {% endif %}
         {% endfor %}
       </ol>
     {% endif %}
