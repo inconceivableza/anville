@@ -30,8 +30,9 @@ function saveStatus(event) {
   return target?.classList.contains("save-status") ? target : null;
 }
 
+// ✨ A contact list's empty row is no form of its own (fix-1), so its status is found by the row's fields' wrapper.
 document.addEventListener("input", (event) => {
-  const status = event.target.closest("form")?.querySelector(".save-status");
+  const status = event.target.closest("form, .contact-person")?.querySelector(".save-status");
   if (status) status.textContent = "";
 });
 
@@ -62,6 +63,17 @@ document.addEventListener("htmx:sendError", notSaved);
 // JavaScript, that button and Enter still save it.
 document.addEventListener("submit", (event) => {
   if (event.target.querySelector(".save-fallback")) event.preventDefault();
+});
+
+// ✨ A contact list's empty rows all belong to its one form for new people (fix-1), whose Enter presses the first
+// empty row's "Get link", wherever it was typed. Press the row's own instead, as when each row was a form of its own.
+// Without JavaScript, Enter still presses the first empty row's, and every row's typing comes back.
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" || event.isComposing || !event.target.matches?.("input")) return;
+  const getsLink = event.target.closest(".contact-row")?.querySelector("[data-gets-link]");
+  if (!getsLink) return;
+  event.preventDefault();
+  getsLink.click();
 });
 
 // ✨ Near a text box's length limit, say how much room is left; the browser stops typing at the limit itself.

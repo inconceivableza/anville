@@ -4,16 +4,27 @@
   ✨ People who know the participant, a first name and an email address per row, as the prototype's contact screen
   lays them out, each row marked needed or optional as the author numbers them (ticket 51a).
 
-  Each row is a form of its own (`engine/contact_row.html`). An empty row adds that person and makes their link in the
-  same act; a person's row changes them alone, so a page left open can never drop anyone added since, as saving the
-  whole list once did. Below the rows, its authored sentence and "Add another person" (`engine/contact_more.html`) add
-  one more row at a time, rather than one appearing once every row is filled (ticket 70).
+  Each person's row is a form of its own (`engine/contact_row.html`), which changes them alone, so a page left open can
+  never drop anyone added since, as saving the whole list once did. An empty row adds that person and makes their link
+  in the same act. Below the rows, its authored sentence and "Add another person" (`engine/contact_more.html`) add one
+  more row at a time, rather than one appearing once every row is filled (ticket 70).
 
-  While answer collection is frozen (ticket 55) the list says why.
+  The empty rows' fields and buttons, and "Add another person", all belong to the one form for new people here, by
+  their `form` attribute, so without JavaScript each of those presses sends what is typed in every empty row, and the
+  page comes back with it, not just the row pressed (fix-1). The server still stores only the row whose "Get link" was
+  pressed. novalidate, as on each person's form, leaves the email addresses to the server.
+
+  While answer collection is frozen (ticket 55) the list says why, and has no empty rows, nor a form for them.
 {% endcomment %}
 <div id="block-{{ block.id }}" class="question-card contact-list">
   {% if block.frozen %}<p class="hint-box">{{ block.frozen }} You can't add anyone or issue a link now, though you can still revoke one.</p>{% endif %}
   {% if block.refusal %}<p class="save-status" role="alert"><span class="save-refused">Not saved. {{ block.refusal }}</span></p>{% endif %}
+  {% if not block.frozen %}
+  <form id="new-people-{{ block.id }}" class="contact-new" novalidate method="post" action="{% url 'contacts' block.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="version" value="{{ pathway.version_id }}">
+  </form>
+  {% endif %}
   <ol class="contact-rows" id="rows-{{ block.id }}">
     {% for row in block.rows %}{% include "engine/contact_row.html" %}{% endfor %}
   </ol>

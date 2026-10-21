@@ -91,24 +91,74 @@ def forms_of(page):
     return forms
 
 
+def list_rows(page):
+    """✨ Each row of the contact list on a page, as its markup."""
+    return re.findall(r'<li class="contact-row".*?</li>', the_list(page), re.S)
+
+
+def field_in(row, name):
+    """✨ The value a row's field of that name shows."""
+    return re.search(rf'<input[^>]*\bname="{name}"[^>]*\bvalue="([^"]*)"', row).group(1)
+
+
 def rows_shown(page):
     """✨ Each row of the contact list as the participant sees it, as (name, email)."""
+    return [(field_in(row, "name"), field_in(row, "email")) for row in list_rows(page)]
+
+
+# ✨ The id of the list's one form for new people, which each empty row's fields and buttons belong to (fix-1).
+NEW_PEOPLE = "new-people-contacts"
+
+
+def new_people_buttons(page):
+    """✨ The buttons of the list's form for new people: each empty row's "Get link" and "Add another person"."""
+    return re.findall(rf'<button[^>]*\bform="{NEW_PEOPLE}"[^>]*>.*?</button>', page, re.S)
+
+
+def another_row_button(page):
+    """✨ The list's "Add another person" (ticket 70), or None while it is not offered."""
+    return next((button for button in new_people_buttons(page) if "Add another person" in button), None)
+
+
+def empty_rows(page):
+    """✨ The number of each empty row on the list's page, nothing typed in it."""
     return [
-        (fields["name"], fields["email"]) for _, fields in forms_of(page) if "name" in fields and "email" in fields
+        int(re.search(r'name="number" value="(\d+)"', row).group(1))
+        for row in list_rows(page)
+        if 'name="number"' in row and not field_in(row, "name")
     ]
 
 
-def another_row_form(page):
-    """✨ The list's "Add another person" (ticket 70), as (where it posts, its fields), or None while it is not offered."""
-    found = re.search(r'<form(?=[^>]*class="contact-more")[^>]*\baction="([^"]+)"[^>]*>(.*?)</form>', page, re.S)
-    if not found:
-        return None
-    return found.group(1), dict(re.findall(r'<input[^>]*\bname="([^"]+)"[^>]*\bvalue="([^"]*)"', found.group(2)))
+def press_for_new_people(page, pressed, typed=None, htmx=False):
+    """✨ What the browser sends when a button of the list's form for new people is pressed on the page given: "more"
+    for "Add another person", or a row's number for its "Get link". The form holds each empty row's fields, as the
+    page fills them or as `typed` gives them by row number, and the button adds its own name and value. Returns (where
+    it posts, the fields); `htmx` as the page's JavaScript sends it, to the button's hx-post."""
+    form = re.search(rf'<form[^>]*\bid="{NEW_PEOPLE}"[^>]*>(.*?)</form>', page, re.S)
+    assert form, "no form for new people on this page"
+    hidden = re.findall(r'<input[^>]*\bname="([^"]+)"[^>]*\bvalue="([^"]*)"', form[1])
+    fields = {name: [value] for name, value in hidden}
+    typed = typed or {}
+    for row in list_rows(page):
+        number = re.search(rf'<input[^>]*name="number" value="(\d+)"[^>]*form="{NEW_PEOPLE}"', row)
+        if number:
+            name, email = typed.get(int(number[1]), (field_in(row, "name"), field_in(row, "email")))
+            for key, value in (("number", number[1]), ("name", name), ("email", email)):
+                fields.setdefault(key, []).append(value)
+    if pressed == "more":
+        button = another_row_button(page)
+    else:
+        button = next(button for button in new_people_buttons(page) if f'name="row" value="{pressed}"' in button)
+    name, value = re.search(r'\bname="([^"]+)" value="([^"]*)"', button).groups()
+    fields[name] = [value]
+    sent_to = re.search(r'\bhx-post="([^"]+)"', button) if htmx else re.search(r'\bformaction="([^"#]+)', button)
+    return (sent_to[1] if sent_to else re.search(r'\baction="([^"]+)"', form[0])[1]), fields
 
 
-def add_another_row(client, section=ONBOARDING, page=None, htmx=False):
-    """✨ Press "Add another person" on the page given or as it is now; `htmx` as the page's JavaScript sends it."""
-    action, fields = another_row_form(page or shown(client, section))
+def add_another_row(client, section=ONBOARDING, page=None, htmx=False, typed=None):
+    """✨ Press "Add another person" on the page given or as it is now, with anything `typed` in its empty rows by
+    number; `htmx` as the page's JavaScript sends it."""
+    action, fields = press_for_new_people(page or shown(client, section), "more", typed, htmx)
     return client.post(action, fields, **(HTMX if htmx else {}))
 
 
@@ -116,11 +166,11 @@ def add_person(client, person, section=ONBOARDING, page=None, htmx=False):
     """✨ Add one person as the participant does, in the list's first empty row, on the page given or as it is now,
     first pressing "Add another person" if every row is filled; `htmx` as the page's JavaScript sends it."""
     page = page or shown(client, section)
-    if not any("name" in fields and not fields["name"] for _, fields in forms_of(page)):
-        page = client.get(add_another_row(client, section, page).url).content.decode()
-    action, fields = next(form for form in forms_of(page) if "name" in form[1] and not form[1]["name"])
-    name, email = person
-    return client.post(action, {**fields, "name": name, "email": email}, **(HTMX if htmx else {}))
+    if not empty_rows(page):
+        page = add_another_row(client, section, page).content.decode()
+    row = empty_rows(page)[0]
+    action, fields = press_for_new_people(page, row, {row: person}, htmx)
+    return client.post(action, fields, **(HTMX if htmx else {}))
 
 
 def save_person(client, name, changed, section=ONBOARDING, page=None, htmx=False):
@@ -227,36 +277,57 @@ def test_once_every_row_is_filled_no_more_appear_until_another_is_asked_for(part
     page = shown(participant, ONBOARDING)
 
     assert rows_shown(page) == [JO, PRIYA]
-    assert another_row_form(page)
+    assert another_row_button(page)
 
 
 # More than the rows ask for (ticket 70)
 
 
 @pytest.mark.django_db
-def test_without_javascript_add_another_person_adds_one_empty_row_keeping_everyone_in_theirs(participant):
-    save_contacts(participant, JO, PRIYA)
+def test_without_javascript_add_another_person_adds_one_empty_row_keeping_what_is_typed_in_the_others(participant):
+    """✨ Typing never saved in another row comes back in it, as well as everyone listed (fix-1)."""
+    add_person(participant, JO)
 
-    added = add_another_row(participant)
+    added = add_another_row(participant, typed={2: PRIYA})
 
-    assert added.status_code == 303
-    assert rows_shown(participant.get(added.url).content.decode()) == [JO, PRIYA, BLANK]
-    assert stored() == [JO, PRIYA]
+    assert added.status_code == 200
+    assert rows_shown(added.content.decode()) == [JO, PRIYA, BLANK]
+    assert stored() == [JO]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "chris, kept, rows_after",
+    [(CHRIS, [CHRIS], [CHRIS, PRIYA]), (("Chris", "chris@"), [], [PRIYA, ("Chris", "chris@")])],
+    ids=["stored", "refused"],
+)
+def test_without_javascript_get_link_stores_its_row_alone_and_what_is_typed_in_the_others_comes_back(
+    participant, chris, kept, rows_after
+):
+    """✨ Typing in the other rows travels with the press, as with "Add another person" (fix-1)."""
+    page = shown(participant, ONBOARDING)
+
+    action, fields = press_for_new_people(page, 2, typed={1: PRIYA, 2: chris})
+    pressed = participant.post(action, fields)
+
+    assert stored() == kept
+    back = participant.get(pressed.url) if pressed.status_code == 303 else pressed
+    assert rows_shown(back.content.decode()) == rows_after
 
 
 @pytest.mark.django_db
 def test_with_javascript_add_another_person_sends_back_one_empty_row_to_go_after_the_others(participant):
     save_contacts(participant, JO, PRIYA)
     page = shown(participant, ONBOARDING)
-    form = re.search(r'<form[^>]*class="contact-more"[^>]*>', page).group()
+    button = another_row_button(page)
     rows_list = re.search(r'<ol[^>]*class="contact-rows"[^>]*>', page).group()
 
     sent = add_another_row(participant, page=page, htmx=True)
 
     assert sent.status_code == 200
     assert rows_sent_back(sent) == [None]
-    assert 'hx-swap="beforeend"' in form
-    assert re.search(r'hx-target="#([\w-]+)"', form).group(1) == re.search(r'id="([\w-]+)"', rows_list).group(1)
+    assert 'hx-swap="beforeend"' in button
+    assert re.search(r'hx-target="#([\w-]+)"', button).group(1) == re.search(r'id="([\w-]+)"', rows_list).group(1)
     assert stored() == [JO, PRIYA]
 
 
@@ -267,7 +338,7 @@ def test_at_the_most_a_list_holds_another_row_is_not_offered_and_one_asked_for_i
     fifty = [{"name": f"Person {number}", "email": f"person{number}@example.com"} for number in range(50)]
     Response.objects.get().replace_contacts("contacts", fifty, Contact.Role.CONTACT)  # ✨ quicker than 50 requests
 
-    assert another_row_form(shown(participant, ONBOARDING)) is None
+    assert another_row_button(shown(participant, ONBOARDING)) is None
     refused = add_another_row(participant, page=left_open)
 
     assert refused.status_code == 400
@@ -281,15 +352,19 @@ def test_a_row_added_with_add_another_person_stores_nobody_until_its_get_link(pa
     save_contacts(participant, JO, PRIYA)
 
     added = add_another_row(participant, htmx=htmx)
-    page = added.content.decode() if htmx else participant.get(added.url).content.decode()
-    row = re.findall(r'<li class="contact-row".*?</li>', page, re.S)[-1]
+    row = re.findall(r'<li class="contact-row".*?</li>', added.content.decode(), re.S)[-1]
+    # ✨ With JavaScript the row sent back goes after the others, as htmx swaps it in.
+    page = added.content.decode()
+    if htmx:
+        page = shown(participant, ONBOARDING)
+        rows_end = page.index("</ol>", page.index('id="rows-contacts"'))
+        page = page[:rows_end] + row + page[rows_end:]
 
     assert stored() == [JO, PRIYA]
     assert "hx-trigger" not in row
     assert re.search(r"<button[^>]*>\s*Get link\s*</button>", row)
-    action = re.search(r'<form[^>]*\baction="([^"]+)"', row).group(1)
-    fields = dict(re.findall(r'<input[^>]*\bname="([^"]+)"[^>]*\bvalue="([^"]*)"', row))
-    assert participant.post(action, {**fields, "name": CHRIS[0], "email": CHRIS[1]}).status_code == 303
+    action, fields = press_for_new_people(page, 3, typed={3: CHRIS})
+    assert participant.post(action, fields).status_code == 303
     assert stored() == [JO, PRIYA, CHRIS]
 
 
@@ -587,7 +662,7 @@ def test_the_browser_leaves_checking_the_email_addresses_to_the_server(participa
     """✨ With its own check on, the browser stops an address without an "@" before it is sent, so the server's
     refusal, which says what is wrong, is never seen."""
     add_person(participant, JO)
-    forms = re.findall(r'<form class="contact-person"[^>]*>', the_list(shown(participant, ONBOARDING)))
+    forms = re.findall(r'<form[^>]*class="contact-(?:person|new)"[^>]*>', the_list(shown(participant, ONBOARDING)))
 
     assert forms and all(re.search(r"\snovalidate[\s>]", form) for form in forms)
 

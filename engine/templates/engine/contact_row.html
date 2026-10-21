@@ -5,6 +5,10 @@
   of its buttons sends back this row alone, which takes its place, so typing not yet saved in any other row is never
   lost; without, each leads to the list's page again, opened at this person (fix-2).
 
+  An empty row is no form of its own: its fields and "Get link" belong to the list's one form for new people
+  (`blocks/contact_list.html`), so without JavaScript its press carries what is typed in every empty row, which comes
+  back in them (fix-1). "Get link" names its row, the one stored; each row's `number` places what was typed in it.
+
   Someone listed is saved as their name or email is typed, only the row's status coming back, the Save button being
   for browsers without JavaScript. An
   empty row stores nobody until "Get link", which adds them and makes their link in the same act, so nobody is listed
@@ -27,33 +31,38 @@
           hx-post="{% url 'contact' block.id row.contact_id %}" hx-trigger="input delay:600ms, change, submit"
           hx-sync="this:queue last" hx-target="find .save-status" hx-select=".save-status" hx-swap="outerHTML">
   {% else %}
-    <form class="contact-person" novalidate method="post" action="{% url 'contacts' block.id %}"
-          hx-post="{% url 'contacts' block.id %}" hx-target="closest li" hx-swap="outerHTML">
+    <div class="contact-person">
   {% endif %}
+    {% if row.contact_id %}
     {% csrf_token %}
     <input type="hidden" name="version" value="{{ pathway.version_id }}">
     <input type="hidden" name="row" value="{{ row.number }}">
+    {% else %}
+    <input type="hidden" name="number" value="{{ row.number }}" form="new-people-{{ block.id }}">
+    {% endif %}
     <span class="contact-num" aria-hidden="true">{{ row.number }}</span>
     <span class="tag contact-need">{% if row.is_needed %}Needed{% else %}Optional{% endif %}</span>
     <label class="contact-field contact-name">
       <span class="visually-hidden">Person {{ row.number }}, first name</span>
-      <input type="text" name="name" placeholder="First name" value="{{ row.name }}" maxlength="150" autocomplete="off"{% if row.contact_id %} id="person-{{ row.contact_id }}-name"{% endif %}{% if row.invalid == "name" %} aria-invalid="true"{% endif %}>
+      <input type="text" name="name" placeholder="First name" value="{{ row.name }}" maxlength="150" autocomplete="off"{% if row.contact_id %} id="person-{{ row.contact_id }}-name"{% else %} form="new-people-{{ block.id }}"{% endif %}{% if row.invalid == "name" %} aria-invalid="true"{% endif %}>
     </label>
     <label class="contact-field contact-email">
       <span class="visually-hidden">Person {{ row.number }}, email address</span>
-      <input type="email" name="email" placeholder="Email address" value="{{ row.email }}" maxlength="254" autocomplete="off"{% if row.contact_id %} id="person-{{ row.contact_id }}-email"{% endif %}{% if row.invalid == "email" %} aria-invalid="true"{% endif %}>
+      <input type="email" name="email" placeholder="Email address" value="{{ row.email }}" maxlength="254" autocomplete="off"{% if row.contact_id %} id="person-{{ row.contact_id }}-email"{% else %} form="new-people-{{ block.id }}"{% endif %}{% if row.invalid == "email" %} aria-invalid="true"{% endif %}>
     </label>
     {% if row.contact_id %}
       <button type="submit" class="pill ghost small save-fallback">Save</button>
     {% else %}
-      <button type="submit" class="pill small">Get link</button>
+      {# ✨ htmx sends the form it belongs to with it, and this row comes back in its place. #}
+      <button type="submit" class="pill small" form="new-people-{{ block.id }}" name="row" value="{{ row.number }}" data-gets-link
+              hx-post="{% url 'contacts' block.id %}" hx-target="closest li" hx-swap="outerHTML">Get link</button>
     {% endif %}
     {% if row.refusal %}
       <p class="save-status" role="alert"><span class="save-refused">Not saved. {{ row.refusal }}</span></p>
     {% elif row.contact_id %}
       <output class="save-status" aria-live="polite">{% if row.saved %}Saved{% endif %}</output>
     {% endif %}
-  </form>
+  {% if row.contact_id %}</form>{% else %}</div>{% endif %}
   {% if row.contact_id %}
     {% if row.issued %}
       {# ✨ Open without JavaScript, and shown as a modal once it has loaded. #}
