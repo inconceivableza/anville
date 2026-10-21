@@ -221,7 +221,7 @@ def open_blocks(section, answers, sections, up_to_page=1):
     """✨ The blocks of a section a participant has reached, and whether nothing in them holds the rest shut.
 
     A block that opens what follows it (a scripture reading) holds the rest of the section shut until it
-    has been answered. A link marked `holds_what_follows` holds it shut until the linked section's gate
+    has been answered. A signpost marked `holds_what_follows` holds it shut until the linked section's gate
     passes, which is why the track's `sections` are needed. Pages after `up_to_page`, the page reached, are
     shut too. The server decides this on every request, so an activity a participant has not opened is
     neither in the page nor answerable: it is not reachable at all, rather than merely unseen.
@@ -241,7 +241,8 @@ def page_reached(section, moved_past, answers, sections):
 
     Each page is reached only through every page ahead of it, and the last is as far as there is to go. A block
     holding the rest shut holds the pages after its own too, even once gone past: a participant who went on past a
-    held link, then made its section's gate fail again, is back on the link's page rather than on one with nothing.
+    holding signpost, then made its section's gate fail again, is back on the signpost's page rather than on one with
+    nothing.
     """
     last = page_count(section)
     moved_past = moved_past.get(section["id"], ())
@@ -257,7 +258,7 @@ def _holds_what_follows(block, answers, sections_by_id):
         return not has_content(answers.get(block["id"]))
     if block.get("holds_what_follows"):
         linked = sections_by_id.get(block["section"])
-        return linked is None or not gate_passes(linked, answers)  # ✨ a link outside the track opens nothing
+        return linked is None or not gate_passes(linked, answers)  # ✨ a signpost outside the track opens nothing
     return False
 
 
@@ -276,7 +277,7 @@ def block_ids_fixed_on_completion(section, answers):
 def is_locked(section, completed, answers=None, sections=(), moved_past=None):
     """✨ Whether a section is still shut, because a section it requires has not been completed, because one of its
     opening conditions fails, or, for a part of a section in the track's `sections`, because the participant has not
-    yet reached that section's link to it.
+    yet reached that section's signpost to it.
 
     A section the participant has already completed is never shut again, whatever happens to the sections
     it required. Otherwise the hub would show it as complete, link to it, and bounce them back here.
@@ -310,7 +311,7 @@ def unmet_opening_notes(section, answers, role="participant"):
 
 class WaitingOn(NamedTuple):
     """✨ What a part of a section waits on: that section, and the block in it holding the way to the part shut, if a
-    block does (None while that section is locked, or its page with the link not yet reached)."""
+    block does (None while that section is locked, or its page with the signpost not yet reached)."""
 
     section: dict
     holding: dict | None
@@ -319,23 +320,23 @@ class WaitingOn(NamedTuple):
 def _waiting_on(part, completed, answers, sections, moved_past):
     """✨ What a part of a section is shut by until the participant reaches it from that section, as a `WaitingOn`, or
     None once it is reached. The original prototype opens its Strengths assessment only from Section 1, once its
-    passages are read (ticket 41b). A part whose section has no link to it opens with that section; one whose section
-    is outside the track, such as the offline track's Strengths assessment without Section 1, by its own requirements
-    alone."""
+    passages are read (ticket 41b). A part whose section has no signpost to it opens with that section; one whose
+    section is outside the track, such as the offline track's Strengths assessment without Section 1, by its own
+    requirements alone."""
     parent = next((section for section in sections if section["id"] == part.get("part_of")), None)
     if parent is None:
         return None
     if is_locked(parent, completed, answers):
         return WaitingOn(parent, None)
-    link = next(
-        (block for block in parent["blocks"] if block["type"] == "section_link" and block["section"] == part["id"]),
+    signpost = next(
+        (block for block in parent["blocks"] if block["type"] == "section_signpost" and block["section"] == part["id"]),
         None,
     )
-    if link is None:
+    if signpost is None:
         return None
     reached = page_reached(parent, moved_past, answers, sections)
     blocks, all_open = open_blocks(parent, answers, sections, up_to_page=reached)
-    if link in blocks:
+    if signpost in blocks:
         return None
     return WaitingOn(parent, None if all_open else blocks[-1])
 

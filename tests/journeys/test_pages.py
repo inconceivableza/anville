@@ -215,9 +215,9 @@ def test_going_on_past_a_confirmed_reading_is_allowed(signed_in_client, load_pat
 
 
 @pytest.mark.django_db
-def test_going_on_past_a_link_still_holding_what_follows_is_refused(signed_in_client, load_pathway):  # noqa: F811
+def test_going_on_past_a_signpost_still_holding_what_follows_is_refused(signed_in_client, load_pathway):  # noqa: F811
     """✨ Held until the linked section's gate passes, as an unconfirmed reading holds."""
-    held = {"id": "to-calling", "type": "section_link", "section": "calling", "holds_what_follows": True}
+    held = {"id": "to-calling", "type": "section_signpost", "section": "calling", "holds_what_follows": True}
     load_pathway(paged_onboarding(second_page=[held]))
     through_to(signed_in_client, 2)
 
@@ -329,16 +329,16 @@ def test_a_page_whose_coach_checklist_holds_a_coach_kept_goes_on_with_continue(
 
 
 @pytest.mark.django_db
-def test_a_link_holding_the_participant_again_leads_them_back_to_its_own_page(
+def test_a_signpost_holding_the_participant_again_leads_them_back_to_its_own_page(
     signed_in_client, load_pathway  # noqa: F811
 ):
-    """✨ Calling opens with a link held until onboarding's gate passes. Gone on past it, then onboarding's answer
-    taken away: the page after the link is shut again, so its address leads to the link's page rather than to a page
-    with nothing on it and no way on."""
+    """✨ Calling opens with a signpost holding what follows until onboarding's gate passes. Gone on past it, then
+    onboarding's answer taken away: the page after the signpost is shut again, so its address leads to the signpost's
+    page rather than to a page with nothing on it and no way on."""
     document = paged_onboarding()
     calling = document["content"]["sections"][1]
     calling["blocks"] = [
-        {"id": "to-onboarding", "type": "section_link", "section": "onboarding", "holds_what_follows": True},
+        {"id": "to-onboarding", "type": "section_signpost", "section": "onboarding", "holds_what_follows": True},
         {"id": "to-statement", "type": "page_break"},
         *calling["blocks"],
     ]
@@ -354,11 +354,12 @@ def test_a_link_holding_the_participant_again_leads_them_back_to_its_own_page(
 
 
 def calling_held_over_three_pages():
-    """✨ Calling opens with a link held until onboarding's gate passes, then its statement, then a last page."""
+    """✨ Calling opens with a signpost holding what follows until onboarding's gate passes, then its statement, then a
+    last page."""
     document = paged_onboarding()
     calling = document["content"]["sections"][1]
     calling["blocks"] = [
-        {"id": "to-onboarding", "type": "section_link", "section": "onboarding", "holds_what_follows": True},
+        {"id": "to-onboarding", "type": "section_signpost", "section": "onboarding", "holds_what_follows": True},
         {"id": "to-statement", "type": "page_break"},
         *calling["blocks"],
         {"id": "to-close", "type": "page_break"},
@@ -377,7 +378,7 @@ def into_calling_page_2(client):
 
 
 @pytest.mark.django_db
-def test_going_on_past_a_page_behind_a_link_holding_the_participant_again_is_refused(
+def test_going_on_past_a_page_behind_a_signpost_holding_the_participant_again_is_refused(
     signed_in_client, load_pathway  # noqa: F811
 ):
     load_pathway(calling_held_over_three_pages())
@@ -391,7 +392,7 @@ def test_going_on_past_a_page_behind_a_link_holding_the_participant_again_is_ref
 
 
 @pytest.mark.django_db
-def test_completing_a_section_a_link_holds_again_leads_back_to_the_links_page(
+def test_completing_a_section_a_signpost_holds_again_leads_back_to_the_signposts_page(
     signed_in_client, load_pathway  # noqa: F811
 ):
     """✨ Though the last page had been reached and the section's own gate passes."""
@@ -498,12 +499,12 @@ def calling_beside_part_way_onboarding():
     document = paged_onboarding()
     calling = document["content"]["sections"][1]
     calling["requires"] = []
-    calling["blocks"].insert(0, {"id": "to-onboarding", "type": "section_link", "section": "onboarding"})
+    calling["blocks"].insert(0, {"id": "to-onboarding", "type": "section_signpost", "section": "onboarding"})
     return document
 
 
 @pytest.mark.django_db
-def test_a_section_link_leads_to_the_page_reached_of_the_section_it_names(
+def test_a_section_signpost_leads_to_the_page_reached_of_the_section_it_names(
     signed_in_client, load_pathway  # noqa: F811
 ):
     load_pathway(calling_beside_part_way_onboarding())

@@ -1,8 +1,8 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
-"""✨ A comparison link (ticket 67a): a card for the way to the comparison, saying where it stands, whose button is the
-results page's "Compare with how others see you →", warning before answer collection freezes as that one does (ADR
+"""✨ A comparison signpost (ticket 67a): a card for the way to the comparison, saying where it stands, whose button is
+the results page's "Compare with how others see you →", warning before answer collection freezes as that one does (ADR
 0017). "Viewed" is pressing it with at least the minimum in, and is kept once withdrawals unfreeze collection."""
 
 import re
@@ -32,7 +32,7 @@ def with_the_card():
     """✨ The observed pathway with the card in the calling section, which opens with onboarding, as the sort's does."""
     document = observed_pathway()
     document["content"]["sections"][1]["blocks"].append(
-        {"id": CARD, "type": "comparison_link", "sort": SORT, "title": "How others see you"}
+        {"id": CARD, "type": "comparison_signpost", "sort": SORT, "title": "How others see you"}
     )
     return document
 

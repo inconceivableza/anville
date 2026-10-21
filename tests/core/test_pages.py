@@ -12,7 +12,7 @@ from engine.document import Problem, checklist, unmet, validate
 from engine.document.blocks import page_of, pages_of
 from engine.document.gates import clauses_of
 from engine.hub import hub_for, open_blocks, page_reached
-from tests.core.test_hub import STRENGTHS, link, long_text, prose, reading, section
+from tests.core.test_hub import STRENGTHS, long_text, prose, reading, section, signpost
 from tests.documents import pathway_document
 
 
@@ -104,12 +104,12 @@ def test_the_hub_leads_to_the_first_page_of_a_section_nobody_has_moved_past_any_
     assert state.page == 1
 
 
-def test_the_hub_leads_back_to_the_page_of_a_link_holding_the_participant_again():
-    """✨ Gone on past a held link while its section's gate passed, then that gate failed again: the pages after
-    the link are shut once more, so the hub leads to the link's own page, not to a page with nothing on it."""
+def test_the_hub_leads_back_to_the_page_of_a_signpost_holding_the_participant_again():
+    """✨ Gone on past a holding signpost while its section's gate passed, then that gate failed again: the pages after
+    the signpost are shut once more, so the hub leads to the signpost's own page, not to a page with nothing on it."""
     gifts = section(
         "gifts",
-        blocks=[link("to-strengths", "strengths", holds_what_follows=True), page_break("to-2"), long_text("a")],
+        blocks=[signpost("to-strengths", "strengths", holds_what_follows=True), page_break("to-2"), long_text("a")],
     )
 
     [state, _] = hub_for([gifts, STRENGTHS], {}, completed=[], moved_past={"gifts": {1}}).sections

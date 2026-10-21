@@ -566,7 +566,7 @@ def test_section_1s_reflection_box_carries_the_prototypes_ghost_text(participant
 
 
 @pytest.mark.django_db
-def test_the_link_in_section_1_shows_how_far_the_strengths_assessment_has_got(participant):
+def test_the_signpost_in_section_1_shows_how_far_the_strengths_assessment_has_got(participant):
     client = through_to_section_1s_activity(participant)
     submit_the_sort(client)
 

@@ -240,8 +240,8 @@ class BlockType(NamedTuple):
         return self.captures is not None
 
 
-# ✨ Never remove or rename an entry while any stored pathway version uses it: versions are never edited, so every
-# response pinned to one would break (spec, The pathway document and versions).
+# ✨ Never remove an entry while any stored pathway version uses it: versions are never edited, so every response
+# pinned to one would break (spec, The pathway document and versions). A renamed one goes in `RENAMED_BLOCK_TYPES`.
 BLOCK_TYPES = {
     block_type.name: block_type
     for block_type in [
@@ -286,13 +286,27 @@ BLOCK_TYPES = {
         BlockType("sort_results"),
         # ✨ The way to its `sort`'s comparison, saying where it stands (`comparison_status`), once there is a result
         # (ticket 67a).
-        BlockType("comparison_link", text_fields=("title",)),
-        BlockType("section_link", text_fields=("body", "button_label")),
+        BlockType("comparison_signpost", text_fields=("title",)),
+        BlockType("section_signpost", text_fields=("body", "button_label")),
         BlockType("download", text_fields=("body", "button_label")),
         # ✨ Never shown: it splits its section into pages (`pages_of`).
         BlockType("page_break"),
     ]
 }
+
+# ✨ Block types renamed since a stored pathway version used them, old name to new (ticket 75). A stored version keeps
+# its old names, since it is never edited, and is read under the new ones (`with_current_names`); a document being
+# loaded may use only the new.
+RENAMED_BLOCK_TYPES = {"section_link": "section_signpost", "comparison_link": "comparison_signpost"}
+
+
+def with_current_names(document):
+    """✨ A stored document with each block under a renamed type given its new name (`RENAMED_BLOCK_TYPES`), as the
+    engine reads every stored pathway version. The document is changed in place and returned."""
+    for section in document.get("content", {}).get("sections", []):
+        for block in section.get("blocks", []):
+            block["type"] = RENAMED_BLOCK_TYPES.get(block.get("type"), block.get("type"))
+    return document
 
 
 # ✨ Authored text any kind of block may carry: the time its activity takes, for a section with several.
@@ -316,11 +330,11 @@ def authored_text(block, role):
     return text
 
 
-def link_shown(block, text, linked_section, is_complete, role):
-    """✨ A section link's wording and where its button leads, as `(text, sort)`. Once the linked section is complete, a
-    link with `finished` wording shows it in place of its own body and button label, and `sort` is the identifier of
-    the sort in that section, whose results the button then leads to, or None to lead to the section as before
-    (ticket 61). Otherwise `text` is the link's own and `sort` is None."""
+def signpost_shown(block, text, linked_section, is_complete, role):
+    """✨ A section signpost's wording and where its button leads, as `(text, sort)`. Once the linked section is
+    complete, a signpost with `finished` wording shows it in place of its own body and button label, and `sort` is the
+    identifier of the sort in that section, whose results the button then leads to, or None to lead to the section as
+    before (ticket 61). Otherwise `text` is the signpost's own and `sort` is None."""
     finished = block.get("finished")
     if not (finished and is_complete):
         return text, None
@@ -333,8 +347,8 @@ def link_shown(block, text, linked_section, is_complete, role):
     return text, sort
 
 
-# ✨ Where the way to the comparison stands, as a comparison link says it: engine wording, as the section statuses are,
-# since the hub and the Five trusted voices card are to say the same (spec, Blocks).
+# ✨ Where the way to the comparison stands, as a comparison signpost says it: engine wording, as the section statuses
+# are, since the hub and the Five trusted voices card are to say the same (spec, Blocks).
 COMPARISON_STATUSES = {
     "waiting": "Waiting for answers ({answered} of {minimum})",
     "ready": "Ready to view",

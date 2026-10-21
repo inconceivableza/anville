@@ -502,13 +502,13 @@ def linking_to_the_sort():
     """✨ The sort pathway, with the calling section leading to the Strengths assessment before its statement."""
     document = sort_pathway()
     document["content"]["sections"][1]["blocks"].insert(
-        0, {"id": "to-strengths", "type": "section_link", "section": "strengths", "body": "Sort your strengths."}
+        0, {"id": "to-strengths", "type": "section_signpost", "section": "strengths", "body": "Sort your strengths."}
     )
     return document
 
 
 @pytest.mark.django_db
-def test_a_link_shows_the_section_it_leads_to_with_that_sections_status(open_calling):
+def test_a_signpost_shows_the_section_it_leads_to_with_that_sections_status(open_calling):
     page = open_calling(linking_to_the_sort()).get(CALLING).content.decode()
 
     assert STRENGTHS_LINK in page
@@ -529,7 +529,7 @@ def test_the_links_status_follows_the_participant_through_the_other_section(open
 
 
 @pytest.mark.django_db
-def test_a_link_to_a_locked_section_names_it_but_does_not_lead_there(open_calling):
+def test_a_signpost_to_a_locked_section_names_it_but_does_not_lead_there(open_calling):
     document = linking_to_the_sort()
     document["content"]["sections"][2]["requires"] = ["calling"]
 
@@ -541,7 +541,7 @@ def test_a_link_to_a_locked_section_names_it_but_does_not_lead_there(open_callin
 
 
 @pytest.mark.django_db
-def test_a_link_takes_no_answer(open_calling):
+def test_a_signpost_takes_no_answer(open_calling):
     client = open_calling(linking_to_the_sort())
 
     client.post("/answers/to-strengths/", {"value": "true", "version": _version_id()})
@@ -557,7 +557,7 @@ def holding_the_statement_for_the_sort():
 
 
 @pytest.mark.django_db
-def test_a_link_can_hold_the_rest_of_its_section_until_the_linked_sections_gate_passes(open_calling):
+def test_a_signpost_can_hold_the_rest_of_its_section_until_the_linked_sections_gate_passes(open_calling):
     client = open_calling(holding_the_statement_for_the_sort())
 
     page = client.get(CALLING).content.decode()
@@ -570,7 +570,7 @@ def test_a_link_can_hold_the_rest_of_its_section_until_the_linked_sections_gate_
 
 
 @pytest.mark.django_db
-def test_a_block_held_by_a_link_cannot_be_answered_either(open_calling):
+def test_a_block_held_by_a_signpost_cannot_be_answered_either(open_calling):
     """✨ Held back from the page and from the answer endpoint alike, as beneath an unconfirmed reading."""
     client = open_calling(holding_the_statement_for_the_sort())
 
@@ -587,7 +587,7 @@ def with_a_button(label="Open Strengths Assessment →"):
 
 
 @pytest.mark.django_db
-def test_a_link_with_a_button_label_leads_there_by_that_button(open_calling):
+def test_a_signpost_with_a_button_label_leads_there_by_that_button(open_calling):
     page = open_calling(with_a_button()).get(CALLING).content.decode()
 
     assert re.search(r'href="/sections/strengths/"[^>]*>\s*Open Strengths Assessment →\s*</a>', page)
@@ -604,7 +604,7 @@ def test_a_button_label_is_escaped_like_any_authored_text(open_calling):
 
 
 @pytest.mark.django_db
-def test_a_link_to_a_locked_section_offers_no_button(open_calling):
+def test_a_signpost_to_a_locked_section_offers_no_button(open_calling):
     document = with_a_button()
     document["content"]["sections"][2]["requires"] = ["calling"]
 

@@ -2136,9 +2136,9 @@ body:not(.framed) .question-card > p + form {
   }
 }
 
-/* A link to another section, with that section's status (the prototype's assessment link card) */
+/* A signpost to another section, with that section's status (the prototype's assessment link card) */
 
-.section-link {
+.signpost {
   background: var(--gold-pale);
   border: 1px solid var(--gold-light);
   border-radius: var(--radius);
@@ -2150,7 +2150,7 @@ body:not(.framed) .question-card > p + form {
   color: var(--ink-light);
 }
 
-.section-link-title {
+.signpost-title {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
   font-weight: 600;
@@ -2159,7 +2159,7 @@ body:not(.framed) .question-card > p + form {
 }
 
 /* ✨ The linked section's status, drawn as the hub's tag draws it (ticket 53b). */
-.section-link .status-chip {
+.signpost .status-chip {
   display: inline-block;
   margin-top: 8px;
   font-family: var(--font-mono);

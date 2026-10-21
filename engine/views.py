@@ -40,11 +40,11 @@ from engine.document.blocks import (
     coach_brief,
     comparison_status,
     landing_of,
-    link_shown,
     page_count,
     page_of,
     pages_of,
     section_of,
+    signpost_shown,
     translation_shown,
 )
 from engine.document.coach import (
@@ -204,13 +204,13 @@ def hub(request):
 
 
 def _hub_comparison(state):
-    """✨ The document's comparison link as the hub shows it, in a row and beside Manage on the Five trusted voices card
-    (ticket 67b): its status and press as its section's card has them (`_comparison_link_shown`), with its title, the
-    section it is in and the part of that section holding its sort, after which its row is listed. None before there
-    is a result, and for a pathway without one."""
+    """✨ The document's comparison signpost as the hub shows it, in a row and beside Manage on the Five trusted voices
+    card (ticket 67b): its status and press as its section's card has them (`_comparison_signpost_shown`), with its
+    title, the section it is in and the part of that section holding its sort, after which its row is listed. None
+    before there is a result, and for a pathway without one."""
     document = state.version.document
     for block in blocks_of(document):
-        shown = _comparison_link_shown(state, block)
+        shown = _comparison_signpost_shown(state, block)
         if shown is not None:
             return {
                 **shown,
@@ -983,7 +983,7 @@ def visit_comparison(request, block_id):
     how many of the people invited have answered, and that once they look no more answers are added. Its button
     confirms, which freezes collection, then goes on as before (ticket 55). Below the minimum nothing is asked.
 
-    A press with the minimum in, confirmed or with collection already frozen, is also the view a comparison link's
+    A press with the minimum in, confirmed or with collection already frozen, is also the view a comparison signpost's
     "Viewed" reads (ticket 67a), kept once withdrawals unfreeze collection."""
     state, result, section = _own_result(request.user, block_id)
     if result is None:
@@ -2260,7 +2260,7 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
                     _frozen(state.response),
                     drawn=_sort_results_drawn(state, block),
                     demo=demo,
-                    comparison=_comparison_link_shown(state, block),
+                    comparison=_comparison_signpost_shown(state, block),
                     rows_back=rows_back.get(block["id"]),
                 )
                 for block in blocks
@@ -2337,10 +2337,10 @@ def _sort_results_drawn(state, block):
     return _results_drawn(state, result, block["sort"])
 
 
-def _comparison_link_shown(state, block):
-    """✨ For a `comparison_link` block, its sort and where the way to that sort's comparison stands, as
+def _comparison_signpost_shown(state, block):
+    """✨ For a `comparison_signpost` block, its sort and where the way to that sort's comparison stands, as
     `comparison_status` words it, once there is a result; None before, and for any other block (ticket 67a)."""
-    if block["type"] != "comparison_link":
+    if block["type"] != "comparison_signpost":
         return None
     sort = block["sort"]
     if not Result.objects.filter(response=state.response, block_id=sort).exists():
@@ -2365,12 +2365,12 @@ def _block_for_participant(
     rows_back=None,
 ):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
-    identifier; a link to a section outside the participant's track has no state and shows nothing. `issued` is a
+    identifier; a signpost to a section outside the participant's track has no state and shows nothing. `issued` is a
     link just issued, a coach's or an observer's. While answer collection is `frozen`, a contact list says why it adds
     nobody (ticket 55); otherwise it offers "Add another person" until it shows the most rows it may (ticket 70). Its
     rows come back from a press without JavaScript as `rows_back` gives them (fix-1). `drawn` is a `sort_results`
-    block's results, from `_sort_results_drawn`, and `comparison` a `comparison_link`'s status, from
-    `_comparison_link_shown`. A sort not yet in starts from `demo`, a demo profile, with its guide beside it
+    block's results, from `_sort_results_drawn`, and `comparison` a `comparison_signpost`'s status, from
+    `_comparison_signpost_shown`. A sort not yet in starts from `demo`, a demo profile, with its guide beside it
     (fix-23)."""
     rows = _contact_rows(block, answers, issued, **(rows_back or {})) if block["type"] == "contact_list" else None
     widget = BLOCK_TYPES[block["type"]].widget
@@ -2385,11 +2385,11 @@ def _block_for_participant(
         for passage, shown in zip(block["passages"], text["passages"]):
             shown["translation"] = translation_shown(document, passage)
     is_checklist = block["type"] == "coach_checklist"
-    link = states.get(block["section"]) if block["type"] == "section_link" else None
+    link = states.get(block["section"]) if block["type"] == "section_signpost" else None
     results = None
     if link is not None:
         linked = section_by_id(document, block["section"])
-        text, sort = link_shown(block, text, linked, link.status == COMPLETE, "participant")
+        text, sort = signpost_shown(block, text, linked, link.status == COMPLETE, "participant")
         results = reverse("results", args=[sort]) if sort else None
     return {
         "rows": rows,
@@ -2408,7 +2408,7 @@ def _block_for_participant(
         "widget": shown_widget,
         "demo": demo,
         "link": link,
-        "results": results,  # ✨ where a section link's button leads instead, once its section is complete (ticket 61)
+        "results": results,  # ✨ where a section signpost's button leads instead, once its section is done (ticket 61)
         "frozen": RESULTS_SEEN if frozen and block["type"] == "contact_list" else None,
         "drawn": drawn,
         "comparison": comparison,

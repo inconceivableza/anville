@@ -188,8 +188,8 @@ def test_a_second_reading_holds_back_what_follows_it_in_turn():
     assert all_of_it is False
 
 
-def link(id, to, **fields):
-    return {"id": id, "type": "section_link", "section": to, **fields}
+def signpost(id, to, **fields):
+    return {"id": id, "type": "section_signpost", "section": to, **fields}
 
 
 def gated_on(section, block_id):
@@ -199,8 +199,8 @@ def gated_on(section, block_id):
 STRENGTHS = gated_on(section("strengths", blocks=[long_text("sort")]), "sort")
 
 
-def test_a_link_that_holds_what_follows_holds_it_until_the_linked_sections_gate_passes():
-    held = link("to-strengths", "strengths", holds_what_follows=True)
+def test_a_signpost_that_holds_what_follows_holds_it_until_the_linked_sections_gate_passes():
+    held = signpost("to-strengths", "strengths", holds_what_follows=True)
     gifts = section("gifts", blocks=[prose("intro"), held, long_text("a")])
 
     blocks, all_of_it = open_blocks(gifts, {}, [gifts, STRENGTHS])
@@ -211,7 +211,7 @@ def test_a_link_that_holds_what_follows_holds_it_until_the_linked_sections_gate_
 
 def test_the_linked_sections_gate_passing_opens_the_rest_without_that_section_being_completed():
     """✨ As in the prototype, the reflection opens once the sort is in, not once its section is marked complete."""
-    gifts = section("gifts", blocks=[link("to-strengths", "strengths", holds_what_follows=True), long_text("a")])
+    gifts = section("gifts", blocks=[signpost("to-strengths", "strengths", holds_what_follows=True), long_text("a")])
 
     blocks, all_of_it = open_blocks(gifts, {"sort": "Sorted"}, [gifts, STRENGTHS])
 
@@ -219,10 +219,10 @@ def test_the_linked_sections_gate_passing_opens_the_rest_without_that_section_be
     assert all_of_it is True
 
 
-def test_a_held_link_to_a_section_with_no_gate_holds_nothing_back():
+def test_a_holding_signpost_to_a_section_with_no_gate_holds_nothing_back():
     """✨ A section with no gate may always be completed, so there is nothing to wait for."""
     ungated = section("strengths", blocks=[long_text("sort")])
-    gifts = section("gifts", blocks=[link("to-strengths", "strengths", holds_what_follows=True), long_text("a")])
+    gifts = section("gifts", blocks=[signpost("to-strengths", "strengths", holds_what_follows=True), long_text("a")])
 
     blocks, all_of_it = open_blocks(gifts, {}, [gifts, ungated])
 
@@ -230,8 +230,8 @@ def test_a_held_link_to_a_section_with_no_gate_holds_nothing_back():
     assert all_of_it is True
 
 
-def test_a_link_holds_nothing_back_unless_its_author_asks_it_to():
-    gifts = section("gifts", blocks=[link("to-strengths", "strengths"), long_text("a")])
+def test_a_signpost_holds_nothing_back_unless_its_author_asks_it_to():
+    gifts = section("gifts", blocks=[signpost("to-strengths", "strengths"), long_text("a")])
 
     blocks, all_of_it = open_blocks(gifts, {}, [gifts, STRENGTHS])
 
@@ -245,16 +245,16 @@ def test_a_link_holds_nothing_back_unless_its_author_asks_it_to():
 def test_a_part_of_a_section_is_complete_once_its_gate_passes_with_nothing_stored():
     """✨ The Strengths assessment within Section 1 (ticket 41b): it has no "Mark complete" of its own."""
     part = {**STRENGTHS, "part_of": "gifts", "requires": []}
-    sections = [section("gifts", blocks=[link("to-strengths", "strengths")]), part]
+    sections = [section("gifts", blocks=[signpost("to-strengths", "strengths")]), part]
 
     assert statuses(sections)[1] == NOT_STARTED
     assert statuses(sections, answers={"sort": "Sorted"}, completed=[])[1] == COMPLETE
 
 
-def test_a_part_is_locked_until_the_participant_reaches_its_sections_link_to_it():
+def test_a_part_is_locked_until_the_participant_reaches_its_sections_signpost_to_it():
     """✨ As the prototype opens the Strengths assessment only from Section 1, once its passages are read (ticket 41b)."""
     part = {**STRENGTHS, "part_of": "gifts"}
-    gifts = section("gifts", blocks=[reading("read"), link("to-strengths", "strengths"), long_text("a")])
+    gifts = section("gifts", blocks=[reading("read"), signpost("to-strengths", "strengths"), long_text("a")])
 
     assert statuses([gifts, part])[1] == LOCKED
     assert statuses([gifts, part], answers={"read": True})[1] == NOT_STARTED

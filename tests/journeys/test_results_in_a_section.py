@@ -32,7 +32,7 @@ def with_results_in_calling(document):
     sections = {section["id"]: section for section in document["content"]["sections"]}
     sections[STRENGTHS]["part_of"] = "calling"
     sections["calling"]["blocks"][:0] = [
-        {"id": "to-strengths", "type": "section_link", "section": STRENGTHS, "holds_what_follows": True},
+        {"id": "to-strengths", "type": "section_signpost", "section": STRENGTHS, "holds_what_follows": True},
         {"id": "strengths-results", "type": "sort_results", "sort": SORT},
     ]
     return document

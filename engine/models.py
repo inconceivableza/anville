@@ -11,6 +11,7 @@ from django.db.models import F, Func, Value
 from django.utils import timezone
 
 from access.consent import withdrawn_participants
+from engine.document.blocks import with_current_names
 from engine.document.gates import (
     coach_answer_key,
     comparison_viewed_key,
@@ -25,10 +26,19 @@ class CollectionFrozen(Exception):
     """✨ An observer assessment sent while the participant's answer collection is frozen (ticket 55)."""
 
 
+class StoredDocumentField(models.JSONField):
+    """✨ A pathway version's document, read with any renamed block type under its new name (`with_current_names`,
+    ticket 75). Only what is read changes: the stored row keeps the names it was loaded with."""
+
+    def from_db_value(self, value, expression, connection):
+        document = super().from_db_value(value, expression, connection)
+        return with_current_names(document) if isinstance(document, dict) else document
+
+
 class PathwayVersion(models.Model):
     """✨ An immutable snapshot of a pathway document. The database refuses any update to a stored row."""
 
-    document = models.JSONField()
+    document = StoredDocumentField()
     content_hash = models.CharField(max_length=64, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

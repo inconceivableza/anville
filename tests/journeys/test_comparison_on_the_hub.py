@@ -1,7 +1,7 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
-"""✨ The comparison link on the hub (ticket 67b): a row within its section, after the part holding its sort, and a
+"""✨ The comparison signpost on the hub (ticket 67b): a row within its section, after the part holding its sort, and a
 button beside Manage on the Five trusted voices card. Each shows the same status as the section's card and makes the
 same press, through the same freeze warning (ADR 0017)."""
 
@@ -13,7 +13,7 @@ from engine.document.blocks import COMPARISON_STATUSES
 from engine.models import Response
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.test_coach_checklist import text
-from tests.journeys.test_comparison_link import CARD, card
+from tests.journeys.test_comparison_signpost import CARD, card
 from tests.journeys.test_contact_list import with_trusted_voices
 from tests.journeys.test_hub import (  # noqa: F401  (signed_in_client is a fixture, used by name)
     PEOPLE,
@@ -30,12 +30,12 @@ ACTION = re.compile(r'<form[^>]* method="post" action="([^"]+)"')
 
 def with_the_card_on_the_hub():
     """✨ The sort pathway with Five trusted voices beside the hub, the Strengths assessment a part of the calling
-    section, and the comparison link in that section, as Section 1 has them in *Whatever You Do*."""
+    section, and the comparison signpost in that section, as Section 1 has them in *Whatever You Do*."""
     document = with_trusted_voices(sort_pathway())
     sections = {section["id"]: section for section in document["content"]["sections"]}
     sections[STRENGTHS]["part_of"] = "calling"
     sections["calling"]["blocks"].append(
-        {"id": CARD, "type": "comparison_link", "sort": SORT, "title": "How others see you"}
+        {"id": CARD, "type": "comparison_signpost", "sort": SORT, "title": "How others see you"}
     )
     return document
 

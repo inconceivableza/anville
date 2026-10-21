@@ -99,13 +99,13 @@ def test_an_agreement_scale_may_be_fixed_once_its_section_is_complete_by_a_yes_o
     assert problem.path == "/content/sections/0/blocks/1/fixed_once_complete"
 
 
-def test_a_section_link_may_carry_a_button_label_and_hold_what_follows_by_a_yes_or_no():
+def test_a_section_signpost_may_carry_a_button_label_and_hold_what_follows_by_a_yes_or_no():
     document = pathway_document()
     document["content"]["sections"][1]["blocks"].insert(
         0,
         {
             "id": "to-onboarding",
-            "type": "section_link",
+            "type": "section_signpost",
             "section": "onboarding",
             "button_label": "Open Strengths Assessment →",
             "holds_what_follows": True,
@@ -118,12 +118,12 @@ def test_a_section_link_may_carry_a_button_label_and_hold_what_follows_by_a_yes_
     assert problem.path == "/content/sections/1/blocks/0/holds_what_follows"
 
 
-def test_a_section_links_finished_wording_needs_a_button_label_and_its_text_is_text():
+def test_a_section_signposts_finished_wording_needs_a_button_label_and_its_text_is_text():
     """✨ The wording it shows once the linked section is complete (ticket 61)."""
     document = pathway_document()
     finished = {"body": "You've completed the assessment.", "button_label": "View my results →"}
-    link = {"id": "to-onboarding", "type": "section_link", "section": "onboarding", "finished": finished}
-    document["content"]["sections"][1]["blocks"].insert(0, link)
+    signpost = {"id": "to-onboarding", "type": "section_signpost", "section": "onboarding", "finished": finished}
+    document["content"]["sections"][1]["blocks"].insert(0, signpost)
     assert validate(document) == []
 
     finished["button_label"] = 5

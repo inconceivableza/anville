@@ -36,7 +36,7 @@ def lint(document):
         *_unseen_once_only_sections(document),
         *_photos_of_missing_sections(document, section_ids),
         *_unknown_linked_sections(document, section_ids),
-        *_links_holding_their_own_section(document),
+        *_signposts_holding_their_own_section(document),
         *_results_of_no_sort(document),
         *_unwaitable_blocks(document),
         *_empty_pages(document),
@@ -180,7 +180,7 @@ def _photos_of_missing_sections(document, section_ids):
 def _unknown_linked_sections(document, section_ids):
     for s, section in enumerate(document["content"]["sections"]):
         for b, block in enumerate(section["blocks"]):
-            if block["type"] == "section_link" and block["section"] not in section_ids:
+            if block["type"] == "section_signpost" and block["section"] not in section_ids:
                 yield Problem(
                     f"/content/sections/{s}/blocks/{b}/section",
                     f"There is no section '{block['section']}' in this pathway.",
@@ -188,12 +188,12 @@ def _unknown_linked_sections(document, section_ids):
 
 
 def _results_of_no_sort(document):
-    """✨ A `sort_results` block shows the results of the sort it names (ticket 57), and a `comparison_link` leads to its
-    comparison (ticket 67a), so each must name one."""
+    """✨ A `sort_results` block shows the results of the sort it names (ticket 57), and a `comparison_signpost` leads to
+    its comparison (ticket 67a), so each must name one."""
     types = block_types_by_id(document)
     for s, section in enumerate(document["content"]["sections"]):
         for b, block in enumerate(section["blocks"]):
-            if block["type"] in ("sort_results", "comparison_link"):
+            if block["type"] in ("sort_results", "comparison_signpost"):
                 yield from _no_such_sort(types, block["sort"], f"/content/sections/{s}/blocks/{b}/sort")
 
 
@@ -219,20 +219,20 @@ def _no_such_sort(types, sort, path):
     return [Problem(path, f"There is no sort '{sort}' in this pathway.")]
 
 
-def _links_holding_their_own_section(document):
-    """✨ A link holding the rest of its own section until that section's gate passes: if the gate needs a block
-    the link holds back, the section can never be finished.
+def _signposts_holding_their_own_section(document):
+    """✨ A section signpost holding the rest of its own section until that section's gate passes: if the gate needs a
+    block the signpost holds back, the section can never be finished.
 
     Two sections each holding on the other can shut both the same way; that takes a search of the whole
-    pathway and is left until a pathway needs more than one held link (noted in ticket 09).
+    pathway and is left until a pathway needs more than one holding signpost (noted in ticket 09).
     """
     for s, section in enumerate(document["content"]["sections"]):
         for b, block in enumerate(section["blocks"]):
-            holds = block["type"] == "section_link" and block.get("holds_what_follows")
+            holds = block["type"] == "section_signpost" and block.get("holds_what_follows")
             if holds and block["section"] == section["id"]:
                 yield Problem(
                     f"/content/sections/{s}/blocks/{b}/holds_what_follows",
-                    "A link cannot hold back the rest of its own section: that section could never be finished.",
+                    "A signpost cannot hold back the rest of its own section: that section could never be finished.",
                 )
 
 

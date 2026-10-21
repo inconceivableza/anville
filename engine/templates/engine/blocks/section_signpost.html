@@ -4,13 +4,13 @@
   ✨ A way to another section, shown as the hub shows it: its title, then its status. A locked section is named
   but not linked, as on the hub. A section outside the participant's track has no state, so nothing is shown.
   With an authored button label the button is the way there, as in the prototype, and the title is plain. Once the
-  section is complete, a link with finished wording shows it, and its button leads to the results of the section's
+  section is complete, a signpost with finished wording shows it, and its button leads to the results of the section's
   sort, if it has one, rather than back to its start (ticket 61).
 {% endcomment %}
 {% load section_pages %}
 {% if block.link %}
-  <div id="block-{{ block.id }}" class="section-link">
-    <p class="section-link-title">
+  <div id="block-{{ block.id }}" class="signpost">
+    <p class="signpost-title">
       {% if block.link.is_locked or block.text.button_label %}
         {{ block.link.title }}
       {% else %}

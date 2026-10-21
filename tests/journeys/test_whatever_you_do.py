@@ -459,7 +459,7 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     a_download_in_place_of_each_of_sections_2_to_4(expected)
     no_relationship_question(expected)
 
-    assert without_the_comparison_link(
+    assert without_the_comparison_signpost(
         without_the_next_step_and_photos(
             without_numbers(
                 without_the_tie_break(without_the_coach_step(without_estimates(without_the_wizard(the_pathway()))))
@@ -468,12 +468,12 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     ) == (without_numbers(expected))
 
 
-def without_the_comparison_link(document):
+def without_the_comparison_signpost(document):
     """✨ The way to the comparison under Section 1's Strengths assessment card is this pathway's alone (ticket 67a): the
     faithful port reaches the comparison from the results page only, as the original prototype does. Nor does the faithful
     port's reflection wait on the comparison (ticket 68)."""
     for section in document["content"]["sections"]:
-        section["blocks"] = [block for block in section["blocks"] if block["type"] != "comparison_link"]
+        section["blocks"] = [block for block in section["blocks"] if block["type"] != "comparison_signpost"]
         for block in section["blocks"]:
             block.pop("after_comparison", None)
     return document

@@ -66,7 +66,7 @@ def comparison_viewed_key(block_id):
 
 def comparison_viewed(answers, sort):
     """✨ Whether the participant has viewed a sort's comparison (ticket 67a), as the answers the gate reads hold it: the
-    one place both a block waiting on the comparison and a comparison link's "Viewed" read it."""
+    one place both a block waiting on the comparison and a comparison signpost's "Viewed" read it."""
     return has_content(answers.get(comparison_viewed_key(sort)))
 
 
