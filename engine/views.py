@@ -168,6 +168,7 @@ def hub(request):
     if wizard is not None:
         return redirect(wizard)
     hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    coach = _coach_of(state.response)
     return render(
         request,
         "engine/hub.html",
@@ -175,23 +176,39 @@ def hub(request):
             "title": text_for(state.version.document["title"], "participant"),
             "hub": hub,
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
-            "side_cards": _side_cards(state, hub),
+            "coach_wait": _coach_wait_panel(state, hub, coach),
+            "side_cards": _side_cards(state, hub, coach),
             "voices": _hub_voices(state, hub),
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
 
 
-def _side_cards(state, hub):
-    """✨ The hub's side cards, the coach's section's tagged with where the coach stands (ticket 51b)."""
-    document = state.version.document
-    coach = _coach_of(state.response)
+def _coach_section_of(document):
+    """✨ The identifier of the section holding the document's coach checklist, or None for a document without one."""
     checklists = [block["id"] for block in blocks_of(document) if block["type"] == "coach_checklist"]
-    coach_section = section_of(document, checklists[0])["id"] if checklists else None
+    return section_of(document, checklists[0])["id"] if checklists else None
+
+
+def _side_cards(state, hub, coach):
+    """✨ The hub's side cards, the coach's section's tagged with where the `coach` stands (ticket 51b)."""
+    coach_section = _coach_section_of(state.version.document)
     return [
         with_coach_answer(card, coach["answer"] if coach else None) if card.id == coach_section else card
         for card in hub.side_cards()
     ]
+
+
+def _coach_wait_panel(state, hub, coach):
+    """✨ What the hub's next-step panel says in place of "Nothing is waiting for you right now" while nothing is next
+    and a section waits on nothing but the coach's acceptance (ticket 65): {"heading", "sentence", "coach_page"}, by
+    the `coach`'s answer, or None otherwise, or with no coach page to lead to."""
+    wait = hub.coach_wait
+    coach_page = _coach_page_of(state.version.document, hub)
+    if hub.next_step is not None or wait is None or not wait.only or coach_page is None:
+        return None
+    wording = wait.panel(coach["answer"] if coach else None, coach["name"] if coach else "")
+    return {**wording._asdict(), "coach_page": coach_page}
 
 
 def _photo_of(document, section_id):

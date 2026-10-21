@@ -93,6 +93,11 @@ def checklist(section, answers, role="participant", page=None):
     return list(met.items())
 
 
+def clause_passes(clause, answers):
+    """✨ Whether one clause holds, as the hub asks of a section's opening conditions to tell which it waits on."""
+    return _passes(clause, answers)
+
+
 def _passes(clause, answers):
     return CLAUSES[clause["type"]](clause, answers.get(_reads(clause)))
 
