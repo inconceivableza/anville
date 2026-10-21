@@ -18,6 +18,8 @@
     </ol>
     <p class="pair-framework">{{ pair.framework }}</p>
     <h1 class="pair-question">{{ pair.question }}</h1>
+    {# ✨ A press refused without JavaScript comes back here, saying why (fix-2). #}
+    {% if refusal %}<p class="save-status" role="alert"><span class="save-refused">Not saved. {{ refusal }}</span></p>{% endif %}
     <form method="post" action="{% url 'tie_break' block_id %}{% if demo %}?{{ demo.query }}{% endif %}">
       {% csrf_token %}
       <input type="hidden" name="pair" value="{{ pair.place }}">

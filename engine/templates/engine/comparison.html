@@ -11,7 +11,8 @@
   <p class="back-to-hub"><a href="{% url 'results' block_id %}">← Back to results</a></p>
   <h1>How others experience you</h1>
 
-  {# ✨ First, so the participant meets the choice before reading on. #}
+  {# ✨ First, so the participant meets the choice before reading on. A tick refused without JavaScript says why above it, whether or not the box is still offered (fix-2). #}
+  {% if share_refusal %}<p class="save-status" role="alert"><span class="save-refused">Not saved. {{ share_refusal }}</span></p>{% endif %}
   {% if coach %}{% include "engine/coach_share.html" %}{% endif %}
 
   {% include "engine/comparison_body.html" %}

@@ -797,18 +797,26 @@ def tie_break(request, block_id):
         chosen = request.POST.get("chosen") or None
         if not 0 <= place < len(plan) or (chosen is not None and chosen not in plan[place]["constructs"]):
             refusal = "That is not one of this pair’s answers."
-            return render(request, "engine/save_status.html", {"refusal": refusal}, status=400)
+            # ✨ Without JavaScript, the next pair again, saying why (fix-2); with every pair answered, a page of its own.
+            left = len(result.tie_break_answers) < len(plan)
+            page = (lambda status: _pair_shown(request, state, result, block_id, plan, status, refusal)) if left else None
+            return _refused(request, refusal, status=400, page=page)
         # ✨ A pair already answered (a form sent twice, or from a stale tab) stores nothing; either way the next is shown.
         result.answer_pair(place, plan[place], chosen)
         _scores_shown_storing_reweighted(state.version.document, result)  # ✨ the last answer re-weights the result
         return _see_other(_with_demo_profile(request, reverse("tie_break", args=[block_id])))
-    place = len(result.tie_break_answers)
-    if place >= len(plan):
+    if len(result.tie_break_answers) >= len(plan):
         return redirect("results", block_id)
-    shown = pair_page(state.version.document, plan, place)
+    return _pair_shown(request, state, result, block_id, plan)
+
+
+def _pair_shown(request, state, result, block_id, plan, status=200, refusal=None):
+    """✨ The tie-break's next unanswered pair, with `refusal`, a press refused without JavaScript, said above it."""
+    shown = pair_page(state.version.document, plan, len(result.tie_break_answers))
     # ✨ Demo only (fix-23): after a demo profile's sort, its guide beside the pair.
     demo = _demo_prefill(request, state.version.document)
-    return render(request, "engine/tie_break.html", {"pair": shown, "block_id": block_id, "demo": demo})
+    context = {"pair": shown, "block_id": block_id, "demo": demo, "refusal": refusal}
+    return render(request, "engine/tie_break.html", context, status=status)
 
 
 def _pairs_left(document, result):
@@ -835,6 +843,12 @@ def comparison(request, block_id):
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
+    return _comparison_shown(request, state, result, section, block_id)
+
+
+def _comparison_shown(request, state, result, section, block_id, status=200, share_refusal=None):
+    """✨ The comparison page, from `_own_result`'s state, result and section, with `share_refusal`, a refused tick of the
+    coach's box sent without JavaScript, said above the box (fix-2)."""
     scores = _scores_shown_storing_reweighted(state.version.document, result)
     shown = _comparison_of(state.response, scores, state.answers[block_id])
     sort = next(block for block in blocks_of(state.response.version.document) if block["id"] == block_id)
@@ -844,8 +858,9 @@ def comparison(request, block_id):
         "coach": _coach_sharing(state.response, block_id),
         "brief": coach_brief(sort),
         "back": section["back"],
+        "share_refusal": share_refusal,
     }
-    return render(request, "engine/comparison.html", context)
+    return render(request, "engine/comparison.html", context, status=status)
 
 
 @login_required
@@ -857,15 +872,20 @@ def share_with_coach(request, block_id):
     is then kept on that link, so it goes with it (ADR 0011). Unticking withdraws it at once, whatever else holds.
 
     The box saves as it changes: with htmx, "Saved" and the line under it for the new state; without, the comparison
-    again, at the box."""
-    state, result, _ = _own_result(request.user, block_id)
+    again, at the box. A refusal without JavaScript is the comparison again, saying why (fix-2), or before there is a
+    result, and so no comparison, a page of its own."""
+    state, result, section = _own_result(request.user, block_id)
     if request.POST.get("share") != "on":
         Invitation.withdraw_results_from_coach(request.user)
     else:
         visited = result is not None and block_id in state.response.comparisons_visited
         if not (visited and Invitation.share_results_with_coach(state.response)):
             refusal = "Your coach can see this only once they have accepted and you have seen your comparison."
-            return render(request, "engine/save_status.html", {"refusal": refusal}, status=403)
+
+            def its_page(status):
+                return _comparison_shown(request, state, result, section, block_id, status, share_refusal=refusal)
+
+            return _refused(request, refusal, status=403, page=its_page if result is not None else None)
     if request.headers.get("HX-Request") == "true":
         return render(request, "engine/coach_share_saved.html", {"coach": _coach_sharing(state.response, block_id)})
     return _see_other(f"{reverse('comparison', args=[block_id])}#coach-share")
@@ -1015,30 +1035,37 @@ def retake(request, block_id):
             and _reopens(shown)
             and any(clause["block"] == block_id for clause in clauses_of(shown))
         ]
+
+    def this_page(status=200, refusal=None):
+        """✨ The page asking, with `refusal`, a choice refused without JavaScript, said above the choice (fix-2)."""
+        context = {
+            "block_id": block_id,
+            "clearing": result is not None,
+            "sort_page": sort_page,
+            "offer": offer,
+            "myself": MYSELF,
+            "reopened": [text_for(shown["title"], "participant") for shown in reopened],
+            "tie_break": bool(result and result.tie_break_answers),
+            "frozen": result is not None and response.collection_frozen_at is not None,
+            "coach_shown": result is not None and bool((_coach_of(response) or {}).get("shared")),
+            "refusal": refusal,
+        }
+        return render(request, "engine/retake.html", context, status=status)
+
     if request.method == "POST":
         profile = request.POST.get(scenario_loading.PROFILE_FIELD, MYSELF)
         answers = request.POST.get(scenario_loading.ANSWERS_FIELD) or None
         refusal = None if profile == MYSELF else scenario_loading.refusal(offer, profile, answers)
         if refusal is not None:
-            return render(request, "engine/save_status.html", {"refusal": refusal}, status=400)
+            # ✨ Without JavaScript, this page again, saying why, with nothing cleared (fix-2).
+            return _refused(request, refusal, status=400, page=lambda status: this_page(status, refusal))
         if result is not None:
             response.clear_sort(block_id, reopened=[shown["id"] for shown in reopened])
         if profile == MYSELF:
             return _see_other(sort_page)
         # ✨ Nothing stored: the sort starts from the profile, and the participant sends it themselves (fix-23).
         return _see_other(f"{sort_page}?{scenario_loading.demo_query(profile, answers)}")
-    context = {
-        "block_id": block_id,
-        "clearing": result is not None,
-        "sort_page": sort_page,
-        "offer": offer,
-        "myself": MYSELF,
-        "reopened": [text_for(shown["title"], "participant") for shown in reopened],
-        "tie_break": bool(result and result.tie_break_answers),
-        "frozen": result is not None and response.collection_frozen_at is not None,
-        "coach_shown": result is not None and bool((_coach_of(response) or {}).get("shared")),
-    }
-    return render(request, "engine/retake.html", context)
+    return this_page()
 
 
 # ✨ The retake page's "Sort the cards myself", as its choice sends it (fix-21).
