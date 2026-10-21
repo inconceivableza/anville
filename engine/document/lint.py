@@ -201,21 +201,14 @@ def _results_of_no_sort(document):
 
 
 def _unwaitable_blocks(document):
-    """✨ A block waiting on the comparison (ticket 68) must be a capture block answered on its page, which is what the
-    engine holds shut, and must name a sort, whose comparison it waits on."""
+    """✨ A block waiting on the comparison (ticket 68) must name a sort, whose comparison it waits on. Only a capture
+    block answered on its page, which is what the engine holds shut (`BlockType.may_wait_on_comparison`), may wait at
+    all; the schema allows `after_comparison` on those alone, so it never reaches here on another (fix-2)."""
     types = block_types_by_id(document)
     for s, section in enumerate(document["content"]["sections"]):
         for b, block in enumerate(section["blocks"]):
             waits, path = block.get("after_comparison"), f"/content/sections/{s}/blocks/{b}/after_comparison"
-            if waits is None:
-                continue
-            if not BLOCK_TYPES[block["type"]].may_wait_on_comparison:
-                yield Problem(
-                    path,
-                    f"Block '{block['id']}' is a {block['type']}, so it cannot wait on the comparison: only a capture "
-                    "block answered on its page can.",
-                )
-            elif not (waits["sort"] in types and types[waits["sort"]].scored):
+            if waits is not None and not (waits["sort"] in types and types[waits["sort"]].scored):
                 yield Problem(f"{path}/sort", f"There is no sort '{waits['sort']}' in this pathway.")
 
 

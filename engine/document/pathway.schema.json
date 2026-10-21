@@ -458,7 +458,7 @@
       "$ref": "#/$defs/text"
     },
     "after_comparison": {
-      "description": "Holds a capture block until the participant has pressed 'Compare with how others see you →' for this sort with at least the minimum number of observer assessments in: until then it is shown but cannot be answered, with the message beside it. Once pressed it stays answerable, even if withdrawals later unfreeze answer collection.",
+      "description": "Allowed only on a capture block answered on its page (a scripture reading, a long text, an agreement scale or a single select). Holds the block until the participant has pressed 'Compare with how others see you →' for this sort with at least the minimum number of observer assessments in: until then it is shown but cannot be answered, with the message beside it. Once pressed it stays answerable, even if withdrawals later unfreeze answer collection.",
       "type": "object",
       "additionalProperties": false,
       "required": ["sort", "message"],
@@ -570,7 +570,6 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "rich_text" },
         "estimate": { "$ref": "#/$defs/estimate" },
-        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "variant": {
           "description": "How the text is set off: plain prose, or a hint box (such as 'The big question').",
           "enum": ["plain", "hint"],
@@ -692,7 +691,6 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "contact_list" },
         "estimate": { "$ref": "#/$defs/estimate" },
-        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "needed": {
           "description": "How many of the list's first rows are marked as needed. The section's gate says what completing it takes.",
           "type": "integer",
@@ -722,7 +720,6 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "coach_checklist" },
         "estimate": { "$ref": "#/$defs/estimate" },
-        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "heading": { "$ref": "#/$defs/text" },
         "lead": { "description": "One sentence set off above the body.", "$ref": "#/$defs/text" },
         "body": { "description": "Why the choice matters. A blank line starts a new paragraph.", "$ref": "#/$defs/text" },
@@ -806,7 +803,6 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "sort_assessment" },
         "estimate": { "$ref": "#/$defs/estimate" },
-        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "coach_brief": {
           "description": "The guidance for the coach's conversation about these results and their comparison, which the coach sees once the participant shares them (ticket 25a).",
           "$ref": "#/$defs/coach_brief"
@@ -822,7 +818,6 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "section_link" },
         "estimate": { "$ref": "#/$defs/estimate" },
-        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "section": { "$ref": "#/$defs/identifier" },
         "body": {
           "description": "Plain text saying what is there. A blank line starts a new paragraph.",
@@ -858,7 +853,6 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "sort_results" },
         "estimate": { "$ref": "#/$defs/estimate" },
-        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "sort": {
           "description": "The identifier of the sort whose results these are.",
           "$ref": "#/$defs/identifier"
@@ -874,7 +868,6 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "comparison_link" },
         "estimate": { "$ref": "#/$defs/estimate" },
-        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "sort": {
           "description": "The identifier of the sort whose comparison this leads to.",
           "$ref": "#/$defs/identifier"
@@ -894,7 +887,6 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "download" },
         "estimate": { "$ref": "#/$defs/estimate" },
-        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "file": {
           "description": "The PDF's name in the pathways/files folder, such as 'whatever-you-do-workbook-section-2.pdf'.",
           "type": "string",
