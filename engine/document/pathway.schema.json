@@ -515,7 +515,11 @@
           "required": ["heading", "sentence"],
           "properties": {
             "heading": { "$ref": "#/$defs/text" },
-            "sentence": { "$ref": "#/$defs/text" }
+            "sentence": { "$ref": "#/$defs/text" },
+            "waiting": {
+              "description": "What the hub's next step says, under 'Waiting on answers', while nothing else is open and this section's only open work waits on the comparison, such as '{section}'s reflection opens once at least {minimum} of the people you invited have answered and you've seen how others see you.' {section} is what the hub calls the section, such as 'Section 1'; {minimum} is the pathway's minimum number of observer answers. Without it, the next step says only the heading.",
+              "$ref": "#/$defs/text"
+            }
           }
         },
         "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } },

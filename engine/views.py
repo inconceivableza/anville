@@ -181,6 +181,8 @@ def hub(request):
         return redirect(wizard)
     hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
     coach = _coach_of(state.response, state.answers)
+    minimum = minimum_observers(state.version.document)
+    waiting = hub.waiting_on_answers
     return render(
         request,
         "engine/hub.html",
@@ -193,7 +195,7 @@ def hub(request):
             "coach_card": _coach_card(state, hub, coach),
             "voices": _hub_voices(state, hub),
             "comparison": _hub_comparison(state),
-            "minimum": minimum_observers(state.version.document),
+            "waiting_sentence": waiting.waiting_sentence(minimum) if waiting is not None else None,
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )

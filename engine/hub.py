@@ -71,10 +71,12 @@ def with_coach_answer(state, answer):
 
 
 class NextStepWording(NamedTuple):
-    """✨ What the hub's next step says for a section that carries its own wording for it (ticket 49b)."""
+    """✨ What the hub's next step says for a section that carries its own wording for it (ticket 49b), and `waiting`, what
+    it says while the section's only open work waits on others' answers (ticket 68), with its placeholders, or None."""
 
     heading: str
     sentence: str
+    waiting: str | None = None
 
 
 class SectionState(NamedTuple):
@@ -108,6 +110,16 @@ class SectionState(NamedTuple):
         """✨ What the engine's wording calls the section: "Section 3" for one numbered "03", as the pathway's own
         sentences call it, or its title for one without a number (tickets 65 and 68)."""
         return f"Section {int(self.number)}" if self.number and self.number.isdigit() else self.title
+
+    def waiting_sentence(self, minimum):
+        """✨ The sentence the hub's next step says while this section's only open work waits on others' answers (ticket
+        68), as the section carries it, with what the engine's wording calls the section at {section} and the pathway's
+        `minimum` number of observer answers at {minimum}; None for a section without one. Replaced as plain text, never
+        through `format()`, as the lock note's {sections} is."""
+        wording = self.next_step.waiting if self.next_step else None
+        if wording is None:
+            return None
+        return wording.replace("{section}", self.called).replace("{minimum}", str(minimum))
 
 
 class OutlineEntry(NamedTuple):
@@ -444,7 +456,8 @@ def _next_step_wording(section, role):
     if "next_step" not in section:
         return None
     wording = section["next_step"]
-    return NextStepWording(text_for(wording["heading"], role), text_for(wording["sentence"], role))
+    waiting = text_for(wording["waiting"], role) if "waiting" in wording else None
+    return NextStepWording(text_for(wording["heading"], role), text_for(wording["sentence"], role), waiting)
 
 
 def _estimate(section, status, role):

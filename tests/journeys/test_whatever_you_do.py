@@ -21,7 +21,7 @@ from django.test import Client
 from django.utils import timezone
 from django.utils.html import escape
 
-from engine.document.observers import relationship_question
+from engine.document.observers import minimum_observers, relationship_question
 from engine.hub import COACH_WAIT_LINE, COACH_WAIT_PANEL
 from engine.models import Contact, ObserverResponse, Response
 from tests.journeys.test_coach_checklist import choose, step
@@ -1037,6 +1037,10 @@ def test_with_nothing_else_open_the_next_step_waits_on_answers_with_a_button_to_
     panel = next_step(client.get("/hub/").content.decode())
 
     assert "Waiting on answers" in panel
+    document = the_pathway()
+    designed = next(section for section in document["content"]["sections"] if section["id"] == "designed")
+    authored, minimum = designed["next_step"]["waiting"], minimum_observers(document)
+    assert escape(authored.replace("{section}", "Section 1").replace("{minimum}", str(minimum))) in panel
     assert 'href="/sections/designed/"' in panel
 
 
