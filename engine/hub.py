@@ -12,7 +12,7 @@ serves the hub page, the guard on a section page and the re-check when a section
 from typing import NamedTuple
 
 from engine.document.blocks import BLOCK_TYPES, page_count, page_of, pages_of
-from engine.document.gates import gate_passes, has_content, opened_key, unmet
+from engine.document.gates import gate_passes, has_content, opened_key, unmet, unmet_clauses, waits_on_comparison
 from engine.document.text import text_for
 
 LOCKED = "locked"
@@ -89,12 +89,14 @@ class OutlineEntry(NamedTuple):
 
 class Hub(NamedTuple):
     """✨ A participant's whole hub: their track's sections, the one to do next, and how many of the sections are
-    complete, out of `total`."""
+    complete, out of `total`. With no next step, `waiting_on_answers` is the first section passed over because its only
+    open work waits on the comparison, and so on other people's answers (ticket 68), or None."""
 
     sections: tuple
     next_step: SectionState | None
     complete: int
     total: int
+    waiting_on_answers: SectionState | None = None
 
     def outline(self):
         """✨ The sections as the hub and the sidebar list them, as `OutlineEntry`s, each with the parts listed under it.
@@ -305,14 +307,29 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None):
     moved_past = moved_past or {}
     completed = complete_sections(sections, answers, completed)
     states = [_state(section, answers, completed, role, moved_past, sections) for section in sections]
-    next_step = next((state for state in states if state.status in (NOT_STARTED, IN_PROGRESS)), None)
+    blocks = {block["id"]: block for section in sections for block in section["blocks"]}
+    open_states = [state for state in states if state.status in (NOT_STARTED, IN_PROGRESS)]
+    waiting = {
+        state.id for state, section in zip(states, sections) if _waits_only_on_comparison(section, answers, blocks)
+    }
+    next_step = next((state for state in open_states if state.id not in waiting), None)
     states = [state._replace(is_next=state is next_step) for state in states]
+    waiting_on_answers = next((state for state in open_states if state.id in waiting), None)
     return Hub(
         sections=tuple(states),
         next_step=next((state for state in states if state.is_next), None),
         complete=sum(1 for state in states if state.status == COMPLETE),
         total=len(states),
+        waiting_on_answers=None if next_step is not None else waiting_on_answers,
     )
+
+
+def _waits_only_on_comparison(section, answers, blocks):
+    """✨ Whether a section's only open work waits on other people: every clause of its gate still unmet names a block
+    waiting on the comparison (ticket 68), as Section 1's reflection does in *Whatever You Do*. The hub's next step passes
+    over it (ADR 0019)."""
+    clauses = unmet_clauses(section, answers)
+    return bool(clauses) and all(waits_on_comparison(blocks.get(clause["block"], {}), answers) for clause in clauses)
 
 
 def _state(section, answers, completed, role, moved_past, sections):

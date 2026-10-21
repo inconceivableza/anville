@@ -66,7 +66,7 @@ from engine.document.contacts import (
     voices_card,
 )
 from engine.document.aggregation import aggregate
-from engine.document.gates import clauses_of, links_issued_key, opened_key
+from engine.document.gates import clauses_of, links_issued_key, opened_key, waits_on_comparison
 from engine.document.scoring import score
 from engine.hub import (
     COMPLETE,
@@ -177,6 +177,7 @@ def hub(request):
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
             "side_cards": _side_cards(state, hub),
             "voices": _hub_voices(state, hub),
+            "minimum": minimum_observers(state.version.document),
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
@@ -462,6 +463,11 @@ def save_answer(request, block_id):
     if block_id in state.fixed:
         # ✨ Refused here, not only disabled on the page, so a page left open from before completing cannot change it.
         return _answer_refused(request, state, section, block_id, FIXED_REFUSAL, status=409)
+    if waits_on_comparison(block, state.answers):
+        # ✨ Refused here, not only disabled on the page, so the reflection is written only once its comparison has been
+        # seen (ADR 0019).
+        refusal = text_for(block["after_comparison"]["message"], "participant")
+        return _answer_refused(request, state, section, block_id, refusal, status=403)
     block_type = BLOCK_TYPES[block["type"]]
     try:
         value = answer_from_form(state.version.document, block, request.POST.get("value"))
@@ -2108,6 +2114,10 @@ def _block_for_participant(
         "frozen": RESULTS_SEEN if frozen and block["type"] == "contact_list" else None,
         "drawn": drawn,
         "comparison": comparison,
+        # ✨ While it waits on the comparison, its authored message, and it is drawn disabled (ticket 68).
+        "waiting": text_for(block["after_comparison"]["message"], "participant")
+        if waits_on_comparison(block, answers)
+        else None,
     }
 
 

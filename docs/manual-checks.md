@@ -633,3 +633,12 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - Collection frozen (as in ticket 71's check): no sentence and no "Add another person".
 - The faithful port's contact list shows "Add another person" below its five rows, with no sentence.
 - Phone width: the sentence and the button sit below the rows with no sideways scroll.
+
+## Section 1's reflection waits for the comparison (ticket 68; rebuild the frontend and load both pathways again, then start a new participant)
+
+- Section 1, with the sort in: the reflection's box shows, faded, with "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer." above it. Nothing can be typed in it, and its "Save" (without JavaScript) cannot be pressed.
+- Choose a coach and give three people links: the hub's next step is Section 2, not Section 1. Mark Section 2 finished: the next step reads "Waiting on answers" / "How you've been designed's reflection opens once at least 3 of the people you invited have answered and you've seen how others see you.", with a button to Section 1.
+- Have two people answer (their links in private windows), then press "Compare with how others see you →": the explanation shows, and the reflection is still faded. Have a third answer and press it again, confirming: back on Section 1 the reflection can be written, and saves. The hub's next step is Section 1 again.
+- Have one of the three withdraw (collection unfreezes): the reflection still saves.
+- The faithful port's reflection can be written as soon as the sort is in, as before.
+- Phone width: the message wraps above the box with no sideways scroll.

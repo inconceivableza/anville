@@ -50,6 +50,19 @@ def coach_answer_key(block_id):
     return f"{block_id}/coach_answer"
 
 
+def comparison_viewed_key(block_id):
+    """✨ Where the answers the gate reads hold that the participant viewed a sort's comparison: pressed "Compare with how
+    others see you →" with the minimum in (ticket 67a). Like `comparison_visit_key`, never a block's own answer."""
+    return f"{block_id}/viewed"
+
+
+def waits_on_comparison(block, answers):
+    """✨ Whether a block is still waiting on the comparison (ticket 68): it carries `after_comparison` and its sort's
+    comparison has not been viewed. Once viewed it never waits again, since "Viewed" outlasts an unfreeze (ADR 0019)."""
+    waits = block.get("after_comparison")
+    return waits is not None and not has_content(answers.get(comparison_viewed_key(waits["sort"])))
+
+
 def opened_key(section_id):
     """✨ Where the answers the hub reads hold when a section with opening conditions first opened, after which they are
     never asked again (ADR 0019). Section and block identifiers are told apart by what follows the "/"."""
@@ -68,8 +81,13 @@ def unmet(section, answers, role="participant"):
     sentence ("Answer all four to continue"), and the participant should read that sentence, not four of it.
     What going on from one page needs is what that page's `checklist` marks unmet.
     """
-    messages = (text_for(clause["message"], role) for clause in clauses_of(section) if not _passes(clause, answers))
+    messages = (text_for(clause["message"], role) for clause in unmet_clauses(section, answers))
     return list(dict.fromkeys(messages))
+
+
+def unmet_clauses(section, answers):
+    """✨ Every clause of the whole gate this response does not satisfy, in the order authored."""
+    return [clause for clause in clauses_of(section) if not _passes(clause, answers)]
 
 
 def checklist(section, answers, role="participant", page=None):
