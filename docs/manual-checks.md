@@ -663,3 +663,11 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - Keyboard only: Tab reaches the row's title and the card's pill, each with visible focus, and Enter presses it. Screen reader: each reads as a button.
 - The faithful port's hub has no such row and no side cards.
 - Phone width: the row stays one line high beside its tag, as the Strengths assessment's does; on the card, "Manage" and the comparison's pill share a line where they fit, the status wrapping under them, with no sideways scroll.
+
+## Before we begin once only (ticket 69; load both pathways again, then a participant started after that)
+
+- *Whatever You Do*: a new participant is taken through Before we begin's two pages, as before. Once "Continue →" on the ratings page completes it, the hub neither lists Before we begin nor counts it ("0 of 8 sections complete"), and nor does the sidebar.
+- Typing `/sections/onboarding/` or `/sections/onboarding/pages/2/` in the address bar lands on the hub. So does pressing Back to a ratings page left open from before completing and changing a rating, with JavaScript on and off; the reason and ratings stay as they were.
+- An organisation's admin sees the same count for that member as the participant's hub shows.
+- The faithful port: once Before we begin is complete it is still listed on the hub and in the sidebar, and its pages open as before.
+- Phone width: the hub and the sidebar list the sections as above, with no sideways scroll.

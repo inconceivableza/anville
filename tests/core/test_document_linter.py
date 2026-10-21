@@ -387,6 +387,19 @@ def test_a_section_with_parts_cannot_be_a_side_card():
     ]
 
 
+def test_a_once_only_section_that_is_not_a_wizard_is_refused():
+    """✨ Ticket 69: a once-only section that is not a wizard might never be seen at all."""
+    document = pathway_document()
+    document["content"]["sections"][0]["once_only"] = True
+
+    assert validate(document) == [
+        Problem(
+            path="/content/sections/0/once_only",
+            message="A once-only section must be a wizard, or a participant might never see it at all.",
+        )
+    ]
+
+
 # ✨ Photos and their credits (ticket 49b)
 
 

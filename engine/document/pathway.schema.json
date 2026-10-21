@@ -501,7 +501,11 @@
           }
         },
         "wizard": {
-          "description": "Take a participant who has not completed this section to it in place of the hub, shown page by page without the hub's links or the sidebar, beside the section's photo, as Before we begin is. Once complete it is listed in the hub as any other section.",
+          "description": "Take a participant who has not completed this section to it in place of the hub, shown page by page without the hub's links or the sidebar, beside the section's photo, as Before we begin is. Once complete it is listed in the hub as any other section, unless it is once-only.",
+          "const": true
+        },
+        "once_only": {
+          "description": "Once the participant has completed this section, never show it again: it leaves the hub, the sidebar and the count of sections, and its pages, its answers and its completion lead to the hub, so its answers can be neither seen nor changed, as Before we begin's are in Whatever You Do. Only a wizard may be once-only.",
           "const": true
         },
         "next_step": {

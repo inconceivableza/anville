@@ -33,6 +33,7 @@ def lint(document):
         *_missing_sections(document, section_ids),
         *_impossible_parts(document, section_ids),
         *_unshowable_side_cards_and_numbers(document),
+        *_unseen_once_only_sections(document),
         *_photos_of_missing_sections(document, section_ids),
         *_unknown_linked_sections(document, section_ids),
         *_links_holding_their_own_section(document),
@@ -155,6 +156,17 @@ def _unshowable_side_cards_and_numbers(document):
             yield Problem(
                 f"{path}/side_card",
                 f"Section '{section['id']}' has parts, which are listed within it, so it cannot be a hub side card.",
+            )
+
+
+def _unseen_once_only_sections(document):
+    """✨ A once-only section leaves the hub once complete (ticket 69). Only a wizard is sure to be seen before then, since
+    the participant is taken to it in place of the hub."""
+    for s, section in enumerate(document["content"]["sections"]):
+        if section.get("once_only") and not section.get("wizard"):
+            yield Problem(
+                f"/content/sections/{s}/once_only",
+                "A once-only section must be a wizard, or a participant might never see it at all.",
             )
 
 

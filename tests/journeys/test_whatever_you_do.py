@@ -175,11 +175,11 @@ def test_the_letter_cannot_be_sent_without_the_fifth_after_rating(participant):
 def test_progress_counts_the_pathways_sections(participant):
     """✨ Before we begin, Section 1 with the Strengths assessment within it, Sections 2, 3 and 4 (ticket 58), the
     letter (ticket 49a), and the side cards Walk with a coach and Five trusted voices (ticket 50). The hub opens once
-    Before we begin is done."""
+    Before we begin is done, and Before we begin, once-only, then leaves the count (ticket 69)."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
 
-    assert "1 of 9 sections complete" in participant.get("/hub/").content.decode()
+    assert "0 of 8 sections complete" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db
@@ -190,15 +190,15 @@ def test_walk_with_a_coach_completes_once_the_coach_has_a_link_and_five_trusted_
     person theirs (ticket 51a)."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
-    assert "1 of 9 sections complete" in participant.get("/hub/").content.decode()
+    assert "0 of 8 sections complete" in participant.get("/hub/").content.decode()
 
     choose(participant)
-    assert "2 of 9 sections complete" in participant.get("/hub/").content.decode()
+    assert "1 of 8 sections complete" in participant.get("/hub/").content.decode()
 
     add_people(participant, 2)
-    assert "2 of 9 sections complete" in participant.get("/hub/").content.decode()
+    assert "1 of 8 sections complete" in participant.get("/hub/").content.decode()
     add_people(participant, 3)
-    assert "3 of 9 sections complete" in participant.get("/hub/").content.decode()
+    assert "2 of 8 sections complete" in participant.get("/hub/").content.decode()
 
 
 @pytest.mark.django_db
@@ -216,11 +216,12 @@ def test_the_contact_list_opens_with_three_rows_needed_and_two_optional(particip
 
 @pytest.mark.django_db
 def test_all_five_start_ratings_are_fixed_once_onboarding_is_complete(participant):
+    """✨ Before we begin is once-only (ticket 69), so a save to it leads to the hub rather than being refused there."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
 
     for slot in SLOTS:
-        assert answer(participant, f"bl-{slot}", "2").status_code == 409
+        assert answer(participant, f"bl-{slot}", "2").url == "/hub/"
     assert {Response.objects.get().answers[f"bl-{slot}"] for slot in SLOTS} == {7}
 
 
@@ -482,10 +483,12 @@ def without_the_wizard(document):
     """✨ Before we begin is a wizard of two pages here, the reason and then the ratings, and its coach and contacts
     pages became the hub side cards Walk with a coach and Five trusted voices (ticket 50). The faithful port keeps the
     original prototype's one section, so the contacts and their gate clause go back into it on a page of their own,
-    and the coach goes, as without the coach step."""
+    and the coach goes, as without the coach step. Nor is it once-only there, so it stays listed once complete (ticket
+    69)."""
     sections = document["content"]["sections"]
     onboarding = sections[0]
     del onboarding["wizard"]
+    del onboarding["once_only"]
     onboarding["blocks"] = [block for block in onboarding["blocks"] if block["id"] != "to-ratings"]
     voices = next(section for section in sections if section["id"] == "trusted-voices")
     onboarding["blocks"] += [{"id": "to-contacts", "type": "page_break"}, *voices["blocks"]]
@@ -813,7 +816,8 @@ def test_sections_3_and_4_and_the_letter_each_open_once_the_one_before_is_finish
         assert complete(client, finished).status_code == 303
         assert set(Response.objects.get().completed_sections) - done_before == {finished}
         assert client.get(f"/sections/{following}/").status_code == 200
-    assert "8 of 9 sections complete" in client.get("/hub/").content.decode()
+    # ✨ Before we begin, once-only, has left the count (ticket 69).
+    assert "7 of 8 sections complete" in client.get("/hub/").content.decode()
 
 
 # Section 3 waits on the coach's acceptance (ADR 0019)

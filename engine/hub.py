@@ -356,15 +356,29 @@ def complete_sections(sections, answers, completed):
     return done | cards_done
 
 
+def is_once_only_and_complete(section, completed):
+    """✨ Whether a section is never seen again: a once-only section the participant has completed (ticket 69). It is
+    left out of the hub, the sidebar and the count, and every way into it leads to the hub."""
+    return bool(section.get("once_only")) and section["id"] in completed
+
+
+def listed_sections(sections, completed):
+    """✨ The sections the hub lists and counts, given those complete as `complete_sections` works them out: all but a
+    once-only section once complete. Progress, on the hub and as an organisation's admins see it, counts these alone."""
+    return [section for section in sections if not is_once_only_and_complete(section, completed)]
+
+
 def hub_for(sections, answers, completed, role="participant", moved_past=None):
-    """✨ A participant's hub over one track's sections. `moved_past` holds, by section, the pages moved past."""
+    """✨ A participant's hub over one track's sections, less any once-only section once complete. `moved_past` holds,
+    by section, the pages moved past."""
     moved_past = moved_past or {}
     completed = complete_sections(sections, answers, completed)
-    states = [_state(section, answers, completed, role, moved_past, sections) for section in sections]
+    listed = listed_sections(sections, completed)
+    states = [_state(section, answers, completed, role, moved_past, sections) for section in listed]
     blocks = {block["id"]: block for section in sections for block in section["blocks"]}
     open_states = [state for state in states if state.status in (NOT_STARTED, IN_PROGRESS)]
     waiting = {
-        state.id for state, section in zip(states, sections) if _waits_only_on_comparison(section, answers, blocks)
+        state.id for state, section in zip(states, listed) if _waits_only_on_comparison(section, answers, blocks)
     }
     next_step = next((state for state in open_states if state.id not in waiting), None)
     states = [state._replace(is_next=state is next_step) for state in states]
@@ -376,7 +390,7 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None):
                 only=_requires_met(section, completed)
                 and _waiting_on(section, completed, answers, sections, moved_past) is None,
             )
-            for section, state in zip(sections, states)
+            for section, state in zip(listed, states)
             if state.is_locked and _waits_on_coach(section, answers)
         ),
         None,

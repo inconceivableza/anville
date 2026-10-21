@@ -74,6 +74,7 @@ from engine.hub import (
     complete_sections,
     hub_for,
     is_locked,
+    is_once_only_and_complete,
     open_blocks,
     page_reached,
     section_by_id,
@@ -117,9 +118,12 @@ class ParticipantState(NamedTuple):
     fixed: set
 
     def reached(self, section):
-        """✨ The page of a section this participant has reached, or None while the section is locked. Every way into
-        a section (its address, "Continue →", completion, an answer or a checklist step) is guarded by this."""
+        """✨ The page of a section this participant has reached, or None while the section is locked, and for a once-only
+        section once complete, never seen again (ticket 69). Every way into a section (its address, "Continue →",
+        completion, an answer or a checklist step) is guarded by this."""
         if is_locked(section, self.completed, self.answers, self.sections, self.moved_past):
+            return None
+        if is_once_only_and_complete(section, self.completed):
             return None
         return page_reached(section, self.moved_past, self.answers, self.sections)
 
@@ -507,6 +511,9 @@ def save_answer(request, block_id):
     # lock or an unconfirmed reading holds it. Otherwise they could fill it in without ever opening it, and
     # both would be decoration again, which is exactly the prototype's mistake.
     section = section_of(state.version.document, block_id)
+    if is_once_only_and_complete(section, state.completed):
+        # ✨ Never seen again once complete (ticket 69), so not refused on its page: there is none to go back to.
+        return _go_to(request, reverse("hub"))
     if not _is_open(state, section, block):
         return _refuse_shut(request)
     if block_id in state.fixed:
