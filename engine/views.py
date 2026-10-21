@@ -71,9 +71,9 @@ from engine.document.gates import (
     clauses_of,
     coach_answer,
     comparison_viewed,
+    comparison_wait_message,
     links_issued_key,
     opened_key,
-    waits_on_comparison,
 )
 from engine.document.scoring import score
 from engine.hub import (
@@ -181,6 +181,8 @@ def hub(request):
         return redirect(wizard)
     hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
     coach = _coach_of(state.response, state.answers)
+    coach_section = _coach_section_of(state.version.document)
+    coach_page = _coach_page_of(state.version.document, hub)
     minimum = minimum_observers(state.version.document)
     waiting = hub.waiting_on_answers
     return render(
@@ -190,9 +192,9 @@ def hub(request):
             "title": text_for(state.version.document["title"], "participant"),
             "hub": hub,
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
-            "coach_wait": _coach_wait_panel(state, hub, coach),
-            "side_cards": _side_cards(state, hub, coach),
-            "coach_card": _coach_card(state, hub, coach),
+            "coach_wait": _coach_wait_panel(hub, coach, coach_page),
+            "side_cards": _side_cards(hub, coach, coach_section),
+            "coach_card": _coach_card(hub, coach, coach_section, coach_page),
             "voices": _hub_voices(state, hub),
             "comparison": _hub_comparison(state),
             "waiting_sentence": waiting.waiting_sentence(minimum) if waiting is not None else None,
@@ -225,37 +227,40 @@ def _coach_section_of(document):
     return section_of(document, checklists[0])["id"] if checklists else None
 
 
-def _side_cards(state, hub, coach):
-    """✨ The hub's side cards, the coach's section's tagged with where the `coach` stands (ticket 51b)."""
-    coach_section = _coach_section_of(state.version.document)
+def _side_cards(hub, coach, coach_section):
+    """✨ The hub's side cards, the coach's section's (`coach_section`) tagged with where the `coach` stands (ticket
+    51b)."""
     return [
-        with_coach_answer(card, coach["answer"] if coach else None) if card.id == coach_section else card
-        for card in hub.side_cards()
+        with_coach_answer(card, _answer_of(coach)) if card.id == coach_section else card for card in hub.side_cards()
     ]
 
 
-def _coach_card(state, hub, coach):
+def _coach_card(hub, coach, coach_section, coach_page):
     """✨ What the Walk with a coach card adds to a side card's own (ticket 65): {"section", "manage", "line"}, its
-    "Manage" leading to the coach page, None while the card is locked, and its line while a section waits on the
+    "Manage" leading to the `coach_page`, None while the card is locked, and its line while a section waits on the
     `coach` at all, None otherwise."""
     wait = hub.coach_wait
     return {
-        "section": _coach_section_of(state.version.document),
-        "manage": _coach_page_of(state.version.document, hub),
-        "line": wait.line(coach["answer"] if coach else None) if wait is not None else None,
+        "section": coach_section,
+        "manage": coach_page,
+        "line": wait.line(_answer_of(coach)) if wait is not None else None,
     }
 
 
-def _coach_wait_panel(state, hub, coach):
+def _coach_wait_panel(hub, coach, coach_page):
     """✨ What the hub's next-step panel says in place of "Nothing is waiting for you right now" while nothing is next
     and a section waits on nothing but the coach's acceptance (ticket 65): {"heading", "sentence", "coach_page"}, by
-    the `coach`'s answer, or None otherwise, or with no coach page to lead to."""
+    the `coach`'s answer, or None otherwise, or with no `coach_page` to lead to."""
     wait = hub.coach_wait
-    coach_page = _coach_page_of(state.version.document, hub)
     if hub.next_step is not None or wait is None or not wait.only or coach_page is None:
         return None
-    wording = wait.panel(coach["answer"] if coach else None, coach["name"] if coach else "")
+    wording = wait.panel(_answer_of(coach), coach["name"] if coach else "")
     return {**wording._asdict(), "coach_page": coach_page}
+
+
+def _answer_of(coach):
+    """✨ The coach's answer, as `_coach_of` gives it, or None with no coach."""
+    return coach["answer"] if coach else None
 
 
 def _photo_of(document, section_id):
@@ -513,15 +518,15 @@ def save_answer(request, block_id):
         # ✨ Never seen again once complete (ticket 69), so not refused on its page: there is none to go back to.
         return _go_to(request, reverse("hub"))
     if not _is_open(state, section, block):
-        return _refuse_shut(request)
+        return _refused(request, NOT_OPEN, status=403)
     if block_id in state.fixed:
         # ✨ Refused here, not only disabled on the page, so a page left open from before completing cannot change it.
         return _answer_refused(request, state, section, block_id, FIXED_REFUSAL, status=409)
-    if waits_on_comparison(block, state.answers):
+    waiting = comparison_wait_message(block, state.answers)
+    if waiting is not None:
         # ✨ Refused here, not only disabled on the page, so the reflection is written only once its comparison has been
         # seen (ADR 0019).
-        refusal = text_for(block["after_comparison"]["message"], "participant")
-        return _answer_refused(request, state, section, block_id, refusal, status=403)
+        return _answer_refused(request, state, section, block_id, waiting, status=403)
     block_type = BLOCK_TYPES[block["type"]]
     try:
         value = answer_from_form(state.version.document, block, request.POST.get("value"))
@@ -555,8 +560,7 @@ def _answer_refused(request, state, section, block_id, refusal, status):
 
     def its_page(status):
         shown = _section_page(state, section, page_of(section, block_id))
-        on_page = next(block for block in shown["section"]["blocks"] if block["id"] == block_id)
-        on_page["refusal"] = refusal
+        _on_page(shown, block_id)["refusal"] = refusal
         return _section_shown(request, state, section, shown, status=status)
 
     return _refused(request, refusal, status, page=its_page)
@@ -580,7 +584,7 @@ def coach_checklist(request, block_id):
     block = _block_of_type(state.version, block_id, "coach_checklist")
     section = section_of(state.version.document, block_id)
     if not _is_open(state, section, block):
-        return _refuse_shut(request)
+        return _refused(request, NOT_OPEN, status=403)
     to = request.POST.get("step")
     if to not in CHECKLIST_STEPS:
         return HttpResponseBadRequest("The coach checklist has no such step.")
@@ -955,10 +959,15 @@ def _hub_voices(state, hub):
         if card is None or card.is_locked:
             continue
         invited = state.answers.get(links_issued_key(block["id"]), 0)
-        answered = len(ObserverResponse.assessments_for(state.response).assessments) if state.response else 0
+        answered = _answered(state.response) if state.response else 0
         shown = voices_card(block, card, invited, answered, minimum_observers(document), frozen=_frozen(state.response))
         return {"section": section_id, **shown}
     return None
+
+
+def _answered(response):
+    """✨ How many observers' assessments of a participant's `response` are in."""
+    return len(ObserverResponse.assessments_for(response).assessments)
 
 
 @login_required
@@ -980,7 +989,7 @@ def visit_comparison(request, block_id):
     if result is None:
         return _see_other(page_url(section["id"], section["page"]))
     response = state.response
-    answered = len(ObserverResponse.assessments_for(response).assessments)
+    answered = _answered(response)
     viewed = answered >= minimum_observers(state.version.document)
     if response.collection_frozen_at is None and viewed:
         if request.POST.get("confirmed") != "yes":
@@ -1440,8 +1449,7 @@ def another_row(request, block_id):
         return shut
     if _frozen(state.response):
         return _refuse_frozen(request, state, block)
-    posted = request.POST.get("rows", "")
-    shown = rows_of(block, len(state.answers.get(block_id) or []), int(posted) if posted.isdigit() else 0)
+    shown = rows_of(block, len(state.answers.get(block_id) or []), _posted_count(request, "rows"))
     if not can_add_row(shown):
         return _refused(
             request,
@@ -1475,7 +1483,7 @@ def _list_shut(request, state, block):
     """✨ The refusal for a change to a contact list the participant has not reached, or None while it is open to change.
     A completion never fixes a contact list: only an agreement scale can be marked `fixed_once_complete`."""
     if not _is_open(state, section_of(state.version.document, block["id"]), block):
-        return _refuse_shut(request)
+        return _refused(request, NOT_OPEN, status=403)
     return None
 
 
@@ -1499,12 +1507,11 @@ def _person_refused(request, state, block, refused, contact_id=None):
         return _rows_sent_back(request, state, block, [row], status=400)
     # ✨ As many rows as the page they typed in had shown, so a row "Add another person" added is still there
     # (ticket 70).
-    pressed = request.POST.get("row", "")
-    asked = int(pressed) if pressed.isdigit() else 0
+    asked = _posted_count(request, "row")
     section = section_of(state.version.document, block["id"])
     rows_back = {block["id"]: {"typed": typed, "asked": asked}}
     shown = _section_page(state, section, page_of(section, block["id"]), rows_back=rows_back)
-    on_page = next(shown_block for shown_block in shown["section"]["blocks"] if shown_block["id"] == block["id"])
+    on_page = _on_page(shown, block["id"])
     if not any(row.get("refusal") for row in on_page["rows"]):
         on_page["refusal"] = str(refused)
     return _section_shown(request, state, section, shown, status=400)
@@ -1601,16 +1608,19 @@ def _list_page(request, state, block, status, refusal=None, asked=0, kept=(), is
     rows_back = {block["id"]: {"asked": asked, "kept": kept}}
     shown = _section_page(state, section, page_of(section, block["id"]), issued=issued, rows_back=rows_back)
     if refusal is not None:
-        on_page = next(shown_block for shown_block in shown["section"]["blocks"] if shown_block["id"] == block["id"])
-        on_page["refusal"] = refusal
+        _on_page(shown, block["id"])["refusal"] = refusal
     return _section_shown(request, state, section, shown, status=status)
 
 
-def _refuse_shut(request):
-    """✨ A press on something the participant has not reached (an answer, a coach checklist step, a change to a contact
-    list): with htmx, the short status line beside it; without, a page saying why, since the page it was on is shut
-    too (ticket 71)."""
-    return _refused(request, NOT_OPEN, status=403)
+def _on_page(shown, block_id):
+    """✨ One block of a page as `_section_page` gives it, to mark before it is drawn."""
+    return next(block for block in shown["section"]["blocks"] if block["id"] == block_id)
+
+
+def _posted_count(request, key):
+    """✨ A count a form posted under `key`, such as how many rows its page showed, or 0 for none or anything else."""
+    posted = request.POST.get(key, "")
+    return int(posted) if posted.isdigit() else 0
 
 
 def _refused(request, refusal, status, page=None):
@@ -1626,6 +1636,8 @@ def _refused(request, refusal, status, page=None):
 
 
 # ✨ Why a press on something not reached is refused: a lock, an unconfirmed reading or a page not yet gone through.
+# Refused with no `page` (an answer, a coach checklist step, a change to a contact list), so without htmx it is a page
+# of its own saying why, since the page it was on is shut too (ticket 71).
 NOT_OPEN = "This is not open yet."
 
 
@@ -2333,7 +2345,7 @@ def _comparison_link_shown(state, block):
     sort = block["sort"]
     if not Result.objects.filter(response=state.response, block_id=sort).exists():
         return None
-    answered = len(ObserverResponse.assessments_for(state.response).assessments)
+    answered = _answered(state.response)
     viewed = comparison_viewed(state.answers, sort)
     status, label = comparison_status(answered, minimum_observers(state.version.document), viewed)
     return {"sort": sort, "status": status, "label": label}
@@ -2401,9 +2413,7 @@ def _block_for_participant(
         "drawn": drawn,
         "comparison": comparison,
         # ✨ While it waits on the comparison, its authored message, and it is drawn disabled (ticket 68).
-        "waiting": text_for(block["after_comparison"]["message"], "participant")
-        if waits_on_comparison(block, answers)
-        else None,
+        "waiting": comparison_wait_message(block, answers),
     }
 
 
