@@ -22,13 +22,13 @@ from django.utils import timezone
 from django.utils.html import escape
 
 from engine.document.observers import relationship_question
-from engine.hub import COACH_WAIT_PANEL
+from engine.hub import COACH_WAIT_LINE, COACH_WAIT_PANEL
 from engine.models import Contact, ObserverResponse, Response
 from tests.journeys.test_coach_checklist import choose, step
 from tests.journeys.test_coach_link import answer_as_coach, coach_link_action, link_shown
 from tests.journeys.test_navigation import section_in, sidebar_of
 from tests.journeys.pages import main_of
-from tests.journeys.test_hub import hub_entry, signed_in_client  # noqa: F401  (a fixture, used by name)
+from tests.journeys.test_hub import hub_entry, side_card, signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.prototype import js_string
 from tests.journeys.test_whatever_you_do_faithful_port import (
     A_LETTER,
@@ -997,3 +997,43 @@ def test_the_panel_is_as_before_while_section_3_also_waits_on_a_section_unfinish
 
     assert "Nothing is waiting for you right now." in panel
     assert button_to(panel, "Your coach") is None
+
+
+def coach_card(client):
+    """✨ The hub's Walk with a coach card."""
+    return side_card(client.get("/hub/").content.decode(), COACH_CARD)
+
+
+# ✨ Where the coach can stand once the card is unlocked: none chosen, a link unanswered, declined, accepted.
+COACH_STATES = {
+    "no coach": lambda client: None,
+    "unanswered": choose,
+    "declined": lambda client: (choose(client), coach_accepts(client, "decline")),
+    "accepted": lambda client: (choose(client), coach_accepts(client)),
+}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("coach", COACH_STATES)
+def test_the_coach_card_has_manage_to_the_coach_page_in_every_state_once_unlocked(participant, coach):
+    client = to_the_coach_page(participant)
+    COACH_STATES[coach](client)
+
+    assert button_to(coach_card(client), "Manage") == the_coach_page(client)
+
+
+@pytest.mark.django_db
+def test_the_coach_cards_line_shows_while_section_3_waits_on_the_coach_and_not_once_it_is_open(participant):
+    client = through_to_section_2(participant)
+    assert escape(COACH_WAIT_LINE["waiting"].format(section="Section 3")) in coach_card(client)
+
+    coach_accepts(client, "decline")
+    assert escape(COACH_WAIT_LINE["declined"].format(section="Section 3")) in coach_card(client)
+
+    coach_accepts(client)
+    complete(client, "shape")
+    assert client.get(SECTION_3).status_code == 200
+    revoke_coach_link(client)  # ✨ which never locks Section 3 again, once open
+
+    card = coach_card(client)
+    assert not any(escape(line.format(section="Section 3")) in card for line in COACH_WAIT_LINE.values())

@@ -45,6 +45,12 @@ COACH_WAIT_PANEL = {
     "declined": ("{coach} has said no", "Choose someone else to walk with you. {section} opens once they accept."),
     None: ("Choose a coach", "{section} opens once your coach has accepted."),
 }
+# ✨ The coach card's line under its tag, by the same answer, while the section waits on the coach at all.
+COACH_WAIT_LINE = {
+    "waiting": "{section} opens once your coach accepts",
+    "declined": "Choose another coach to open {section}",
+    None: "{section} opens once your coach accepts",
+}
 
 
 def with_coach_answer(state, answer):
@@ -114,9 +120,11 @@ class CoachWait(NamedTuple):
         """✨ The next-step panel's heading and sentence, as a `NextStepWording`, by the coach's `answer` as the coach
         page tells it, naming the `coach`."""
         heading, sentence = COACH_WAIT_PANEL.get(answer, COACH_WAIT_PANEL[None])
-        return NextStepWording(
-            heading.format(coach=coach), sentence.format(section=self.called(), coach=coach)
-        )
+        return NextStepWording(heading.format(coach=coach), sentence.format(section=self.called(), coach=coach))
+
+    def line(self, answer):
+        """✨ The coach card's line under its tag, by the coach's `answer` as the coach page tells it."""
+        return COACH_WAIT_LINE.get(answer, COACH_WAIT_LINE[None]).format(section=self.called())
 
 
 class Hub(NamedTuple):

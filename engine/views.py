@@ -178,6 +178,7 @@ def hub(request):
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
             "coach_wait": _coach_wait_panel(state, hub, coach),
             "side_cards": _side_cards(state, hub, coach),
+            "coach_card": _coach_card(state, hub, coach),
             "voices": _hub_voices(state, hub),
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
@@ -197,6 +198,18 @@ def _side_cards(state, hub, coach):
         with_coach_answer(card, coach["answer"] if coach else None) if card.id == coach_section else card
         for card in hub.side_cards()
     ]
+
+
+def _coach_card(state, hub, coach):
+    """✨ What the Walk with a coach card adds to a side card's own (ticket 65): {"section", "manage", "line"}, its
+    "Manage" leading to the coach page, None while the card is locked, and its line while a section waits on the
+    `coach` at all, None otherwise."""
+    wait = hub.coach_wait
+    return {
+        "section": _coach_section_of(state.version.document),
+        "manage": _coach_page_of(state.version.document, hub),
+        "line": wait.line(coach["answer"] if coach else None) if wait is not None else None,
+    }
 
 
 def _coach_wait_panel(state, hub, coach):
