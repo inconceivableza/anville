@@ -163,24 +163,21 @@ class Response(models.Model):
         viewed it, each in one UPDATE that merges it in. The first of each keeps its time, as a fixed answer does, and a
         later one writes nothing."""
         now = timezone.now()
-        stamp = Value({block_id: now.isoformat()}, output_field=models.JSONField())
-        Response.objects.filter(pk=self.pk).exclude(comparisons_visited__has_key=block_id).update(
-            comparisons_visited=_MergeJson(stamp, F("comparisons_visited")),
-            updated_at=now,
-        )
+        self._stamp_once("comparisons_visited", block_id, now)
         if viewed:
-            Response.objects.filter(pk=self.pk).exclude(comparisons_viewed__has_key=block_id).update(
-                comparisons_viewed=_MergeJson(stamp, F("comparisons_viewed")),
-                updated_at=now,
-            )
+            self._stamp_once("comparisons_viewed", block_id, now)
 
     def open_section(self, section_id):
         """✨ Record that a section with opening conditions has opened, in one UPDATE that merges it in. The first time
         is kept, and a later one writes nothing."""
-        now = timezone.now()
-        opened = Value({section_id: now.isoformat()}, output_field=models.JSONField())
-        Response.objects.filter(pk=self.pk).exclude(sections_opened__has_key=section_id).update(
-            sections_opened=_MergeJson(opened, F("sections_opened")),
+        self._stamp_once("sections_opened", section_id, timezone.now())
+
+    def _stamp_once(self, field, key, now):
+        """✨ Stamp `key` with `now` in the JSON `field`, in one UPDATE that merges it in, unless it is there already:
+        the first time is kept, and a later one writes nothing."""
+        stamp = Value({key: now.isoformat()}, output_field=models.JSONField())
+        Response.objects.filter(pk=self.pk).exclude(**{f"{field}__has_key": key}).update(
+            **{field: _MergeJson(stamp, F(field))},
             updated_at=now,
         )
 
@@ -304,9 +301,9 @@ class Response(models.Model):
         """✨ The stored answers, with each block's contacts read in as its answer, as the gate and progress read it.
         Each contact carries its id, which a contact list's rows send back so a save can tell them apart. Each visit to
         a sort's comparison is read in too, under a key no block can have, for a `comparison_visited` clause, and so is
-        each view of one, for a block waiting on the comparison (ticket 68), how many of each block's people have a working link, for a `links_issued` clause, the coach's answer on their
-        current link, expired or not, for a `coach_accepted` clause, and when each section with opening conditions first
-        opened, for the hub."""
+        each view of one, for a block waiting on the comparison (ticket 68), how many of each block's people have a
+        working link, for a `links_issued` clause, the coach's answer on their current link, expired or not, for a
+        `coach_accepted` clause, and when each section with opening conditions first opened, for the hub."""
         kept, links, coach_answers = {}, {}, {}
         now = timezone.now()
         for contact in self.contacts.select_related("invitation").order_by("block_id", "position"):

@@ -239,14 +239,6 @@ class BlockType(NamedTuple):
         """✨ Whether the participant does something here. Progress counts these blocks and no others."""
         return self.captures is not None
 
-    @property
-    def may_wait_on_comparison(self):
-        """✨ Whether a block of this type may carry `after_comparison` (ticket 68): a capture block answered on its page,
-        whose save the engine can refuse until the comparison is viewed. Not a sort, which is scored once when sent, nor a
-        contact list, whose people are kept each at their own address. The schema allows `after_comparison` on exactly
-        these types (fix-2), so a change here is made there too."""
-        return self.is_interactive and not self.scored and self.captures is not CONTACTS
-
 
 # ✨ Never remove or rename an entry while any stored pathway version uses it: versions are never edited, so every
 # response pinned to one would break (spec, The pathway document and versions).
