@@ -209,6 +209,23 @@ def test_coach_accepted_passes_only_for_an_acceptance_on_the_coachs_current_link
     assert unmet(section, answers) == ([] if passes else ["Wait for your coach."])
 
 
+@pytest.mark.parametrize(
+    "answers, passes",
+    [
+        ({coach_answer_key("coach"): "accepted", links_issued_key("coach"): 0}, True),
+        ({links_issued_key("coach"): 0}, False),
+        ({coach_answer_key("coach"): None, links_issued_key("coach"): 1}, False),
+    ],
+    ids=["accepted on an expired current link", "revoked", "reissued"],
+)
+def test_coach_accepted_holds_on_an_expired_link_but_not_once_revoked_or_reissued(answers, passes):
+    """✨ ADR 0019, as the answers the gate reads hold each (A1-64): an expired link is no working link but keeps its
+    record and answer; a revoked one has no record; a reissued one works and starts unanswered."""
+    section = section_gated_by(clause("coach_accepted", block="coach", message="Wait for your coach."))
+
+    assert unmet(section, answers) == ([] if passes else ["Wait for your coach."])
+
+
 # Combinations, and a message for each failing clause
 
 
