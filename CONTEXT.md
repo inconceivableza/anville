@@ -92,7 +92,7 @@ _Avoid_: hidden section, one-time section, locked (it is not waiting on anything
 
 **Opening condition**:
 Something other than a required section that must hold before a section first opens, such as the participant's coach having accepted, each with its own authored message. Once the section has opened it stays open, whatever happens to the condition later.
-_Avoid_: gate (which governs completing a section, not opening it), prerequisite, unlock rule.
+_Avoid_: gate (which governs completing a section, not opening it), prerequisite, unlock rule, waiting on the comparison (a block's, not a section's).
 
 **Locked section**:
 A section whose required sections are not yet complete, or whose opening conditions do not yet hold, so it cannot be opened. Being locked comes from section order and opening conditions; gates come from a section's own requirements for completing it.
@@ -105,6 +105,10 @@ _Avoid_: check, validation, locked section. (The prior plans used "Gate" for del
 **Recap**:
 A block that shows a participant's earlier answers back to them through a named view, with an authored message for when there is nothing to show yet.
 _Avoid_: summary, snapshot, derived block.
+
+**Signpost**:
+A block that points to another part of the pathway, says where that part stands, and has one button that goes there. A **section signpost**, such as Section 1's card for the Strengths assessment, leads to a section. A **comparison signpost**, such as Section 1's "How others see you", leads to the comparison. Its button does what the results page's "Compare with how others see you" does, and the hub and the Five trusted voices card each offer the same button and status.
+_Avoid_: link, section link, comparison link, comparison card, dynamic card, "How others see you" (one pathway's title).
 
 **Coach brief**:
 The authored guidance for the coach's conversation with the participant about what they share: its purpose, length, questions to ask, what to look out for and what to avoid. The participant may read it too.
@@ -257,6 +261,14 @@ _Avoid_: gap analysis, 360.
 **Answer collection**:
 The period in which a participant's observers may send their observer assessments. It **freezes** when the participant first asks to see a comparison with at least the minimum number of observers' answers in (pressing the button, not loading the page), after which no observer assessment is accepted, and unfreezes if withdrawals leave fewer than the minimum number of observers, until the next such press.
 _Avoid_: collection (on its own), answer window, lock, closing.
+
+**Viewed**:
+What a participant's comparison is once they have pressed through to it with at least the minimum number of observers' answers in. It stays viewed whatever answer collection does afterwards, and only a demonstration taking back the self-assessment can undo it. The first such press also freezes answer collection, but the two are separate: when collection unfreezes, the comparison is still viewed. Any press through to the comparison, including one below the minimum, is a **visit**, and sharing with the coach depends on a visit. Opening the comparison's address directly counts as neither.
+_Avoid_: seen, opened, unlocked, visited (for viewed), frozen (for viewed).
+
+**Waiting on the comparison**:
+What a block is while the participant can see it but cannot answer it because the comparison has not been viewed yet, as with Section 1's reflection. Once the comparison is viewed, the block can be answered from then on. When the only open work in a section is waiting this way, the hub's next step skips that section. The participant's copy says such a block "opens", but its section is not locked.
+_Avoid_: opening condition, locked, opens (outside the copy), held back (what a section signpost can do to the blocks after it, which it hides).
 
 **Enrolment code**:
 A shared code that admits a person to sign up to a deployment, required unless the deployment turns it off or the person arrives by a join link. It grants access only and never stands in for consent.
