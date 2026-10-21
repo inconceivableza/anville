@@ -327,11 +327,23 @@ The homepage (`/`):
 - Once the sort is in, back on Section 1 the card reads "You've completed the assessment. You can review your results any time." in place of "Sort your strengths into buckets…", and the button reads "View my results →". Clicking it opens your results page (or, with tie-break pairs still to answer, the next pair), never the assessment's start page. The status chip reads "Complete". Same in both pathways.
 - Phone width: the finished sentence and the "View my results →" button wrap within the card.
 
+## How others see you (Section 1's card under the Strengths assessment; after `migrate`, rebuild the frontend and load the pathway again, with a participant started after that)
+
+- Before the sort is in, Section 1 shows no "How others see you" card. Once it is in, the card sits under the Strengths assessment card and above the reflection, drawn as that card is: its title, the "Compare with how others see you →" button, then its status chip on a line of its own.
+- With fewer than three observers answered, the chip reads "Waiting for answers (2 of 3)" (the count as it stands). Pressing the button opens "Not enough answers yet", as the results page's button does, and back on Section 1 the chip still says waiting.
+- With three answered, the chip reads "Ready to view". Pressing the button opens "Before you look", exactly as from the results page; "← Back to results" changes nothing, and back on Section 1 the chip still reads "Ready to view". Confirming opens the comparison, and back on Section 1 the chip reads "Viewed".
+- Typing the comparison's address (`/results/strengths-sort/comparison/`) before pressing anything shows it, but the chip stays "Ready to view".
+- An observer withdraws after "Viewed", leaving two: the chip still reads "Viewed".
+- With JavaScript turned off, the button still opens "Before you look" and confirming still opens the comparison.
+- Keyboard only: Tab reaches the button, its focus is visible, and Enter presses it. Screen reader: VoiceOver reads it as a button, then the status after it.
+- Phone width: the title and button wrap within the card, and the chip stays a small pill the width of its words.
+- On the faithful port (load `pathways/whatever-you-do-faithful-port.json`): Section 1 has no such card.
+
 ## Sections 2–4 on paper (after Section 1, with a coach's link and three people's links made)
 
 - The hub lists onboarding, Section 1, the Strengths assessment, "The shape of your life", "Putting your calling into words", "Growth plan" and Section 5, and no "The Workbook".
 - Section 1 completes with the sort in and the reflection written, without visiting the comparison and with nobody invited; its checklist lists only the assessment and the reflections.
-- With Section 1 complete and nobody invited, Section 2's entry says "Opens once you've finished Walk with a coach and Five trusted voices."; once the coach is saved, "Opens once you've finished Five trusted voices."; once three people are added, it opens. Done the other way round (both cards first), it says "Opens once you've finished How you've been designed."
+- With Section 1 complete and nobody invited, Section 2's entry says "Opens once you've finished Walk with a coach and Five trusted voices."; once the coach is saved, "Opens once you've finished Five trusted voices."; once three people are added, it opens. With a participant started after the pathway was loaded again (B1A-66): Section 2 opens with the sort in and both cards complete while Section 1 is still unfinished; before the sort, with nothing else done, its entry says "Opens once you've finished Strengths assessment, Walk with a coach and Five trusted voices." Section 3's entry then says "Opens once you've finished How you've been designed and The shape of your life.", and once Section 2 alone is finished, "Opens once you've finished How you've been designed." Phone width: the longer note wraps within its entry.
 - Walk with a coach's and Five trusted voices' pages have no "Mark complete" and no "Mark as not complete". Until complete, each lists what it waits on ("Choose a coach and send them their link.", "Add at least 3 people.") as plain text, not a link; once complete, nothing below the list. The header's count goes up as each completes.
 - Five trusted voices stays "Complete" after revoking one person's link (and Section 2 stays open). Phone width: Section 2's lock note wraps within its entry.
 - While Section 2 is the next step, the hub's next step shows its title and "About 30–40 minutes". Section 3's entry says "Opens once you've finished The shape of your life.", and Section 4's "Opens once you've finished Putting your calling into words.".
@@ -596,3 +608,69 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - Beside the lines, deacon stays in lower case, as the prototype wrote it: the results page's APEST(d) profile, the comparison's rows and a coach's link all read "deacon".
 - Wherever text names it, it is "Deacon": the tie-break boxes (`seed_tie_break --profile tied-apest --answers behind` reads "Evangelist now sits on top, in place of Deacon, after your answers to “Which is more true of you?”."), the heading over its item scores under "Show item scores", a largest-gaps card on the comparison that names it ("Deacon (APEST(d))"; `seed_observers`, until deacon is among the largest gaps), and the leaders listed under "The results should then show:", in the "Demo profile" guide and in `seed_tie_break`'s output.
 - The faithful port reads the same, beside its lines and in its item scores and largest gaps. A result scored against a pathway version loaded before this change still reads "deacon" everywhere, as before. Same at phone width.
+
+## Section 3 waits on the coach (A1-64; migrate, load both pathways again, and use a participant started after that)
+
+- With the sections Section 3 requires unfinished and the coach not yet accepted, the hub's note under Section 3 reads "Opens once you've finished {those sections} and your coach has accepted." Finish them: it reads "Opens once your coach has accepted. If they decline, choose someone else." Section 3 shows "Locked" on the hub and in the sidebar, with no link, and typing `/sections/calling/` leads back to the hub.
+- From the coach page, open the coach's link in a private window and decline: Section 3 stays locked. Reissue the link and accept: Section 3 opens on the hub and in the sidebar.
+- Then revoke or reissue the coach's link, or choose another coach: Section 3 stays open.
+- On the faithful port, Section 3 opens as before, with no coach. Same at phone width: the longer note wraps under the section's title, nothing scrolls sideways.
+
+## Refusals without JavaScript (ticket 71; JavaScript switched off in the browser's developer tools)
+
+- A page left open after collection froze: open the list's page from the hub's Five trusted voices card in one tab, freeze collection in another (press "Compare with how others see you →" with three answered, and confirm), then in the first tab type a name and email in the empty row and press "Get link", or press "Issue link" beside someone. Each shows the list's page again in the participant's dark frame, with "You've seen your results, so no more answers are added. You can't add anyone…" at the top of the list, no empty row and no "Issue link"; nobody is added and no link is shown.
+- A section not open yet: open a page of a section that another section's completion opens, then in another tab press "Mark as not complete" on that other section, so the first is locked again. In the first tab type an answer and press Enter (or "Save"), or press a coach checklist button where the page has one: a page in the participant's dark frame with "← Back to the hub", "Not saved" and "This is not open yet."; the link leads to the hub, and the hub shows nothing saved from that press.
+- With JavaScript on, the same presses show only the short "Not saved. …" line beside what was pressed, as before.
+- Phone width: the refusal page and the list's page fit with no sideways scroll.
+
+## More than five trusted voices (ticket 70; rebuild the frontend and load the pathway again, then start a new participant)
+
+- Five trusted voices' page: below the five rows, "Five is a good number, but you can add more." and an "Add another person" button, from the start, before any row is filled.
+- With JavaScript: type a name in an empty row without pressing "Get link", and change someone listed without waiting for "Saved", then press "Add another person". A sixth, empty row appears below the others marked "Optional", and what you typed in the other rows is still there. Press it again: a seventh. Give the sixth a name and email and press "Get link": the link dialog opens, and the hub's card counts 6 invited.
+- Fill all five rows: no sixth row appears until "Add another person" is pressed.
+- Without JavaScript (switched off in the browser's developer tools; fix-1, ADR 0020): with two people listed, change the first person's name, type a name and email in the third row and only a name in the fourth, pressing nothing, then press "Add another person". The page comes back at a new sixth row: the first person's new name is saved (reload the hub's list in another tab to see it), the third and fourth rows are as you typed them, and the hub's card still counts 2 invited.
+- Still without JavaScript: give the second person an invalid email ("jo@") and press "Add another person": "Not saved. Check the email address." in their row, every row as typed, no new row, and nothing saved (the other tab still shows the old email). Put it right, then press "Get link" in the fourth row (its email still empty): "Not saved" in that row, nothing else saved. Give it an email and press its "Get link": the link shows for that person, now listed third, the second person's corrected email is saved, and what you typed in the other row comes back in the row below them, unsaved; the extra rows are still there. A person's Save saves every person's edit in the same way.
+- Typing too long for the cookie (fill several empty rows with very long names and emails, then "Get link" on one): the page comes back with the link and every row as typed. Reload and confirm sending again: the person is listed once, not twice, and no link shows (reissue it from their row).
+- Without JavaScript, Enter in a row presses the first row's button (Save, or the first empty row's "Get link"): edits are saved and everything typed comes back. With JavaScript, Enter in an empty row presses that row's own "Get link", and in a person's row saves that row, as before; changing a person still saves on its own as you type, showing "Saved".
+- Removing the sixth person takes their row away, back to five.
+- Collection frozen (as in ticket 71's check): no sentence and no "Add another person".
+- The faithful port's contact list shows "Add another person" below its five rows, with no sentence.
+- Phone width: the sentence and the button sit below the rows with no sideways scroll.
+
+## Section 1's reflection waits for the comparison (ticket 68; rebuild the frontend and load both pathways again, then start a new participant)
+
+- Section 1, with the sort in: the reflection's box shows, faded, with "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer." above it. Nothing can be typed in it, and its "Save" (without JavaScript) cannot be pressed.
+- Choose a coach and give three people links: the hub's next step is Section 2, not Section 1. Mark Section 2 finished: the next step reads "Waiting on answers" / "Section 1's reflection opens once at least 3 of the people you invited have answered and you've seen how others see you.", with a button to Section 1.
+- Have two people answer (their links in private windows), then press "Compare with how others see you →": the explanation shows, and the reflection is still faded. Have a third answer and press it again, confirming: back on Section 1 the reflection can be written, and saves. The hub's next step is Section 1 again.
+- Have one of the three withdraw (collection unfreezes): the reflection still saves.
+- The faithful port's reflection can be written as soon as the sort is in, as before.
+- Phone width: the message wraps above the box with no sideways scroll.
+
+## The hub while Section 3 waits on the coach (ticket 65; rebuild the frontend, load both pathways again, and use a participant started after that)
+
+- Walk with a coach card, with no coach chosen: a small light "Manage" pill under its sentence, at its own width, leading to the coach page; and above the sentence, in darker type, "Section 3 opens once your coach accepts". Choose a coach: the same line and button.
+- Five trusted voices card: its "Manage" is now the same small pill, at its own width rather than across the card.
+- Finish Section 1 and Section 2 with the coach's link unanswered: the next-step panel reads "Waiting on your coach to respond" / "Section 3 opens once {coach} has accepted.", with a "Your coach" button to the coach page, in place of "Nothing is waiting for you right now."
+- Decline from the coach's link in a private window: the panel reads "{coach} has said no" / "Choose someone else to walk with you. Section 3 opens once they accept.", and the card's line "Choose another coach to open Section 3". Revoke the link, or remove the coach: "Choose a coach" / "Section 3 opens once your coach has accepted.", and the card's line is back to "Section 3 opens once your coach accepts".
+- Issue a link again and accept: Section 3 is the next step, and the card has no line, as it has none once Section 3 has opened, whatever happens to the link after.
+- The faithful port's hub, which has no coach and no side cards: its next step is as before.
+- Phone width: both cards' pills stay small and on one line, the cards below the list with no sideways scroll; the panel's button sits under its sentence.
+
+## How others see you on the hub (ticket 67b; rebuild the frontend, load the pathway again, and use a participant started after that)
+
+- Before the sort is in, the hub lists no "How others see you" row within Section 1, and the Five trusted voices card has only "Manage".
+- Once the sort is in: within Section 1, after the Strengths assessment, a row "How others see you" with its status as the row's tag; on the Five trusted voices card, beside "Manage", a small ringed "How others see you →" pill, with the same status after it in small capitals. Each reads the same as Section 1's card: "Waiting for answers (2 of 3)" with two answered, "Ready to view" with three, "Viewed" once confirmed.
+- With three answered, pressing the row's title, and pressing the card's pill, each open "Before you look", exactly as Section 1's card and the results page do; "← Back to results" changes nothing. With fewer than three, each opens "Not enough answers yet".
+- With JavaScript turned off, both still open "Before you look", and confirming opens the comparison.
+- Once confirmed (collection frozen): the voices card still reads "You've seen your results, so no more answers are added." under its tag, and its pill still opens the comparison, with nothing asked.
+- Keyboard only: Tab reaches the row's title and the card's pill, each with visible focus, and Enter presses it. Screen reader: each reads as a button.
+- The faithful port's hub has no such row and no side cards.
+- Phone width: the row stays one line high beside its tag, as the Strengths assessment's does; on the card, "Manage" and the comparison's pill share a line where they fit, the status wrapping under them, with no sideways scroll.
+
+## Before we begin once only (ticket 69; load both pathways again, then a participant started after that)
+
+- *Whatever You Do*: a new participant is taken through Before we begin's two pages, as before. Once "Continue →" on the ratings page completes it, the hub neither lists Before we begin nor counts it ("0 of 8 sections complete"), and nor does the sidebar.
+- Typing `/sections/onboarding/` or `/sections/onboarding/pages/2/` in the address bar lands on the hub. So does pressing Back to a ratings page left open from before completing and changing a rating, with JavaScript on and off; the reason and ratings stay as they were.
+- An organisation's admin sees the same count for that member as the participant's hub shows.
+- The faithful port: once Before we begin is complete it is still listed on the hub and in the sidebar, and its pages open as before.
+- Phone width: the hub and the sidebar list the sections as above, with no sideways scroll.

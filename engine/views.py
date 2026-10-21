@@ -1,6 +1,7 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../LICENSE.md
 
+import hashlib
 import json
 import mimetypes
 from typing import NamedTuple
@@ -9,7 +10,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.humanize.templatetags.humanize import apnumber
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -37,6 +38,7 @@ from engine.document.blocks import (
     CONTACTS,
     blocks_of,
     coach_brief,
+    comparison_status,
     landing_of,
     link_shown,
     page_count,
@@ -55,9 +57,17 @@ from engine.document.coach import (
     coach_from_form,
     commitments,
 )
-from engine.document.contacts import LIST_FULL, MAX_CONTACTS, contact_from_form, needed, rows_of, voices_card
+from engine.document.contacts import (
+    LIST_FULL,
+    MAX_CONTACTS,
+    can_add_row,
+    contact_from_form,
+    needed,
+    rows_of,
+    voices_card,
+)
 from engine.document.aggregation import aggregate
-from engine.document.gates import clauses_of, links_issued_key
+from engine.document.gates import clauses_of, links_issued_key, opened_key, waits_on_comparison
 from engine.document.scoring import score
 from engine.hub import (
     COMPLETE,
@@ -65,6 +75,7 @@ from engine.hub import (
     complete_sections,
     hub_for,
     is_locked,
+    is_once_only_and_complete,
     open_blocks,
     page_reached,
     section_by_id,
@@ -108,9 +119,12 @@ class ParticipantState(NamedTuple):
     fixed: set
 
     def reached(self, section):
-        """✨ The page of a section this participant has reached, or None while the section is locked. Every way into
-        a section (its address, "Continue →", completion, an answer or a checklist step) is guarded by this."""
+        """✨ The page of a section this participant has reached, or None while the section is locked, and for a once-only
+        section once complete, never seen again (ticket 69). Every way into a section (its address, "Continue →",
+        completion, an answer or a checklist step) is guarded by this."""
         if is_locked(section, self.completed, self.answers, self.sections, self.moved_past):
+            return None
+        if is_once_only_and_complete(section, self.completed):
             return None
         return page_reached(section, self.moved_past, self.answers, self.sections)
 
@@ -159,6 +173,7 @@ def hub(request):
     if wizard is not None:
         return redirect(wizard)
     hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    coach = _coach_of(state.response)
     return render(
         request,
         "engine/hub.html",
@@ -166,23 +181,72 @@ def hub(request):
             "title": text_for(state.version.document["title"], "participant"),
             "hub": hub,
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
-            "side_cards": _side_cards(state, hub),
+            "coach_wait": _coach_wait_panel(state, hub, coach),
+            "side_cards": _side_cards(state, hub, coach),
+            "coach_card": _coach_card(state, hub, coach),
             "voices": _hub_voices(state, hub),
+            "comparison": _hub_comparison(state),
+            "minimum": minimum_observers(state.version.document),
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
 
 
-def _side_cards(state, hub):
-    """✨ The hub's side cards, the coach's section's tagged with where the coach stands (ticket 51b)."""
+def _hub_comparison(state):
+    """✨ The document's comparison link as the hub shows it, in a row and beside Manage on the Five trusted voices card
+    (ticket 67b): its status and press as its section's card has them (`_comparison_link_shown`), with its title, the
+    section it is in and the part of that section holding its sort, after which its row is listed. None before there
+    is a result, and for a pathway without one."""
     document = state.version.document
-    coach = _coach_of(state.response)
+    for block in blocks_of(document):
+        shown = _comparison_link_shown(state, block)
+        if shown is not None:
+            return {
+                **shown,
+                "title": authored_text(block, "participant")["title"],
+                "section": section_of(document, block["id"])["id"],
+                "after": section_of(document, block["sort"])["id"],
+            }
+    return None
+
+
+def _coach_section_of(document):
+    """✨ The identifier of the section holding the document's coach checklist, or None for a document without one."""
     checklists = [block["id"] for block in blocks_of(document) if block["type"] == "coach_checklist"]
-    coach_section = section_of(document, checklists[0])["id"] if checklists else None
+    return section_of(document, checklists[0])["id"] if checklists else None
+
+
+def _side_cards(state, hub, coach):
+    """✨ The hub's side cards, the coach's section's tagged with where the `coach` stands (ticket 51b)."""
+    coach_section = _coach_section_of(state.version.document)
     return [
         with_coach_answer(card, coach["answer"] if coach else None) if card.id == coach_section else card
         for card in hub.side_cards()
     ]
+
+
+def _coach_card(state, hub, coach):
+    """✨ What the Walk with a coach card adds to a side card's own (ticket 65): {"section", "manage", "line"}, its
+    "Manage" leading to the coach page, None while the card is locked, and its line while a section waits on the
+    `coach` at all, None otherwise."""
+    wait = hub.coach_wait
+    return {
+        "section": _coach_section_of(state.version.document),
+        "manage": _coach_page_of(state.version.document, hub),
+        "line": wait.line(coach["answer"] if coach else None) if wait is not None else None,
+    }
+
+
+def _coach_wait_panel(state, hub, coach):
+    """✨ What the hub's next-step panel says in place of "Nothing is waiting for you right now" while nothing is next
+    and a section waits on nothing but the coach's acceptance (ticket 65): {"heading", "sentence", "coach_page"}, by
+    the `coach`'s answer, or None otherwise, or with no coach page to lead to."""
+    wait = hub.coach_wait
+    coach_page = _coach_page_of(state.version.document, hub)
+    if hub.next_step is not None or wait is None or not wait.only or coach_page is None:
+        return None
+    wording = wait.panel(coach["answer"] if coach else None, coach["name"] if coach else "")
+    return {**wording._asdict(), "coach_page": coach_page}
 
 
 def _photo_of(document, section_id):
@@ -436,11 +500,19 @@ def save_answer(request, block_id):
     # lock or an unconfirmed reading holds it. Otherwise they could fill it in without ever opening it, and
     # both would be decoration again, which is exactly the prototype's mistake.
     section = section_of(state.version.document, block_id)
+    if is_once_only_and_complete(section, state.completed):
+        # ✨ Never seen again once complete (ticket 69), so not refused on its page: there is none to go back to.
+        return _go_to(request, reverse("hub"))
     if not _is_open(state, section, block):
-        return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
+        return _refuse_shut(request)
     if block_id in state.fixed:
         # ✨ Refused here, not only disabled on the page, so a page left open from before completing cannot change it.
         return _answer_refused(request, state, section, block_id, FIXED_REFUSAL, status=409)
+    if waits_on_comparison(block, state.answers):
+        # ✨ Refused here, not only disabled on the page, so the reflection is written only once its comparison has been
+        # seen (ADR 0019).
+        refusal = text_for(block["after_comparison"]["message"], "participant")
+        return _answer_refused(request, state, section, block_id, refusal, status=403)
     block_type = BLOCK_TYPES[block["type"]]
     try:
         value = answer_from_form(state.version.document, block, request.POST.get("value"))
@@ -471,12 +543,14 @@ def _answer_refused(request, state, section, block_id, refusal, status):
     """✨ An answer not saved, and why: with htmx, the status line beside it; without, its page again, the reason shown
     at the answer. A form submitted as a full page (Enter in an answer field does that) never lands the participant on
     the bare status line (fix-7)."""
-    if _is_htmx(request):
-        return render(request, "engine/save_status.html", {"refusal": refusal}, status=status)
-    shown = _section_page(state, section, page_of(section, block_id))
-    on_page = next(block for block in shown["section"]["blocks"] if block["id"] == block_id)
-    on_page["refusal"] = refusal
-    return _section_shown(request, state, section, shown, status=status)
+
+    def its_page(status):
+        shown = _section_page(state, section, page_of(section, block_id))
+        on_page = next(block for block in shown["section"]["blocks"] if block["id"] == block_id)
+        on_page["refusal"] = refusal
+        return _section_shown(request, state, section, shown, status=status)
+
+    return _refused(request, refusal, status, page=its_page)
 
 
 @sensitive_post_parameters()
@@ -497,7 +571,7 @@ def coach_checklist(request, block_id):
     block = _block_of_type(state.version, block_id, "coach_checklist")
     section = section_of(state.version.document, block_id)
     if not _is_open(state, section, block):
-        return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
+        return _refuse_shut(request)
     to = request.POST.get("step")
     if to not in CHECKLIST_STEPS:
         return HttpResponseBadRequest("The coach checklist has no such step.")
@@ -866,19 +940,24 @@ def visit_comparison(request, block_id):
 
     With at least the minimum number of observer assessments in, and collection not yet frozen, the press first asks:
     how many of the people invited have answered, and that once they look no more answers are added. Its button
-    confirms, which freezes collection, then goes on as before (ticket 55). Below the minimum nothing is asked."""
+    confirms, which freezes collection, then goes on as before (ticket 55). Below the minimum nothing is asked.
+
+    A press with the minimum in, confirmed or with collection already frozen, is also the view a comparison link's
+    "Viewed" reads (ticket 67a), kept once withdrawals unfreeze collection."""
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return _see_other(page_url(section["id"], section["page"]))
     response = state.response
     answered = len(ObserverResponse.assessments_for(response).assessments)
-    if response.collection_frozen_at is None and answered >= minimum_observers(state.version.document):
+    viewed = answered >= minimum_observers(state.version.document)
+    if response.collection_frozen_at is None and viewed:
         if request.POST.get("confirmed") != "yes":
             invited = response.contacts.filter(role=Contact.Role.CONTACT).count()
             context = {"block_id": block_id, "answered": answered, "invited": invited, "everyone": answered >= invited}
             return render(request, "engine/comparison_confirm.html", context)
-        response.freeze_collection()
-    response.visit_comparison(block_id)
+        # ✨ Counted again under the freeze's lock: a withdrawal since may have left fewer than the minimum.
+        viewed = response.freeze_collection()
+    response.visit_comparison(block_id, viewed=viewed)
     return _see_other("comparison", block_id)
 
 
@@ -1042,16 +1121,20 @@ def invitations(request):
 def contacts(request, block_id):
     """✨ Add one person to a contact list, and make their observer's link in the same act (ticket 51a), so nobody is
     listed without having had one. Then back to the list at them, which shows the link this once. Nobody else on the
-    list is touched, so a page left open since someone else was added never drops them."""
+    list is touched, so a page left open since someone else was added never drops them. Without JavaScript the press
+    carries the whole list, and saves edits to people listed with it (fix-1, `_link_with_the_list`)."""
     state = _participant(request.user, first_version=lambda: _published_version(request.POST.get("version")))
     block = _block_of_type(state.version, block_id, "contact_list")
     shut = _list_shut(request, state, block)
     if shut is not None:
         return shut
     if _frozen(state.response):
-        return _refuse_frozen(request)
+        return _refuse_frozen(request, state, block)
+    typed = [] if _is_htmx(request) else _typed_rows(request)
+    if typed:
+        return _link_with_the_list(request, state, block, typed)
     try:
-        person = contact_from_form(request.POST.get("name"), request.POST.get("email"))
+        person = contact_from_form(*_typed_for_new(request))
     except AnswerRefused as refused:
         return _person_refused(request, state, block, refused)
     lifetime = link_lifetime(state.version.document)
@@ -1061,14 +1144,186 @@ def contacts(request, block_id):
     person, token = added
     link = _link_of(request, person, token)
     if _is_htmx(request):
-        # ✨ In place of the row they were typed into, and once every row is filled, the next empty one after them.
+        # ✨ In place of the row they were typed into, and nothing more: filling every row adds none, as "Add another
+        # person" does that (ticket 70).
         state = _participant(request.user)
         rows = _contact_rows(block, state.answers, {"contact": person.pk, "link": link})
         added_row = _as_typed_in(request, block, next(row for row in rows if row["contact_id"] == person.pk))
-        held = len(state.answers.get(block_id) or [])
-        grown = rows_of(block, held) > rows_of(block, held - 1)
-        return _rows_sent_back(request, state, block, [added_row, *rows[-1:]] if grown else [added_row])
+        return _rows_sent_back(request, state, block, [added_row])
     return _back_with_issued(request, person, link)
+
+
+def _link_with_the_list(request, state, block, typed):
+    """✨ "Get link" pressed without JavaScript, the whole list sent with it (fix-1): the edits typed to people listed
+    are saved, as their own Save would, and the person typed in the row pressed is added with their link, all or none.
+    A refusal, theirs or an edit's, comes back in its row with every row as typed. Then back to the list at them, as
+    ever, with what was typed in the other empty rows in the cookie that carries their link (ADR 0020).
+
+    Too much typing to fit in that cookie, and the list's page is drawn here instead, with their link and every row as
+    typed, never cached. A reload sends the press again, so the list's form carries a `press` (`_press_of`), and a press
+    that already added that person (`_repeated_press`) adds nobody again: the page comes back with them listed."""
+    pressed = request.POST.get("row", "")
+    new = next((row for row in typed if row["person"] is None and str(row["number"]) == pressed), None)
+    others = [row for row in typed if row["person"] is None and row is not new]
+    repeated = _repeated_press(request, block, new)
+    if repeated is not None:
+        return _list_page(request, _participant(request.user), block, 200, kept=others)
+    edits, refusals = _edits_of(state, block, typed)
+    try:
+        person = contact_from_form(new["name"] if new else "", new["email"] if new else "")
+    except AnswerRefused as refused:
+        if new is None:
+            return _press_refused(request, state, block, typed, refusals, refusal=str(refused))
+        refusals[new["number"]] = refused
+    if refusals:
+        return _press_refused(request, state, block, typed, refusals)
+    with transaction.atomic():
+        _save_edits(edits)
+        added = state.stored_response(request.user).add_contact(
+            block["id"], person, link_lifetime(state.version.document), MAX_CONTACTS
+        )
+        if added is None:
+            transaction.set_rollback(True)
+    if added is None:
+        return _press_refused(request, state, block, typed, {}, refusal=LIST_FULL)
+    person, token = added
+    _remember_press(request, person)
+    link = _link_of(request, person, token)
+    kept = [{"name": row["name"], "email": row["email"]} for row in others]
+    if len(json.dumps({"contact": person.pk, "link": link, "kept": kept})) <= ISSUED_COOKIE_MOST:
+        return _back_with_issued(request, person, link, kept=kept)
+    issued = {"contact": person.pk, "link": link}
+    drawn = _list_page(request, _participant(request.user), block, 200, kept=others, issued=issued)
+    drawn["Cache-Control"] = "no-store"
+    return drawn
+
+
+def _typed_rows(request):
+    """✨ What a press of the list's one form sent from each of its rows, in order, as {"number", "person" (None for an
+    empty row), "drawn", "name", "email"} (fix-1): none for a press that sent one person alone."""
+    keys = ("number", "person", "drawn", "name", "email")
+    return [
+        {
+            "number": int(number),
+            "person": int(person) if person.isdigit() else None,
+            "drawn": drawn,
+            "name": name,
+            "email": email,
+        }
+        for number, person, drawn, name, email in zip(*(request.POST.getlist(key) for key in keys))
+        if number.isdigit()
+    ]
+
+
+def _typed_for_new(request):
+    """✨ The name and email address typed for someone new: in the row whose "Get link" was pressed (`row`), among all
+    the rows sent, or else the one person sent."""
+    pressed = request.POST.get("row")
+    typed = next((typed for typed in _typed_rows(request) if str(typed["number"]) == pressed), None)
+    if typed is not None:
+        return typed["name"], typed["email"]
+    return request.POST.get("name"), request.POST.get("email")
+
+
+def _drawn(name, email):
+    """✨ A short fingerprint of a person as a row showed them, sent back with it, so a press saves only the rows
+    changed since the page was drawn: a page left open never puts back what another tab has since saved (fix-1)."""
+    return hashlib.sha256(f"{name}\0{email}".encode()).hexdigest()[:16]
+
+
+def _edits_of(state, block, typed):
+    """✨ The edits typed to people listed, sent with a press of the list's one form (fix-1), as ([(their identifier,
+    what to save)], {row number: why it is refused}): only rows changed since the page was drawn, each checked as their
+    own Save checks it. Someone taken off the list since is passed over."""
+    changed = [row for row in typed if row["person"] is not None and _drawn(row["name"], row["email"]) != row["drawn"]]
+    on_list = set(
+        Contact.objects.filter(
+            response=state.response,
+            block_id=block["id"],
+            role=Contact.Role.CONTACT,
+            pk__in=[row["person"] for row in changed],
+        ).values_list("pk", flat=True)
+    )
+    edits, refusals = [], {}
+    for row in changed:
+        if row["person"] not in on_list:
+            continue
+        try:
+            edits.append((row["person"], contact_from_form(row["name"], row["email"])))
+        except AnswerRefused as refused:
+            refusals[row["number"]] = refused
+    return edits, refusals
+
+
+def _save_edits(edits):
+    """✨ Save each edit from `_edits_of`, the person's link still working."""
+    for contact_id, fields in edits:
+        Contact.objects.filter(pk=contact_id).update(**fields)
+
+
+def _saved_with_the_list(request, state, block, typed, asked=0, back=None):
+    """✨ A press of the list's one form without JavaScript that adds nobody (fix-1): the edits typed to people listed
+    saved, all or none, then the list's page drawn here, at least `asked` rows, with what was typed in the empty rows
+    back in them, since it is kept nowhere. Sending it again saves the same again. With nothing typed in them, a
+    redirect to `back`, if given, as Save made before: only empty rows are left behind."""
+    edits, refusals = _edits_of(state, block, typed)
+    if refusals:
+        return _press_refused(request, state, block, typed, refusals)
+    _save_edits(edits)
+    state = _participant(request.user)
+    kept = [row for row in typed if row["person"] is None]
+    if back and not any(row["name"] or row["email"] for row in kept):
+        return _see_other(back)
+    return _list_page(request, state, block, 200, asked=asked, kept=kept)
+
+
+def _press_refused(request, state, block, typed, refusals, refusal=None):
+    """✨ The list's page again after a press of its one form was refused, nothing from it stored (fix-1): every row as
+    typed, each refused one with why and the field at fault, or `refusal` on the list's own line."""
+    kept = [
+        {**row, "refusal": str(refusals[row["number"]]), "invalid": refusals[row["number"]].field}
+        if row["number"] in refusals
+        else row
+        for row in typed
+    ]
+    return _list_page(request, state, block, 400, refusal=refusal, kept=kept)
+
+
+# ✨ Where the session remembers which person each recent press of a contact list's form added, by its `press`, and
+# how many it remembers: a press is one page drawn, so a handful covers any reload.
+PRESSES_KEY = "contact_presses"
+PRESSES_KEPT = 20
+
+
+def _press_of(block, rows):
+    """✨ What a contact list's form sends as `press`: a fingerprint of who it lists, so it changes as soon as a press
+    adds anyone, and a press sent again by a reload is told from a new one (fix-1, `_repeated_press`). The same list
+    draws the same page."""
+    listed = ",".join(str(row["contact_id"]) for row in rows if row["contact_id"])
+    return hashlib.sha256(f"{block['id']}:{listed}".encode()).hexdigest()[:16]
+
+
+def _repeated_press(request, block, new):
+    """✨ The person this press already added, if it is one sent again (a reload of the page it drew), or None: its
+    `press` added them, and they are on this list still, as the row pressed has them (fix-1)."""
+    added = request.session.get(PRESSES_KEY, {}).get(request.POST.get("press") or "")
+    if added is None or new is None:
+        return None
+    try:
+        person = contact_from_form(new["name"], new["email"])
+    except AnswerRefused:
+        return None
+    return Contact.objects.filter(pk=added, block_id=block["id"], **person).first()
+
+
+def _remember_press(request, person):
+    """✨ Remember that this press added `person`, for `_repeated_press`: only identifiers, never their details."""
+    press = request.POST.get("press")
+    if not press:
+        return
+    presses = request.session.get(PRESSES_KEY, {})
+    presses[press] = person.pk
+    request.session[PRESSES_KEY] = dict(list(presses.items())[-PRESSES_KEPT:])
 
 
 @login_required
@@ -1077,11 +1332,15 @@ def contacts(request, block_id):
 def contact(request, block_id, contact_id):
     """✨ Change one person's name or email address, and theirs alone (ticket 51a), as the row saves on a change with
     JavaScript, or by its Save button without (fix-2). Their link keeps working. Another participant's contact, or one
-    from another list, is a 404 that says nothing of whether it exists."""
+    from another list, is a 404 that says nothing of whether it exists. Save without JavaScript sends the whole list,
+    and saves every edit typed to it, the empty rows' typing coming back (fix-1, `_saved_with_the_list`)."""
     state, block, person = _listed_person(request, block_id, contact_id)
     shut = _list_shut(request, state, block)
     if shut is not None:
         return shut
+    typed = [] if _is_htmx(request) else _typed_rows(request)
+    if typed:
+        return _saved_with_the_list(request, state, block, typed, back=_listed_at(person))
     try:
         changed = contact_from_form(request.POST.get("name"), request.POST.get("email"))
     except AnswerRefused as refused:
@@ -1125,6 +1384,43 @@ def contact_removal(request, block_id, contact_id):
     return _see_other(_block_address(state.version.document, block_id))
 
 
+@login_required
+@consent_required
+@require_POST
+def another_row(request, block_id):
+    """✨ "Add another person" below a contact list's rows (ticket 70): one more empty row, storing nobody, since its
+    "Get link" adds the person as any empty row's does. With JavaScript, that row alone, to go after the others, with
+    the control again counting it, so nothing typed in any other row is touched; without, the list's page again
+    showing one more row than the page it was pressed on (`rows`), with the edits typed to people listed saved and
+    what was typed in each empty row back in it (fix-1, `_saved_with_the_list`). Refused, with nothing saved, once the
+    list shows the most it may hold, and while answer collection is frozen, when nobody can be added."""
+    state = _participant(request.user)
+    block = _block_of_type(state.version, block_id, "contact_list")
+    shut = _list_shut(request, state, block)
+    if shut is not None:
+        return shut
+    if _frozen(state.response):
+        return _refuse_frozen(request, state, block)
+    posted = request.POST.get("rows", "")
+    shown = rows_of(block, len(state.answers.get(block_id) or []), int(posted) if posted.isdigit() else 0)
+    if not can_add_row(shown):
+        return _refused(
+            request,
+            LIST_FULL,
+            status=400,
+            page=lambda status: _list_page(request, state, block, status, LIST_FULL, kept=_typed_rows(request)),
+        )
+    number = shown + 1
+    if _is_htmx(request):
+        context = {
+            "row": _empty_row(block, number),
+            "block": {"id": block_id, "rows_shown": number, "adds_rows": can_add_row(number)},
+            "pathway": {"version_id": state.version.pk},
+        }
+        return render(request, "engine/contact_row_added.html", context)
+    return _saved_with_the_list(request, state, block, _typed_rows(request), asked=number)
+
+
 def _listed_person(request, block_id, contact_id):
     """✨ The participant's state, a contact list block and one person on it, or a 404 that says nothing of whether
     another participant has a contact by that number, or this one on another list."""
@@ -1140,17 +1436,19 @@ def _list_shut(request, state, block):
     """✨ The refusal for a change to a contact list the participant has not reached, or None while it is open to change.
     A completion never fixes a contact list: only an agreement scale can be marked `fixed_once_complete`."""
     if not _is_open(state, section_of(state.version.document, block["id"]), block):
-        return render(request, "engine/save_status.html", {"refusal": "This is not open yet."}, status=403)
+        return _refuse_shut(request)
     return None
 
 
 def _person_refused(request, state, block, refused, contact_id=None):
     """✨ The list's page again, saying why one person was not saved, with what was typed in their row (or, for someone
-    new, the first empty one) and the field at fault marked, so nothing typed is lost."""
+    new, the first empty one) and the field at fault marked, so nothing typed is lost. A press that sent the whole list
+    without JavaScript is refused by `_press_refused` instead (fix-1)."""
+    name, email = (request.POST.get("name"), request.POST.get("email")) if contact_id else _typed_for_new(request)
     typed = {
         "contact_id": contact_id,
-        "name": request.POST.get("name", ""),
-        "email": request.POST.get("email", ""),
+        "name": name or "",
+        "email": email or "",
         "refusal": str(refused),
         "invalid": refused.field,
     }
@@ -1160,12 +1458,16 @@ def _person_refused(request, state, block, refused, contact_id=None):
         row = next((row for row in rows if row["contact_id"] == contact_id), None) or _empty_row(block, 0)
         row = _as_typed_in(request, block, {**row, **{key: typed[key] for key in typed if key != "contact_id"}})
         return _rows_sent_back(request, state, block, [row], status=400)
+    # ✨ As many rows as the page they typed in had shown, so a row "Add another person" added is still there
+    # (ticket 70).
+    pressed = request.POST.get("row", "")
+    asked = int(pressed) if pressed.isdigit() else 0
     section = section_of(state.version.document, block["id"])
-    shown = _section_page(state, section, page_of(section, block["id"]))
+    rows_back = {block["id"]: {"typed": typed, "asked": asked}}
+    shown = _section_page(state, section, page_of(section, block["id"]), rows_back=rows_back)
     on_page = next(shown_block for shown_block in shown["section"]["blocks"] if shown_block["id"] == block["id"])
-    on_page["rows"] = _contact_rows(block, state.answers, typed=typed)
     if not any(row.get("refusal") for row in on_page["rows"]):
-        on_page["refusal"] = typed["refusal"]
+        on_page["refusal"] = str(refused)
     return _section_shown(request, state, section, shown, status=400)
 
 
@@ -1234,7 +1536,8 @@ def issue_invitation(request, contact_id):
     """
     contact = _own_contact_or_404(request.user, contact_id)
     if contact.role == Contact.Role.CONTACT and _frozen(contact.response):
-        return _refuse_frozen(request)
+        state = _participant(request.user)
+        return _refuse_frozen(request, state, _block_of_type(state.version, contact.block_id, "contact_list"))
     link = _issue_link(request, contact)
     if contact.role == Contact.Role.CONTACT and _is_htmx(request):
         return _person_row_sent_back(request, contact, issued=link)  # ✨ with the link in it (fix-2)
@@ -1246,8 +1549,45 @@ def _frozen(response):
     return response is not None and response.collection_frozen_at is not None
 
 
-def _refuse_frozen(request):
-    return render(request, "engine/save_status.html", {"refusal": RESULTS_SEEN}, status=403)
+def _refuse_frozen(request, state, block):
+    """✨ Someone added, or an observer's link issued, while answer collection is frozen: with htmx, the short status;
+    without, the list's page again, whose own line says why (ticket 71)."""
+    return _refused(request, RESULTS_SEEN, status=403, page=lambda status: _list_page(request, state, block, status))
+
+
+def _list_page(request, state, block, status, refusal=None, asked=0, kept=(), issued=None):
+    """✨ The page a contact list is on, as it now stands, with `refusal`, if given, on the list's own line, at least
+    `asked` rows, `kept`, what was typed in its rows, back in them, and `issued`, a link just issued (fix-1)."""
+    section = section_of(state.version.document, block["id"])
+    rows_back = {block["id"]: {"asked": asked, "kept": kept}}
+    shown = _section_page(state, section, page_of(section, block["id"]), issued=issued, rows_back=rows_back)
+    if refusal is not None:
+        on_page = next(shown_block for shown_block in shown["section"]["blocks"] if shown_block["id"] == block["id"])
+        on_page["refusal"] = refusal
+    return _section_shown(request, state, section, shown, status=status)
+
+
+def _refuse_shut(request):
+    """✨ A press on something the participant has not reached (an answer, a coach checklist step, a change to a contact
+    list): with htmx, the short status line beside it; without, a page saying why, since the page it was on is shut
+    too (ticket 71)."""
+    return _refused(request, NOT_OPEN, status=403)
+
+
+def _refused(request, refusal, status, page=None):
+    """✨ The one way a press is refused: with htmx, the short status line beside what was pressed; without, `page` (a
+    callable drawing the page it was pressed on again, the refusal shown there, with the same status) or, with none,
+    a page of its own in the participant's frame saying why, with the way back to the hub. A form submitted as a full
+    page never lands the participant on the bare status line (fix-7, ticket 71)."""
+    if _is_htmx(request):
+        return render(request, "engine/save_status.html", {"refusal": refusal}, status=status)
+    if page is not None:
+        return page(status)
+    return render(request, "engine/refused.html", {"refusal": refusal}, status=status)
+
+
+# ✨ Why a press on something not reached is refused: a lock, an unconfirmed reading or a page not yet gone through.
+NOT_OPEN = "This is not open yet."
 
 
 # ✨ Why the participant can add nobody while answer collection is frozen: the Five trusted voices card's wording (ticket
@@ -1267,13 +1607,19 @@ def _link_of(request, contact, token):
     return request.build_absolute_uri(reverse(link_to, args=[token]))
 
 
-def _back_with_issued(request, contact, link):
-    """✨ A redirect to where the contact is listed, carrying the link just issued for that page to show this once."""
+def _back_with_issued(request, contact, link, kept=None):
+    """✨ A redirect to where the contact is listed, carrying the link just issued for that page to show this once, and
+    `kept`, what was typed in the list's other empty rows, for that page to put back in them (fix-1). That travels as
+    the link does, in the participant's own cookie, so it is kept nowhere of ours (ADR 0020); a caller with more than
+    fits (`ISSUED_COOKIE_MOST`) draws the page itself instead."""
     listed_at = _listed_at(contact)
     back = _see_other(listed_at)
+    issued = {"contact": contact.pk, "link": link}
+    if kept:
+        issued["kept"] = kept
     back.set_signed_cookie(
         ISSUED_COOKIE,
-        json.dumps({"contact": contact.pk, "link": link}),
+        json.dumps(issued),
         salt=ISSUED_COOKIE,
         max_age=ISSUED_COOKIE_SECONDS,
         path=listed_at.partition("#")[0],  # ✨ that page alone reads it
@@ -1287,6 +1633,9 @@ def _back_with_issued(request, contact, link):
 # ✨ Where a link just issued waits for the page that shows it, and for how long at most.
 ISSUED_COOKIE = "issued_link"
 ISSUED_COOKIE_SECONDS = 60
+# ✨ The most its contents may run to, as JSON: quoting can double them, and a browser drops a cookie past 4096 bytes,
+# signature and attributes included.
+ISSUED_COOKIE_MOST = 1800
 
 
 def _issued_link(request):
@@ -1749,13 +2098,24 @@ def _participant(user, first_version=Publication.current_version):
     for section in sections:
         if "side_card" in section and section["id"] in completed and section["id"] not in stored:
             participant_response.complete_section(section["id"])
+    # ✨ Likewise the first time a section with opening conditions is open, so it stays open once the coach's link is
+    # revoked or reissued, or the coach changed (ADR 0019).
+    moved_past = participant_response.moved_past_by_section()
+    for section in sections:
+        if (
+            "opens_when" in section
+            and opened_key(section["id"]) not in answers
+            and not is_locked(section, completed, answers, sections, moved_past)
+        ):
+            participant_response.open_section(section["id"])
+            answers[opened_key(section["id"])] = True
     return ParticipantState(
         response=participant_response,
         version=participant_response.version,
         sections=sections,
         answers=answers,
         completed=completed,
-        moved_past=participant_response.moved_past_by_section(),
+        moved_past=moved_past,
         fixed=set(participant_response.fixed_answers),
     )
 
@@ -1794,11 +2154,14 @@ def _section_or_404(version, section_id):
     return section
 
 
-def _section_page(state, section, page=1, issued=None, demo=None):
+def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None):
     """✨ One page of a section as its template needs it. Every page but the last ends in "Continue →", held by that
     page's own clauses; the last ends in the section's completion, held by the whole gate. `issued` is a link just
     issued, a coach's or an observer's, which the page shows this once beside the person it is for. `demo` is a demo
-    profile, from `_demo_prefill`, that a sort not yet in starts from (fix-23)."""
+    profile, from `_demo_prefill`, that a sort not yet in starts from (fix-23). `rows_back` is how a contact list's
+    rows come back from a press without JavaScript, by its identifier, as `_contact_rows` takes it (ticket 70,
+    fix-1)."""
+    rows_back = rows_back or {}
     version, answers, fixed = state.version, state.answers, state.fixed
     opened, activity_open = open_blocks(section, answers, state.sections, up_to_page=page)
     on_page = {block["id"] for block in pages_of(section)[page - 1]}
@@ -1844,6 +2207,8 @@ def _section_page(state, section, page=1, issued=None, demo=None):
                     _frozen(state.response),
                     drawn=_sort_results_drawn(state, block),
                     demo=demo,
+                    comparison=_comparison_link_shown(state, block),
+                    rows_back=rows_back.get(block["id"]),
                 )
                 for block in blocks
             ],
@@ -1919,12 +2284,42 @@ def _sort_results_drawn(state, block):
     return _results_drawn(state, result, block["sort"])
 
 
-def _block_for_participant(document, block, answers, fixed, states, issued=None, frozen=False, drawn=None, demo=None):
+def _comparison_link_shown(state, block):
+    """✨ For a `comparison_link` block, its sort and where the way to that sort's comparison stands, as
+    `comparison_status` words it, once there is a result; None before, and for any other block (ticket 67a)."""
+    if block["type"] != "comparison_link":
+        return None
+    sort = block["sort"]
+    if not Result.objects.filter(response=state.response, block_id=sort).exists():
+        return None
+    answered = len(ObserverResponse.assessments_for(state.response).assessments)
+    viewed = sort in state.response.comparisons_viewed
+    status, label = comparison_status(answered, minimum_observers(state.version.document), viewed)
+    return {"sort": sort, "status": status, "label": label}
+
+
+def _block_for_participant(
+    document,
+    block,
+    answers,
+    fixed,
+    states,
+    issued=None,
+    frozen=False,
+    drawn=None,
+    demo=None,
+    comparison=None,
+    rows_back=None,
+):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
     identifier; a link to a section outside the participant's track has no state and shows nothing. `issued` is a
     link just issued, a coach's or an observer's. While answer collection is `frozen`, a contact list says why it adds
-    nobody (ticket 55). `drawn` is a `sort_results` block's results, from `_sort_results_drawn`. A sort not yet in
-    starts from `demo`, a demo profile, with its guide beside it (fix-23)."""
+    nobody (ticket 55); otherwise it offers "Add another person" until it shows the most rows it may (ticket 70). Its
+    rows come back from a press without JavaScript as `rows_back` gives them (fix-1). `drawn` is a `sort_results`
+    block's results, from `_sort_results_drawn`, and `comparison` a `comparison_link`'s status, from
+    `_comparison_link_shown`. A sort not yet in starts from `demo`, a demo profile, with its guide beside it
+    (fix-23)."""
+    rows = _contact_rows(block, answers, issued, **(rows_back or {})) if block["type"] == "contact_list" else None
     widget = BLOCK_TYPES[block["type"]].widget
     shown_widget = widget(document, "participant", "") if widget else None  # ✨ the participant's wording names no one
     if demo is not None and BLOCK_TYPES[block["type"]].scored and block["id"] not in answers:
@@ -1944,7 +2339,10 @@ def _block_for_participant(document, block, answers, fixed, states, issued=None,
         text, sort = link_shown(block, text, linked, link.status == COMPLETE, "participant")
         results = reverse("results", args=[sort]) if sort else None
     return {
-        "rows": _contact_rows(block, answers, issued) if block["type"] == "contact_list" else None,
+        "rows": rows,
+        "rows_shown": len(rows) if rows is not None else None,
+        "adds_rows": rows is not None and not frozen and can_add_row(len(rows)),
+        "press": _press_of(block, rows) if rows is not None else None,
         "checklist": _opening_checklist(text, _coach_kept(answers, block["id"]), issued) if is_checklist else None,
         "id": block["id"],
         "landing": landing_of(block),  # ✨ where saving it without JavaScript comes back to
@@ -1960,6 +2358,11 @@ def _block_for_participant(document, block, answers, fixed, states, issued=None,
         "results": results,  # ✨ where a section link's button leads instead, once its section is complete (ticket 61)
         "frozen": RESULTS_SEEN if frozen and block["type"] == "contact_list" else None,
         "drawn": drawn,
+        "comparison": comparison,
+        # ✨ While it waits on the comparison, its authored message, and it is drawn disabled (ticket 68).
+        "waiting": text_for(block["after_comparison"]["message"], "participant")
+        if waits_on_comparison(block, answers)
+        else None,
     }
 
 
@@ -1971,16 +2374,23 @@ def _opening_checklist(text, kept, issued=None):
     return _checklist_screen(text)
 
 
-def _contact_rows(block, answers, issued=None, typed=None):
+def _contact_rows(block, answers, issued=None, typed=None, asked=0, kept=()):
     """✨ A contact list's rows: each person on it in order, with their invitation while their link works and the link
-    itself if it was just issued (`issued`, shown this once), then empty rows for the next people. Each row is marked
-    needed or optional by its place. `typed` is a person whose save was refused, shown as typed in their row, or for
-    someone new in the first empty one, with why and the field at fault."""
+    itself if it was just issued (`issued`, shown this once), then empty rows for the next people, as many as `asked`
+    for in all if that is more (ticket 70). Each row is marked needed or optional by its place. `typed` is a person
+    whose save was refused, shown as typed in their row, or for someone new in the first empty one, with why and the
+    field at fault. `kept` is what was typed in the rows of the page pressed without JavaScript, any refusal with it,
+    or else what the link just issued brought back: a person's in their row, and the empty rows' in order, each in the
+    next empty row, with a row for each (fix-1). Each person's row carries `drawn`, their fingerprint as stored."""
     people = answers.get(block["id"]) or []
+    if not kept and issued and any(person["id"] == issued["contact"] for person in people):
+        kept = issued.get("kept", ())
+    for_people = {typed_in["person"]: typed_in for typed_in in kept if typed_in.get("person") is not None}
+    for_new = [typed_in for typed_in in kept if typed_in.get("person") is None]
     links = Invitation.objects.filter(contact_id__in=[person["id"] for person in people], expires_at__gt=timezone.now())
     working = {invitation.contact_id: invitation for invitation in links}
     rows = []
-    for number in range(1, rows_of(block, len(people)) + 1):
+    for number in range(1, rows_of(block, len(people), max(asked, len(people) + len(for_new))) + 1):
         person = people[number - 1] if number <= len(people) else {"name": "", "email": "", "id": None}
         just_issued = issued and issued["contact"] == person["id"]
         rows.append(
@@ -1992,8 +2402,14 @@ def _contact_rows(block, answers, issued=None, typed=None):
                 "email": person["email"],
                 "invitation": working.get(person["id"]),
                 "issued": issued["link"] if just_issued else None,
+                "drawn": _drawn(person["name"], person["email"]) if person["id"] else "",
             }
         )
+    empty = (row for row in rows if row["contact_id"] is None)
+    pairs = [(row, for_people[row["contact_id"]]) for row in rows if row["contact_id"] in for_people]
+    for row, typed_in in [*pairs, *zip(empty, for_new)]:
+        row.update(name=typed_in["name"], email=typed_in["email"])
+        row.update({mark: typed_in[mark] for mark in ("refusal", "invalid") if mark in typed_in})
     if typed is not None:
         row = next((row for row in rows if row["contact_id"] == typed["contact_id"]), None)
         if row is not None:  # ✨ a full list has no empty row: its refusal is the list's own

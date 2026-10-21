@@ -11,7 +11,13 @@ from django.db.models import F, Func, Value
 from django.utils import timezone
 
 from access.consent import withdrawn_participants
-from engine.document.gates import comparison_visit_key, links_issued_key
+from engine.document.gates import (
+    coach_answer_key,
+    comparison_viewed_key,
+    comparison_visit_key,
+    links_issued_key,
+    opened_key,
+)
 from engine.document.observers import minimum_observers
 
 
@@ -68,10 +74,17 @@ class Response(models.Model):
     # ✨ When the participant first visited each sort's comparison with their observers, keyed by the sort's block, in
     # either state. Recorded, since a visit leaves no answer behind, and Section 1's gate waits on it (ticket 16c).
     comparisons_visited = models.JSONField(default=dict)
+    # ✨ When the participant first viewed each sort's comparison, keyed by the sort's block: visited it with at least the
+    # minimum number of observer assessments in (ticket 67a). Kept once withdrawals leave fewer, as a fixed answer is.
+    comparisons_viewed = models.JSONField(default=dict)
     # ✨ When answer collection froze: the participant confirmed "Compare with how others see you →" with at least the
     # minimum number of observer assessments in (ticket 55). Empty while it is open, and again once withdrawals leave
     # fewer than the minimum.
     collection_frozen_at = models.DateTimeField(null=True, blank=True)
+    # ✨ When each section with opening conditions first opened, keyed by section (ADR 0019). Recorded, as a hub side
+    # card's completion is, so a section once open stays open whatever later happens to its conditions, such as the
+    # coach's link revoked. Empty on a response from before opening conditions, whose sections carry none.
+    sections_opened = models.JSONField(default=dict)
     is_test_data = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -145,13 +158,29 @@ class Response(models.Model):
             updated_at=now,
         )
 
-    def visit_comparison(self, block_id):
-        """✨ Record that the participant visited a sort's comparison, in one UPDATE that merges it in. The first visit
-        keeps its time, as a fixed answer does, and a later one writes nothing."""
+    def visit_comparison(self, block_id, viewed=False):
+        """✨ Record that the participant visited a sort's comparison, and if `viewed`, with the minimum in, that they
+        viewed it, each in one UPDATE that merges it in. The first of each keeps its time, as a fixed answer does, and a
+        later one writes nothing."""
         now = timezone.now()
-        visited = Value({block_id: now.isoformat()}, output_field=models.JSONField())
+        stamp = Value({block_id: now.isoformat()}, output_field=models.JSONField())
         Response.objects.filter(pk=self.pk).exclude(comparisons_visited__has_key=block_id).update(
-            comparisons_visited=_MergeJson(visited, F("comparisons_visited")),
+            comparisons_visited=_MergeJson(stamp, F("comparisons_visited")),
+            updated_at=now,
+        )
+        if viewed:
+            Response.objects.filter(pk=self.pk).exclude(comparisons_viewed__has_key=block_id).update(
+                comparisons_viewed=_MergeJson(stamp, F("comparisons_viewed")),
+                updated_at=now,
+            )
+
+    def open_section(self, section_id):
+        """✨ Record that a section with opening conditions has opened, in one UPDATE that merges it in. The first time
+        is kept, and a later one writes nothing."""
+        now = timezone.now()
+        opened = Value({section_id: now.isoformat()}, output_field=models.JSONField())
+        Response.objects.filter(pk=self.pk).exclude(sections_opened__has_key=section_id).update(
+            sections_opened=_MergeJson(opened, F("sections_opened")),
             updated_at=now,
         )
 
@@ -180,8 +209,8 @@ class Response(models.Model):
     def clear_sort(self, block_id, reopened=()):
         """✨ Demo only (fix-19): take back the participant's sort for `block_id` and everything worked out from it, so
         they can sort again from the start. Its answer and result go, and the tie-break's answers and re-weighted result
-        with it; so does the visit to its comparison, and with it the freeze and the coach's sight of the results, both
-        of which rest on that visit. Each section in `reopened`, whose gate needed the sort, is no longer complete.
+        with it; so does the visit to its comparison and the view of it, and with them the freeze and the coach's sight
+        of the results, both of which rest on that visit. Each section in `reopened`, whose gate needed the sort, is no longer complete.
         Observers' assessments, the coach's link and every other answer stay. Done together or not at all."""
         with transaction.atomic():
             Result.objects.filter(response=self, block_id=block_id).delete()
@@ -192,6 +221,7 @@ class Response(models.Model):
                 answers=_WithoutKey(F("answers"), Value(block_id)),
                 fixed_answers=_WithoutKey(F("fixed_answers"), Value(block_id)),
                 comparisons_visited=_WithoutKey(F("comparisons_visited"), Value(block_id)),
+                comparisons_viewed=_WithoutKey(F("comparisons_viewed"), Value(block_id)),
                 completed_sections=completed,
                 collection_frozen_at=None,
                 updated_at=timezone.now(),
@@ -274,8 +304,10 @@ class Response(models.Model):
         """✨ The stored answers, with each block's contacts read in as its answer, as the gate and progress read it.
         Each contact carries its id, which a contact list's rows send back so a save can tell them apart. Each visit to
         a sort's comparison is read in too, under a key no block can have, for a `comparison_visited` clause, and so is
-        how many of each block's people have a working link, for a `links_issued` clause."""
-        kept, links = {}, {}
+        each view of one, for a block waiting on the comparison (ticket 68), how many of each block's people have a working link, for a `links_issued` clause, the coach's answer on their
+        current link, expired or not, for a `coach_accepted` clause, and when each section with opening conditions first
+        opened, for the hub."""
+        kept, links, coach_answers = {}, {}, {}
         now = timezone.now()
         for contact in self.contacts.select_related("invitation").order_by("block_id", "position"):
             person = {"name": contact.name, "email": contact.email, "id": contact.pk}
@@ -283,8 +315,15 @@ class Response(models.Model):
             if contact.live_invitation(now) is not None:
                 key = links_issued_key(contact.block_id)
                 links[key] = links.get(key, 0) + 1
+            invitation = getattr(contact, "invitation", None)
+            if contact.role == Contact.Role.COACH and invitation is not None:
+                # ✨ Expired or not, as the coach card shows it; a revoked link has no record, and a reissued one
+                # starts unanswered (ADR 0019).
+                coach_answers[coach_answer_key(contact.block_id)] = invitation.coach_answer
         visits = {comparison_visit_key(block_id): at for block_id, at in self.comparisons_visited.items()}
-        return {**self.answers, **kept, **visits, **links}
+        viewed = {comparison_viewed_key(block_id): at for block_id, at in self.comparisons_viewed.items()}
+        opened = {opened_key(section_id): at for section_id, at in self.sections_opened.items()}
+        return {**self.answers, **kept, **visits, **viewed, **links, **coach_answers, **opened}
 
 
 class Contact(models.Model):

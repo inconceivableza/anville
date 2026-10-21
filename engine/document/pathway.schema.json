@@ -457,6 +457,22 @@
       "description": "How long this takes, worded as it is shown, such as 'About 15 minutes'. On a section it shows on the hub and at the top of the section; on a block, just above the block, for a section with several activities.",
       "$ref": "#/$defs/text"
     },
+    "after_comparison": {
+      "description": "Holds a capture block until the participant has pressed 'Compare with how others see you →' for this sort with at least the minimum number of observer assessments in: until then it is shown but cannot be answered, with the message beside it. Once pressed it stays answerable, even if withdrawals later unfreeze answer collection.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sort", "message"],
+      "properties": {
+        "sort": {
+          "description": "The identifier of the sort whose comparison the block waits on.",
+          "$ref": "#/$defs/identifier"
+        },
+        "message": {
+          "description": "Shown with the block while it waits, such as 'This opens once you've seen how others see you.'",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
     "section": {
       "type": "object",
       "additionalProperties": false,
@@ -485,7 +501,11 @@
           }
         },
         "wizard": {
-          "description": "Take a participant who has not completed this section to it in place of the hub, shown page by page without the hub's links or the sidebar, beside the section's photo, as Before we begin is. Once complete it is listed in the hub as any other section.",
+          "description": "Take a participant who has not completed this section to it in place of the hub, shown page by page without the hub's links or the sidebar, beside the section's photo, as Before we begin is. Once complete it is listed in the hub as any other section, unless it is once-only.",
+          "const": true
+        },
+        "once_only": {
+          "description": "Once the participant has completed this section, never show it again: it leaves the hub, the sidebar and the count of sections, and its pages, its answers and its completion lead to the hub, so its answers can be neither seen nor changed, as Before we begin's are in Whatever You Do. Only a wizard may be once-only.",
           "const": true
         },
         "next_step": {
@@ -500,6 +520,7 @@
         },
         "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } },
         "gate": { "$ref": "#/$defs/gate" },
+        "opens_when": { "$ref": "#/$defs/opens_when" },
         "complete_label": {
           "description": "The wording of the button that completes the section, such as 'Continue →'. Without one, it reads 'Mark complete'.",
           "$ref": "#/$defs/text"
@@ -510,7 +531,7 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "section_link", "download", "page_break"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "comparison_link", "section_link", "download", "page_break"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
@@ -521,6 +542,7 @@
         { "if": { "properties": { "type": { "const": "contact_list" } } }, "then": { "$ref": "#/$defs/contact_list" } },
         { "if": { "properties": { "type": { "const": "coach_checklist" } } }, "then": { "$ref": "#/$defs/coach_checklist" } },        { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } },
         { "if": { "properties": { "type": { "const": "sort_results" } } }, "then": { "$ref": "#/$defs/sort_results" } },
+        { "if": { "properties": { "type": { "const": "comparison_link" } } }, "then": { "$ref": "#/$defs/comparison_link" } },
         { "if": { "properties": { "type": { "const": "section_link" } } }, "then": { "$ref": "#/$defs/section_link" } },
         { "if": { "properties": { "type": { "const": "download" } } }, "then": { "$ref": "#/$defs/download" } },
         { "if": { "properties": { "type": { "const": "page_break" } } }, "then": { "$ref": "#/$defs/page_break" } }
@@ -544,6 +566,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "rich_text" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "variant": {
           "description": "How the text is set off: plain prose, or a hint box (such as 'The big question').",
           "enum": ["plain", "hint"],
@@ -568,6 +591,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "scripture_reading" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "heading": { "$ref": "#/$defs/text" },
         "passages": {
           "type": "array",
@@ -611,6 +635,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "agreement_scale" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "prompt": { "$ref": "#/$defs/text" },
         "min_label": { "$ref": "#/$defs/text" },
         "max_label": { "$ref": "#/$defs/text" },
@@ -630,6 +655,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "single_select" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "prompt": { "$ref": "#/$defs/text" },
         "placeholder": {
           "description": "What the list shows before anything is chosen, such as 'Select...'. It is never an answer.",
@@ -654,7 +680,7 @@
       }
     },
     "contact_list": {
-      "description": "People who know the participant, a first name and an email address per row, each added with their observer's link or changed on their own. Once its rows are filled, one more is offered. They are kept as contacts, apart from the participant's answers. At most 50.",
+      "description": "People who know the participant, a first name and an email address per row, each added with their observer's link or changed on their own. 'Add another person' below the rows adds one more row at a time. They are kept as contacts, apart from the participant's answers. At most 50.",
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "type"],
@@ -662,6 +688,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "contact_list" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "needed": {
           "description": "How many of the list's first rows are marked as needed. The section's gate says what completing it takes.",
           "type": "integer",
@@ -675,6 +702,10 @@
           "minimum": 0,
           "maximum": 50,
           "default": 5
+        },
+        "more_note": {
+          "description": "One sentence above 'Add another person', saying more people can be added than the rows ask for.",
+          "$ref": "#/$defs/text"
         }
       }
     },
@@ -687,6 +718,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "coach_checklist" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "heading": { "$ref": "#/$defs/text" },
         "lead": { "description": "One sentence set off above the body.", "$ref": "#/$defs/text" },
         "body": { "description": "Why the choice matters. A blank line starts a new paragraph.", "$ref": "#/$defs/text" },
@@ -770,6 +802,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "sort_assessment" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "coach_brief": {
           "description": "The guidance for the coach's conversation about these results and their comparison, which the coach sees once the participant shares them (ticket 25a).",
           "$ref": "#/$defs/coach_brief"
@@ -785,6 +818,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "section_link" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "section": { "$ref": "#/$defs/identifier" },
         "body": {
           "description": "Plain text saying what is there. A blank line starts a new paragraph.",
@@ -820,9 +854,30 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "sort_results" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "sort": {
           "description": "The identifier of the sort whose results these are.",
           "$ref": "#/$defs/identifier"
+        }
+      }
+    },
+    "comparison_link": {
+      "description": "A card for the way to a sort's comparison with the participant's observers, once there is a result: its title, where it stands (waiting for answers, ready to view, or viewed) and the results page's 'Compare with how others see you →', which warns before answer collection freezes as that one does.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "sort", "title"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "comparison_link" },
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
+        "sort": {
+          "description": "The identifier of the sort whose comparison this leads to.",
+          "$ref": "#/$defs/identifier"
+        },
+        "title": {
+          "description": "The card's title, such as 'How others see you'.",
+          "$ref": "#/$defs/text"
         }
       }
     },
@@ -835,6 +890,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "download" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "file": {
           "description": "The PDF's name in the pathways/files folder, such as 'whatever-you-do-workbook-section-2.pdf'.",
           "type": "string",
@@ -858,6 +914,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "long_text" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "prompt": { "$ref": "#/$defs/text" },
         "placeholder": {
           "description": "Ghost text in the empty box, such as 'Dear me,'. A hint only: it is never saved as the answer.",
@@ -874,6 +931,19 @@
         "clauses": { "type": "array", "items": { "$ref": "#/$defs/clause" } }
       }
     },
+    "opens_when": {
+      "description": "What must be true before this section first opens, beside the sections it requires, such as the coach having accepted. Every clause must pass; while one fails the section is locked and the hub's note under it gives that clause's message. Once the section has opened it stays open, whatever later happens to these clauses.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clauses"],
+      "properties": {
+        "clauses": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/clause" } },
+        "with_sections": {
+          "description": "The hub's note while sections this one requires are unfinished too, naming them where it says {sections}, such as 'Opens once you've finished {sections} and your coach has accepted.' Without it, the note names only the sections.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
     "clause": {
       "description": "One requirement, chosen from a fixed set and configured. Never an expression (ADR 0003).",
       "type": "object",
@@ -887,7 +957,8 @@
             "distinct_value_count",
             "every_entry_has",
             "comparison_visited",
-            "links_issued"
+            "links_issued",
+            "coach_accepted"
           ]
         }
       },
@@ -898,7 +969,8 @@
         { "if": { "properties": { "type": { "const": "distinct_value_count" } } }, "then": { "$ref": "#/$defs/distinct_value_count" } },
         { "if": { "properties": { "type": { "const": "every_entry_has" } } }, "then": { "$ref": "#/$defs/every_entry_has" } },
         { "if": { "properties": { "type": { "const": "comparison_visited" } } }, "then": { "$ref": "#/$defs/comparison_visited" } },
-        { "if": { "properties": { "type": { "const": "links_issued" } } }, "then": { "$ref": "#/$defs/links_issued" } }
+        { "if": { "properties": { "type": { "const": "links_issued" } } }, "then": { "$ref": "#/$defs/links_issued" } },
+        { "if": { "properties": { "type": { "const": "coach_accepted" } } }, "then": { "$ref": "#/$defs/coach_accepted" } }
       ]
     },
     "clause_message": {
@@ -995,6 +1067,17 @@
         "type": { "const": "links_issued" },
         "block": { "$ref": "#/$defs/identifier" },
         "min": { "type": "integer", "minimum": 1 },
+        "message": { "$ref": "#/$defs/clause_message" }
+      }
+    },
+    "coach_accepted": {
+      "description": "The coach chosen through this coach checklist has accepted on their current link, even if that link has since expired. A decline, no link, a revoked or reissued link, or another coach chosen since, does not count.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "block", "message"],
+      "properties": {
+        "type": { "const": "coach_accepted" },
+        "block": { "$ref": "#/$defs/identifier" },
         "message": { "$ref": "#/$defs/clause_message" }
       }
     },

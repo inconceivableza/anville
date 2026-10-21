@@ -4,17 +4,17 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 3a (from 20 Oct)
 
 **Spec:** Engine: sections, tracks, gates, progress; Blocks
 
-- [ ] Section 2 opens once the sort is in and Walk with a coach and Five trusted voices are complete, whether or not Section 1 is
-- [ ] Section 2's lock note names what is unfinished, with the Strengths assessment named as the hub names it
-- [ ] Section 3 is locked until both Section 1 and Section 2 are complete, and its lock note names whichever are unfinished
-- [ ] A section may require a part of another section, and the linter accepts it
-- [ ] The faithful port is unchanged
+- [x] Section 2 opens once the sort is in and Walk with a coach and Five trusted voices are complete, whether or not Section 1 is
+- [x] Section 2's lock note names what is unfinished, with the Strengths assessment named as the hub names it
+- [x] Section 3 is locked until both Section 1 and Section 2 are complete, and its lock note names whichever are unfinished
+- [x] A section may require a part of another section, and the linter accepts it
+- [x] The faithful port is unchanged
 
 **Context**
 

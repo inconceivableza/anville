@@ -33,12 +33,15 @@ def lint(document):
         *_missing_sections(document, section_ids),
         *_impossible_parts(document, section_ids),
         *_unshowable_side_cards_and_numbers(document),
+        *_unseen_once_only_sections(document),
         *_photos_of_missing_sections(document, section_ids),
         *_unknown_linked_sections(document, section_ids),
         *_links_holding_their_own_section(document),
         *_results_of_no_sort(document),
+        *_unwaitable_blocks(document),
         *_empty_pages(document),
         *_unreadable_clauses(document),
+        *_unreadable_opening_conditions(document),
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
         *_unworded_generalist(document),
@@ -156,6 +159,17 @@ def _unshowable_side_cards_and_numbers(document):
             )
 
 
+def _unseen_once_only_sections(document):
+    """✨ A once-only section leaves the hub once complete (ticket 69). Only a wizard is sure to be seen before then, since
+    the participant is taken to it in place of the hub."""
+    for s, section in enumerate(document["content"]["sections"]):
+        if section.get("once_only") and not section.get("wizard"):
+            yield Problem(
+                f"/content/sections/{s}/once_only",
+                "A once-only section must be a wizard, or a participant might never see it at all.",
+            )
+
+
 def _photos_of_missing_sections(document, section_ids):
     """✨ A photo is named by the section it is shown with, so one named for no section is shown nowhere (ticket 49b)."""
     for section_id in document.get("photos", {}):
@@ -174,14 +188,35 @@ def _unknown_linked_sections(document, section_ids):
 
 
 def _results_of_no_sort(document):
-    """✨ A `sort_results` block shows the results of the sort it names (ticket 57), so it must name one."""
+    """✨ A `sort_results` block shows the results of the sort it names (ticket 57), and a `comparison_link` leads to its
+    comparison (ticket 67a), so each must name one."""
     types = block_types_by_id(document)
     for s, section in enumerate(document["content"]["sections"]):
         for b, block in enumerate(section["blocks"]):
-            if block["type"] == "sort_results" and not (block["sort"] in types and types[block["sort"]].scored):
+            naming_a_sort = block["type"] in ("sort_results", "comparison_link")
+            if naming_a_sort and not (block["sort"] in types and types[block["sort"]].scored):
                 yield Problem(
                     f"/content/sections/{s}/blocks/{b}/sort", f"There is no sort '{block['sort']}' in this pathway."
                 )
+
+
+def _unwaitable_blocks(document):
+    """✨ A block waiting on the comparison (ticket 68) must be a capture block answered on its page, which is what the
+    engine holds shut, and must name a sort, whose comparison it waits on."""
+    types = block_types_by_id(document)
+    for s, section in enumerate(document["content"]["sections"]):
+        for b, block in enumerate(section["blocks"]):
+            waits, path = block.get("after_comparison"), f"/content/sections/{s}/blocks/{b}/after_comparison"
+            if waits is None:
+                continue
+            if not BLOCK_TYPES[block["type"]].may_wait_on_comparison:
+                yield Problem(
+                    path,
+                    f"Block '{block['id']}' is a {block['type']}, so it cannot wait on the comparison: only a capture "
+                    "block answered on its page can.",
+                )
+            elif not (waits["sort"] in types and types[waits["sort"]].scored):
+                yield Problem(f"{path}/sort", f"There is no sort '{waits['sort']}' in this pathway.")
 
 
 def _links_holding_their_own_section(document):
@@ -242,13 +277,30 @@ def _unreadable_clauses(document):
                     "own section.",
                 )
             elif not _can_read(clause["type"], block_types[named]):
-                type_name = block_types[named].name
-                article = "an" if type_name[0] in "aeiou" else "a"
-                yield Problem(
-                    path,
-                    f"A '{clause['type']}' clause cannot be checked against block '{named}', "
-                    f"which is {article} {type_name}.",
-                )
+                yield _unreadable(path, clause, block_types[named])
+
+
+def _unreadable_opening_conditions(document):
+    """✨ An opening condition the engine could never check (ADR 0019). It may name a block in any section, since what
+    opens a section is by nature outside it: nothing in a section is reachable before it opens."""
+    block_types = block_types_by_id(document)
+    for s, section in enumerate(document["content"]["sections"]):
+        for c, clause in enumerate(section.get("opens_when", {}).get("clauses", [])):
+            named, path = clause["block"], f"/content/sections/{s}/opens_when/clauses/{c}/block"
+            if named not in block_types:
+                yield Problem(path, f"There is no block '{named}' in this pathway.")
+            elif not _can_read(clause["type"], block_types[named]):
+                yield _unreadable(path, clause, block_types[named])
+
+
+def _unreadable(path, clause, block_type):
+    type_name = block_type.name
+    article = "an" if type_name[0] in "aeiou" else "a"
+    return Problem(
+        path,
+        f"A '{clause['type']}' clause cannot be checked against block '{clause['block']}', "
+        f"which is {article} {type_name}.",
+    )
 
 
 def _can_read(clause_type, block_type):

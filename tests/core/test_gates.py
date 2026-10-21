@@ -10,7 +10,7 @@ before a section may be completed, and each failing clause contributes its own a
 import pytest
 
 from engine.document import checklist, gate_passes, unmet
-from engine.document.gates import comparison_visit_key, links_issued_key
+from engine.document.gates import coach_answer_key, comparison_visit_key, links_issued_key
 
 
 def section_gated_by(*clauses):
@@ -190,6 +190,23 @@ def test_links_issued_passes_once_enough_of_the_blocks_people_hold_a_working_lin
     answers = {"contacts": named} if issued is None else {"contacts": named, links_issued_key("contacts"): issued}
 
     assert unmet(section, answers) == ([] if passes else ["Send two links."])
+
+
+# coach_accepted
+
+
+@pytest.mark.parametrize(
+    "answer, passes",
+    [("accepted", True), (None, False), ("declined", False), ("missing", False)],
+    ids=["accepted on the current link", "unanswered", "declined", "no current link"],
+)
+def test_coach_accepted_passes_only_for_an_acceptance_on_the_coachs_current_link(answer, passes):
+    """✨ ADR 0019. What the clause reads is the answer on the coach's current link, expired or not: a revoked link has no
+    record, and a reissued one or a new coach's starts unanswered, so neither carries the old acceptance."""
+    section = section_gated_by(clause("coach_accepted", block="coach", message="Wait for your coach."))
+    answers = {} if answer == "missing" else {coach_answer_key("coach"): answer}
+
+    assert unmet(section, answers) == ([] if passes else ["Wait for your coach."])
 
 
 # Combinations, and a message for each failing clause

@@ -25,6 +25,7 @@
         "id": "onboarding",
         "title": "Before we begin",
         "wizard": true,
+        "once_only": true,
         "estimate": "About 10 minutes",
         "complete_label": "Continue →",
         "blocks": [
@@ -161,10 +162,20 @@
             "holds_what_follows": true
           },
           {
+            "id": "how-others-see-you",
+            "type": "comparison_link",
+            "sort": "strengths-sort",
+            "title": "How others see you"
+          },
+          {
             "id": "gifts-summary",
             "type": "long_text",
             "prompt": "Having completed the assessment and read the passages above, summarise: what gifts and talents has God given you? And what has He not given you?",
-            "placeholder": "Draw on the scripture, your assessment results, and what others have told you..."
+            "placeholder": "Draw on the scripture, your assessment results, and what others have told you...",
+            "after_comparison": {
+              "sort": "strengths-sort",
+              "message": "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer."
+            }
           }
         ],
         "gate": {
@@ -225,14 +236,14 @@
         "title": "The shape of your life",
         "number": "02",
         "estimate": "About 30–40 minutes",
-        "requires": ["designed", "walk-with-a-coach", "trusted-voices"],
+        "requires": ["strengths", "walk-with-a-coach", "trusted-voices"],
         "complete_label": "I've finished Section 2",
         "blocks": [
           {
             "id": "shape-pdf",
             "type": "download",
             "file": "whatever-you-do-workbook-section-2.pdf",
-            "body": "Section two, to work through on paper: mapping your story, and what has happened in each season of it.\n\nSections two to four make up the middle of the course, which works better on paper, so each is a booklet of its own. When you've finished this one, come back here to say so, and Section 3 opens.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their assessments of you – don’t let that stop you making progress on the workbook.",
+            "body": "Section two, to work through on paper: mapping your story, and what has happened in each season of it.\n\nSections two to four make up the middle of the course, which works better on paper, so each is a booklet of its own. When you've finished this one, come back here to say so.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their assessments of you – don’t let that stop you making progress on the workbook.",
             "button_label": "Download Section 2 (PDF)"
           }
         ]
@@ -242,7 +253,17 @@
         "title": "Putting your calling into words",
         "number": "03",
         "estimate": "About 30–40 minutes",
-        "requires": ["shape"],
+        "requires": ["designed", "shape"],
+        "opens_when": {
+          "clauses": [
+            {
+              "type": "coach_accepted",
+              "block": "coach",
+              "message": "Opens once your coach has accepted. If they decline, choose someone else."
+            }
+          ],
+          "with_sections": "Opens once you've finished {sections} and your coach has accepted."
+        },
         "complete_label": "I've finished Section 3",
         "blocks": [
           {
@@ -466,7 +487,8 @@
             "id": "contacts",
             "type": "contact_list",
             "needed": 3,
-            "optional": 2
+            "optional": 2,
+            "more_note": "Five is a good number, but you can add more."
           }
         ],
         "gate": {

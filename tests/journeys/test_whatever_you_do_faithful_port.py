@@ -180,6 +180,17 @@ def test_onboarding_is_not_complete_without_a_reason(participant):
 
 
 @pytest.mark.django_db
+def test_onboarding_stays_listed_in_the_hub_once_complete(participant):
+    """✨ Before we begin is once-only in *Whatever You Do* alone (ticket 69); the faithful port keeps it listed."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+
+    hub = participant.get("/hub/").content.decode()
+
+    assert '<a class="hub-section-title" href="/sections/onboarding/">' in hub
+
+
+@pytest.mark.django_db
 def test_the_reason_can_be_corrected_after_onboarding_is_complete(participant):
     """✨ Unlike the baseline ratings, which are fixed on completion so the closing ratings have something to meet."""
     answer_onboarding(participant)
@@ -531,6 +542,17 @@ def test_section_1s_reflection_cannot_be_written_before_the_sort_is_in(participa
 
     assert refused.status_code == 403
     assert "gifts-summary" not in Response.objects.get().answers
+
+
+@pytest.mark.django_db
+def test_section_1s_reflection_saves_once_the_sort_is_in_with_no_comparison_seen(participant):
+    """✨ As in the original prototype: *Whatever You Do*'s reflection waits on the comparison too (ticket 68), and this
+    one does not."""
+    client = through_to_section_1s_activity(participant)
+    submit_the_sort(client)
+
+    assert answer(client, "gifts-summary", A_REFLECTION).status_code == 303
+    assert Response.objects.get().answers["gifts-summary"] == A_REFLECTION
 
 
 @pytest.mark.django_db

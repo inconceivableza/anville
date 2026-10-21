@@ -18,7 +18,6 @@ from engine.document.scoring import unrounded_shares
 from engine.document.standing import place, standing
 from engine.document.text import text_for
 from engine.document.tie_break import (
-    BALANCED,
     CIRCLE,
     GENERALIST,
     LEVEL,
@@ -62,6 +61,18 @@ AXIS_START, AXIS_END = -3, 103
 # that side instead, so it is never cut off.
 LABEL_EDGE = 20
 
+# ✨ Where the results page finds its words for each tie-break outcome in the document's `presentation.tie_break`, as
+# `(entry, field)`: the first whose entry the pathway version has. Separated names a leader, new or the same; balanced
+# names none, the choices having gone in a circle or left the best of them level. A version loaded before skipping
+# had words of its own says it as it said it then, as level.
+OUTCOME_WORDS = {
+    TOP_CHANGED: [("separated", "changed")],
+    SAME_TOP: [("separated", "same")],
+    CIRCLE: [("balanced", "circle")],
+    LEVEL: [("balanced", "level")],
+    SKIPPED: [("skipped", "text"), ("balanced", "level")],
+}
+
 # ✨ The stylesheet's class for each direction of a gap, so a document's key never becomes a class name.
 GAP_CLASSES = {"others_higher": "gap-others-higher", "you_higher": "gap-you-higher"}
 
@@ -85,23 +96,10 @@ def results_page(document, scores, sort, name, role="participant"):
 def _results(document, scores, shares, sort, name, role):
     """✨ `results_page`, given the result's unrounded `shares`, so the comparison works them out only once."""
     presentation = document.get("presentation", {})
-    construct_presentation = {entry["construct"]: entry for entry in presentation.get("constructs", [])}
-    framework_presentation = {entry["framework"]: entry for entry in presentation.get("frameworks", [])}
-    frameworks = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
     title = presentation.get("results_title", document["title"])
     shown = []
     for scored in scores["frameworks"]:
-        framework = _framework(
-            document,
-            frameworks[scored["framework"]],
-            framework_presentation.get(scored["framework"], {}),
-            scored["constructs"],
-            shares[scored["framework"]],
-            construct_presentation,
-            document["instrument"]["items"],
-            sort,
-            role,
-        )
+        framework = _framework(document, scored, shares[scored["framework"]], sort, role)
         framework["tie_break"] = _after_tie_break(presentation, scores, scored["framework"], framework["bars"], role)
         shown.append(framework)
     return {
@@ -128,9 +126,8 @@ def _generalist(document, scores, presentation, role):
 
 def _after_tie_break(presentation, scores, framework, bars, role):
     """✨ What the results page says of a framework the tie-break re-weighted (ticket 30c, ADR 0018), in the document's
-    words, or None for any other: separated, with a new leader or the same one; genuinely balanced, the choices having
-    gone in a circle or left the best of them level, with no winner named; or every pair skipped. A pathway version
-    loaded before skipping had words of its own says it as it said it then, as level.
+    words (OUTCOME_WORDS), or None for any other: separated, with a new leader or the same one; genuinely balanced, the
+    choices having gone in a circle or left the best of them level, with no winner named; or every pair skipped.
 
     The words may name the constructs (fix-26, PLACEHOLDERS), each as text names it (fix-27): the top and the next from
     the framework's `bars`, in the order drawn; the previous leader and the tied constructs from the stored result, the
@@ -139,11 +136,8 @@ def _after_tie_break(presentation, scores, framework, bars, role):
     if outcome is None:
         return None
     wording = presentation["tie_break"]
-    if outcome == SKIPPED and "skipped" in wording:
-        said, text = wording["skipped"], "text"
-    else:
-        said = wording["balanced"] if outcome in (*BALANCED, SKIPPED) else wording["separated"]
-        text = {TOP_CHANGED: "changed", SAME_TOP: "same", CIRCLE: "circle", LEVEL: "level", SKIPPED: "level"}[outcome]
+    entry, field = next((entry, field) for entry, field in OUTCOME_WORDS[outcome] if entry in wording)
+    said = wording[entry]
     labels = {bar["construct"]: bar["text_label"] for bar in bars}
     tied = tied_in(scores)[framework]
     names = {
@@ -152,7 +146,7 @@ def _after_tie_break(presentation, scores, framework, bars, role):
         "previous": labels[tied[0]] if tied else "",
         "names": joined([bar["text_label"] for bar in bars if bar["construct"] in tied]),
     }
-    return {"heading": text_for(said["heading"], role), "text": named(text_for(said[text], role), names)}
+    return {"heading": text_for(said["heading"], role), "text": named(text_for(said[field], role), names)}
 
 
 def pair_page(document, plan, place):
@@ -364,14 +358,23 @@ def _at(percent, top):
     return round(min(percent / top, 1) * 100, 2)
 
 
-def _framework(document, framework, presentation, ranked_constructs, shares, construct_presentation, items, sort, role):
+def _framework(document, scored, shares, sort, role):
+    """✨ One framework as the results page draws it: what the participant's result holds of it, `scored` as stored and
+    `shares` unrounded; its words, from the `document`, for `role`; and its items' values, from the `sort`."""
+    framework = next(f for f in document["measurement"]["frameworks"] if f["id"] == scored["framework"])
+    document_presentation = document.get("presentation", {})
+    presentation = {entry["framework"]: entry for entry in document_presentation.get("frameworks", [])}.get(
+        scored["framework"], {}
+    )
+    construct_presentation = {entry["construct"]: entry for entry in document_presentation.get("constructs", [])}
+    items = document["instrument"]["items"]
     labels = {construct["id"]: text_for(construct["label"], role) for construct in framework["constructs"]}
     in_text = {construct["id"]: _text_label(construct, role) for construct in framework["constructs"]}
     # ✨ Listed by unrounded share, highest first, as they are drawn, so a shorter bar is never above a longer one;
     # exact ties keep the order declared. Ordered here, never stored, so a result stored before is ordered so too.
     declared = [construct["id"] for construct in framework["constructs"]]
     ranked_constructs = sorted(
-        ranked_constructs, key=lambda c: (-shares[c["construct"]], declared.index(c["construct"]))
+        scored["constructs"], key=lambda c: (-shares[c["construct"]], declared.index(c["construct"]))
     )
     constructs = len(framework["constructs"])
     top = _axis_top(constructs)

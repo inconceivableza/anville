@@ -177,6 +177,61 @@ def test_a_sort_results_block_naming_anything_but_a_sort_is_reported(named):
     ]
 
 
+@pytest.mark.parametrize("named", ["statement", "nowhere"])
+def test_a_comparison_link_naming_anything_but_a_sort_is_reported(named):
+    document = sort_pathway()
+    card = {"id": "compare", "type": "comparison_link", "sort": named, "title": "How others see you"}
+    document["content"]["sections"][1]["blocks"].append(card)
+
+    assert validate(document) == [
+        Problem(path="/content/sections/1/blocks/1/sort", message=f"There is no sort '{named}' in this pathway.")
+    ]
+
+
+def waiting_on_the_comparison(block_id, sort="strengths-sort"):
+    """✨ The sort pathway with the block `block_id` waiting on the comparison of `sort` (ticket 68)."""
+    document = sort_pathway()
+    for section in document["content"]["sections"]:
+        for block in section["blocks"]:
+            if block["id"] == block_id:
+                block["after_comparison"] = {"sort": sort, "message": "This opens once you've seen how others see you."}
+    return document
+
+
+def not_a_capture_block(block_id, type_name):
+    return (
+        f"Block '{block_id}' is a {type_name}, so it cannot wait on the comparison: only a capture block answered on "
+        "its page can."
+    )
+
+
+WAITING_SORT = "/content/sections/1/blocks/0/after_comparison/sort"
+
+
+@pytest.mark.parametrize(
+    "block_id, sort, problem",
+    [
+        ("statement", "statement", (WAITING_SORT, "There is no sort 'statement' in this pathway.")),
+        ("statement", "nowhere", (WAITING_SORT, "There is no sort 'nowhere' in this pathway.")),
+        (
+            "welcome",
+            "strengths-sort",
+            ("/content/sections/0/blocks/0/after_comparison", not_a_capture_block("welcome", "rich_text")),
+        ),
+        (
+            "strengths-sort",
+            "strengths-sort",
+            ("/content/sections/2/blocks/0/after_comparison", not_a_capture_block("strengths-sort", "sort_assessment")),
+        ),
+    ],
+    ids=["naming a long text", "naming nothing", "on rich text", "on a sort"],
+)
+def test_waiting_on_the_comparison_of_anything_but_a_sort_or_on_a_block_that_is_no_capture_block_is_reported(
+    block_id, sort, problem
+):
+    assert validate(waiting_on_the_comparison(block_id, sort)) == [Problem(*problem)]
+
+
 def test_a_pathway_without_a_sort_needs_no_scoring_method():
     document = pathway_document()
     assert "scoring" not in document["measurement"]
@@ -237,6 +292,16 @@ def test_a_section_may_be_a_part_of_another_section():
     """✨ The Strengths assessment within Section 1 (ticket 41b)."""
     document = sort_pathway()
     document["content"]["sections"][2]["part_of"] = "calling"
+
+    assert validate(document) == []
+
+
+def test_a_section_may_require_a_part_of_another_section():
+    """✨ As Section 2 requires the Strengths assessment, a part of Section 1 (ADR 0019). A requirement naming no section
+    is still refused (above)."""
+    document = sort_pathway()
+    document["content"]["sections"][2]["part_of"] = "onboarding"
+    document["content"]["sections"][1]["requires"] = ["strengths"]
 
     assert validate(document) == []
 
@@ -318,6 +383,19 @@ def test_a_section_with_parts_cannot_be_a_side_card():
         Problem(
             path="/content/sections/1/side_card",
             message="Section 'calling' has parts, which are listed within it, so it cannot be a hub side card.",
+        )
+    ]
+
+
+def test_a_once_only_section_that_is_not_a_wizard_is_refused():
+    """✨ Ticket 69: a once-only section that is not a wizard might never be seen at all."""
+    document = pathway_document()
+    document["content"]["sections"][0]["once_only"] = True
+
+    assert validate(document) == [
+        Problem(
+            path="/content/sections/0/once_only",
+            message="A once-only section must be a wizard, or a participant might never see it at all.",
         )
     ]
 

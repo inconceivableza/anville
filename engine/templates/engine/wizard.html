@@ -35,7 +35,7 @@
         <div class="step">
           <h1>{{ section.title }}</h1>
           {% for block in section.blocks %}
-            {% include block.template %}
+            {% include "engine/block_drawn.html" %}
           {% endfor %}
           {% include "engine/completion.html" %}
         </div>

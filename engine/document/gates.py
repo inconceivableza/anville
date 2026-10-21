@@ -28,6 +28,7 @@ CLAUSE_ANSWER_KINDS = {
 # ✨ A clause that reads something other than a block's answer names the block types it can read instead.
 CLAUSE_BLOCK_TYPES = {
     "links_issued": ("contact_list", "coach_checklist"),
+    "coach_accepted": ("coach_checklist",),
 }
 
 
@@ -43,6 +44,31 @@ def links_issued_key(block_id):
     return f"{block_id}/links"
 
 
+def coach_answer_key(block_id):
+    """✨ Where the answers the gate reads hold the coach's answer on their current link, through a coach checklist,
+    whether or not that link has since expired (ADR 0019). Like `comparison_visit_key`, never a block's own answer."""
+    return f"{block_id}/coach_answer"
+
+
+def comparison_viewed_key(block_id):
+    """✨ Where the answers the gate reads hold that the participant viewed a sort's comparison: pressed "Compare with how
+    others see you →" with the minimum in (ticket 67a). Like `comparison_visit_key`, never a block's own answer."""
+    return f"{block_id}/viewed"
+
+
+def waits_on_comparison(block, answers):
+    """✨ Whether a block is still waiting on the comparison (ticket 68): it carries `after_comparison` and its sort's
+    comparison has not been viewed. Once viewed it never waits again, since "Viewed" outlasts an unfreeze (ADR 0019)."""
+    waits = block.get("after_comparison")
+    return waits is not None and not has_content(answers.get(comparison_viewed_key(waits["sort"])))
+
+
+def opened_key(section_id):
+    """✨ Where the answers the hub reads hold when a section with opening conditions first opened, after which they are
+    never asked again (ADR 0019). Section and block identifiers are told apart by what follows the "/"."""
+    return f"{section_id}/opened"
+
+
 def gate_passes(section, answers):
     """✨ Whether this section may be completed. A section with no gate always may."""
     return not unmet(section, answers)
@@ -55,8 +81,13 @@ def unmet(section, answers, role="participant"):
     sentence ("Answer all four to continue"), and the participant should read that sentence, not four of it.
     What going on from one page needs is what that page's `checklist` marks unmet.
     """
-    messages = (text_for(clause["message"], role) for clause in clauses_of(section) if not _passes(clause, answers))
+    messages = (text_for(clause["message"], role) for clause in unmet_clauses(section, answers))
     return list(dict.fromkeys(messages))
+
+
+def unmet_clauses(section, answers):
+    """✨ Every clause of the whole gate this response does not satisfy, in the order authored."""
+    return [clause for clause in clauses_of(section) if not _passes(clause, answers)]
 
 
 def checklist(section, answers, role="participant", page=None):
@@ -80,17 +111,24 @@ def checklist(section, answers, role="participant", page=None):
     return list(met.items())
 
 
+def clause_passes(clause, answers):
+    """✨ Whether one clause holds, as the hub asks of a section's opening conditions to tell which it waits on."""
+    return _passes(clause, answers)
+
+
 def _passes(clause, answers):
     return CLAUSES[clause["type"]](clause, answers.get(_reads(clause)))
 
 
 def _reads(clause):
-    """✨ What a clause reads: the named block's answer, for `comparison_visited` the visit to its comparison, and for
-    `links_issued` how many of its people have a working link."""
+    """✨ What a clause reads: the named block's answer, for `comparison_visited` the visit to its comparison, for
+    `links_issued` how many of its people have a working link, and for `coach_accepted` the coach's answer."""
     if clause["type"] == "comparison_visited":
         return comparison_visit_key(clause["block"])
     if clause["type"] == "links_issued":
         return links_issued_key(clause["block"])
+    if clause["type"] == "coach_accepted":
+        return coach_answer_key(clause["block"])
     return clause["block"]
 
 
@@ -142,6 +180,11 @@ def _links_issued(clause, issued):
     return (issued or 0) >= clause["min"]
 
 
+def _coach_accepted(clause, answer):
+    # ✨ Answered, unlike `links_issued`: Section 3 waits on the coach (ADR 0019, reversing ticket 40 there).
+    return answer == "accepted"
+
+
 CLAUSES = {
     "has_answer": _has_answer,
     "min_text_length": _min_text_length,
@@ -150,6 +193,7 @@ CLAUSES = {
     "every_entry_has": _every_entry_has,
     "comparison_visited": _comparison_visited,
     "links_issued": _links_issued,
+    "coach_accepted": _coach_accepted,
 }
 
 

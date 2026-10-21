@@ -239,6 +239,13 @@ class BlockType(NamedTuple):
         """✨ Whether the participant does something here. Progress counts these blocks and no others."""
         return self.captures is not None
 
+    @property
+    def may_wait_on_comparison(self):
+        """✨ Whether a block of this type may carry `after_comparison` (ticket 68): a capture block answered on its page,
+        whose save the engine can refuse until the comparison is viewed. Not a sort, which is scored once when sent, nor a
+        contact list, whose people are kept each at their own address."""
+        return self.is_interactive and not self.scored and self.captures is not CONTACTS
+
 
 # ✨ Never remove or rename an entry while any stored pathway version uses it: versions are never edited, so every
 # response pinned to one would break (spec, The pathway document and versions).
@@ -261,7 +268,7 @@ BLOCK_TYPES = {
             text_lists=(("options", ("label",)),),
             captures=CHOICE,
         ),
-        BlockType("contact_list", captures=CONTACTS),
+        BlockType("contact_list", text_fields=("more_note",), captures=CONTACTS),
         # ✨ Captures nothing: its answers are opinions about another person, never kept (see `coach.py`).
         BlockType(
             "coach_checklist",
@@ -284,6 +291,9 @@ BLOCK_TYPES = {
         BlockType("sort_assessment", captures=SORT, scored=True, widget=_sort_widget),
         # ✨ Its `sort`'s results in full, drawn as the results page draws them, once there are any (ticket 57).
         BlockType("sort_results"),
+        # ✨ The way to its `sort`'s comparison, saying where it stands (`comparison_status`), once there is a result
+        # (ticket 67a).
+        BlockType("comparison_link", text_fields=("title",)),
         BlockType("section_link", text_fields=("body", "button_label")),
         BlockType("download", text_fields=("body", "button_label")),
         # ✨ Never shown: it splits its section into pages (`pages_of`).
@@ -328,6 +338,28 @@ def link_shown(block, text, linked_section, is_complete, role):
     }
     sort = next((other["id"] for other in linked_section["blocks"] if BLOCK_TYPES[other["type"]].scored), None)
     return text, sort
+
+
+# ✨ Where the way to the comparison stands, as a comparison link says it: engine wording, as the section statuses are,
+# since the hub and the Five trusted voices card are to say the same (spec, Blocks).
+COMPARISON_STATUSES = {
+    "waiting": "Waiting for answers ({answered} of {minimum})",
+    "ready": "Ready to view",
+    "viewed": "Viewed",
+}
+
+
+def comparison_status(answered, minimum, viewed):
+    """✨ Where the way to a sort's comparison stands, as `(state, wording)`: viewed once the participant has pressed
+    "Compare with how others see you →" with at least the minimum in, whatever has been answered since; otherwise ready
+    from the minimum, and waiting below it, saying how many of the minimum have answered (ticket 67a)."""
+    if viewed:
+        state = "viewed"
+    elif answered >= minimum:
+        state = "ready"
+    else:
+        state = "waiting"
+    return state, COMPARISON_STATUSES[state].format(answered=answered, minimum=minimum)
 
 
 def translation_shown(document, passage):
