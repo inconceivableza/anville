@@ -14,8 +14,5 @@
   {% include "engine/results_body.html" with results=drawn.results own_page=True %}
 
   {% comment %}✨ A form, not a link: pressing it is the visit Section 1 waits on, and a browser never loads a POST ahead of time.{% endcomment %}
-  <form class="results-next" method="post" action="{% url 'visit_comparison' drawn.block_id %}">
-    {% csrf_token %}
-    <button type="submit" class="pill">Compare with how others see you →</button>
-  </form>
+  {% include "engine/comparison_press.html" with press_sort=drawn.block_id press_class="pill" press_form_class="results-next" %}
 </div>

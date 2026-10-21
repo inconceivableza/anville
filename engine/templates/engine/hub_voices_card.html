@@ -22,10 +22,7 @@
   <div class="hub-side-actions">
     <a class="pill small" data-magnetic href="{% page_url section.id section.page %}">Manage <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span></a>
     {% if comparison %}
-      <form method="post" action="{% url 'visit_comparison' comparison.sort %}">
-        {% csrf_token %}
-        <button type="submit" class="pill ghost small">{{ comparison.title }} <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span></button>
-      </form>
+      {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="pill ghost small" press_label=comparison.title press_arrow=True %}
       <span class="hub-side-status status-{{ comparison.status }}">{{ comparison.label }}</span>
     {% endif %}
   </div>
