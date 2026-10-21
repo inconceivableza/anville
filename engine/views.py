@@ -66,7 +66,7 @@ from engine.document.contacts import (
     voices_card,
 )
 from engine.document.aggregation import aggregate
-from engine.document.gates import clauses_of, links_issued_key
+from engine.document.gates import clauses_of, links_issued_key, opened_key
 from engine.document.scoring import score
 from engine.hub import (
     COMPLETE,
@@ -1850,13 +1850,24 @@ def _participant(user, first_version=Publication.current_version):
     for section in sections:
         if "side_card" in section and section["id"] in completed and section["id"] not in stored:
             participant_response.complete_section(section["id"])
+    # ✨ Likewise the first time a section with opening conditions is open, so it stays open once the coach's link is
+    # revoked or reissued, or the coach changed (ADR 0019).
+    moved_past = participant_response.moved_past_by_section()
+    for section in sections:
+        if (
+            "opens_when" in section
+            and opened_key(section["id"]) not in answers
+            and not is_locked(section, completed, answers, sections, moved_past)
+        ):
+            participant_response.open_section(section["id"])
+            answers[opened_key(section["id"])] = True
     return ParticipantState(
         response=participant_response,
         version=participant_response.version,
         sections=sections,
         answers=answers,
         completed=completed,
-        moved_past=participant_response.moved_past_by_section(),
+        moved_past=moved_past,
         fixed=set(participant_response.fixed_answers),
     )
 

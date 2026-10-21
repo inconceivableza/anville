@@ -39,6 +39,7 @@ def lint(document):
         *_results_of_no_sort(document),
         *_empty_pages(document),
         *_unreadable_clauses(document),
+        *_unreadable_opening_conditions(document),
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
         *_unworded_generalist(document),
@@ -244,13 +245,30 @@ def _unreadable_clauses(document):
                     "own section.",
                 )
             elif not _can_read(clause["type"], block_types[named]):
-                type_name = block_types[named].name
-                article = "an" if type_name[0] in "aeiou" else "a"
-                yield Problem(
-                    path,
-                    f"A '{clause['type']}' clause cannot be checked against block '{named}', "
-                    f"which is {article} {type_name}.",
-                )
+                yield _unreadable(path, clause, block_types[named])
+
+
+def _unreadable_opening_conditions(document):
+    """✨ An opening condition the engine could never check (ADR 0019). It may name a block in any section, since what
+    opens a section is by nature outside it: nothing in a section is reachable before it opens."""
+    block_types = block_types_by_id(document)
+    for s, section in enumerate(document["content"]["sections"]):
+        for c, clause in enumerate(section.get("opens_when", {}).get("clauses", [])):
+            named, path = clause["block"], f"/content/sections/{s}/opens_when/clauses/{c}/block"
+            if named not in block_types:
+                yield Problem(path, f"There is no block '{named}' in this pathway.")
+            elif not _can_read(clause["type"], block_types[named]):
+                yield _unreadable(path, clause, block_types[named])
+
+
+def _unreadable(path, clause, block_type):
+    type_name = block_type.name
+    article = "an" if type_name[0] in "aeiou" else "a"
+    return Problem(
+        path,
+        f"A '{clause['type']}' clause cannot be checked against block '{clause['block']}', "
+        f"which is {article} {type_name}.",
+    )
 
 
 def _can_read(clause_type, block_type):
