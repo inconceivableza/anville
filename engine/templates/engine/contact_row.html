@@ -5,8 +5,15 @@
   of its buttons sends back this row alone, which takes its place, so typing not yet saved in any other row is never
   lost; without, each leads to the list's page again, opened at this person (fix-2).
 
+  Every row's fields, and its Save or "Get link", belong to the list's one form (`blocks/contact_list.html`) by their
+  `form` attribute, so without JavaScript each of those presses carries what is typed in every row: edits to people
+  listed are saved with it, and what was typed in the empty rows comes back in them (fix-1, ADR 0020). Each row's
+  `number`, `person` and `drawn` (what its person was when the page was drawn, so only rows changed since count as
+  edits) place what was typed in it; the button names the row pressed.
+
   Someone listed is saved as their name or email is typed, only the row's status coming back, the Save button being
-  for browsers without JavaScript. An
+  for browsers without JavaScript. Their own form, holding no fields now, still carries that autosave: it includes
+  their two fields by id. An
   empty row stores nobody until "Get link", which adds them and makes their link in the same act, so nobody is listed
   without one. A link just made, or reissued, opens in a dialog to copy, this once (only its hash is kept); without
   JavaScript the dialog shows open, in the row. Remove, for someone whose link works, asks first: in a dialog here, or
@@ -25,35 +32,41 @@
     {# ✨ from the row sent back, never its fields, so nothing typed while a save is on its way is lost. #}
     <form class="contact-person" novalidate method="post" action="{% url 'contact' block.id row.contact_id %}"
           hx-post="{% url 'contact' block.id row.contact_id %}" hx-trigger="input delay:600ms, change, submit"
+          hx-include="#person-{{ row.contact_id }}-name, #person-{{ row.contact_id }}-email"
           hx-sync="this:queue last" hx-target="find .save-status" hx-select=".save-status" hx-swap="outerHTML">
-  {% else %}
-    <form class="contact-person" novalidate method="post" action="{% url 'contacts' block.id %}"
-          hx-post="{% url 'contacts' block.id %}" hx-target="closest li" hx-swap="outerHTML">
-  {% endif %}
     {% csrf_token %}
     <input type="hidden" name="version" value="{{ pathway.version_id }}">
     <input type="hidden" name="row" value="{{ row.number }}">
+  {% else %}
+    <div class="contact-person">
+  {% endif %}
+    <input type="hidden" name="number" value="{{ row.number }}" form="list-{{ block.id }}">
+    <input type="hidden" name="person" value="{{ row.contact_id|default_if_none:'' }}" form="list-{{ block.id }}">
+    <input type="hidden" name="drawn" value="{{ row.drawn }}" form="list-{{ block.id }}">
     <span class="contact-num" aria-hidden="true">{{ row.number }}</span>
     <span class="tag contact-need">{% if row.is_needed %}Needed{% else %}Optional{% endif %}</span>
     <label class="contact-field contact-name">
       <span class="visually-hidden">Person {{ row.number }}, first name</span>
-      <input type="text" name="name" placeholder="First name" value="{{ row.name }}" maxlength="150" autocomplete="off"{% if row.contact_id %} id="person-{{ row.contact_id }}-name"{% endif %}{% if row.invalid == "name" %} aria-invalid="true"{% endif %}>
+      <input type="text" name="name" placeholder="First name" value="{{ row.name }}" maxlength="150" autocomplete="off" form="list-{{ block.id }}"{% if row.contact_id %} id="person-{{ row.contact_id }}-name"{% endif %}{% if row.invalid == "name" %} aria-invalid="true"{% endif %}>
     </label>
     <label class="contact-field contact-email">
       <span class="visually-hidden">Person {{ row.number }}, email address</span>
-      <input type="email" name="email" placeholder="Email address" value="{{ row.email }}" maxlength="254" autocomplete="off"{% if row.contact_id %} id="person-{{ row.contact_id }}-email"{% endif %}{% if row.invalid == "email" %} aria-invalid="true"{% endif %}>
+      <input type="email" name="email" placeholder="Email address" value="{{ row.email }}" maxlength="254" autocomplete="off" form="list-{{ block.id }}"{% if row.contact_id %} id="person-{{ row.contact_id }}-email"{% endif %}{% if row.invalid == "email" %} aria-invalid="true"{% endif %}>
     </label>
     {% if row.contact_id %}
-      <button type="submit" class="pill ghost small save-fallback">Save</button>
+      <button type="submit" class="pill ghost small save-fallback" form="list-{{ block.id }}" name="row" value="{{ row.number }}"
+              formaction="{% url 'contact' block.id row.contact_id %}#person-{{ row.contact_id }}">Save</button>
     {% else %}
-      <button type="submit" class="pill small">Get link</button>
+      {# ✨ htmx sends the form it belongs to with it, and this row comes back in its place. #}
+      <button type="submit" class="pill small" form="list-{{ block.id }}" name="row" value="{{ row.number }}" data-gets-link
+              hx-post="{% url 'contacts' block.id %}" hx-target="closest li" hx-swap="outerHTML">Get link</button>
     {% endif %}
     {% if row.refusal %}
       <p class="save-status" role="alert"><span class="save-refused">Not saved. {{ row.refusal }}</span></p>
     {% elif row.contact_id %}
       <output class="save-status" aria-live="polite">{% if row.saved %}Saved{% endif %}</output>
     {% endif %}
-  </form>
+  {% if row.contact_id %}</form>{% else %}</div>{% endif %}
   {% if row.contact_id %}
     {% if row.issued %}
       {# ✨ Open without JavaScript, and shown as a modal once it has loaded. #}
