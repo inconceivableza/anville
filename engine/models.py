@@ -11,7 +11,13 @@ from django.db.models import F, Func, Value
 from django.utils import timezone
 
 from access.consent import withdrawn_participants
-from engine.document.gates import coach_answer_key, comparison_visit_key, links_issued_key, opened_key
+from engine.document.gates import (
+    coach_answer_key,
+    comparison_viewed_key,
+    comparison_visit_key,
+    links_issued_key,
+    opened_key,
+)
 from engine.document.observers import minimum_observers
 
 
@@ -298,7 +304,7 @@ class Response(models.Model):
         """✨ The stored answers, with each block's contacts read in as its answer, as the gate and progress read it.
         Each contact carries its id, which a contact list's rows send back so a save can tell them apart. Each visit to
         a sort's comparison is read in too, under a key no block can have, for a `comparison_visited` clause, and so is
-        how many of each block's people have a working link, for a `links_issued` clause, the coach's answer on their
+        each view of one, for a block waiting on the comparison (ticket 68), how many of each block's people have a working link, for a `links_issued` clause, the coach's answer on their
         current link, expired or not, for a `coach_accepted` clause, and when each section with opening conditions first
         opened, for the hub."""
         kept, links, coach_answers = {}, {}, {}
@@ -315,8 +321,9 @@ class Response(models.Model):
                 # starts unanswered (ADR 0019).
                 coach_answers[coach_answer_key(contact.block_id)] = invitation.coach_answer
         visits = {comparison_visit_key(block_id): at for block_id, at in self.comparisons_visited.items()}
+        viewed = {comparison_viewed_key(block_id): at for block_id, at in self.comparisons_viewed.items()}
         opened = {opened_key(section_id): at for section_id, at in self.sections_opened.items()}
-        return {**self.answers, **kept, **visits, **links, **coach_answers, **opened}
+        return {**self.answers, **kept, **visits, **viewed, **links, **coach_answers, **opened}
 
 
 class Contact(models.Model):

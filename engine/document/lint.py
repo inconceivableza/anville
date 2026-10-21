@@ -37,6 +37,7 @@ def lint(document):
         *_unknown_linked_sections(document, section_ids),
         *_links_holding_their_own_section(document),
         *_results_of_no_sort(document),
+        *_unwaitable_blocks(document),
         *_empty_pages(document),
         *_unreadable_clauses(document),
         *_unreadable_opening_conditions(document),
@@ -185,6 +186,25 @@ def _results_of_no_sort(document):
                 yield Problem(
                     f"/content/sections/{s}/blocks/{b}/sort", f"There is no sort '{block['sort']}' in this pathway."
                 )
+
+
+def _unwaitable_blocks(document):
+    """✨ A block waiting on the comparison (ticket 68) must be a capture block answered on its page, which is what the
+    engine holds shut, and must name a sort, whose comparison it waits on."""
+    types = block_types_by_id(document)
+    for s, section in enumerate(document["content"]["sections"]):
+        for b, block in enumerate(section["blocks"]):
+            waits, path = block.get("after_comparison"), f"/content/sections/{s}/blocks/{b}/after_comparison"
+            if waits is None:
+                continue
+            if not BLOCK_TYPES[block["type"]].may_wait_on_comparison:
+                yield Problem(
+                    path,
+                    f"Block '{block['id']}' is a {block['type']}, so it cannot wait on the comparison: only a capture "
+                    "block answered on its page can.",
+                )
+            elif not (waits["sort"] in types and types[waits["sort"]].scored):
+                yield Problem(f"{path}/sort", f"There is no sort '{waits['sort']}' in this pathway.")
 
 
 def _links_holding_their_own_section(document):
