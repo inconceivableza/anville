@@ -239,6 +239,15 @@ def test_the_voices_card_counts_working_links_as_invited_and_assessments_sent_as
 
 
 @pytest.mark.django_db
+def test_the_voices_card_counts_a_sixth_person_with_a_link(trusted_voices):
+    """✨ Past the five rows the list asks to be filled, in a row "Add another person" added (ticket 70)."""
+    six = [(f"Person {number}", f"person{number}@example.com") for number in range(1, 7)]
+    add_people_with_links(trusted_voices, *six)
+
+    assert meters(voices_card(trusted_voices)) == {"Invited": 6, "Answered": 0}
+
+
+@pytest.mark.django_db
 def test_the_voices_card_names_nobody(trusted_voices):
     add_people_with_links(trusted_voices, *PEOPLE)
 

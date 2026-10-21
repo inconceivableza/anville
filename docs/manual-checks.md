@@ -622,3 +622,14 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - A section not open yet: open a page of a section that another section's completion opens, then in another tab press "Mark as not complete" on that other section, so the first is locked again. In the first tab type an answer and press Enter (or "Save"), or press a coach checklist button where the page has one: a page in the participant's dark frame with "← Back to the hub", "Not saved" and "This is not open yet."; the link leads to the hub, and the hub shows nothing saved from that press.
 - With JavaScript on, the same presses show only the short "Not saved. …" line beside what was pressed, as before.
 - Phone width: the refusal page and the list's page fit with no sideways scroll.
+
+## More than five trusted voices (ticket 70; rebuild the frontend and load the pathway again, then start a new participant)
+
+- Five trusted voices' page: below the five rows, "Five is a good number, but you can add more." and an "Add another person" button, from the start, before any row is filled.
+- With JavaScript: type a name in an empty row without pressing "Get link", and change someone listed without waiting for "Saved", then press "Add another person". A sixth, empty row appears below the others marked "Optional", and what you typed in the other rows is still there. Press it again: a seventh. Give the sixth a name and email and press "Get link": the link dialog opens, and the hub's card counts 6 invited.
+- Fill all five rows: no sixth row appears until "Add another person" is pressed.
+- Without JavaScript (switched off in the browser's developer tools): "Add another person" brings the page back, at the new empty row, with everyone listed still in their rows. What was typed and not yet saved in another row is not kept: each row saves by its own button. An invalid email in the new row comes back in that row with the refusal, the row still there.
+- Removing the sixth person takes their row away, back to five.
+- Collection frozen (as in ticket 71's check): no sentence and no "Add another person".
+- The faithful port's contact list shows "Add another person" below its five rows, with no sentence.
+- Phone width: the sentence and the button sit below the rows with no sideways scroll.

@@ -533,14 +533,14 @@ def no_relationship_question(document):
 def three_people_each_with_their_link(document):
     """✨ The faithful port asks for the prototype's five people, or none for now; this pathway asks for three, each with
     their link (ticket 52), in each place it says so: onboarding's list, which became Five trusted voices, and Section
-    1's Strengths assessment card."""
+    1's Strengths assessment card. Its list says that more people can be added (ticket 70)."""
     for block in document["content"]["sections"][1]["blocks"]:
         if block["id"] == "strengths-link":
             block["body"] = block["body"].replace("at least 5 trusted people", "at least 3 trusted people")
     onboarding = document["content"]["sections"][0]
     for block in onboarding["blocks"]:
         if block["type"] == "contact_list":
-            block.update(needed=3, optional=2)
+            block.update(needed=3, optional=2, more_note="Five is a good number, but you can add more.")
         if block["id"] == "contacts-intro":
             block["body"] = block["body"].replace("at least 5 people", "at least 3 people")
     onboarding["gate"]["clauses"] = [

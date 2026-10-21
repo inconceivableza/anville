@@ -4,14 +4,14 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 3a (from 20 Oct)
 
 **Spec:** Blocks
 
-- [ ] The page shows the authored sentence "Five is a good number, but you can add more."
-- [ ] "Add another person" below the rows adds one empty row, with or without JavaScript, never losing anything typed in other rows
-- [ ] It is not shown once the list holds the most it may, and adding past that is still refused
-- [ ] A row added this way needs its "Get link" before anyone is stored, as a new row does now
-- [ ] The card's meters keep counting beyond five as they do now
+- [x] The page shows the authored sentence "Five is a good number, but you can add more."
+- [x] "Add another person" below the rows adds one empty row, with or without JavaScript, never losing anything typed in other rows
+- [x] It is not shown once the list holds the most it may, and adding past that is still refused
+- [x] A row added this way needs its "Get link" before anyone is stored, as a new row does now
+- [x] The card's meters keep counting beyond five as they do now
