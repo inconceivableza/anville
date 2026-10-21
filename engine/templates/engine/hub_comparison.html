@@ -8,10 +8,7 @@
 {% endcomment %}
 <li class="hub-section srow hub-part hub-comparison">
   <div class="srow-body">
-    <form method="post" action="{% url 'visit_comparison' comparison.sort %}">
-      {% csrf_token %}
-      <h3><button type="submit" class="hub-section-title">{{ comparison.title }}</button></h3>
-    </form>
+    {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="hub-section-title" press_label=comparison.title press_in_heading=True %}
   </div>
   <span class="tag status-{{ comparison.status }}">{{ comparison.label }}</span>
 </li>

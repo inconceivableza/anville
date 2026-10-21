@@ -198,12 +198,9 @@ def waiting_on_the_comparison(block_id, sort="strengths-sort"):
     return document
 
 
-def not_a_capture_block(block_id, type_name):
-    return (
-        f"Block '{block_id}' is a {type_name}, so it cannot wait on the comparison: only a capture block answered on "
-        "its page can."
-    )
-
+# ✨ The schema allows `after_comparison` only on a capture block answered on its page (fix-2), so on any other block it
+# is refused there, at the block's path.
+NOT_A_CAPTURE_BLOCK = "Additional properties are not allowed ('after_comparison' was unexpected)"
 
 WAITING_SORT = "/content/sections/1/blocks/0/after_comparison/sort"
 
@@ -216,12 +213,12 @@ WAITING_SORT = "/content/sections/1/blocks/0/after_comparison/sort"
         (
             "welcome",
             "strengths-sort",
-            ("/content/sections/0/blocks/0/after_comparison", not_a_capture_block("welcome", "rich_text")),
+            ("/content/sections/0/blocks/0", NOT_A_CAPTURE_BLOCK),
         ),
         (
             "strengths-sort",
             "strengths-sort",
-            ("/content/sections/2/blocks/0/after_comparison", not_a_capture_block("strengths-sort", "sort_assessment")),
+            ("/content/sections/2/blocks/0", NOT_A_CAPTURE_BLOCK),
         ),
     ],
     ids=["naming a long text", "naming nothing", "on rich text", "on a sort"],

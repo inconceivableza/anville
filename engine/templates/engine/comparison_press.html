@@ -1,0 +1,14 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ The press on to a sort's comparison, as the results page, a comparison link and the hub draw it: a form posting to
+  `visit_comparison`, not a link, so pressing it is the visit Section 1 waits on, it warns before collection freezes, and
+  it works without JavaScript; a browser never loads a POST ahead of time. Each place passes what differs: `press_sort`;
+  `press_class`, the button's classes; and if it needs them, `press_form_class`, the form's; `press_label`, in place of
+  "Compare with how others see you →"; `press_in_heading`, to set the button in an h3 as a hub row's title is; and
+  `press_arrow`, for a pill's arrow. Named apart from the page's own context, which an include still sees.
+{% endcomment %}
+<form{% if press_form_class %} class="{{ press_form_class }}"{% endif %} method="post" action="{% url 'visit_comparison' press_sort %}">
+  {% csrf_token %}
+  {% if press_in_heading %}<h3>{% endif %}<button type="submit" class="{{ press_class }}">{% if press_label %}{{ press_label }}{% else %}Compare with how others see you →{% endif %}{% if press_arrow %} <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span>{% endif %}</button>{% if press_in_heading %}</h3>{% endif %}
+</form>

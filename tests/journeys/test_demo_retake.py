@@ -143,6 +143,20 @@ def test_retaking_leaves_observers_assessments_the_coach_link_and_other_answers_
 
 
 @pytest.mark.django_db
+def test_without_javascript_a_refused_choice_comes_back_on_the_retake_page_with_nothing_cleared(sorted_in):
+    """✨ Never the bare status line (spec, Engine; fix-2)."""
+    refused = sorted_in.post(RETAKE, {"profile": "no-such-profile"})
+
+    page = refused.content.decode()
+    assert refused.status_code == 400
+    assert Result.objects.get().tie_break_answers
+    assert SORT in Response.objects.get().answers
+    assert refused.templates[0].name == "engine/retake.html"
+    assert '<body class="framed">' in page
+    assert "Not saved." in page
+
+
+@pytest.mark.django_db
 def test_a_participant_can_clear_only_their_own_assessment(sorted_in, django_user_model):
     someone_else = django_user_model.objects.create_user(username="someone", email="someone@example.com")
     other = Client()

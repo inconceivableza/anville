@@ -112,7 +112,8 @@
         "requires": ["onboarding"],
         "next_step": {
           "heading": "Start with your gifts.",
-          "sentence": "Take the ten-minute strengths assessment and read three short passages on gifts."
+          "sentence": "Take the ten-minute strengths assessment and read three short passages on gifts.",
+          "waiting": "{section}'s reflection opens once at least {minimum} of the people you invited have answered and you've seen how others see you."
         },
         "blocks": [
           {

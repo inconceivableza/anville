@@ -41,12 +41,12 @@
               </section>
             {% endwith %}
           {% elif hub.waiting_on_answers %}
-            {# ✨ Engine wording: nothing is next, but a section's only open work waits on others' answers (ticket 68). #}
+            {# ✨ Nothing is next, but a section's only open work waits on others' answers (ticket 68): the engine's heading, and the sentence the section carries for it (fix-2). #}
             {% with waiting=hub.waiting_on_answers %}
               <section class="panel next">
                 <p class="label">Your next step</p>
                 <h2>Waiting on answers</h2>
-                <p>{{ waiting.called }}'s reflection opens once at least {{ minimum }} of the people you invited have answered and you've seen how others see you.</p>
+                {% if waiting_sentence %}<p>{{ waiting_sentence }}</p>{% endif %}
                 <a class="pill" data-magnetic href="{% page_url waiting.id waiting.page %}">
                   {{ waiting.title }}
                   <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span>

@@ -11,6 +11,7 @@ the same pathway version the result was scored against.
 """
 
 import random
+from typing import NamedTuple
 
 from engine.document.comparison import agreement, comparison_settings, largest_gaps, seen_by_others
 from engine.document.observers import minimum_observers
@@ -22,7 +23,6 @@ from engine.document.tie_break import (
     GENERALIST,
     LEVEL,
     SAME_TOP,
-    SEPARATED,
     SKIPPED,
     TOP_CHANGED,
     joined,
@@ -61,16 +61,24 @@ AXIS_START, AXIS_END = -3, 103
 # that side instead, so it is never cut off.
 LABEL_EDGE = 20
 
-# ✨ Where the results page finds its words for each tie-break outcome in the document's `presentation.tie_break`, as
-# `(entry, field)`: the first whose entry the pathway version has. Separated names a leader, new or the same; balanced
-# names none, the choices having gone in a circle or left the best of them level. A version loaded before skipping
-# had words of its own says it as it said it then, as level.
+class OutcomeShown(NamedTuple):
+    """✨ How the results page treats one tie-break outcome: where it finds its `words` in the document's
+    `presentation.tie_break`, as `(entry, field)`, the first whose entry the pathway version has; and whether it
+    `separates` the framework, naming a leader, which rules out the generalist's words."""
+
+    words: list
+    separates: bool = False
+
+
+# ✨ Each tie-break outcome as the results page treats it, decided here once (ticket 72a). Separated names a leader, new
+# or the same; balanced names none, the choices having gone in a circle or left the best of them level. A version
+# loaded before skipping had words of its own says it as it said it then, as level.
 OUTCOME_WORDS = {
-    TOP_CHANGED: [("separated", "changed")],
-    SAME_TOP: [("separated", "same")],
-    CIRCLE: [("balanced", "circle")],
-    LEVEL: [("balanced", "level")],
-    SKIPPED: [("skipped", "text"), ("balanced", "level")],
+    TOP_CHANGED: OutcomeShown([("separated", "changed")], separates=True),
+    SAME_TOP: OutcomeShown([("separated", "same")], separates=True),
+    CIRCLE: OutcomeShown([("balanced", "circle")]),
+    LEVEL: OutcomeShown([("balanced", "level")]),
+    SKIPPED: OutcomeShown([("skipped", "text"), ("balanced", "level")]),
 }
 
 # ✨ The stylesheet's class for each direction of a gap, so a document's key never becomes a class name.
@@ -117,7 +125,7 @@ def _generalist(document, scores, presentation, role):
     separated. A re-weighted result says so in the document's words for after the pairs; a pathway version loaded
     before it had them says it in the sort's."""
     broken = outcomes(scores)
-    if any(outcome in SEPARATED for outcome in broken.values()) or tie_break(document, scores)["outcome"] != GENERALIST:
+    if any(OUTCOME_WORDS[outcome].separates for outcome in broken.values()) or tie_break(document, scores)["outcome"] != GENERALIST:
         return None
     wording = presentation["generalist"]
     text = wording.get("after_pairs", wording["text"]) if broken else wording["text"]
@@ -136,7 +144,7 @@ def _after_tie_break(presentation, scores, framework, bars, role):
     if outcome is None:
         return None
     wording = presentation["tie_break"]
-    entry, field = next((entry, field) for entry, field in OUTCOME_WORDS[outcome] if entry in wording)
+    entry, field = next((entry, field) for entry, field in OUTCOME_WORDS[outcome].words if entry in wording)
     said = wording[entry]
     labels = {bar["construct"]: bar["text_label"] for bar in bars}
     tied = tied_in(scores)[framework]

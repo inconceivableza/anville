@@ -21,8 +21,8 @@ from django.test import Client
 from django.utils import timezone
 from django.utils.html import escape
 
-from engine.document.observers import relationship_question
-from engine.hub import COACH_WAIT_LINE, COACH_WAIT_PANEL
+from engine.document.observers import minimum_observers, relationship_question
+from engine.hub import COACH_WAIT_WORDING
 from engine.models import Contact, ObserverResponse, Response
 from tests.journeys.test_coach_checklist import choose, step
 from tests.journeys.test_coach_link import answer_as_coach, coach_link_action, link_shown
@@ -899,6 +899,23 @@ def test_an_acceptance_on_the_coachs_current_link_opens_section_3_even_once_that
 
 
 @pytest.mark.django_db
+def test_once_an_accepting_coachs_link_has_expired_the_hub_shows_section_3_open_and_no_coach_wait(participant):
+    """✨ The hub reads the coach's answer as Section 3's opening condition does, expired or not (fix-2)."""
+    client = through_to_section_2(participant)
+    coach_accepts(client)
+
+    with time_machine.travel(timezone.now() + timedelta(days=31), tick=False):
+        client.force_login(Response.objects.get().participant)  # ✨ a session lasts two weeks
+        complete(client, "shape")
+        hub = client.get("/hub/").content.decode()
+        panel = next_step_panel(client)
+
+        assert "Locked" not in hub_entry(hub, TITLES["calling"])
+        assert not any(escape(heading.format(coach="Sam")) in panel for heading, *_ in COACH_WAIT_WORDING.values())
+        assert client.get(SECTION_3).status_code == 200
+
+
+@pytest.mark.django_db
 @pytest.mark.parametrize("change", ["revoked", "reissued", "changed"])
 def test_once_section_3_has_opened_it_stays_open_whatever_happens_to_the_coach(participant, change):
     client = through_to_section_2(participant)
@@ -1020,6 +1037,10 @@ def test_with_nothing_else_open_the_next_step_waits_on_answers_with_a_button_to_
     panel = next_step(client.get("/hub/").content.decode())
 
     assert "Waiting on answers" in panel
+    document = the_pathway()
+    designed = next(section for section in document["content"]["sections"] if section["id"] == "designed")
+    authored, minimum = designed["next_step"]["waiting"], minimum_observers(document)
+    assert escape(authored.replace("{section}", "Section 1").replace("{minimum}", str(minimum))) in panel
     assert 'href="/sections/designed/"' in panel
 
 
@@ -1074,10 +1095,11 @@ def test_with_nothing_next_and_section_3_waiting_only_on_the_coach_the_panel_nam
         client.force_login(Response.objects.get().participant)  # ✨ a session lasts two weeks
         panel = next_step_panel(client)
 
-        heading, sentence = COACH_WAIT_PANEL[answer]
+        heading, sentence, _ = COACH_WAIT_WORDING[answer]
         assert escape(heading.format(coach="Sam")) in panel
         assert escape(sentence.format(section="Section 3", coach="Sam")) in panel
         assert button_to(panel, "Your coach") == the_coach_page(client)
+        assert section_3_is_locked(client)
 
 
 @pytest.mark.django_db
@@ -1133,10 +1155,10 @@ def test_the_coach_card_has_manage_to_the_coach_page_in_every_state_once_unlocke
 @pytest.mark.django_db
 def test_the_coach_cards_line_shows_while_section_3_waits_on_the_coach_and_not_once_it_is_open(participant):
     client = through_to_section_2(participant)
-    assert escape(COACH_WAIT_LINE["waiting"].format(section="Section 3")) in coach_card(client)
+    assert escape(COACH_WAIT_WORDING["waiting"].line.format(section="Section 3")) in coach_card(client)
 
     coach_accepts(client, "decline")
-    assert escape(COACH_WAIT_LINE["declined"].format(section="Section 3")) in coach_card(client)
+    assert escape(COACH_WAIT_WORDING["declined"].line.format(section="Section 3")) in coach_card(client)
 
     coach_accepts(client)
     complete(client, "shape")
@@ -1144,4 +1166,4 @@ def test_the_coach_cards_line_shows_while_section_3_waits_on_the_coach_and_not_o
     revoke_coach_link(client)  # ✨ which never locks Section 3 again, once open
 
     card = coach_card(client)
-    assert not any(escape(line.format(section="Section 3")) in card for line in COACH_WAIT_LINE.values())
+    assert not any(escape(line.format(section="Section 3")) in card for *_, line in COACH_WAIT_WORDING.values())

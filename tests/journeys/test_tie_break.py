@@ -139,6 +139,21 @@ def test_a_choice_outside_the_pair_is_refused_and_nothing_is_stored(marked):
 
 
 @pytest.mark.django_db
+def test_without_javascript_a_choice_outside_the_pair_comes_back_on_the_pair_saying_why(marked):
+    """✨ Never the bare status line (spec, Engine; fix-2)."""
+    submit_sort(marked, TIED_ON_ONE)
+
+    refused = choose(marked, 0, "deliver")
+
+    page = refused.content.decode()
+    assert refused.status_code == 400
+    assert stored()[1] == []
+    assert refused.templates[0].name == "engine/tie_break.html"
+    assert '<body class="framed">' in page
+    assert "That is not one of this pair’s answers." in text_of(page)
+
+
+@pytest.mark.django_db
 def test_leaving_part_way_comes_back_to_the_next_pair_and_the_last_leads_to_the_results(marked):
     submit_sort(marked, TIED_ON_ONE)
     choose(marked, 0, "apostle")

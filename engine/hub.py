@@ -45,19 +45,38 @@ COACH_ANSWER_LABELS = {
 }
 
 
+class CoachWaitWording(NamedTuple):
+    """✨ What the engine says of a section waiting on the coach's acceptance, for one answer of the coach's: the
+    next-step panel's `heading` and `sentence`, while nothing else is open, and the coach card's `line` under its tag,
+    while the section waits on the coach at all (ticket 65)."""
+
+    heading: str
+    sentence: str
+    line: str
+
+
+# ✨ The coach card's line while no coach has said no, whether a link awaits their answer or there is none.
+_OPENS_ONCE_YOUR_COACH_ACCEPTS = "{section} opens once your coach accepts"
+
 # ✨ Engine wording for a section waiting on the coach's acceptance (ADR 0019), by the coach's answer as the coach page
 # tells it: "waiting" while a working link is unanswered, "declined", or None with no working link (none made, expired
-# unanswered, or revoked). The next-step panel's heading and sentence, while nothing else is open (ticket 65).
-COACH_WAIT_PANEL = {
-    "waiting": ("Waiting on your coach to respond", "{section} opens once {coach} has accepted."),
-    "declined": ("{coach} has said no", "Choose someone else to walk with you. {section} opens once they accept."),
-    None: ("Choose a coach", "{section} opens once your coach has accepted."),
-}
-# ✨ The coach card's line under its tag, by the same answer, while the section waits on the coach at all.
-COACH_WAIT_LINE = {
-    "waiting": "{section} opens once your coach accepts",
-    "declined": "Choose another coach to open {section}",
-    None: "{section} opens once your coach accepts",
+# unanswered, or revoked).
+COACH_WAIT_WORDING = {
+    "waiting": CoachWaitWording(
+        "Waiting on your coach to respond",
+        "{section} opens once {coach} has accepted.",
+        _OPENS_ONCE_YOUR_COACH_ACCEPTS,
+    ),
+    "declined": CoachWaitWording(
+        "{coach} has said no",
+        "Choose someone else to walk with you. {section} opens once they accept.",
+        "Choose another coach to open {section}",
+    ),
+    None: CoachWaitWording(
+        "Choose a coach",
+        "{section} opens once your coach has accepted.",
+        _OPENS_ONCE_YOUR_COACH_ACCEPTS,
+    ),
 }
 
 
@@ -71,10 +90,12 @@ def with_coach_answer(state, answer):
 
 
 class NextStepWording(NamedTuple):
-    """✨ What the hub's next step says for a section that carries its own wording for it (ticket 49b)."""
+    """✨ What the hub's next step says for a section that carries its own wording for it (ticket 49b), and `waiting`, what
+    it says while the section's only open work waits on others' answers (ticket 68), with its placeholders, or None."""
 
     heading: str
     sentence: str
+    waiting: str | None = None
 
 
 class SectionState(NamedTuple):
@@ -109,6 +130,16 @@ class SectionState(NamedTuple):
         sentences call it, or its title for one without a number (tickets 65 and 68)."""
         return f"Section {int(self.number)}" if self.number and self.number.isdigit() else self.title
 
+    def waiting_sentence(self, minimum):
+        """✨ The sentence the hub's next step says while this section's only open work waits on others' answers (ticket
+        68), as the section carries it, with what the engine's wording calls the section at {section} and the pathway's
+        `minimum` number of observer answers at {minimum}; None for a section without one. Replaced as plain text, never
+        through `format()`, as the lock note's {sections} is."""
+        wording = self.next_step.waiting if self.next_step else None
+        if wording is None:
+            return None
+        return wording.replace("{section}", self.called).replace("{minimum}", str(minimum))
+
 
 class OutlineEntry(NamedTuple):
     """✨ One section as the hub and the sidebar list it, with the parts of it listed under it (ticket 41b)."""
@@ -124,19 +155,23 @@ class CoachWait(NamedTuple):
     section: SectionState
     only: bool
 
-    def called(self):
-        """✨ What the wording calls the section, as `SectionState.called` says."""
-        return self.section.called
-
     def panel(self, answer, coach):
         """✨ The next-step panel's heading and sentence, as a `NextStepWording`, by the coach's `answer` as the coach
         page tells it, naming the `coach`."""
-        heading, sentence = COACH_WAIT_PANEL.get(answer, COACH_WAIT_PANEL[None])
-        return NextStepWording(heading.format(coach=coach), sentence.format(section=self.called(), coach=coach))
+        wording = _coach_wait_wording(answer)
+        return NextStepWording(
+            wording.heading.format(coach=coach), wording.sentence.format(section=self.section.called, coach=coach)
+        )
 
     def line(self, answer):
         """✨ The coach card's line under its tag, by the coach's `answer` as the coach page tells it."""
-        return COACH_WAIT_LINE.get(answer, COACH_WAIT_LINE[None]).format(section=self.called())
+        return _coach_wait_wording(answer).line.format(section=self.section.called)
+
+
+def _coach_wait_wording(answer):
+    """✨ The engine's wording for the coach's `answer`, as `COACH_WAIT_WORDING` has it; an answer it lacks is said as
+    no working link is."""
+    return COACH_WAIT_WORDING.get(answer, COACH_WAIT_WORDING[None])
 
 
 class Hub(NamedTuple):
@@ -249,21 +284,26 @@ def is_locked(section, completed, answers=None, sections=(), moved_past=None):
     if section["id"] in completed:
         return False
     answers = answers or {}
-    if not _requires_met(section, completed) or opening_conditions_unmet(section, answers):
+    if not _requires_met(section, completed) or unmet_opening_notes(section, answers):
         return True
     return _waiting_on(section, completed, answers, sections, moved_past or {}) is not None
 
 
 def _requires_met(section, completed):
-    """✨ Whether every section this one requires has been completed. A part of a section counts once its gate passes, as
-    `complete_sections` works it out, so Section 2 may require the Strengths assessment alone (ADR 0019)."""
+    """✨ Whether every section this one requires is among those `completed`."""
     return set(section.get("requires", [])) <= set(completed)
 
 
-def opening_conditions_unmet(section, answers, role="participant"):
+def _has_opened(section, answers):
+    """✨ Whether a section with opening conditions has opened, as stored the first time it did (ADR 0019)."""
+    return has_content(answers.get(opened_key(section["id"])))
+
+
+def unmet_opening_notes(section, answers, role="participant"):
     """✨ The authored message of each of a section's opening conditions that fails, in the order authored, said once
-    each (ADR 0019). None fail once the section has opened, since that is stored and they are never asked again."""
-    if has_content(answers.get(opened_key(section["id"]))):
+    each (ADR 0019), or none while they all pass. None fail once the section has opened, since that is stored and they
+    are never asked again."""
+    if _has_opened(section, answers):
         return []
     return unmet({"gate": section.get("opens_when", {})}, answers, role)
 
@@ -305,15 +345,15 @@ def _lock_note(section, completed, answers, sections, moved_past, role):
     opening conditions in the sentence it carries for that; once those sections are done, the message of each failing
     opening condition (ADR 0019); for a part waiting on its section, where it opens from and, while a reading there is
     unconfirmed, what opens it; otherwise the engine's general note."""
-    conditions = opening_conditions_unmet(section, answers, role)
+    notes = unmet_opening_notes(section, answers, role)
     if not _requires_met(section, completed):
         named = _unfinished_named(section, completed, sections, role)
         with_sections = section.get("opens_when", {}).get("with_sections")
-        if named and conditions and with_sections:
+        if named and notes and with_sections:
             return text_for(with_sections, role).replace("{sections}", named)
         return f"Opens once you've finished {named}." if named else "Complete what comes before this to open it."
-    if conditions:
-        return " ".join(conditions)
+    if notes:
+        return " ".join(notes)
     waiting = _waiting_on(section, completed, answers, sections, moved_past)
     if waiting is None:
         return "Complete what comes before this to open it."
@@ -415,7 +455,7 @@ def _waits_only_on_comparison(section, answers, blocks):
 
 def _waits_on_coach(section, answers):
     """✨ Whether a section not yet opened has a `coach_accepted` opening condition that fails (ADR 0019)."""
-    if has_content(answers.get(opened_key(section["id"]))):
+    if _has_opened(section, answers):
         return False
     clauses = section.get("opens_when", {}).get("clauses", [])
     return any(clause["type"] == "coach_accepted" and not clause_passes(clause, answers) for clause in clauses)
@@ -444,7 +484,8 @@ def _next_step_wording(section, role):
     if "next_step" not in section:
         return None
     wording = section["next_step"]
-    return NextStepWording(text_for(wording["heading"], role), text_for(wording["sentence"], role))
+    waiting = text_for(wording["waiting"], role) if "waiting" in wording else None
+    return NextStepWording(text_for(wording["heading"], role), text_for(wording["sentence"], role), waiting)
 
 
 def _estimate(section, status, role):

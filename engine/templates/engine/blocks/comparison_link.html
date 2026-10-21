@@ -9,10 +9,7 @@
 {% if block.comparison %}
   <div id="block-{{ block.id }}" class="section-link comparison-link">
     <p class="section-link-title">{{ block.text.title }}</p>
-    <form method="post" action="{% url 'visit_comparison' block.comparison.sort %}">
-      {% csrf_token %}
-      <button type="submit" class="pill">Compare with how others see you →</button>
-    </form>
+    {% include "engine/comparison_press.html" with press_sort=block.comparison.sort press_class="pill" %}
     <span class="status-chip status-{{ block.comparison.status }}">{{ block.comparison.label }}</span>
   </div>
 {% endif %}

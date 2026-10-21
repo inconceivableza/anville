@@ -13,7 +13,7 @@ import re
 
 import pytest
 
-from engine.models import Response
+from engine.models import Invitation, Response
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.test_answers import CALLING, answer, participant  # noqa: F401 (a fixture)
 from tests.journeys.test_coach_checklist import choose, step, text, the_coach_checklist
@@ -165,6 +165,25 @@ def test_consent_is_refused_before_the_participant_has_visited_their_comparison(
 
     assert refused.status_code == 403
     assert SHOWN not in what_the_coach_sees(observer, link)
+
+
+@pytest.mark.django_db
+def test_without_javascript_a_refused_tick_comes_back_on_the_comparison_saying_why(
+    signed_in, participant, observer  # noqa: F811
+):
+    """✨ Never the bare status line (spec, Engine; fix-2)."""
+    with_a_result(signed_in, participant, visited=False)
+    link = an_accepted_coach(signed_in, observer)
+
+    refused = share(signed_in)
+
+    page = refused.content.decode()
+    assert refused.status_code == 403
+    assert not Invitation.objects.filter(results_shared_at__isnull=False).exists()
+    assert SHOWN not in what_the_coach_sees(observer, link)
+    assert refused.templates[0].name == "engine/comparison.html"
+    assert '<body class="framed">' in page
+    assert "Your coach can see this only once they have accepted and you have seen your comparison." in text(refused)
 
 
 @pytest.mark.django_db

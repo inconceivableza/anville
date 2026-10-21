@@ -50,17 +50,39 @@ def coach_answer_key(block_id):
     return f"{block_id}/coach_answer"
 
 
+def coach_answer(answers, block_id):
+    """✨ The coach's answer through a coach checklist, as the hub tells it, read from the answers the gate reads so that
+    the hub and a `coach_accepted` clause never disagree: their answer on their current link, expired or not (ADR 0019);
+    "waiting" while a working link is unanswered; None with no link, one expired unanswered, or one revoked."""
+    answer = answers.get(coach_answer_key(block_id))
+    return answer or ("waiting" if answers.get(links_issued_key(block_id)) else None)
+
+
 def comparison_viewed_key(block_id):
     """✨ Where the answers the gate reads hold that the participant viewed a sort's comparison: pressed "Compare with how
     others see you →" with the minimum in (ticket 67a). Like `comparison_visit_key`, never a block's own answer."""
     return f"{block_id}/viewed"
 
 
+def comparison_viewed(answers, sort):
+    """✨ Whether the participant has viewed a sort's comparison (ticket 67a), as the answers the gate reads hold it: the
+    one place both a block waiting on the comparison and a comparison link's "Viewed" read it."""
+    return has_content(answers.get(comparison_viewed_key(sort)))
+
+
 def waits_on_comparison(block, answers):
     """✨ Whether a block is still waiting on the comparison (ticket 68): it carries `after_comparison` and its sort's
     comparison has not been viewed. Once viewed it never waits again, since "Viewed" outlasts an unfreeze (ADR 0019)."""
     waits = block.get("after_comparison")
-    return waits is not None and not has_content(answers.get(comparison_viewed_key(waits["sort"])))
+    return waits is not None and not comparison_viewed(answers, waits["sort"])
+
+
+def comparison_wait_message(block, answers, role="participant"):
+    """✨ What a block says while it waits on the comparison (`waits_on_comparison`): its authored `after_comparison`
+    message, or None once it no longer waits, or for a block that never does."""
+    if not waits_on_comparison(block, answers):
+        return None
+    return text_for(block["after_comparison"]["message"], role)
 
 
 def opened_key(section_id):
@@ -87,7 +109,7 @@ def unmet(section, answers, role="participant"):
 
 def unmet_clauses(section, answers):
     """✨ Every clause of the whole gate this response does not satisfy, in the order authored."""
-    return [clause for clause in clauses_of(section) if not _passes(clause, answers)]
+    return [clause for clause in clauses_of(section) if not clause_passes(clause, answers)]
 
 
 def checklist(section, answers, role="participant", page=None):
@@ -103,20 +125,17 @@ def checklist(section, answers, role="participant", page=None):
     clauses = clauses_of(section, page)
     if page is not None and page == page_count(section):
         # ✨ The whole gate's clauses on this page or left unmet on an earlier one, still in the order authored.
-        clauses = [clause for clause in clauses_of(section) if clause in clauses or not _passes(clause, answers)]
+        clauses = [clause for clause in clauses_of(section) if clause in clauses or not clause_passes(clause, answers)]
     met = {}
     for clause in clauses:
         message = text_for(clause["message"], role)
-        met[message] = met.get(message, True) and _passes(clause, answers)
+        met[message] = met.get(message, True) and clause_passes(clause, answers)
     return list(met.items())
 
 
 def clause_passes(clause, answers):
-    """✨ Whether one clause holds, as the hub asks of a section's opening conditions to tell which it waits on."""
-    return _passes(clause, answers)
-
-
-def _passes(clause, answers):
+    """✨ Whether one clause holds, as the gate asks of each of its clauses and the hub of a section's opening
+    conditions to tell which it waits on."""
     return CLAUSES[clause["type"]](clause, answers.get(_reads(clause)))
 
 
