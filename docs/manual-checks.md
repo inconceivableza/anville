@@ -637,8 +637,18 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 ## Section 1's reflection waits for the comparison (ticket 68; rebuild the frontend and load both pathways again, then start a new participant)
 
 - Section 1, with the sort in: the reflection's box shows, faded, with "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer." above it. Nothing can be typed in it, and its "Save" (without JavaScript) cannot be pressed.
-- Choose a coach and give three people links: the hub's next step is Section 2, not Section 1. Mark Section 2 finished: the next step reads "Waiting on answers" / "How you've been designed's reflection opens once at least 3 of the people you invited have answered and you've seen how others see you.", with a button to Section 1.
+- Choose a coach and give three people links: the hub's next step is Section 2, not Section 1. Mark Section 2 finished: the next step reads "Waiting on answers" / "Section 1's reflection opens once at least 3 of the people you invited have answered and you've seen how others see you.", with a button to Section 1.
 - Have two people answer (their links in private windows), then press "Compare with how others see you →": the explanation shows, and the reflection is still faded. Have a third answer and press it again, confirming: back on Section 1 the reflection can be written, and saves. The hub's next step is Section 1 again.
 - Have one of the three withdraw (collection unfreezes): the reflection still saves.
 - The faithful port's reflection can be written as soon as the sort is in, as before.
 - Phone width: the message wraps above the box with no sideways scroll.
+
+## The hub while Section 3 waits on the coach (ticket 65; rebuild the frontend, load both pathways again, and use a participant started after that)
+
+- Walk with a coach card, with no coach chosen: a small light "Manage" pill under its sentence, at its own width, leading to the coach page; and above the sentence, in darker type, "Section 3 opens once your coach accepts". Choose a coach: the same line and button.
+- Five trusted voices card: its "Manage" is now the same small pill, at its own width rather than across the card.
+- Finish Section 1 and Section 2 with the coach's link unanswered: the next-step panel reads "Waiting on your coach to respond" / "Section 3 opens once {coach} has accepted.", with a "Your coach" button to the coach page, in place of "Nothing is waiting for you right now."
+- Decline from the coach's link in a private window: the panel reads "{coach} has said no" / "Choose someone else to walk with you. Section 3 opens once they accept.", and the card's line "Choose another coach to open Section 3". Revoke the link, or remove the coach: "Choose a coach" / "Section 3 opens once your coach has accepted.", and the card's line is back to "Section 3 opens once your coach accepts".
+- Issue a link again and accept: Section 3 is the next step, and the card has no line, as it has none once Section 3 has opened, whatever happens to the link after.
+- The faithful port's hub, which has no coach and no side cards: its next step is as before.
+- Phone width: both cards' pills stay small and on one line, the cards below the list with no sideways scroll; the panel's button sits under its sentence.

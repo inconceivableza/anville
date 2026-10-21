@@ -1069,6 +1069,26 @@ main > .hub ~ .hub-consent {
   color: var(--muted);
 }
 
+/* ✨ What a section waits on the coach for, under the coach card's tag (ticket 65): darker than the sentence below it. */
+.card p.hub-side-line {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ✨ A side card's buttons (ticket 65): small pills in a row at their own width, not stretched across the card, so
+   the card grows as little as possible and another button can sit beside Manage, wrapping on a narrow phone. */
+.hub-side-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.hub-side-actions .pill.small .pill-arrow {
+  width: 18px;
+  height: 18px;
+}
+
 .meter {
   display: grid;
   gap: var(--space-2xs);
