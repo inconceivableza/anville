@@ -4,17 +4,17 @@
 
 **Blocked by:** B1B-67a ("How others see you" card in Section 1); B1A-66 (Section 2 opens on the Strengths assessment)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 3a (from 20 Oct)
 
 **Spec:** Blocks; Engine: sections, tracks, gates, progress
 
-- [ ] Until the comparison is "Viewed" (67a), the reflection is shown disabled with "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer.", and a save to it is refused, with or without JavaScript
-- [ ] Once viewed it can be written, and stays so even if withdrawals later unfreeze collection
-- [ ] While Section 1's only unmet requirements wait on the comparison, the hub's next step is the next open section instead
-- [ ] With nothing else open, the panel reads "Waiting on answers" / "{section}'s reflection opens once at least {minimum} of the people you invited have answered and you've seen how others see you.", with a button to Section 1
-- [ ] The waiting is authored on the block in *Whatever You Do* only; the faithful port shows the reflection once the sort is done, as the original prototype does
+- [x] Until the comparison is "Viewed" (67a), the reflection is shown disabled with "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer.", and a save to it is refused, with or without JavaScript
+- [x] Once viewed it can be written, and stays so even if withdrawals later unfreeze collection
+- [x] While Section 1's only unmet requirements wait on the comparison, the hub's next step is the next open section instead
+- [x] With nothing else open, the panel reads "Waiting on answers" / "{section}'s reflection opens once at least {minimum} of the people you invited have answered and you've seen how others see you.", with a button to Section 1
+- [x] The waiting is authored on the block in *Whatever You Do* only; the faithful port shows the reflection once the sort is done, as the original prototype does
 
 **Carried from 67a**
 
