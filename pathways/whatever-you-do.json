@@ -171,7 +171,11 @@
             "id": "gifts-summary",
             "type": "long_text",
             "prompt": "Having completed the assessment and read the passages above, summarise: what gifts and talents has God given you? And what has He not given you?",
-            "placeholder": "Draw on the scripture, your assessment results, and what others have told you..."
+            "placeholder": "Draw on the scripture, your assessment results, and what others have told you...",
+            "after_comparison": {
+              "sort": "strengths-sort",
+              "message": "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer."
+            }
           }
         ],
         "gate": {

@@ -2507,6 +2507,30 @@ body:not(.framed) .question-card > p + form {
   margin-top: 8px;
 }
 
+/* ✨ A block waiting on the comparison (ticket 68): shown, its controls disabled by the fieldset, and why above it. */
+.waits-on-comparison {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.waits-on-comparison > :not(.waiting-note) {
+  opacity: 0.55;
+}
+
+.waits-on-comparison textarea,
+.waits-on-comparison select,
+.waits-on-comparison input {
+  cursor: not-allowed;
+}
+
+.waiting-note {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
 /* Form panel: the prototype's .name-section, used by the account pages' forms. The fields inside are
    rendered by Django, so they are styled by element. */
 

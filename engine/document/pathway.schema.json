@@ -457,6 +457,22 @@
       "description": "How long this takes, worded as it is shown, such as 'About 15 minutes'. On a section it shows on the hub and at the top of the section; on a block, just above the block, for a section with several activities.",
       "$ref": "#/$defs/text"
     },
+    "after_comparison": {
+      "description": "Holds a capture block until the participant has pressed 'Compare with how others see you →' for this sort with at least the minimum number of observer assessments in: until then it is shown but cannot be answered, with the message beside it. Once pressed it stays answerable, even if withdrawals later unfreeze answer collection.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sort", "message"],
+      "properties": {
+        "sort": {
+          "description": "The identifier of the sort whose comparison the block waits on.",
+          "$ref": "#/$defs/identifier"
+        },
+        "message": {
+          "description": "Shown with the block while it waits, such as 'This opens once you've seen how others see you.'",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
     "section": {
       "type": "object",
       "additionalProperties": false,
@@ -550,6 +566,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "rich_text" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "variant": {
           "description": "How the text is set off: plain prose, or a hint box (such as 'The big question').",
           "enum": ["plain", "hint"],
@@ -574,6 +591,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "scripture_reading" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "heading": { "$ref": "#/$defs/text" },
         "passages": {
           "type": "array",
@@ -617,6 +635,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "agreement_scale" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "prompt": { "$ref": "#/$defs/text" },
         "min_label": { "$ref": "#/$defs/text" },
         "max_label": { "$ref": "#/$defs/text" },
@@ -636,6 +655,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "single_select" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "prompt": { "$ref": "#/$defs/text" },
         "placeholder": {
           "description": "What the list shows before anything is chosen, such as 'Select...'. It is never an answer.",
@@ -668,6 +688,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "contact_list" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "needed": {
           "description": "How many of the list's first rows are marked as needed. The section's gate says what completing it takes.",
           "type": "integer",
@@ -697,6 +718,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "coach_checklist" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "heading": { "$ref": "#/$defs/text" },
         "lead": { "description": "One sentence set off above the body.", "$ref": "#/$defs/text" },
         "body": { "description": "Why the choice matters. A blank line starts a new paragraph.", "$ref": "#/$defs/text" },
@@ -780,6 +802,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "sort_assessment" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "coach_brief": {
           "description": "The guidance for the coach's conversation about these results and their comparison, which the coach sees once the participant shares them (ticket 25a).",
           "$ref": "#/$defs/coach_brief"
@@ -795,6 +818,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "section_link" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "section": { "$ref": "#/$defs/identifier" },
         "body": {
           "description": "Plain text saying what is there. A blank line starts a new paragraph.",
@@ -830,6 +854,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "sort_results" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "sort": {
           "description": "The identifier of the sort whose results these are.",
           "$ref": "#/$defs/identifier"
@@ -845,6 +870,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "comparison_link" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "sort": {
           "description": "The identifier of the sort whose comparison this leads to.",
           "$ref": "#/$defs/identifier"
@@ -864,6 +890,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "download" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "file": {
           "description": "The PDF's name in the pathways/files folder, such as 'whatever-you-do-workbook-section-2.pdf'.",
           "type": "string",
@@ -887,6 +914,7 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "long_text" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "prompt": { "$ref": "#/$defs/text" },
         "placeholder": {
           "description": "Ghost text in the empty box, such as 'Dear me,'. A hint only: it is never saved as the answer.",

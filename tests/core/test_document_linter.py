@@ -188,6 +188,50 @@ def test_a_comparison_link_naming_anything_but_a_sort_is_reported(named):
     ]
 
 
+def waiting_on_the_comparison(block_id, sort="strengths-sort"):
+    """✨ The sort pathway with the block `block_id` waiting on the comparison of `sort` (ticket 68)."""
+    document = sort_pathway()
+    for section in document["content"]["sections"]:
+        for block in section["blocks"]:
+            if block["id"] == block_id:
+                block["after_comparison"] = {"sort": sort, "message": "This opens once you've seen how others see you."}
+    return document
+
+
+def not_a_capture_block(block_id, type_name):
+    return (
+        f"Block '{block_id}' is a {type_name}, so it cannot wait on the comparison: only a capture block answered on "
+        "its page can."
+    )
+
+
+WAITING_SORT = "/content/sections/1/blocks/0/after_comparison/sort"
+
+
+@pytest.mark.parametrize(
+    "block_id, sort, problem",
+    [
+        ("statement", "statement", (WAITING_SORT, "There is no sort 'statement' in this pathway.")),
+        ("statement", "nowhere", (WAITING_SORT, "There is no sort 'nowhere' in this pathway.")),
+        (
+            "welcome",
+            "strengths-sort",
+            ("/content/sections/0/blocks/0/after_comparison", not_a_capture_block("welcome", "rich_text")),
+        ),
+        (
+            "strengths-sort",
+            "strengths-sort",
+            ("/content/sections/2/blocks/0/after_comparison", not_a_capture_block("strengths-sort", "sort_assessment")),
+        ),
+    ],
+    ids=["naming a long text", "naming nothing", "on rich text", "on a sort"],
+)
+def test_waiting_on_the_comparison_of_anything_but_a_sort_or_on_a_block_that_is_no_capture_block_is_reported(
+    block_id, sort, problem
+):
+    assert validate(waiting_on_the_comparison(block_id, sort)) == [Problem(*problem)]
+
+
 def test_a_pathway_without_a_sort_needs_no_scoring_method():
     document = pathway_document()
     assert "scoring" not in document["measurement"]
