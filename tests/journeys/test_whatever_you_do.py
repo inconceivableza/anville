@@ -22,12 +22,13 @@ from django.utils import timezone
 from django.utils.html import escape
 
 from engine.document.observers import relationship_question
+from engine.hub import COACH_WAIT_LINE, COACH_WAIT_PANEL
 from engine.models import Contact, ObserverResponse, Response
 from tests.journeys.test_coach_checklist import choose, step
 from tests.journeys.test_coach_link import answer_as_coach, coach_link_action, link_shown
 from tests.journeys.test_navigation import section_in, sidebar_of
 from tests.journeys.pages import main_of
-from tests.journeys.test_hub import hub_entry, signed_in_client  # noqa: F401  (a fixture, used by name)
+from tests.journeys.test_hub import hub_entry, side_card, signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.prototype import js_string
 from tests.journeys.test_whatever_you_do_faithful_port import (
     A_LETTER,
@@ -912,3 +913,127 @@ def test_section_3s_lock_note_names_the_unfinished_sections_and_the_coach_then_t
 
     coach_only = authored["clauses"][0]["message"]
     assert escape(coach_only) in hub_entry(client.get("/hub/").content.decode(), TITLES["calling"])
+
+
+# The hub while Section 3 waits on the coach (ticket 65)
+
+COACH_CARD = "Walk with a coach"
+
+
+def next_step_panel(client):
+    """✨ The hub's next-step panel, whichever it is."""
+    page = client.get("/hub/").content.decode()
+    return re.search(r'<(section|div) class="panel next">.*?</\1>', page, re.S).group()
+
+
+def button_to(html, label):
+    """✨ Where the button or link with this label leads, or None."""
+    found = re.search(rf'href="([^"]*)"[^>]*>\s*{label}\b', html)
+    return found.group(1) if found else None
+
+
+def the_coach_page(client):
+    """✨ The coach page's address, as the sidebar's "Your coach" gives it."""
+    return button_to(sidebar_of(client.get("/hub/").content.decode()), "Your coach")
+
+
+def revoke_coach_link(client):
+    client.post(coach_link_action(client, "revoke", section="walk-with-a-coach"))
+
+
+# ✨ Each way Section 3 can wait on the coach, as the coach's answer the panel's wording is chosen by and how to get
+# there from a coach given a working link: unanswered, declined, and no working link (none made, expired unanswered,
+# revoked).
+COACH_WAITS = {
+    "unanswered": ("waiting", lambda client: None),
+    "declined": ("declined", lambda client: coach_accepts(client, "decline")),
+    "no link made": (None, lambda client: step(client, "remove")),
+    "expired unanswered": (None, lambda client: None),
+    "revoked": (None, revoke_coach_link),
+}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("wait", COACH_WAITS)
+def test_with_nothing_next_and_section_3_waiting_only_on_the_coach_the_panel_names_the_wait(participant, wait):
+    client = through_to_section_2(participant)
+    answer, do = COACH_WAITS[wait]
+    do(client)
+    complete(client, "shape")
+    later = timezone.now() + timedelta(days=31) if wait == "expired unanswered" else timezone.now()
+
+    with time_machine.travel(later, tick=False):
+        client.force_login(Response.objects.get().participant)  # ✨ a session lasts two weeks
+        panel = next_step_panel(client)
+
+        heading, sentence = COACH_WAIT_PANEL[answer]
+        assert escape(heading.format(coach="Sam")) in panel
+        assert escape(sentence.format(section="Section 3", coach="Sam")) in panel
+        assert button_to(panel, "Your coach") == the_coach_page(client)
+
+
+@pytest.mark.django_db
+def test_the_panel_is_as_before_while_something_else_is_next(participant):
+    client = through_to_section_2(participant)
+
+    panel = next_step_panel(client)
+
+    assert button_to(panel, "Begin") == SECTION_2
+    assert button_to(panel, "Your coach") is None
+
+
+@pytest.mark.django_db
+def test_the_panel_is_as_before_while_section_3_also_waits_on_a_section_unfinished(signed_in_client, load_pathway):
+    """✨ Section 3 made to require a section that can never open, as a section stands that the hub passes over while it
+    waits on others (ADR 0019): nothing is next, and Section 3 waits on more than the coach."""
+    document = the_pathway()
+    calling = next(section for section in document["content"]["sections"] if section["id"] == "calling")
+    calling["requires"].append("growth")  # ✨ which requires Section 3 in turn
+    load_pathway(document)
+    client = through_to_section_2(signed_in_client)
+    complete(client, "shape")
+
+    panel = next_step_panel(client)
+
+    assert "Nothing is waiting for you right now." in panel
+    assert button_to(panel, "Your coach") is None
+
+
+def coach_card(client):
+    """✨ The hub's Walk with a coach card."""
+    return side_card(client.get("/hub/").content.decode(), COACH_CARD)
+
+
+# ✨ Where the coach can stand once the card is unlocked: none chosen, a link unanswered, declined, accepted.
+COACH_STATES = {
+    "no coach": lambda client: None,
+    "unanswered": choose,
+    "declined": lambda client: (choose(client), coach_accepts(client, "decline")),
+    "accepted": lambda client: (choose(client), coach_accepts(client)),
+}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("coach", COACH_STATES)
+def test_the_coach_card_has_manage_to_the_coach_page_in_every_state_once_unlocked(participant, coach):
+    client = to_the_coach_page(participant)
+    COACH_STATES[coach](client)
+
+    assert button_to(coach_card(client), "Manage") == the_coach_page(client)
+
+
+@pytest.mark.django_db
+def test_the_coach_cards_line_shows_while_section_3_waits_on_the_coach_and_not_once_it_is_open(participant):
+    client = through_to_section_2(participant)
+    assert escape(COACH_WAIT_LINE["waiting"].format(section="Section 3")) in coach_card(client)
+
+    coach_accepts(client, "decline")
+    assert escape(COACH_WAIT_LINE["declined"].format(section="Section 3")) in coach_card(client)
+
+    coach_accepts(client)
+    complete(client, "shape")
+    assert client.get(SECTION_3).status_code == 200
+    revoke_coach_link(client)  # ✨ which never locks Section 3 again, once open
+
+    card = coach_card(client)
+    assert not any(escape(line.format(section="Section 3")) in card for line in COACH_WAIT_LINE.values())

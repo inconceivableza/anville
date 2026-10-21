@@ -40,6 +40,16 @@
                 </a>
               </section>
             {% endwith %}
+          {% elif coach_wait %}
+            {# ✨ Nothing is next, and a section waits on the coach alone: the engine's wording for the wait, by the coach's answer (ticket 65). #}
+            <section class="panel next">
+              <h2>{{ coach_wait.heading }}</h2>
+              <p>{{ coach_wait.sentence }}</p>
+              <a class="pill" data-magnetic href="{{ coach_wait.coach_page }}">
+                Your coach
+                <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span>
+              </a>
+            </section>
           {% else %}
             <div class="panel next">
               <h2>Nothing is waiting for you right now.</h2>

@@ -633,3 +633,13 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - Collection frozen (as in ticket 71's check): no sentence and no "Add another person".
 - The faithful port's contact list shows "Add another person" below its five rows, with no sentence.
 - Phone width: the sentence and the button sit below the rows with no sideways scroll.
+
+## The hub while Section 3 waits on the coach (ticket 65; rebuild the frontend, load both pathways again, and use a participant started after that)
+
+- Walk with a coach card, with no coach chosen: a small light "Manage" pill under its sentence, at its own width, leading to the coach page; and above the sentence, in darker type, "Section 3 opens once your coach accepts". Choose a coach: the same line and button.
+- Five trusted voices card: its "Manage" is now the same small pill, at its own width rather than across the card.
+- Finish Section 1 and Section 2 with the coach's link unanswered: the next-step panel reads "Waiting on your coach to respond" / "Section 3 opens once {coach} has accepted.", with a "Your coach" button to the coach page, in place of "Nothing is waiting for you right now."
+- Decline from the coach's link in a private window: the panel reads "{coach} has said no" / "Choose someone else to walk with you. Section 3 opens once they accept.", and the card's line "Choose another coach to open Section 3". Revoke the link, or remove the coach: "Choose a coach" / "Section 3 opens once your coach has accepted.", and the card's line is back to "Section 3 opens once your coach accepts".
+- Issue a link again and accept: Section 3 is the next step, and the card has no line, as it has none once Section 3 has opened, whatever happens to the link after.
+- The faithful port's hub, which has no coach and no side cards: its next step is as before.
+- Phone width: both cards' pills stay small and on one line, the cards below the list with no sideways scroll; the panel's button sits under its sentence.
