@@ -676,3 +676,28 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - An organisation's admin sees the same count for that member as the participant's hub shows.
 - The faithful port: once Before we begin is complete it is still listed on the hub and in the sidebar, and its pages open as before.
 - Phone width: the hub and the sidebar list the sections as above, with no sideways scroll.
+
+## The coherence walk on staging (ticket 54)
+
+A walk through the whole app on staging, after a sprint's changes, to see it hangs together. Staging sends real email through Mailjet; the steps that do are marked. Server commands run on the host over ssh, with `k` standing for `sudo k3s kubectl -n whatever-you-do-staging`, and `exec deployment/anville -c web --` before each `python manage.py`.
+
+Before starting: `curl -s https://anville.vabl.dev/healthz` gives the commit staging runs; if it is behind `main`, deploy, then publish `whatever-you-do-faithful-port.json` and, last, `whatever-you-do.json`, since the pathway published last is the one new participants get (`deploy/README.md`). Every participant in the walk is one started after that. Use made-up names and `example.com` addresses, except where a step needs a mailbox or a Google account.
+
+- **The participant**, in a private window: the homepage, "Begin your journey →", sign-up, consent, Before we begin's two pages, then the hub, with Before we begin gone from it and from the sidebar ("0 of 8 sections complete"). Section 1's Strengths assessment; its results; the "How others see you" card waiting for answers and the reflection faded. A coach chosen and three people given links on Five trusted voices: Section 2 opens without Section 1. Section 2's workbook PDF; marking it finished. Removing one of the three: their link says "This link does not work".
+- **The observers**, each link in a private window of its own: the sort about the participant, in the observer's voice, sent after fine-tuning and once without; "Thank you" with only "Withdraw my answers". As the participant: "Not enough answers yet" at two, "Ready to view" at three, "Before you look", then the comparison, and the reflection open.
+- **The coach**, Sam's link in a private window: the six promises, "Accept →" refused with one unticked, accepted with all six. As the participant: Section 3 opens once Section 1 is marked complete. "Give my coach access…" ticked and unticked, with Sam's link showing the guide, the results and the comparison, then "What happens next" again.
+- **The tie-break**: `seed_tie_break --profile tied-apest --answers behind` prints a made-up participant's address, a sign-in link and the answers to give; its password is `information.`. The results read "Evangelist now sits on top, in place of Deacon…".
+- **Password reset** (sends email): sign up at an address you own, sign out, "Forgot your password?". The email arrives with `[TEST]` before its subject and the disclaimer at the top; the new password signs in, the old is refused, and the link fails a second time. An address with no account shows the same page and sends nothing.
+- **Google sign-in**, with a second test user listed under Google Cloud's OAuth consent screen, Audience, Test users. Close every private window before each press of "Continue with Google", until it always shows Google's account chooser. The second test user signs up with no password and signs in again straight away. The password account's address is refused: "An account already exists with this email address…", and no account is made.
+- **Deleting an account to repeat the demo**: there is no way in the app yet. Find the account's id, then delete it, which takes its answers, observers' answers and Google link with it:
+
+  ```sh
+  k exec deployment/anville -c web -- python manage.py shell -c "from django.contrib.auth import get_user_model; [print(u.id, repr(u.username), repr(u.email), u.has_usable_password(), u.socialaccount_set.count()) for u in get_user_model().objects.order_by('-date_joined')[:8]]"
+  k exec deployment/anville -c web -- python manage.py shell -c "from django.contrib.auth import get_user_model; u = get_user_model().objects.get(id=<ID>); print(repr(u.username), u.is_superuser); print(u.delete())"
+  ```
+
+  "Continue with Google" with the same account then leads to the sign-up form and consent, as for someone new.
+- **A withdrawn participant's links**: with Sam's link and an unused observer's link open, withdraw consent; both refuse as a wrong link does, naming nobody, and the observer's withdrawal page still opens. Agreeing again restores both.
+- **An error page**: `/observe/made-up-token/nothing-here/` shows "Page not found" in the site's styles. Delete the `csrftoken` cookie on sign in (in the console, `document.cookie = "csrftoken=; Max-Age=0; path=/; secure"`), then send the form: "This page was out of date".
+
+Walked at a wide screen on 22 Oct 2026, with staging on `56924e5`; each passed, with findings still to fix. Phone width is still to walk.
