@@ -17,6 +17,7 @@ from django.utils.safestring import mark_safe
 from engine.document.blocks import BLOCK_TYPES, page_count, page_of, pages_of
 from engine.document.gates import (
     clause_passes,
+    clauses_of,
     gate_passes,
     has_content,
     opened_key,
@@ -393,15 +394,23 @@ def _unfinished_named(section, completed, sections, role):
     """✨ What is left in the sections a section requires that are not yet complete, as the lock note's pieces, or None.
     Each is named by its authored phrase for what finishing it takes (ticket 79), or else as "finished {title}", as the
     faithful port names its sections (ticket 52); those sharing a phrase together, all joined in document order. A
-    required section outside the track is not named."""
+    phrase's {min} is its section's own `links_issued` minimum, filled before they are grouped (ticket 81). A required
+    section outside the track is not named."""
     by_phrase = {}
     for other in sections:
         if other["id"] in section.get("requires", []) and other["id"] not in completed:
-            phrase = text_for(other["to_finish"], role) if "to_finish" in other else "finished {title}"
+            phrase = _with_min(text_for(other["to_finish"], role), other) if "to_finish" in other else "finished {title}"
             by_phrase.setdefault(phrase, []).append(other)
     if not by_phrase:
         return None
     return _joined([_named_by(phrase, group, role) for phrase, group in by_phrase.items()])
+
+
+def _with_min(phrase, section):
+    """✨ A section's phrase with its `links_issued` clause's minimum wherever it says {min}. The linter refuses a {min}
+    in a section without exactly one such clause."""
+    issued = [clause for clause in clauses_of(section) if clause["type"] == "links_issued"]
+    return phrase.replace("{min}", str(issued[0]["min"])) if len(issued) == 1 else phrase
 
 
 def _named_by(phrase, group, role):

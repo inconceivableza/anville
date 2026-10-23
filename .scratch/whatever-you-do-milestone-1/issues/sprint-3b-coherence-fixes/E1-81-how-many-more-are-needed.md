@@ -4,7 +4,7 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 3b (coherence fixes, from 23 Oct)
 
@@ -17,7 +17,7 @@
 
 **Carried from 79**
 
-- [ ] The number of people Five trusted voices needs is written once: its gate message and its phrase for what finishing it takes ("added at least 3 people in …") say it through a `{min}` placeholder, filled from the section's own links-issued clause, and the linter refuses a number written into those texts that differs from that clause's minimum (developer's call, 23 Oct)
+- [x] The number of people Five trusted voices needs is written once: its gate message and its phrase for what finishing it takes ("added at least 3 people in …") say it through a `{min}` placeholder, filled from the section's own links-issued clause, and the linter refuses a number written into those texts that differs from that clause's minimum (developer's call, 23 Oct)
 
 **Context**
 

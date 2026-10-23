@@ -481,7 +481,7 @@
         "id": "trusted-voices",
         "title": "Five trusted voices",
         "requires": ["onboarding"],
-        "to_finish": "added at least 3 people in {title}",
+        "to_finish": "added at least {min} people in {title}",
         "side_card": {
           "sentence": "Invite people who know you well. Their answers sit beside your own in Section 1, combined so you never see whose is whose."
         },
@@ -502,7 +502,7 @@
         ],
         "gate": {
           "clauses": [
-            { "type": "links_issued", "block": "contacts", "min": 3, "message": "Add at least 3 people." }
+            { "type": "links_issued", "block": "contacts", "min": 3, "message": "Add at least {min} people." }
           ]
         }
       }

@@ -530,7 +530,7 @@
           "$ref": "#/$defs/text"
         },
         "to_finish": {
-          "description": "What finishing this section takes, as the hub's note under a section requiring it says it after 'Opens once you've', such as 'added at least 3 people in {title}'. {title} is the section's title, in italics; {section} is what the hub calls it, such as 'Section 1'. Unfinished sections sharing one are named together, as 'completed Sections 1 and 2'. Without one, the note says 'finished' and the title.",
+          "description": "What finishing this section takes, as the hub's note under a section requiring it says it after 'Opens once you've', such as 'added at least {min} people in {title}'. {title} is the section's title, in italics; {section} is what the hub calls it, such as 'Section 1'; {min} is the minimum of the section's own links_issued clause, of which it must have exactly one. Unfinished sections sharing one are named together, as 'completed Sections 1 and 2'. Without one, the note says 'finished' and the title.",
           "$ref": "#/$defs/text"
         }
       }
@@ -1059,7 +1059,7 @@
       }
     },
     "links_issued": {
-      "description": "At least this many of the people a contact list or coach checklist holds have a working link. Issued is enough: nobody need have answered.",
+      "description": "At least this many of the people a contact list or coach checklist holds have a working link. Issued is enough: nobody need have answered. Its message says min as {min}, such as 'Add at least {min} people.'",
       "type": "object",
       "additionalProperties": false,
       "required": ["type", "block", "min", "message"],

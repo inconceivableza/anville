@@ -723,6 +723,14 @@ Reload the page for the rebuilt frontend; no new participant is needed.
 - Regression: the links below read as before: "Your results" and "How others experience you" once the sort is in, "Invite others to assess you", and "Your coach".
 - Phone width: the panel spans the header's width with no sideways scroll, and long titles wrap under their statuses.
 
+### Ticket 81: How many more answers, or people, are needed
+
+Load *Whatever You Do* again, and start a new participant for the regression line: its `{min}` wording comes from the version loaded now. The other lines work with any participant.
+
+- Once the sort is in, with two people answered: Section 1's "How others see you" card, the hub's row and the Five trusted voices pill each read "1 more answer needed"; with one answered, "2 more answers needed"; with three, "Ready to view".
+- With Five trusted voices complete (three people with links), revoke one link on its page: the card's tag reads "1 more needed", with "You'll see how others see you once 3 people have answered." under it while fewer than three have answered. The hub's header count of sections complete is unchanged, and Section 2 stays open if it had opened.
+- Regression: Section 2's note still says "added at least 3 people in *Five trusted voices*", and, before three people have links, Five trusted voices' page lists "Add at least 3 people." under its people.
+
 ## Signposts under their new names (ticket 75; a database holding a participant started before 75, from a pathway version loaded before it)
 
 - That participant's Section 1 reads as before: the Strengths assessment card leads to the assessment and, once the sort is in, reads "View my results →"; what it held back is still held back until then; the "How others see you" card shows its status, and reads "Viewed" once confirmed.

@@ -222,6 +222,55 @@ def test_a_comparison_visited_clause_may_name_the_sort_in_another_section_but_no
     ]
 
 
+# The number of people a links_issued clause needs, written once (ticket 81)
+
+
+def with_voices(message="Add at least {min} people.", to_finish="added at least {min} people in {title}", gate=True):
+    """✨ The test pathway with a section after onboarding holding a contact list, as Five trusted voices does, its
+    `links_issued` clause asking for three people (left out without a `gate`), and with `to_finish`."""
+    document = pathway_document()
+    clause = {"type": "links_issued", "block": "contacts", "min": 3, "message": message}
+    document["content"]["sections"].append(
+        {
+            "id": "voices",
+            "title": "Five trusted voices",
+            "requires": ["onboarding"],
+            "to_finish": to_finish,
+            "blocks": [{"id": "contacts", "type": "contact_list"}],
+            **({"gate": {"clauses": [clause]}} if gate else {}),
+        }
+    )
+    return document
+
+
+@pytest.mark.parametrize(
+    "fields, path",
+    [
+        ({"message": "Add at least 4 people."}, "/content/sections/2/gate/clauses/0/message"),
+        ({"to_finish": "added at least 4 people in {title}"}, "/content/sections/2/to_finish"),
+        (
+            {"to_finish": {"participant": "added at least {min} people in {title}", "observer": "added 4"}},
+            "/content/sections/2/to_finish/observer",
+        ),
+    ],
+    ids=["in the message", "in the phrase", "in one role's phrase"],
+)
+def test_a_number_other_than_the_links_issued_minimum_is_refused_where_it_is_written(fields, path):
+    assert validate(with_voices(**fields)) == [
+        Problem(path, "This says 4 where the section's 'links_issued' clause asks for 3; write {min} for its minimum.")
+    ]
+
+
+def test_a_phrase_may_write_min_only_in_a_section_with_one_links_issued_clause():
+    assert validate(with_voices(gate=False)) == [
+        Problem(
+            "/content/sections/2/to_finish",
+            "{min} is the minimum of the section's own 'links_issued' clause, and this section has none, or more "
+            "than one.",
+        )
+    ]
+
+
 def test_a_gate_may_combine_clauses_of_different_types_over_different_blocks_in_its_section():
     document = document_whose_gate_names({"type": "min_text_length", "block": "statement", "min": 10, "message": "More."})
     document["content"]["sections"][1]["blocks"].append(

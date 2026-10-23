@@ -70,7 +70,7 @@ SAYS_HOW_MUCH = {
 SLOTS = (*PROTOTYPE_SLOTS, "peace")
 # ✨ Three people rather than the prototype's five, each with their link (ticket 52), as the list marks three needed
 # (ticket 51a). The two side cards' gates, which complete them with nothing to press.
-ADD_THREE = "Add at least 3 people."
+ADD_THREE = "Add at least {min} people."  # ✨ its clause's 3 (ticket 81)
 SEND_THE_COACH = "Choose a coach and send them their link."
 # ✨ Before we begin's coach and contacts pages became the hub side cards Walk with a coach and Five trusted voices
 # (ticket 50).
@@ -740,11 +740,13 @@ OPENS_ONCE = "Opens once you've {}."
 
 
 def what_is_left(section_id, called=None):
-    """✨ What finishing a section takes, as its phrase in the document says it (ticket 79): its title at {title}, and
-    at {section} `called`, or else what the hub calls it ("Section 1")."""
+    """✨ What finishing a section takes, as its phrase in the document says it (ticket 79): its title at {title}, at
+    {section} `called`, or else what the hub calls it ("Section 1"), and at {min} its links_issued minimum (ticket 81)."""
     section = next(section for section in the_pathway()["content"]["sections"] if section["id"] == section_id)
     called = called or (f"Section {int(section['number'])}" if "number" in section else section["title"])
-    return section["to_finish"].replace("{title}", section["title"]).replace("{section}", called)
+    issued = [clause["min"] for clause in section.get("gate", {}).get("clauses", []) if clause["type"] == "links_issued"]
+    phrase = section["to_finish"].replace("{title}", section["title"]).replace("{section}", called)
+    return phrase.replace("{min}", str(issued[0])) if issued else phrase
 
 
 def note_under(client, section_id):

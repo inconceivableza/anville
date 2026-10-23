@@ -41,6 +41,7 @@ def lint(document):
         *_unwaitable_blocks(document),
         *_empty_pages(document),
         *_unreadable_clauses(document),
+        *_minimums_written_twice(document),
         *_unreadable_opening_conditions(document),
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
@@ -278,6 +279,42 @@ def _unreadable_clauses(document):
                 )
             elif not _can_read(clause["type"], block_types[named]):
                 yield _unreadable(path, clause, block_types[named])
+
+
+def _minimums_written_twice(document):
+    """✨ The number of people a `links_issued` clause needs is written once, in the clause (ticket 81): its message and
+    its section's `to_finish` say it by {min}, so a different number written in either is refused, and a {min} in the
+    `to_finish` of a section without exactly one such clause, which would reach the participant as written."""
+    for s, section in enumerate(document["content"]["sections"]):
+        issued = [(c, clause) for c, clause in enumerate(clauses_of(section)) if clause["type"] == "links_issued"]
+        for c, clause in issued:
+            yield from _other_numbers(clause["message"], clause["min"], f"/content/sections/{s}/gate/clauses/{c}/message")
+        if "to_finish" not in section:
+            continue
+        path = f"/content/sections/{s}/to_finish"
+        if len(issued) == 1:
+            yield from _other_numbers(section["to_finish"], issued[0][1]["min"], path)
+        elif any("{min}" in said for _, said in _by_role(section["to_finish"])):
+            yield Problem(
+                path,
+                "{min} is the minimum of the section's own 'links_issued' clause, and this section has none, or more "
+                "than one.",
+            )
+
+
+def _other_numbers(text, minimum, path):
+    for role, said in _by_role(text):
+        for number in sorted({int(found) for found in re.findall(r"\d+", said)} - {minimum}):
+            yield Problem(
+                path + (f"/{role}" if role else ""),
+                f"This says {number} where the section's 'links_issued' clause asks for {minimum}; write {{min}} for "
+                "its minimum.",
+            )
+
+
+def _by_role(text):
+    """✨ Authored text as (role, text) pairs: one with no role for plain text, or one per role of a role pair."""
+    return text.items() if isinstance(text, dict) else [(None, text)]
 
 
 def _unreadable_opening_conditions(document):

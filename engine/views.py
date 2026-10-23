@@ -68,6 +68,7 @@ from engine.document.contacts import (
 )
 from engine.document.aggregation import aggregate
 from engine.document.gates import (
+    clause_message,
     clauses_of,
     coach_answer,
     comparison_viewed,
@@ -2337,7 +2338,7 @@ def _requirement_links(state, section):
         if not _is_open(state, section_of(document, block["id"]), block):
             continue
         is_coach = block["type"] == "coach_checklist"
-        links[text_for(clause["message"], "participant")] = (
+        links[clause_message(clause)] = (
             _block_address(document, block["id"]) if is_coach else reverse("invitations")
         )
     return links

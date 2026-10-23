@@ -336,6 +336,14 @@ def test_a_locked_section_names_what_is_left_in_each_section_by_its_phrase_or_el
     assert lock_note(sections, completed=["a", "b"]) == "Opens once you've added at least 3 people in C and finished D."
 
 
+def test_a_phrase_says_its_sections_links_issued_minimum_where_it_writes_min():
+    """✨ So the number is written once, in the section's own `links_issued` clause (ticket 81)."""
+    voices = phrased("c", "added at least {min} people in {title}")
+    voices["gate"] = {"clauses": [{"type": "links_issued", "block": "contacts", "min": 4, "message": "Add {min}."}]}
+
+    assert lock_note([voices, section("last", requires=["c"])]) == "Opens once you've added at least 4 people in C."
+
+
 def test_sections_sharing_a_phrase_are_named_together_and_only_those_left():
     """✨ As Section 3 names Sections 1 and 2 (ticket 79)."""
     sections = [
