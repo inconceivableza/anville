@@ -39,6 +39,21 @@ class AccountAdapter(DefaultAccountAdapter):
 
 
 class SocialAccountAdapter(DefaultSocialAccountAdapter):
+    # ✨ Nothing connects a Google account to an existing one, so in place of allauth's "sign in to that account first,
+    # then connect", the refusal sends the person to sign in with their password (ticket 77). The Google sign-up form
+    # links to signing in and the password reset beside it.
+    error_messages = {
+        **DefaultSocialAccountAdapter.error_messages,
+        "email_taken": "There's already an account with this email address, made with a password. "
+        "Sign in with your email and password instead.",
+    }
+
+    def validation_error(self, code, *args):
+        # ✨ allauth hands its own refusal the provider's name to fill in, which ours does not take.
+        if code == "email_taken":
+            args = ()
+        return super().validation_error(code, *args)
+
     def list_apps(self, request, provider=None, client_id=None):
         """✨ Google's client comes only from the environment's pair (ticket 28b), read on each request, and never
         from the database: with half a pair or none, there is no app, so no button."""

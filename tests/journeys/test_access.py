@@ -10,7 +10,9 @@ import jwt
 import pytest
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from django.contrib.auth import get_user
+from django.utils.html import escape
 
+from access.adapter import SocialAccountAdapter
 from engine.models import Publication, Response
 from tests.documents import pathway_document
 from tests.journeys.pages import loads_the_built_stylesheet
@@ -364,8 +366,8 @@ def come_back_from_google(client, *, email="sam.google@example.com"):
         return client.get(GOOGLE_CALLBACK, {"code": "from-google", "state": state})
 
 
-def finish_google_sign_up(client, *, enrolment_code="GRACE-2026", is_adult=True):
-    form = {"display_name": "Sam", "email": "sam.google@example.com", "enrolment_code": enrolment_code}
+def finish_google_sign_up(client, *, email="sam.google@example.com", enrolment_code="GRACE-2026", is_adult=True):
+    form = {"display_name": "Sam", "email": email, "enrolment_code": enrolment_code}
     return client.post("/accounts/3rdparty/signup/", {**form, "is_adult": "on"} if is_adult else form)
 
 
@@ -394,6 +396,7 @@ def test_with_the_client_pair_set_google_is_offered_and_a_google_sign_up_makes_a
     participant = get_user(client)
     assert participant.is_authenticated
     assert participant.email == "sam.google@example.com"
+    assert participant.username == "sam.google@example.com"
     assert participant.account.display_name == "Sam"
 
 
@@ -439,6 +442,73 @@ def test_google_never_signs_in_to_an_account_already_made_with_its_address(clien
 
     assert not get_user(client).is_authenticated
     assert django_user_model.objects.count() == 1
+
+
+# Google sign-up keeps Google's address, always asks which Google account, and says what to do when refused (ticket 77)
+
+
+@pytest.mark.django_db
+def test_a_google_sign_up_sending_another_address_cannot_step_round_a_password_account_at_googles(
+    client, settings, django_user_model
+):
+    require_the_code(settings)
+    give_google_a_client(settings)
+    sign_up(client, email="sam.google@example.com")
+    client.post("/accounts/logout/")
+
+    come_back_from_google(client, email="sam.google@example.com")
+    finish_google_sign_up(client, email="someone.else@example.com")
+
+    assert not get_user(client).is_authenticated
+    assert django_user_model.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_a_google_sign_up_sending_another_address_makes_no_account_at_either(client, settings, django_user_model):
+    require_the_code(settings)
+    give_google_a_client(settings)
+
+    come_back_from_google(client, email="sam.google@example.com")
+    finish_google_sign_up(client, email="someone.else@example.com")
+
+    assert not get_user(client).is_authenticated
+    assert not django_user_model.objects.exists()
+
+
+@pytest.mark.django_db
+def test_continue_with_google_always_opens_googles_account_chooser(client, settings):
+    give_google_a_client(settings)
+
+    to_google = client.post(GOOGLE_LOGIN)
+
+    assert parse_qs(urlparse(to_google.url).query)["prompt"] == ["select_account"]
+
+
+@pytest.mark.django_db
+def test_refusing_an_address_with_a_password_account_sends_the_person_to_sign_in_or_reset(client, settings):
+    require_the_code(settings)
+    give_google_a_client(settings)
+    sign_up(client, email="sam.google@example.com")
+    client.post("/accounts/logout/")
+
+    come_back_from_google(client)
+    page = finish_google_sign_up(client).content.decode()
+
+    assert escape(SocialAccountAdapter.error_messages["email_taken"]) in page
+    assert 'href="/accounts/login/"' in page
+    assert 'href="/accounts/password/reset/"' in page
+
+
+@pytest.mark.django_db
+def test_the_google_sign_up_form_shows_googles_address_read_only(client, settings):
+    require_the_code(settings)
+    give_google_a_client(settings)
+
+    page = client.get(come_back_from_google(client).url).content.decode()
+
+    email_field = re.search(r'<input[^>]*name="email"[^>]*>', page).group()
+    assert 'value="sam.google@example.com"' in email_field
+    assert "readonly" in email_field
 
 
 @pytest.mark.django_db
