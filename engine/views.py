@@ -1754,7 +1754,7 @@ def _landing(request, invitation, action, frozen=None):
     return shown
 
 
-@require_POST
+@require_http_methods(["GET", "POST"])
 def start_observing(request, token):
     """✨ The observer's "I'm answering for Sam": the claim. Their own link is shown this once, straight back rather
     than by redirect so it never sits in the history, and kept in a cookie so they need not follow it; the
@@ -1762,8 +1762,11 @@ def start_observing(request, token):
     noticed, not hidden.
 
     Only the claim sets the cookie, never a plain visit: this is a POST that carries a CSRF token, so no other site
-    can put someone else's claim in an observer's browser by sending it to a link.
+    can put someone else's claim in an observer's browser by sending it to a link. Opening this address, by a reload
+    or a bookmark, claims nothing and goes on to the link's own page (ticket 78).
     """
+    if request.method == "GET":
+        return redirect("observe", token)
     secret = Invitation.claim(token)
     if secret is None:
         if Invitation.live(token) is not None:

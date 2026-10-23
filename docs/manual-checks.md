@@ -443,6 +443,13 @@ The homepage (`/`):
 - Signed in as the participant in the same browser, opening and starting their own link changes nothing on their hub or sections.
 - Each listed person has "Remove", quieter than "Get link". For someone whose link works it opens "Remove Jo?" (in a dialog with JavaScript), saying the link will stop, with "Remove Jo" and "Keep Jo" stacked and alike in size; "Keep Jo" goes back to Jo's row with nothing changed. "Remove Jo" comes back to the list without Jo, the others unchanged, and Jo's link in a private window says "This link does not work". After revoking someone's link, "Remove" takes them off at once. Same with JavaScript off; at phone width the row's buttons wrap without the page scrolling sideways.
 
+### Ticket 78: The observer's pages: no placeholder line, and the start address opened again
+
+- A new link, with `start/` added to its end, opened in a private window: the address bar changes to the link as sent, and the page is its landing, with the notice and "I'm answering for …". Pressing it starts as usual.
+- After pressing "I'm answering for …", the sort has nothing under it: no "[Not built yet…]" line.
+- Still on that page, click the address bar (it ends `/start/`) and press Enter: "This link has already been used", as the link as sent says, never the browser's "This page isn't working".
+- `/observe/made-up/start/`, and a revoked link with `start/` added: "This link does not work", as the address without `start/` says. At phone width these pages look as the plain addresses' do.
+
 ## The observer's assessment (after starting from a link, in a private window)
 
 - The sort widget runs as the participant's does, about them: "Sort …'s strengths", "Choose the bucket that fits … best", buckets "Definitely not …" and "Not really …", the four reworded items ("outlast them", "different from theirs", "matters to them", "they could explain it"), "How strong is each one in …?", sliders from "Not …" to "Real strength", and "Send my assessment →", in the observer's own voice. Nothing speaks as the participant: no "Not me", "outlast you" or "your strengths".

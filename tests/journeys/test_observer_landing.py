@@ -169,6 +169,64 @@ def test_starting_from_a_wrong_expired_or_revoked_link_is_refused_as_opening_one
     assert the_observers_page(observer).status_code == 404
 
 
+# Opening the start address (ticket 78): a reload, a bookmark or Back after starting
+
+
+def open_start(client, link):
+    """✨ Open the start address as a reload from the address bar or a bookmark does: a GET, followed wherever it leads."""
+    return client.get(f"{link}start/", follow=True)
+
+
+@pytest.mark.django_db
+def test_opening_an_unclaimed_links_start_address_claims_nothing_and_starting_from_there_still_works(
+    participant, observer
+):
+    save_contacts(participant, JO)
+    link = issue_link(participant, "Jo")
+
+    opened = open_start(observer, link)
+
+    assert opened.status_code == 200
+    assert f'action="{link}start/"' in opened.content.decode()
+    assert Client().get(link).status_code == 200
+    claim(observer, link)
+    assert the_observers_page(observer).status_code == 200
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("dead", ["wrong", "expired", "revoked", "taken off the list", "withdrawn by the observer"])
+def test_opening_a_refused_links_start_address_shows_the_refusal_its_plain_address_shows(participant, observer, dead):
+    with time_machine.travel(ISSUED_AT, tick=False):
+        save_contacts(participant, JO, PRIYA)
+        link = f"/observe/{A_WRONG_TOKEN}/" if dead == "wrong" else issue_link(participant, "Jo")
+        if dead == "revoked":
+            participant.post(invitation_action(participant, "Jo", "revoke"))
+        if dead == "taken off the list":
+            take_off_the_list(participant, "Jo")
+        if dead == "withdrawn by the observer":
+            link = claim(observer, link)  # ✨ the participant's copy is used, not refused: the next test
+            assessment.withdraw(observer)
+
+    with time_machine.travel(ISSUED_AT + timedelta(days=31 if dead == "expired" else 1), tick=False):
+        opened = open_start(observer, link)
+        plain = observer.get(link)
+
+    assert opened.status_code == plain.status_code == 404
+    assert opened.content.decode() == plain.content.decode()
+
+
+@pytest.mark.django_db
+def test_opening_a_used_links_start_address_says_it_has_been_used_as_its_plain_address_does(participant, observer):
+    save_contacts(participant, JO)
+    link = issue_link(participant, "Jo")
+    claim(observer, link)
+
+    opened = open_start(observer, link)
+
+    assert opened.status_code == observer.get(link).status_code == 410
+    assert opened.content.decode() == observer.get(link).content.decode()
+
+
 # While the participant's consent is withdrawn (ticket 45)
 
 

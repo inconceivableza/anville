@@ -4,12 +4,12 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 3b (coherence fixes, from 23 Oct)
 
 **Spec:** Observers (ADR 0005)
 
-- [ ] No observer page shows "[Not built yet: the written questions come in a later version.]"
-- [ ] Opening the start address of an invitation whose link works shows the invitation's own page, as its plain address does, and starting from there still works
-- [ ] Opening the start address of a link that is refused (withdrawn, removed, expired or made up) shows "This link does not work", as its plain address does
+- [x] No observer page shows "[Not built yet: the written questions come in a later version.]"
+- [x] Opening the start address of an invitation whose link works shows the invitation's own page, as its plain address does, and starting from there still works
+- [x] Opening the start address of a link that is refused (withdrawn, removed, expired or made up) shows "This link does not work", as its plain address does
