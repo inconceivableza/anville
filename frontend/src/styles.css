@@ -2610,6 +2610,14 @@ body:not(.framed) .question-card > p + form {
   box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
+/* ✨ A field that cannot be changed, such as the address Google gave on its sign-up form (ticket 77): greyed, and
+   nothing invites typing. Still focusable, so it is read out and its text can be copied. */
+.name-section input[readonly] {
+  background: var(--cream-2);
+  color: var(--muted);
+  cursor: default;
+}
+
 /* A checkbox (such as "Remember me") sits beside its label; Django renders the label first. */
 .name-section p:has(> input[type="checkbox"]) {
   display: flex;
