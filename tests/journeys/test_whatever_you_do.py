@@ -1092,9 +1092,8 @@ def button_to(html, label):
 
 
 def the_coach_page(client):
-    """✨ The coach page's address, at the checklist. The sidebar's "Your coach" gave it until the sidebar listed Walk with
-    a coach in its place (ticket 80)."""
-    return f"{COACH_PAGE}#block-coach"
+    """✨ The coach page's address, as the sidebar's "Your coach" gives it."""
+    return button_to(sidebar_of(client.get("/hub/").content.decode()), "Your coach")
 
 
 def revoke_coach_link(client):

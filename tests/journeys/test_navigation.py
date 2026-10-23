@@ -312,12 +312,18 @@ def test_how_others_see_you_is_listed_within_section_1_after_the_assessment_as_t
 
     assert parts.index("Strengths assessment") < parts.index("How others see you")
     assert ACTION.search(parts).group(1) == ACTION.search(hub_row(listing)).group(1)
-    assert f'href="/results/{SORT}/comparison/"' not in sidebar
+    assert f'href="/results/{SORT}/comparison/"' not in parts
 
 
 @pytest.mark.django_db
-def test_no_link_below_the_sidebars_entries_repeats_one_and_your_results_stays(listing):
+def test_with_the_side_cards_and_the_row_listed_every_link_below_the_entries_stays(listing):
+    """✨ They are quick ways in beside the entries, as before (developer's call, 23 Oct)."""
     sidebar = sidebar_of(started(listing).get(f"/sections/{CALLING}/").content.decode())
     links = re.search(r'<ul class="pathway-nav-links">.*?</ul>', sidebar, re.S).group(0)
 
-    assert re.findall(r">([^<]+)</a>", links) == ["Your results"]
+    assert re.findall(r">([^<]+)</a>", links) == [
+        "Your results",
+        "How others experience you",
+        "Invite others to assess you",
+        "Your coach",
+    ]

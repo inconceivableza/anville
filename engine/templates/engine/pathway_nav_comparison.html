@@ -7,7 +7,7 @@
 {% endcomment %}
 <li class="pathway-nav-section pathway-nav-comparison">
   <div class="pathway-nav-row">
-    {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="pathway-nav-title" press_label=comparison.title %}
     <span class="status-chip status-{{ comparison.status }}">{{ comparison.label }}</span>
+    {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="pathway-nav-title" press_label=comparison.title %}
   </div>
 </li>

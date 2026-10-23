@@ -99,7 +99,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 ## The header and the pathway sidebar (every participant page)
 
 - The hub, each section page, results, the comparison and invitations have the header: the pathway's name (leading to the hub) on the left, and "Your pathway" and "Sign out" on the right. The coach's page and the observer's pages have none of it, even in the participant's own signed-in browser.
-- "Your pathway" opens a panel down the right listing what the hub lists (ticket 80): its sections, the comparison's row and its side cards, with their statuses; the section you are in is highlighted, and a locked section is greyed and not a link. Below them, links to what the hub does not list: results once the sort is in, and the comparison, invitations and the coach page where no entry above already leads there. Pressing "Your pathway" again closes it.
+- "Your pathway" opens a panel down the right listing what the hub lists (ticket 80): its sections, the comparison's row and its side cards, with their statuses; the section you are in is highlighted, and a locked section is greyed and not a link. Below them: invitations, the coach page once Section 1 is open, and results and the comparison once the sort is in. Pressing "Your pathway" again closes it.
 - Without JavaScript, the panel opens and closes just the same.
 - Keyboard only: Tab reaches "Your pathway", Enter or Space opens it, and Tab then moves through its links, with the focus ring showing on each.
 - Screen reader: "Your pathway" is announced as collapsed or expanded, and the step you are on as the current page.
@@ -716,11 +716,12 @@ Load *Whatever You Do* again, then start a new participant (the notes come from 
 Reload the page for the rebuilt frontend; no new participant is needed.
 
 - At a wide screen, "Your pathway" opens a panel down the right-hand side of the page, under the header, its right edge at the header's, all inside the window.
-- Each entry reads its title, then its status beside it on the right, every status in the same place, short titles and long ones alike.
-- Beside the hub, the panel lists the same entries in the same order with the same statuses and locks: the sections, the Strengths assessment within Section 1, then Walk with a coach and Five trusted voices, Five trusted voices with its card's tag ("2 more needed", "Links issued" …).
+- Every entry has its status above its title, in small capitals on a grey pill, short titles and long ones alike; "How others see you" fits on one line.
+- The next step's entry has a pale green background and a green status pill, as the hub's next step has a green tag; the page you are on has a deep green edge.
+- Beside the hub, the panel lists the same entries in the same order with the same statuses and locks: the sections, the Strengths assessment within Section 1, then, below a rule and each as a small outlined card, Walk with a coach and Five trusted voices, Five trusted voices with its card's tag ("2 more needed", "Links issued" …).
 - Once the sort is in, "How others see you" is listed within Section 1 after the Strengths assessment, with the hub row's status ("Waiting for answers (0 of 3)"). Pressing it does what the hub's row does: with the minimum in and not yet confirmed, it asks before collection freezes.
-- Below the entries only "Your results" remains, once the sort is in. In the faithful port the links below read as before: results and "How others experience you" once the sort is in, and "Invite others to assess you".
-- Phone width: the panel spans the header's width with no sideways scroll, and long titles wrap beside their statuses.
+- Regression: the links below read as before: "Your results" and "How others experience you" once the sort is in, "Invite others to assess you", and "Your coach".
+- Phone width: the panel spans the header's width with no sideways scroll, and long titles wrap under their statuses.
 
 ## Signposts under their new names (ticket 75; a database holding a participant started before 75, from a pathway version loaded before it)
 

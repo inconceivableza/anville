@@ -286,7 +286,7 @@ body {
   width: min(340px, 100%);
   max-height: calc(100vh - 100%);
   overflow-y: auto;
-  padding: var(--space-lg);
+  padding: var(--space-md);
   background: var(--paper);
   border-left: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
@@ -299,21 +299,32 @@ body {
 }
 
 /* ✨ The highlight is on an entry's own row, so a section's parts listed within it are not highlighted with it. The
-   title wraps in its own column and the status keeps the other, so every status sits in the same place (ticket 80). */
+   status sits above the title in every entry, so the title has the panel's width (ticket 80). */
 .pathway-nav-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: baseline;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2xs);
+  padding: var(--space-xs) var(--space-sm);
   border-left: 3px solid transparent;
   border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
 }
 
-/* ✨ A long status, such as the comparison's "Waiting for answers (0 of 3)", wraps rather than squeezing the title */
+/* ✨ The status as the hub's tag reads, smaller: grey, and green for the next step, as the hub's is (ticket 80) */
 .pathway-nav-row > .status-chip {
-  max-width: 10em;
-  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 1px var(--space-xs);
+  border-radius: var(--radius-pill-shape);
+  background: var(--cream-2);
+  color: var(--muted);
+}
+
+.pathway-nav-section.is-next > .pathway-nav-row > .status-chip {
+  background: var(--green);
+  color: var(--green-ink);
 }
 
 /* ✨ The comparison signpost's entry: its title is a button, the hub row's press, drawn as the other titles are */
@@ -337,13 +348,34 @@ body {
   outline-offset: 2px;
 }
 
+/* ✨ The next step has the pale green behind it, to lead the eye there; the page you are on, its deep green edge */
 .pathway-nav-section.is-next > .pathway-nav-row {
+  background: var(--gold-pale);
   border-left-color: var(--gold-light);
 }
 
 .pathway-nav-section.is-current > .pathway-nav-row {
-  background: var(--gold-pale);
   border-left-color: var(--green-deep);
+}
+
+/* ✨ The side cards, set apart below the sections, each a small card, as the hub draws them beside its list (ticket 80) */
+.pathway-nav-cards {
+  display: grid;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+}
+
+.pathway-nav-cards > .pathway-nav-section {
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.pathway-nav-cards .pathway-nav-row {
+  border-radius: 0;
 }
 
 /* ✨ A part of a section, indented within that section's entry (ticket 41b) */
