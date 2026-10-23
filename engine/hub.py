@@ -351,7 +351,7 @@ def _waiting_on(part, completed, answers, sections, moved_past):
 
 class LockNote(str):
     """✨ A note naming the sections a locked section still waits for (ticket 79): plain text as a string, and, as a
-    page draws it, each title a phrase names by {title} in italics. Built from `pieces`, each (text, in italics)."""
+    page draws it, each section title it names in italics. Built from `pieces`, each (text, in italics)."""
 
     def __new__(cls, pieces):
         note = super().__new__(cls, "".join(text for text, _ in pieces))
@@ -383,21 +383,21 @@ def _lock_note(section, completed, answers, sections, moved_past, role):
     waiting = _waiting_on(section, completed, answers, sections, moved_past)
     if waiting is None:
         return "Complete what comes before this to open it."
-    title = text_for(waiting.section["title"], role)
+    title = (text_for(waiting.section["title"], role), True)
     if waiting.holding is not None and BLOCK_TYPES[waiting.holding["type"]].opens_what_follows:
-        return f"Opens from {title}, once you've read the passages."
-    return f"Opens from {title}."
+        return LockNote([("Opens from ", False), title, (", once you've read the passages.", False)])
+    return LockNote([("Opens from ", False), title, (".", False)])
 
 
 def _unfinished_named(section, completed, sections, role):
     """✨ What is left in the sections a section requires that are not yet complete, as the lock note's pieces, or None.
-    Each is named by its authored phrase for what finishing it takes (ticket 79), those sharing one together, and each
-    without one as "finished {title}", those together too, as the faithful port names its sections (ticket 52); all
-    joined in document order. A required section outside the track is not named."""
+    Each is named by its authored phrase for what finishing it takes (ticket 79), or else as "finished {title}", as the
+    faithful port names its sections (ticket 52); those sharing a phrase together, all joined in document order. A
+    required section outside the track is not named."""
     by_phrase = {}
     for other in sections:
         if other["id"] in section.get("requires", []) and other["id"] not in completed:
-            phrase = text_for(other["to_finish"], role) if "to_finish" in other else None
+            phrase = text_for(other["to_finish"], role) if "to_finish" in other else "finished {title}"
             by_phrase.setdefault(phrase, []).append(other)
     if not by_phrase:
         return None
@@ -406,11 +406,9 @@ def _unfinished_named(section, completed, sections, role):
 
 def _named_by(phrase, group, role):
     """✨ The pieces naming a `group` of sections sharing a `phrase`. In it, {section} is what the engine's wording calls
-    them ("Sections 1 and 2"), and {title} their titles in italics. Without a phrase they are "finished" and their
-    titles, plain, as the faithful port's notes have always been."""
+    them ("Sections 1 and 2"), and {title} their titles, in italics, as a section's title is wherever a note names it
+    (developer's call, 23 Oct)."""
     titles = [text_for(other["title"], role) for other in group]
-    if phrase is None:
-        return [("finished ", False), *_joined([[(title, False)] for title in titles])]
     numbers = [other.get("number") or "" for other in group]
     if len(group) > 1 and all(number.isdigit() for number in numbers):
         called = "Sections " + _joined_text([str(int(number)) for number in numbers])

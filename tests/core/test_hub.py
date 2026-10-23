@@ -348,8 +348,8 @@ def test_sections_sharing_a_phrase_are_named_together_and_only_those_left():
     assert lock_note(sections, completed=["a"]) == "Opens once you've completed Section 2."
 
 
-def test_a_title_a_phrase_names_is_in_italics_and_escaped_and_one_without_a_phrase_is_plain():
-    """✨ The note as the page draws it (ticket 79). The faithful port's titles stay plain, as they were."""
+def test_every_title_a_note_names_is_in_italics_and_escaped():
+    """✨ The note as the page draws it (ticket 79), whether a phrase names the title or not (developer's call, 23 Oct)."""
     sections = [
         {**phrased("a", "added people in {title}"), "title": "<b>Voices</b>"},
         section("b"),
@@ -357,7 +357,7 @@ def test_a_title_a_phrase_names_is_in_italics_and_escaped_and_one_without_a_phra
     ]
 
     assert conditional_escape(lock_note(sections)) == (
-        "Opens once you&#x27;ve added people in <em>&lt;b&gt;Voices&lt;/b&gt;</em> and finished B."
+        "Opens once you&#x27;ve added people in <em>&lt;b&gt;Voices&lt;/b&gt;</em> and finished <em>B</em>."
     )
 
 

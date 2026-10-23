@@ -706,7 +706,8 @@ Load *Whatever You Do* again, then start a new participant (the notes come from 
 - With Before we begin done and nothing else, the hub's notes read: Section 2 "Opens once you've done the *Strengths assessment*, sent a coach their link in *Walk with a coach* and added at least 3 people in *Five trusted voices*."; Section 3 "Opens once you've completed Sections 1 and 2, and your coach has accepted."; Section 4 "Opens once you've completed Section 3."; the letter "Opens once you've completed Section 4.". The titles are in italics, in the grey of the rest of the note.
 - Choose a coach and send their link: Section 2's note drops the coach's part, and drops each other part as it is done.
 - Section 1's button reads "I've finished Section 1", as Sections 2–4's read for theirs.
-- The faithful port's notes read as before ("Opens once you've finished …"), with no italics.
+- Before Section 1's reading is confirmed, the Strengths assessment's note reads "Opens from *How you've been designed*, once you've read the passages.", the title in italics.
+- The faithful port's notes read as before ("Opens once you've finished …"), with the titles now in italics.
 - The sidebar ("Your pathway") shows no notes, only each entry's status and title. Open it, then click anywhere outside it: it closes. Open it again and press Escape: it closes and the focus is on "Your pathway". A click inside it, on a status or between entries, leaves it open.
 - Phone width: the longest notes wrap within their entries, italics and all, with no sideways scroll; the sidebar closes on a tap outside it.
 
