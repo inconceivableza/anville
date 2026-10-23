@@ -98,13 +98,13 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 ## The header and the pathway sidebar (every participant page)
 
-- The hub, each section page, results, the comparison and invitations have the header: "Your pathway" on the left, the pathway's name (leading to the hub), and "Sign out" on the right. The coach's page and the observer's pages have none of it, even in the participant's own signed-in browser.
-- "Your pathway" opens a panel down the left listing the hub's sections with their status chips; the section you are in is highlighted, and a locked section is greyed and not a link. Below them: invitations, the coach page once Section 1 is open, and results and the comparison once the sort is in. Pressing "Your pathway" again closes it.
+- The hub, each section page, results, the comparison and invitations have the header: the pathway's name (leading to the hub) on the left, and "Your pathway" and "Sign out" on the right. The coach's page and the observer's pages have none of it, even in the participant's own signed-in browser.
+- "Your pathway" opens a panel down the right listing what the hub lists (ticket 80): its sections, the comparison's row and its side cards, with their statuses; the section you are in is highlighted, and a locked section is greyed and not a link. Below them, links to what the hub does not list: results once the sort is in, and the comparison, invitations and the coach page where no entry above already leads there. Pressing "Your pathway" again closes it.
 - Without JavaScript, the panel opens and closes just the same.
 - Keyboard only: Tab reaches "Your pathway", Enter or Space opens it, and Tab then moves through its links, with the focus ring showing on each.
 - Screen reader: "Your pathway" is announced as collapsed or expanded, and the step you are on as the current page.
 - Phone width: the header fits on one line or wraps tidily, the panel fills most of the width without sideways scrolling, and a long list scrolls inside the panel.
-- Phone width (ticket 53b): every section in the panel that isn't locked is a link, and so are invitations, the coach page, results and the comparison below them; none is missing, as they were on a phone before. On the homepage, the menu still hides its links at phone width as before.
+- Phone width (ticket 53b): every section in the panel that isn't locked is a link, and so are the links below them; none is missing, as they were on a phone before. On the homepage, the menu still hides its links at phone width as before.
 - "Sign out" lands on the homepage, signed out.
 - The footer's "Credits" shows the header while signed in, and the plain page once signed out.
 - With `ANVILLE_SIDEBAR=false` in `.env` and the server restarted, "Your pathway" is gone; the pathway's name and "Sign out" remain.
@@ -117,7 +117,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - The header says "1 of 9 sections complete" once Before we begin is done, and counts up as sections, and the Strengths assessment, are completed. There is no "Where you started" card, even once the sort is in.
 - "Your consent · Your groups" sits below the hub, lined up with its left edge.
 - Phone width: one column, the cards below the sections; the brown border still shows, and nothing scrolls sideways.
-- Walk with a coach and Five trusted voices, side cards since ticket 50, show in the right column as cards with their title, sentence and status, and not in the list or "Your pathway"; each title leads to its page. The old "Walk with a mentor" card is gone (ticket 51b), and so is the hub's own "Five trusted voices" card (ticket 51a).
+- Walk with a coach and Five trusted voices, side cards since ticket 50, show in the right column as cards with their title, sentence and status, and not in the list; "Your pathway" lists them after the sections (ticket 80). Each title leads to its page. The old "Walk with a mentor" card is gone (ticket 51b), and so is the hub's own "Five trusted voices" card (ticket 51a).
 - Walk with a coach's tag (ticket 51b): "Locked" before Before we begin is done, then "Not started"; once Sam is saved, "Link issued"; after Sam accepts or declines on the link, "Accepted" or "Declined"; reissuing the link goes back to "Link issued"; revoking it, "Not started". Its sentence is "When you're ready, ask someone to walk this with you.", with no briefing pack. At phone width the tag fits beside the title.
 - Five trusted voices (ticket 51a) is a dark card, as the prototype's, with no names and no name box: "Not started" before anyone is added; with one person, "2 more needed" and "You'll see how others see you once 3 people have answered."; with three, "Complete" (ticket 52), as the section completes once three people have links. "Invited" counts people with a working link (revoking one counts down) and "Answered" counts assessments sent (starting from a link does not count), each "n / 5". "Manage" and the title lead to the section's page. Once the section is complete the tag says "Complete" and never asks for more people. Phone width: the meters fill the card.
 
@@ -710,6 +710,17 @@ Load *Whatever You Do* again, then start a new participant (the notes come from 
 - The faithful port's notes read as before ("Opens once you've finished …"), with the titles now in italics.
 - The sidebar ("Your pathway") shows no notes, only each entry's status and title. Open it, then click anywhere outside it: it closes. Open it again and press Escape: it closes and the focus is on "Your pathway". A click inside it, on a status or between entries, leaves it open.
 - Phone width: the longest notes wrap within their entries, italics and all, with no sideways scroll; the sidebar closes on a tap outside it.
+
+### Ticket 80: The sidebar opens on the right and lists what the hub lists
+
+Reload the page for the rebuilt frontend; no new participant is needed.
+
+- At a wide screen, "Your pathway" opens a panel down the right-hand side of the page, under the header, its right edge at the header's, all inside the window.
+- Each entry reads its title, then its status beside it on the right, every status in the same place, short titles and long ones alike.
+- Beside the hub, the panel lists the same entries in the same order with the same statuses and locks: the sections, the Strengths assessment within Section 1, then Walk with a coach and Five trusted voices, Five trusted voices with its card's tag ("2 more needed", "Links issued" …).
+- Once the sort is in, "How others see you" is listed within Section 1 after the Strengths assessment, with the hub row's status ("Waiting for answers (0 of 3)"). Pressing it does what the hub's row does: with the minimum in and not yet confirmed, it asks before collection freezes.
+- Below the entries only "Your results" remains, once the sort is in. In the faithful port the links below read as before: results and "How others experience you" once the sort is in, and "Invite others to assess you".
+- Phone width: the panel spans the header's width with no sideways scroll, and long titles wrap beside their statuses.
 
 ## Signposts under their new names (ticket 75; a database holding a participant started before 75, from a pathway version loaded before it)
 

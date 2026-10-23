@@ -318,10 +318,13 @@ def _block_address(document, block_id):
 
 def participant_nav(request):
     """✨ The header and sidebar of every participant page (ticket 41a), as `engine/participant_header.html` needs them:
-    the pathway's name, and unless the site switches it off, the sidebar. The sidebar's sections are the hub's own, so
+    the pathway's name, and unless the site switches it off, the sidebar. The sidebar lists what the hub lists, in its
+    order (ticket 80): its sections, the comparison signpost's row and its side cards, from the hub's own derivation, so
     their statuses and locks are the hub's; a locked section carries no address, and neither does a page within it,
-    such as the coach page. Results and the comparison are listed once there is a result, since before then they lead
-    only back to the sort. `current` is the section whose page this is, if any."""
+    such as the coach page. Below them are links to what the hub does not list: results and the comparison once there
+    is a result, since before then they lead only back to the sort, the comparison only while no row is its press,
+    and the invitations and coach pages unless a side card is theirs. `current` is the section whose page this is, if
+    any."""
     state = _participant(request.user)
     if state.version is None:
         return {"title": None, "sidebar": None}
@@ -330,25 +333,50 @@ def participant_nav(request):
     if not settings.ANVILLE_SIDEBAR or not any(section["blocks"] for section in state.sections):
         return {"title": title, "sidebar": None}
     hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    side_cards = _sidebar_side_cards(state, hub)
+    on_a_card = {card.id for card in side_cards}
+    comparison = _hub_comparison(state)
     links = []
     scored = _scored_block(document)
     if scored and Result.objects.filter(response=state.response, block_id=scored["id"]).exists():
-        links += [
-            ("Your results", reverse("results", args=[scored["id"]])),
-            ("How others experience you", reverse("comparison", args=[scored["id"]])),
-        ]
-    links.append(("Invite others to assess you", reverse("invitations")))
+        links.append(("Your results", reverse("results", args=[scored["id"]])))
+        if comparison is None:
+            links.append(("How others experience you", reverse("comparison", args=[scored["id"]])))
+    if _section_holding(document, "contact_list") not in on_a_card:
+        links.append(("Invite others to assess you", reverse("invitations")))
     coach_page = _coach_page_of(document, hub)
-    if coach_page:
+    if coach_page and _coach_section_of(document) not in on_a_card:
         links.append(("Your coach", coach_page))
     return {
         "title": title,
         "sidebar": {
             "outline": hub.outline(),
+            "comparison": comparison,
+            "side_cards": side_cards,
             "current": _current_section(request, document),
             "links": [{"label": label, "href": href, "is_current": href == request.path} for label, href in links],
         },
     }
+
+
+def _sidebar_side_cards(state, hub):
+    """✨ The hub's side cards as the sidebar lists them (ticket 80), each with the status its card shows: the coach's
+    by where the coach stands, and Five trusted voices by its own tag while it is unlocked."""
+    document = state.version.document
+    coach_section = _coach_section_of(document)
+    # ✨ The coach is read only where a side card is theirs, so a page without that card never depends on the coach.
+    on_a_card = any(card.id == coach_section for card in hub.side_cards())
+    cards = _side_cards(hub, _coach_of(state.response, state.answers) if on_a_card else None, coach_section)
+    voices = _hub_voices(state, hub)
+    if voices is None:
+        return cards
+    return [card._replace(label=voices["tag"]) if card.id == voices["section"] else card for card in cards]
+
+
+def _section_holding(document, block_type):
+    """✨ The identifier of the section holding the document's first block of `block_type`, or None without one."""
+    held = (section_of(document, block["id"])["id"] for block in blocks_of(document) if block["type"] == block_type)
+    return next(held, None)
 
 
 def _current_section(request, document):

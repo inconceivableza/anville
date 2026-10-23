@@ -4,20 +4,25 @@
 {% comment %}
   ✨ One section's entry in the sidebar, with any `parts` of it listed within it (ticket 41b). A part is given no parts.
   The highlight of the section you are in, or of the next step, is on the entry's own row, not on the parts within it.
+  The title comes first and its status after it, as on the hub, so the status keeps its place whatever the title's
+  length; the comparison signpost's entry follows the part holding its sort, as on the hub (ticket 80).
 {% endcomment %}
 <li class="pathway-nav-section{% if section.is_next %} is-next{% endif %}{% if section.id == current %} is-current{% endif %}">
-  <span class="pathway-nav-row">
-    <span class="status-chip status-{{ section.status }}">{{ section.label }}</span>
+  <div class="pathway-nav-row">
     {% if section.is_locked %}
       <span class="pathway-nav-title">{{ section.title }}</span>
     {% else %}
       <a class="pathway-nav-title" href="{% page_url section.id section.page %}"{% if section.id == current %} aria-current="page"{% endif %}>{{ section.title }}</a>
     {% endif %}
-  </span>
+    <span class="status-chip status-{{ section.status }}">{{ section.label }}</span>
+  </div>
   {% if parts %}
     <ol class="pathway-nav-parts">
       {% for part in parts %}
         {% include "engine/pathway_nav_section.html" with section=part parts=None %}
+        {% if comparison.section == section.id and comparison.after == part.id %}
+          {% include "engine/pathway_nav_comparison.html" %}
+        {% endif %}
       {% endfor %}
     </ol>
   {% endif %}
