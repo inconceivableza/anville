@@ -337,7 +337,7 @@ The homepage (`/`):
 ## How others see you (ticket 67a; Section 1's card under the Strengths assessment; after `migrate`, rebuild the frontend and load the pathway again, with a participant started after that)
 
 - Before the sort is in, Section 1 shows no "How others see you" card. Once it is in, the card sits under the Strengths assessment card and above the reflection, drawn as that card is: its title, the "Compare with how others see you →" button, then its status chip on a line of its own.
-- With fewer than three observers answered, the chip reads "Waiting for answers (2 of 3)" (the count as it stands). Pressing the button opens "Not enough answers yet", as the results page's button does, and back on Section 1 the chip still says waiting.
+- With fewer than three observers answered, the chip says how many more answers are needed, "1 more answer needed" with two in (ticket 81). Pressing the button opens "Not enough answers yet", as the results page's button does, and back on Section 1 the chip still says waiting.
 - With three answered, the chip reads "Ready to view". Pressing the button opens "Before you look", exactly as from the results page; "← Back to results" changes nothing, and back on Section 1 the chip still reads "Ready to view". Confirming opens the comparison, and back on Section 1 the chip reads "Viewed".
 - Typing the comparison's address (`/results/strengths-sort/comparison/`) before pressing anything shows it, but the chip stays "Ready to view".
 - An observer withdraws after "Viewed", leaving two: the chip still reads "Viewed".
@@ -675,7 +675,7 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 ## How others see you on the hub (ticket 67b; rebuild the frontend, load the pathway again, and use a participant started after that)
 
 - Before the sort is in, the hub lists no "How others see you" row within Section 1, and the Five trusted voices card has only "Manage".
-- Once the sort is in: within Section 1, after the Strengths assessment, a row "How others see you" with its status as the row's tag; on the Five trusted voices card, beside "Manage", a small ringed "How others see you →" pill, with the same status after it in small capitals. Each reads the same as Section 1's card: "Waiting for answers (2 of 3)" with two answered, "Ready to view" with three, "Viewed" once confirmed.
+- Once the sort is in: within Section 1, after the Strengths assessment, a row "How others see you" with its status as the row's tag; on the Five trusted voices card, beside "Manage", a small ringed "How others see you →" pill, with the same status after it in small capitals. Each reads the same as Section 1's card: "1 more answer needed" with two answered (ticket 81), "Ready to view" with three, "Viewed" once confirmed.
 - With three answered, pressing the row's title, and pressing the card's pill, each open "Before you look", exactly as Section 1's card and the results page do; "← Back to results" changes nothing. With fewer than three, each opens "Not enough answers yet".
 - With JavaScript turned off, both still open "Before you look", and confirming opens the comparison.
 - Once confirmed (collection frozen): the voices card still reads "You've seen your results, so no more answers are added." under its tag, and its pill still opens the comparison, with nothing asked.
@@ -719,7 +719,7 @@ Reload the page for the rebuilt frontend; no new participant is needed.
 - Every entry has its status above its title, in small capitals on a grey pill, short titles and long ones alike; "How others see you" fits on one line.
 - The next step's entry has a pale green background and a green status pill, as the hub's next step has a green tag; the page you are on has a deep green edge.
 - Beside the hub, the panel lists the same entries in the same order with the same statuses and locks: the sections, the Strengths assessment within Section 1, then, below a rule and each as a small outlined card, Walk with a coach and Five trusted voices, Five trusted voices with its card's tag ("2 more needed", "Links issued" …).
-- Once the sort is in, "How others see you" is listed within Section 1 after the Strengths assessment, with the hub row's status ("Waiting for answers (0 of 3)"). Pressing it does what the hub's row does: with the minimum in and not yet confirmed, it asks before collection freezes.
+- Once the sort is in, "How others see you" is listed within Section 1 after the Strengths assessment, with the hub row's status ("3 more answers needed"). Pressing it does what the hub's row does: with the minimum in and not yet confirmed, it asks before collection freezes.
 - Regression: the links below read as before: "Your results" and "How others experience you" once the sort is in, "Invite others to assess you", and "Your coach".
 - Phone width: the panel spans the header's width with no sideways scroll, and long titles wrap under their statuses.
 

@@ -4,14 +4,14 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 3b (coherence fixes, from 23 Oct)
 
 **Spec:** Blocks; Engine: sections, tracks, gates, progress
 
-- [ ] Below the minimum, the comparison signpost's status reads "2 more answers needed" ("1 more answer needed" for one), on Section 1's signpost, the hub's row and the Five trusted voices side card alike
-- [ ] At and above the minimum, and once viewed, it reads "Ready to view" and "Viewed" as before
+- [x] Below the minimum, the comparison signpost's status reads "2 more answers needed" ("1 more answer needed" for one), on Section 1's signpost, the hub's row and the Five trusted voices side card alike
+- [x] At and above the minimum, and once viewed, it reads "Ready to view" and "Viewed" as before
 - [ ] The Five trusted voices side card, once complete, says how many more people are needed whenever fewer have working links than it needs, as it does before it is complete
 - [ ] The side card still counts as complete after that removal, and what it opened stays open
 

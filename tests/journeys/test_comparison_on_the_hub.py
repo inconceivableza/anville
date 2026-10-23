@@ -65,8 +65,7 @@ def voices_button(client):
 def statuses(html):
     """✨ Which of the comparison's statuses the markup reads, for any number of answers out of a minimum of three."""
     words = text(html)
-    waiting = re.escape(COMPARISON_STATUSES["waiting"]).replace(re.escape("{answered}"), r"\d")
-    waiting = re.findall(waiting.replace(re.escape("{minimum}"), "3"), words)
+    waiting = re.findall(r"\d more answers? needed", words)
     return waiting + [COMPARISON_STATUSES[state] for state in ("ready", "viewed") if COMPARISON_STATUSES[state] in words]
 
 
@@ -79,7 +78,7 @@ def test_once_there_is_a_result_the_hubs_row_and_the_voices_cards_button_show_wi
     submit_sort(participant, complete_sort())
 
     on_the_card = statuses(card(participant))
-    assert on_the_card == [COMPARISON_STATUSES["waiting"].format(answered=2, minimum=3)]
+    assert on_the_card == ["1 more answer needed"]
     assert statuses(hub_row(participant)) == on_the_card
     assert statuses(voices_card(participant)) == on_the_card
 

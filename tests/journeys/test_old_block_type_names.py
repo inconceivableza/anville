@@ -27,7 +27,7 @@ from tests.journeys.test_whatever_you_do import (
 )
 
 OLD_NAMES = {"section_signpost": "section_link", "comparison_signpost": "comparison_link"}
-WAITING, VIEWED = (COMPARISON_STATUSES[state] for state in ("waiting", "viewed"))
+VIEWED = COMPARISON_STATUSES["viewed"]
 
 
 def under_the_old_names(document):
@@ -90,7 +90,7 @@ def test_a_participant_on_a_version_stored_under_the_old_names_finds_both_signpo
 
     page = section_1(client)
     assert "View my results →" in page
-    assert WAITING.format(answered=0, minimum=3) in page
+    assert "3 more answers needed" in page
     assert VIEWED not in client.get("/hub/").content.decode()
     assert save_the_reflection(client).status_code == 403
 
