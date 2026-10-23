@@ -31,5 +31,5 @@
 ## Comments
 
 - The three journeys were walked at desktop width on 22 Oct; phone width is still to walk
-- Small fixes from the 22 Oct walk are listed, not yet built
+- Small fixes from the 22 Oct walk are ticketed in `sprint-3b-coherence-fixes` (77–84), not yet built
 - The walk is recorded in the manual checks for desktop width; phone width is still to record
