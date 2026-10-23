@@ -60,11 +60,18 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 ## Google sign-in (ticket 28b; needs a development OAuth client, `deploy/README.md`, "Set up Google sign-in", step 8)
 
 - With neither `ANVILLE_GOOGLE_CLIENT_ID` nor `ANVILLE_GOOGLE_CLIENT_SECRET` in `.env`, or only one, sign in and sign up look exactly as before: no "or", no Google button.
-- With both set and `runserver` restarted, sign in and sign up each end with "or" and an outlined "Continue with Google" across the form's width, at a wide screen and at phone width.
-- Pressing it goes straight to Google's account chooser, with no Anville page asking again first. Cancelling there comes back to an Anville page, not an error.
+- With both set and `runserver` restarted, sign in and sign up each start with an outlined "Continue with Google" across the form's width, then "or", then the email-and-password form, at a wide screen and at phone width.
+- Pressing it goes straight to Google's account chooser, with no Anville page asking again first, even when the browser is already signed in to a Google account. Cancelling there comes back to an Anville page, not an error.
 - A Google account new to Anville comes back to a sign-up form with its email filled in, asking for the first name, the enrolment code (where asked for) and "I am 18 or over", and no password. Leaving the box unticked stops the form as on the email sign-up.
 - Once signed up, the hub sends it to the consent page first. Signing out and pressing "Continue with Google" again signs straight in to the hub.
 - An address that already has an email-and-password account is refused on that form, and no second account is made.
+
+### Ticket 77: Google sign-up: Google's own address, the account chooser, and a refusal that says what to do
+
+- Sign up and sign in, at a wide screen and at about 375px: "Continue with Google" comes first, under the line about signing in or up, then "or", then the form, with room between each. With the Google pair unset, both pages are the form alone, with no "or".
+- In a window already signed in to a Google account, "Continue with Google" shows Google's account chooser rather than going straight back.
+- A Google account new to Anville: the sign-up form's "Email" shows the address Google gave, and clicking into it lets you select the text but not change it.
+- Sign up by email at an address, sign out, then "Continue with Google" with a Google account at that address and send the form: just above "Email", "There's already an account with this email address, made with a password. Sign in with your email and password instead.", and under the address "Sign in · Forgot your password?", each leading to its page. No account is made, and nothing mentions connecting a Google account.
 
 ## Password reset (sign in's "Forgot your password?")
 
@@ -702,7 +709,7 @@ Before starting: `curl -s https://anville.vabl.dev/healthz` gives the commit sta
 - **The coach**, Sam's link in a private window: the six promises, "Accept →" refused with one unticked, accepted with all six. As the participant: Section 3 opens once Section 1 is marked complete. "Give my coach access…" ticked and unticked, with Sam's link showing the guide, the results and the comparison, then "What happens next" again.
 - **The tie-break**: `seed_tie_break --profile tied-apest --answers behind` prints a made-up participant's address, a sign-in link and the answers to give; its password is `information.`. The results read "Evangelist now sits on top, in place of Deacon…".
 - **Password reset** (sends email): sign up at an address you own, sign out, "Forgot your password?". The email arrives with `[TEST]` before its subject and the disclaimer at the top; the new password signs in, the old is refused, and the link fails a second time. An address with no account shows the same page and sends nothing.
-- **Google sign-in**, with a second test user listed under Google Cloud's OAuth consent screen, Audience, Test users. Close every private window before each press of "Continue with Google", until it always shows Google's account chooser. The second test user signs up with no password and signs in again straight away. The password account's address is refused: "An account already exists with this email address…", and no account is made.
+- **Google sign-in**, with a second test user listed under Google Cloud's OAuth consent screen, Audience, Test users. "Continue with Google" always shows Google's account chooser (ticket 77). The second test user signs up with no password and signs in again straight away. The password account's address is refused: "There's already an account with this email address, made with a password…", with "Sign in · Forgot your password?" under it, and no account is made.
 - **Deleting an account to repeat the demo**: there is no way in the app yet. Find the account's id, then delete it, which takes its answers, observers' answers and Google link with it:
 
   ```sh

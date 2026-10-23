@@ -1,0 +1,44 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "account/base_entrance.html" %}
+{% load i18n %}
+{% load allauth account %}
+{% comment %}
+  ✨ allauth's sign-in page, with "Continue with Google" above the form rather than below it, as on sign-up
+  (ticket 77). With no Google client the snippet draws nothing and the page is allauth's. Its passkey and
+  sign-in-code options, which Anville does not turn on, are left out.
+{% endcomment %}
+{% block head_title %}
+  {% trans "Sign In" %}
+{% endblock head_title %}
+{% block content %}
+  {% element h1 %}
+    {% trans "Sign In" %}
+  {% endelement %}
+  {% setvar link %}
+    <a href="{{ signup_url }}">
+  {% endsetvar %}
+  {% setvar end_link %}
+    </a>
+  {% endsetvar %}
+  {% element p %}
+    {% blocktranslate %}If you have not created an account yet, then please {{ link }}sign up{{ end_link }} first.{% endblocktranslate %}
+  {% endelement %}
+  {% if SOCIALACCOUNT_ENABLED %}
+    {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
+  {% endif %}
+  {% url 'account_login' as login_url %}
+  {% element form form=form method="post" action=login_url tags="entrance,login" %}
+    {% slot body %}
+      {% csrf_token %}
+      {% element fields form=form unlabeled=True %}
+      {% endelement %}
+      {{ redirect_field }}
+    {% endslot %}
+    {% slot actions %}
+      {% element button type="submit" tags="prominent,login" %}
+        {% trans "Sign In" %}
+      {% endelement %}
+    {% endslot %}
+  {% endelement %}
+{% endblock content %}
