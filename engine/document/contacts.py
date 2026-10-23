@@ -73,10 +73,11 @@ def voices_card(block, card, invited, answered, minimum, frozen=False):
 
     The tag reads the card's section (`card`, as the hub sees it) first: locked, it says so. While answer collection is
     `frozen`, it is complete and says no more answers are added (ticket 55). While fewer of the `needed` people than
-    that have a working link, it says how many more are needed, unless the section is not started or already complete,
-    when it says so, so once complete it never goes back to asking for more people. Then it follows the answers: links
-    issued with none sent, some sent while fewer than `minimum`, then all of them once everyone with a working link has
-    sent, or else enough (fix-2)."""
+    that have a working link, it says how many more are needed, unless the section is not started, when it says so;
+    once complete it asks again after a removal, while the card stays complete (ticket 81, in place of ticket 51a's
+    "Complete"), and says when the comparison shows only while fewer than `minimum` have answered. Then it follows the
+    answers: links issued with none sent, some sent while fewer than `minimum`, then all of them once everyone with a
+    working link has sent, or else enough (fix-2)."""
     tag, line = _voices_tag(card, needed(block), invited, answered, minimum, frozen)
     return {
         "tag": tag,
@@ -93,9 +94,8 @@ def _voices_tag(card, needed, invited, answered, minimum, frozen):
     if card.status in (LOCKED, NOT_STARTED):
         return card.label, None
     if invited < needed:
-        if card.status == COMPLETE:
-            return card.label, None
-        return f"{needed - invited} more needed", f"You'll see how others see you once {minimum} people have answered."
+        line = f"You'll see how others see you once {minimum} people have answered." if answered < minimum else None
+        return f"{needed - invited} more needed", line
     if answered == 0:
         return "Links issued", None
     if answered < minimum:
