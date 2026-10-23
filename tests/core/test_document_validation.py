@@ -135,6 +135,18 @@ def test_a_section_signposts_finished_wording_needs_a_button_label_and_its_text_
     assert problem.path == "/content/sections/1/blocks/0/finished"
 
 
+def test_what_finishing_a_section_takes_is_authored_text():
+    """✨ The phrase a locked section's note names it by (ticket 79)."""
+    document = pathway_document()
+    first = document["content"]["sections"][0]
+    first["to_finish"] = {"participant": "completed {section}"}
+    assert validate(document) == []
+
+    first["to_finish"] = 5
+    [problem] = validate(document)
+    assert problem.path == "/content/sections/0/to_finish"
+
+
 def test_a_construct_may_be_named_in_text_otherwise_than_beside_its_drawing_by_authored_text():
     """✨ Both Whatever You Do pathways label deacon "deacon" beside its drawing and "Deacon" in text (fix-27)."""
     for name in ("whatever-you-do.json", "whatever-you-do-faithful-port.json"):

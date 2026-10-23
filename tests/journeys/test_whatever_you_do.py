@@ -459,13 +459,25 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     a_download_in_place_of_each_of_sections_2_to_4(expected)
     no_relationship_question(expected)
 
-    assert without_the_comparison_signpost(
-        without_the_next_step_and_photos(
-            without_numbers(
-                without_the_tie_break(without_the_coach_step(without_estimates(without_the_wizard(the_pathway()))))
+    assert without_what_finishing_takes(
+        without_the_comparison_signpost(
+            without_the_next_step_and_photos(
+                without_numbers(
+                    without_the_tie_break(without_the_coach_step(without_estimates(without_the_wizard(the_pathway()))))
+                )
             )
         )
     ) == (without_numbers(expected))
+
+
+def without_what_finishing_takes(document):
+    """✨ What finishing each section takes, as its lock notes name it, is this pathway's alone (ticket 79), and so is
+    Section 1's "I've finished Section 1": the faithful port's notes name the sections by title, and its Section 1 has
+    the engine's own button."""
+    for section in document["content"]["sections"]:
+        section.pop("to_finish", None)
+    next(section for section in document["content"]["sections"] if section["id"] == "designed").pop("complete_label")
+    return document
 
 
 def without_the_comparison_signpost(document):
@@ -525,7 +537,10 @@ def a_download_in_place_of_each_of_sections_2_to_4(document):
     Section 3 once Sections 1 and 2 are finished (ADR 0019), Section 4 once Section 3 is, and the letter waits for
     Section 4."""
     sections = document["content"]["sections"]
-    ours = {section["id"]: section for section in without_estimates(the_pathway())["content"]["sections"]}
+    ours = {
+        section["id"]: section
+        for section in without_what_finishing_takes(without_estimates(the_pathway()))["content"]["sections"]
+    }
     for index, section in enumerate(sections):
         if section["id"] in ON_PAPER:
             sections[index] = {**ours[section["id"]], "title": section["title"]}
@@ -663,15 +678,12 @@ def test_section_2_stays_locked_until_both_cards_are_complete_and_names_those_st
     """✨ With the Strengths assessment done, which Section 2 requires in place of Section 1 (ADR 0019)."""
     client = to_the_reflection(participant)
     assert client.get(SECTION_2).status_code == 302
-    assert escape("Opens once you've finished Walk with a coach and Five trusted voices.") in hub_entry(
-        client.get("/hub/").content.decode(), TITLES["shape"]
-    )
+    coach, voices = what_is_left("walk-with-a-coach"), what_is_left("trusted-voices")
+    assert escape(OPENS_ONCE.format(f"{coach} and {voices}")) in note_under(client, "shape")
 
     choose(client)
     assert client.get(SECTION_2).status_code == 302
-    assert escape("Opens once you've finished Five trusted voices.") in hub_entry(
-        client.get("/hub/").content.decode(), TITLES["shape"]
-    )
+    assert escape(OPENS_ONCE.format(voices)) in note_under(client, "shape")
 
     add_people(client, 3)
     assert client.get(SECTION_2).status_code == 200
@@ -723,31 +735,49 @@ def title_of(section_id):
     return next(section["title"] for section in the_pathway()["content"]["sections"] if section["id"] == section_id)
 
 
+# ✨ Engine wording around what a lock note names (ticket 79).
+OPENS_ONCE = "Opens once you've {}."
+
+
+def what_is_left(section_id, called=None):
+    """✨ What finishing a section takes, as its phrase in the document says it (ticket 79): its title at {title}, and
+    at {section} `called`, or else what the hub calls it ("Section 1")."""
+    section = next(section for section in the_pathway()["content"]["sections"] if section["id"] == section_id)
+    called = called or (f"Section {int(section['number'])}" if "number" in section else section["title"])
+    return section["to_finish"].replace("{title}", section["title"]).replace("{section}", called)
+
+
+def note_under(client, section_id):
+    """✨ The hub's entry for a section, its titles' italics left out, so its note reads as plain text."""
+    return re.sub(r"</?em>", "", hub_entry(client.get("/hub/").content.decode(), TITLES[section_id]))
+
+
 @pytest.mark.django_db
-def test_each_lock_note_names_exactly_the_sections_still_unfinished(participant):
-    """✨ The Strengths assessment by its title on the hub, as Section 2 now requires it in place of Section 1."""
+def test_each_lock_note_names_exactly_what_is_left_in_the_sections_still_unfinished(participant):
+    """✨ Each by its phrase in the document (ticket 79), the Strengths assessment among them, as Section 2 requires it
+    in place of Section 1, and Sections 1 and 2 named together."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
 
-    def note_under(section_id):
-        return hub_entry(participant.get("/hub/").content.decode(), TITLES[section_id])
-
-    finished = "Opens once you've finished {}."
     # ✨ Section 3 also waits on the coach, whom its note names after the sections (ticket 64).
     with_the_coach = opening_condition()["with_sections"].replace("{sections}", "{}")
-    strengths, coach, voices, designed, shape = map(
-        title_of, ["strengths", "walk-with-a-coach", "trusted-voices", "designed", "shape"]
+    strengths, coach, voices = map(what_is_left, ["strengths", "walk-with-a-coach", "trusted-voices"])
+    assert escape(OPENS_ONCE.format(f"{strengths}, {coach} and {voices}")) in note_under(participant, "shape")
+    assert escape(with_the_coach.format(what_is_left("designed", "Sections 1 and 2"))) in note_under(
+        participant, "calling"
     )
-    assert escape(finished.format(f"{strengths}, {coach} and {voices}")) in note_under("shape")
-    assert escape(with_the_coach.format(f"{designed} and {shape}")) in note_under("calling")
+    assert escape(OPENS_ONCE.format(what_is_left("calling"))) in note_under(participant, "growth")
 
     do_the_sort(participant)
     choose(participant)
-    assert escape(finished.format(voices)) in note_under("shape")
+    assert escape(OPENS_ONCE.format(voices)) in note_under(participant, "shape")
 
     add_people(participant, 3)
     complete(participant, "shape")
-    assert escape(with_the_coach.format(designed)) in note_under("calling")
+    assert escape(with_the_coach.format(what_is_left("designed"))) in note_under(participant, "calling")
+
+    coach_accepts(participant)
+    assert escape(OPENS_ONCE.format(what_is_left("designed"))) in note_under(participant, "calling")
 
 
 @pytest.mark.django_db
@@ -933,8 +963,8 @@ def test_once_section_3_has_opened_it_stays_open_whatever_happens_to_the_coach(p
 def test_section_3s_lock_note_names_the_unfinished_sections_and_the_coach_then_the_coach_alone(participant):
     client = through_to_section_2(participant)
     authored = opening_condition()
-    with_sections = authored["with_sections"].format(sections=TITLES["shape"])
-    assert escape(with_sections) in hub_entry(client.get("/hub/").content.decode(), TITLES["calling"])
+    with_sections = authored["with_sections"].replace("{sections}", what_is_left("shape"))
+    assert escape(with_sections) in note_under(client, "calling")
 
     complete(client, "shape")
 

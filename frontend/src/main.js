@@ -81,6 +81,23 @@ document.addEventListener("keydown", (event) => {
   else row.querySelector("form.contact-person")?.requestSubmit();
 });
 
+// ✨ The sidebar ("Your pathway") is a <details>, which stays open until its button is pressed again. Close it too on a
+// click anywhere outside it, or on Escape, leaving the focus on its button (ticket 79). Without JavaScript only its
+// button closes it.
+document.addEventListener("click", (event) => {
+  document.querySelectorAll("details.pathway-nav-toggle[open]").forEach((sidebar) => {
+    if (!sidebar.contains(event.target)) sidebar.open = false;
+  });
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  const sidebar = document.querySelector("details.pathway-nav-toggle[open]");
+  if (!sidebar) return;
+  sidebar.open = false;
+  sidebar.querySelector("summary").focus();
+});
+
 // ✨ Near a text box's length limit, say how much room is left; the browser stops typing at the limit itself.
 const SHOW_LENGTH_LEFT_BELOW = 0.1;
 

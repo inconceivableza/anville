@@ -8,6 +8,7 @@ to open is enforced separately, over HTTP, in tests/journeys/test_sections.py.
 """
 
 import pytest
+from django.utils.html import conditional_escape
 
 from engine.hub import COMPLETE, IN_PROGRESS, LOCKED, NOT_STARTED, hub_for, is_locked, open_blocks
 
@@ -313,6 +314,51 @@ def test_a_locked_section_names_the_sections_it_still_waits_for():
     assert lock_note(sections) == "Opens once you've finished A, B and C."
     assert lock_note(sections, completed=["a"]) == "Opens once you've finished B and C."
     assert lock_note(sections, completed=["a", "b"]) == "Opens once you've finished C."
+
+
+def phrased(id, phrase, number=None):
+    """✨ A section carrying `phrase` as what finishing it takes (ticket 79), and `number` if given."""
+    return {**section(id), "to_finish": phrase, **({"number": number} if number else {})}
+
+
+def test_a_locked_section_names_what_is_left_in_each_section_by_its_phrase_or_else_by_its_title():
+    """✨ As Section 2 names the Strengths assessment and both side cards (ticket 79). Sections without a phrase are
+    named together, as the faithful port's are."""
+    sections = [
+        phrased("a", "done the {title}"),
+        section("b"),
+        phrased("c", "added at least 3 people in {title}"),
+        section("d"),
+        section("last", requires=["a", "b", "c", "d"]),
+    ]
+
+    assert lock_note(sections) == "Opens once you've done the A, finished B and D and added at least 3 people in C."
+    assert lock_note(sections, completed=["a", "b"]) == "Opens once you've added at least 3 people in C and finished D."
+
+
+def test_sections_sharing_a_phrase_are_named_together_and_only_those_left():
+    """✨ As Section 3 names Sections 1 and 2 (ticket 79)."""
+    sections = [
+        phrased("a", "completed {section}", number="01"),
+        phrased("b", "completed {section}", number="02"),
+        section("last", requires=["a", "b"]),
+    ]
+
+    assert lock_note(sections) == "Opens once you've completed Sections 1 and 2."
+    assert lock_note(sections, completed=["a"]) == "Opens once you've completed Section 2."
+
+
+def test_a_title_a_phrase_names_is_in_italics_and_escaped_and_one_without_a_phrase_is_plain():
+    """✨ The note as the page draws it (ticket 79). The faithful port's titles stay plain, as they were."""
+    sections = [
+        {**phrased("a", "added people in {title}"), "title": "<b>Voices</b>"},
+        section("b"),
+        section("last", requires=["a", "b"]),
+    ]
+
+    assert conditional_escape(lock_note(sections)) == (
+        "Opens once you&#x27;ve added people in <em>&lt;b&gt;Voices&lt;/b&gt;</em> and finished B."
+    )
 
 
 # What the hub says about each section

@@ -5,7 +5,8 @@
   ✨ The header of every participant page (ticket 41a): the pathway's name, leading to the hub; the sidebar; and "Sign
   out", allauth's own, a POST so no page loaded ahead of time signs anyone out, leading to the homepage.
 
-  The sidebar is a <details>, so it opens and closes without JavaScript. Its sections are the hub's, with the same
+  The sidebar is a <details>, so it opens and closes without JavaScript; with it, a click outside or Escape closes it
+  too (ticket 79). Its sections are the hub's, with the same
   statuses and locks: a locked section is named but not linked, as on the hub, and a part of a section is listed within
   that section's entry (ticket 41b). The site can switch it off
   (ANVILLE_SIDEBAR), leaving the rest of the header.

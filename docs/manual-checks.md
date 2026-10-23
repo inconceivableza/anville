@@ -135,7 +135,7 @@ Page by page:
 - **Section 1's Strengths assessment card:** its status ("Not started", "Complete" …) is a small rounded tag in grey capitals, as the hub's tags are. Once the assessment is done, "View my results →" leads to the results as before (ticket 61).
 - **The Workbook's pages** (Sections 2, 3 and 4, on paper): "Download Section 2 (PDF)" and "I've finished Section 2" are in the same look as Section 1's buttons; the same for 3 and 4.
 - **Walk with a coach and Five trusted voices** (the hub's side cards, opened): what each waits on is listed as the gate's pale boxes are, with no "Mark complete".
-- **The hub's locked sections:** a locked section's row shows its title in grey and what opens it ("Opens once you've finished …") in grey beneath it, as before; a locked side card's title is grey and not a link.
+- **The hub's locked sections:** a locked section's row shows its title in grey and what opens it ("Opens once you've …", with any section titles in italics) in grey beneath it, as before; a locked side card's title is grey and not a link.
 - **The card sort and fine-tuning** (Section 1's assessment): the thin progress bar, the card and the five buckets, "↩ Undo last", the all-sorted screen with its counts, and the sliders look as they did. They now sit on the cream inside the frame. At phone width the buckets stack one above another and nothing scrolls sideways, even as a card flies off. The observer's sort, in a private window, looks the same but stays plain cream, with no frame.
 - **The tie-break's pairs** (a participant tied on a framework): the pairs sit centred in the frame, and each option fills the column. At phone width the options are easy to tap.
 - **Results:** each framework is a card. Each construct's name sits on the left and its standing on the right, with a gap between them even at phone width, where a long name wraps rather than running into its standing. Every drawing, the generalist's box and a framework's tie-break box are as D5-59b left them, each construct in its standing's colour (fix-16). "Compare with how others see you →" is centred below.
@@ -286,7 +286,7 @@ The homepage (`/`):
 
 ## The gate and "Mark complete"
 
-- The button fills the width of the page, in every section, apart from "← Previous page" beside it on a page after the first. Onboarding's reads "Continue →"; every other section's reads "Mark complete".
+- The button fills the width of the page, in every section, apart from "← Previous page" beside it on a page after the first. Onboarding's reads "Continue →"; in *Whatever You Do*, Sections 1–4 read "I've finished Section 1" and so on; every other section's reads "Mark complete".
 - Completing onboarding opens Section 1, not the hub. Completing the last open section returns to the hub.
 
 - Every requirement is listed below the button, a met one ticked (✓) and quieter, an unmet one with a dot. As you type, an item changes between the two in place: scrolled to the very bottom of the page, nothing moves.
@@ -327,7 +327,7 @@ The homepage (`/`):
 ## A link to another section (Section 1's Strengths assessment card)
 
 - The card reads as a way somewhere else: the Strengths assessment's title, the text, the "Open Strengths Assessment →" button, then its status chip on a line of its own, coloured as on the hub.
-- Before the sort is in, nothing follows the card: no reflection and no "Mark complete". After the sort, coming back to Section 1 shows the reflection.
+- Before the sort is in, nothing follows the card: no reflection and no "Mark complete" ("I've finished Section 1" in *Whatever You Do*). After the sort, coming back to Section 1 shows the reflection.
 - Keyboard only: Tab reaches the button, its focus is visible, and Enter opens the Strengths assessment.
 - Screen reader: Tab to the button. It is a link styled as a button, since it goes to another page, so VoiceOver reads "Open Strengths Assessment, right arrow, link" and tells you how to follow it. Control-Option-Right arrow then reads the status.
 - Phone width: the card's text and button wrap, and the status chip stays a small pill the width of its words rather than stretching across the card.
@@ -350,10 +350,10 @@ The homepage (`/`):
 
 - The hub lists onboarding, Section 1, the Strengths assessment, "The shape of your life", "Putting your calling into words", "Growth plan" and Section 5, and no "The Workbook".
 - Section 1 completes with the sort in and the reflection written, without visiting the comparison and with nobody invited; its checklist lists only the assessment and the reflections.
-- With Section 1 complete and nobody invited, Section 2's entry says "Opens once you've finished Walk with a coach and Five trusted voices."; once the coach is saved, "Opens once you've finished Five trusted voices."; once three people are added, it opens. Section 2 no longer waits on Section 1: see ticket 66's check below.
+- With Section 1 complete and nobody invited, Section 2's entry says "Opens once you've sent a coach their link in *Walk with a coach* and added at least 3 people in *Five trusted voices*."; once the coach is saved, "Opens once you've added at least 3 people in *Five trusted voices*."; once three people are added, it opens (the wording of ticket 79). Section 2 no longer waits on Section 1: see ticket 66's check below.
 - Walk with a coach's and Five trusted voices' pages have no "Mark complete" and no "Mark as not complete". Until complete, each lists what it waits on ("Choose a coach and send them their link.", "Add at least 3 people.") as plain text, not a link; once complete, nothing below the list. The header's count goes up as each completes.
 - Five trusted voices stays "Complete" after revoking one person's link (and Section 2 stays open). Phone width: Section 2's lock note wraps within its entry.
-- While Section 2 is the next step, the hub's next step shows its title and "About 30–40 minutes". Section 3's entry says "Opens once you've finished The shape of your life.", and Section 4's "Opens once you've finished Putting your calling into words.".
+- While Section 2 is the next step, the hub's next step shows its title and "About 30–40 minutes". Section 3's entry says "Opens once you've completed Section 2, and your coach has accepted." while the coach has not accepted, and Section 4's "Opens once you've completed Section 3.".
 - In each of Sections 2, 3 and 4, "Download Section 2 (PDF)" (3, 4) opens that section's PDF in the browser's own viewer, not a blank page or a download of an HTML error, and saving it keeps the name `whatever-you-do-workbook-section-2.pdf` (3, 4). Its text reads plainly, with no mention of a draft.
 - "I've finished Section 2" leads to the hub with Section 3 open as the next step; the same for 3 and then 4, after which Section 5 opens.
 - Keyboard only: Tab reaches the button and Enter opens the PDF; Tab then reaches "I've finished Section 2".
@@ -625,7 +625,7 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 
 ## Section 3 waits on the coach (A1-64; migrate, load both pathways again, and use a participant started after that)
 
-- With the sections Section 3 requires unfinished and the coach not yet accepted, the hub's note under Section 3 reads "Opens once you've finished {those sections} and your coach has accepted." Finish them: it reads "Opens once your coach has accepted. If they decline, choose someone else." Section 3 shows "Locked" on the hub and in the sidebar, with no link, and typing `/sections/calling/` leads back to the hub.
+- With the sections Section 3 requires unfinished and the coach not yet accepted, the hub's note under Section 3 reads "Opens once you've completed {those sections}, and your coach has accepted.", such as "Sections 1 and 2" (the wording of ticket 79). Finish them: it reads "Opens once your coach has accepted. If they decline, choose someone else." Section 3 shows "Locked" on the hub and in the sidebar, with no link, and typing `/sections/calling/` leads back to the hub.
 - From the coach page, open the coach's link in a private window and decline: Section 3 stays locked. Reissue the link and accept: Section 3 opens on the hub and in the sidebar.
 - Then revoke or reissue the coach's link, or choose another coach: Section 3 stays open.
 - On the faithful port, Section 3 opens as before, with no coach. Same at phone width: the longer note wraps under the section's title, nothing scrolls sideways.
@@ -693,11 +693,22 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 
 ## Section 2 opens on the Strengths assessment (ticket 66; load the pathway again, and use a participant started after that)
 
-- Before the sort, with nothing else done, Section 2's entry on the hub says "Opens once you've finished Strengths assessment, Walk with a coach and Five trusted voices."
+- Before the sort, with nothing else done, Section 2's entry on the hub says "Opens once you've done the *Strengths assessment*, sent a coach their link in *Walk with a coach* and added at least 3 people in *Five trusted voices*." (the wording of ticket 79).
 - Do the sort, choose a coach and give three people links, leaving Section 1 unfinished: Section 2 opens, on the hub and in the sidebar.
-- Section 3's entry, with the coach's link unanswered, says "Opens once you've finished How you've been designed and The shape of your life and your coach has accepted."; with Section 2 alone finished, "Opens once you've finished How you've been designed and your coach has accepted."; with the coach accepted too, "Opens once you've finished How you've been designed."
+- Section 3's entry, with the coach's link unanswered, says "Opens once you've completed Sections 1 and 2, and your coach has accepted."; with Section 2 alone finished, "Opens once you've completed Section 1, and your coach has accepted."; with the coach accepted too, "Opens once you've completed Section 1."
 - The faithful port's sections open as before.
 - Phone width: the longer notes wrap within their entries, with no sideways scroll.
+
+### Ticket 79: A locked section's note says what to do
+
+Load *Whatever You Do* again, then start a new participant (the notes come from the pathway version a participant started on); reload the page for the rebuilt frontend.
+
+- With Before we begin done and nothing else, the hub's notes read: Section 2 "Opens once you've done the *Strengths assessment*, sent a coach their link in *Walk with a coach* and added at least 3 people in *Five trusted voices*."; Section 3 "Opens once you've completed Sections 1 and 2, and your coach has accepted."; Section 4 "Opens once you've completed Section 3."; the letter "Opens once you've completed Section 4.". The titles are in italics, in the grey of the rest of the note.
+- Choose a coach and send their link: Section 2's note drops the coach's part, and drops each other part as it is done.
+- Section 1's button reads "I've finished Section 1", as Sections 2–4's read for theirs.
+- The faithful port's notes read as before ("Opens once you've finished …"), with no italics.
+- The sidebar ("Your pathway") shows no notes, only each entry's status and title. Open it, then click anywhere outside it: it closes. Open it again and press Escape: it closes and the focus is on "Your pathway". A click inside it, on a status or between entries, leaves it open.
+- Phone width: the longest notes wrap within their entries, italics and all, with no sideways scroll; the sidebar closes on a tap outside it.
 
 ## Signposts under their new names (ticket 75; a database holding a participant started before 75, from a pathway version loaded before it)
 

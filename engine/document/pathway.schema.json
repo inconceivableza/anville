@@ -528,6 +528,10 @@
         "complete_label": {
           "description": "The wording of the button that completes the section, such as 'Continue →'. Without one, it reads 'Mark complete'.",
           "$ref": "#/$defs/text"
+        },
+        "to_finish": {
+          "description": "What finishing this section takes, as the hub's note under a section requiring it says it after 'Opens once you've', such as 'added at least 3 people in {title}'. {title} is the section's title, in italics; {section} is what the hub calls it, such as 'Section 1'. Unfinished sections sharing one are named together, as 'completed Sections 1 and 2'. Without one, the note says 'finished' and the title.",
+          "$ref": "#/$defs/text"
         }
       }
     },
@@ -935,7 +939,7 @@
       "properties": {
         "clauses": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/clause" } },
         "with_sections": {
-          "description": "The hub's note while sections this one requires are unfinished too, naming them where it says {sections}, such as 'Opens once you've finished {sections} and your coach has accepted.' Without it, the note names only the sections.",
+          "description": "The hub's note while sections this one requires are unfinished too, naming what is left in them where it says {sections}, as each one's to_finish says it, such as 'Opens once you've {sections}, and your coach has accepted.' Without it, the note names only the sections.",
           "$ref": "#/$defs/text"
         }
       }
