@@ -70,7 +70,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 - Sign up and sign in, at a wide screen and at about 375px: "Continue with Google" comes first, under the line about signing in or up, then "or", then the form, with room between each. With the Google pair unset, both pages are the form alone, with no "or".
 - In a window already signed in to a Google account, "Continue with Google" shows Google's account chooser rather than going straight back.
-- A Google account new to Anville: the sign-up form's "Email" shows the address Google gave, and clicking into it lets you select the text but not change it.
+- A Google account new to Anville: the sign-up form's "Email" shows the address Google gave, and clicking into it lets you select the text but not change it. Google itself may first say "You're signing back in to Whatever You Do", even for an account never used here: Google remembers the sign-in against the Google Cloud project, which every environment shares, so a sign-in on staging counts. Anville's own sign-up form still follows.
 - Sign up by email at an address, sign out, then "Continue with Google" with a Google account at that address and send the form: just above "Email", "There's already an account with this email address, made with a password. Sign in with your email and password instead.", and under the address "Sign in · Forgot your password?", each leading to its page. No account is made, and nothing mentions connecting a Google account.
 
 ## Password reset (sign in's "Forgot your password?")
