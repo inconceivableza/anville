@@ -348,11 +348,10 @@ def signpost_shown(block, text, linked_section, is_complete, role):
 
 
 # ✨ Where the way to the comparison stands, as a comparison signpost says it: engine wording, as the section statuses
-# are, since the hub and the Five trusted voices card are to say the same (spec, Blocks). While waiting, it says how
-# many more answers are needed, not how many are in, which the card's meter says (ticket 81).
+# are, since its section's card and the hub's row are to say the same (spec, Blocks). While waiting, it says how many
+# of the minimum have answered, which, unlike "Waiting for answers", never reads as done (ticket 81).
 COMPARISON_STATUSES = {
-    "waiting": "{more} more answers needed",
-    "waiting_one": "1 more answer needed",
+    "waiting": "{answered} of {minimum} answered",
     "ready": "Ready to view",
     "viewed": "Viewed",
 }
@@ -361,15 +360,14 @@ COMPARISON_STATUSES = {
 def comparison_status(answered, minimum, viewed):
     """✨ Where the way to a sort's comparison stands, as `(state, wording)`: viewed once the participant has pressed
     "Compare with how others see you →" with at least the minimum in, whatever has been answered since; otherwise ready
-    from the minimum, and waiting below it, saying how many more answers are needed (tickets 67a, 81)."""
+    from the minimum, and waiting below it, saying how many of the minimum have answered (tickets 67a, 81)."""
     if viewed:
         state = "viewed"
     elif answered >= minimum:
         state = "ready"
     else:
         state = "waiting"
-    wording = COMPARISON_STATUSES["waiting_one" if state == "waiting" and minimum - answered == 1 else state]
-    return state, wording.format(more=minimum - answered)
+    return state, COMPARISON_STATUSES[state].format(answered=answered, minimum=minimum)
 
 
 def translation_shown(document, passage):

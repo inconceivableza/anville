@@ -2,8 +2,8 @@
 # For licensing information see ../../LICENSE.md
 
 """✨ The comparison signpost on the hub (ticket 67b): a row within its section, after the part holding its sort, and a
-button beside Manage on the Five trusted voices card. Each shows the same status as the section's card and makes the
-same press, through the same freeze warning (ADR 0017)."""
+button beside Manage on the Five trusted voices card. Each makes the same press as the section's card, through the
+same freeze warning (ADR 0017), and the row shows the same status (the button no longer does, ticket 81)."""
 
 import re
 
@@ -65,12 +65,16 @@ def voices_button(client):
 def statuses(html):
     """✨ Which of the comparison's statuses the markup reads, for any number of answers out of a minimum of three."""
     words = text(html)
-    waiting = re.findall(r"\d more answers? needed", words)
+    waiting = re.findall(r"\d+ of 3 answered", words)
     return waiting + [COMPARISON_STATUSES[state] for state in ("ready", "viewed") if COMPARISON_STATUSES[state] in words]
 
 
 @pytest.mark.django_db
-def test_once_there_is_a_result_the_hubs_row_and_the_voices_cards_button_show_with_the_cards_status(participant):
+def test_once_there_is_a_result_the_hubs_row_shows_with_the_cards_status_and_the_voices_cards_button_without_it(
+    participant,
+):
+    """✨ The voices card's Answered meter and tag already say where the answers stand (developer's call, 23 Oct, ticket
+    81)."""
     answer_through(*participant.links[:2])
     assert hub_row(participant) is None
     assert voices_button(participant) is None
@@ -78,16 +82,17 @@ def test_once_there_is_a_result_the_hubs_row_and_the_voices_cards_button_show_wi
     submit_sort(participant, complete_sort())
 
     on_the_card = statuses(card(participant))
-    assert on_the_card == ["1 more answer needed"]
+    assert on_the_card == ["2 of 3 answered"]
     assert statuses(hub_row(participant)) == on_the_card
-    assert statuses(voices_card(participant)) == on_the_card
+    assert voices_button(participant) is not None
+    assert statuses(voices_card(participant)) == []
 
     answer_through(participant.links[2])
     press_compare(participant)
 
     assert statuses(card(participant)) == [COMPARISON_STATUSES["viewed"]]
     assert statuses(hub_row(participant)) == [COMPARISON_STATUSES["viewed"]]
-    assert statuses(voices_card(participant)) == [COMPARISON_STATUSES["viewed"]]
+    assert statuses(voices_card(participant)) == []
 
 
 @pytest.mark.django_db

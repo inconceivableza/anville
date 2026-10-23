@@ -1,6 +1,6 @@
 # 81: How many more answers, or people, are needed
 
-**What to build:** Below the minimum, the comparison signpost's status, "Waiting for answers (1 of 3)", reads as either waiting or done and repeats the side card's "Answered" meter. It says how many more answers are needed instead, wherever it shows. The Five trusted voices side card, once complete, still says "Complete" after a removal leaves fewer people with working links than it needs; it asks for another person instead, while staying complete.
+**What to build:** Below the minimum, the comparison signpost's status, "Waiting for answers (1 of 3)", reads as either waiting or done and repeats the side card's "Answered" meter. It says how many of the minimum have answered instead, "2 of 3 answered", on Section 1's signpost and the hub's row; the side card, whose meter says it, shows none. The Five trusted voices side card, once complete, still says "Complete" after a removal leaves fewer people with working links than it needs; it asks for another person instead, while staying complete.
 
 **Blocked by:** None (can start immediately)
 
@@ -10,7 +10,7 @@
 
 **Spec:** Blocks; Engine: sections, tracks, gates, progress
 
-- [x] Below the minimum, the comparison signpost's status reads "2 more answers needed" ("1 more answer needed" for one), on Section 1's signpost, the hub's row and the Five trusted voices side card alike
+- [x] Below the minimum, the comparison signpost's status reads "2 of 3 answered", on Section 1's signpost and the hub's row alike; the Five trusted voices side card's button shows no status, its meter and tag saying it (developer's call, 23 Oct, after the first check)
 - [x] At and above the minimum, and once viewed, it reads "Ready to view" and "Viewed" as before
 - [x] The Five trusted voices side card, once complete, says how many more people are needed whenever fewer have working links than it needs, as it does before it is complete
 - [x] The side card still counts as complete after that removal, and what it opened stays open
