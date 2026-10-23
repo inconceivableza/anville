@@ -128,9 +128,11 @@ python manage.py load_pathway pathways/whatever-you-do.json
 five baseline ratings, Section 1 with its scripture and reflection, the Strengths assessment (the sort and
 its results, in a section of its own so the offline track can share it), Sections 2–4 and the letter.
 Sections 2–4 are done on paper, each in its part of the content owner's workbook, which the section offers as a PDF.
-Section 2 opens once Section 1 is complete and the side cards Walk with a coach and Five trusted voices are too: a
-coach has a link, and three people have links. Sections 3 and 4, and then the letter, each open once the participant
-says they have finished the section before. Nothing on the way waits for anyone to answer.
+Section 2 opens once the Strengths assessment is done and the side cards Walk with a coach and Five trusted voices are
+complete (a coach has a link, and three people have links), without waiting for Section 1. Section 3 opens once
+Sections 1 and 2 are finished and the coach has accepted; Section 4, and then the letter, each open once the
+participant says they have finished the section before. Section 1's reflection waits until the participant has seen
+how others see them, which needs at least three people's answers.
 `pathways/example.json` is a smaller file for trying the loader out.
 
 The sections' PDFs are `pathways/files/whatever-you-do-workbook-section-2.pdf`, `-section-3.pdf` and

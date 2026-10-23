@@ -27,20 +27,20 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - A disabled "Mark complete" is grey with muted words, and the pointer shows it can't be pressed.
 - Phone width: the header's "Your pathway" and "Sign out", and the save row's "Save", are the small size and fit on one line.
 
-## The homepage (`/`, signed out and signed in)
+## The homepage (`/`, signed out and signed in; beside v3's, `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`)
 
-- Side by side with the prototype's homepage (`Prototypes for reference/original-prototype.html`) and its newer "How it works" (`how-it-works-homepagesection.html`), the words match. The only differences: "anonymously" is gone from step 1, the Churches, Writing, Newsletter, Team, Go further, Donate and Contact sections are gone, and so are the footer's Privacy Policy and Terms links.
+- Top to bottom: the forest video under a top bar, with "Everyone has a purpose. Do you know yours?"; "Whatever You Do is a pathway for discerning your purpose." with its five pillars; "How it works" with its five steps and the coach's line; Impact's three cards; For churches; "Ideas to explore"; a parent's story; the callings carousel; the footer. Nothing offers a newsletter, donations or a contact address.
+- The top bar reads Home, How it works, The assessment, Impact, Coaches and Begin. Each but Begin scrolls to its part of the page; there is no round menu button.
 - The forest video plays muted and loops, with no sound and no controls. With the video blocked (DevTools, Network, right-click `hero.mp4`, "Block request URL", then reload), the still frame shows in its place.
 - Reduced motion, and without JavaScript: the still frame shows from the start and the forest never moves, not even for a moment.
-- In "How it works", steps 2–4 have greyed mockups, each labelled "In the workbook"; their words and times are as easy to read as step 1's.
-- The round menu button stays visible over the video and over the white and pale sections below it. It opens a panel listing About, How it works and Impact only, and each link scrolls to its section and closes the panel.
-- Without JavaScript, the menu still opens and its links still scroll.
-- Keyboard only: Tab reaches the menu button first, Enter opens it, and the focus ring shows on it and on each link.
+- "How it works": STEP 01 to STEP 05, each with its activities and an "In your workbook" outcome; the tabs and ← → move between them. The tabs and the carousel are checked in detail under fix-14 and fix-17 below.
+- Without JavaScript, the top bar's and the footer's links still scroll to their parts.
+- Keyboard only: Tab reaches each top bar link with a visible focus ring, and Enter follows it.
 - DevTools, Network, reload: every request goes to this site (no Google Fonts, nothing else).
-- With `ANVILLE_DEMO_NOTICE` set in `.env` (as every staging environment has it), the amber "Demo" notice sits under "Begin →" over the video, easy to read at phone width and on a wide screen, and at the top of the sign-up and sign-in pages. With it unset, neither shows.
-- On a wide screen, About's text is centred in a narrower column than How it works' steps, and Impact is centred beneath them.
-- Phone width: the headline fits without sideways scrolling, step 4's four-column roadmap is still legible, the Begin buttons are easy to tap, each step's mockup sits above its words, and the impact figures stay beside their text.
-- Signed out, both "Begin →" buttons open sign-up; signed in, both open the hub. Signing in, and agreeing to consent, both land on the hub, not the homepage.
+- With `ANVILLE_DEMO_NOTICE` set in `.env` (as every staging environment has it), the amber "Demo" notice sits under "Begin your journey" over the video, easy to read at phone width and on a wide screen, and at the top of the sign-up and sign-in pages. With it unset, neither shows.
+- The footer's Explore and For churches links scroll to their parts, and Credits opens `/credits/`.
+- Phone width: the headline and the top bar fit without sideways scrolling, and the Begin buttons are easy to tap.
+- Signed out, Begin and every "Begin your journey" button open sign-up; signed in, they open the hub. Signing in, and agreeing to consent, both land on the hub, not the homepage.
 
 ## The demo notice beyond the homepage (ticket 46; `ANVILLE_DEMO_NOTICE` set in `.env`)
 
@@ -327,7 +327,7 @@ The homepage (`/`):
 - Once the sort is in, back on Section 1 the card reads "You've completed the assessment. You can review your results any time." in place of "Sort your strengths into buckets…", and the button reads "View my results →". Clicking it opens your results page (or, with tie-break pairs still to answer, the next pair), never the assessment's start page. The status chip reads "Complete". Same in both pathways.
 - Phone width: the finished sentence and the "View my results →" button wrap within the card.
 
-## How others see you (Section 1's card under the Strengths assessment; after `migrate`, rebuild the frontend and load the pathway again, with a participant started after that)
+## How others see you (ticket 67a; Section 1's card under the Strengths assessment; after `migrate`, rebuild the frontend and load the pathway again, with a participant started after that)
 
 - Before the sort is in, Section 1 shows no "How others see you" card. Once it is in, the card sits under the Strengths assessment card and above the reflection, drawn as that card is: its title, the "Compare with how others see you →" button, then its status chip on a line of its own.
 - With fewer than three observers answered, the chip reads "Waiting for answers (2 of 3)" (the count as it stands). Pressing the button opens "Not enough answers yet", as the results page's button does, and back on Section 1 the chip still says waiting.
@@ -343,7 +343,7 @@ The homepage (`/`):
 
 - The hub lists onboarding, Section 1, the Strengths assessment, "The shape of your life", "Putting your calling into words", "Growth plan" and Section 5, and no "The Workbook".
 - Section 1 completes with the sort in and the reflection written, without visiting the comparison and with nobody invited; its checklist lists only the assessment and the reflections.
-- With Section 1 complete and nobody invited, Section 2's entry says "Opens once you've finished Walk with a coach and Five trusted voices."; once the coach is saved, "Opens once you've finished Five trusted voices."; once three people are added, it opens. With a participant started after the pathway was loaded again (B1A-66): Section 2 opens with the sort in and both cards complete while Section 1 is still unfinished; before the sort, with nothing else done, its entry says "Opens once you've finished Strengths assessment, Walk with a coach and Five trusted voices." Section 3's entry then says "Opens once you've finished How you've been designed and The shape of your life.", and once Section 2 alone is finished, "Opens once you've finished How you've been designed." Phone width: the longer note wraps within its entry.
+- With Section 1 complete and nobody invited, Section 2's entry says "Opens once you've finished Walk with a coach and Five trusted voices."; once the coach is saved, "Opens once you've finished Five trusted voices."; once three people are added, it opens. Section 2 no longer waits on Section 1: see ticket 66's check below.
 - Walk with a coach's and Five trusted voices' pages have no "Mark complete" and no "Mark as not complete". Until complete, each lists what it waits on ("Choose a coach and send them their link.", "Add at least 3 people.") as plain text, not a link; once complete, nothing below the list. The header's count goes up as each completes.
 - Five trusted voices stays "Complete" after revoking one person's link (and Section 2 stays open). Phone width: Section 2's lock note wraps within its entry.
 - While Section 2 is the next step, the hub's next step shows its title and "About 30–40 minutes". Section 3's entry says "Opens once you've finished The shape of your life.", and Section 4's "Opens once you've finished Putting your calling into words.".
@@ -676,6 +676,20 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - An organisation's admin sees the same count for that member as the participant's hub shows.
 - The faithful port: once Before we begin is complete it is still listed on the hub and in the sidebar, and its pages open as before.
 - Phone width: the hub and the sidebar list the sections as above, with no sideways scroll.
+
+## Section 2 opens on the Strengths assessment (ticket 66; load the pathway again, and use a participant started after that)
+
+- Before the sort, with nothing else done, Section 2's entry on the hub says "Opens once you've finished Strengths assessment, Walk with a coach and Five trusted voices."
+- Do the sort, choose a coach and give three people links, leaving Section 1 unfinished: Section 2 opens, on the hub and in the sidebar.
+- Section 3's entry, with the coach's link unanswered, says "Opens once you've finished How you've been designed and The shape of your life and your coach has accepted."; with Section 2 alone finished, "Opens once you've finished How you've been designed and your coach has accepted."; with the coach accepted too, "Opens once you've finished How you've been designed."
+- The faithful port's sections open as before.
+- Phone width: the longer notes wrap within their entries, with no sideways scroll.
+
+## Signposts under their new names (ticket 75; a database holding a participant started before 75, from a pathway version loaded before it)
+
+- That participant's Section 1 reads as before: the Strengths assessment card leads to the assessment and, once the sort is in, reads "View my results →"; what it held back is still held back until then; the "How others see you" card shows its status, and reads "Viewed" once confirmed.
+- A participant started after loading the pathway again sees the same.
+- Loading a pathway file that still says `section_link` or `comparison_link` (`python manage.py load_pathway`, on a copy of the file with one type changed back) is refused, and nothing is loaded.
 
 ## The coherence walk on staging (ticket 54)
 
