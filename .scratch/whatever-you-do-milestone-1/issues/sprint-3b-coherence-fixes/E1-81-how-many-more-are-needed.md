@@ -15,6 +15,10 @@
 - [ ] The Five trusted voices side card, once complete, says how many more people are needed whenever fewer have working links than it needs, as it does before it is complete
 - [ ] The side card still counts as complete after that removal, and what it opened stays open
 
+**Carried from 79**
+
+- [ ] The number of people Five trusted voices needs is written once: its gate message and its phrase for what finishing it takes ("added at least 3 people in …") say it through a `{min}` placeholder, filled from the section's own links-issued clause, and the linter refuses a number written into those texts that differs from that clause's minimum (developer's call, 23 Oct)
+
 **Context**
 
 - Wording settled with the developer on 23 Oct, from the coherence walk (54)
