@@ -5,12 +5,17 @@
   stands.
   The button is the results page's "Compare with how others see you →", a form posting to the same address, so it
   warns before collection freezes as that one does and works without JavaScript; a browser never loads a POST ahead of
-  time. Before there is a result, nothing is shown.
+  time. Before there is a result, nothing is shown. While nobody has answered, the button is grey, never disabled: a
+  press still shows the explanation (ticket 88).
 {% endcomment %}
 {% if block.comparison %}
   <div id="block-{{ block.id }}" class="signpost comparison-signpost">
     <p class="signpost-title">{{ block.text.title }}</p>
-    {% include "engine/comparison_press.html" with press_sort=block.comparison.sort press_class="pill" %}
+    {% if block.comparison.unanswered %}
+      {% include "engine/comparison_press.html" with press_sort=block.comparison.sort press_class="pill quiet" %}
+    {% else %}
+      {% include "engine/comparison_press.html" with press_sort=block.comparison.sort press_class="pill" %}
+    {% endif %}
     <span class="status-chip status-{{ block.comparison.status }}">{{ block.comparison.label }}</span>
   </div>
 {% endif %}

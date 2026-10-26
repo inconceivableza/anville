@@ -1525,6 +1525,13 @@ form + .way-on,
   box-shadow: inset 0 0 0 1px currentColor;
 }
 
+/* ✨ A button that can be pressed but has nothing much to show yet, grey as a disabled one looks, such as the
+   comparison signpost's while nobody has answered (ticket 88). */
+.pill.quiet {
+  background: var(--border);
+  color: var(--muted);
+}
+
 .pill.full {
   width: 100%;
   justify-content: center;
@@ -3128,6 +3135,28 @@ html[data-javascript="loaded"] .invitation-copy {
 .results-next {
   text-align: center;
   margin: var(--space-xl) 0 var(--space-lg);
+}
+
+/* ✨ The results as the end of their section (ticket 88): its finish, then the outline button beside it, wrapping
+   one under the other at phone width; how many more are needed sits under the invitation. */
+.results-finish {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
+
+.results-invite {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.results-invite-phrase {
+  font-size: var(--text-xs);
+  color: var(--muted);
 }
 
 /* ✨ The comparison: per construct, a "You" bar above an "Others" bar in --blue-soft, as the prototype's comparison

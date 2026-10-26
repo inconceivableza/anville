@@ -46,6 +46,7 @@ from engine.document.blocks import (
     page_count,
     page_of,
     pages_of,
+    section_ended_by,
     section_of,
     signpost_shown,
     translation_shown,
@@ -845,8 +846,34 @@ def results(request, block_id):
     if _pairs_left(state.version.document, result):
         return redirect("tie_break", block_id)
     drawn = _results_drawn(state, result, block_id)
-    context = {"drawn": drawn, "results": drawn["results"], "section": section, "retake": _demo_tools_on()}
+    context = {
+        "drawn": drawn,
+        "results": drawn["results"],
+        "section": section,
+        "retake": _demo_tools_on(),
+        "finish": _results_finish(state, block_id),
+    }
     return render(request, "engine/results.html", context)
+
+
+def _results_finish(state, block_id):
+    """✨ What the results page offers in place of "Compare with how others see you →" alone, when its sort is the last
+    thing in a part that is the last thing in its section, so the results are that section's end (ticket 88): the
+    section's finish, as `_finish_of` gives it, and beside it, below the minimum, the way to invite people, with how many
+    more the Five trusted voices card needs, or else how many of the minimum have answered. None otherwise, when the
+    page is as before."""
+    document = state.version.document
+    part = section_of(document, block_id)
+    finish = _finish_of(state, part) if part["blocks"][-1]["id"] == block_id else None
+    if finish is None:
+        return None
+    answered, minimum = _answered(state.response), minimum_observers(document)
+    hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    voices = _hub_voices(state, hub)
+    if voices is not None and answered < minimum:
+        phrase = voices["more_needed"] or comparison_status(answered, minimum, viewed=False)[1]
+        finish["invite"] = {"href": page_url(voices["section"]), "phrase": phrase}
+    return finish
 
 
 def _results_drawn(state, result, block_id):
@@ -2328,6 +2355,8 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
             "estimate": shown_state.estimate if shown_state is not None else None,
             "complete_label": text_for(section.get("complete_label", "Mark complete"), "participant"),
             "is_part": "part_of" in section,
+            # ✨ On a part's last page, the finish of the section it is the last thing in, if it is (ticket 88).
+            "finish": _finish_of(state, section) if is_last else None,
             "is_side_card": "side_card" in section,
             "reopens": _reopens(section),
             "blocks": [
@@ -2386,6 +2415,21 @@ def _section_this_is_part_of(state, section):
     return {"title": text_for(parent_section["title"], "participant"), "href": page_url(parent_section["id"], reached)}
 
 
+def _finish_of(state, part):
+    """✨ The finish a part's end offers when the part is the last thing in its section (ticket 88): that section's id
+    and its finish button's label, and whether it is complete already, when the end offers "Back to the hub" instead.
+    None for a part that ends nothing, or whose section the participant has not reached. Pressing it is that section's
+    own completion, so its gate refuses it exactly as it refuses the section's own button."""
+    ended = section_ended_by(state.version.document, part)
+    if ended is None or state.reached(ended) is None:
+        return None
+    return {
+        "section_id": ended["id"],
+        "label": text_for(ended.get("complete_label", "Mark complete"), "participant"),
+        "done": ended["id"] in state.completed,
+    }
+
+
 def _requirement_links(state, section):
     """✨ Where each of a section's requirements met on another page is met, by its message (ticket 41b): a coach's link
     on the coach page, people's links on the invitations page. One whose page is not open yet is left out, and so is one
@@ -2433,7 +2477,8 @@ def _comparison_signpost_shown(state, block):
     answered = _answered(state.response)
     viewed = comparison_viewed(state.answers, sort)
     status, label = comparison_status(answered, minimum_observers(state.version.document), viewed)
-    return {"sort": sort, "status": status, "label": label}
+    # ✨ `unanswered`: nobody has answered yet, when its button is grey, though still pressed as ever (ticket 88).
+    return {"sort": sort, "status": status, "label": label, "unanswered": answered == 0}
 
 
 def _block_for_participant(

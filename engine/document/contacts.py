@@ -82,6 +82,9 @@ def voices_card(block, card, invited, answered, minimum, frozen=False):
     return {
         "tag": tag,
         "line": line,
+        # ✨ How many more people need a working link, as the tag says it, or None once enough have; the results page
+        # says it beside "Invite people who know you →" (ticket 88), whatever the tag says meanwhile.
+        "more_needed": more_needed(needed(block), invited),
         "invited": invited,
         "answered": answered,
         "out_of": max(rows_to_fill(block), invited, answered, 1),
@@ -95,7 +98,7 @@ def _voices_tag(card, needed, invited, answered, minimum, frozen):
         return card.label, None
     if invited < needed:
         line = f"You'll see how others see you once {minimum} people have answered." if answered < minimum else None
-        return f"{needed - invited} more needed", line
+        return more_needed(needed, invited), line
     if answered == 0:
         return "Links issued", None
     if answered < minimum:
@@ -103,6 +106,12 @@ def _voices_tag(card, needed, invited, answered, minimum, frozen):
     if answered == invited:
         return "All answers received", None
     return "Enough answers received", None
+
+
+def more_needed(needed, invited):
+    """✨ How many more of the `needed` people need a working link, in words ("2 more needed", ticket 81), or None once
+    `invited` is enough."""
+    return f"{needed - invited} more needed" if invited < needed else None
 
 
 def is_email_address(email):

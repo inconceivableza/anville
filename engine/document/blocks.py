@@ -447,3 +447,16 @@ def section_of(document, block_id):
         if any(block["id"] == block_id for block in section["blocks"]):
             return section
     return None
+
+
+def section_ended_by(document, part):
+    """✨ The section a part is the last thing in, or None: the section it is a part of, when that section's last block
+    is its signpost to the part, as Section 1 ends in the strengths evaluation (ticket 88). The part's end then offers
+    that section's finish. A part its section does not link to, or one with anything after its link, ends nothing."""
+    if "part_of" not in part:
+        return None
+    parent = next((section for section in document["content"]["sections"] if section["id"] == part["part_of"]), None)
+    last = parent["blocks"][-1] if parent and parent["blocks"] else None
+    if last is None or last["type"] != "section_signpost" or last["section"] != part["id"]:
+        return None
+    return parent

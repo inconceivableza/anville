@@ -46,6 +46,19 @@
     {% if refused %}
       <p class="gate-refused">This section was not marked complete: it is not finished yet.</p>
     {% endif %}
+  {% elif offers_way_on and section.finish %}
+    {# ✨ A part that is the last thing in its section ends in that section's finish (ticket 88), refused by its gate. #}
+    <div class="way-on">
+      {% include "engine/previous_page.html" %}
+      {% if section.finish.done %}
+        <a class="pill full" href="{% url 'hub' %}">Back to the hub</a>
+      {% else %}
+        <form method="post" action="{% url 'complete_section' section.finish.section_id %}">
+          {% csrf_token %}
+          <button type="submit" class="pill full">{{ section.finish.label }}</button>
+        </form>
+      {% endif %}
+    </div>
   {% else %}
     {% if section.is_part or section.is_side_card %}
       {# ✨ A part of a section, or a hub side card, is complete once its gate passes, so it has no completion of its #}
