@@ -68,6 +68,7 @@ from engine.document.contacts import (
 )
 from engine.document.aggregation import aggregate
 from engine.document.gates import (
+    clause_message,
     clauses_of,
     coach_answer,
     comparison_viewed,
@@ -318,10 +319,12 @@ def _block_address(document, block_id):
 
 def participant_nav(request):
     """✨ The header and sidebar of every participant page (ticket 41a), as `engine/participant_header.html` needs them:
-    the pathway's name, and unless the site switches it off, the sidebar. The sidebar's sections are the hub's own, so
+    the pathway's name, and unless the site switches it off, the sidebar. The sidebar lists what the hub lists, in its
+    order (ticket 80): its sections, the comparison signpost's row and its side cards, from the hub's own derivation, so
     their statuses and locks are the hub's; a locked section carries no address, and neither does a page within it,
-    such as the coach page. Results and the comparison are listed once there is a result, since before then they lead
-    only back to the sort. `current` is the section whose page this is, if any."""
+    such as the coach page. Below them are links, kept beside the entries as quick ways in (developer's call, 23 Oct):
+    results and the comparison once there is a result, since before then they lead only back to the sort, the
+    invitations, and the coach page. `current` is the section whose page this is, if any."""
     state = _participant(request.user)
     if state.version is None:
         return {"title": None, "sidebar": None}
@@ -345,10 +348,26 @@ def participant_nav(request):
         "title": title,
         "sidebar": {
             "outline": hub.outline(),
+            "comparison": _hub_comparison(state),
+            "side_cards": _sidebar_side_cards(state, hub),
             "current": _current_section(request, document),
             "links": [{"label": label, "href": href, "is_current": href == request.path} for label, href in links],
         },
     }
+
+
+def _sidebar_side_cards(state, hub):
+    """✨ The hub's side cards as the sidebar lists them (ticket 80), each with the status its card shows: the coach's
+    by where the coach stands, and Five trusted voices by its own tag while it is unlocked."""
+    document = state.version.document
+    coach_section = _coach_section_of(document)
+    # ✨ The coach is read only where a side card is theirs, so a page without that card never depends on the coach.
+    on_a_card = any(card.id == coach_section for card in hub.side_cards())
+    cards = _side_cards(hub, _coach_of(state.response, state.answers) if on_a_card else None, coach_section)
+    voices = _hub_voices(state, hub)
+    if voices is None:
+        return cards
+    return [card._replace(label=voices["tag"]) if card.id == voices["section"] else card for card in cards]
 
 
 def _current_section(request, document):
@@ -1754,7 +1773,7 @@ def _landing(request, invitation, action, frozen=None):
     return shown
 
 
-@require_POST
+@require_http_methods(["GET", "POST"])
 def start_observing(request, token):
     """✨ The observer's "I'm answering for Sam": the claim. Their own link is shown this once, straight back rather
     than by redirect so it never sits in the history, and kept in a cookie so they need not follow it; the
@@ -1762,8 +1781,11 @@ def start_observing(request, token):
     noticed, not hidden.
 
     Only the claim sets the cookie, never a plain visit: this is a POST that carries a CSRF token, so no other site
-    can put someone else's claim in an observer's browser by sending it to a link.
+    can put someone else's claim in an observer's browser by sending it to a link. Opening this address, by a reload
+    or a bookmark, claims nothing and goes on to the link's own page (ticket 78).
     """
+    if request.method == "GET":
+        return redirect("observe", token)
     secret = Invitation.claim(token)
     if secret is None:
         if Invitation.live(token) is not None:
@@ -2316,7 +2338,7 @@ def _requirement_links(state, section):
         if not _is_open(state, section_of(document, block["id"]), block):
             continue
         is_coach = block["type"] == "coach_checklist"
-        links[text_for(clause["message"], "participant")] = (
+        links[clause_message(clause)] = (
             _block_address(document, block["id"]) if is_coach else reverse("invitations")
         )
     return links

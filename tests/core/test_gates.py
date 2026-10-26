@@ -192,6 +192,16 @@ def test_links_issued_passes_once_enough_of_the_blocks_people_hold_a_working_lin
     assert unmet(section, answers) == ([] if passes else ["Send two links."])
 
 
+def test_a_links_issued_message_says_its_own_minimum_where_it_writes_min():
+    """✨ So the number is written once, in the clause (ticket 81)."""
+    message = {"participant": "Add at least {min} people.", "observer": "They add {min}."}
+    section = section_gated_by(clause("links_issued", block="contacts", min=3, message=message))
+
+    assert unmet(section, {}) == ["Add at least 3 people."]
+    assert checklist(section, {links_issued_key("contacts"): 3}) == [("Add at least 3 people.", True)]
+    assert unmet(section, {}, role="observer") == ["They add 3."]
+
+
 # coach_accepted
 
 

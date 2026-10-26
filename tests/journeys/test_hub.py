@@ -132,7 +132,7 @@ def test_each_hub_entry_shows_its_sections_time_estimate_even_while_locked(signe
 
     assert "About 15 minutes" in hub_entry(page, "Putting your calling into words")
     assert "Whole section:" not in hub_entry(page, "Putting your calling into words")  # ✨ plainly the section's here
-    assert "Opens once you&#x27;ve finished Before we begin." in hub_entry(page, "Putting your calling into words")
+    assert "Opens once you&#x27;ve finished <em>Before we begin</em>." in hub_entry(page, "Putting your calling into words")
     assert "time-estimate" not in hub_entry(page, "Before we begin")
 
 
@@ -258,32 +258,50 @@ def test_the_voices_card_names_nobody(trusted_voices):
         assert email not in card
 
 
+def sections_complete(client):
+    """✨ The hub header's count of sections complete."""
+    return int(re.search(r"(\d+) of \d+ sections complete", client.get("/hub/").content.decode()).group(1))
+
+
 @pytest.mark.django_db
 def test_five_trusted_voices_completes_once_three_people_have_links_and_stays_complete_whatever_becomes_of_them(
-    trusted_voices,
+    signed_in_client, load_pathway
 ):
-    """✨ Nothing to press (ticket 52), and never asking for more people once complete (ticket 51a): links that expire
-    or are revoked, or people taken off the list, never take the completion back."""
+    """✨ Nothing to press (ticket 52). Links that expire or are revoked, or people taken off the list, never take the
+    completion back or lock again what it opened; the card only asks for more people again (ticket 81)."""
     from engine.models import Invitation
-    from tests.journeys.test_contact_list import VOICES, take_off_the_list  # ✨ as above
+    from tests.journeys.test_contact_list import VOICES, take_off_the_list, with_trusted_voices  # ✨ as above
     from tests.journeys.test_invitations import invitation_action
 
-    add_people_with_links(trusted_voices, PEOPLE[0])
-    assert tag_of(voices_card(trusted_voices)) == "2 more needed"
+    document = with_trusted_voices(sort_pathway())
+    document["content"]["sections"].append(
+        {
+            "id": "after-voices",
+            "title": "After the voices",
+            "requires": [VOICES],
+            "blocks": [{"id": "after-note", "type": "rich_text", "body": "Opened by Five trusted voices."}],
+        }
+    )
+    load_pathway(document)
+    signed_in_client.post("/sections/onboarding/complete/")
+    add_people_with_links(signed_in_client, PEOPLE[0])
+    assert tag_of(voices_card(signed_in_client)) == "2 more needed"
 
-    add_people_with_links(trusted_voices, *PEOPLE[1:])
-    assert tag_of(voices_card(trusted_voices)) == "Links issued"
-    assert "Mark complete" not in trusted_voices.get("/sections/voices/").content.decode()
-    assert trusted_voices.post("/sections/voices/complete/").status_code == 404
+    add_people_with_links(signed_in_client, *PEOPLE[1:])
+    assert tag_of(voices_card(signed_in_client)) == "Links issued"
+    assert "Mark complete" not in signed_in_client.get("/sections/voices/").content.decode()
+    assert signed_in_client.post("/sections/voices/complete/").status_code == 404
+    complete = sections_complete(signed_in_client)
+    assert signed_in_client.get("/sections/after-voices/").status_code == 200
 
-    trusted_voices.post(invitation_action(trusted_voices, "Jo", "revoke"))
-    assert take_off_the_list(trusted_voices, "Priya", VOICES).status_code == 303
+    signed_in_client.post(invitation_action(signed_in_client, "Jo", "revoke"))
+    assert take_off_the_list(signed_in_client, "Priya", VOICES).status_code == 303
     # ✨ Chris's link expired: travelling 31 days would end the participant's session too.
     Invitation.objects.filter(contact__name="Chris").update(expires_at=timezone.now() - timedelta(days=1))
 
-    card = voices_card(trusted_voices)
-    assert tag_of(card) == "Complete"
-    assert "needed" not in card
+    assert tag_of(voices_card(signed_in_client)) == "3 more needed"
+    assert sections_complete(signed_in_client) == complete
+    assert signed_in_client.get("/sections/after-voices/").status_code == 200
 
 
 PEOPLE = (("Jo", "jo@example.com"), ("Priya", "priya@example.com"), ("Chris", "chris@example.com"))

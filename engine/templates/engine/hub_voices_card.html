@@ -17,13 +17,13 @@
   <div class="meter"><div class="meter-label"><span>Invited</span><span>{{ voices.invited }} / {{ voices.out_of }}</span></div><progress class="track" max="{{ voices.out_of }}" value="{{ voices.invited }}" aria-hidden="true"></progress></div>
   <div class="meter"><div class="meter-label"><span>Answered</span><span>{{ voices.answered }} / {{ voices.out_of }}</span></div><progress class="track" max="{{ voices.out_of }}" value="{{ voices.answered }}" aria-hidden="true"></progress></div>
   {# ✨ The small pill, as the coach's card has, so the card grows as little as possible (ticket 65). #}
-  {# ✨ Beside it, once there is a result, the comparison signpost's press and status, as its section's card has them: a #}
-  {# form posting to the results page's address, through the same freeze warning, with or without JavaScript (67b). #}
+  {# ✨ Beside it, once there is a result, the comparison signpost's press, as its section's card has it: a form posting #}
+  {# to the results page's address, through the same freeze warning, with or without JavaScript (67b). Without its #}
+  {# status, which the Answered meter and the tag already tell here (developer's call, 23 Oct, ticket 81). #}
   <div class="hub-side-actions">
     <a class="pill small" data-magnetic href="{% page_url section.id section.page %}">Manage <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span></a>
     {% if comparison %}
       {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="pill ghost small" press_label=comparison.title press_arrow=True %}
-      <span class="hub-side-status status-{{ comparison.status }}">{{ comparison.label }}</span>
     {% endif %}
   </div>
 </section>

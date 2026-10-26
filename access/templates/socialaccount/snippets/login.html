@@ -4,14 +4,15 @@
 {% comment %}
   ✨ Replaces allauth's list of third-party sign-ins, which sign in and sign up both include (ticket 28b). Only a
   provider given its client is listed, so with no Google pair this draws nothing. Each button posts straight to
-  the provider, rather than linking to allauth's page that asks again before leaving for it.
+  the provider, rather than linking to allauth's page that asks again before leaving for it. Both pages draw it
+  above their form (ticket 77), so "or" comes after the buttons, between them and the form.
 {% endcomment %}
 {% get_providers as socialaccount_providers %}
 {% for provider in socialaccount_providers %}
-  {% if forloop.first %}<p>or</p>{% endif %}
   <form method="post" action="{% provider_login_url provider process='login' %}">
     {% csrf_token %}
     {{ redirect_field }}
     <button class="pill ghost full" type="submit">Continue with {{ provider.name }}</button>
   </form>
+  {% if forloop.last %}<p>or</p>{% endif %}
 {% endfor %}

@@ -103,8 +103,17 @@ def unmet(section, answers, role="participant"):
     sentence ("Answer all four to continue"), and the participant should read that sentence, not four of it.
     What going on from one page needs is what that page's `checklist` marks unmet.
     """
-    messages = (text_for(clause["message"], role) for clause in unmet_clauses(section, answers))
+    messages = (clause_message(clause, role) for clause in unmet_clauses(section, answers))
     return list(dict.fromkeys(messages))
+
+
+def clause_message(clause, role="participant"):
+    """✨ A clause's authored message, with a `links_issued` clause's minimum wherever it says {min}, so the number is
+    written once, in the clause (ticket 81). Replaced as plain text, never through `format()`, so other braces stay."""
+    message = text_for(clause["message"], role)
+    if clause["type"] == "links_issued":
+        message = message.replace("{min}", str(clause["min"]))
+    return message
 
 
 def unmet_clauses(section, answers):
@@ -128,7 +137,7 @@ def checklist(section, answers, role="participant", page=None):
         clauses = [clause for clause in clauses_of(section) if clause in clauses or not clause_passes(clause, answers)]
     met = {}
     for clause in clauses:
-        message = text_for(clause["message"], role)
+        message = clause_message(clause, role)
         met[message] = met.get(message, True) and clause_passes(clause, answers)
     return list(met.items())
 

@@ -4,16 +4,17 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 3b (coherence fixes, from 23 Oct)
 
 **Spec:** Participants, access and consent (ADR 0004)
 
-- [ ] The Google sign-up form shows the address Google gave, and it cannot be changed there
-- [ ] A sign-up sent with any other address is refused on the server and makes no account, so the refusal of an address that already has a password account cannot be stepped round, no two accounts share an address, and every username is its email
-- [ ] "Continue with Google", on sign-up and on sign-in, always opens Google's account chooser, even when the browser is already signed in to a Google account
-- [ ] The refusal reads "There's already an account with this email address, made with a password. Sign in with your email and password instead.", links to sign in and to "Forgot your password?", and says nothing about connecting a Google account
+- [x] The Google sign-up form shows the address Google gave, and it cannot be changed there
+- [x] A sign-up sent with any other address is refused on the server and makes no account, so the refusal of an address that already has a password account cannot be stepped round, no two accounts share an address, and every username is its email
+- [x] "Continue with Google", on sign-up and on sign-in, always opens Google's account chooser, even when the browser is already signed in to a Google account
+- [x] The refusal reads "There's already an account with this email address, made with a password. Sign in with your email and password instead.", links to sign in and to "Forgot your password?", and says nothing about connecting a Google account
+- [x] Where Google sign-in is offered, sign-up and sign-in show "Continue with Google" first, above the email-and-password form, with "or" between them
 
 **Context**
 

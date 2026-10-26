@@ -3,24 +3,30 @@
 
 """✨ The header on every participant page, and the pathway sidebar it opens (ticket 41a).
 
-The header leads to the hub and lets the participant sign out; the sidebar lists the hub's own sections, from the same
-derivation as the hub, so its statuses and locks are the hub's by construction. Observers and the coach have no
+The header leads to the hub and lets the participant sign out; the sidebar lists what the hub lists, from the same
+derivation as the hub, so its statuses and locks are the hub's by construction (ticket 80). Observers and the coach have no
 account, so their pages have neither. Opening and closing the sidebar without JavaScript is a hand check.
 """
 
 import json
 import re
+from html.parser import HTMLParser
 
 import pytest
 
+from engine.document.blocks import COMPARISON_STATUSES
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.test_answers import answer
 from tests.journeys.test_coach_checklist import choose, the_coach_checklist
-from tests.journeys.test_coach_link import issue_coach_link, with_a_coach_and_contacts
+from tests.journeys.test_coach_link import issue_coach_link, with_a_coach_and_contacts, with_a_coach_card
+from tests.journeys.test_comparison_on_the_hub import ACTION, hub_row, with_the_card_on_the_hub
 from tests.journeys.test_contact_list import JO, PRIYA, save_contacts
+from tests.journeys.test_hub import PEOPLE, add_people_with_links, answer_through
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_invitations import issue_link
+from tests.journeys.test_observer_assessment import press_compare
 from tests.journeys.test_observer_landing import claim
+from tests.journeys.test_results import submit_sort
 
 SORT, STRENGTHS, CALLING = "strengths-sort", "strengths", "calling"
 
@@ -174,3 +180,150 @@ def test_signing_out_from_the_header_ends_the_session_and_leads_to_the_homepage(
     assert signed_out.status_code == 302
     assert signed_out.url == "/"
     assert under_way.get("/hub/").url.startswith("/accounts/login/")
+
+
+def with_the_hubs_entries():
+    """✨ 67b's pathway, with a part, the comparison signpost's row and Five trusted voices, and Walk with a coach added:
+    every kind of entry the hub lists, as Whatever You Do has them."""
+    document = with_the_card_on_the_hub()
+    document["content"]["sections"] += with_a_coach_card()["content"]["sections"][-1:]
+    return document
+
+
+@pytest.fixture
+def listing(signed_in_client, load_pathway):  # noqa: F811
+    load_pathway(with_the_hubs_entries())
+    return signed_in_client
+
+
+def started(client):
+    """✨ Onboarding complete, a coach chosen, three people with links and the sort in: the comparison's row is shown."""
+    client.post("/sections/onboarding/complete/")
+    choose(client)
+    client.links = add_people_with_links(client, *PEOPLE)
+    submit_sort(client, complete_sort())
+    return client
+
+
+class _Tree(HTMLParser):
+    """✨ The markup as nested nodes, {"tag", "class", "children"}, with the text between them as strings."""
+
+    VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr"}
+
+    def __init__(self, page):
+        super().__init__()
+        self.root = {"tag": None, "class": [], "children": []}
+        self.open = [self.root]
+        self.feed(page)
+
+    def handle_starttag(self, tag, attrs):
+        node = {"tag": tag, "class": (dict(attrs).get("class") or "").split(), "children": []}
+        self.open[-1]["children"].append(node)
+        if tag not in self.VOID:
+            self.open.append(node)
+
+    def handle_endtag(self, tag):
+        while len(self.open) > 1 and self.open.pop()["tag"] != tag:
+            pass
+
+    def handle_data(self, data):
+        self.open[-1]["children"].append(data)
+
+
+def _nodes(node, skip=lambda node: False):
+    """✨ Every node within `node`, in the page's order, leaving out any that `skip` names and all within them."""
+    for child in node["children"]:
+        if isinstance(child, dict) and not skip(child):
+            yield child
+            yield from _nodes(child, skip)
+
+
+def _words(node):
+    """✨ What a reader sees of a node, its spacing evened."""
+    parts = [child if isinstance(child, str) else _words(child) for child in node["children"]]
+    return " ".join(" ".join(parts).split())
+
+
+def _entries(page, is_entry, is_title, is_status, is_locked):
+    """✨ Each entry on the page, as (title, status, locked), its title and status its own, not those of entries in it."""
+    found = []
+    for node in _nodes(_Tree(page).root):
+        if is_entry(node):
+            own = list(_nodes(node, is_entry))
+            title = next(child for child in own if is_title(child))
+            status = next(child for child in own if is_status(child))
+            found.append((_words(title), _words(status), is_locked(node, title)))
+    return found
+
+
+def hub_entries(page):
+    """✨ The hub's rows and side cards, in its order: the list, then the cards beside it."""
+    return _entries(
+        page,
+        lambda node: (node["tag"] == "li" and "srow" in node["class"])
+        or (node["tag"] == "section" and "hub-side-card" in node["class"]),
+        lambda node: node["tag"] == "h3",
+        lambda node: node["tag"] == "span" and "tag" in node["class"],
+        lambda entry, title: "locked" in entry["class"],
+    )
+
+
+def sidebar_entries(sidebar):
+    """✨ The sidebar's entries, in its order; a locked one's title is not a link or a press."""
+    return _entries(
+        sidebar,
+        lambda node: node["tag"] == "li" and "pathway-nav-section" in node["class"],
+        lambda node: "pathway-nav-title" in node["class"],
+        lambda node: "status-chip" in node["class"],
+        lambda entry, title: title["tag"] == "span",
+    )
+
+
+@pytest.mark.django_db
+def test_the_sidebar_lists_what_the_hub_lists_in_its_order_with_its_statuses_and_locks(listing):
+    def both():
+        page = listing.get("/hub/").content.decode()
+        return hub_entries(page), sidebar_entries(sidebar_of(page))
+
+    hub, sidebar = both()
+    assert sidebar == hub
+    assert any(locked for _, _, locked in hub)
+
+    started(listing)
+    hub, sidebar = both()
+    assert sidebar == hub
+    assert "How others see you" in [title for title, _, _ in hub]
+
+    answer_through(*listing.links)
+    press_compare(listing)
+    hub, sidebar = both()
+    assert sidebar == hub
+    assert ("How others see you", COMPARISON_STATUSES["viewed"], False) in hub
+
+
+@pytest.mark.django_db
+def test_how_others_see_you_is_listed_within_section_1_after_the_assessment_as_the_hubs_press(listing):
+    listing.post("/sections/onboarding/complete/")
+    assert "How others see you" not in sidebar_of(listing.get("/hub/").content.decode())
+
+    started(listing)
+    sidebar = sidebar_of(listing.get(f"/sections/{CALLING}/").content.decode())
+    parts = re.search(r'<ol class="pathway-nav-parts">.*?</ol>', sidebar, re.S).group(0)
+
+    assert parts.index("Strengths assessment") < parts.index("How others see you")
+    assert ACTION.search(parts).group(1) == ACTION.search(hub_row(listing)).group(1)
+    assert f'href="/results/{SORT}/comparison/"' not in parts
+
+
+@pytest.mark.django_db
+def test_with_the_side_cards_and_the_row_listed_every_link_below_the_entries_stays(listing):
+    """✨ They are quick ways in beside the entries, as before (developer's call, 23 Oct)."""
+    sidebar = sidebar_of(started(listing).get(f"/sections/{CALLING}/").content.decode())
+    links = re.search(r'<ul class="pathway-nav-links">.*?</ul>', sidebar, re.S).group(0)
+
+    assert re.findall(r">([^<]+)</a>", links) == [
+        "Your results",
+        "How others experience you",
+        "Invite others to assess you",
+        "Your coach",
+    ]

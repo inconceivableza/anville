@@ -110,6 +110,8 @@
         "title": "How you've been designed",
         "number": "01",
         "requires": ["onboarding"],
+        "to_finish": "completed {section}",
+        "complete_label": "I've finished Section 1",
         "next_step": {
           "heading": "Start with your gifts.",
           "sentence": "Take the ten-minute strengths assessment and read three short passages on gifts.",
@@ -199,6 +201,7 @@
         "title": "Strengths assessment",
         "estimate": "About 10 minutes",
         "requires": ["onboarding"],
+        "to_finish": "done the {title}",
         "part_of": "designed",
         "blocks": [
           {
@@ -238,6 +241,7 @@
         "number": "02",
         "estimate": "About 30–40 minutes",
         "requires": ["strengths", "walk-with-a-coach", "trusted-voices"],
+        "to_finish": "completed {section}",
         "complete_label": "I've finished Section 2",
         "blocks": [
           {
@@ -263,8 +267,9 @@
               "message": "Opens once your coach has accepted. If they decline, choose someone else."
             }
           ],
-          "with_sections": "Opens once you've finished {sections} and your coach has accepted."
+          "with_sections": "Opens once you've {sections}, and your coach has accepted."
         },
+        "to_finish": "completed {section}",
         "complete_label": "I've finished Section 3",
         "blocks": [
           {
@@ -282,6 +287,7 @@
         "number": "04",
         "estimate": "About 30–40 minutes",
         "requires": ["calling"],
+        "to_finish": "completed {section}",
         "complete_label": "I've finished Section 4",
         "blocks": [
           {
@@ -381,6 +387,7 @@
         "id": "walk-with-a-coach",
         "title": "Walk with a coach",
         "requires": ["onboarding"],
+        "to_finish": "sent a coach their link in {title}",
         "side_card": {
           "sentence": "When you're ready, ask someone to walk this with you."
         },
@@ -474,6 +481,7 @@
         "id": "trusted-voices",
         "title": "Five trusted voices",
         "requires": ["onboarding"],
+        "to_finish": "added at least {min} people in {title}",
         "side_card": {
           "sentence": "Invite people who know you well. Their answers sit beside your own in Section 1, combined so you never see whose is whose."
         },
@@ -494,7 +502,7 @@
         ],
         "gate": {
           "clauses": [
-            { "type": "links_issued", "block": "contacts", "min": 3, "message": "Add at least 3 people." }
+            { "type": "links_issued", "block": "contacts", "min": 3, "message": "Add at least {min} people." }
           ]
         }
       }

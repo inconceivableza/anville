@@ -17,6 +17,6 @@ A participant may sign in with their Google account, alongside email and passwor
 ## Consequences
 
 - The privacy notice, when it is written, says Google handles sign-in for participants who choose it (spec, Legalities are parked, not forgotten).
-- A participant signing up through Google still confirms they are 18 or over, gives the enrolment code where the deployment asks for one, and passes the consent step (ADR 0004).
+- A participant signing up through Google still confirms they are 18 or over, gives the enrolment code where the deployment asks for one, and passes the consent step (ADR 0004). Since ADR 0021 the account is made at once and the age and consent are asked on the wizard's first page.
 - Until the app is published in the Google project, only listed test users can sign in with Google. Publishing needs a privacy notice, terms and a verified domain, so it waits for those.
 - The Google project is held by one operator for now. Before real use it should belong to an account the church holds, with a second owner.

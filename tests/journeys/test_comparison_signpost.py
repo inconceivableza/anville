@@ -25,7 +25,9 @@ from tests.journeys.test_observer_assessment import (
 from tests.journeys.test_results import SORT, submit_sort
 
 CARD = "how-others-see-you"
-WAITING, READY, VIEWED = (COMPARISON_STATUSES[state] for state in ("waiting", "ready", "viewed"))
+READY, VIEWED = (COMPARISON_STATUSES[state] for state in ("ready", "viewed"))
+# ✨ The waiting status by how many have answered, of three (ticket 81's wording).
+ANSWERED = {1: "1 of 3 answered", 2: "2 of 3 answered"}
 
 
 def with_the_card():
@@ -69,7 +71,7 @@ def test_a_press_below_the_minimum_freezes_nothing_and_one_with_it_in_confirmed_
 
     assert (below.status_code, below["Location"]) == (303, f"/results/{SORT}/comparison/")
     assert not is_frozen()
-    assert WAITING.format(answered=2, minimum=3) in status(participant)
+    assert ANSWERED[2] in status(participant)
 
     answered_by(participant, "Chris")
     assert press_compare(participant, confirmed=False).status_code == 200
@@ -122,18 +124,21 @@ def test_the_cards_press_is_the_results_pages_and_reaches_the_same_freeze_warnin
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("answered", [2, 3, "viewed"])
-def test_the_status_reads_waiting_below_the_minimum_ready_at_it_and_viewed_once_pressed(participant, answered):
+@pytest.mark.parametrize("answered", [1, 2, 3, "viewed"])
+def test_the_status_says_how_many_of_the_minimum_have_answered_below_it_ready_at_it_and_viewed_once_pressed(
+    participant, answered
+):
+    """✨ Below the minimum, how many of it have answered, in words that never read as done (ticket 81)."""
     submit_sort(participant, complete_sort())
-    answered_by(participant, *["Jo", "Priya", "Chris"][: 2 if answered == 2 else 3])
+    answered_by(participant, *["Jo", "Priya", "Chris"][: 3 if answered == "viewed" else answered])
     if answered == "viewed":
         press_compare(participant)
 
     shown = status(participant)
 
-    expected = {2: WAITING.format(answered=2, minimum=3), 3: READY, "viewed": VIEWED}[answered]
-    assert expected in shown
-    assert [state for state in (WAITING.format(answered=2, minimum=3), READY, VIEWED) if state in shown] == [expected]
+    statuses = (ANSWERED[1], ANSWERED[2], READY, VIEWED)
+    expected = {1: ANSWERED[1], 2: ANSWERED[2], 3: READY, "viewed": VIEWED}[answered]
+    assert [state for state in statuses if state in shown] == [expected]
 
 
 @pytest.mark.django_db
