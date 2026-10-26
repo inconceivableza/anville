@@ -10,8 +10,8 @@
 
 **Spec:** Participants, access and consent (ADR 0004)
 
-- [ ] "Continue with Google" for someone without an account makes it at once, with no form, and lands on the wizard's first page
-- [ ] The first name there is Google's given name, else its full name, else the part of the email before the @
-- [ ] Where the deployment requires an enrolment code, a Google sign-up shows a form asking only for the code
-- [ ] An address that already has a password account is refused as ticket 77 settled, with the same wording and links
-- [ ] A participant who already signed up with Google signs straight in, as now
+- [x] "Continue with Google" for someone without an account makes it at once, with no form, and lands on the wizard's first page
+- [x] The first name there is Google's given name, else its full name, else the part of the email before the @
+- [x] Where the deployment requires an enrolment code, a Google sign-up shows a form asking only for the code
+- [x] An address that already has a password account is refused as ticket 77 settled, with the same wording and links
+- [x] A participant who already signed up with Google signs straight in, as now
