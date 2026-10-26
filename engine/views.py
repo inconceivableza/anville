@@ -2352,7 +2352,7 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
             "id": section["id"],
             "title": text_for(section["title"], "participant"),
             "estimate": shown_state.estimate if shown_state is not None else None,
-            "complete_label": text_for(section.get("complete_label", "Mark complete"), "participant"),
+            "complete_label": _complete_label(section),
             "is_part": "part_of" in section,
             # ✨ On a part's last page, the finish of the section it is the last thing in, if it is (ticket 88).
             "finish": _finish_of(state, section) if is_last else None,
@@ -2424,9 +2424,14 @@ def _finish_of(state, part):
         return None
     return {
         "section_id": ended["id"],
-        "label": text_for(ended.get("complete_label", "Mark complete"), "participant"),
+        "label": _complete_label(ended),
         "done": ended["id"] in state.completed,
     }
+
+
+def _complete_label(section):
+    """✨ The wording of the button that completes the section: its own, or else "Mark complete"."""
+    return text_for(section.get("complete_label", "Mark complete"), "participant")
 
 
 def _requirement_links(state, section):
