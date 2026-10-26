@@ -4,7 +4,7 @@
 
 **Blocked by:** 83 (Messages only after a press, and Before we begin's "Log out"), C1
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 3c (ends Fri 30 Oct)
 
