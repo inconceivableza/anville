@@ -8,7 +8,7 @@ Runs only on a document that has already passed the schema, so it relies on the 
 
 import re
 
-from engine.document.blocks import BLOCK_TYPES, block_types_by_id
+from engine.document.blocks import BLOCK_TYPES, PASSAGE_BLOCK_TYPES, block_types_by_id
 from engine.document.gates import CLAUSE_ANSWER_KINDS, CLAUSE_BLOCK_TYPES, clauses_of, people_minimum
 from engine.document.problem import Problem
 from engine.document.tie_break import PLACEHOLDERS
@@ -489,7 +489,7 @@ def _undeclared_translations(document):
         named.append(("/translation", document["translation"]))
     for s, section in enumerate(document["content"]["sections"]):
         for b, block in enumerate(section["blocks"]):
-            for p, passage in enumerate(block.get("passages", []) if block["type"] == "scripture_reading" else []):
+            for p, passage in enumerate(block.get("passages", []) if block["type"] in PASSAGE_BLOCK_TYPES else []):
                 path = f"/content/sections/{s}/blocks/{b}/passages/{p}"
                 if "translation" in passage:
                     named.append((f"{path}/translation", passage["translation"]))

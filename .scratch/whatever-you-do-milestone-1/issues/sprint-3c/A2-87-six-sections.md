@@ -4,7 +4,7 @@
 
 **Blocked by:** 85 (The new words), A1A; 86 (Lock notes, the minimum and section names, each worked out in one place), A1B
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 3c (ends Fri 30 Oct)
 
@@ -19,3 +19,7 @@
 **Context**
 
 - The PDFs themselves still say "Section 2" to "Section 4" until the content owner's revised versions arrive
+
+## Comments
+
+- Criterion 2: all but "more room above its green button", which needs the stylesheet in `frontend/`; the activity's status pill (89) and the "Complete the…" prompts shown only after a refused press (83) are those tickets' criteria

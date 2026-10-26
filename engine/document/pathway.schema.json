@@ -509,10 +509,11 @@
           "const": true
         },
         "next_step": {
-          "description": "What the hub's next step says while this section is the next step, in place of the section's title and time estimate, such as 'Start with your gifts.' and a sentence on what it asks.",
+          "description": "What the hub's next step says while this section is the next step, in place of the section's title and time estimate, such as 'Start with your gifts.' and a sentence on what it asks. A section may carry only 'waiting', its next step then saying its title and estimate.",
           "type": "object",
           "additionalProperties": false,
-          "required": ["heading", "sentence"],
+          "dependentRequired": { "heading": ["sentence"], "sentence": ["heading"] },
+          "minProperties": 1,
           "properties": {
             "heading": { "$ref": "#/$defs/text" },
             "sentence": { "$ref": "#/$defs/text" },
@@ -539,11 +540,12 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "comparison_signpost", "section_signpost", "download", "page_break"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "scripture_passages", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "comparison_signpost", "section_signpost", "download", "page_break"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
         { "if": { "properties": { "type": { "const": "scripture_reading" } } }, "then": { "$ref": "#/$defs/scripture_reading" } },
+        { "if": { "properties": { "type": { "const": "scripture_passages" } } }, "then": { "$ref": "#/$defs/scripture_passages" } },
         { "if": { "properties": { "type": { "const": "long_text" } } }, "then": { "$ref": "#/$defs/long_text" } },
         { "if": { "properties": { "type": { "const": "agreement_scale" } } }, "then": { "$ref": "#/$defs/agreement_scale" } },
         { "if": { "properties": { "type": { "const": "single_select" } } }, "then": { "$ref": "#/$defs/single_select" } },
@@ -631,6 +633,20 @@
           "description": "The wording of the confirm control. Defaults to \"I have read these\".",
           "$ref": "#/$defs/text"
         }
+      }
+    },
+    "scripture_passages": {
+      "description": "Passages to read, as a scripture reading has them, with nothing to confirm: what follows them is open at once.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "passages"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "scripture_passages" },
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "heading": { "$ref": "#/$defs/text" },
+        "passages": { "$ref": "#/$defs/scripture_reading/properties/passages" },
+        "note": { "$ref": "#/$defs/scripture_reading/properties/note" }
       }
     },
     "agreement_scale": {

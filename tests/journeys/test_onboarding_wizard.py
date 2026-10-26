@@ -198,8 +198,9 @@ def test_once_complete_it_is_gone_from_the_hub_the_sidebar_and_the_count(partici
 
     assert "/sections/onboarding/" not in hub
     assert "Before we begin" not in sidebar
-    # ✨ Nothing else is complete yet, and Before we begin is no longer one of the sections counted.
-    assert f"0 of {len(sections) - 1} sections complete" in hub
+    # ✨ Nothing else is complete yet, and Before we begin is not one of the sections counted, which are the numbered
+    # ones alone (ticket 87).
+    assert f"0 of {sum('number' in section for section in sections)} sections complete" in hub
 
 
 def without_once_only(document):

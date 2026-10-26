@@ -96,10 +96,11 @@ def with_coach_answer(state, answer):
 
 class NextStepWording(NamedTuple):
     """✨ What the hub's next step says for a section that carries its own wording for it (ticket 49b), and `waiting`, what
-    it says while the section's only open work waits on others' answers (ticket 68), with its placeholders, or None."""
+    it says while the section's only open work waits on others' answers (ticket 68), with its placeholders, or None. A
+    section may carry `waiting` alone, its heading and sentence then None (ticket 87)."""
 
-    heading: str
-    sentence: str
+    heading: str | None
+    sentence: str | None
     waiting: str | None = None
 
 
@@ -190,8 +191,8 @@ def _coach_wait_wording(answer):
 
 
 class Hub(NamedTuple):
-    """✨ A participant's whole hub: their track's sections, the one to do next, how many of the sections are
-    complete, out of `total`, and the first section waiting on the coach, as a `CoachWait`, if any. With no next step,
+    """✨ A participant's whole hub: their track's sections, the one to do next, how many of the sections it
+    counts (`counted_sections`) are complete, out of `total`, and the first section waiting on the coach, as a `CoachWait`, if any. With no next step,
     `waiting_on_answers` is the first section passed over because its only open work waits on the comparison, and so on
     other people's answers (ticket 68), or None."""
 
@@ -504,9 +505,18 @@ def is_once_only_and_complete(section, completed):
 
 
 def listed_sections(sections, completed):
-    """✨ The sections the hub lists and counts, given those complete as `complete_sections` works them out: all but a
-    once-only section once complete. Progress, on the hub and as an organisation's admins see it, counts these alone."""
+    """✨ The sections the hub lists, given those complete as `complete_sections` works them out: all but a once-only
+    section once complete. Progress counts these alone, or some of them (`counted_sections`)."""
     return [section for section in sections if not is_once_only_and_complete(section, completed)]
+
+
+def counted_sections(sections, completed):
+    """✨ The sections progress counts, on the hub and as an organisation's admins see it: of those listed, only the
+    numbered ones in a pathway that numbers any, leaving out its parts, its side cards and its wizard (sprint 3c, ticket
+    87); every one listed in a pathway that numbers none, as the faithful port."""
+    listed = listed_sections(sections, completed)
+    numbered = [section for section in listed if section.get("number")]
+    return numbered or listed
 
 
 def hub_for(sections, answers, completed, role="participant", moved_past=None):
@@ -536,11 +546,12 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None):
         ),
         None,
     )
+    counted = {section["id"] for section in counted_sections(sections, completed)}
     return Hub(
         sections=tuple(states),
         next_step=next((state for state in states if state.is_next), None),
-        complete=sum(1 for state in states if state.status == COMPLETE),
-        total=len(states),
+        complete=sum(1 for state in states if state.id in counted and state.status == COMPLETE),
+        total=len(counted),
         coach_wait=coach_wait,
         waiting_on_answers=None if next_step is not None else waiting_on_answers,
     )
@@ -581,12 +592,12 @@ def _state(section, answers, completed, role, moved_past, sections):
 
 
 def _next_step_wording(section, role):
-    """✨ The heading and sentence the section carries for when it is the next step, or None."""
+    """✨ The heading and sentence the section carries for when it is the next step, each None for a section carrying
+    only its `waiting` sentence (ticket 87), or None."""
     if "next_step" not in section:
         return None
-    wording = section["next_step"]
-    waiting = text_for(wording["waiting"], role) if "waiting" in wording else None
-    return NextStepWording(text_for(wording["heading"], role), text_for(wording["sentence"], role), waiting)
+    wording = {field: text_for(text, role) for field, text in section["next_step"].items()}
+    return NextStepWording(wording.get("heading"), wording.get("sentence"), wording.get("waiting"))
 
 
 def _estimate(section, status, role):
@@ -601,11 +612,13 @@ def _status(section, answers, completed, sections, moved_past):
         return COMPLETE  # ✨ completing is the participant's own act, so it outlasts any later change
     if is_locked(section, completed, answers, sections, moved_past):
         return LOCKED
-    if any(has_content(answers.get(block["id"])) for block in _interactive_blocks(section)):
+    parts = [other for other in sections if other.get("part_of") == section["id"]]
+    if any(has_content(answers.get(block["id"])) for other in (section, *parts) for block in _interactive_blocks(other)):
         return IN_PROGRESS
     return NOT_STARTED
 
 
 def _interactive_blocks(section):
-    """✨ The blocks the participant does something with. Progress counts these and no others."""
+    """✨ The blocks the participant does something with. Progress counts these and no others: a section's own, and its
+    parts', so a section whose own blocks take no answer is in progress once its part is begun (ticket 87)."""
     return [block for block in section["blocks"] if BLOCK_TYPES[block["type"]].is_interactive]

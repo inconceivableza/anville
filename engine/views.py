@@ -36,6 +36,7 @@ from engine.document import (
 )
 from engine.document.blocks import (
     CONTACTS,
+    PASSAGE_BLOCK_TYPES,
     blocks_of,
     coach_brief,
     comparison_status,
@@ -207,17 +208,19 @@ def hub(request):
 def _hub_comparison(state):
     """✨ The document's comparison signpost as the hub shows it, in a row and beside Manage on the Five trusted voices
     card (ticket 67b): its status and press as its section's card has them (`_comparison_signpost_shown`), with its
-    title, the section it is in and the part of that section holding its sort, after which its row is listed. None
-    before there is a result, and for a pathway without one."""
+    title, the section it is in and the part of that section holding its sort, after which its row is listed, or None
+    where its sort is not in a part of that section, as in *Whatever You Do*'s Section 2, which lists it first (ticket
+    87). None before there is a result, and for a pathway without one."""
     document = state.version.document
     for block in blocks_of(document):
         shown = _comparison_signpost_shown(state, block)
         if shown is not None:
+            section, holding = section_of(document, block["id"]), section_of(document, block["sort"])
             return {
                 **shown,
                 "title": authored_text(block, "participant")["title"],
-                "section": section_of(document, block["id"])["id"],
-                "after": section_of(document, block["sort"])["id"],
+                "section": section["id"],
+                "after": holding["id"] if holding.get("part_of") == section["id"] else None,
             }
     return None
 
@@ -2403,7 +2406,7 @@ def _block_for_participant(
     else:
         demo = None
     text = authored_text(block, "participant")
-    if block["type"] == "scripture_reading":
+    if block["type"] in PASSAGE_BLOCK_TYPES:
         for passage, shown in zip(block["passages"], text["passages"]):
             shown["translation"] = translation_shown(document, passage)
     is_checklist = block["type"] == "coach_checklist"

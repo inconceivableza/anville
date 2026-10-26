@@ -107,15 +107,14 @@
       },
       {
         "id": "designed",
-        "title": "How you've been designed",
+        "title": "How you've been designed – your strengths",
         "number": "01",
         "requires": ["onboarding"],
         "to_finish": "completed {section}",
         "complete_label": "I've finished Section 1",
         "next_step": {
           "heading": "Start with your gifts.",
-          "sentence": "Take the ten-minute strengths evaluation and read three short passages on gifts.",
-          "waiting": "{section}'s reflection opens once at least {minimum} of the people you invited have answered and you've seen how others see you."
+          "sentence": "Take the ten-minute strengths evaluation and read three short passages on gifts."
         },
         "blocks": [
           {
@@ -127,8 +126,8 @@
           },
           {
             "id": "gifts-reading",
-            "type": "scripture_reading",
-            "heading": "Read these passages before continuing",
+            "type": "scripture_passages",
+            "heading": "Scripture on gifts",
             "passages": [
               {
                 "reference": "Romans 12:6–8",
@@ -143,41 +142,23 @@
                 "text": "Show hospitality to one another without grumbling. As each has received a gift, use it to serve one another, as good stewards of God's varied grace: whoever speaks, as one who speaks oracles of God; whoever serves, as one who serves by the strength that God supplies—in order that in everything God may be glorified through Jesus Christ. To him belong glory and dominion for ever and ever. Amen."
               }
             ],
-            "note": "As you read, reflect: what gifts do you see in yourself? Which do others affirm in you? Which are notably absent – and what might that tell you about how God has designed you?",
-            "confirm_label": "I've read these passages and I'm ready to continue"
+            "note": "As you read, reflect: what gifts do you see in yourself? Which do others affirm in you? Which are notably absent – and what might that tell you about how God has designed you?"
           },
           {
             "id": "gifts-activity",
             "type": "rich_text",
             "label": "Your activity",
-            "body": "This section uses the strengths evaluation – a tool where you sort and rate your strengths across 36 areas. You can also invite people you trust to do the same for you."
+            "body": "This section uses the strengths evaluation, where you sort and rate your strengths across 36 areas. You can also invite people you trust to do the same for you."
           },
           {
             "id": "strengths-link",
             "type": "section_signpost",
             "section": "strengths",
             "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 3 trusted people to evaluate you too.",
-            "button_label": "Open strengths evaluation →",
+            "button_label": "Open the strengths evaluation →",
             "finished": {
               "body": "You've completed the strengths evaluation. You can review your results any time.",
               "button_label": "View my results →"
-            },
-            "holds_what_follows": true
-          },
-          {
-            "id": "how-others-see-you",
-            "type": "comparison_signpost",
-            "sort": "strengths-sort",
-            "title": "How others see you"
-          },
-          {
-            "id": "gifts-summary",
-            "type": "long_text",
-            "prompt": "Having completed the strengths evaluation and read the passages above, summarise: what gifts and talents has God given you? And what has He not given you?",
-            "placeholder": "Draw on the scripture, your strengths evaluation results, and what others have told you...",
-            "after_comparison": {
-              "sort": "strengths-sort",
-              "message": "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer."
             }
           }
         ],
@@ -187,11 +168,6 @@
               "type": "has_answer",
               "block": "strengths-sort",
               "message": "Complete the strengths evaluation to continue."
-            },
-            {
-              "type": "has_answer",
-              "block": "gifts-summary",
-              "message": "Complete the gifts reflections to continue."
             }
           ]
         }
@@ -201,7 +177,6 @@
         "title": "Strengths evaluation",
         "estimate": "About 10 minutes",
         "requires": ["onboarding"],
-        "to_finish": "done the {title}",
         "part_of": "designed",
         "blocks": [
           {
@@ -236,29 +211,67 @@
         }
       },
       {
-        "id": "shape",
-        "title": "The shape of your life",
+        "id": "others",
+        "title": "How others see you",
         "number": "02",
-        "estimate": "About 30–40 minutes",
-        "requires": ["strengths", "walk-with-a-coach", "trusted-voices"],
+        "requires": ["designed"],
         "to_finish": "completed {section}",
         "complete_label": "I've finished Section 2",
+        "next_step": {
+          "waiting": "{section}'s reflection opens once at least {minimum} of the people you invited have answered and you've seen how others see you."
+        },
+        "blocks": [
+          {
+            "id": "how-others-see-you",
+            "type": "comparison_signpost",
+            "sort": "strengths-sort",
+            "title": "How others see you"
+          },
+          {
+            "id": "gifts-summary",
+            "type": "long_text",
+            "prompt": "Having completed the strengths evaluation, read the passages on gifts and seen how others see you, summarise: what gifts and talents has God given you? And what has He not given you?",
+            "placeholder": "Draw on the scripture, your strengths evaluation results, and what others have told you...",
+            "after_comparison": {
+              "sort": "strengths-sort",
+              "message": "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer."
+            }
+          }
+        ],
+        "gate": {
+          "clauses": [
+            {
+              "type": "has_answer",
+              "block": "gifts-summary",
+              "message": "Complete the gifts reflections to continue."
+            }
+          ]
+        }
+      },
+      {
+        "id": "shape",
+        "title": "The shape of your life",
+        "number": "03",
+        "estimate": "About 30–40 minutes",
+        "requires": ["designed", "walk-with-a-coach", "trusted-voices"],
+        "to_finish": "completed {section}",
+        "complete_label": "I've finished Section 3",
         "blocks": [
           {
             "id": "shape-pdf",
             "type": "download",
             "file": "whatever-you-do-workbook-section-2.pdf",
-            "body": "Section two, to work through on paper: mapping your story, and what has happened in each season of it.\n\nSections two to four make up the middle of the course, which works better on paper, so each is a booklet of its own. When you've finished this one, come back here to say so.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their evaluations of you – don’t let that stop you making progress on your journey.",
-            "button_label": "Download Section 2 (PDF)"
+            "body": "Section three, to work through on paper: mapping your story, and what has happened in each season of it.\n\nSections three to five make up the middle of the course, which works better on paper, so each is a booklet of its own. When you've finished this one, come back here to say so.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their evaluations of you – don’t let that stop you making progress on your journey.",
+            "button_label": "Download Section 3 (PDF)"
           }
         ]
       },
       {
         "id": "calling",
         "title": "Putting your calling into words",
-        "number": "03",
+        "number": "04",
         "estimate": "About 30–40 minutes",
-        "requires": ["designed", "shape"],
+        "requires": ["designed", "others", "shape"],
         "opens_when": {
           "clauses": [
             {
@@ -270,39 +283,39 @@
           "with_sections": "Opens once you've {sections}, and your coach has accepted."
         },
         "to_finish": "completed {section}",
-        "complete_label": "I've finished Section 3",
+        "complete_label": "I've finished Section 4",
         "blocks": [
           {
             "id": "calling-pdf",
             "type": "download",
             "file": "whatever-you-do-workbook-section-3.pdf",
-            "body": "Section three, to work through on paper: narrowing your calling to a sentence, then opening it back up.\n\nWhen you've finished it, come back here to say so, and Section 4 opens.",
-            "button_label": "Download Section 3 (PDF)"
+            "body": "Section four, to work through on paper: narrowing your calling to a sentence, then opening it back up.\n\nWhen you've finished it, come back here to say so, and Section 5 opens.",
+            "button_label": "Download Section 4 (PDF)"
           }
         ]
       },
       {
         "id": "growth",
         "title": "Growth plan",
-        "number": "04",
+        "number": "05",
         "estimate": "About 30–40 minutes",
         "requires": ["calling"],
         "to_finish": "completed {section}",
-        "complete_label": "I've finished Section 4",
+        "complete_label": "I've finished Section 5",
         "blocks": [
           {
             "id": "growth-pdf",
             "type": "download",
             "file": "whatever-you-do-workbook-section-4.pdf",
-            "body": "Section four, to work through on paper: turning all of it into something you will actually do.\n\nWhen you've finished it, come back here to say so, and Section 5, a letter to your future self, opens.",
-            "button_label": "Download Section 4 (PDF)"
+            "body": "Section five, to work through on paper: turning all of it into something you will actually do.\n\nWhen you've finished it, come back here to say so, and Section 6, a letter to your future self, opens.",
+            "button_label": "Download Section 5 (PDF)"
           }
         ]
       },
       {
         "id": "letter",
         "title": "A letter to your future self",
-        "number": "05",
+        "number": "06",
         "estimate": "About 15 minutes",
         "requires": ["growth"],
         "blocks": [
@@ -483,7 +496,7 @@
         "requires": ["onboarding"],
         "to_finish": "added at least {min} people in {title}",
         "side_card": {
-          "sentence": "Invite people who know you well. Their answers sit beside your own in Section 1, combined so you never see whose is whose."
+          "sentence": "Invite people who know you well. Their answers sit beside your own strengths evaluation, combined so you never see whose is whose."
         },
         "blocks": [
           {

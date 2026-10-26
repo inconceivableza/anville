@@ -6,14 +6,7 @@
   cannot reach the activity by reading the markup. Once confirmed, the passages stay, to be read again.
 {% endcomment %}
 <div id="block-{{ block.id }}" class="scripture">
-  {% if block.text.heading %}<h3 class="scripture-heading">{{ block.text.heading }}</h3>{% endif %}
-  {% for passage in block.text.passages %}
-    <blockquote class="scripture-passage">
-      {{ passage.text|linebreaks }}
-      <cite class="scripture-ref">{{ passage.reference }}{% if passage.translation %} ({{ passage.translation }}){% endif %}</cite>
-    </blockquote>
-  {% endfor %}
-  {% if block.text.note %}<p class="scripture-note">{{ block.text.note }}</p>{% endif %}
+  {% include "engine/passages.html" %}
   {% if block.answer %}
     {# ✨ Where confirming lands without JavaScript, so the activity it opened is just beneath (ticket 41e). #}
     <p id="{{ block.landing }}" class="scripture-confirmed">{{ block.text.confirm_label|default:"I have read these" }} ✓</p>

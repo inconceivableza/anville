@@ -22,6 +22,7 @@ from tests.journeys.test_whatever_you_do import (
     reflection_stored,
     save_the_reflection,
     section_1,
+    section_2,
     the_pathway,
     to_the_reflection,
 )
@@ -88,16 +89,15 @@ def test_a_version_stored_under_the_old_names_reads_with_the_new_ones_and_its_ro
 def test_a_participant_on_a_version_stored_under_the_old_names_finds_both_signposts_as_before(participant):
     client = to_the_reflection(participant)
 
-    page = section_1(client)
-    assert "View my results →" in page
-    assert "0 of 3 answered" in page
+    assert "View my results →" in section_1(client)
+    assert "0 of 3 answered" in section_2(client)  # ✨ the comparison signpost is Section 2's (ticket 87)
     assert VIEWED not in client.get("/hub/").content.decode()
     assert save_the_reflection(client).status_code == 403
 
     people_answer(client)
     assert press_compare(client).status_code == 303
 
-    assert VIEWED in section_1(client)
+    assert VIEWED in section_2(client)
     assert VIEWED in client.get("/hub/").content.decode()
     assert save_the_reflection(client).status_code < 400
     assert reflection_stored()

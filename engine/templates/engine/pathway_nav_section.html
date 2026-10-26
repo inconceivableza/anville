@@ -5,7 +5,8 @@
   ✨ One section's entry in the sidebar, with any `parts` of it listed within it (ticket 41b). A part is given no parts.
   The highlight of the section you are in, or of the next step, is on the entry's own row, not on the parts within it.
   The status sits above the title, in every entry, so the title has the panel's width; the comparison signpost's entry
-  follows the part holding its sort, as on the hub (ticket 80).
+  follows the part holding its sort, as on the hub (ticket 80), or comes first where no part of its section holds the
+  sort (ticket 87).
 {% endcomment %}
 <li class="pathway-nav-section{% if section.is_next %} is-next{% endif %}{% if section.id == current %} is-current{% endif %}">
   <div class="pathway-nav-row">
@@ -16,8 +17,9 @@
       <a class="pathway-nav-title" href="{% page_url section.id section.page %}"{% if section.id == current %} aria-current="page"{% endif %}>{{ section.title }}</a>
     {% endif %}
   </div>
-  {% if parts %}
+  {% if parts or comparison.section == section.id %}
     <ol class="pathway-nav-parts">
+      {% if comparison.section == section.id and not comparison.after %}{% include "engine/pathway_nav_comparison.html" %}{% endif %}
       {% for part in parts %}
         {% include "engine/pathway_nav_section.html" with section=part parts=None %}
         {% if comparison.section == section.id and comparison.after == part.id %}

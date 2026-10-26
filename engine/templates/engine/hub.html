@@ -27,7 +27,7 @@
               <section class="panel next">
                 {% if photo %}<img src="{{ photo }}" alt="">{% endif %}
                 <p class="label">Your next step</p>
-                {% if step.next_step %}
+                {% if step.next_step.heading %}
                   <h2>{{ step.next_step.heading }}</h2>
                   <p>{{ step.next_step.sentence }}</p>
                 {% else %}

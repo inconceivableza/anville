@@ -1,0 +1,14 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ A block's authored heading, passages and note, as a scripture reading and passages with nothing to confirm both
+  show them (ticket 87).
+{% endcomment %}
+{% if block.text.heading %}<h3 class="scripture-heading">{{ block.text.heading }}</h3>{% endif %}
+{% for passage in block.text.passages %}
+  <blockquote class="scripture-passage">
+    {{ passage.text|linebreaks }}
+    <cite class="scripture-ref">{{ passage.reference }}{% if passage.translation %} ({{ passage.translation }}){% endif %}</cite>
+  </blockquote>
+{% endfor %}
+{% if block.text.note %}<p class="scripture-note">{{ block.text.note }}</p>{% endif %}

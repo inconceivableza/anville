@@ -253,6 +253,8 @@ BLOCK_TYPES = {
             captures=CONFIRMATION,
             opens_what_follows=True,
         ),
+        # ✨ Passages to read with nothing to confirm, so nothing beneath them waits on them (sprint 3c, ticket 87).
+        BlockType("scripture_passages", text_fields=("heading", "note"), text_lists=(("passages", ("reference", "text")),)),
         BlockType("long_text", text_fields=("prompt", "placeholder"), captures=TEXT),
         BlockType("agreement_scale", text_fields=("prompt", "min_label", "max_label"), captures=SCALE_POINT),
         BlockType(
@@ -293,6 +295,9 @@ BLOCK_TYPES = {
         BlockType("page_break"),
     ]
 }
+
+# ✨ The block types that quote passages of scripture, each passage from a translation the pathway declares.
+PASSAGE_BLOCK_TYPES = ("scripture_reading", "scripture_passages")
 
 # ✨ Block types renamed since a stored pathway version used them, old name to new (ticket 75). A stored version keeps
 # its old names, since it is never edited, and is read under the new ones (`with_current_names`); a document being

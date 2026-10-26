@@ -130,6 +130,21 @@ def test_progress_counts_the_sections_complete_not_the_answers():
     assert (hub.complete, hub.total) == (1, 3)
 
 
+def test_a_pathway_that_numbers_its_sections_counts_only_those_it_numbers():
+    """✨ Leaving out a part and a side card, as *Whatever You Do*'s hub does since sprint 3c; a pathway numbering none,
+    as the faithful port, counts every section it lists, as above."""
+    numbered = [
+        {**section("first"), "number": "01"},
+        {**STRENGTHS, "part_of": "first"},
+        {**section("second", requires=["first"]), "number": "02"},
+        side_card("card"),
+    ]
+
+    hub = hub_for(numbered, {"sort": "Sorted"}, completed=["first"])
+
+    assert (hub.complete, hub.total) == (1, 2)
+
+
 @pytest.mark.parametrize("answer", ["", "   ", None])
 def test_a_block_left_blank_does_not_start_its_section(answer):
     assert statuses([section("first", blocks=[long_text("a")])], {"a": answer}) == [NOT_STARTED]
@@ -259,6 +274,24 @@ def test_a_part_is_locked_until_the_participant_reaches_its_sections_signpost_to
 
     assert statuses([gifts, part])[1] == LOCKED
     assert statuses([gifts, part], answers={"read": True})[1] == NOT_STARTED
+
+
+def test_passages_with_nothing_to_confirm_open_the_part_beneath_them_with_the_section():
+    """✨ *Whatever You Do*'s Section 1 since sprint 3c: its passages, then the strengths evaluation, open at once."""
+    part = {**STRENGTHS, "part_of": "gifts"}
+    passages = {**reading("read"), "type": "scripture_passages"}
+    gifts = section("gifts", blocks=[passages, signpost("to-strengths", "strengths")])
+
+    assert statuses([gifts, part]) == [NOT_STARTED, NOT_STARTED]
+
+
+def test_a_section_is_in_progress_once_a_part_of_it_is_begun():
+    """✨ A section whose own blocks take no answer, as *Whatever You Do*'s Section 1 since sprint 3c, is in progress
+    while the participant works on its part, and stays so once the part is complete, until the section is finished."""
+    part = {**STRENGTHS, "part_of": "gifts"}
+    gifts = section("gifts", blocks=[signpost("to-strengths", "strengths")])
+
+    assert statuses([gifts, part], answers={"sort": "Sorted"}) == [IN_PROGRESS, COMPLETE]
 
 
 # A hub side card
