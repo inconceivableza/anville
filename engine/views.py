@@ -53,7 +53,7 @@ from engine.document.coach import (
     checklist_answers_from_form,
     checklist_outcome,
     coach_answer_from_form,
-    coach_details_as_typed,
+    coach_confirmed,
     coach_from_form,
     commitments,
 )
@@ -603,7 +603,7 @@ def coach_checklist(request, block_id):
     form, screen to screen, and the outcome is worked out again from what was posted, never taken from the button
     pressed. The answers are opinions about another person, including their faith (special category data under
     GDPR), and no later step reads them; `sensitive_post_parameters` keeps them out of error reports too. Saving
-    keeps only the chosen coach's name and email address, as a contact, and only once the outcome allows it.
+    keeps only the chosen coach's name, as a contact (ADR 0022), and only once the outcome allows it.
     """
     state = _participant(request.user)
     block = _block_of_type(state.version, block_id, "coach_checklist")
@@ -697,7 +697,7 @@ def _checklist_step(block, to, posted, coach_kept=None):
     try:
         return {"screen": "chosen", "coach": coach_from_form(posted)}
     except AnswerRefused as refused:
-        return {**going_ahead, **coach_details_as_typed(posted), "refusal": str(refused), "invalid": refused.field}
+        return {**going_ahead, "confirmed": coach_confirmed(posted), "refusal": str(refused), "invalid": refused.field}
 
 
 def _checklist_screen(
@@ -709,15 +709,14 @@ def _checklist_screen(
     refusal=None,
     confident=False,
     coach=None,
-    email="",
     confirmed=False,
     invalid=None,
     kept=None,
     issued=None,
 ):
     """✨ One screen of the coach checklist as its template needs it: the questions with any answers given, and on
-    a second thought or a stop, each answer that was not Yes with why that question matters. On going ahead, the
-    coach's details as typed, and which of them a refusal is about; once chosen, the coach kept, with their link
+    a second thought or a stop, each answer that was not Yes with why that question matters. On going ahead, whether
+    the box was ticked, and which field a refusal is about; once chosen, the coach kept, with their link
     (`issued` is a link just issued, shown this once). On the intro while choosing again, `kept` is the coach who
     stays until another is saved."""
     answers = answers or {}
@@ -734,7 +733,6 @@ def _checklist_screen(
         "confident": confident,
         "refusal": refusal,
         "coach": coach,
-        "email": email,
         "confirmed": confirmed,
         "invalid": invalid,
         "kept": kept,

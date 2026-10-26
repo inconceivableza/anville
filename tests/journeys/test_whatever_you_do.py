@@ -930,7 +930,7 @@ def change_the_coach(client, change):
     elif change == "reissued":
         reissue_coach_link(client)
     else:
-        assert choose(client, name="Alex", email="alex@example.com").status_code == 200
+        assert choose(client, name="Alex").status_code == 200
 
 
 @pytest.mark.django_db

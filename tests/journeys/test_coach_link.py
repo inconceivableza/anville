@@ -92,28 +92,26 @@ def link_shown(page):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("htmx", [True, False], ids=["htmx", "no javascript"])
-@pytest.mark.parametrize("email", ["sam@example.com", ""], ids=["with an email", "without one"])
-def test_saving_the_coach_makes_their_link_in_the_same_act_and_shows_it_the_email_optional(
-    signed_in_client, load_pathway, observer, htmx, email  # noqa: F811
+def test_saving_the_coach_makes_their_link_in_the_same_act_and_shows_it(
+    signed_in_client, load_pathway, observer, htmx  # noqa: F811
 ):
     """✨ Ticket 51b: nobody misses the step of making the link."""
     load_pathway(with_a_coach_and_contacts())
 
-    saved = choose(signed_in_client, email=email, htmx=htmx)
+    saved = choose(signed_in_client, htmx=htmx)
 
     page = saved.content.decode() if htmx else shown(signed_in_client, ONBOARDING)
     link = link_shown(page)
     assert link, "the coach's link is not shown on saving"
     assert observer.get(link).status_code == 200
-    assert Contact.objects.get().email == email
     assert link_shown(shown(signed_in_client, ONBOARDING)) is None  # ✨ shown once: only its hash is kept
 
 
 @pytest.mark.django_db
 def test_a_coach_kept_without_an_email_address_is_a_valid_contact(signed_in_client, load_pathway):  # noqa: F811
-    """✨ The coach's email is optional (ticket 51b), so the model's own validation must allow it blank (fix-2)."""
+    """✨ A coach is a name alone (ADR 0022), so the model's own validation must allow their email blank (fix-2)."""
     load_pathway(with_a_coach_and_contacts())
-    choose(signed_in_client, email="")
+    choose(signed_in_client)
 
     Contact.objects.get(role=Contact.Role.COACH).full_clean()
 
@@ -301,7 +299,7 @@ def test_saving_another_coach_or_removing_this_one_stops_the_coachs_link(partici
     link = issue_coach_link(participant)
 
     if change == "another coach saved":
-        assert choose(participant, name="Alex", email="alex@example.com").status_code == 200
+        assert choose(participant, name="Alex").status_code == 200
     else:
         assert step(participant, "remove").status_code == 200
 

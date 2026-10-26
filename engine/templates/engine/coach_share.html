@@ -25,7 +25,7 @@
       </div>
     </form>
   {% elif coach.offer == "expired" %}
-    <p class="coach-hint">{{ coach.name }}'s link has expired. Reissue it from your coach page; once {{ coach.name }} accepts again, you can share your results and the comparison below. <a href="{{ coach.coach_page }}">Your coach page →</a></p>
+    <p class="coach-hint">{{ coach.name }}'s link has expired. Make a new one from your coach page; once {{ coach.name }} accepts again, you can share your results and the comparison below. <a href="{{ coach.coach_page }}">Your coach page →</a></p>
   {% else %}
     <p class="coach-hint">Once {{ coach.name }} accepts being your coach, you can share your results and the comparison below with {{ coach.name }}. <a href="{{ coach.coach_page }}">Your coach page →</a></p>
   {% endif %}
