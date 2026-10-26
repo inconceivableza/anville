@@ -966,6 +966,23 @@ def test_each_sections_pdf_is_refused_until_it_is_reached_then_served_from_its_p
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("section_id", ON_PAPER)
+def test_each_sections_pdf_link_opens_a_new_tab_without_handing_it_the_app(participant, section_id):
+    """✨ The app's tab stays on the section (ticket 84). The link's own text says so as well, which a screen reader
+    reads with it; the wording is a hand check."""
+    client = through_to_section_3(participant)
+    coach_accepts(client)
+    for earlier in ON_PAPER[: ON_PAPER.index(section_id)]:
+        complete(client, earlier)
+    page = client.get(f"/sections/{section_id}/").content.decode()
+    link = re.search(rf'<a\b[^>]*href="{PDFS[section_id]}"[^>]*>(.*?)</a>', page, re.S)
+    assert link
+    assert 'target="_blank"' in link.group(0)
+    assert "noopener" in link.group(0)
+    assert "new tab" in link.group(1).lower()
+
+
+@pytest.mark.django_db
 def test_sections_4_and_5_and_the_letter_each_open_once_the_one_before_is_finished(participant):
     """✨ In place of the letter after the whole workbook (ticket 58). None of Sections 3–5 has a gate: the participant
     says when each is done, with its own button, and the hub counts it. The coach has accepted, which Section 4 also
