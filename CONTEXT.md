@@ -84,7 +84,11 @@ _Avoid_: hub card, side section, right column, sidebar (the pathway's list besid
 
 **Wizard**:
 A section a participant completes before first seeing the hub, shown page by page without the hub or the sidebar. Unless it is also once-only, it is afterwards listed in the hub as any other section.
-_Avoid_: opening section, onboarding (one section's identifier), steps.
+_Avoid_: opening section, onboarding (one section's identifier), steps ("Step 2 of 3" is only the participant's counter).
+
+**Entry page**:
+The engine's page every participant passes once, before any of a pathway's own pages, giving their first name, that they are 18 or over, and their consent. It belongs to the account, not to a pathway, and is neither a section nor a page of one; consent asked for again later is asked on its own page.
+_Avoid_: the wizard's first page, first page, About you (its heading), sign-up step, onboarding.
 
 **Once-only section**:
 A section a participant completes once and never sees again: once complete, it leaves the hub, the sidebar and the count of sections, and its answers can be neither seen nor changed there. Before we begin is one.
