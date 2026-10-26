@@ -19,7 +19,7 @@ def join(request, token):
     longer works, so it reveals nothing about any group.
 
     Otherwise the link is held in the session, so sign-up drops the enrolment code, and the visitor is sent to sign
-    up, then to consent (on the wizard's first page until it is passed), each told to come back here. The page names
+    up, then to consent (on the entry page until it is passed), each told to come back here. The page names
     the group and what its admins see; only "Join" records anything, and it leads to the hub. A member opening the
     link again is told so and offered the hub.
     """

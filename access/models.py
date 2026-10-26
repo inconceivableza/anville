@@ -19,7 +19,7 @@ class Account(models.Model):
 
     participant = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="account")
     display_name = models.CharField(max_length=DISPLAY_NAME_MAX_LENGTH)
-    # ✨ When "I am 18 or over" was ticked on the wizard's first page (ADR 0021), never a date of birth. Empty for an
+    # ✨ When "I am 18 or over" was ticked on the entry page (ADR 0021), never a date of birth. Empty for an
     # account made before sprint 3c, which ticked it at sign-up, where it was not kept.
     adult_confirmed_at = models.DateTimeField(null=True, blank=True)
 

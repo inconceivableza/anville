@@ -87,7 +87,7 @@ def test_a_missing_enrolment_code_is_refused(client, settings):
 
 @pytest.mark.django_db
 def test_sign_up_keeps_the_first_name_and_leaves_18_or_over_to_the_wizard_with_never_a_date_of_birth(client):
-    """✨ "I am 18 or over" is asked on the wizard's first page, after the account is made (ADR 0021)."""
+    """✨ "I am 18 or over" is asked on the entry page, after the account is made (ADR 0021)."""
     page = client.get("/accounts/signup/").content.decode()
 
     assert 'name="display_name"' in page
@@ -497,8 +497,8 @@ def test_the_google_sign_up_form_shows_googles_address_read_only(client, setting
 
 
 @pytest.mark.django_db
-def test_a_new_google_account_meets_the_wizards_first_page_before_any_answer_is_stored(client, settings, load_pathway):
-    """✨ The first page asks for consent, beside "I am 18 or over" (ADR 0021)."""
+def test_a_new_google_account_meets_the_entry_page_before_any_answer_is_stored(client, settings, load_pathway):
+    """✨ The entry page asks for consent, beside "I am 18 or over" (ADR 0021)."""
     require_the_code(settings)
     give_google_a_client(settings)
     load_pathway(pathway_document())
@@ -520,7 +520,7 @@ def leave_the_code_off(settings):
 
 
 @pytest.mark.django_db
-def test_with_the_code_off_coming_back_from_google_makes_the_account_at_once_and_lands_on_the_wizards_first_page(
+def test_with_the_code_off_coming_back_from_google_makes_the_account_at_once_and_lands_on_the_entry_page(
     client, settings, django_user_model, load_pathway
 ):
     leave_the_code_off(settings)
@@ -556,7 +556,7 @@ def test_a_google_sign_up_takes_googles_given_name_else_its_full_name_else_the_e
 
 
 @pytest.mark.django_db
-def test_where_the_code_is_required_a_google_sign_up_asks_only_for_the_code_then_lands_on_the_wizards_first_page(
+def test_where_the_code_is_required_a_google_sign_up_asks_only_for_the_code_then_lands_on_the_entry_page(
     client, settings, load_pathway
 ):
     require_the_code(settings)

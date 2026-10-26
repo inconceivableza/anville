@@ -1,13 +1,26 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../LICENSE.md
 
-# ✨ Apart from access/forms.py: allauth builds its sign-up forms on the sign-up form class there, so importing them
-# into that module would import it in a circle.
+# ✨ allauth's own forms, extended. Apart from access/forms.py: allauth builds its sign-up forms on the sign-up form
+# class there, so importing allauth's forms into that module would import it in a circle, and the entry page's view
+# could not import its form from there.
 
+from allauth.account.forms import LoginForm
 from allauth.socialaccount.forms import SignupForm
 from django import forms
 from django.urls import reverse
 from django.utils.html import format_html
+
+
+class SignInForm(LoginForm):
+    """✨ allauth's sign-in form, with "Remember me" in sentence case like the rest of Anville's wording, and
+    read as a statement beside its box, so without a colon."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "remember" in self.fields:  # ✨ allauth drops it when ACCOUNT_SESSION_REMEMBER is set
+            self.fields["remember"].label = "Remember me"
+            self.fields["remember"].label_suffix = ""
 
 
 class GoogleSignupForm(SignupForm):
@@ -18,7 +31,7 @@ class GoogleSignupForm(SignupForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["email"].widget.attrs["readonly"] = True
-        # ✨ The first name is Google's, changeable on the wizard's first page, so the form asks only for the
+        # ✨ The first name is Google's, changeable on the entry page, so the form asks only for the
         # enrolment code, and is shown only where that is asked for (ADR 0021) or the address is refused.
         del self.fields["display_name"]
         if not self.is_bound:

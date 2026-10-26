@@ -41,7 +41,7 @@ def test_a_new_person_signs_up_without_the_code_consents_and_joins_knowingly(cli
     to_join = client.post("/accounts/signup/", {**form, "next": hidden_next(sign_up_page)})
     assert get_user(client).is_authenticated
 
-    # ✨ Consent is asked on the wizard's first page, beside "I am 18 or over" (ADR 0021).
+    # ✨ Consent is asked on the entry page, beside "I am 18 or over" (ADR 0021).
     to_consent = client.get(to_join.url)
     consent_page = client.get(to_consent.url).content.decode()
     back_to_join = client.post(

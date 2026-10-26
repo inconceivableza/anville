@@ -15,17 +15,17 @@ from engine.models import Publication, Response
 from tests.documents import pathway_document
 from tests.journeys.pages import version_on
 from tests.journeys.test_access import require_the_code, sign_up
-from tests.journeys.test_first_page import FIRST_PAGE, pass_the_first_page
+from tests.journeys.test_entry_page import ENTRY_PAGE, pass_the_entry_page
 
 CONSENT = "/consent/"
 
 
 def give_consent(client):
     """✨ Agree to the consent text, sending the version of the text the page showed, as the browser does: on the
-    wizard's first page, which the consent page sends to until it is passed (ADR 0021), or else on the consent page."""
+    entry page, which the consent page sends to until it is passed (ADR 0021), or else on the consent page."""
     page = client.get(CONSENT)
-    if page.status_code == 303 and page.url.startswith(FIRST_PAGE):
-        return pass_the_first_page(client)
+    if page.status_code == 303 and page.url.startswith(ENTRY_PAGE):
+        return pass_the_entry_page(client)
     version = version_on(page.content.decode())
     return client.post(CONSENT, {"decision": "agree", **({"version": version} if version else {})})
 
@@ -56,7 +56,7 @@ def test_enrolment_alone_never_counts_as_consent(signed_up):
     hub = signed_up.get("/hub/")
 
     assert hub.status_code == 302
-    assert hub.url == FIRST_PAGE
+    assert hub.url == ENTRY_PAGE
     answer(signed_up, "baseline-bible", "7")
     assert not Response.objects.exists()
 
@@ -74,17 +74,17 @@ def test_enrolment_alone_never_counts_as_consent(signed_up):
     ],
 )
 def test_every_page_of_the_pathway_waits_for_consent(signed_up, method, address):
-    """✨ Asked first on the wizard's first page (ADR 0021)."""
+    """✨ Asked first on the entry page (ADR 0021)."""
     refused = getattr(signed_up, method)(address, {"value": "7", "version": Publication.current_version().pk})
 
     assert refused.status_code == 302
-    assert refused.url == FIRST_PAGE
+    assert refused.url == ENTRY_PAGE
     assert not Response.objects.exists()
 
 
 @pytest.fixture
 def withdrawn(signed_up):
-    """✨ A participant who passed the wizard's first page and has since withdrawn, so the consent page asks them."""
+    """✨ A participant who passed the entry page and has since withdrawn, so the consent page asks them."""
     give_consent(signed_up)
     withdraw_consent(signed_up)
     return signed_up
@@ -100,8 +100,8 @@ def test_the_consent_page_offers_agreeing_and_declining_as_separate_choices(with
 
 
 @pytest.mark.django_db
-def test_the_consent_text_is_still_marked_as_a_draft_here_and_on_the_first_page(signed_up):
-    assert "Draft wording" in signed_up.get(FIRST_PAGE).content.decode()
+def test_the_consent_text_is_still_marked_as_a_draft_here_and_on_the_entry_page(signed_up):
+    assert "Draft wording" in signed_up.get(ENTRY_PAGE).content.decode()
     give_consent(signed_up)
     assert "Draft wording" in signed_up.get(CONSENT).content.decode()
 
@@ -118,7 +118,7 @@ def test_agreeing_opens_the_pathway(signed_up):
 
 @pytest.mark.django_db
 def test_consent_is_recorded_with_the_version_of_the_text_and_when_it_was_given(signed_up):
-    version = version_on(signed_up.get(FIRST_PAGE).content.decode())
+    version = version_on(signed_up.get(ENTRY_PAGE).content.decode())
 
     give_consent(signed_up)
 

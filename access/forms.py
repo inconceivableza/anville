@@ -1,7 +1,6 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../LICENSE.md
 
-from allauth.account.forms import LoginForm
 from allauth.core import context as allauth_context
 from django import forms
 from django.conf import settings
@@ -9,22 +8,14 @@ from django.conf import settings
 from access.enrolment import asks_for_the_code, is_valid_enrolment_code
 from access.models import DISPLAY_NAME_MAX_LENGTH, Account
 
-
-class SignInForm(LoginForm):
-    """✨ allauth's sign-in form, with "Remember me" in sentence case like the rest of Anville's wording, and
-    read as a statement beside its box, so without a colon."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if "remember" in self.fields:  # ✨ allauth drops it when ACCOUNT_SESSION_REMEMBER is set
-            self.fields["remember"].label = "Remember me"
-            self.fields["remember"].label_suffix = ""
+# ✨ No form of allauth's own is imported here (they are in access/allauth_forms.py): allauth builds them on the sign-up
+# form class below, so importing one would import this module in a circle.
 
 
 class EnrolmentCodeSignupForm(forms.Form):
     # ✨ allauth puts added fields straight after the email, but the name comes first, as on the prototype's account
     # form. A field left off this list would land after the passwords, so a new one must be listed here. "I am 18 or
-    # over" is asked on the wizard's first page instead, after the account is made (ADR 0021).
+    # over" is asked on the entry page instead, after the account is made (ADR 0021).
     field_order = ["display_name", "email", "enrolment_code", "password1", "password2"]
 
     # ✨ The prototype's wording for the name its account form asks for first. Kept as the display name (ticket 37).
@@ -55,3 +46,28 @@ class EnrolmentCodeSignupForm(forms.Form):
         # ✨ Called by allauth once the user is saved (the ACCOUNT_SIGNUP_FORM_CLASS contract). The enrolment code
         # grants access only, and is not stored. The display name is.
         Account.objects.create(participant=user, display_name=self.cleaned_data["display_name"])
+
+
+class EntryPageForm(forms.Form):
+    """✨ The entry page (ADR 0021): the first name, changeable, "I am 18 or over" and the consent tick, each required.
+    Adults only (ADR 0004): a threshold, so it is asked as one, with no date of birth. The consent text's version is
+    checked by the view, as the consent page checks it."""
+
+    # ✨ Required by the server alone, so a refusal shows only once Continue is pressed (ticket 83's way), and never by
+    # the browser beforehand.
+    use_required_attribute = False
+
+    display_name = forms.CharField(
+        label="First name",
+        max_length=DISPLAY_NAME_MAX_LENGTH,
+        error_messages={"required": "Add your first name."},
+    )
+    is_adult = forms.BooleanField(
+        label="I am 18 or over",
+        error_messages={"required": "You need to be 18 or over to take part."},
+    )
+    consents = forms.BooleanField(
+        label="I agree to Whatever You Do storing my answers, including anything about my faith, work or health, as "
+        "set out in the privacy notice.",
+        error_messages={"required": "You need to agree to take part."},
+    )

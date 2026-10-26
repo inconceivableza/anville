@@ -51,7 +51,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 ## Sign up
 
-- There is no "I am 18 or over" box: it is asked on the wizard's first page, after the account is made (ticket 92).
+- There is no "I am 18 or over" box: it is asked on the entry page, after the account is made (ticket 92).
 - "First name" comes first, with "e.g. Ed" as its placeholder, and the browser offers nothing saved for it.
 - With `ANVILLE_ENROLMENT_REQUIRED=false` there is no enrolment code field; with it left out, the field sits after the email.
 
@@ -60,7 +60,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - With neither `ANVILLE_GOOGLE_CLIENT_ID` nor `ANVILLE_GOOGLE_CLIENT_SECRET` in `.env`, or only one, sign in and sign up look exactly as before: no "or", no Google button.
 - With both set and `runserver` restarted, sign in and sign up each start with an outlined "Continue with Google" across the form's width, then "or", then the email-and-password form, at a wide screen and at phone width.
 - Pressing it goes straight to Google's account chooser, with no Anville page asking again first, even when the browser is already signed in to a Google account. Cancelling there comes back to an Anville page, not an error.
-- A Google account new to Anville goes straight in, with no form, to the wizard's first page ("About you"), where "First name" holds Google's first name; where the enrolment code is asked for, it first comes back to a sign-up form asking only for the code, with its email filled in, and no password (ticket 93).
+- A Google account new to Anville goes straight in, with no form, to the entry page ("About you"), where "First name" holds Google's first name; where the enrolment code is asked for, it first comes back to a sign-up form asking only for the code, with its email filled in, and no password (ticket 93).
 - Signing out and pressing "Continue with Google" again signs straight in to the hub.
 - An address that already has an email-and-password account is refused on that form, and no second account is made.
 
@@ -90,9 +90,9 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 
 ## Consent
 
-- After signing up, and at a first sign-in, the wizard's first page ("About you", ticket 92) comes before the hub, and `/consent/` leads there too until it is passed.
+- After signing up, and at a first sign-in, the entry page ("About you", ticket 92) comes before the hub, and `/consent/` leads there too until it is passed.
 - Passing it as a new participant opens onboarding, with the reason first, not the hub (in Whatever You Do, as the wizard, with no way to the hub until it is done).
-- The checks below are of the consent page itself, which asks only once the first page is passed: withdraw from "Your consent" at the foot of the hub first.
+- The checks below are of the consent page itself, which asks only once the entry page is passed: withdraw from "Your consent" at the foot of the hub first.
 - "I agree" and "I do not agree" are stacked with a gap between them and look like equal choices: neither is hidden, greyed out or smaller.
 - "I do not agree" says nothing will be stored, and "Read the text again" goes back to the page.
 - Without JavaScript, both buttons work: the page is a plain form.
@@ -201,7 +201,7 @@ The homepage (`/`):
 
 ## Before we begin as a wizard (ticket 50; load the pathway again first, then sign up as someone new)
 
-- After the wizard's first page, Before we begin opens as the wizard, beside the photo of the figure facing the sun (as the prototype's onboarding view): no header, no "Your pathway", no link to the hub; "Step 2 of 3" with three bars at the top, two of them filled, the first page being step 1 (ticket 92). Page 1 is the reason alone; "Continue →" leads to page 2, the five ratings, with "← Previous page" beside the way on.
+- After the entry page, Before we begin opens as the wizard, beside the photo of the figure facing the sun (as the prototype's onboarding view): no header, no "Your pathway", no link to the hub; "Step 2 of 3" with three bars at the top, two of them filled, the entry page being step 1 (ticket 92). Page 1 is the reason alone; "Continue →" leads to page 2, the five ratings, with "← Previous page" beside the way on.
 - Going to `/hub/` part-way lands on the page reached. The last "Continue →" lands on the hub, Before we begin listed as complete, and the hub never sends you back. Its entry opens it as an ordinary section page, header and sidebar included, the ratings fixed.
 - `/credits/` lists "Photograph of a figure facing the sun from Unsplash.".
 - Phone width: the photo sits above the page, the ratings fit without scrolling sideways.
@@ -219,13 +219,13 @@ The homepage (`/`):
 - At about 375px: "Log out" sits on the left of the step bar, on one line; the messages under "Continue →" wrap within the page.
 - The faithful port is unchanged: its onboarding lists every requirement beneath a grey "Continue →" from the start, ticked once met.
 
-### Ticket 92: The wizard's first page: first name, 18 or over, and consent (after `migrate`, rebuild the frontend and sign up as someone new; no need to load the pathway again)
+### Ticket 92: The entry page: first name, 18 or over, and consent (after `migrate`, rebuild the frontend and sign up as someone new; no need to load the pathway again)
 
 - Signing up by email lands on "About you" in the wizard's layout: "Log out" top left, "Step 1 of 3" with one of three bars filled, the leaf on green in place of a photo, the Ephesians 2:10 quote beside it. The sign-up form had "First name" and no "I am 18 or over".
 - "First name" shows the name given at sign-up and can be changed; below it "I am 18 or over", then "I agree to Whatever You Do storing my answers, including anything about my faith, work or health, as set out in the privacy notice.", each beside its box, and under it "What this means", closed.
 - "What this means" opens to the consent text, with "Draft wording" at its top, no paragraph on a group's admins, "Agreeing is up to you." with nothing about an enrolment code, nothing about staying in groups after withdrawing, and "Version 3 of this text." at its end. It opens and closes with JavaScript off too, and by keyboard (Tab to it, Enter).
 - On arrival no refusal shows. Press "Continue →" with the name cleared and both boxes unticked: "Add your first name.", "You need to be 18 or over to take part." and "You need to agree to take part." each under what it refuses, the field and boxes outlined in red, and what was typed or ticked kept. `/hub/` still comes back to this page.
-- With all three given, "Continue →" opens Before we begin at "Step 2 of 3". After finishing it, the hub greets you by the name given on the first page, and "Your consent" at its foot shows "You agreed to version 3 of this text".
+- With all three given, "Continue →" opens Before we begin at "Step 2 of 3". After finishing it, the hub greets you by the name given on the entry page, and "Your consent" at its foot shows "You agreed to version 3 of this text".
 - Withdraw there, then open `/hub/`: it goes to the consent page, not "About you", and `/about-you/` leads to the hub. A participant who agreed to version 2 before is asked again on the consent page too, never on "About you".
 - At about 375px: the field fills the width, each long label wraps beside its box, "What this means" wraps within the page, and "Continue →" fills the width.
 
@@ -568,7 +568,7 @@ Rebuild the frontend. No need to load the pathway again: a participant started o
 
 ## Joining a group by link (`/join/<token>/`, the token from a group in the admin)
 
-- In a private window with the enrolment code on, the link leads to sign up with no "Enrolment code" field. Signing up leads to the wizard's first page; passing it leads to "Join Example Church, Autumn cohort?" (the group's own names) with the sentence on what its admins see. The consent text no longer has a group line, while no organisation is set up (ticket 92, ADR 0021). "Join" lands on the hub, and the admin's Memberships list now shows the new account in that group.
+- In a private window with the enrolment code on, the link leads to sign up with no "Enrolment code" field. Signing up leads to the entry page; passing it leads to "Join Example Church, Autumn cohort?" (the group's own names) with the sentence on what its admins see. The consent text no longer has a group line, while no organisation is set up (ticket 92, ADR 0021). "Join" lands on the hub, and the admin's Memberships list now shows the new account in that group.
 - In a fresh private window, `/accounts/signup/` opened without a join link still asks for the enrolment code.
 - Signed in and consented, the link shows the join page at once; "Not now, go to your pathway" leads to the hub and the Memberships list is unchanged. Opening the link again after joining says "You're already in this group" with "Go to your pathway".
 - Signed out with an existing account, following "Sign in" from the sign-up page the link led to and signing in lands on the join page, not the hub.
@@ -592,7 +592,7 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - Copy puts the whole link on the clipboard and reads "Copied"; pasting it in a private window opens the join page for that group. Without JavaScript, there is no Copy button, and the link in the field can be selected and copied by hand.
 - The browser's console shows no error on loading the page or pressing Copy.
 - With `manage` on the Autumn cohort only: the page shows Example Church with the Autumn cohort alone. With `see_progress` only, the group shows its type and member count but no join link.
-- An account that has not consented reaches the page by typing `/organisations/`, and is not sent to the consent text. Opening the hub instead lands on the wizard's first page (or, once that is passed, the consent page), whose foot links "Your organisations" for an account holding a permission (and not for one without).
+- An account that has not consented reaches the page by typing `/organisations/`, and is not sent to the consent text. Opening the hub instead lands on the entry page (or, once that is passed, the consent page), whose foot links "Your organisations" for an account holding a permission (and not for one without).
 - Phone width: the link field and Copy stay on one line without the page scrolling sideways.
 - With `manage` on Example Church: under its groups (or under "No groups yet.") is a "New group" form with a Name field and Type as two radio buttons, Cohort already chosen. Creating "Worship team" as a Team comes back to the page scrolled to the new group, which shows "Team", "0 members" and its own join link; reloading asks nothing about resending a form. Creating with an empty name keeps the browser on the form; with the browser's check bypassed (removing `required` in the inspector), the page comes back with a message on the Name field and nothing created.
 - With `manage` on the Autumn cohort only, or `see_progress` on Example Church, there is no "New group" form.

@@ -69,7 +69,7 @@ def test_logging_in_for_the_first_time_asks_for_consent_before_the_pathway(clien
 
     response = client.post("/accounts/login/", {"login": "participant@example.com", "password": PASSWORD}, follow=True)
 
-    assert response.redirect_chain[-1][0] == "/about-you/"  # ✨ the wizard's first page asks for consent (ADR 0021)
+    assert response.redirect_chain[-1][0] == "/about-you/"  # ✨ the entry page asks for consent (ADR 0021)
     assert "Test Pathway" not in response.content.decode()
 
 

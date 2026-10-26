@@ -19,10 +19,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods, require_POST
 
-from access.consent import consent_required, current_text_version, has_passed_first_page, pass_first_page
-from access.first_page_form import FirstPageForm
+from access.consent import consent_required
 from access.models import name_shown_for
-from access.views import next_on_this_site
 from engine.document import (
     BLOCK_TYPES,
     LONG_TEXT_MAX_LENGTH,
@@ -85,7 +83,6 @@ from engine.hub import (
     COMPLETE,
     block_ids_fixed_on_completion,
     complete_sections,
-    entry_page_step,
     hub_for,
     is_locked,
     is_once_only_and_complete,
@@ -427,39 +424,6 @@ def start(request):
     if next_step is None or not any(section["blocks"] for section in state.sections):
         return redirect("hub")  # ✨ the hub's empty state says there is nothing to begin
     return redirect("section", next_step.id)
-
-
-@login_required
-@require_http_methods(["GET", "POST"])
-def first_page(request):
-    """✨ The wizard's first page, the engine's and authored by no pathway (ADR 0021): the first name, filled in from
-    the account and changeable, "I am 18 or over", and the consent tick, with the consent text beside it. It comes
-    before the track's first wizard, in its layout, as step 1 of its steps.
-
-    Continue is refused, storing nothing, unless all three are given, the refusals shown only after the press. Passing
-    it keeps the name, when 18 or over was ticked and consent to the text the page showed, then goes on as agreeing on
-    the consent page does. Once passed it is never asked again: the hub leads on, and the consent page asks again after
-    a withdrawal or a change to the text.
-    """
-    if has_passed_first_page(request.user):
-        return redirect("hub")
-    version = current_text_version()
-    after = next_on_this_site(request)
-    form = FirstPageForm(request.POST or None, initial={"display_name": name_shown_for(request.user)})
-    text_changed = request.method == "POST" and request.POST.get("version") != str(version)
-    if request.method == "POST" and form.is_valid() and not text_changed:
-        pass_first_page(request.user, form.cleaned_data["display_name"])
-        return _see_other(after or "start")
-    step = entry_page_step(_participant(request.user).sections)
-    shown = {
-        "form": form,
-        "version": version,
-        "next": after,
-        "text_changed": text_changed,
-        "step": step,
-        "steps": step.numbers,
-    }
-    return render(request, "engine/first_page.html", shown, status=400 if request.method == "POST" else 200)
 
 
 @login_required

@@ -126,8 +126,8 @@ def test_an_admin_who_has_not_consented_still_gets_the_page(client, django_user_
 def test_the_page_asking_for_consent_links_your_organisations_only_for_an_account_holding_a_permission(
     client, django_user_model
 ):
-    """✨ The hub sends an account that has not consented to the page that asks, the wizard's first page until it is
-    passed (ADR 0021), so an admin who has not consented finds the link there."""
+    """✨ The hub sends an account that has not consented to the page that asks, the entry page until it is passed
+    (ADR 0021), so an admin who has not consented finds the link there."""
     church = Organisation.objects.create(name="Example Church")
     participant = django_user_model.objects.create_user(username="participant", email="participant@example.com")
     client.force_login(participant)

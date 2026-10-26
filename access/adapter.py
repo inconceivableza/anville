@@ -68,7 +68,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
     def save_user(self, request, sociallogin, form=None):
         """✨ Names the new account from Google (ADR 0021): its given name, else its full name, else the part of the
         email before the @, the fallback the spec already uses for an account without a name. The participant can
-        change it on the wizard's first page."""
+        change it on the entry page."""
         user = super().save_user(request, sociallogin, form=form)
         claims = sociallogin.account.extra_data
         name = (claims.get("given_name") or "").strip() or (claims.get("name") or "").strip()

@@ -44,10 +44,16 @@ def withdrawn_participants():
     return Consent.objects.filter(withdrawn_at__isnull=False).exclude(participant__in=standing).values("participant")
 
 
+def text_changed(request):
+    """✨ Whether a press agreed to a version of the text other than the current one, as when it changed while the page
+    was open: consent is to the text that was read, so it is read again."""
+    return request.method == "POST" and request.POST.get("version") != str(current_text_version())
+
+
 @transaction.atomic
-def pass_first_page(participant, display_name):
-    """✨ What passing the wizard's first page keeps (ADR 0021), all at once: the first name given there, when "I am 18
-    or over" was ticked, and consent to the current text, as the consent page records it."""
+def pass_entry_page(participant, display_name):
+    """✨ What passing the entry page keeps (ADR 0021), all at once: the first name given there, when "I am 18 or over"
+    was ticked, and consent to the current text, as the consent page records it."""
     now = timezone.now()
     Account.objects.update_or_create(
         participant=participant, defaults={"display_name": display_name, "adult_confirmed_at": now}
@@ -63,10 +69,10 @@ def withdraw(participant):
     Consent.objects.filter(participant=participant, withdrawn_at__isnull=True).update(withdrawn_at=timezone.now())
 
 
-def has_passed_first_page(participant):
-    """✨ Whether the participant has passed the wizard's first page, saying they are 18 or over and consenting (ADR
-    0021). An account made before it ticked 18 or over at sign-up, where the time was not kept, and then consented on
-    the consent page, so any consent on record, even one withdrawn or out of date, counts as having passed it."""
+def has_passed_entry_page(participant):
+    """✨ Whether the participant has passed the entry page, saying they are 18 or over and consenting (ADR 0021). An
+    account made before it ticked 18 or over at sign-up, where the time was not kept, and then consented on the
+    consent page, so any consent on record, even one withdrawn or out of date, counts as having passed it."""
     account = getattr(participant, "account", None)
     if account is not None and account.adult_confirmed_at is not None:
         return True
@@ -74,9 +80,9 @@ def has_passed_first_page(participant):
 
 
 def where_consent_is_asked(participant):
-    """✨ The name of the page that asks for the participant's consent: the wizard's first page until they have passed
-    it, and after that the consent page, which asks again after a withdrawal or a change to the text."""
-    return "consent" if has_passed_first_page(participant) else "first_page"
+    """✨ The name of the page that asks for the participant's consent: the entry page until they have passed it, and
+    after that the consent page, which asks again after a withdrawal or a change to the text."""
+    return "consent" if has_passed_entry_page(participant) else "entry_page"
 
 
 def consent_required(view):

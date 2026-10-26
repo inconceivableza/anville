@@ -20,7 +20,7 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
-from access.views import consent
+from access.views import consent, entry_page
 from config.health import healthz
 from engine.views import (
     another_row,
@@ -34,7 +34,6 @@ from engine.views import (
     contacts,
     credits_page,
     download,
-    first_page,
     fresh_link,
     home,
     hub,
@@ -65,7 +64,7 @@ urlpatterns = [
     path("healthz", healthz, name="healthz"),
     path("accounts/", include("allauth.urls")),
     path("consent/", consent, name="consent"),
-    path("about-you/", first_page, name="first_page"),
+    path("about-you/", entry_page, name="entry_page"),
     path("start/", start, name="start"),
     path("answers/<slug:block_id>/", save_answer, name="save_answer"),
     path("coach/<slug:block_id>/", coach_checklist, name="coach_checklist"),

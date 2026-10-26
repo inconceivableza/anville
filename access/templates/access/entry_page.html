@@ -2,7 +2,7 @@
 {# For licensing information see ../../../LICENSE.md #}
 {% extends "engine/wizard.html" %}
 {% comment %}
-  ✨ The wizard's first page (ADR 0021), the engine's own and in the wizard's layout: the first name, "I am 18 or over"
+  ✨ The entry page (ADR 0021), the engine's own and in the wizard's layout: the first name, "I am 18 or over"
   and the consent tick, with "What this means" opening to the consent text, without JavaScript too. Each refusal sits
   under what it refuses and shows only after Continue is pressed. No photo: the pathway's photos wait for consent, as
   the rest of it does, so the wizard's leaf stands in.
@@ -11,7 +11,7 @@
 
 {% block step %}
   <h1>About you</h1>
-  <form method="post" action="{% url 'first_page' %}" class="first-page" novalidate>
+  <form method="post" action="{% url 'entry_page' %}" class="first-page" novalidate>
     {% csrf_token %}
     <input type="hidden" name="version" value="{{ version }}">
     {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}

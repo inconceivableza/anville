@@ -607,7 +607,7 @@ main.container:has(> .ob) {
   font-weight: 300;
 }
 
-/* ✨ The wizard's first page (ADR 0021): v3's field and its tick boxes, each refusal under what it refuses */
+/* ✨ The entry page (ADR 0021), its classes still named first-page: v3's field and its tick boxes, each refusal under what it refuses */
 .first-page {
   display: grid;
   gap: var(--space-lg);
