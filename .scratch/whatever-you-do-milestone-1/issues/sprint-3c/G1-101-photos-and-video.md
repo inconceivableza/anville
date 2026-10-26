@@ -18,5 +18,6 @@
 
 **Context**
 
-- Before this starts, the developer puts in place the Pexels video the spec names, at about 720p, and the churches photo if one is picked by Wed 28 Oct
+- The video and its poster are in place beside today's hero video (26 Oct), at 720p. Its credit: "Video by Marian Croitoru from Pexels", linking to https://www.pexels.com/video/healthy-light-landscape-nature-4524595/
+- The developer puts the churches photo in place if one is picked by Wed 28 Oct
 - Last but one in the cut order: if time runs short, the video and churches photo go before the wizard and side-card photos (spec)
