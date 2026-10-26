@@ -4,7 +4,7 @@
 
 **Blocked by:** 87 (Six sections), A2
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 3c (ends Fri 30 Oct)
 
