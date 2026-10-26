@@ -14,7 +14,7 @@ from tests.journeys.test_consent import answer, give_consent
 YOUR_GROUPS = "/groups/"
 WHAT_ADMINS_SEE = (
     "Its admins, and its organisation's admins, see your first name, how far through you are and when you were last "
-    "active, and the self-assessment results of the whole group averaged, once at least three members have them, "
+    "active, and the strengths evaluation results of the whole group averaged, once at least three members have them, "
     "never yours on their own. They never see your answers. If you leave the group, they no longer see anything "
     "about you through it."
 )

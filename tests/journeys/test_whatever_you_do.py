@@ -433,6 +433,33 @@ def without_the_tie_break(document):
     return document
 
 
+NEW_WORDS = [
+    # ✨ Sprint 3c (ticket 85): the prototype's "assessment" is the strengths evaluation, and an observer sends an evaluation.
+    ("Open Strengths Assessment", "Open strengths evaluation"),
+    ("the Strengths Assessment", "the strengths evaluation"),
+    ("to assess you too", "to evaluate you too"),
+    ("completed the assessment", "completed the strengths evaluation"),
+    ("your assessment results", "your strengths evaluation results"),
+    ("send your assessment now", "send your evaluation now"),
+    ("Send my assessment", "Send my evaluation"),
+]
+
+
+def in_the_new_words(node):
+    """✨ `node` with the faithful port's old words for the strengths evaluation put into the new ones, as this
+    pathway words them and the port, which keeps the prototype's, does not."""
+    if isinstance(node, dict):
+        return {key: in_the_new_words(value) for key, value in node.items()}
+    if isinstance(node, list):
+        return [in_the_new_words(value) for value in node]
+    if node == "Strengths assessment":
+        return "Strengths evaluation"
+    if isinstance(node, str):
+        for old, new in NEW_WORDS:
+            node = node.replace(old, new)
+    return node
+
+
 def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else():
     """✨ The fifth rating is added to the faithful port here and the result compared whole, so a change made to
     one document and not the other fails, and so does a slip in the fifth rating itself (its place, its anchors,
@@ -458,6 +485,7 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     three_people_each_with_their_link(expected)
     a_download_in_place_of_each_of_sections_2_to_4(expected)
     no_relationship_question(expected)
+    expected = in_the_new_words(expected)
 
     assert without_what_finishing_takes(
         without_the_comparison_signpost(
@@ -625,7 +653,7 @@ def test_section_1s_button_opens_the_assessment_until_it_is_done_and_then_the_re
     complete(participant, "onboarding")
     answer(participant, "gifts-reading", "true")
     button = r'href="{}"[^>]*>\s*{}\s*</a>'
-    assert re.search(button.format("/sections/strengths/", "Open Strengths Assessment →"), section_1(participant))
+    assert re.search(button.format("/sections/strengths/", "Open strengths evaluation →"), section_1(participant))
 
     submit_the_sort(participant)
 

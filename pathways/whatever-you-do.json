@@ -114,7 +114,7 @@
         "complete_label": "I've finished Section 1",
         "next_step": {
           "heading": "Start with your gifts.",
-          "sentence": "Take the ten-minute strengths assessment and read three short passages on gifts.",
+          "sentence": "Take the ten-minute strengths evaluation and read three short passages on gifts.",
           "waiting": "{section}'s reflection opens once at least {minimum} of the people you invited have answered and you've seen how others see you."
         },
         "blocks": [
@@ -150,16 +150,16 @@
             "id": "gifts-activity",
             "type": "rich_text",
             "label": "Your activity",
-            "body": "This section uses the Strengths Assessment – a tool where you sort and rate your strengths across 36 areas. You can also invite people you trust to do the same for you."
+            "body": "This section uses the strengths evaluation – a tool where you sort and rate your strengths across 36 areas. You can also invite people you trust to do the same for you."
           },
           {
             "id": "strengths-link",
             "type": "section_signpost",
             "section": "strengths",
-            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 3 trusted people to assess you too.",
-            "button_label": "Open Strengths Assessment →",
+            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 3 trusted people to evaluate you too.",
+            "button_label": "Open strengths evaluation →",
             "finished": {
-              "body": "You've completed the assessment. You can review your results any time.",
+              "body": "You've completed the strengths evaluation. You can review your results any time.",
               "button_label": "View my results →"
             },
             "holds_what_follows": true
@@ -173,8 +173,8 @@
           {
             "id": "gifts-summary",
             "type": "long_text",
-            "prompt": "Having completed the assessment and read the passages above, summarise: what gifts and talents has God given you? And what has He not given you?",
-            "placeholder": "Draw on the scripture, your assessment results, and what others have told you...",
+            "prompt": "Having completed the strengths evaluation and read the passages above, summarise: what gifts and talents has God given you? And what has He not given you?",
+            "placeholder": "Draw on the scripture, your strengths evaluation results, and what others have told you...",
             "after_comparison": {
               "sort": "strengths-sort",
               "message": "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer."
@@ -186,7 +186,7 @@
             {
               "type": "has_answer",
               "block": "strengths-sort",
-              "message": "Complete the Strengths Assessment to continue."
+              "message": "Complete the strengths evaluation to continue."
             },
             {
               "type": "has_answer",
@@ -198,7 +198,7 @@
       },
       {
         "id": "strengths",
-        "title": "Strengths assessment",
+        "title": "Strengths evaluation",
         "estimate": "About 10 minutes",
         "requires": ["onboarding"],
         "to_finish": "done the {title}",
@@ -209,7 +209,7 @@
             "type": "sort_assessment",
             "coach_brief": {
               "title": "Session 1 – Their gifts",
-              "purpose": "Help them believe what the assessment is telling them, and notice where they discount themselves.",
+              "purpose": "Help them believe what the strengths evaluation is telling them, and notice where they discount themselves.",
               "length": "45–60 minutes",
               "questions": [
                 { "text": "Which of these results surprised you, and which felt obvious?" },
@@ -221,7 +221,7 @@
                 { "text": "People routinely dismiss their strongest gift as \"nothing special\". If they wave something away, slow down and ask about it." },
                 { "text": "A low score is not a failing. Help them read the whole profile, not just hunt for weaknesses." }
               ],
-              "avoid": "Do not treat the assessment as a verdict. It is a conversation starter, not a diagnosis."
+              "avoid": "Do not treat the strengths evaluation as a verdict. It is a conversation starter, not a diagnosis."
             }
           }
         ],
@@ -230,7 +230,7 @@
             {
               "type": "has_answer",
               "block": "strengths-sort",
-              "message": "Complete the Strengths Assessment to continue."
+              "message": "Complete the strengths evaluation to continue."
             }
           ]
         }
@@ -248,7 +248,7 @@
             "id": "shape-pdf",
             "type": "download",
             "file": "whatever-you-do-workbook-section-2.pdf",
-            "body": "Section two, to work through on paper: mapping your story, and what has happened in each season of it.\n\nSections two to four make up the middle of the course, which works better on paper, so each is a booklet of its own. When you've finished this one, come back here to say so.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their assessments of you – don’t let that stop you making progress on the workbook.",
+            "body": "Section two, to work through on paper: mapping your story, and what has happened in each season of it.\n\nSections two to four make up the middle of the course, which works better on paper, so each is a booklet of its own. When you've finished this one, come back here to say so.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their evaluations of you – don’t let that stop you making progress on your journey.",
             "button_label": "Download Section 2 (PDF)"
           }
         ]
@@ -714,14 +714,14 @@
       "sort_heading": { "participant": "Sort your strengths", "observer": "Sort {name}'s strengths" },
       "sort_instruction": { "participant": "Choose the bucket that fits best", "observer": "Choose the bucket that fits {name} best" },
       "all_sorted": "All {count} sorted!",
-      "send_or_fine_tune": "You can send your assessment now, or fine-tune how strong each one is in {name} first.",
+      "send_or_fine_tune": "You can send your evaluation now, or fine-tune how strong each one is in {name} first.",
       "fine_tune_label": "Continue to fine-tuning →",
       "send_now_label": "Skip fine-tuning and send →",
       "fine_tune_heading": { "participant": "How strong is each one?", "observer": "How strong is each one in {name}?" },
       "fine_tune_intro": "Grouped by how you sorted them. Adjust the sliders to fine-tune.",
       "slider_min": { "participant": "Not me", "observer": "Not {name}" },
       "slider_max": "Real strength",
-      "submit_label": { "participant": "See my results →", "observer": "Send my assessment →" }
+      "submit_label": { "participant": "See my results →", "observer": "Send my evaluation →" }
     }
   }
 }
