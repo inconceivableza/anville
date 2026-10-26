@@ -40,7 +40,7 @@
       {% for error in form.consents.errors %}<p class="first-page-refusal" role="alert">{{ error }}</p>{% endfor %}
       <details class="first-page-details">
         <summary>What this means</summary>
-        {% include "access/consent_text.html" with withdraw_from="the “Your consent” page, linked at the foot of your hub" %}
+        {% include "access/consent_text.html" %}
         <p>Version {{ version }} of this text.</p>
       </details>
     </div>
