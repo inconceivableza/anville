@@ -23,7 +23,7 @@
         <input type="text" id="coach-link-{{ block.id }}" value="{{ link.issued }}" readonly autofocus form="coach-link-{{ block.id }}-in-no-form">
         <button type="button" class="pill invitation-copy" data-copy="coach-link-{{ block.id }}">Copy</button>
       </div>
-      <p>This link is shown only this once. If you lose it, reissue it.</p>
+      <p>This link is shown only this once. If you lose it, make a new one here; the old one will stop working.</p>
     </div>
   {% endif %}
   {% if link.answer == "waiting" %}
@@ -37,7 +37,7 @@
     {% url 'issue_invitation' link.contact_id as issue %}
     <button type="submit" formaction="{{ issue }}" hx-post="{{ issue }}" hx-target="#block-{{ block.id }}"
             hx-select="#block-{{ block.id }}" hx-swap="outerHTML" class="pill ghost">
-      {% if link.invitation %}Reissue link{% else %}Get a link for {{ coach.name }}{% endif %}
+      {% if link.invitation %}Make a new link{% else %}Get a link for {{ coach.name }}{% endif %}
     </button>
     {% if link.invitation %}
       {% url 'revoke_invitation' link.contact_id as revoke %}

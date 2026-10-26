@@ -264,20 +264,30 @@ The homepage (`/`):
 
 ## The coach's details (Whatever You Do's coach page)
 
-- Going ahead (all Yes, or "I'm still confident — ask Sam"): beneath the gold box come "Their name" (already holding the first name typed on the intro), "Their email (optional)", the tick "I've spoken to this person and they're happy to receive a link from me about coaching me through this course.", a full-width "Save Sam as your coach", then "Choose someone else". The two boxes look like the intro's name box; the tick sits beside its words, not above them.
-- Saving with the box unticked says "Tick the box to confirm you've spoken to them." beneath the tick, with the name and email kept as typed; a bad address (`sam`, `sam@`, `sam@example`) says "Check their email address." and the email box turns red. Nothing is saved either way. An empty email box saves (ticket 51b).
-- Saving shows "You've chosen Sam" with their email (none if left empty), Sam's link shown once to copy (see "The coach's link"), "Choose someone else" and "Remove", without reloading the page. A reload, or coming back through the hub, shows the same, without the link.
+- Going ahead (all Yes, or "I'm still confident — ask Sam"): within the gold box, beneath "The next step is to ask them properly.", come the tick "I've spoken to this person and they're happy to receive a link from me about coaching me through this course.", then "Save Sam as your coach" and "Choose someone else". No name or email box (ticket 94); the tick sits beside its words, not above them.
+- Saving with the box unticked says "Tick the box to confirm you've spoken to them." beneath the tick, and nothing is saved.
+- Saving shows "You've chosen Sam", with no email address, Sam's link shown once to copy (see "The coach's link"), "Back to the hub", "Choose someone else" and "Remove", without reloading the page. A reload, or coming back through the hub, shows the same, without the link.
 - "Choose someone else" starts the checklist again, with "Sam stays your coach until you save someone else." and "Keep Sam" beneath its "Continue →". Enter in the name box goes on to the questions, not "Keep Sam". On the questions, with an answer chosen, Enter goes on like "Continue →", never back to the intro, and "Back" still shows on the left, at phone width too (fix-12). "Keep Sam" goes back to "You've chosen Sam" (or "Sam is your coach" once they have accepted). A reload before saving anyone new still shows the coach saved before. "Remove" goes back to the intro, and a reload shows the intro.
 - Without JavaScript: saving and "Remove" come back to the coach page at the checklist; a refused save comes back as the whole coach page with its reason.
 - Screen reader: the refusal is announced; a refused field is announced as invalid when Tab reaches it.
-- Phone width: the details and buttons fill the card's width.
+- Phone width: the tick and buttons fill the card's width.
+
+### Ticket 94: Walk with a coach on one screen, with no email address (rebuild the frontend; no need to load the pathway again)
+
+- From the hub's Walk with a coach card, give a first name and answer all Yes: the verdict card, "Sam sounds like the right person", holds the tick and "Save Sam as your coach" itself, with no name or email box anywhere on the way. Tick and save: "You've chosen Sam" replaces it on the same page, with the link shown once, "Make a new link", "Back to the hub", "Choose someone else" and "Remove". "Back to the hub" goes to the hub.
+- Answer one question No (not "Can ask questions…"): "Worth a second thought" ends "None of this rules Sam out. When Sam opens their link, they'll be asked to agree to the same six things you've just answered, including asking questions rather than handing out answers." "I'm still confident — ask Sam" leads to the verdict card, as above.
+- Across the intro, the questions and each outcome: body paragraphs are all one size, and the small notes (under the intro, under each question, "Sam stays your coach…") are all one size and colour.
+- The link dialog on Five trusted voices' page and the link beneath "You've chosen Sam" both say "This link is shown only this once. If you lose it, make a new one here; the old one will stop working.", and once a link exists, each person's button and the coach's read "Make a new link".
+- Open Sam's link in a private window: the line above "Accept →" says "We keep only your answer, accept or decline, with the name participant provided." and nothing about an email address.
+- Without JavaScript: saving from the verdict card comes back to the coach page showing "You've chosen Sam" and the link, and "Back to the hub" works.
+- Phone width: the verdict card's tick and its two buttons fit the card, and "You've chosen Sam"'s three buttons wrap within it.
 
 ## The coach's link (ticket 13c)
 
-- Saving Sam (ticket 51b) leads straight to "You've chosen Sam", saying the next step is to ask them properly, with the link shown once beneath, "Copy", "Waiting for Sam to answer. The link works until …", "Reissue link" and "Revoke link", without reloading the page; the link box has focus. "Copy" says "Copied". A reload shows no link, only the status. After "Revoke link" the button reads "Get a link for Sam", which shows a new link the same way.
-- With Before we begin complete (and later, Section 1 too), saving a coach and "Reissue link" still work.
+- Saving Sam (ticket 51b) leads straight to "You've chosen Sam", saying the next step is to ask them properly, with the link shown once beneath, "Copy", "Waiting for Sam to answer. The link works until …", "Make a new link" and "Revoke link", without reloading the page; the link box has focus. "Copy" says "Copied". A reload shows no link, only the status. After "Revoke link" the button reads "Get a link for Sam", which shows a new link the same way.
+- With Before we begin complete (and later, Section 1 too), saving a coach and "Make a new link" still work.
 - Enter in the link box does nothing: the link stays the same and still works (with and without JavaScript).
-- Without JavaScript: saving Sam, "Get a link for Sam", "Reissue link" and "Revoke link" each come back to the coach page at the checklist, the link shown once after issuing.
+- Without JavaScript: saving Sam, "Get a link for Sam", "Make a new link" and "Revoke link" each come back to the coach page at the checklist, the link shown once after issuing.
 - In a private window, the link shows "participant has asked you to be their coach" (the participant's display name), the two authored paragraphs, "What you'd be agreeing to" and the six promises, each with its note in smaller type and a box to its left; the box or its words tick it. The line on what is kept sits above "Accept →" and "I can't commit to all of this".
 - "Accept →" with a box unticked says "Tick all six to accept…" with the boxes as they were. All six ticked: "Thank you — participant will be told" and the authored line; a reload says "You're participant's coach" in its place (ticket 25a), and never shows the boxes again.
 - "I can't commit to all of this" (any boxes ticked): "That's a good answer" and the two authored paragraphs.
@@ -461,7 +471,7 @@ The homepage (`/`):
 - Issuing a link shows it under that person's name, in a read-only field with Copy. Copy puts the whole link on the clipboard and reads "Copied"; pasting it in a private window opens "You've been invited".
 - Without JavaScript, there is no Copy button, and the link in the field can be selected and copied by hand.
 - With enough people listed that the page scrolls: with JavaScript, issuing, reissuing or revoking a lower person's link changes only their row, and the page does not move; the new link is focused. Without JavaScript, the page comes back opened at that person, not at the top.
-- Reloading the page after issuing no longer shows the link (only its hash is kept), asks nothing about resending a form, and issues nothing new (the link from before still opens "You've been invited"), and the person shows "Link works until …" with "Reissue link" and "Revoke link".
+- Reloading the page after issuing no longer shows the link (only its hash is kept), asks nothing about resending a form, and issues nothing new (the link from before still opens "You've been invited"), and the person shows "Link works until …" with "Make a new link" and "Revoke link".
 - Going Back in the browser after issuing does not bring the link back from the cache.
 - Phone width: the link field and Copy stay on one line without the page scrolling sideways.
 - The observer's landing (a link opened in a private window): the notice's paragraphs, then "I'm answering for …" naming the participant, with nothing asked before it. Pressing it shows "Bookmark this link, it's yours" with Copy, as on the invitations page; reloading, or Back then Forward, does not bring the link back.
@@ -492,7 +502,7 @@ The homepage (`/`):
 ## Answer collection freezes (after `migrate`; three observers answered, at least one more person invited)
 
 - On the results page, "Compare with how others see you →" opens "Before you look": "3 of the 4 people you invited have answered…" and the same button again. "← Back to results" changes nothing; pressing the button opens the comparison. With everyone invited answered (or after `seed_observers`), it reads "Everyone you invited has answered. Once you look, you can't add anyone else." Below three answered, the press goes straight to "Not enough answers yet", as before.
-- Once looked: the hub's Five trusted voices card reads "Complete" with "You've seen your results, so no more answers are added." The list's page says the same and why, has no empty row and no "Issue link" or "Reissue link"; names can still be saved, and "Revoke link" still works. The coach page still issues and reissues the coach's link.
+- Once looked: the hub's Five trusted voices card reads "Complete" with "You've seen your results, so no more answers are added." The list's page says the same and why, has no empty row and no "Issue link" or "Make a new link"; names can still be saved, and "Revoke link" still works. The coach page still issues and reissues the coach's link.
 - In a private window, an unanswered person's link shows the notice then "No more answers are being taken." with no button; their own link, if they had started, shows the same in place of the sort.
 - An observer who answered withdraws: with two left, the comparison is "Not enough answers yet" again, the list offers its empty row and links again, and the next press asks again.
 - The notice (load the pathway again first) ends with withdrawing at any time, through the link or by asking the people who run the service, and says no new answers are added once the participant has looked.

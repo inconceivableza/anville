@@ -77,7 +77,7 @@
           <input type="text" id="invite-link-{{ row.contact_id }}" value="{{ row.issued }}" readonly autofocus>
           <button type="button" class="pill invitation-copy" data-copy="invite-link-{{ row.contact_id }}">Copy</button>
         </div>
-        <p>This link is shown only this once. If you lose it, reissue it.</p>
+        <p>This link is shown only this once. If you lose it, make a new one here; the old one will stop working.</p>
         <form method="dialog"><button type="submit" class="pill ghost small">Done</button></form>
       </dialog>
     {% endif %}
@@ -88,7 +88,7 @@
       <form method="post" action="{% url 'issue_invitation' row.contact_id %}"
             hx-post="{% url 'issue_invitation' row.contact_id %}" hx-target="closest li" hx-swap="outerHTML">
         {% csrf_token %}
-        <button type="submit" class="pill ghost small">{% if row.invitation %}Reissue link{% else %}Issue link{% endif %}</button>
+        <button type="submit" class="pill ghost small">{% if row.invitation %}Make a new link{% else %}Issue link{% endif %}</button>
       </form>
     {% endif %}
     {% if row.invitation %}

@@ -1806,8 +1806,13 @@ body:not(.framed) .question-card > p + form {
   line-height: 1.5;
 }
 
-.coach-why p {
+/* ✨ The checklist's body copy, one size on every screen: the intro's, each outcome's and the coach's link's (ticket 94).
+   Only paragraphs with no class of their own, so a note or a refusal keeps its own size. */
+.coach-why p,
+.coach-outcome p:not([class]) {
+  font-size: var(--text-md);
   line-height: 1.6;
+  margin: 0 0 var(--space-sm);
 }
 
 .coach-distinction {
@@ -1837,15 +1842,15 @@ body:not(.framed) .question-card > p + form {
   color: var(--green-deep);
 }
 
+/* ✨ The checklist's small notes share one size and colour (ticket 94): these, .coach-hint, .coach-note and .coach-kept p. */
 .coach-footnote,
 .coach-sub {
   font-size: var(--text-sm);
-  color: var(--muted);
+  color: var(--ink-light);
   margin: 0 0 var(--space-md);
 }
 
-.coach-checklist input[type="text"],
-.coach-checklist input[type="email"] {
+.coach-checklist input[type="text"] {
   width: 100%;
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--border);
@@ -1856,8 +1861,7 @@ body:not(.framed) .question-card > p + form {
   background: var(--paper);
 }
 
-.coach-checklist input[type="text"]:focus,
-.coach-checklist input[type="email"]:focus {
+.coach-checklist input[type="text"]:focus {
   outline: none;
   border-color: var(--green-deep);
   box-shadow: 0 0 0 3px var(--focus-ring);
@@ -1996,12 +2000,6 @@ body:not(.framed) .question-card > p + form {
 .coach-outcome {
   border-radius: var(--radius-lg);
   padding: var(--space-lg) var(--space-lg);
-}
-
-.coach-outcome p {
-  font-size: var(--text-sm);
-  line-height: 1.65;
-  margin: 0 0 var(--space-sm);
 }
 
 .coach-go {
@@ -2203,14 +2201,9 @@ body:not(.framed) .question-card > p + form {
   margin-top: 8px;
 }
 
-/* ✨ The coach's details beneath going ahead, as the original prototype's mentor screen asks for them */
-.coach-details {
-  margin-top: 20px;
-}
-
-.coach-details input[type="text"],
-.coach-details input[type="email"] {
-  margin-bottom: 16px;
+/* ✨ The tick on the verdict card, between its words and its buttons (ticket 94) */
+.coach-outcome .coach-confirm {
+  margin: var(--space-md) 0 var(--space-sm);
 }
 
 .question-card .coach-confirm,
@@ -2252,7 +2245,7 @@ body:not(.framed) .question-card > p + form {
 
 .coach-kept p {
   font-size: var(--text-sm);
-  color: var(--muted);
+  color: var(--ink-light);
   margin: 0 0 var(--space-sm);
 }
 

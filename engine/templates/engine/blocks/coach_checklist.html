@@ -6,8 +6,8 @@
   the server sends back the next screen in its place (htmx), or the whole section with it (without JavaScript).
 
   Nothing of the checklist is saved. The name and the answers so far are carried in the form from screen to screen,
-  and the outcome is worked out again from them on the server. Going ahead asks for the coach's name and, optionally,
-  email, which are all that is kept; saving them makes the coach's link, shown this once (ticket 51b), and once kept,
+  and the outcome is worked out again from them on the server. Going ahead asks only for the tick: the name given at
+  the start is all that is kept (ADR 0022); saving makes the coach's link, shown this once (ticket 51b), and once kept,
   the checklist opens on them. novalidate leaves every check to the server, as
   for the contact list, so a refusal is always said in words.
 {% endcomment %}
@@ -69,30 +69,26 @@
     </div>
 
   {% elif checklist.screen == "proceed" %}
-    {# ✨ The answers go with the details, so saving is refused past a stop however the form was sent. #}
+    {% comment %}
+      ✨ The answers and the name given at the start go with the tick, so saving is refused past a stop however the
+      form was sent. A coach is a name alone (ADR 0022), so the verdict card asks for nothing more: its tick says the
+      link comes from the participant (ticket 13c), not an email from us, and its button makes the link (ticket 94).
+    {% endcomment %}
+    <input type="hidden" name="name" value="{{ checklist.name }}">
     {% include "engine/blocks/coach_checklist_answers.html" %}
     <div class="coach-outcome coach-go">
-      {# ✨ The name follows what is typed below, so a save refused with it cleared has a fallback. #}
+      {# ✨ A hand-made save with no name is refused, so the heading has a fallback. #}
       <h2>{% if checklist.name %}{{ checklist.name }} sounds{% else %}This sounds{% endif %} like the right person</h2>
       {# ✨ Not after "I'm still confident", where the mock-up said it anyway. #}
       {% if not checklist.confident %}<p>You've said yes to all {{ checklist.count }}. That's worth something — most people find at least one they hesitate on.</p>{% endif %}
       <p>The next step is to ask them properly.</p>
-    </div>
-    {# ✨ The details the original prototype's mentor screen asks for, with the tick saying the link comes from the participant (ticket 13c), not an email from us. #}
-    <div class="coach-details">
-      <label for="coach-name-{{ block.id }}">Their name</label>
-      <input type="text" id="coach-name-{{ block.id }}" name="name" value="{{ checklist.name }}" maxlength="150" autocomplete="off"
-             {% if checklist.invalid == "name" %}aria-invalid="true"{% endif %}>
-      <label for="coach-email-{{ block.id }}">Their email (optional)</label>
-      <input type="email" id="coach-email-{{ block.id }}" name="email" value="{{ checklist.email }}" maxlength="254" autocomplete="off"
-             {% if checklist.invalid == "email" %}aria-invalid="true"{% endif %}>
       <label class="coach-confirm">
         <input type="checkbox" name="confirmed"{% if checklist.confirmed %} checked{% endif %}{% if checklist.invalid == "confirmed" %} aria-invalid="true"{% endif %}>
         <span>I've spoken to this person and they're happy to receive a link from me about coaching me through this course.</span>
       </label>
       {% if checklist.refusal %}<p class="coach-refusal" role="alert">{{ checklist.refusal }}</p>{% endif %}
-      <button type="submit" name="step" value="save" class="pill full">Save {% if checklist.name %}{{ checklist.name }} {% endif %}as your coach</button>
       <div class="coach-buttons">
+        <button type="submit" name="step" value="save" class="pill coach-grow">Save {% if checklist.name %}{{ checklist.name }} {% endif %}as your coach</button>
         <button type="submit" name="step" value="restart" class="pill ghost">Choose someone else</button>
       </div>
     </div>
@@ -109,9 +105,11 @@
         {% elif checklist.link.answer == "declined" %}{{ checklist.coach.name }} isn't able to be your coach
         {% else %}You've chosen {{ checklist.coach.name }}{% endif %}
       </h2>
-      {% if checklist.coach.email %}<p>{{ checklist.coach.email }}</p>{% endif %}
+      {# ✨ No email address: a coach is a name alone (ADR 0022), though one saved before may still hold one. #}
       {% if checklist.link %}{% include "engine/blocks/coach_link.html" with link=checklist.link coach=checklist.coach %}{% endif %}
+      {# ✨ The way on (ticket 94); after a decline, choosing someone else leads instead. #}
       <div class="coach-buttons">
+        <a href="{% url 'hub' %}" class="pill{% if checklist.link.answer == 'declined' %} ghost{% endif %}">Back to the hub</a>
         <button type="submit" name="step" value="restart" class="pill{% if checklist.link.answer != 'declined' %} ghost{% endif %}">Choose someone else</button>
         <button type="submit" name="step" value="remove" class="pill ghost">Remove</button>
       </div>
@@ -124,7 +122,7 @@
       <h2>Worth a second thought</h2>
       <p>Most of this looks right, but {% if checklist.flags|length == 1 %}one thing{% else %}a couple of things{% endif %} gave you pause. That hesitation is usually worth listening to.</p>
       {% include "engine/blocks/coach_checklist_flags.html" %}
-      <p>None of this rules {{ checklist.name }} out, and it may be worth simply raising it with them. “Would you be able to mostly ask questions rather than give me advice?” is a fair thing to ask upfront.</p>
+      <p>None of this rules {{ checklist.name }} out. When {{ checklist.name }} opens their link, they'll be asked to agree to the same {{ checklist.count }} things you've just answered, including asking questions rather than handing out answers.</p>
       <div class="coach-buttons">
         <button type="submit" name="step" value="confident" class="pill coach-warn">I’m still confident — ask {{ checklist.name }}</button>
         <button type="submit" name="step" value="restart" class="pill ghost">Think about someone else</button>
