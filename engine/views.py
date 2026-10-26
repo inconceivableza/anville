@@ -485,17 +485,17 @@ def move_past_page(request, section_id, page):
     section = _section_or_404(state.version, section_id)
     reached = state.reached(section)
     if reached is None:
-        return redirect("hub")
+        return _to_the_hub_when_locked(request)
     if _page_or_404(section, page) == page_count(section):
         raise Http404("The last page of a section is moved past by completing it.")
     if page > reached:
-        return _see_other(page_url(section_id, reached))
+        return _go_to(request, page_url(section_id, reached))
     shown = _section_page(state, section, page)
     if not shown["offers_way_on"] or shown["unmet"]:
-        return _section_shown(request, state, section, {**shown, "refused": True}, status=400)
+        return _way_on_refused(request, state, section, shown)
 
     state.stored_response(request.user).move_past_page(section_id, page)
-    return _see_other(page_url(section_id, page + 1))
+    return _go_to(request, page_url(section_id, page + 1))
 
 
 @login_required
@@ -511,18 +511,32 @@ def complete_section(request, section_id):
         raise Http404("This section is complete once its gate passes, with no completion of its own.")
     reached = state.reached(section)
     if reached is None:
-        return redirect("hub")
+        return _to_the_hub_when_locked(request)
     last = page_count(section)
     if reached < last:
-        return _see_other(page_url(section_id, reached))
+        return _go_to(request, page_url(section_id, reached))
     if unmet(section, state.answers):
-        shown = _section_page(state, section, last)
-        return _section_shown(request, state, section, {**shown, "refused": True}, status=400)
+        return _way_on_refused(request, state, section, _section_page(state, section, last))
 
     fixed_block_ids = block_ids_fixed_on_completion(section, state.answers)
     state.stored_response(request.user).complete_section(section_id, fixed_block_ids=fixed_block_ids)
     # ✨ Back to the hub, which points at the next step, as the prototype's `completePillar` goes (ticket 41b).
-    return _see_other("hub")
+    return _go_to(request, reverse("hub"))
+
+
+def _to_the_hub_when_locked(request):
+    """✨ A press on a section that is locked, or outside the track: to the hub, with htmx told to go there rather than
+    draw the hub beneath the button (fix-2)."""
+    return _go_to(request, reverse("hub")) if _is_htmx(request) else redirect("hub")
+
+
+def _way_on_refused(request, state, section, shown):
+    """✨ A refused "Continue →" or completion, nothing stored: with htmx, only what sits beneath the button, for the
+    page's `#gate-refusal`, so the page neither reloads nor moves (fix-2); without, the page again."""
+    shown = {**shown, "refused": True}
+    if _is_htmx(request):
+        return render(request, "engine/gate_refusal.html", shown, status=400)
+    return _section_shown(request, state, section, shown, status=400)
 
 
 @login_required
@@ -820,6 +834,8 @@ def results(request, block_id):
         "section": section,
         "retake": _demo_tools_on(),
         "finish": _results_finish(state, block_id),
+        # ✨ How a refused finish comes back, as on a section's page (fix-2).
+        "messages_after_a_press": state.version.document.get("messages_after_a_press", False),
     }
     return render(request, "engine/results.html", context)
 

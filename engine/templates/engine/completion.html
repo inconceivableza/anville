@@ -15,50 +15,49 @@
   own where there is no way on beside it (ticket 41e).
 
   The way on is disabled while its gate is unmet, unless the document wants messages only after a press (ticket 83):
-  then it can always be pressed, and a refused press says what is missing.
+  then it can always be pressed, and a refused press says what is missing. There, with JavaScript, the press is sent
+  in the background and a refusal comes back into `#gate-refusal` alone, beneath the button, which keeps the focus
+  (fix-2). Without, the page comes back opened at `#refused`, the way on, which only a refused press's page has: an
+  accepted press's next page would otherwise open at its own way on, since a redirect keeps the address's fragment.
+  The faithful port's way on is disabled until it can be pressed, so it keeps its plain form.
 {% endcomment %}
 <div id="completion"{% if offers_way_on %} class="completion"{% endif %}{% if out_of_band %} hx-swap-oob="true"{% endif %}>
   {% if offers_way_on and not page.is_last %}
     {# ✨ Every page but the last goes on to the next, held by that page's own requirements, listed as below. #}
-    <div class="way-on">
+    <div class="way-on"{% if refused %} id="refused"{% endif %}>
       {% include "engine/previous_page.html" %}
-      <form method="post" action="{% url 'move_past_page' section.id page.number %}">
+      {% url 'move_past_page' section.id page.number as move_on %}
+      <form method="post"{% if messages_after_a_press %} action="{{ move_on }}#refused" hx-post="{{ move_on }}" hx-target="#gate-refusal"{% else %} action="{{ move_on }}"{% endif %}>
         {% csrf_token %}
         <button type="submit" class="pill full"{% if unmet and not messages_after_a_press %} disabled{% endif %}>Continue →</button>
       </form>
     </div>
-    {% include "engine/gate_checklist.html" %}
-    {% if refused %}
-      <p class="gate-refused">This page is not finished yet.</p>
-    {% endif %}
+    <div id="gate-refusal">{% include "engine/gate_refusal.html" %}</div>
   {% elif offers_way_on and section.is_side_card and not is_complete %}
     {# ✨ A hub side card is complete once its gate passes, with nothing to press (ticket 52): only what it waits on. #}
     {% include "engine/gate_checklist.html" %}
   {% elif offers_way_on and not section.is_part and not section.is_side_card and not is_complete %}
-    <div class="way-on">
+    <div class="way-on"{% if refused %} id="refused"{% endif %}>
       {% include "engine/previous_page.html" %}
-      <form method="post" action="{% url 'complete_section' section.id %}">
+      {% url 'complete_section' section.id as complete %}
+      <form method="post"{% if messages_after_a_press %} action="{{ complete }}#refused" hx-post="{{ complete }}" hx-target="#gate-refusal"{% else %} action="{{ complete }}"{% endif %}>
         {% csrf_token %}
         <button type="submit" class="pill full"{% if unmet and not messages_after_a_press %} disabled{% endif %}>{{ section.complete_label }}</button>
       </form>
     </div>
-    {% include "engine/gate_checklist.html" %}
-    {% if refused %}
-      <p class="gate-refused">This section was not marked complete: it is not finished yet.</p>
-    {% endif %}
+    <div id="gate-refusal">{% include "engine/gate_refusal.html" %}</div>
   {% elif offers_way_on and section.finish %}
-    {# ✨ A part that is the last thing in its section ends in that section's finish (ticket 88), refused by its gate. #}
+    {# ✨ A part that is the last thing in its section ends in that section's finish (ticket 88), refused by its gate: #}
+    {# ✨ with JavaScript, into `#gate-refusal` beneath it; without, on that section's last page, at its way on. #}
     <div class="way-on">
       {% include "engine/previous_page.html" %}
       {% if section.finish.done %}
         <a class="pill full" href="{% url 'hub' %}">Back to the hub</a>
       {% else %}
-        <form method="post" action="{% url 'complete_section' section.finish.section_id %}">
-          {% csrf_token %}
-          <button type="submit" class="pill full">{{ section.finish.label }}</button>
-        </form>
+        {% include "engine/finish_form.html" with finish=section.finish button_class="pill full" %}
       {% endif %}
     </div>
+    {% if not section.finish.done %}<div id="gate-refusal"></div>{% endif %}
   {% else %}
     {% if section.is_part or section.is_side_card %}
       {# ✨ A part of a section, or a hub side card, is complete once its gate passes, so it has no completion of its #}

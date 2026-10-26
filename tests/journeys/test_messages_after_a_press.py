@@ -7,6 +7,7 @@ signs the participant out. The messages are read from the document, so its wordi
 
 import json
 import re
+from html import unescape
 from pathlib import Path
 
 import pytest
@@ -51,6 +52,51 @@ def test_the_wizard_says_nothing_on_arrival_and_a_refused_continue_names_what_is
     refused = participant.post("/sections/onboarding/pages/1/continue/")
     assert refused.status_code == 400
     assert gate_checklist(refused.content.decode()) == {choose_a_reason: False}
+
+
+HTMX = {"HX-Request": "true"}
+
+
+def text_of(fragment):
+    """✨ The words a fragment shows, its unmet item's dot left out."""
+    return " ".join(unescape(re.sub(r"<[^>]+>", " ", fragment)).replace("•", " ").split())
+
+
+@pytest.mark.django_db
+def test_with_javascript_a_refused_continue_sends_back_only_what_is_missing_and_stores_nothing(participant):
+    """✨ fix-2: swapped in beneath the button, so the page neither reloads nor moves, and without a general line."""
+    refused = participant.post("/sections/onboarding/pages/1/continue/", headers=HTMX)
+
+    assert refused.status_code == 400
+    assert "<html" not in refused.content.decode()
+    assert text_of(refused.content.decode()) == gate_message("onboarding", "reason")
+    assert participant.get(RATINGS_PAGE).url == WIZARD
+
+
+@pytest.mark.django_db
+def test_with_javascript_an_accepted_press_goes_on_to_the_next_page_and_completing_to_the_hub(participant):
+    answer(participant, "reason", "exploring")
+    moved_on = participant.post("/sections/onboarding/pages/1/continue/", headers=HTMX)
+    for rating in RATINGS:
+        answer(participant, rating, "7")
+    completed = participant.post("/sections/onboarding/complete/", headers=HTMX)
+
+    assert moved_on.headers["HX-Redirect"] == RATINGS_PAGE
+    assert completed.headers["HX-Redirect"] == "/hub/"
+
+
+@pytest.mark.django_db
+def test_without_javascript_a_refused_press_comes_back_at_its_way_on_where_no_unrefused_page_opens(participant):
+    """✨ fix-2: a redirect keeps the address's fragment, so the page an accepted press leads to must not have it."""
+    arrived = participant.get(WIZARD).content.decode()
+    action = re.search(r'action="(/sections/onboarding/pages/1/continue/[^"]*)"', arrived).group(1)
+    path, _, anchor = action.partition("#")
+
+    refused = participant.post(path).content.decode()
+
+    assert anchor
+    assert f'id="{anchor}"' in refused
+    assert f'id="{anchor}"' not in arrived
 
 
 @pytest.mark.django_db

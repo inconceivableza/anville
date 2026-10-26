@@ -24,10 +24,7 @@
       {% if finish.done %}
         <a class="pill" href="{% url 'hub' %}">Back to the hub</a>
       {% else %}
-        <form method="post" action="{% url 'complete_section' finish.section_id %}">
-          {% csrf_token %}
-          <button type="submit" class="pill">{{ finish.label }}</button>
-        </form>
+        {% include "engine/finish_form.html" with button_class="pill" %}
       {% endif %}
       {% if finish.invite %}
         <span class="results-invite">
@@ -38,6 +35,8 @@
         {% include "engine/comparison_press.html" with press_sort=drawn.block_id press_class="pill ghost" %}
       {% endif %}
     </div>
+    {# ✨ Where a refused finish shows, with JavaScript, beneath it (fix-2). #}
+    {% if not finish.done %}<div id="gate-refusal"></div>{% endif %}
   {% else %}
     {% comment %}✨ A form, not a link: pressing it is the visit Section 1 waits on, and a browser never loads a POST ahead of time.{% endcomment %}
     {% include "engine/comparison_press.html" with press_sort=drawn.block_id press_class="pill" press_form_class="results-next" %}

@@ -1,0 +1,13 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ A part's finish (ticket 88), at the end of the part's last page and on its results page: the completion of the
+  section the part ends, refused by that section's gate. Where the document wants messages only after a press, a
+  refusal comes back with JavaScript into the page's `#gate-refusal`, and without it as that section's last page,
+  opened at its way on (fix-2), as completion.html's own completion does.
+{% endcomment %}
+{% url 'complete_section' finish.section_id as complete %}
+<form method="post"{% if messages_after_a_press %} action="{{ complete }}#refused" hx-post="{{ complete }}" hx-target="#gate-refusal"{% else %} action="{{ complete }}"{% endif %}>
+  {% csrf_token %}
+  <button type="submit" class="{{ button_class }}">{{ finish.label }}</button>
+</form>

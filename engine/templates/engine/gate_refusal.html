@@ -1,0 +1,17 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ What sits beneath a way on's button: the gate's checklist and, once a press is refused, the line saying so. Drawn
+  inside the page's `#gate-refusal`, and on its own as htmx's answer to a press refused where the document wants
+  messages only after a press (fix-2), swapped into that same place so the page neither reloads nor moves. There the
+  general line is left out: the list of what is missing is the refusal, and a line under it only said it again. On a
+  section's last page the press was its completion; on any other, "Continue →".
+{% endcomment %}
+{% include "engine/gate_checklist.html" %}
+{% if refused and not messages_after_a_press %}
+  {% if page.is_last %}
+    <p class="gate-refused">This section was not marked complete: it is not finished yet.</p>
+  {% else %}
+    <p class="gate-refused">This page is not finished yet.</p>
+  {% endif %}
+{% endif %}

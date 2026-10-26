@@ -5,6 +5,8 @@
 You Do*'s Section 1, so its results page finishes Section 1, and beside that sends a participant without enough
 answers to invite people rather than to a comparison they cannot see yet. Wording and layout are hand checks."""
 
+import re
+
 import pytest
 from django.test import Client
 from django.utils.html import escape
@@ -22,7 +24,7 @@ from tests.journeys.test_whatever_you_do import answer_onboarding, people_answer
 from tests.journeys.test_whatever_you_do_faithful_port import a_whole_sort, complete, submit_the_sort
 
 RESULTS = "/results/strengths-sort/"
-FINISH_SECTION_1 = 'action="/sections/designed/complete/"'
+FINISH_SECTION_1 = 'action="/sections/designed/complete/'  # ✨ its refusal's place after it (fix-2)
 
 
 @pytest.fixture
@@ -54,6 +56,17 @@ def test_until_section_1_is_complete_its_results_finish_it_and_land_on_the_hub(p
 
     assert (finished.status_code, finished.url) == (303, "/hub/")
     assert "designed" in Response.objects.get().completed_sections
+
+
+@pytest.mark.django_db
+def test_with_javascript_a_refused_finish_comes_back_into_a_place_beneath_it_on_the_results_page(participant):
+    """✨ fix-2: htmx swaps a refusal into the element the form names, which must be on this page."""
+    page = results_page(participant)
+    form = re.search(r'<form [^>]*action="/sections/designed/complete/[^"]*"[^>]*>', page).group(0)
+
+    target = re.search(r'hx-target="#([^"]+)"', form).group(1)
+
+    assert f'id="{target}"' in page
 
 
 @pytest.mark.django_db
