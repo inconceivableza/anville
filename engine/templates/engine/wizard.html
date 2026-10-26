@@ -4,9 +4,11 @@
 {% comment %}
   ✨ A section the pathway document marks as a wizard (ticket 50), while it is not yet complete: one page of it, its
   blocks and its way on as on any section page, beside the section's photo, without the hub's links or the sidebar.
-  Completing it leads to the hub, and from then on it is reread as any other section.
+  Completing it leads to the hub, and from then on it is reread as any other section. The wizard's first page, the
+  engine's own (ADR 0021), takes this layout too, filling `step` with its own form; it is the first of the steps
+  counted, so `step` is the step this page is of them all, not its page within the section.
 {% endcomment %}
-{% block head_title %}{{ section.title }} | {{ page.number }} of {{ page.count }}{% endblock head_title %}
+{% block head_title %}{% block page_title %}{{ section.title }}{% endblock page_title %} | {{ step.number }} of {{ step.count }}{% endblock head_title %}
 
 {% block content %}
   <div class="ob">
@@ -30,19 +32,21 @@
           <button type="submit" class="linkbtn">Log out</button>
         </form>
         <div class="prog" aria-live="polite">
-          <span class="label">Step {{ page.number }} of {{ page.count }}</span>
-          <span class="bar" aria-hidden="true">{% for step in steps %}<i{% if step <= page.number %} class="on"{% endif %}></i>{% endfor %}</span>
+          <span class="label">Step {{ step.number }} of {{ step.count }}</span>
+          <span class="bar" aria-hidden="true">{% for each in steps %}<i{% if each <= step.number %} class="on"{% endif %}></i>{% endfor %}</span>
         </div>
         <svg class="ob-mark" aria-hidden="true"><use href="#mark"/></svg>
       </header>
 
       <div class="ob-main">
         <div class="step">
-          <h1>{{ section.title }}</h1>
-          {% for block in section.blocks %}
-            {% include "engine/block_drawn.html" %}
-          {% endfor %}
-          {% include "engine/completion.html" %}
+          {% block step %}
+            <h1>{{ section.title }}</h1>
+            {% for block in section.blocks %}
+              {% include "engine/block_drawn.html" %}
+            {% endfor %}
+            {% include "engine/completion.html" %}
+          {% endblock step %}
         </div>
       </div>
     </section>

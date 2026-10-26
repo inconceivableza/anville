@@ -607,6 +607,94 @@ main.container:has(> .ob) {
   font-weight: 300;
 }
 
+/* ✨ The wizard's first page (ADR 0021): v3's field and its tick boxes, each refusal under what it refuses */
+.first-page {
+  display: grid;
+  gap: var(--space-lg);
+  max-width: 560px;
+}
+
+.first-page-field {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.first-page-field label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.first-page-field input {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.first-page-field input:focus {
+  outline: none;
+  border-color: var(--green-deep);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.first-page-field input[aria-invalid="true"] {
+  border-color: var(--red-soft);
+  box-shadow: 0 0 0 3px var(--error-ring);
+}
+
+.first-page-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  font-size: var(--text-md);
+  cursor: pointer;
+}
+
+.first-page-check input {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  accent-color: var(--green-deep);
+}
+
+.first-page-check input[aria-invalid="true"] {
+  outline: 2px solid var(--red-soft);
+  outline-offset: 2px;
+}
+
+.first-page-refusal {
+  margin: var(--space-xs) 0 0;
+  color: var(--red-text);
+  font-size: var(--text-sm);
+}
+
+/* ✨ "What this means": the consent text, closed until asked for, its words under the tick's rather than its box */
+.first-page-details {
+  margin: var(--space-sm) 0 0 calc(18px + var(--space-sm));
+  font-size: var(--text-sm);
+  color: var(--ink-light);
+}
+
+.first-page-details > summary {
+  cursor: pointer;
+  color: var(--green-deep);
+  font-weight: 600;
+}
+
+.first-page-details h2 {
+  font-size: var(--text-md);
+  margin: var(--space-md) 0 var(--space-xs);
+}
+
+.first-page-details .hint-box {
+  margin: var(--space-sm) 0 0;
+}
+
 @media (max-width: 900px) {
   .ob {
     grid-template-columns: 1fr;

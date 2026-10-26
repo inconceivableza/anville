@@ -38,13 +38,21 @@ def test_a_new_person_signs_up_without_the_code_consents_and_joins_knowingly(cli
     sign_up_page = client.get(to_sign_up.url).content.decode()
     assert 'name="enrolment_code"' not in sign_up_page
     form = {"display_name": "Sam", "email": "sam@example.com", "password1": PASSWORD, "password2": PASSWORD}
-    to_join = client.post("/accounts/signup/", {**form, "is_adult": "on", "next": hidden_next(sign_up_page)})
+    to_join = client.post("/accounts/signup/", {**form, "next": hidden_next(sign_up_page)})
     assert get_user(client).is_authenticated
 
+    # ✨ Consent is asked on the wizard's first page, beside "I am 18 or over" (ADR 0021).
     to_consent = client.get(to_join.url)
     consent_page = client.get(to_consent.url).content.decode()
     back_to_join = client.post(
-        "/consent/", {"decision": "agree", "version": version_on(consent_page), "next": hidden_next(consent_page)}
+        to_consent.url,
+        {
+            "display_name": "Sam",
+            "is_adult": "on",
+            "consents": "on",
+            "version": version_on(consent_page),
+            "next": hidden_next(consent_page),
+        },
     )
     assert back_to_join.url == join_link(cohort)
 

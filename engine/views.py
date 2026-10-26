@@ -19,8 +19,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods, require_POST
 
-from access.consent import consent_required
+from access.consent import consent_required, current_text_version, has_passed_first_page, pass_first_page
+from access.first_page_form import FirstPageForm
 from access.models import name_shown_for
+from access.views import next_on_this_site
 from engine.document import (
     BLOCK_TYPES,
     LONG_TEXT_MAX_LENGTH,
@@ -295,10 +297,25 @@ def _shows_as_wizard(state, section):
 def _section_shown(request, state, section, shown, status=200):
     """✨ A page of a section as `_section_page` gives it, drawn as its wizard while it is one."""
     if _shows_as_wizard(state, section):
-        steps = range(1, shown["page"]["count"] + 1)
-        shown = {**shown, "photo": _photo_of(state.version.document, section["id"]), "steps": steps}
+        step = _wizard_step(state.sections, section, shown["page"]["number"])
+        steps = range(1, step["count"] + 1)
+        shown = {**shown, "photo": _photo_of(state.version.document, section["id"]), "step": step, "steps": steps}
         return render(request, "engine/wizard.html", shown, status=status)
     return render(request, "engine/section.html", shown, status=status)
+
+
+def _wizard_step(sections, section, number):
+    """✨ The step a wizard's page `number` is, as {"number", "count"}. The wizard's first page (ADR 0021) comes
+    before the first wizard of the track, as its step 1, so that wizard's pages are counted from 2; any later wizard
+    counts its own pages alone."""
+    first = _first_wizard(sections)
+    before = 1 if first is not None and first["id"] == section["id"] else 0
+    return {"number": number + before, "count": page_count(section) + before}
+
+
+def _first_wizard(sections):
+    """✨ The first section of these that the document marks as a wizard, or None."""
+    return next((section for section in sections if section.get("wizard")), None)
 
 
 def _coach_page_of(document, hub):
@@ -403,6 +420,41 @@ def start(request):
     if next_step is None or not any(section["blocks"] for section in state.sections):
         return redirect("hub")  # ✨ the hub's empty state says there is nothing to begin
     return redirect("section", next_step.id)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def first_page(request):
+    """✨ The wizard's first page, the engine's and authored by no pathway (ADR 0021): the first name, filled in from
+    the account and changeable, "I am 18 or over", and the consent tick, with the consent text beside it. It comes
+    before the track's first wizard, in its layout, as step 1 of its steps.
+
+    Continue is refused, storing nothing, unless all three are given, the refusals shown only after the press. Passing
+    it keeps the name, when 18 or over was ticked and consent to the text the page showed, then goes on as agreeing on
+    the consent page does. Once passed it is never asked again: the hub leads on, and the consent page asks again after
+    a withdrawal or a change to the text.
+    """
+    if has_passed_first_page(request.user):
+        return redirect("hub")
+    version = current_text_version()
+    after = next_on_this_site(request)
+    form = FirstPageForm(request.POST or None, initial={"display_name": name_shown_for(request.user)})
+    text_changed = request.method == "POST" and request.POST.get("version") != str(version)
+    if request.method == "POST" and form.is_valid() and not text_changed:
+        pass_first_page(request.user, form.cleaned_data["display_name"])
+        return _see_other(after or "start")
+    state = _participant(request.user)
+    first = _first_wizard(state.sections)
+    step = {"number": 1, "count": 1 + (page_count(first) if first is not None else 0)}
+    shown = {
+        "form": form,
+        "version": version,
+        "next": after,
+        "text_changed": text_changed,
+        "step": step,
+        "steps": range(1, step["count"] + 1),
+    }
+    return render(request, "engine/first_page.html", shown, status=400 if request.method == "POST" else 200)
 
 
 @login_required

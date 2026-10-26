@@ -1,0 +1,58 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/wizard.html" %}
+{% comment %}
+  ✨ The wizard's first page (ADR 0021), the engine's own and in the wizard's layout: the first name, "I am 18 or over"
+  and the consent tick, with "What this means" opening to the consent text, without JavaScript too. Each refusal sits
+  under what it refuses and shows only after Continue is pressed. No photo: the pathway's photos wait for consent, as
+  the rest of it does, so the wizard's leaf stands in.
+{% endcomment %}
+{% block page_title %}About you{% endblock page_title %}
+
+{% block step %}
+  <h1>About you</h1>
+  <form method="post" action="{% url 'first_page' %}" class="first-page" novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="version" value="{{ version }}">
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+    <div class="first-page-field">
+      <label for="{{ form.display_name.id_for_label }}">{{ form.display_name.label }}</label>
+      <input type="text" name="{{ form.display_name.html_name }}" id="{{ form.display_name.id_for_label }}"
+             value="{{ form.display_name.value|default_if_none:'' }}" maxlength="{{ form.display_name.field.max_length }}"
+             autocomplete="given-name"{% if form.display_name.errors %} aria-invalid="true"{% endif %}>
+      {% for error in form.display_name.errors %}<p class="first-page-refusal" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+
+    <div>
+      <label class="first-page-check">
+        <input type="checkbox" name="{{ form.is_adult.html_name }}"{% if form.is_adult.value %} checked{% endif %}{% if form.is_adult.errors %} aria-invalid="true"{% endif %}>
+        <span>{{ form.is_adult.label }}</span>
+      </label>
+      {% for error in form.is_adult.errors %}<p class="first-page-refusal" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+
+    <div>
+      <label class="first-page-check">
+        <input type="checkbox" name="{{ form.consents.html_name }}"{% if form.consents.value %} checked{% endif %}{% if form.consents.errors %} aria-invalid="true"{% endif %}>
+        <span>{{ form.consents.label }}</span>
+      </label>
+      {% for error in form.consents.errors %}<p class="first-page-refusal" role="alert">{{ error }}</p>{% endfor %}
+      <details class="first-page-details">
+        <summary>What this means</summary>
+        {% include "access/consent_text.html" with withdraw_from="the “Your consent” page, linked at the foot of your hub" %}
+        <p>Version {{ version }} of this text.</p>
+      </details>
+    </div>
+
+    {% if text_changed %}
+      <p class="consent-changed" role="alert">The text has changed since you opened this page. Please read it again.</p>
+    {% endif %}
+    <div class="way-on">
+      <button type="submit" class="pill full">Continue →</button>
+    </div>
+  </form>
+
+  {# ✨ The hub needs consent and admins' pages don't, so an admin who has not consented finds the way here, as on the consent page. #}
+  {% if user.organisation_permissions.exists %}<p class="hub-consent"><a href="{% url 'your_organisations' %}">Your organisations</a></p>{% endif %}
+{% endblock step %}
