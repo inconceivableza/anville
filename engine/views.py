@@ -1032,7 +1032,7 @@ def _demo_tools_on():
 @consent_required
 @require_http_methods(["GET", "POST"])
 def retake(request, block_id):
-    """✨ Demo only (fix-19): the results page's quiet "Retake the assessment (demo only)" asks first, saying what will
+    """✨ Demo only (fix-19): the results page's quiet "Retake the strengths evaluation (demo only)" asks first, saying what will
     be cleared; only its button clears the participant's own sort and everything worked out from it, then opens the
     sort afresh. Off a development or demo system it is a 404.
 
@@ -1046,7 +1046,7 @@ def retake(request, block_id):
     A section completed whose gate needed the sort is no longer complete, so the hub never shows it complete beside an
     assessment not started; the participant's other answers in it stay, and completing it again needs the new sort."""
     if not _demo_tools_on():
-        raise Http404("Retaking the assessment is offered only on a development or demo system.")
+        raise Http404("Retaking the strengths evaluation is offered only on a development or demo system.")
     state, result, section = _own_result(request.user, block_id)
     sort_page = page_url(section["id"], section["page"])
     document = state.version.document
@@ -1989,7 +1989,7 @@ def send_assessment(request, token=None):
     try:
         sent = ObserverResponse.send(invitation.contact.response, secret, assessment, relationship=relationship)
     except IntegrityError:
-        refusal = "Your assessment has already been sent."
+        refusal = "Your evaluation has already been sent."
         return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
     except CollectionFrozen:
         return render(request, "engine/save_status.html", {"refusal": NO_MORE_ANSWERS}, status=409)

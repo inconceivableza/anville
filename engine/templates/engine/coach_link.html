@@ -15,7 +15,7 @@
 
   Departures from the mock-up: "Accept and get the first session guide →" is "Accept →", and its promise to send a
   briefing pack is gone, since there is no email yet; "What happens next" keeps the mock-up's first sentence with "the
-  first section" as "the strengths assessment", promises the comparison beside the results and the guide, and says
+  first section" as "the strengths evaluation", promises the comparison beside the results and the guide, and says
   they appear on this page, since nothing is sent. Accept is not held disabled until every box is ticked, nor is "n of 6 agreed" counted
   beneath them, which would need JavaScript; the server refuses an accept short of a box and says why.
 {% endcomment %}
@@ -32,7 +32,7 @@
       {% if not shared %}
         <div class="coach-next">
           <p class="coach-next-label">What happens next</p>
-          <p>{{ name }} finishes the strengths assessment and sends it to you. You'll get the results{% if briefed %}, how others rate the same strengths, and a short guide to that conversation — what it's for, what to ask, what to watch for{% else %}, and how others rate the same strengths{% endif %}. They'll appear on this page, so keep the link.</p>
+          <p>{{ name }} finishes the strengths evaluation and sends it to you. You'll get the results{% if briefed %}, how others rate the same strengths, and a short guide to that conversation — what it's for, what to ask, what to watch for{% else %}, and how others rate the same strengths{% endif %}. They'll appear on this page, so keep the link.</p>
         </div>
       {% endif %}
     </div>

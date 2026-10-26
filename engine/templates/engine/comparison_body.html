@@ -14,7 +14,7 @@
 {% endif %}
 
 {% if comparison.frameworks is None %}
-  <p class="results-desc">{% if for_coach %}Comparing {{ name }}'s self-assessment with the averaged responses of the people {{ name }} asked.{% else %}Comparing your self-assessment with the averaged responses of people who know you.{% endif %}</p>
+  <p class="results-desc">{% if for_coach %}Comparing {{ name }}'s strengths evaluation with the averaged responses of the people {{ name }} asked.{% else %}Comparing your strengths evaluation with the averaged responses of people who know you.{% endif %}</p>
   <section class="results-section comparison-waiting">
     <h2>Not enough answers yet</h2>
     {% if for_coach %}
@@ -26,7 +26,7 @@
     {% if not for_coach %}<p><a class="pill" href="{% url 'invitations' %}">Invite people who know you →</a></p>{% endif %}
   </section>
 {% else %}
-  <p class="results-desc">{% if for_coach %}Comparing {{ name }}'s self-assessment with the averaged responses of the {{ comparison.observers }} people {{ name }} asked.{% else %}Comparing your self-assessment with the averaged responses of {{ comparison.observers }} people who know you.{% endif %}</p>
+  <p class="results-desc">{% if for_coach %}Comparing {{ name }}'s strengths evaluation with the averaged responses of the {{ comparison.observers }} people {{ name }} asked.{% else %}Comparing your strengths evaluation with the averaged responses of {{ comparison.observers }} people who know you.{% endif %}</p>
 
   {% comment %}
     ✨ The two icons, drawn once and used on every axis: a single person for the participant, a group for the

@@ -93,7 +93,7 @@ def test_the_consent_text_says_what_a_groups_admins_see_and_that_leaving_ends_it
         "your first name",
         "how far through you are",
         "when you were last active",
-        "the self-assessment results of the whole group averaged",
+        "the strengths evaluation results of the whole group averaged",
         "never yours on their own",
         "If you leave the group, they no longer see anything about you",
     ]:

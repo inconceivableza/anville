@@ -40,7 +40,29 @@ def test_the_repository_has_no_licence_while_its_pathways_quote_scripture_by_per
 OWN_WORDING = [path for path in PATHWAY_FILES if path.name != "whatever-you-do-faithful-port.json"]
 
 
-WITH_AN_INSTRUMENT = [path for path in PATHWAY_FILES if "instrument" in json.loads(path.read_text(encoding="utf-8"))]
+def _words_a_reader_sees(node, key=None):
+    """✨ Every string in the document except the ones that name something for the code: ids, types and file names."""
+    if isinstance(node, dict):
+        for name, value in node.items():
+            yield from _words_a_reader_sees(value, name)
+    elif isinstance(node, list):
+        for value in node:
+            yield from _words_a_reader_sees(value, key)
+    elif isinstance(node, str) and key not in {"id", "type", "file", "loads", "construct", "section", "sort", "part_of"}:
+        yield node
+
+
+@pytest.mark.parametrize("path", OWN_WORDING, ids=lambda path: path.name)
+def test_no_wording_a_reader_sees_calls_the_strengths_evaluation_an_assessment_or_the_course_a_workbook(path):
+    """✨ Sprint 3c's new words: "strengths evaluation" and "journey". "Workbook" stays only in a section's PDF file
+    name, which is not read here."""
+    document = json.loads(path.read_text(encoding="utf-8"))
+
+    old = [text for text in _words_a_reader_sees(document) if re.search(r"assessments?\b|workbook", text, re.IGNORECASE)]
+    assert old == []
+
+
+WITH_AN_INSTRUMENT =[path for path in PATHWAY_FILES if "instrument" in json.loads(path.read_text(encoding="utf-8"))]
 
 
 @pytest.mark.parametrize("path", WITH_AN_INSTRUMENT, ids=lambda path: path.name)

@@ -29,11 +29,11 @@ from tests.journeys.test_results import SORT
 
 BRIEF = {
     "title": "Session 1 – Their gifts",
-    "purpose": "Help them believe what the assessment is telling them.",
+    "purpose": "Help them believe what the strengths evaluation is telling them.",
     "length": "45–60 minutes",
     "questions": [{"text": "Which of these results surprised you?"}, {"text": "Which felt obvious?"}],
     "watch_for": [{"text": "People dismiss their strongest gift as nothing special."}],
-    "avoid": "Do not treat the assessment as a verdict.",
+    "avoid": "Do not treat the strengths evaluation as a verdict.",
 }
 
 # ✨ Every passage of the brief, as a reader sees it.

@@ -174,7 +174,7 @@ document.addEventListener("change", (event) => {
   shown.classList.remove("unset");
 });
 
-// ✨ Demo only (fix-20): a demo-only element marked data-demo-reveal (the results page's "Retake the assessment (demo
+// ✨ Demo only (fix-20): a demo-only element marked data-demo-reveal (the results page's "Retake the strengths evaluation (demo
 // only)") comes `hidden`, and only a demo system's markup carries one. Option/Alt held on its own for a second shows
 // it, or on a phone the element marked data-demo-reveal-hold (the page's title) pressed and held for a second; another
 // key, a click, letting go early or a scroll cancels. Once shown it stays until the page is left, so the participant
@@ -317,7 +317,7 @@ if (document.querySelector("main.page") && !reducedMotion) {
   });
 }
 
-// --- Assessment tabs: auto-advancing, pausable, keyboard-navigable ---
+// --- Evaluation tabs: auto-advancing, pausable, keyboard-navigable ---
 (() => {
   const bar = document.getElementById("aTabs");
   const text = document.getElementById("aText");
@@ -325,9 +325,9 @@ if (document.querySelector("main.page") && !reducedMotion) {
   const section = document.getElementById("journey");
   if (!bar || !text) return;
   const steps = [
-    { title: "Discover your gifts", summary: "Reflect on your strengths through a guided assessment and scripture.", activities: ["Sort 36 statements about yourself", "Explore gifts described in Romans 12 and 1 Corinthians 12", "Write a summary in your workbook"], outcome: "Your gifts and strengths" },
+    { title: "Discover your gifts", summary: "Reflect on your strengths through a guided evaluation and scripture.", activities: ["Sort 36 statements about yourself", "Explore gifts described in Romans 12 and 1 Corinthians 12", "Write a summary in your journey"], outcome: "Your gifts and strengths" },
     { title: "Hear from people who know you", summary: "Invite trusted people to share their perspective, then compare it with your own.", activities: ["Add at least two people, or return to invitations later", "Compare their perspective with your own", "Reflect on where your views align or differ"], outcome: "Your strengths alongside trusted perspectives" },
-    { title: "Make sense of your story", summary: "Use the workbook to reflect on your life, work and the moments that have shaped you.", activities: ["Work through guided prompts at your own pace", "Notice themes in your experience", "Connect your story with what matters to you"], outcome: "Your story and reflections" },
+    { title: "Make sense of your story", summary: "Use the journey to reflect on your life, work and the moments that have shaped you.", activities: ["Work through guided prompts at your own pace", "Notice themes in your experience", "Connect your story with what matters to you"], outcome: "Your story and reflections" },
     { title: "Explore a sense of calling", summary: "Draw together your gifts, experience and reflections as you consider possible directions.", activities: ["Put your sense of calling into words", "Consider possible directions", "Identify practical next steps"], outcome: "A calling statement and directions to explore" },
     { title: "Return to what you discovered", summary: "Write a letter to your future self and revisit your reflections later.", activities: ["Capture what matters to you now", "Record the steps you want to take", "Revisit your letter in the future"], outcome: "A letter to your future self" },
   ];
@@ -341,7 +341,7 @@ if (document.querySelector("main.page") && !reducedMotion) {
   bar.style.setProperty("--dur", STEP_MS + "ms");
   const render = () => {
     const step = steps[i];
-    text.innerHTML = `<div class="tp-anim"><span class="tp-step">STEP 0${i + 1}</span><h3>${step.title}</h3><p>${step.summary}</p></div><ul class="tp-anim">${step.activities.map((activity) => `<li><svg><use href="#leaf"/></svg>${activity}</li>`).join("")}</ul><div class="out"><span>In your workbook</span><b>${step.outcome}</b></div>`;
+    text.innerHTML = `<div class="tp-anim"><span class="tp-step">STEP 0${i + 1}</span><h3>${step.title}</h3><p>${step.summary}</p></div><ul class="tp-anim">${step.activities.map((activity) => `<li><svg><use href="#leaf"/></svg>${activity}</li>`).join("")}</ul><div class="out"><span>In your journey</span><b>${step.outcome}</b></div>`;
     text.setAttribute("aria-labelledby", "atab" + i);
     tabs.forEach((tab, j) => {
       tab.setAttribute("aria-selected", j === i);
