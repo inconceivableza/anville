@@ -312,9 +312,15 @@ def _coach_page_of(document, hub):
 
 
 def _block_address(document, block_id):
-    """✨ The address of the page a block is on, at the block."""
+    """✨ The address of the page a block is on, at the block. A coach checklist that opens its page is reached at the
+    page's top, with no anchor, which would scroll past the page's title (ticket 82)."""
     section = section_of(document, block_id)
-    return f"{page_url(section['id'], page_of(section, block_id))}#block-{block_id}"
+    number = page_of(section, block_id)
+    block = next(on_page for on_page in pages_of(section)[number - 1] if on_page["id"] == block_id)
+    first = pages_of(section)[number - 1][0] is block
+    if block["type"] == "coach_checklist" and first:
+        return page_url(section["id"], number)
+    return f"{page_url(section['id'], number)}#block-{block_id}"
 
 
 def participant_nav(request):
@@ -633,7 +639,7 @@ def coach_checklist(request, block_id):
         # the link just made, as issuing it leads back.
         if coach is not None:
             return _back_with_issued(request, coach, screen["issued"]["link"])
-        return _see_other(f"{page_url(section['id'], page)}#block-{block_id}")
+        return _see_other(_block_address(state.version.document, block_id))
     shown = _section_page(state.with_answers(kept), section, page)
     checklist_block = next(on_page for on_page in shown["section"]["blocks"] if on_page["id"] == block_id)
     checklist_block["checklist"] = _checklist_screen(checklist_block["text"], **screen)
