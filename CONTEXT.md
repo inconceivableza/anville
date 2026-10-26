@@ -3,7 +3,7 @@
 > ✨ Produced with AI assistance during a design interview; terms were agreed with the team.
 
 Anville is a configurable coaching-pathway engine and studio. Its first pathway is
-*Whatever You Do*, a Christian vocational-calling workbook.
+*Whatever You Do*, a Christian vocational-calling journey.
 
 This document is a glossary and nothing else. Decisions live in [docs/adr/](docs/adr/).
 Behavioural reference for the prototype lives in [docs/prototype/](docs/prototype/).
@@ -21,8 +21,8 @@ The authoring surface in which an author edits a pathway, previews it as a parti
 _Avoid_: admin, CMS, backend, builder.
 
 **Whatever You Do**:
-The first pathway. A Christian vocational-calling and discernment workbook.
-_Avoid_: WYD, the workbook, the calling workbook.
+The first pathway. A Christian vocational-calling and discernment journey. Its copy calls the pathway a **journey**, a participant's self-assessment their **strengths evaluation** and an observer assessment an **evaluation**, and gives the name **workbook** only to a section's printable PDF, worked through on paper.
+_Avoid_: WYD, the workbook, the calling workbook, the assessment (in its copy).
 
 **Prototype**:
 A client-side HTML sketch by the content owner of all or part of a pathway. A behavioural and content reference, never production architecture.
@@ -36,7 +36,7 @@ _Avoid_: the prototype (when another prototype could be meant).
 
 **Pathway**:
 A configured coaching experience: ordered sections and their content, rules and result behaviour.
-_Avoid_: course, programme, questionnaire, workbook.
+_Avoid_: course, programme, questionnaire, workbook, journey (*Whatever You Do*'s copy word for it, not ours).
 
 **Pathway version**:
 An immutable snapshot of a pathway, and the exact thing a response is answered against.
@@ -55,7 +55,7 @@ A top-level division of a pathway, presented to the participant as one unit of w
 _Avoid_: pillar, chapter, step, module.
 
 **Part** (of a section):
-A section that belongs within another, as the Strengths assessment belongs within Section 1. It is listed under that section, has no completion of its own (it is complete once its gate passes), and leads back to that section.
+A section that belongs within another, as the strengths evaluation belongs within Section 1. It is listed under that section, has no completion of its own (it is complete once its gate passes), and leads back to that section.
 _Avoid_: subsection, child section.
 
 **Track**:
@@ -107,7 +107,7 @@ A block that shows a participant's earlier answers back to them through a named 
 _Avoid_: summary, snapshot, derived block.
 
 **Signpost**:
-A block that points to another part of the pathway, says where that part stands, and has one button that goes there. A **section signpost**, such as Section 1's card for the Strengths assessment, leads to a section. A **comparison signpost**, such as Section 1's "How others see you", leads to the comparison. Its button does what the results page's "Compare with how others see you" does, and the hub and the Five trusted voices card each offer the same button and status.
+A block that points to another part of the pathway, says where that part stands, and has one button that goes there. A **section signpost**, such as Section 1's card for the strengths evaluation, leads to a section. A **comparison signpost**, such as the one in Section 2, leads to the comparison. Its button does what the results page's button to the comparison does, and the hub and the Five trusted voices card each offer the same button and status.
 _Avoid_: link, section link, comparison link, comparison card, dynamic card, "How others see you" (one pathway's title).
 
 **Coach brief**:
@@ -267,7 +267,7 @@ What a participant's comparison is once they have pressed through to it with at 
 _Avoid_: seen, opened, unlocked, visited (for viewed), frozen (for viewed).
 
 **Waiting on the comparison**:
-What a block is while the participant can see it but cannot answer it because the comparison has not been viewed yet, as with Section 1's reflection. Once the comparison is viewed, the block can be answered from then on. When the only open work in a section is waiting this way, the hub's next step skips that section. The participant's copy says such a block "opens", but its section is not locked.
+What a block is while the participant can see it but cannot answer it because the comparison has not been viewed yet, as with Section 2's reflection. Once the comparison is viewed, the block can be answered from then on. When the only open work in a section is waiting this way, the hub's next step skips that section. The participant's copy says such a block "opens", but its section is not locked.
 _Avoid_: opening condition, locked, opens (outside the copy), held back (what a section signpost can do to the blocks after it, which it hides).
 
 **Enrolment code**:

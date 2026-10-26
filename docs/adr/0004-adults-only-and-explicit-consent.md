@@ -23,3 +23,5 @@ The workbook collects reflective free text, including accounts of hardship and l
 - Retention, deletion on withdrawal, and a data protection impact assessment remain open and are not decided here.
 
 Note, 9 Oct (B1): version 2 of the text says who sees what (the participant, their observers, a coach, group and organisation admins, the operator) and what declining keeps (the account: display name, email address, password stored hashed, and when the account signed up and last signed in). A member who withdraws, or has not agreed to the current version, stays in their groups, and those groups' admins see their display name and that they have not consented, so they know who to follow up. That name is shown without current consent; what it rests on instead is left to the legal review the spec parks, and the text says it plainly in the meantime.
+
+Note, 26 Oct: ADR 0021 moves the 18+ tick and consent to the wizard's first page, after the account is made, and records the tick's time; the group admins paragraph leaves the text while no organisation is set up.
