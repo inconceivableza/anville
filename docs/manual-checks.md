@@ -286,7 +286,7 @@ The homepage (`/`):
 - Answer one question No (not "Can ask questions…"): "Worth a second thought" ends "None of this rules Sam out. When Sam opens their link, they'll be asked to agree to the same six things you've just answered, including asking questions rather than handing out answers." "I'm still confident — ask Sam" leads to the verdict card, as above.
 - Across the intro, the questions and each outcome: body paragraphs are all one size, and the small notes (under the intro, under each question, "Sam stays your coach…") are all one size and colour.
 - The link dialog on Five trusted voices' page and the link beneath "You've chosen Sam" both say "This link is shown only this once. If you lose it, make a new one here; the old one will stop working.", and once a link exists, each person's button and the coach's read "Make a new link".
-- Open Sam's link in a private window: the line above "Accept →" says "We keep only your answer, accept or decline, with the name participant provided." and nothing about an email address.
+- Open Sam's link in a private window: the line above "Accept →" says "We keep only your answer, accept or decline, and the name {participant} gave us for you. If you accept, {participant} is told you've agreed to all six; if you decline, never which boxes you ticked.", with the participant's first name for {participant}, and nothing about an email address (fix-3).
 - Without JavaScript: saving from the verdict card comes back to the coach page showing "You've chosen Sam" and the link, and "Back to the hub" works.
 - Phone width: the verdict card's tick and its two buttons fit the card, and "You've chosen Sam"'s three buttons wrap within it.
 
