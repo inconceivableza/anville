@@ -9,7 +9,7 @@ Runs only on a document that has already passed the schema, so it relies on the 
 import re
 
 from engine.document.blocks import BLOCK_TYPES, block_types_by_id
-from engine.document.gates import CLAUSE_ANSWER_KINDS, CLAUSE_BLOCK_TYPES, clauses_of
+from engine.document.gates import CLAUSE_ANSWER_KINDS, CLAUSE_BLOCK_TYPES, clauses_of, people_minimum
 from engine.document.problem import Problem
 from engine.document.tie_break import PLACEHOLDERS
 
@@ -42,6 +42,7 @@ def lint(document):
         *_empty_pages(document),
         *_unreadable_clauses(document),
         *_minimums_written_twice(document),
+        *_unknown_phrase_placeholders(document),
         *_unreadable_opening_conditions(document),
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
@@ -286,14 +287,16 @@ def _minimums_written_twice(document):
     its section's `to_finish` say it by {min}, so a different number written in either is refused, and a {min} in the
     `to_finish` of a section without exactly one such clause, which would reach the participant as written."""
     for s, section in enumerate(document["content"]["sections"]):
-        issued = [(c, clause) for c, clause in enumerate(clauses_of(section)) if clause["type"] == "links_issued"]
-        for c, clause in issued:
-            yield from _other_numbers(clause["message"], clause["min"], f"/content/sections/{s}/gate/clauses/{c}/message")
+        for c, clause in enumerate(clauses_of(section)):
+            minimum = people_minimum([clause])
+            if minimum is not None:
+                yield from _other_numbers(clause["message"], minimum, f"/content/sections/{s}/gate/clauses/{c}/message")
         if "to_finish" not in section:
             continue
         path = f"/content/sections/{s}/to_finish"
-        if len(issued) == 1:
-            yield from _other_numbers(section["to_finish"], issued[0][1]["min"], path)
+        minimum = people_minimum(clauses_of(section))
+        if minimum is not None:
+            yield from _other_numbers(section["to_finish"], minimum, path)
         elif any("{min}" in said for _, said in _by_role(section["to_finish"])):
             yield Problem(
                 path,
@@ -303,13 +306,32 @@ def _minimums_written_twice(document):
 
 
 def _other_numbers(text, minimum, path):
+    """✨ A problem for each number in `text` other than the `links_issued` clause's `minimum`, at `path` (or its role's
+    path within it), since a stale number left after the minimum changes is what this exists to catch. An author
+    writes {min} for the minimum and spells any other number in words (sprint 3b code review)."""
     for role, said in _by_role(text):
         for number in sorted({int(found) for found in re.findall(r"\d+", said)} - {minimum}):
             yield Problem(
                 path + (f"/{role}" if role else ""),
                 f"This says {number} where the section's 'links_issued' clause asks for {minimum}; write {{min}} for "
-                "its minimum.",
+                "its minimum and any other number in words.",
             )
+
+
+# ✨ The placeholders a section's `to_finish` may hold (ticket 79): the hub fills each, and no other.
+TO_FINISH_PLACEHOLDERS = {"title", "section", "min"}
+
+
+def _unknown_phrase_placeholders(document):
+    """✨ A placeholder in a section's `to_finish` that the hub does not fill, such as a typo for {title}, which would
+    reach the participant as written (sprint 3b code review)."""
+    for s, section in enumerate(document["content"]["sections"]):
+        for role, said in _by_role(section.get("to_finish", {})):
+            for name in sorted(set(re.findall(r"\{(\w+)\}", said)) - TO_FINISH_PLACEHOLDERS):
+                yield Problem(
+                    f"/content/sections/{s}/to_finish" + (f"/{role}" if role else ""),
+                    f"The engine fills no {{{name}}} here: a phrase may say {{title}}, {{section}} or {{min}}.",
+                )
 
 
 def _by_role(text):

@@ -24,6 +24,7 @@ from engine.document.gates import (
     unmet,
     unmet_clauses,
     waits_on_comparison,
+    with_people_minimum,
 )
 from engine.document.text import text_for
 
@@ -132,7 +133,7 @@ class SectionState(NamedTuple):
     def called(self):
         """✨ What the engine's wording calls the section: "Section 3" for one numbered "03", as the pathway's own
         sentences call it, or its title for one without a number (tickets 65 and 68)."""
-        return _called(self.number, self.title)
+        return _called([(self.number, self.title)])
 
     def waiting_sentence(self, minimum):
         """✨ The sentence the hub's next step says while this section's only open work waits on others' answers (ticket
@@ -145,9 +146,14 @@ class SectionState(NamedTuple):
         return wording.replace("{section}", self.called).replace("{minimum}", str(minimum))
 
 
-def _called(number, title):
-    """✨ What the engine's wording calls a section with this `number` and `title`, as `SectionState.called` says."""
-    return f"Section {int(number)}" if number and number.isdigit() else title
+def _called(numbered):
+    """✨ What the engine's wording calls the sections given as (number, title): "Section 1" for one numbered "01",
+    "Sections 1 and 2" for several all numbered, or else each by that or by its title for one without a number, joined
+    ("Section 1 and Walk with a coach"). The one rule for both the hub's {section} and a lock note's (ticket 86)."""
+    numbers = [number for number, _ in numbered if number and number.isdigit()]
+    if len(numbered) > 1 and len(numbers) == len(numbered):
+        return "Sections " + _joined_text([str(int(number)) for number in numbers])
+    return _joined_text([f"Section {int(number)}" if number and number.isdigit() else title for number, title in numbered])
 
 
 class OutlineEntry(NamedTuple):
@@ -350,19 +356,40 @@ def _waiting_on(part, completed, answers, sections, moved_past):
     return WaitingOn(parent, None if all_open else blocks[-1])
 
 
+class Piece(NamedTuple):
+    """✨ A stretch of a lock note's text, and whether a page draws it in italics, as it does each section title."""
+
+    text: str
+    italic: bool = False
+
+
+def plain(text):
+    """✨ A piece of a lock note drawn as it is."""
+    return Piece(text)
+
+
+def italic(text):
+    """✨ A piece of a lock note drawn in italics: a section title it names (developer's call, 23 Oct)."""
+    return Piece(text, italic=True)
+
+
 class LockNote(str):
-    """✨ A note naming the sections a locked section still waits for (ticket 79): plain text as a string, and, as a
-    page draws it, each section title it names in italics. Built from `pieces`, each (text, in italics)."""
+    """✨ What the hub says under a locked section (ticket 79), always built from `pieces`, each a `Piece` (ticket 86):
+    plain text as a string, and, as a page draws it, each italic piece in italics."""
 
     def __new__(cls, pieces):
-        note = super().__new__(cls, "".join(text for text, _ in pieces))
+        note = super().__new__(cls, "".join(piece.text for piece in pieces))
         note.pieces = tuple(pieces)
         return note
 
     def __html__(self):
         return mark_safe(
-            "".join(format_html("<em>{}</em>", text) if italic else escape(text) for text, italic in self.pieces)
+            "".join(format_html("<em>{}</em>", piece.text) if piece.italic else escape(piece.text) for piece in self.pieces)
         )
+
+
+# ✨ The engine's general lock note, for a section locked by what comes before it with nothing more to name.
+GENERAL_LOCK_NOTE = "Complete what comes before this to open it."
 
 
 def _lock_note(section, completed, answers, sections, moved_past, role):
@@ -377,40 +404,43 @@ def _lock_note(section, completed, answers, sections, moved_past, role):
         if named and notes and with_sections:
             return LockNote(_filled(text_for(with_sections, role), "{sections}", named))
         if not named:
-            return "Complete what comes before this to open it."
-        return LockNote([("Opens once you've ", False), *named, (".", False)])
+            return LockNote([plain(GENERAL_LOCK_NOTE)])
+        return LockNote([plain("Opens once you've "), *named, plain(".")])
     if notes:
-        return " ".join(notes)
+        return LockNote([plain(" ".join(notes))])
     waiting = _waiting_on(section, completed, answers, sections, moved_past)
     if waiting is None:
-        return "Complete what comes before this to open it."
-    title = (text_for(waiting.section["title"], role), True)
+        return LockNote([plain(GENERAL_LOCK_NOTE)])
+    title = italic(text_for(waiting.section["title"], role))
     if waiting.holding is not None and BLOCK_TYPES[waiting.holding["type"]].opens_what_follows:
-        return LockNote([("Opens from ", False), title, (", once you've read the passages.", False)])
-    return LockNote([("Opens from ", False), title, (".", False)])
+        return LockNote([plain("Opens from "), title, plain(", once you've read the passages.")])
+    return LockNote([plain("Opens from "), title, plain(".")])
 
 
 def _unfinished_named(section, completed, sections, role):
     """✨ What is left in the sections a section requires that are not yet complete, as the lock note's pieces, or None.
     Each is named by its authored phrase for what finishing it takes (ticket 79), or else as "finished {title}", as the
-    faithful port names its sections (ticket 52); those sharing a phrase together, all joined in document order. A
-    phrase's {min} is its section's own `links_issued` minimum, filled before they are grouped (ticket 81). A required
-    section outside the track is not named."""
-    by_phrase = {}
-    for other in sections:
-        if other["id"] in section.get("requires", []) and other["id"] not in completed:
-            phrase = _with_min(text_for(other["to_finish"], role), other) if "to_finish" in other else "finished {title}"
-            by_phrase.setdefault(phrase, []).append(other)
-    if not by_phrase:
+    faithful port names its sections (ticket 52), in the order of its requirements; those next to each other sharing a
+    phrase together, so none is moved ahead of a section between them (sprint 3b code review). A phrase's {min} is its
+    section's own `links_issued` minimum, filled before they are grouped (ticket 81). A required section outside the
+    track is not named."""
+    by_id = {other["id"]: other for other in sections}
+    runs = []
+    for required in section.get("requires", []):
+        other = by_id.get(required)
+        if other is None or required in completed:
+            continue
+        if "to_finish" in other:
+            phrase = with_people_minimum(text_for(other["to_finish"], role), clauses_of(other))
+        else:
+            phrase = "finished {title}"
+        if runs and runs[-1][0] == phrase:
+            runs[-1][1].append(other)
+        else:
+            runs.append((phrase, [other]))
+    if not runs:
         return None
-    return _joined([_named_by(phrase, group, role) for phrase, group in by_phrase.items()])
-
-
-def _with_min(phrase, section):
-    """✨ A section's phrase with its `links_issued` clause's minimum wherever it says {min}. The linter refuses a {min}
-    in a section without exactly one such clause."""
-    issued = [clause for clause in clauses_of(section) if clause["type"] == "links_issued"]
-    return phrase.replace("{min}", str(issued[0]["min"])) if len(issued) == 1 else phrase
+    return _joined([_named_by(phrase, group, role) for phrase, group in runs])
 
 
 def _named_by(phrase, group, role):
@@ -418,12 +448,8 @@ def _named_by(phrase, group, role):
     them ("Sections 1 and 2"), and {title} their titles, in italics, as a section's title is wherever a note names it
     (developer's call, 23 Oct)."""
     titles = [text_for(other["title"], role) for other in group]
-    numbers = [other.get("number") or "" for other in group]
-    if len(group) > 1 and all(number.isdigit() for number in numbers):
-        called = "Sections " + _joined_text([str(int(number)) for number in numbers])
-    else:
-        called = _joined_text([_called(other.get("number"), title) for other, title in zip(group, titles)])
-    return _filled(phrase.replace("{section}", called), "{title}", _joined([[(title, True)] for title in titles]))
+    called = _called([(other.get("number"), title) for other, title in zip(group, titles)])
+    return _filled(phrase.replace("{section}", called), "{title}", _joined([[italic(title)] for title in titles]))
 
 
 def _filled(text, placeholder, pieces):
@@ -433,7 +459,7 @@ def _filled(text, placeholder, pieces):
     for index, part in enumerate(text.split(placeholder)):
         if index:
             filled.extend(pieces)
-        filled.append((part, False))
+        filled.append(plain(part))
     return filled
 
 
@@ -442,14 +468,14 @@ def _joined(items):
     joined = []
     for index, item in enumerate(items):
         if index:
-            joined.append((" and " if index == len(items) - 1 else ", ", False))
+            joined.append(plain(" and " if index == len(items) - 1 else ", "))
         joined.extend(item)
     return joined
 
 
 def _joined_text(words):
     """✨ `words` joined as `_joined` joins pieces, as plain text."""
-    return "".join(text for text, _ in _joined([[(word, False)] for word in words]))
+    return "".join(piece.text for piece in _joined([[plain(word)] for word in words]))
 
 
 def complete_sections(sections, answers, completed):

@@ -4,15 +4,15 @@
 
 **Blocked by:** 85 (The new words), A1A
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 3c (ends Fri 30 Oct)
 
 **Spec:** Blocks; Implementation Decisions › Coach
 
-- [ ] Walk with a coach opens at its top, not scrolled down to its card
-- [ ] Each "Continue →" and "← Previous page" in Walk with a coach shows the new page from its top
-- [ ] The same at phone width
+- [x] Walk with a coach opens at its top, not scrolled down to its card
+- [x] Each "Continue →" and "← Previous page" in Walk with a coach shows the new page from its top
+- [x] The same at phone width
 
 **Context**
 

@@ -257,7 +257,11 @@ def with_voices(message="Add at least {min} people.", to_finish="added at least 
 )
 def test_a_number_other_than_the_links_issued_minimum_is_refused_where_it_is_written(fields, path):
     assert validate(with_voices(**fields)) == [
-        Problem(path, "This says 4 where the section's 'links_issued' clause asks for 3; write {min} for its minimum.")
+        Problem(
+            path,
+            "This says 4 where the section's 'links_issued' clause asks for 3; write {min} for its minimum and any "
+            "other number in words.",
+        )
     ]
 
 
@@ -269,6 +273,13 @@ def test_a_phrase_may_write_min_only_in_a_section_with_one_links_issued_clause()
             "than one.",
         )
     ]
+
+
+def test_a_phrase_holding_a_placeholder_the_engine_does_not_know_is_refused_where_it_is_written():
+    """✨ A typo such as {titel} would otherwise reach the participant as written (sprint 3b code review)."""
+    document = with_voices(to_finish={"participant": "added at least {min} people in {titel}", "observer": "{title}"})
+
+    assert [problem.path for problem in validate(document)] == ["/content/sections/2/to_finish/participant"]
 
 
 def test_a_gate_may_combine_clauses_of_different_types_over_different_blocks_in_its_section():
