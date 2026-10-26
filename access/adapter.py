@@ -60,10 +60,12 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
     def is_auto_signup_allowed(self, request, sociallogin):
         """✨ A Google sign-up makes the account at once, with no form (ADR 0021), except where the enrolment code is
         asked for, when the form asks for the code alone. An address too long to be a username goes to the form too,
-        to be refused there as on the email-and-password form. allauth sends an address that already has an account
-        to the form as well, to be refused (ticket 77)."""
+        to be refused there as on the email-and-password form. allauth's own answer, SOCIALACCOUNT_AUTO_SIGNUP, still
+        decides first, and after this allauth sends an address that already has an account to the form as well, to be
+        refused (ticket 77)."""
         email = user_email(sociallogin.user) or ""
-        return not asks_for_the_code(request) and len(email) <= USERNAME_MAX_LENGTH
+        allowed = super().is_auto_signup_allowed(request, sociallogin)
+        return allowed and not asks_for_the_code(request) and len(email) <= USERNAME_MAX_LENGTH
 
     def save_user(self, request, sociallogin, form=None):
         """✨ Names the new account from Google (ADR 0021): its given name, else its full name, else the part of the
