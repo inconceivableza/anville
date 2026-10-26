@@ -110,10 +110,22 @@ def unmet(section, answers, role="participant"):
 def clause_message(clause, role="participant"):
     """✨ A clause's authored message, with a `links_issued` clause's minimum wherever it says {min}, so the number is
     written once, in the clause (ticket 81). Replaced as plain text, never through `format()`, so other braces stay."""
-    message = text_for(clause["message"], role)
-    if clause["type"] == "links_issued":
-        message = message.replace("{min}", str(clause["min"]))
-    return message
+    return with_people_minimum(text_for(clause["message"], role), [clause])
+
+
+def people_minimum(clauses):
+    """✨ What {min} stands for in text beside these `clauses`: the minimum of their one `links_issued` clause, or None
+    where there is not exactly one (ticket 81). A clause's message is beside that clause alone; a section's `to_finish`
+    beside its whole gate. The hub, the gate messages and the linter all read it here."""
+    issued = [clause for clause in clauses if clause["type"] == "links_issued"]
+    return issued[0]["min"] if len(issued) == 1 else None
+
+
+def with_people_minimum(text, clauses):
+    """✨ `text` with `people_minimum(clauses)` wherever it says {min}, or as written where there is none, which the
+    linter refuses. Replaced as plain text, never through `format()`, so other braces stay."""
+    minimum = people_minimum(clauses)
+    return text if minimum is None else text.replace("{min}", str(minimum))
 
 
 def unmet_clauses(section, answers):
