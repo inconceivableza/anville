@@ -90,7 +90,8 @@ def test_a_participant_on_a_version_stored_under_the_old_names_finds_both_signpo
     client = to_the_reflection(participant)
 
     assert "View my results →" in section_1(client)
-    assert "0 of 3 answered" in section_2(client)  # ✨ the comparison signpost is Section 2's (ticket 87)
+    # ✨ the comparison signpost is Section 2's (ticket 87); what it says below the minimum is fix-3's, tested there
+    assert 'id="block-how-others-see-you"' in section_2(client)
     assert VIEWED not in client.get("/hub/").content.decode()
     assert save_the_reflection(client).status_code == 403
 

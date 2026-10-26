@@ -5,14 +5,15 @@
   stands.
   The button is the results page's "Compare with how others see you →", a form posting to the same address, so it
   warns before collection freezes as that one does and works without JavaScript; a browser never loads a POST ahead of
-  time. Before there is a result, nothing is shown. While nobody has answered, the button is grey, never disabled: a
-  press still shows the explanation (ticket 88).
+  time. Before there is a result, nothing is shown. Below the minimum, where the pathway has a Five trusted voices card,
+  it is the results page's "Invite people who know you →" instead, leading to that card's page, with its phrase as the
+  status (ticket 88, fix-3).
 {% endcomment %}
 {% if block.comparison %}
   <div id="block-{{ block.id }}" class="signpost comparison-signpost">
     <p class="signpost-title">{{ block.text.title }}</p>
-    {% if block.comparison.unanswered %}
-      {% include "engine/comparison_press.html" with press_sort=block.comparison.sort press_class="pill quiet" %}
+    {% if block.comparison.invite %}
+      <a class="pill" href="{{ block.comparison.invite.href }}">Invite people who know you →</a>
     {% else %}
       {% include "engine/comparison_press.html" with press_sort=block.comparison.sort press_class="pill" %}
     {% endif %}

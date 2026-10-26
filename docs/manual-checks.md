@@ -472,9 +472,16 @@ Rebuild the frontend. No need to load the pathway again: a participant started o
 - Back on the results page: the green button reads "Back to the hub" and leads there.
 - Give three people links: the phrase under "Invite people who know you →" reads "0 of 3 answered", then "2 of 3 answered" once two have answered (their links in private windows). The button opens Five trusted voices.
 - With three answered: the outline button is "Compare with how others see you →", opening "Before you look" as before.
-- Section 2's "How others see you" card: its button is grey while nobody has answered, and green from the first answer; grey, it still presses, and opens "Not enough answers yet".
 - With JavaScript turned off, every one of these buttons works the same.
 - Phone width: the two buttons sit one under the other, centred, with no sideways scroll.
+
+### Fix-3: The comparison's other buttons below the minimum
+
+Rebuild the frontend. No need to load the pathway again.
+
+- *Whatever You Do*, the sort in, fewer than three answered: Section 2's "How others see you" card has a green "Invite people who know you →", never grey, with the results page's phrase as its status ("3 more needed", or "2 of 3 answered" once three have links). It opens Five trusted voices. The hub's "How others see you" row and the sidebar's entry show the same status and open Five trusted voices too. The Five trusted voices card has "Manage" alone, with no "How others see you →" beside it.
+- With three answered: the card's button is a green "Compare with how others see you →", the row and the sidebar's entry press on to "Before you look", and "How others see you →" is back beside "Manage". Each reads "Ready to view", then "Viewed" once pressed through.
+- With JavaScript turned off, each works the same. Phone width: the card's button and status wrap within the card, with no sideways scroll.
 - The faithful port: the results page keeps its single green "Compare with how others see you →", and Section 1 is finished from its own page.
 
 ## The comparison (the results page's "Compare with how others see you →")
@@ -528,7 +535,7 @@ Rebuild the frontend. No need to load the pathway again: a participant started o
 
 ## Answer collection freezes (after `migrate`; three observers answered, at least one more person invited)
 
-- On the results page, "Compare with how others see you →" opens "Before you look": "3 of the 4 people you invited have answered…" and the same button again. "← Back to results" changes nothing; pressing the button opens the comparison. With everyone invited answered (or after `seed_observers`), it reads "Everyone you invited has answered. Once you look, you can't add anyone else." Below three answered, Section 2's "How others see you" card's press goes straight to "Not enough answers yet", as before; the results page offers "Invite people who know you →" there instead (ticket 88).
+- On the results page, "Compare with how others see you →" opens "Before you look": "3 of the 4 people you invited have answered…" and the same button again. "← Back to results" changes nothing; pressing the button opens the comparison. With everyone invited answered (or after `seed_observers`), it reads "Everyone you invited has answered. Once you look, you can't add anyone else." Below three answered, the results page and Section 2's "How others see you" card offer "Invite people who know you →" instead (ticket 88, fix-3).
 - Once looked: the hub's Five trusted voices card reads "Complete" with "You've seen your results, so no more answers are added." The list's page says the same and why, has no empty row and no "Issue link" or "Make a new link"; names can still be saved, and "Revoke link" still works. The coach page still issues and reissues the coach's link.
 - In a private window, an unanswered person's link shows the notice then "No more answers are being taken." with no button; their own link, if they had started, shows the same in place of the sort.
 - An observer who answered withdraws: with two left, the comparison is "Not enough answers yet" again, the list offers its empty row and links again, and the next press asks again.
@@ -738,8 +745,8 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 ## How others see you on the hub (ticket 67b; rebuild the frontend, load the pathway again, and use a participant started after that)
 
 - Before the sort is in, the hub lists no "How others see you" row within Section 2, and the Five trusted voices card has only "Manage".
-- Once the sort is in: within Section 2, "How others see you", the first line under its title, a row "How others see you" with its status as the row's tag (ticket 87; it followed the Strengths evaluation within Section 1 before); on the Five trusted voices card, beside "Manage", a small ringed "How others see you →" pill, with no status after it (ticket 81: the card's meter and tag say it). The row reads the same as Section 2's card: "2 of 3 answered" with two answered (ticket 81), "Ready to view" with three, "Viewed" once confirmed.
-- With three answered, pressing the row's title, and pressing the card's pill, each open "Before you look", exactly as Section 2's card and the results page do; "← Back to results" changes nothing. With fewer than three, each opens "Not enough answers yet".
+- Once the sort is in: within Section 2, "How others see you", the first line under its title, a row "How others see you" with its status as the row's tag (ticket 87; it followed the Strengths evaluation within Section 1 before); on the Five trusted voices card, from three answered, beside "Manage", a small ringed "How others see you →" pill, with no status after it (ticket 81: the card's meter and tag say it; below three it is not there, fix-3). The row reads the same as Section 2's card: "2 of 3 answered" with two answered of three with links (ticket 81), "Ready to view" with three, "Viewed" once confirmed.
+- With three answered, pressing the row's title, and pressing the card's pill, each open "Before you look", exactly as Section 2's card and the results page do; "← Back to results" changes nothing. With fewer than three, the row's title opens Five trusted voices (fix-3).
 - With JavaScript turned off, both still open "Before you look", and confirming opens the comparison.
 - Once confirmed (collection frozen): the voices card still reads "You've seen your results, so no more answers are added." under its tag, and its pill still opens the comparison, with nothing asked.
 - Keyboard only: Tab reaches the row's title and the card's pill, each with visible focus, and Enter presses it. Screen reader: each reads as a button.
@@ -786,8 +793,8 @@ Reload the page for the rebuilt frontend; no new participant is needed.
 
 Load *Whatever You Do* again, and start a new participant for the regression line: its `{min}` wording comes from the version loaded now. The other lines work with any participant.
 
-- Once the sort is in, with two people answered: Section 2's "How others see you" card and the hub's row each read "2 of 3 answered"; with one answered, "1 of 3 answered"; with three, "Ready to view".
-- On the Five trusted voices card, the ringed "How others see you →" pill beside "Manage" has no status after it, waiting, ready or viewed; the pill itself is there and presses as before.
+- Once the sort is in, with three people given links and two answered: Section 2's "How others see you" card and the hub's row each read "2 of 3 answered"; with one answered, "1 of 3 answered"; with three, "Ready to view". With fewer than three given links, each reads how many more are needed instead (fix-3).
+- On the Five trusted voices card, from three answered, the ringed "How others see you →" pill beside "Manage" has no status after it, ready or viewed; the pill itself is there and presses as before. Below three it is not there (fix-3).
 - With Five trusted voices complete (three people with links), revoke one link on its page: the card's tag reads "1 more needed", with "You'll see how others see you once 3 people have answered." under it while fewer than three have answered. The hub's header count of sections complete is unchanged, and Section 3 stays open if it had opened.
 - Regression: Section 3's note still says "added at least 3 people in *Five trusted voices*". (Since ticket 83, Five trusted voices' page no longer lists "Add at least 3 people." under its people.)
 
