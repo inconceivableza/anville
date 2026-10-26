@@ -18,6 +18,13 @@ class GoogleSignupForm(SignupForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["email"].widget.attrs["readonly"] = True
+        # ✨ The first name is Google's, changeable on the wizard's first page, so the form asks only for the
+        # enrolment code, and is shown only where that is asked for (ADR 0021) or the address is refused.
+        del self.fields["display_name"]
+
+    def signup(self, request, user):
+        # ✨ The adapter has already made the account and named it from Google; the code is not stored.
+        pass
 
     def clean_email(self):
         if self.cleaned_data["email"].lower() != self.initial.get("email", "").lower():

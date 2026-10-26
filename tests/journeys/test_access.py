@@ -332,9 +332,10 @@ def offers_google(page):
     return f'action="{GOOGLE_LOGIN}' in page
 
 
-def come_back_from_google(client, *, email="sam.google@example.com"):
+def come_back_from_google(client, *, email="sam.google@example.com", **names):
     """✨ Press the Google button, then return to the callback as Google would, with the participant's details in a
-    token Anville fetched itself (so, as allauth allows, its signature is not checked)."""
+    token Anville fetched itself (so, as allauth allows, its signature is not checked). `names` replaces the given
+    name Google sends: `given_name` and `name`, either None to leave it out."""
     to_google = client.post(GOOGLE_LOGIN)
     state = parse_qs(urlparse(to_google.url).query)["state"][0]
     claims = {
@@ -347,6 +348,8 @@ def come_back_from_google(client, *, email="sam.google@example.com"):
         "exp": int(time.time()) + 600,
         "iat": int(time.time()),
     }
+    claims.update(names)
+    claims = {key: value for key, value in claims.items() if value is not None}
     token = {"access_token": "access", "id_token": jwt.encode(claims, "a key Anville never checks, long enough", algorithm="HS256")}
     with patch.object(OAuth2Client, "get_access_token", return_value=token):
         return client.get(GOOGLE_CALLBACK, {"code": "from-google", "state": state})
@@ -507,3 +510,25 @@ def test_a_new_google_account_meets_the_wizards_first_page_before_any_answer_is_
 
     assert (hub.status_code, hub.url) == (302, "/about-you/")
     assert not Response.objects.exists()
+
+
+# A Google sign-up goes straight in (ticket 93, ADR 0021)
+
+
+def leave_the_code_off(settings):
+    settings.ANVILLE_ENROLMENT_REQUIRED = False
+
+
+@pytest.mark.django_db
+def test_with_the_code_off_coming_back_from_google_makes_the_account_at_once_and_lands_on_the_wizards_first_page(
+    client, settings, django_user_model, load_pathway
+):
+    leave_the_code_off(settings)
+    give_google_a_client(settings)
+    load_pathway(pathway_document())
+
+    landed = client.get(come_back_from_google(client).url, follow=True)
+
+    assert get_user(client).email == "sam.google@example.com"
+    assert django_user_model.objects.count() == 1
+    assert landed.redirect_chain[-1][0] == "/about-you/"
