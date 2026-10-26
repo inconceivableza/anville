@@ -113,8 +113,8 @@ ANVILLE_SIDEBAR = env.bool("ANVILLE_SIDEBAR", default=True)
 ANVILLE_GOOGLE_CLIENT_ID = env("ANVILLE_GOOGLE_CLIENT_ID", default="")
 ANVILLE_GOOGLE_CLIENT_SECRET = env("ANVILLE_GOOGLE_CLIENT_SECRET", default="")
 SOCIALACCOUNT_ADAPTER = "access.adapter.SocialAccountAdapter"
-# ✨ A Google sign-up goes through the sign-up form, for the 18+ confirmation and the enrolment code.
-SOCIALACCOUNT_AUTO_SIGNUP = False
+# ✨ A Google sign-up makes the account at once (ADR 0021); the adapter sends it to the form only for the enrolment code.
+SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_FORMS = {"signup": "access.social_forms.GoogleSignupForm"}
 # ✨ Google always asks which of its accounts to use, even when the browser is signed in to one (ticket 77).
 SOCIALACCOUNT_PROVIDERS = {"google": {"AUTH_PARAMS": {"prompt": "select_account"}}}

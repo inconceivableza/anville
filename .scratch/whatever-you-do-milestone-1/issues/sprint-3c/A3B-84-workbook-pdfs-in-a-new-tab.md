@@ -4,14 +4,14 @@
 
 **Blocked by:** 87 (Six sections), A2
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 3c (ends Fri 30 Oct)
 
 **Spec:** Sections 2 and 3; Blocks
 
-- [ ] The workbook PDF in Sections 3, 4 and 5 opens in a new tab, and the app's tab stays on the section
-- [ ] The link says it opens in a new tab, both on screen and to a screen reader
+- [x] The workbook PDF in Sections 3, 4 and 5 opens in a new tab, and the app's tab stays on the section
+- [x] The link says it opens in a new tab, both on screen and to a screen reader
 
 **Context**
 

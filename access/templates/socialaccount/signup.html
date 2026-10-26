@@ -4,12 +4,13 @@
 {% load allauth %}
 {% comment %}
   ✨ Replaces allauth's page that finishes a sign-up begun with Google (ticket 53c): the same form, in Anville's words.
-  allauth's own sentence named the site by its `Site` record, which no deployment sets.
+  allauth's own sentence named the site by its `Site` record, which no deployment sets. Since ticket 93 a Google
+  sign-up comes here only for the enrolment code, or to be refused, when there is nothing to fill in.
 {% endcomment %}
 {% block head_title %}Sign up with {{ account.get_provider.name }}{% endblock head_title %}
 {% block content %}
   <h1>Sign up with {{ account.get_provider.name }}</h1>
-  <p>You're signing up with your {{ account.get_provider.name }} account. One last step: please fill in this form.</p>
+  <p>You're signing up with your {{ account.get_provider.name }} account.{% if "enrolment_code" in form.fields %} One last step: please fill in this form.{% endif %}</p>
   {% url 'socialaccount_signup' as action_url %}
   {% element form form=form method="post" action=action_url %}
     {% slot body %}

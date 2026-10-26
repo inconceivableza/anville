@@ -332,9 +332,10 @@ def offers_google(page):
     return f'action="{GOOGLE_LOGIN}' in page
 
 
-def come_back_from_google(client, *, email="sam.google@example.com"):
+def come_back_from_google(client, *, email="sam.google@example.com", **names):
     """✨ Press the Google button, then return to the callback as Google would, with the participant's details in a
-    token Anville fetched itself (so, as allauth allows, its signature is not checked)."""
+    token Anville fetched itself (so, as allauth allows, its signature is not checked). `names` replaces the given
+    name Google sends: `given_name` and `name`, either None to leave it out."""
     to_google = client.post(GOOGLE_LOGIN)
     state = parse_qs(urlparse(to_google.url).query)["state"][0]
     claims = {
@@ -347,6 +348,8 @@ def come_back_from_google(client, *, email="sam.google@example.com"):
         "exp": int(time.time()) + 600,
         "iat": int(time.time()),
     }
+    claims.update(names)
+    claims = {key: value for key, value in claims.items() if value is not None}
     token = {"access_token": "access", "id_token": jwt.encode(claims, "a key Anville never checks, long enough", algorithm="HS256")}
     with patch.object(OAuth2Client, "get_access_token", return_value=token):
         return client.get(GOOGLE_CALLBACK, {"code": "from-google", "state": state})
@@ -507,3 +510,96 @@ def test_a_new_google_account_meets_the_wizards_first_page_before_any_answer_is_
 
     assert (hub.status_code, hub.url) == (302, "/about-you/")
     assert not Response.objects.exists()
+
+
+# A Google sign-up goes straight in (ticket 93, ADR 0021)
+
+
+def leave_the_code_off(settings):
+    settings.ANVILLE_ENROLMENT_REQUIRED = False
+
+
+@pytest.mark.django_db
+def test_with_the_code_off_coming_back_from_google_makes_the_account_at_once_and_lands_on_the_wizards_first_page(
+    client, settings, django_user_model, load_pathway
+):
+    leave_the_code_off(settings)
+    give_google_a_client(settings)
+    load_pathway(pathway_document())
+
+    landed = client.get(come_back_from_google(client).url, follow=True)
+
+    assert get_user(client).email == "sam.google@example.com"
+    assert django_user_model.objects.count() == 1
+    assert landed.redirect_chain[-1][0] == "/about-you/"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "given_name, name, first_name",
+    [("Sam", "Sam Okafor", "Sam"), (None, "Sam Okafor", "Sam Okafor"), (None, None, "sam.google"), ("  ", "", "sam.google")],
+)
+def test_a_google_sign_up_takes_googles_given_name_else_its_full_name_else_the_email_before_the_at(
+    client, settings, given_name, name, first_name
+):
+    leave_the_code_off(settings)
+    give_google_a_client(settings)
+
+    client.get(come_back_from_google(client, given_name=given_name, name=name).url)
+
+    assert get_user(client).account.display_name == first_name
+
+
+@pytest.mark.django_db
+def test_where_the_code_is_required_a_google_sign_up_asks_only_for_the_code_then_lands_on_the_wizards_first_page(
+    client, settings, load_pathway
+):
+    require_the_code(settings)
+    give_google_a_client(settings)
+    load_pathway(pathway_document())
+
+    form = client.get(come_back_from_google(client).url).content.decode()
+    asked = {
+        re.search(r'name="([^"]+)"', field).group(1)
+        for field in re.findall(r"<input[^>]*>", form)
+        if 'type="hidden"' not in field and "readonly" not in field
+    }
+    form_sent = {"email": "sam.google@example.com", "enrolment_code": "GRACE-2026"}  # ✨ a read-only box still sends
+    landed = client.post("/accounts/3rdparty/signup/", form_sent, follow=True)
+
+    assert asked == {"enrolment_code"}
+    assert landed.redirect_chain[-1][0] == "/about-you/"
+    assert get_user(client).account.display_name == "Sam"
+
+
+@pytest.mark.django_db
+def test_coming_back_from_google_with_an_address_that_has_a_password_account_is_refused_on_arrival(
+    client, settings, django_user_model
+):
+    """✨ With nothing left to fill in, the refusal ticket 77 settled is shown at once, not after "Sign up"."""
+    leave_the_code_off(settings)
+    give_google_a_client(settings)
+    sign_up(client, email="sam.google@example.com")
+    client.post("/accounts/logout/")
+
+    page = client.get(come_back_from_google(client).url).content.decode()
+
+    assert escape(SocialAccountAdapter.error_messages["email_taken"]) in page
+    assert 'href="/accounts/login/"' in page
+    assert 'href="/accounts/password/reset/"' in page
+    assert not get_user(client).is_authenticated
+    assert django_user_model.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_a_participant_who_signed_up_with_google_signs_straight_in_with_it(client, settings, django_user_model):
+    leave_the_code_off(settings)
+    give_google_a_client(settings)
+    client.get(come_back_from_google(client).url)
+    client.post("/accounts/logout/")
+
+    signed_in = come_back_from_google(client)
+
+    assert signed_in.url == "/hub/"
+    assert get_user(client).email == "sam.google@example.com"
+    assert django_user_model.objects.count() == 1

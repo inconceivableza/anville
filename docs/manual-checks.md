@@ -60,16 +60,24 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - With neither `ANVILLE_GOOGLE_CLIENT_ID` nor `ANVILLE_GOOGLE_CLIENT_SECRET` in `.env`, or only one, sign in and sign up look exactly as before: no "or", no Google button.
 - With both set and `runserver` restarted, sign in and sign up each start with an outlined "Continue with Google" across the form's width, then "or", then the email-and-password form, at a wide screen and at phone width.
 - Pressing it goes straight to Google's account chooser, with no Anville page asking again first, even when the browser is already signed in to a Google account. Cancelling there comes back to an Anville page, not an error.
-- A Google account new to Anville comes back to a sign-up form with its email filled in, asking for the first name and the enrolment code (where asked for), and no password.
-- Once signed up, the hub sends it to the wizard's first page ("About you") first. Signing out and pressing "Continue with Google" again signs straight in to the hub.
+- A Google account new to Anville goes straight in, with no form, to the wizard's first page ("About you"), where "First name" holds Google's first name; where the enrolment code is asked for, it first comes back to a sign-up form asking only for the code, with its email filled in, and no password (ticket 93).
+- Signing out and pressing "Continue with Google" again signs straight in to the hub.
 - An address that already has an email-and-password account is refused on that form, and no second account is made.
+
+### Ticket 93: Google sign-up goes straight in
+
+Needs the Google pair set; any participant will do, with no need to load the pathway again.
+
+- With `ANVILLE_ENROLMENT_REQUIRED=false`, "Continue with Google" with a Google account new to Anville: no Anville form, straight to "About you", step 1, "First name" filled in with the Google account's first name and changeable, at a wide screen and at about 375px.
+- With the enrolment code asked for: "Sign up with Google", "You're signing up with your Google account. One last step: please fill in this form.", the greyed address, "Enrolment code" and "Sign up", and no "First name". A wrong code is refused; the right one leads to "About you" with Google's first name.
+- With a Google account at an address that already has a password account, and the code off: the page arrives showing the refusal (ticket 77's wording, "Sign in · Forgot your password?" under the address) without anything being pressed, and its lead line is "You're signing up with your Google account." alone.
 
 ### Ticket 77: Google sign-up: Google's own address, the account chooser, and a refusal that says what to do
 
 - Sign up and sign in, at a wide screen and at about 375px: "Continue with Google" comes first, under the line about signing in or up, then "or", then the form, with room between each. With the Google pair unset, both pages are the form alone, with no "or".
 - In a window already signed in to a Google account, "Continue with Google" shows Google's account chooser rather than going straight back.
 - A Google account new to Anville: the sign-up form's "Email" shows the address Google gave, greyed, and clicking into it lets you select the text but not change it. Google itself may first say "You're signing back in to Whatever You Do", even for an account never used here: Google remembers the sign-in against the Google Cloud project, which every environment shares, so a sign-in on staging counts. Anville's own sign-up form still follows.
-- Sign up by email at an address, sign out, then "Continue with Google" with a Google account at that address and send the form: just above "Email", "There's already an account with this email address, made with a password. Sign in with your email and password instead.", and under the address "Sign in · Forgot your password?", each leading to its page. No account is made, and nothing mentions connecting a Google account.
+- Sign up by email at an address, sign out, then "Continue with Google" with a Google account at that address (since ticket 93, the refusal shows on arrival, with no form to send): just above "Email", "There's already an account with this email address, made with a password. Sign in with your email and password instead.", and under the address "Sign in · Forgot your password?", each leading to its page. No account is made, and nothing mentions connecting a Google account.
 
 ## Password reset (sign in's "Forgot your password?")
 
@@ -180,7 +188,7 @@ The organisations pages (signed in; these keep the participant header, the one d
 - At about 375px, each of these: the header fits, the words sit about 16px in from the edges, the buttons fill the width, and nothing scrolls sideways.
 
 Google sign-in's own pages (needs the Google client pair, as above):
-- **Finishing a sign-up:** "Sign up with Google", then "You're signing up with your Google account. One last step: please fill in this form.", the form, and "Sign up". Not "You are about to use your Google account to login to example.com".
+- **Finishing a sign-up** (only where the enrolment code is asked for, ticket 93): "Sign up with Google", then "You're signing up with your Google account. One last step: please fill in this form.", the form, and "Sign up". Not "You are about to use your Google account to login to example.com".
 - **Going on to Google** (`/accounts/google/login/` opened directly): "Sign in with Google", "You're about to sign in with your Google account.", then "Continue" alone, with no empty box round it.
 - **Cancelled** (cancel at Google's account chooser): "Sign-in cancelled", then "You cancelled signing in with your Google account. If you didn't mean to, you can sign in again.", "sign in" leading to sign in.
 - **Failed** (`/accounts/3rdparty/login/error/` opened directly): "Signing in with Google didn't work", then "Something went wrong while signing you in with your Google account. You can try again.", "try again" leading to sign in.
@@ -390,10 +398,16 @@ The homepage (`/`):
 - Walk with a coach's and Five trusted voices' pages have no "Mark complete" and no "Mark as not complete". Neither lists what it waits on, since nothing on them is a press that could be refused (ticket 83). The header's count does not change as each completes, since it counts only the six numbered sections (ticket 87).
 - After revoking one person's link, Five trusted voices stays complete, its tag saying "1 more needed" (ticket 81), and Section 3 stays open. Phone width: Section 3's lock note wraps within its entry.
 - While Section 3 is the next step, the hub's next step shows its title and "About 30–40 minutes". Section 4's entry says "Opens once you've completed Sections 2 and 3, and your coach has accepted." while the coach has not accepted and Section 2 is unfinished, and Section 5's "Opens once you've completed Section 4.".
-- In each of Sections 3, 4 and 5, "Download Section 3 (PDF)" (4, 5) opens that section's PDF in the browser's own viewer, not a blank page or a download of an HTML error, and saving it keeps the name `whatever-you-do-workbook-section-2.pdf` (3, 4): the files keep their old numbers until the content owner's revised PDFs arrive. Its text reads plainly, with no mention of a draft.
+- In each of Sections 3, 4 and 5, "Download Section 3 (PDF)" (4, 5) opens that section's PDF in a new tab, in the browser's own viewer, not a blank page or a download of an HTML error, and saving it keeps the name `whatever-you-do-workbook-section-2.pdf` (3, 4): the files keep their old numbers until the content owner's revised PDFs arrive. Its text reads plainly, with no mention of a draft.
 - "I've finished Section 3" leads to the hub with Section 4 open as the next step once Section 2 is finished and the coach has accepted; the same for 4 and then 5, after which the letter, Section 6, opens.
 - Keyboard only: Tab reaches the button and Enter opens the PDF; Tab then reaches "I've finished Section 3".
 - Phone width: the button wraps rather than running off the screen, and the PDF opens in the phone's viewer.
+
+### Ticket 84: The workbook PDFs open in a new tab
+
+- In each of Sections 3, 4 and 5, the button reads "Download Section 3 (PDF) (opens in a new tab)" (4, 5). Clicking it opens the PDF in a new tab and the app's tab stays on the section, not replaced by the PDF. Closing the PDF tab returns to the section as it was.
+- With a screen reader (or reading the page's text), the link is announced with "opens in a new tab" as part of its name.
+- Phone width: the longer button wraps rather than running off the screen. No participant restart is needed; the wording is in the engine's template.
 
 ## Scripture and the credits page (Section 1's reading, the homepage, `/credits/`)
 
@@ -819,7 +833,7 @@ Before starting: `curl -s https://anville.vabl.dev/healthz` gives the commit sta
 - **The coach**, Sam's link in a private window: the six promises, "Accept →" refused with one unticked, accepted with all six. As the participant: Section 3 opens once Section 1 is marked complete. "Give my coach access…" ticked and unticked, with Sam's link showing the guide, the results and the comparison, then "What happens next" again.
 - **The tie-break**: `seed_tie_break --profile tied-apest --answers behind` prints a made-up participant's address, a sign-in link and the answers to give; its password is `information.`. The results read "Evangelist now sits on top, in place of Deacon…".
 - **Password reset** (sends email): sign up at an address you own, sign out, "Forgot your password?". The email arrives with `[TEST]` before its subject and the disclaimer at the top; the new password signs in, the old is refused, and the link fails a second time. An address with no account shows the same page and sends nothing.
-- **Google sign-in**, with a second test user listed under Google Cloud's OAuth consent screen, Audience, Test users. "Continue with Google" always shows Google's account chooser (ticket 77). The second test user signs up with no password and signs in again straight away. The password account's address is refused: "There's already an account with this email address, made with a password…", with "Sign in · Forgot your password?" under it, and no account is made.
+- **Google sign-in**, with a second test user listed under Google Cloud's OAuth consent screen, Audience, Test users. "Continue with Google" always shows Google's account chooser (ticket 77). The second test user signs up with no password and no form, straight to "About you" (ticket 93), and signs in again straight away. The password account's address is refused: "There's already an account with this email address, made with a password…", with "Sign in · Forgot your password?" under it, and no account is made.
 - **Deleting an account to repeat the demo**: there is no way in the app yet. Find the account's id, then delete it, which takes its answers, observers' answers and Google link with it:
 
   ```sh
@@ -827,7 +841,7 @@ Before starting: `curl -s https://anville.vabl.dev/healthz` gives the commit sta
   k exec deployment/anville -c web -- python manage.py shell -c "from django.contrib.auth import get_user_model; u = get_user_model().objects.get(id=<ID>); print(repr(u.username), u.is_superuser); print(u.delete())"
   ```
 
-  "Continue with Google" with the same account then leads to the sign-up form and consent, as for someone new.
+  "Continue with Google" with the same account then goes straight in to "About you", as for someone new.
 - **A withdrawn participant's links**: with Sam's link and an unused observer's link open, withdraw consent; both refuse as a wrong link does, naming nobody, and the observer's withdrawal page still opens. Agreeing again restores both.
 - **An error page**: `/observe/made-up-token/nothing-here/` shows "Page not found" in the site's styles. Delete the `csrftoken` cookie on sign in (in the console, `document.cookie = "csrftoken=; Max-Age=0; path=/; secure"`), then send the form: "This page was out of date".
 

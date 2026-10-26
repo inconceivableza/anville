@@ -18,6 +18,21 @@ class GoogleSignupForm(SignupForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["email"].widget.attrs["readonly"] = True
+        # ✨ The first name is Google's, changeable on the wizard's first page, so the form asks only for the
+        # enrolment code, and is shown only where that is asked for (ADR 0021) or the address is refused.
+        del self.fields["display_name"]
+        if not self.is_bound:
+            # ✨ An address that already has an account is refused whatever the form is given, so the refusal shows
+            # on arrival rather than after "Sign up" (ticket 93).
+            try:
+                self.validate_unique_email(self.initial.get("email", ""))
+            except forms.ValidationError as refusal:
+                self.cleaned_data = {}  # ✨ add_error clears the field from it, and an unbound form has none
+                self.add_error("email", refusal)
+
+    def signup(self, request, user):
+        # ✨ The adapter has already made the account and named it from Google; the code is not stored.
+        pass
 
     def clean_email(self):
         if self.cleaned_data["email"].lower() != self.initial.get("email", "").lower():
