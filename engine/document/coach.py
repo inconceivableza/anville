@@ -5,8 +5,8 @@
 
 The questions, which of them are critical and why each matters are authored in the pathway document; turning
 the answers into an outcome is the engine's (ADR 0003). Nothing here is kept: the answers are opinions about
-another person, and are only ever read from a form and worked out again. Only the coach finally chosen, a name and
-any email address given, is kept, and as a contact. The coach is then asked, through their link, to commit to the same
+another person, and are only ever read from a form and worked out again. Only the coach finally chosen, a name
+alone (ADR 0022), is kept, and as a contact. The coach is then asked, through their link, to commit to the same
 questions as first-person promises; of that, only whether they accepted or declined is kept (ticket 13c).
 """
 
@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 from django.contrib.humanize.templatetags.humanize import apnumber
 
 from engine.document.answers import AnswerRefused
-from engine.document.contacts import NAME_MAX_LENGTH, is_email_address
+from engine.document.contacts import NAME_MAX_LENGTH
 
 # ✨ Yes, Not sure and No, as each answer is sent.
 ANSWERS = ("yes", "maybe", "no")
@@ -74,18 +74,15 @@ def candidate_name_from_form(posted):
 
 def coach_from_form(posted):
     """✨ The chosen coach as {"name", "email"}, or AnswerRefused naming the field at fault. Held to a contact's rules,
-    and only once the participant ticks that they have spoken to them; the tick itself is not kept. The email address
-    is optional, as the system sends the coach nothing (ticket 51b), and is "" when left out."""
+    and only once the participant ticks that they have spoken to them; the tick itself is not kept. A coach is a name
+    alone (ADR 0022): the system sends the coach nothing, so their email is always "", whatever a form sends."""
     try:
         name = candidate_name_from_form(posted)
     except AnswerRefused as refused:
         raise AnswerRefused(str(refused), field="name") from None
-    typed = coach_details_as_typed(posted)
-    if typed["email"] and not is_email_address(typed["email"]):
-        raise AnswerRefused("Check their email address.", field="email")
-    if not typed["confirmed"]:
+    if not coach_confirmed(posted):
         raise AnswerRefused("Tick the box to confirm you've spoken to them.", field="confirmed")
-    return {"name": name, "email": typed["email"]}
+    return {"name": name, "email": ""}
 
 
 def commitments(questions):
@@ -108,6 +105,6 @@ def coach_answer_from_form(questions, posted):
     return "accepted"
 
 
-def coach_details_as_typed(posted):
-    """✨ The coach's email address, trimmed, and whether the box was ticked, as a form sent them, checked or not."""
-    return {"email": (posted.get("email") or "").strip(), "confirmed": bool(posted.get("confirmed"))}
+def coach_confirmed(posted):
+    """✨ Whether a form ticked the box saying the participant has spoken to the coach."""
+    return bool(posted.get("confirmed"))

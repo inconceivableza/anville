@@ -384,9 +384,17 @@ def test_a_chosen_coach_is_kept_on_the_coach_page_and_apart_from_the_contacts(pa
 
     saved = choose(participant, htmx=False)
 
-    assert saved.url == f"{COACH_PAGE}#block-coach"
+    assert saved.url == COACH_PAGE  # ✨ the checklist is the page's first block: back at the top, no anchor (ticket 82)
     assert "You've chosen Sam" in participant.get(COACH_PAGE).content.decode()
     assert "sam@example.com" not in participant.get(CONTACTS_PAGE).content.decode()
+
+
+@pytest.mark.django_db
+def test_the_coach_page_is_reached_at_its_top(participant):
+    """✨ Ticket 82: the sidebar's way to the coach page names no anchor, which would open it scrolled to its card."""
+    to_the_coach_page(participant)
+
+    assert the_coach_page(participant) == COACH_PAGE
 
 
 def test_observers_are_not_asked_how_they_know_the_participant():
@@ -553,9 +561,10 @@ def without_the_wizard(document):
 
 def without_the_next_step_and_photos(document):
     """✨ The hub's next-step wording, its photos and their credits' setting are this pathway's alone (ticket 49b): the
-    faithful port takes none."""
+    faithful port takes none. Nor does it take messages only after a press (ticket 83), keeping its checklist."""
     document.pop("photos", None)
     document.pop("show_courtesy_credits", None)
+    document.pop("messages_after_a_press", None)
     for section in document["content"]["sections"]:
         section.pop("next_step", None)
     return document
@@ -1014,7 +1023,7 @@ def change_the_coach(client, change):
     elif change == "reissued":
         reissue_coach_link(client)
     else:
-        assert choose(client, name="Alex", email="alex@example.com").status_code == 200
+        assert choose(client, name="Alex").status_code == 200
 
 
 @pytest.mark.django_db

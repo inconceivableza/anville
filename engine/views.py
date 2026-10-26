@@ -54,7 +54,7 @@ from engine.document.coach import (
     checklist_answers_from_form,
     checklist_outcome,
     coach_answer_from_form,
-    coach_details_as_typed,
+    coach_confirmed,
     coach_from_form,
     commitments,
 )
@@ -315,9 +315,15 @@ def _coach_page_of(document, hub):
 
 
 def _block_address(document, block_id):
-    """✨ The address of the page a block is on, at the block."""
+    """✨ The address of the page a block is on, at the block. A coach checklist that opens its page is reached at the
+    page's top, with no anchor, which would scroll past the page's title (ticket 82)."""
     section = section_of(document, block_id)
-    return f"{page_url(section['id'], page_of(section, block_id))}#block-{block_id}"
+    number = page_of(section, block_id)
+    block = next(on_page for on_page in pages_of(section)[number - 1] if on_page["id"] == block_id)
+    first = pages_of(section)[number - 1][0] is block
+    if block["type"] == "coach_checklist" and first:
+        return page_url(section["id"], number)
+    return f"{page_url(section['id'], number)}#block-{block_id}"
 
 
 def participant_nav(request):
@@ -600,7 +606,7 @@ def coach_checklist(request, block_id):
     form, screen to screen, and the outcome is worked out again from what was posted, never taken from the button
     pressed. The answers are opinions about another person, including their faith (special category data under
     GDPR), and no later step reads them; `sensitive_post_parameters` keeps them out of error reports too. Saving
-    keeps only the chosen coach's name and email address, as a contact, and only once the outcome allows it.
+    keeps only the chosen coach's name, as a contact (ADR 0022), and only once the outcome allows it.
     """
     state = _participant(request.user)
     block = _block_of_type(state.version, block_id, "coach_checklist")
@@ -636,7 +642,7 @@ def coach_checklist(request, block_id):
         # the link just made, as issuing it leads back.
         if coach is not None:
             return _back_with_issued(request, coach, screen["issued"]["link"])
-        return _see_other(f"{page_url(section['id'], page)}#block-{block_id}")
+        return _see_other(_block_address(state.version.document, block_id))
     shown = _section_page(state.with_answers(kept), section, page)
     checklist_block = next(on_page for on_page in shown["section"]["blocks"] if on_page["id"] == block_id)
     checklist_block["checklist"] = _checklist_screen(checklist_block["text"], **screen)
@@ -694,7 +700,7 @@ def _checklist_step(block, to, posted, coach_kept=None):
     try:
         return {"screen": "chosen", "coach": coach_from_form(posted)}
     except AnswerRefused as refused:
-        return {**going_ahead, **coach_details_as_typed(posted), "refusal": str(refused), "invalid": refused.field}
+        return {**going_ahead, "confirmed": coach_confirmed(posted), "refusal": str(refused), "invalid": refused.field}
 
 
 def _checklist_screen(
@@ -706,15 +712,14 @@ def _checklist_screen(
     refusal=None,
     confident=False,
     coach=None,
-    email="",
     confirmed=False,
     invalid=None,
     kept=None,
     issued=None,
 ):
     """✨ One screen of the coach checklist as its template needs it: the questions with any answers given, and on
-    a second thought or a stop, each answer that was not Yes with why that question matters. On going ahead, the
-    coach's details as typed, and which of them a refusal is about; once chosen, the coach kept, with their link
+    a second thought or a stop, each answer that was not Yes with why that question matters. On going ahead, whether
+    the box was ticked, and which field a refusal is about; once chosen, the coach kept, with their link
     (`issued` is a link just issued, shown this once). On the intro while choosing again, `kept` is the coach who
     stays until another is saved."""
     answers = answers or {}
@@ -731,7 +736,6 @@ def _checklist_screen(
         "confident": confident,
         "refusal": refusal,
         "coach": coach,
-        "email": email,
         "confirmed": confirmed,
         "invalid": invalid,
         "kept": kept,
@@ -952,7 +956,7 @@ def _coach_of(response, answers=None):
     """✨ The coach kept, as the hub and the comparison read them, or None: their name, the coach page, their answer as
     the coach page tells it, whether they can be shown the results (accepted through a working link) and whether they
     are. The answer is read from the `answers` the gate reads (the response's own, if not given), as a `coach_accepted`
-    clause reads it, so the hub's wording and Section 3's lock never disagree (fix-2)."""
+    clause reads it, so the hub's wording and Section 4's lock never disagree (fix-2; Section 3's until ticket 87)."""
     coach = response.contacts.filter(role=Contact.Role.COACH).first() if response is not None else None
     if coach is None:
         return None
@@ -2301,6 +2305,10 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
         # ✨ What the checklist marks unmet: on the last page, where completing checks it, the whole gate.
         "unmet": [message for message, met, _ in gate_checklist if not met],
         "checklist": gate_checklist,
+        # ✨ Where the document asks for it (ticket 83), the checklist only once a press is refused, and unmet alone.
+        "messages_after_a_press": version.document.get("messages_after_a_press", False),
+        # ✨ A wizard's answers save without saying "Saved" (ticket 83); a refusal still says why.
+        "saves_quietly": bool(section.get("wizard")),
     }
 
 

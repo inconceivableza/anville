@@ -559,7 +559,7 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None):
 
 def _waits_only_on_comparison(section, answers, blocks):
     """✨ Whether a section's only open work waits on other people: every clause of its gate still unmet names a block
-    waiting on the comparison (ticket 68), as Section 1's reflection does in *Whatever You Do*. The hub's next step passes
+    waiting on the comparison (ticket 68), as Section 2's reflection does in *Whatever You Do* (ticket 87). The hub's next step passes
     over it (ADR 0019)."""
     clauses = unmet_clauses(section, answers)
     return bool(clauses) and all(waits_on_comparison(blocks.get(clause["block"], {}), answers) for clause in clauses)

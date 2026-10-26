@@ -5,8 +5,9 @@
   ✨ One section. Only the blocks the server decided to send are here: an activity behind a scripture reading
   the participant has not confirmed is absent from the page, not hidden in it, and will not take an answer.
 
-  The complete button is disabled while the gate has anything to say. The server re-checks the gate when it
-  is pressed, so a participant who re-enables the button in their browser gets this page back unchanged.
+  The complete button is disabled while the gate has anything to say, unless the document wants messages only after a
+  press (ticket 83). The server re-checks the gate when it is pressed, so a participant who re-enables the button in
+  their browser, or presses it where it is never disabled, gets this page back with what is missing.
 {% endcomment %}
 {% block head_title %}{{ section.title }}{% endblock head_title %}
 

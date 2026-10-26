@@ -134,7 +134,13 @@ document.addEventListener("htmx:afterSettle", (event) => {
   const checklist = event.target;
   if (!checklist.classList?.contains("coach-checklist")) return;
   if (checklist.dataset.screen === checklistScreenBefore) return;
-  if (checklist.getBoundingClientRect().top < 0) checklist.scrollIntoView({ block: "start" });
+  // ✨ A checklist that is the first block of its page (Walk with a coach) shows the new screen from the top of the
+  // page, its title included, not from the card (ticket 82).
+  const opensPage = checklist.parentElement?.querySelector('[id^="block-"]') === checklist;
+  if (checklist.getBoundingClientRect().top < 0) {
+    if (opensPage) window.scrollTo({ top: 0 });
+    else checklist.scrollIntoView({ block: "start" });
+  }
   const heading = checklist.querySelector("h2");
   if (!heading || checklist.contains(document.activeElement)) return;
   heading.tabIndex = -1;

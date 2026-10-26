@@ -23,7 +23,12 @@
     </aside>
     <section class="ob-form">
       <header class="ob-top">
-        <a class="linkbtn" href="{% url 'home' %}">Exit</a>
+        {# ✨ Signs out, landing on the homepage signed out, as the header's "Sign out" does, with or without JavaScript #}
+        {# ✨ (ticket 83): "Exit" only went back to the homepage still signed in. #}
+        <form method="post" action="{% url 'account_logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="linkbtn">Log out</button>
+        </form>
         <div class="prog" aria-live="polite">
           <span class="label">Step {{ page.number }} of {{ page.count }}</span>
           <span class="bar" aria-hidden="true">{% for step in steps %}<i{% if step <= page.number %} class="on"{% endif %}></i>{% endfor %}</span>

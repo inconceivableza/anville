@@ -24,7 +24,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Keyboard only: each button and pill, the homepage's included, shows a dark green ring when Tab reaches it.
 - With a mouse, the homepage's, hub's and wizard's pills lean towards the pointer as before; a button on any other page stays still.
 - Without JavaScript, the Copy buttons on the invitations, coach and organisation pages are still hidden.
-- A disabled "Mark complete" is grey with muted words, and the pointer shows it can't be pressed.
+- In the faithful port, a disabled "Mark complete" is grey with muted words, and the pointer shows it can't be pressed. *Whatever You Do* disables none (ticket 83).
 - Phone width: the header's "Your pathway" and "Sign out", and the save row's "Save", are the small size and fit on one line.
 
 ## The homepage (`/`, signed out and signed in; beside v3's, `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`)
@@ -201,6 +201,17 @@ The homepage (`/`):
 - The photo is as tall as the window on both pages, at a wide screen and at a tall one (over 900px high): no bare dark strip beneath it, whether at the top of the ratings or scrolled to their end, and the photo the same size and crop on page 2 as on page 1, never zoomed. At about 375px it sits above the page as before (fix-10).
 - Pressing Enter in an answer (with a rating's point focused, chosen or not, or in the reason drop-down) does nothing: the page stays as it was, never "Not saved. No answer was sent." on a page of its own (fix-7).
 
+### Ticket 83: Messages only after a press, and Before we begin's "Log out" (rebuild the frontend, load the pathway again, and use a participant started after that)
+
+- Page 1 of Before we begin, on arrival: no message under "Continue →", and the button is green, not grey. Press it with no reason chosen: "Choose what's bringing you to the course to continue." and "This page is not finished yet." show beneath it. Choose a reason and press "Continue →" straight away: page 2 opens.
+- Page 2: no "Answer all five to continue" on arrival, and choosing a point shows no "Saved" beside it. Press "Continue →" with one rating unanswered: "Answer all five to continue" shows once, unticked, and nothing ticked is listed.
+- Section 1 ("I've finished Section 1"): no "Complete the…" lines on arrival, and the button is green; pressed before the work is done, only the missing ones show.
+- Walk with a coach and Five trusted voices: no "Choose a coach and send them their link." or "Add at least 3 people." on their pages, at any time.
+- Five trusted voices, with JavaScript: "Get link" on an empty row is an outline; typing a name turns it green, and clearing the name back to an outline. Press it with no name: the row says what is missing. With JavaScript off, every "Get link" is green.
+- Top left of both pages of Before we begin: "Log out", in place of "Exit". Pressing it lands on the homepage signed out (the homepage offers sign-in, and `/hub/` asks you to sign in). The same with JavaScript off.
+- At about 375px: "Log out" sits on the left of the step bar, on one line; the messages under "Continue →" wrap within the page.
+- The faithful port is unchanged: its onboarding lists every requirement beneath a grey "Continue →" from the start, ticked once met.
+
 ## The hub's next step and its photo (load the pathway again first; ticket 49b)
 
 - Once Section 1 is next: "Start with your gifts." and "Take the ten-minute strengths evaluation and read three short passages on gifts.", over the grass photo, shaded so the words read clearly, the panel taller, as the prototype's. "Begin" leads into Section 1.
@@ -244,20 +255,30 @@ The homepage (`/`):
 
 ## The coach's details (Whatever You Do's coach page)
 
-- Going ahead (all Yes, or "I'm still confident — ask Sam"): beneath the gold box come "Their name" (already holding the first name typed on the intro), "Their email (optional)", the tick "I've spoken to this person and they're happy to receive a link from me about coaching me through this course.", a full-width "Save Sam as your coach", then "Choose someone else". The two boxes look like the intro's name box; the tick sits beside its words, not above them.
-- Saving with the box unticked says "Tick the box to confirm you've spoken to them." beneath the tick, with the name and email kept as typed; a bad address (`sam`, `sam@`, `sam@example`) says "Check their email address." and the email box turns red. Nothing is saved either way. An empty email box saves (ticket 51b).
-- Saving shows "You've chosen Sam" with their email (none if left empty), Sam's link shown once to copy (see "The coach's link"), "Choose someone else" and "Remove", without reloading the page. A reload, or coming back through the hub, shows the same, without the link.
+- Going ahead (all Yes, or "I'm still confident — ask Sam"): within the gold box, beneath "The next step is to ask them properly.", come the tick "I've spoken to this person and they're happy to receive a link from me about coaching me through this course.", then "Save Sam as your coach" and "Choose someone else". No name or email box (ticket 94); the tick sits beside its words, not above them.
+- Saving with the box unticked says "Tick the box to confirm you've spoken to them." beneath the tick, and nothing is saved.
+- Saving shows "You've chosen Sam", with no email address, Sam's link shown once to copy (see "The coach's link"), "Back to the hub", "Choose someone else" and "Remove", without reloading the page. A reload, or coming back through the hub, shows the same, without the link.
 - "Choose someone else" starts the checklist again, with "Sam stays your coach until you save someone else." and "Keep Sam" beneath its "Continue →". Enter in the name box goes on to the questions, not "Keep Sam". On the questions, with an answer chosen, Enter goes on like "Continue →", never back to the intro, and "Back" still shows on the left, at phone width too (fix-12). "Keep Sam" goes back to "You've chosen Sam" (or "Sam is your coach" once they have accepted). A reload before saving anyone new still shows the coach saved before. "Remove" goes back to the intro, and a reload shows the intro.
 - Without JavaScript: saving and "Remove" come back to the coach page at the checklist; a refused save comes back as the whole coach page with its reason.
 - Screen reader: the refusal is announced; a refused field is announced as invalid when Tab reaches it.
-- Phone width: the details and buttons fill the card's width.
+- Phone width: the tick and buttons fill the card's width.
+
+### Ticket 94: Walk with a coach on one screen, with no email address (rebuild the frontend; no need to load the pathway again)
+
+- From the hub's Walk with a coach card, give a first name and answer all Yes: the verdict card, "Sam sounds like the right person", holds the tick and "Save Sam as your coach" itself, with no name or email box anywhere on the way. Tick and save: "You've chosen Sam" replaces it on the same page, with the link shown once, "Make a new link", "Back to the hub", "Choose someone else" and "Remove". "Back to the hub" goes to the hub.
+- Answer one question No (not "Can ask questions…"): "Worth a second thought" ends "None of this rules Sam out. When Sam opens their link, they'll be asked to agree to the same six things you've just answered, including asking questions rather than handing out answers." "I'm still confident — ask Sam" leads to the verdict card, as above.
+- Across the intro, the questions and each outcome: body paragraphs are all one size, and the small notes (under the intro, under each question, "Sam stays your coach…") are all one size and colour.
+- The link dialog on Five trusted voices' page and the link beneath "You've chosen Sam" both say "This link is shown only this once. If you lose it, make a new one here; the old one will stop working.", and once a link exists, each person's button and the coach's read "Make a new link".
+- Open Sam's link in a private window: the line above "Accept →" says "We keep only your answer, accept or decline, with the name participant provided." and nothing about an email address.
+- Without JavaScript: saving from the verdict card comes back to the coach page showing "You've chosen Sam" and the link, and "Back to the hub" works.
+- Phone width: the verdict card's tick and its two buttons fit the card, and "You've chosen Sam"'s three buttons wrap within it.
 
 ## The coach's link (ticket 13c)
 
-- Saving Sam (ticket 51b) leads straight to "You've chosen Sam", saying the next step is to ask them properly, with the link shown once beneath, "Copy", "Waiting for Sam to answer. The link works until …", "Reissue link" and "Revoke link", without reloading the page; the link box has focus. "Copy" says "Copied". A reload shows no link, only the status. After "Revoke link" the button reads "Get a link for Sam", which shows a new link the same way.
-- With Before we begin complete (and later, Section 1 too), saving a coach and "Reissue link" still work.
+- Saving Sam (ticket 51b) leads straight to "You've chosen Sam", saying the next step is to ask them properly, with the link shown once beneath, "Copy", "Waiting for Sam to answer. The link works until …", "Make a new link" and "Revoke link", without reloading the page; the link box has focus. "Copy" says "Copied". A reload shows no link, only the status. After "Revoke link" the button reads "Get a link for Sam", which shows a new link the same way.
+- With Before we begin complete (and later, Section 1 too), saving a coach and "Make a new link" still work.
 - Enter in the link box does nothing: the link stays the same and still works (with and without JavaScript).
-- Without JavaScript: saving Sam, "Get a link for Sam", "Reissue link" and "Revoke link" each come back to the coach page at the checklist, the link shown once after issuing.
+- Without JavaScript: saving Sam, "Get a link for Sam", "Make a new link" and "Revoke link" each come back to the coach page at the checklist, the link shown once after issuing.
 - In a private window, the link shows "participant has asked you to be their coach" (the participant's display name), the two authored paragraphs, "What you'd be agreeing to" and the six promises, each with its note in smaller type and a box to its left; the box or its words tick it. The line on what is kept sits above "Accept →" and "I can't commit to all of this".
 - "Accept →" with a box unticked says "Tick all six to accept…" with the boxes as they were. All six ticked: "Thank you — participant will be told" and the authored line; a reload says "You're participant's coach" in its place (ticket 25a), and never shows the boxes again.
 - "I can't commit to all of this" (any boxes ticked): "That's a good answer" and the two authored paragraphs.
@@ -289,18 +310,24 @@ The homepage (`/`):
 - The button fills the width of the page, in every section, apart from "← Previous page" beside it on a page after the first. Onboarding's reads "Continue →"; in *Whatever You Do*, Sections 1–5 read "I've finished Section 1" and so on (ticket 87); every other section's reads "Mark complete".
 - Completing onboarding opens Section 1, not the hub. Completing the last open section returns to the hub.
 
-- Every requirement is listed below the button, a met one ticked (✓) and quieter, an unmet one with a dot. As you type, an item changes between the two in place: scrolled to the very bottom of the page, nothing moves.
+- In the faithful port, every requirement is listed below the button, a met one ticked (✓) and quieter, an unmet one with a dot (in *Whatever You Do*, only a refused press lists anything, and only what is unmet: ticket 83). As you type, an item changes between the two in place: scrolled to the very bottom of the page, nothing moves.
 - Screen reader: a met item is read as "Done: …", and the tick and dot are not read.
 - A refused completion ("This section was not marked complete…") also shows below the button.
 
 ## Pages within a section (onboarding)
 
 - Onboarding plays as two pages: in Whatever You Do, the wizard's (the reason; the five ratings), and in the faithful port, the reason and four ratings, then "Who knows you best?". In the faithful port each page is headed by the section's title, with "Page 1 of 2" quietly beneath it. A section of one page, such as Section 1, says nothing of pages.
-- Every page but the last ends in "Continue →" (the full width on the first page), disabled until that page's own requirements are met, which are listed beneath it as the gate's are. The last page ends in onboarding's own "Continue →", which completes it.
-- "Continue →" goes to the next page, at its top. Pressing it on a page with a requirement unmet (re-enable the button in DevTools) comes back with "This page is not finished yet." beneath it.
+- Every page but the last ends in "Continue →" (the full width on the first page). In the faithful port it is disabled until that page's own requirements are met, which are listed beneath it as the gate's are; in Whatever You Do it is never disabled, and nothing is listed until a press is refused (ticket 83). The last page ends in onboarding's own "Continue →", which completes it.
+- "Continue →" goes to the next page, at its top. Pressing it on a page with a requirement unmet (in the faithful port, re-enable the button in DevTools) comes back with "This page is not finished yet." beneath it.
 - "← Previous page", a secondary button, sits on the left of the way on, level with it, as "Back" sits beside "Continue →" in the coach checklist; the way on takes the rest of the row, and the checklist sits beneath both. It is on every page but the first and goes to the page before, with its answers as left, landing at that page's "Continue →" rather than its top. The first page has none. On a page whose way on is not offered yet (behind an unconfirmed reading), it sits on its own.
 - On the coach page, each checklist screen ("Continue →" to "About Sam", then on to the outcome, "Back", "Choose someone else"): if the top of the checklist had scrolled out of view, the new screen opens at its heading, not part way down; if it was in view, nothing moves. Keyboard focus is on the new screen's heading, so Tab goes on from there. The same screen sent back stays put, focus included: "Continue →" on "About Sam" with an answer missing shows its refusal beside the button, still in view; so do "Get a link for Sam", "Reissue link" and "Revoke link".
-- Going back and clearing the reason, then going forward again: the last page's checklist also lists "Choose what's bringing you to the course…" unticked, and completing is refused with it.
+### Ticket 82: Where pages land
+
+- In *Whatever You Do*, open Walk with a coach from the hub card's title, the sidebar's "Your coach" and, once Sam is saved, "Manage": the page opens at its top, with "← Back to the hub" and the title in view, not scrolled down to the card. Saving Sam without JavaScript comes back to the top too.
+- Scroll down the intro, press "Continue →", then "Back", "Continue →" through to the outcome: each new screen shows from the top of the page, title included. The same screen sent back (a refusal) stays where it is. At phone width too.
+- In the faithful port, where the coach checklist is part way down onboarding's page, it still opens at the checklist, as above.
+
+- In the faithful port, going back and clearing the reason, then going forward again: the last page's checklist also lists "Choose what's bringing you to the course…" unticked, and completing is refused with it.
 - Typing `/sections/onboarding/pages/2/` before reaching it lands on the page reached. The hub's "Carry on" and onboarding's entry lead to the page reached, not the first. Once onboarding is complete, its hub entry and its sidebar entry open it at page 1, and "← Back to the hub" at the top of every page goes to the hub.
 - Refreshing any page keeps you on it. (A refused "Continue →" is the exception, as a refused completion is: the browser offers to send the form again.)
 - Without JavaScript: "Continue →" and "← Previous page" both work, and the coach checklist's buttons come back to the coach page, not the first.
@@ -351,7 +378,7 @@ The homepage (`/`):
 - The hub lists Section 1, the Strengths evaluation within it, "How others see you", "The shape of your life", "Putting your calling into words", "Growth plan" and the letter, and no "The Workbook".
 - Section 1 completes with the sort in, without visiting the comparison and with nobody invited; its checklist lists only the strengths evaluation (ticket 87).
 - With Section 1 complete and nobody invited, Section 3's entry says "Opens once you've sent a coach their link in *Walk with a coach* and added at least 3 people in *Five trusted voices*."; once the coach is saved, "Opens once you've added at least 3 people in *Five trusted voices*."; once three people are added, it opens (the wording of ticket 79). Section 3 does not wait on Section 2.
-- Walk with a coach's and Five trusted voices' pages have no "Mark complete" and no "Mark as not complete". Until complete, each lists what it waits on ("Choose a coach and send them their link.", "Add at least 3 people.") as plain text, not a link; once complete, nothing below the list. The header's count does not change as each completes, since it counts only the six numbered sections (ticket 87).
+- Walk with a coach's and Five trusted voices' pages have no "Mark complete" and no "Mark as not complete". Neither lists what it waits on, since nothing on them is a press that could be refused (ticket 83). The header's count does not change as each completes, since it counts only the six numbered sections (ticket 87).
 - After revoking one person's link, Five trusted voices stays complete, its tag saying "1 more needed" (ticket 81), and Section 3 stays open. Phone width: Section 3's lock note wraps within its entry.
 - While Section 3 is the next step, the hub's next step shows its title and "About 30–40 minutes". Section 4's entry says "Opens once you've completed Sections 2 and 3, and your coach has accepted." while the coach has not accepted and Section 2 is unfinished, and Section 5's "Opens once you've completed Section 4.".
 - In each of Sections 3, 4 and 5, "Download Section 3 (PDF)" (4, 5) opens that section's PDF in the browser's own viewer, not a blank page or a download of an HTML error, and saving it keeps the name `whatever-you-do-workbook-section-2.pdf` (3, 4): the files keep their old numbers until the content owner's revised PDFs arrive. Its text reads plainly, with no mention of a draft.
@@ -435,7 +462,7 @@ The homepage (`/`):
 - Issuing a link shows it under that person's name, in a read-only field with Copy. Copy puts the whole link on the clipboard and reads "Copied"; pasting it in a private window opens "You've been invited".
 - Without JavaScript, there is no Copy button, and the link in the field can be selected and copied by hand.
 - With enough people listed that the page scrolls: with JavaScript, issuing, reissuing or revoking a lower person's link changes only their row, and the page does not move; the new link is focused. Without JavaScript, the page comes back opened at that person, not at the top.
-- Reloading the page after issuing no longer shows the link (only its hash is kept), asks nothing about resending a form, and issues nothing new (the link from before still opens "You've been invited"), and the person shows "Link works until …" with "Reissue link" and "Revoke link".
+- Reloading the page after issuing no longer shows the link (only its hash is kept), asks nothing about resending a form, and issues nothing new (the link from before still opens "You've been invited"), and the person shows "Link works until …" with "Make a new link" and "Revoke link".
 - Going Back in the browser after issuing does not bring the link back from the cache.
 - Phone width: the link field and Copy stay on one line without the page scrolling sideways.
 - The observer's landing (a link opened in a private window): the notice's paragraphs, then "I'm answering for …" naming the participant, with nothing asked before it. Pressing it shows "Bookmark this link, it's yours" with Copy, as on the invitations page; reloading, or Back then Forward, does not bring the link back.
@@ -466,7 +493,7 @@ The homepage (`/`):
 ## Answer collection freezes (after `migrate`; three observers answered, at least one more person invited)
 
 - On the results page, "Compare with how others see you →" opens "Before you look": "3 of the 4 people you invited have answered…" and the same button again. "← Back to results" changes nothing; pressing the button opens the comparison. With everyone invited answered (or after `seed_observers`), it reads "Everyone you invited has answered. Once you look, you can't add anyone else." Below three answered, the press goes straight to "Not enough answers yet", as before.
-- Once looked: the hub's Five trusted voices card reads "Complete" with "You've seen your results, so no more answers are added." The list's page says the same and why, has no empty row and no "Issue link" or "Reissue link"; names can still be saved, and "Revoke link" still works. The coach page still issues and reissues the coach's link.
+- Once looked: the hub's Five trusted voices card reads "Complete" with "You've seen your results, so no more answers are added." The list's page says the same and why, has no empty row and no "Issue link" or "Make a new link"; names can still be saved, and "Revoke link" still works. The coach page still issues and reissues the coach's link.
 - In a private window, an unanswered person's link shows the notice then "No more answers are being taken." with no button; their own link, if they had started, shows the same in place of the sort.
 - An observer who answered withdraws: with two left, the comparison is "Not enough answers yet" again, the list offers its empty row and links again, and the next press asks again.
 - The notice (load the pathway again first) ends with withdrawing at any time, through the link or by asking the people who run the service, and says no new answers are added once the participant has looked.
@@ -726,7 +753,7 @@ Load *Whatever You Do* again, and start a new participant for the regression lin
 - Once the sort is in, with two people answered: Section 2's "How others see you" card and the hub's row each read "2 of 3 answered"; with one answered, "1 of 3 answered"; with three, "Ready to view".
 - On the Five trusted voices card, the ringed "How others see you →" pill beside "Manage" has no status after it, waiting, ready or viewed; the pill itself is there and presses as before.
 - With Five trusted voices complete (three people with links), revoke one link on its page: the card's tag reads "1 more needed", with "You'll see how others see you once 3 people have answered." under it while fewer than three have answered. The hub's header count of sections complete is unchanged, and Section 3 stays open if it had opened.
-- Regression: Section 3's note still says "added at least 3 people in *Five trusted voices*", and, before three people have links, Five trusted voices' page lists "Add at least 3 people." under its people.
+- Regression: Section 3's note still says "added at least 3 people in *Five trusted voices*". (Since ticket 83, Five trusted voices' page no longer lists "Add at least 3 people." under its people.)
 
 ### Ticket 85: The new words (load the pathway again, and use a participant started after that)
 
@@ -744,7 +771,7 @@ Load *Whatever You Do* again, and start a new participant for the regression lin
 Load *Whatever You Do* again, then start a new participant: one started before keeps the five sections of the version they began on.
 
 - The hub lists "01 How you've been designed – your strengths", with the Strengths evaluation within it, "02 How others see you", "03 The shape of your life", "04 Putting your calling into words", "05 Growth plan" and "06 A letter to your future self"; the header reads "0 of 6 sections complete", and choosing a coach or giving three people links leaves it at 0.
-- Section 1: "Scripture on gifts" over the three passages, with no "I've read these passages…" button; then "This section uses the strengths evaluation, where you sort and rate your strengths across 36 areas. …" and the Strengths evaluation card, whose "Open the strengths evaluation →" works at once. On the hub the Strengths evaluation is open from the start, with no lock note. "I've finished Section 1" is disabled until the sort is in, and then finishes the section, with nobody invited. Section 1 shows "In progress" on the hub once the sort is begun.
+- Section 1: "Scripture on gifts" over the three passages, with no "I've read these passages…" button; then "This section uses the strengths evaluation, where you sort and rate your strengths across 36 areas. …" and the Strengths evaluation card, whose "Open the strengths evaluation →" works at once. On the hub the Strengths evaluation is open from the start, with no lock note. "I've finished Section 1", pressed before the sort is in, is refused with "Complete the strengths evaluation to continue." (ticket 83); once the sort is in, it finishes the section, with nobody invited. Section 1 shows "In progress" on the hub once the sort is begun.
 - Section 2, locked until then with "Opens once you've completed Section 1.", holds the "How others see you" card and then the reflection, "Having completed the strengths evaluation, read the passages on gifts and seen how others see you, summarise: …", faded until the comparison is seen; "I've finished Section 2" waits on the reflection. On the hub, its "How others see you" row sits within Section 2. With the comparison seen and the reflection unwritten, the hub's next step is "How others see you".
 - Section 3 opens once Section 1 is finished and both side cards are complete, without Section 2; its paragraphs read "Section three, to work through on paper…" and "Sections three to five make up the middle of the course…", its buttons "Download Section 3 (PDF)" and "I've finished Section 3". Section 4's read "Section four, …, and Section 5 opens.", "Download Section 4 (PDF)" and "I've finished Section 4"; Section 5's "Section five, …, and Section 6, a letter to your future self, opens.", "Download Section 5 (PDF)" and "I've finished Section 5". The PDFs themselves still say Sections 2 to 4.
 - The coach waits name Section 4: the card's "Section 4 opens once your coach accepts" and, with Sections 1–3 done, "Section 4 opens once {coach} has accepted."; with Section 3 done and Section 2 not, "Waiting on answers" / "Section 2's reflection opens once at least 3 of the people you invited have answered and you've seen how others see you."

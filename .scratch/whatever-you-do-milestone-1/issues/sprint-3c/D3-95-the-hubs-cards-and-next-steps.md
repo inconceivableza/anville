@@ -15,3 +15,8 @@
 - [ ] "Your groups" no longer shows below the sections
 - [ ] Section 3's page is laid out so its paragraphs, its PDF and its finish button read in order, and the hub's next step for it starts it with one button
 - [ ] The hub and the sidebar take each side card and its status from one place, so they never disagree
+
+**Carried from 87**
+
+- [ ] Section 1's page has more room above its green button ("I've finished Section 1"), below the strengths evaluation's card (the stylesheet is in `frontend/`)
+- The Five trusted voices card's sentence already reads as the wording sheet's row ("…beside your own strengths evaluation…")

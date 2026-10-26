@@ -13,6 +13,9 @@
 
   "← Previous page" sits beside the way on, as "Back" sits beside "Continue →" in the coach checklist, and on its
   own where there is no way on beside it (ticket 41e).
+
+  The way on is disabled while its gate is unmet, unless the document wants messages only after a press (ticket 83):
+  then it can always be pressed, and a refused press says what is missing.
 {% endcomment %}
 <div id="completion"{% if offers_way_on %} class="completion"{% endif %}{% if out_of_band %} hx-swap-oob="true"{% endif %}>
   {% if offers_way_on and not page.is_last %}
@@ -21,7 +24,7 @@
       {% include "engine/previous_page.html" %}
       <form method="post" action="{% url 'move_past_page' section.id page.number %}">
         {% csrf_token %}
-        <button type="submit" class="pill full"{% if unmet %} disabled{% endif %}>Continue →</button>
+        <button type="submit" class="pill full"{% if unmet and not messages_after_a_press %} disabled{% endif %}>Continue →</button>
       </form>
     </div>
     {% include "engine/gate_checklist.html" %}
@@ -36,7 +39,7 @@
       {% include "engine/previous_page.html" %}
       <form method="post" action="{% url 'complete_section' section.id %}">
         {% csrf_token %}
-        <button type="submit" class="pill full"{% if unmet %} disabled{% endif %}>{{ section.complete_label }}</button>
+        <button type="submit" class="pill full"{% if unmet and not messages_after_a_press %} disabled{% endif %}>{{ section.complete_label }}</button>
       </form>
     </div>
     {% include "engine/gate_checklist.html" %}
