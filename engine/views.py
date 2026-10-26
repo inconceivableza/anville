@@ -153,6 +153,25 @@ class ParticipantState(NamedTuple):
         return Response.objects.get_or_create(participant=user, version=self.version)[0]
 
 
+class Invite(NamedTuple):
+    """✨ The way to invite people the results page offers beside a section's finish below the minimum (ticket 88): the
+    address of the Five trusted voices card's page, and the phrase beside it."""
+
+    href: str
+    phrase: str
+
+
+class Finish(NamedTuple):
+    """✨ The finish a part's end offers when the part is the last thing in its section (ticket 88): that section's
+    identifier, its finish button's label, whether it is complete already, and on the results page the way to invite
+    people, if offered."""
+
+    section_id: str
+    label: str
+    done: bool
+    invite: Invite | None = None
+
+
 def home(request):
     """✨ The public homepage (ticket 32a), the same for everyone; "Begin" leads to sign-up, or to the hub once
     signed in."""
@@ -871,7 +890,7 @@ def _results_finish(state, block_id):
     voices = _hub_voices(state, hub)
     if voices is not None and answered < minimum:
         phrase = voices["more_needed"] or comparison_status(answered, minimum, viewed=False)[1]
-        finish["invite"] = {"href": page_url(voices["section"]), "phrase": phrase}
+        return finish._replace(invite=Invite(page_url(voices["section"]), phrase))
     return finish
 
 
@@ -2415,18 +2434,13 @@ def _section_this_is_part_of(state, section):
 
 
 def _finish_of(state, part):
-    """✨ The finish a part's end offers when the part is the last thing in its section (ticket 88): that section's id
-    and its finish button's label, and whether it is complete already, when the end offers "Back to the hub" instead.
-    None for a part that ends nothing, or whose section the participant has not reached. Pressing it is that section's
+    """✨ The finish a part's end offers when the part is the last thing in its section (ticket 88), as a `Finish`
+    without an invitation; once its section is complete, the end offers "Back to the hub" instead. None for a part that ends nothing, or whose section the participant has not reached. Pressing it is that section's
     own completion, so its gate refuses it exactly as it refuses the section's own button."""
     ended = section_ended_by(state.version.document, part)
     if ended is None or state.reached(ended) is None:
         return None
-    return {
-        "section_id": ended["id"],
-        "label": _complete_label(ended),
-        "done": ended["id"] in state.completed,
-    }
+    return Finish(ended["id"], _complete_label(ended), ended["id"] in state.completed)
 
 
 def _complete_label(section):
