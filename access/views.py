@@ -3,10 +3,11 @@
 
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, render
-from django.utils.http import url_has_allowed_host_and_scheme
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from django.views.decorators.http import require_http_methods
 
-from access.consent import current_consent, current_text_version, latest_consent, withdraw
+from access.consent import current_consent, current_text_version, has_passed_first_page, latest_consent, withdraw
 from access.models import Consent
 
 
@@ -18,11 +19,17 @@ def consent(request):
     Agreeing records the version of the text the page showed and when, then goes on to the page that sent the
     participant here, if it named itself as `next` on this site, or else to the start. Declining records nothing.
     Withdrawing marks their consent withdrawn, and the pathway waits for consent again.
+
+    A participant who has not passed the wizard's first page is sent there, whatever they pressed, with the same
+    `next`: consent is first given there, beside "I am 18 or over", so agreeing here cannot step round it (ADR 0021).
     """
+    after = next_on_this_site(request)
+    if not has_passed_first_page(request.user):
+        first_page = reverse("first_page")
+        return _see_other(f"{first_page}?{urlencode({'next': after})}" if after else first_page)
     given = current_consent(request.user)
     version = current_text_version()
     decision = request.POST.get("decision")
-    after = _next_on_this_site(request)
     if given is None and decision == "decline":
         return render(request, "access/consent_declined.html")
     if given is None and decision == "agree":
@@ -40,7 +47,7 @@ def consent(request):
     return render(request, "access/consent.html", _page(request.user, version, given, after))
 
 
-def _next_on_this_site(request):
+def next_on_this_site(request):
     """✨ The `next` the request names, as sign-in's own is read, kept only if it is a page on this site."""
     after = request.POST.get("next") or request.GET.get("next")
     if after and url_has_allowed_host_and_scheme(after, {request.get_host()}, require_https=request.is_secure()):

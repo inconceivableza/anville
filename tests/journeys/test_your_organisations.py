@@ -123,21 +123,23 @@ def test_an_admin_who_has_not_consented_still_gets_the_page(client, django_user_
 
 
 @pytest.mark.django_db
-def test_the_consent_page_links_your_organisations_only_for_an_account_holding_a_permission(
+def test_the_page_asking_for_consent_links_your_organisations_only_for_an_account_holding_a_permission(
     client, django_user_model
 ):
-    """✨ The hub sends an account that has not consented to the consent page, so an admin who has not consented
-    finds the link there."""
+    """✨ The hub sends an account that has not consented to the page that asks, the wizard's first page until it is
+    passed (ADR 0021), so an admin who has not consented finds the link there."""
     church = Organisation.objects.create(name="Example Church")
     participant = django_user_model.objects.create_user(username="participant", email="participant@example.com")
     client.force_login(participant)
-    assert YOUR_ORGANISATIONS not in client.get("/consent/").content.decode()
+    assert YOUR_ORGANISATIONS not in client.get("/consent/", follow=True).content.decode()
 
     admin = django_user_model.objects.create_user(username="admin", email="admin@example.com")
     Permission.objects.create(holder=admin, capability=Permission.Capability.MANAGE, organisation=church)
     client.force_login(admin)
 
-    assert re.search(rf'<a href="{YOUR_ORGANISATIONS}">Your organisations</a>', client.get("/consent/").content.decode())
+    asking = client.get("/consent/", follow=True)
+    assert asking.request["PATH_INFO"] == "/about-you/"
+    assert re.search(rf'<a href="{YOUR_ORGANISATIONS}">Your organisations</a>', asking.content.decode())
 
 
 @pytest.mark.django_db

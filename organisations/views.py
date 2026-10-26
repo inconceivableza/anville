@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST
 
-from access.consent import consent_required, current_consent
+from access.consent import consent_required, current_consent, where_consent_is_asked
 from organisations import joining
 from organisations.forms import NewGroupForm
 from organisations.models import Group, Membership, Organisation, new_join_token
@@ -19,7 +19,7 @@ def join(request, token):
     longer works, so it reveals nothing about any group.
 
     Otherwise the link is held in the session, so sign-up drops the enrolment code, and the visitor is sent to sign
-    up, then to consent, each told to come back here. The page names the group and what its admins see; only "Join"
+    up, then to consent (on the wizard's first page until it is passed), each told to come back here. The page names the group and what its admins see; only "Join"
     records anything, and it leads to the hub. A member opening the link again is told so and offered the hub.
     """
     group = Group.objects.filter(join_token=token).select_related("organisation").first()
@@ -29,7 +29,7 @@ def join(request, token):
     if not request.user.is_authenticated:
         return _then_back_here("account_signup", request)
     if current_consent(request.user) is None:
-        return _then_back_here("consent", request)
+        return _then_back_here(where_consent_is_asked(request.user), request)
     if Membership.objects.filter(participant=request.user, group=group).exists():
         joining.release(request.session)
         return render(request, "organisations/already_in_group.html")

@@ -3,16 +3,18 @@
 
 from functools import wraps
 
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
 
-from access.models import Consent
+from access.models import Account, Consent
 
-# ✨ The version of the text in templates/access/consent.html. Raise it whenever a change alters what a
-# participant agrees to (not for a typo), and everyone is asked again before they continue.
-CONSENT_TEXT_VERSION = 2
+# ✨ The version of the text in templates/access/consent_text.html. Raise it whenever a change alters what a
+# participant agrees to (not for a typo), and everyone is asked again before they continue. Version 3 leaves out
+# group admins while no organisation is set up (ADR 0021).
+CONSENT_TEXT_VERSION = 3
 
 
 def current_text_version():
@@ -42,6 +44,17 @@ def withdrawn_participants():
     return Consent.objects.filter(withdrawn_at__isnull=False).exclude(participant__in=standing).values("participant")
 
 
+@transaction.atomic
+def pass_first_page(participant, display_name):
+    """✨ What passing the wizard's first page keeps (ADR 0021), all at once: the first name given there, when "I am 18
+    or over" was ticked, and consent to the current text, as the consent page records it."""
+    now = timezone.now()
+    Account.objects.update_or_create(
+        participant=participant, defaults={"display_name": display_name, "adult_confirmed_at": now}
+    )
+    Consent.objects.create(participant=participant, text_version=current_text_version(), given_at=now)
+
+
 def withdraw(participant):
     """✨ Withdraw every consent still standing. The rows stay, as the record of what was consented to and when.
 
@@ -50,19 +63,36 @@ def withdraw(participant):
     Consent.objects.filter(participant=participant, withdrawn_at__isnull=True).update(withdrawn_at=timezone.now())
 
 
+def has_passed_first_page(participant):
+    """✨ Whether the participant has passed the wizard's first page, saying they are 18 or over and consenting (ADR
+    0021). An account made before it ticked 18 or over at sign-up, where the time was not kept, and then consented on
+    the consent page, so any consent on record, even one withdrawn or out of date, counts as having passed it."""
+    account = getattr(participant, "account", None)
+    if account is not None and account.adult_confirmed_at is not None:
+        return True
+    return Consent.objects.filter(participant=participant).exists()
+
+
+def where_consent_is_asked(participant):
+    """✨ The name of the page that asks for the participant's consent: the wizard's first page until they have passed
+    it, and after that the consent page, which asks again after a withdrawal or a change to the text."""
+    return "consent" if has_passed_first_page(participant) else "first_page"
+
+
 def consent_required(view):
     """✨ Nothing of the pathway is shown or stored until the participant has consented to the current text.
 
-    Goes beneath `login_required`, which decides who the participant is. htmx is told to go to the consent
-    page rather than swap it into the middle of a section, in the way a sort is sent on to its results.
+    Goes beneath `login_required`, which decides who the participant is. htmx is told to go to the page that asks
+    rather than swap it into the middle of a section, in the way a sort is sent on to its results.
     """
 
     @wraps(view)
     def wrapped(request, *args, **kwargs):
         if current_consent(request.user) is not None:
             return view(request, *args, **kwargs)
+        asked = where_consent_is_asked(request.user)
         if request.headers.get("HX-Request") == "true":
-            return HttpResponse(headers={"HX-Redirect": reverse("consent")})
-        return redirect("consent")
+            return HttpResponse(headers={"HX-Redirect": reverse(asked)})
+        return redirect(asked)
 
     return wrapped

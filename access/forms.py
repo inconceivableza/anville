@@ -24,9 +24,9 @@ class SignInForm(LoginForm):
 
 class EnrolmentCodeSignupForm(forms.Form):
     # ✨ allauth puts added fields straight after the email, but the name comes first, as on the prototype's account
-    # form, and the age confirmation belongs just above the button. A field left off this list would land after it,
-    # so a new one must be listed here.
-    field_order = ["display_name", "email", "enrolment_code", "password1", "password2", "is_adult"]
+    # form. A field left off this list would land after the passwords, so a new one must be listed here. "I am 18 or
+    # over" is asked on the wizard's first page instead, after the account is made (ADR 0021).
+    field_order = ["display_name", "email", "enrolment_code", "password1", "password2"]
 
     # ✨ The prototype's wording for the name its account form asks for first. Kept as the display name (ticket 37).
     display_name = forms.CharField(
@@ -39,13 +39,6 @@ class EnrolmentCodeSignupForm(forms.Form):
         label="Enrolment code",
         error_messages={"required": "Enter the enrolment code you were given."},
     )
-    # ✨ Adults only (ADR 0004). A threshold, so it is asked as one: no date of birth, and nothing kept.
-    is_adult = forms.BooleanField(
-        label="I am 18 or over",
-        label_suffix="",  # ✨ a statement beside its box, not a heading above a field, so no colon
-        error_messages={"required": "You need to be 18 or over to take part."},
-    )
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # ✨ Not asked for at all when turned off from the environment, or while the visitor holds a group's join link,
@@ -65,5 +58,5 @@ class EnrolmentCodeSignupForm(forms.Form):
 
     def signup(self, request, user):
         # ✨ Called by allauth once the user is saved (the ACCOUNT_SIGNUP_FORM_CLASS contract). The enrolment code
-        # grants access only, and the age confirmation admits an adult; neither is stored. The display name is.
+        # grants access only, and is not stored. The display name is.
         Account.objects.create(participant=user, display_name=self.cleaned_data["display_name"])
