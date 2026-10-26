@@ -230,6 +230,38 @@ def track_sections(document):
     return document["content"]["sections"]
 
 
+class WizardStep(NamedTuple):
+    """✨ Where a wizard's page stands in its "Step N of M" counter: its `number`, out of `count`."""
+
+    number: int
+    count: int
+
+    @property
+    def numbers(self):
+        """✨ Every step's number, in order, as the counter's bar draws one mark for each."""
+        return range(1, self.count + 1)
+
+
+def wizard_step(sections, section, number):
+    """✨ The step a wizard's page `number` is. The entry page (ADR 0021) comes before the first wizard of the track, as
+    its step 1, so that wizard's pages are counted from 2; any later wizard counts its own pages alone."""
+    first = _first_wizard(sections)
+    before = 1 if first is not None and first["id"] == section["id"] else 0
+    return WizardStep(number + before, page_count(section) + before)
+
+
+def entry_page_step(sections):
+    """✨ The entry page's step: the one before the track's first wizard's page 1, or a step on its own for a track
+    without a wizard."""
+    first = _first_wizard(sections)
+    return wizard_step(sections, first, 0) if first is not None else WizardStep(1, 1)
+
+
+def _first_wizard(sections):
+    """✨ The first section of these that the document marks as a wizard, or None."""
+    return next((section for section in sections if section.get("wizard")), None)
+
+
 def section_by_id(document, section_id):
     """✨ The section with this identifier within the participant's track, or None."""
     return next((section for section in track_sections(document) if section["id"] == section_id), None)

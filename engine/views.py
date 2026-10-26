@@ -85,6 +85,7 @@ from engine.hub import (
     COMPLETE,
     block_ids_fixed_on_completion,
     complete_sections,
+    entry_page_step,
     hub_for,
     is_locked,
     is_once_only_and_complete,
@@ -93,6 +94,7 @@ from engine.hub import (
     section_by_id,
     track_sections,
     with_coach_answer,
+    wizard_step,
 )
 from engine.document.observers import (
     link_lifetime,
@@ -317,25 +319,11 @@ def _shows_as_wizard(state, section):
 def _section_shown(request, state, section, shown, status=200):
     """✨ A page of a section as `_section_page` gives it, drawn as its wizard while it is one."""
     if _shows_as_wizard(state, section):
-        step = _wizard_step(state.sections, section, shown["page"]["number"])
-        steps = range(1, step["count"] + 1)
-        shown = {**shown, "photo": _photo_of(state.version.document, section["id"]), "step": step, "steps": steps}
+        step = wizard_step(state.sections, section, shown["page"]["number"])
+        photo = _photo_of(state.version.document, section["id"])
+        shown = {**shown, "photo": photo, "step": step, "steps": step.numbers}
         return render(request, "engine/wizard.html", shown, status=status)
     return render(request, "engine/section.html", shown, status=status)
-
-
-def _wizard_step(sections, section, number):
-    """✨ The step a wizard's page `number` is, as {"number", "count"}. The wizard's first page (ADR 0021) comes
-    before the first wizard of the track, as its step 1, so that wizard's pages are counted from 2; any later wizard
-    counts its own pages alone."""
-    first = _first_wizard(sections)
-    before = 1 if first is not None and first["id"] == section["id"] else 0
-    return {"number": number + before, "count": page_count(section) + before}
-
-
-def _first_wizard(sections):
-    """✨ The first section of these that the document marks as a wizard, or None."""
-    return next((section for section in sections if section.get("wizard")), None)
 
 
 def _coach_page_of(document, hub):
@@ -462,16 +450,14 @@ def first_page(request):
     if request.method == "POST" and form.is_valid() and not text_changed:
         pass_first_page(request.user, form.cleaned_data["display_name"])
         return _see_other(after or "start")
-    state = _participant(request.user)
-    first = _first_wizard(state.sections)
-    step = {"number": 1, "count": 1 + (page_count(first) if first is not None else 0)}
+    step = entry_page_step(_participant(request.user).sections)
     shown = {
         "form": form,
         "version": version,
         "next": after,
         "text_changed": text_changed,
         "step": step,
-        "steps": range(1, step["count"] + 1),
+        "steps": step.numbers,
     }
     return render(request, "engine/first_page.html", shown, status=400 if request.method == "POST" else 200)
 
