@@ -224,7 +224,9 @@ def test_one_soft_no_asks_for_a_second_thought_naming_the_answer_and_why_it_matt
         "Would give you a few unhurried conversations over the next few months — you said no "
         "Good intentions and a full diary produce a coach who cancels twice and then apologises."
     ) in text(page)
-    assert "None of this rules Sam out. When Sam opens their link, they'll be asked to agree to the same six things" in text(page)
+    assert (
+        "None of this rules Sam out. When Sam opens their link, they'll be asked to agree to the same six things"
+    ) in text(page)
     assert re.search(r'<button type="submit" name="step" value="confident"[^>]*>I’m still confident — ask Sam</button>', page)
     assert re.search(r'<button type="submit" name="step" value="restart"[^>]*>Think about someone else</button>', page)
 

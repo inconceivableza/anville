@@ -537,7 +537,12 @@ def test_with_the_code_off_coming_back_from_google_makes_the_account_at_once_and
 @pytest.mark.django_db
 @pytest.mark.parametrize(
     "given_name, name, first_name",
-    [("Sam", "Sam Okafor", "Sam"), (None, "Sam Okafor", "Sam Okafor"), (None, None, "sam.google"), ("  ", "", "sam.google")],
+    [
+        ("Sam", "Sam Okafor", "Sam"),
+        (None, "Sam Okafor", "Sam Okafor"),
+        (None, None, "sam.google"),
+        ("  ", "", "sam.google"),
+    ],
 )
 def test_a_google_sign_up_takes_googles_given_name_else_its_full_name_else_the_email_before_the_at(
     client, settings, given_name, name, first_name

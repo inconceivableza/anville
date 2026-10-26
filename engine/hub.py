@@ -154,7 +154,9 @@ def _called(numbered):
     numbers = [number for number, _ in numbered if number and number.isdigit()]
     if len(numbered) > 1 and len(numbers) == len(numbered):
         return "Sections " + _joined_text([str(int(number)) for number in numbers])
-    return _joined_text([f"Section {int(number)}" if number and number.isdigit() else title for number, title in numbered])
+    return _joined_text(
+        [f"Section {int(number)}" if number and number.isdigit() else title for number, title in numbered]
+    )
 
 
 class OutlineEntry(NamedTuple):
@@ -192,9 +194,9 @@ def _coach_wait_wording(answer):
 
 class Hub(NamedTuple):
     """✨ A participant's whole hub: their track's sections, the one to do next, how many of the sections it
-    counts (`counted_sections`) are complete, out of `total`, and the first section waiting on the coach, as a `CoachWait`, if any. With no next step,
-    `waiting_on_answers` is the first section passed over because its only open work waits on the comparison, and so on
-    other people's answers (ticket 68), or None."""
+    counts (`counted_sections`) are complete, out of `total`, and the first section waiting on the coach, as a
+    `CoachWait`, if any. With no next step, `waiting_on_answers` is the first section passed over because its only open
+    work waits on the comparison, and so on other people's answers (ticket 68), or None."""
 
     sections: tuple
     next_step: SectionState | None
@@ -385,7 +387,9 @@ class LockNote(str):
 
     def __html__(self):
         return mark_safe(
-            "".join(format_html("<em>{}</em>", piece.text) if piece.italic else escape(piece.text) for piece in self.pieces)
+            "".join(
+                format_html("<em>{}</em>", piece.text) if piece.italic else escape(piece.text) for piece in self.pieces
+            )
         )
 
 
@@ -559,8 +563,8 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None):
 
 def _waits_only_on_comparison(section, answers, blocks):
     """✨ Whether a section's only open work waits on other people: every clause of its gate still unmet names a block
-    waiting on the comparison (ticket 68), as Section 2's reflection does in *Whatever You Do* (ticket 87). The hub's next step passes
-    over it (ADR 0019)."""
+    waiting on the comparison (ticket 68), as Section 2's reflection does in *Whatever You Do* (ticket 87). The hub's
+    next step passes over it (ADR 0019)."""
     clauses = unmet_clauses(section, answers)
     return bool(clauses) and all(waits_on_comparison(blocks.get(clause["block"], {}), answers) for clause in clauses)
 

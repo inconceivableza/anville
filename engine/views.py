@@ -1117,9 +1117,9 @@ def _demo_tools_on():
 @consent_required
 @require_http_methods(["GET", "POST"])
 def retake(request, block_id):
-    """✨ Demo only (fix-19): the results page's quiet "Retake the strengths evaluation (demo only)" asks first, saying what will
-    be cleared; only its button clears the participant's own sort and everything worked out from it, then opens the
-    sort afresh. Off a development or demo system it is a 404.
+    """✨ Demo only (fix-19): the results page's quiet "Retake the strengths evaluation (demo only)" asks first, saying
+    what will be cleared; only its button clears the participant's own sort and everything worked out from it, then
+    opens the sort afresh. Off a development or demo system it is a 404.
 
     It also offers a demo profile (fix-21): one of `seed_tie_break`'s starting profiles, and how to answer its pairs,
     chosen apart (fix-25), as a combination that holds on this pathway. Once the old sort is cleared, the sort opens

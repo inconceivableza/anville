@@ -451,7 +451,8 @@ def without_the_tie_break(document):
 
 
 NEW_WORDS = [
-    # ✨ Sprint 3c (ticket 85): the prototype's "assessment" is the strengths evaluation, and an observer sends an evaluation.
+    # ✨ Sprint 3c (ticket 85): the prototype's "assessment" is the strengths evaluation, and an observer sends an
+    # evaluation.
     ("Open Strengths Assessment", "Open the strengths evaluation"),
     ("the Strengths Assessment – a tool where you", "the strengths evaluation, where you"),
     ("the Strengths Assessment", "the strengths evaluation"),
