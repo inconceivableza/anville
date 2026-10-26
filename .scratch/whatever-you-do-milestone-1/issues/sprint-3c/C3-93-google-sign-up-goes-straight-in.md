@@ -4,7 +4,7 @@
 
 **Blocked by:** 92 (The wizard's first page), C2
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 3c (ends Fri 30 Oct)
 
