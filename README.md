@@ -138,7 +138,8 @@ how others see them, which needs at least three people's answers.
 `pathways/example.json` is a smaller file for trying the loader out.
 
 The sections' PDFs are `pathways/files/whatever-you-do-workbook-section-2.pdf`, `-section-3.pdf` and
-`-section-4.pdf`, for Sections 3, 4 and 5, each served only to a participant who has reached its section. They are
+`-section-4.pdf`, for Sections 3, 4 and 5, each served only to a participant who has reached its section, and each
+opened from its button in a new tab. They are
 saved from the content owner's Word files in `Prototypes for reference/`, which still number them 2 to 4; replace each,
 under the same name, when a new version arrives.
 

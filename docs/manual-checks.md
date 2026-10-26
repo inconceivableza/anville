@@ -390,10 +390,16 @@ The homepage (`/`):
 - Walk with a coach's and Five trusted voices' pages have no "Mark complete" and no "Mark as not complete". Neither lists what it waits on, since nothing on them is a press that could be refused (ticket 83). The header's count does not change as each completes, since it counts only the six numbered sections (ticket 87).
 - After revoking one person's link, Five trusted voices stays complete, its tag saying "1 more needed" (ticket 81), and Section 3 stays open. Phone width: Section 3's lock note wraps within its entry.
 - While Section 3 is the next step, the hub's next step shows its title and "About 30–40 minutes". Section 4's entry says "Opens once you've completed Sections 2 and 3, and your coach has accepted." while the coach has not accepted and Section 2 is unfinished, and Section 5's "Opens once you've completed Section 4.".
-- In each of Sections 3, 4 and 5, "Download Section 3 (PDF)" (4, 5) opens that section's PDF in the browser's own viewer, not a blank page or a download of an HTML error, and saving it keeps the name `whatever-you-do-workbook-section-2.pdf` (3, 4): the files keep their old numbers until the content owner's revised PDFs arrive. Its text reads plainly, with no mention of a draft.
+- In each of Sections 3, 4 and 5, "Download Section 3 (PDF)" (4, 5) opens that section's PDF in a new tab, in the browser's own viewer, not a blank page or a download of an HTML error, and saving it keeps the name `whatever-you-do-workbook-section-2.pdf` (3, 4): the files keep their old numbers until the content owner's revised PDFs arrive. Its text reads plainly, with no mention of a draft.
 - "I've finished Section 3" leads to the hub with Section 4 open as the next step once Section 2 is finished and the coach has accepted; the same for 4 and then 5, after which the letter, Section 6, opens.
 - Keyboard only: Tab reaches the button and Enter opens the PDF; Tab then reaches "I've finished Section 3".
 - Phone width: the button wraps rather than running off the screen, and the PDF opens in the phone's viewer.
+
+### Ticket 84: The workbook PDFs open in a new tab
+
+- In each of Sections 3, 4 and 5, the button reads "Download Section 3 (PDF) (opens in a new tab)" (4, 5). Clicking it opens the PDF in a new tab and the app's tab stays on the section, not replaced by the PDF. Closing the PDF tab returns to the section as it was.
+- With a screen reader (or reading the page's text), the link is announced with "opens in a new tab" as part of its name.
+- Phone width: the longer button wraps rather than running off the screen. No participant restart is needed; the wording is in the engine's template.
 
 ## Scripture and the credits page (Section 1's reading, the homepage, `/credits/`)
 
