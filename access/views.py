@@ -2,7 +2,8 @@
 # For licensing information see ../LICENSE.md
 
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.http import HttpResponse
+from django.shortcuts import redirect, render, resolve_url
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from django.views.decorators.http import require_http_methods
@@ -69,14 +70,19 @@ def entry_page(request):
     it keeps the name, when 18 or over was ticked and consent to the text the page showed, then goes on as agreeing on
     the consent page does. Once passed it is never asked again: the hub leads on, and the consent page asks again after
     a withdrawal or a change to the text.
+
+    With htmx (fix-2), a refusal sends back the form alone, to take its own place, and passing tells htmx where to go.
     """
     if has_passed_entry_page(request.user):
         return redirect("hub")
     after = next_on_this_site(request)
     form = EntryPageForm(request.POST or None, initial={"display_name": name_shown_for(request.user)})
     changed = text_changed(request)
+    is_htmx = request.headers.get("HX-Request") == "true"
     if request.method == "POST" and form.is_valid() and not changed:
         pass_entry_page(request.user, form.cleaned_data["display_name"])
+        if is_htmx:
+            return HttpResponse(headers={"HX-Redirect": resolve_url(after or "start")})
         return _see_other(after or "start")
     step = entry_page_step(_track_of(request.user))
     shown = {
@@ -87,7 +93,8 @@ def entry_page(request):
         "step": step,
         "steps": step.numbers,
     }
-    return render(request, "access/entry_page.html", shown, status=400 if request.method == "POST" else 200)
+    template = "access/entry_page_form.html" if is_htmx and request.method == "POST" else "access/entry_page.html"
+    return render(request, template, shown, status=400 if request.method == "POST" else 200)
 
 
 def _track_of(participant):

@@ -10,6 +10,7 @@ from html import unescape
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.shortcuts import resolve_url
 from django.utils import timezone
 
 from access.consent import current_text_version, withdraw
@@ -86,6 +87,27 @@ def test_passing_keeps_the_name_when_18_or_over_was_ticked_and_consent_then_goes
     assert Consent.objects.get().text_version == current_text_version()
     assert passed.status_code == 303
     assert signed_up.get(passed.url, follow=True).request["PATH_INFO"] == "/sections/onboarding/"
+
+
+@pytest.mark.django_db
+def test_a_refused_continue_comes_back_in_place_with_javascript_and_at_the_form_without(signed_up):
+    """✨ fix-2: with htmx, the form alone, its refusals in it, for the page's form to be swapped for; without, the page,
+    opened at the form. A passed press with htmx goes on as without."""
+    page = signed_up.get(ENTRY_PAGE).content.decode()
+    given = {"display_name": name_on(page), "is_adult": "on", "version": version_on(page)}
+    anchor = re.search(r'action="/about-you/#([^"]+)"', page).group(1)
+
+    refused_in_place = signed_up.post(ENTRY_PAGE, given, headers={"HX-Request": "true"})
+    refused = signed_up.post(ENTRY_PAGE, given)
+    assert not Consent.objects.exists()
+    passed = signed_up.post(ENTRY_PAGE, {**given, "consents": "on"}, headers={"HX-Request": "true"})
+
+    assert refused_in_place.status_code == 400
+    assert "<html" not in refused_in_place.content.decode()
+    assert f'<form id="{anchor}"' in refused_in_place.content.decode()
+    assert refusal("consents") in unescape(refused_in_place.content.decode())
+    assert f'id="{anchor}"' in refused.content.decode()
+    assert passed.headers["HX-Redirect"] == resolve_url("start")
 
 
 @pytest.mark.django_db
