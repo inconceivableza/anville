@@ -68,6 +68,11 @@
       "type": "boolean",
       "default": false
     },
+    "messages_after_a_press": {
+      "description": "Whether a gate's messages wait for a press: on, each page's way on is never disabled, and its gate's unmet messages show only once pressing it has been refused, never on arrival nor ticked off as met. Off, every requirement is listed beneath the way on from the start, ticked once met, and the way on is disabled while any is unmet.",
+      "type": "boolean",
+      "default": false
+    },
     "content": {
       "type": "object",
       "additionalProperties": false,

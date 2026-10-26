@@ -19,6 +19,7 @@
     }
   },
   "show_courtesy_credits": true,
+  "messages_after_a_press": true,
   "content": {
     "sections": [
       {

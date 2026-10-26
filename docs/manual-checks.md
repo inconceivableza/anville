@@ -24,7 +24,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Keyboard only: each button and pill, the homepage's included, shows a dark green ring when Tab reaches it.
 - With a mouse, the homepage's, hub's and wizard's pills lean towards the pointer as before; a button on any other page stays still.
 - Without JavaScript, the Copy buttons on the invitations, coach and organisation pages are still hidden.
-- A disabled "Mark complete" is grey with muted words, and the pointer shows it can't be pressed.
+- In the faithful port, a disabled "Mark complete" is grey with muted words, and the pointer shows it can't be pressed. *Whatever You Do* disables none (ticket 83).
 - Phone width: the header's "Your pathway" and "Sign out", and the save row's "Save", are the small size and fit on one line.
 
 ## The homepage (`/`, signed out and signed in; beside v3's, `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`)
@@ -201,6 +201,17 @@ The homepage (`/`):
 - The photo is as tall as the window on both pages, at a wide screen and at a tall one (over 900px high): no bare dark strip beneath it, whether at the top of the ratings or scrolled to their end, and the photo the same size and crop on page 2 as on page 1, never zoomed. At about 375px it sits above the page as before (fix-10).
 - Pressing Enter in an answer (with a rating's point focused, chosen or not, or in the reason drop-down) does nothing: the page stays as it was, never "Not saved. No answer was sent." on a page of its own (fix-7).
 
+### Ticket 83: Messages only after a press, and Before we begin's "Log out" (rebuild the frontend, load the pathway again, and use a participant started after that)
+
+- Page 1 of Before we begin, on arrival: no message under "Continue →", and the button is green, not grey. Press it with no reason chosen: "Choose what's bringing you to the course to continue." and "This page is not finished yet." show beneath it. Choose a reason and press "Continue →" straight away: page 2 opens.
+- Page 2: no "Answer all five to continue" on arrival, and choosing a point shows no "Saved" beside it. Press "Continue →" with one rating unanswered: "Answer all five to continue" shows once, unticked, and nothing ticked is listed.
+- Section 1 ("I've finished Section 1"): no "Complete the…" lines on arrival, and the button is green; pressed before the work is done, only the missing ones show.
+- Walk with a coach and Five trusted voices: no "Choose a coach and send them their link." or "Add at least 3 people." on their pages, at any time.
+- Five trusted voices, with JavaScript: "Get link" on an empty row is an outline; typing a name turns it green, and clearing the name back to an outline. Press it with no name: the row says what is missing. With JavaScript off, every "Get link" is green.
+- Top left of both pages of Before we begin: "Log out", in place of "Exit". Pressing it lands on the homepage signed out (the homepage offers sign-in, and `/hub/` asks you to sign in). The same with JavaScript off.
+- At about 375px: "Log out" sits on the left of the step bar, on one line; the messages under "Continue →" wrap within the page.
+- The faithful port is unchanged: its onboarding lists every requirement beneath a grey "Continue →" from the start, ticked once met.
+
 ## The hub's next step and its photo (load the pathway again first; ticket 49b)
 
 - Once Section 1 is next: "Start with your gifts." and "Take the ten-minute strengths evaluation and read three short passages on gifts.", over the grass photo, shaded so the words read clearly, the panel taller, as the prototype's. "Begin" leads into Section 1.
@@ -289,18 +300,18 @@ The homepage (`/`):
 - The button fills the width of the page, in every section, apart from "← Previous page" beside it on a page after the first. Onboarding's reads "Continue →"; in *Whatever You Do*, Sections 1–4 read "I've finished Section 1" and so on; every other section's reads "Mark complete".
 - Completing onboarding opens Section 1, not the hub. Completing the last open section returns to the hub.
 
-- Every requirement is listed below the button, a met one ticked (✓) and quieter, an unmet one with a dot. As you type, an item changes between the two in place: scrolled to the very bottom of the page, nothing moves.
+- In the faithful port, every requirement is listed below the button, a met one ticked (✓) and quieter, an unmet one with a dot (in *Whatever You Do*, only a refused press lists anything, and only what is unmet: ticket 83). As you type, an item changes between the two in place: scrolled to the very bottom of the page, nothing moves.
 - Screen reader: a met item is read as "Done: …", and the tick and dot are not read.
 - A refused completion ("This section was not marked complete…") also shows below the button.
 
 ## Pages within a section (onboarding)
 
 - Onboarding plays as two pages: in Whatever You Do, the wizard's (the reason; the five ratings), and in the faithful port, the reason and four ratings, then "Who knows you best?". In the faithful port each page is headed by the section's title, with "Page 1 of 2" quietly beneath it. A section of one page, such as Section 1, says nothing of pages.
-- Every page but the last ends in "Continue →" (the full width on the first page), disabled until that page's own requirements are met, which are listed beneath it as the gate's are. The last page ends in onboarding's own "Continue →", which completes it.
-- "Continue →" goes to the next page, at its top. Pressing it on a page with a requirement unmet (re-enable the button in DevTools) comes back with "This page is not finished yet." beneath it.
+- Every page but the last ends in "Continue →" (the full width on the first page). In the faithful port it is disabled until that page's own requirements are met, which are listed beneath it as the gate's are; in Whatever You Do it is never disabled, and nothing is listed until a press is refused (ticket 83). The last page ends in onboarding's own "Continue →", which completes it.
+- "Continue →" goes to the next page, at its top. Pressing it on a page with a requirement unmet (in the faithful port, re-enable the button in DevTools) comes back with "This page is not finished yet." beneath it.
 - "← Previous page", a secondary button, sits on the left of the way on, level with it, as "Back" sits beside "Continue →" in the coach checklist; the way on takes the rest of the row, and the checklist sits beneath both. It is on every page but the first and goes to the page before, with its answers as left, landing at that page's "Continue →" rather than its top. The first page has none. On a page whose way on is not offered yet (behind an unconfirmed reading), it sits on its own.
 - On the coach page, each checklist screen ("Continue →" to "About Sam", then on to the outcome, "Back", "Choose someone else"): if the top of the checklist had scrolled out of view, the new screen opens at its heading, not part way down; if it was in view, nothing moves. Keyboard focus is on the new screen's heading, so Tab goes on from there. The same screen sent back stays put, focus included: "Continue →" on "About Sam" with an answer missing shows its refusal beside the button, still in view; so do "Get a link for Sam", "Reissue link" and "Revoke link".
-- Going back and clearing the reason, then going forward again: the last page's checklist also lists "Choose what's bringing you to the course…" unticked, and completing is refused with it.
+- In the faithful port, going back and clearing the reason, then going forward again: the last page's checklist also lists "Choose what's bringing you to the course…" unticked, and completing is refused with it.
 - Typing `/sections/onboarding/pages/2/` before reaching it lands on the page reached. The hub's "Carry on" and onboarding's entry lead to the page reached, not the first. Once onboarding is complete, its hub entry and its sidebar entry open it at page 1, and "← Back to the hub" at the top of every page goes to the hub.
 - Refreshing any page keeps you on it. (A refused "Continue →" is the exception, as a refused completion is: the browser offers to send the form again.)
 - Without JavaScript: "Continue →" and "← Previous page" both work, and the coach checklist's buttons come back to the coach page, not the first.
@@ -351,7 +362,7 @@ The homepage (`/`):
 - The hub lists onboarding, Section 1, the Strengths evaluation, "The shape of your life", "Putting your calling into words", "Growth plan" and Section 5, and no "The Workbook".
 - Section 1 completes with the sort in and the reflection written, without visiting the comparison and with nobody invited; its checklist lists only the strengths evaluation and the reflections.
 - With Section 1 complete and nobody invited, Section 2's entry says "Opens once you've sent a coach their link in *Walk with a coach* and added at least 3 people in *Five trusted voices*."; once the coach is saved, "Opens once you've added at least 3 people in *Five trusted voices*."; once three people are added, it opens (the wording of ticket 79). Section 2 no longer waits on Section 1: see ticket 66's check below.
-- Walk with a coach's and Five trusted voices' pages have no "Mark complete" and no "Mark as not complete". Until complete, each lists what it waits on ("Choose a coach and send them their link.", "Add at least 3 people.") as plain text, not a link; once complete, nothing below the list. The header's count goes up as each completes.
+- Walk with a coach's and Five trusted voices' pages have no "Mark complete" and no "Mark as not complete". Neither lists what it waits on, since nothing on them is a press that could be refused (ticket 83). The header's count goes up as each completes.
 - After revoking one person's link, Five trusted voices stays complete, its tag saying "1 more needed" (ticket 81), and Section 2 stays open. Phone width: Section 2's lock note wraps within its entry.
 - While Section 2 is the next step, the hub's next step shows its title and "About 30–40 minutes". Section 3's entry says "Opens once you've completed Section 2, and your coach has accepted." while the coach has not accepted, and Section 4's "Opens once you've completed Section 3.".
 - In each of Sections 2, 3 and 4, "Download Section 2 (PDF)" (3, 4) opens that section's PDF in the browser's own viewer, not a blank page or a download of an HTML error, and saving it keeps the name `whatever-you-do-workbook-section-2.pdf` (3, 4). Its text reads plainly, with no mention of a draft.
@@ -730,7 +741,7 @@ Load *Whatever You Do* again, and start a new participant for the regression lin
 - Once the sort is in, with two people answered: Section 1's "How others see you" card and the hub's row each read "2 of 3 answered"; with one answered, "1 of 3 answered"; with three, "Ready to view".
 - On the Five trusted voices card, the ringed "How others see you →" pill beside "Manage" has no status after it, waiting, ready or viewed; the pill itself is there and presses as before.
 - With Five trusted voices complete (three people with links), revoke one link on its page: the card's tag reads "1 more needed", with "You'll see how others see you once 3 people have answered." under it while fewer than three have answered. The hub's header count of sections complete is unchanged, and Section 2 stays open if it had opened.
-- Regression: Section 2's note still says "added at least 3 people in *Five trusted voices*", and, before three people have links, Five trusted voices' page lists "Add at least 3 people." under its people.
+- Regression: Section 2's note still says "added at least 3 people in *Five trusted voices*". (Since ticket 83, Five trusted voices' page no longer lists "Add at least 3 people." under its people.)
 
 ### Ticket 85: The new words (load the pathway again, and use a participant started after that)
 

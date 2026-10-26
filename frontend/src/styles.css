@@ -550,6 +550,8 @@ main.container:has(> .ob) {
 
 .ob-top .linkbtn {
   text-decoration: none;
+  font-family: var(--font-body); /* ✨ a button since "Log out" signs out (ticket 83), which takes no font of its own */
+  cursor: pointer;
 }
 
 .ob-mark {
@@ -1421,6 +1423,15 @@ form + .way-on,
 
 /* ✨ On the cream, its pale fill, as the ghost button had before ticket 53a (fix-2); on a dark panel, none. */
 .pill.ghost {
+  background: var(--paper);
+  color: inherit;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+/* ✨ A contact list's "Get link" is an outline until its row has a name, then green (ticket 83). Only where JavaScript
+   has run, so without it, where nothing else would change, it is always green. Never disabled: pressed empty, the
+   server says what is missing. */
+[data-javascript="loaded"] .contact-row:has(.contact-name input:placeholder-shown) [data-gets-link] {
   background: var(--paper);
   color: inherit;
   box-shadow: inset 0 0 0 1px currentColor;

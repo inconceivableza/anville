@@ -2298,6 +2298,10 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
         # ✨ What the checklist marks unmet: on the last page, where completing checks it, the whole gate.
         "unmet": [message for message, met, _ in gate_checklist if not met],
         "checklist": gate_checklist,
+        # ✨ Where the document asks for it (ticket 83), the checklist only once a press is refused, and unmet alone.
+        "messages_after_a_press": version.document.get("messages_after_a_press", False),
+        # ✨ A wizard's answers save without saying "Saved" (ticket 83); a refusal still says why.
+        "saves_quietly": bool(section.get("wizard")),
     }
 
 
