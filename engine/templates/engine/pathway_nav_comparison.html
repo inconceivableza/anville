@@ -3,11 +3,16 @@
 {% comment %}
   ✨ The comparison signpost's entry in the sidebar (ticket 80), listed as the hub lists its row: within its section,
   after the part holding its sort or first, with the hub row's status. Its title is the hub row's press, a form posting
-  to the same address, so it is the visit Section 2's reflection waits on and warns before collection freezes.
+  to the same address, so it is the visit Section 2's reflection waits on and warns before collection freezes. Below the
+  minimum, as on the hub row, it is a link to Five trusted voices' page instead (fix-3).
 {% endcomment %}
 <li class="pathway-nav-section pathway-nav-comparison">
   <div class="pathway-nav-row">
     <span class="status-chip status-{{ comparison.status }}">{{ comparison.label }}</span>
-    {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="pathway-nav-title" press_label=comparison.title %}
+    {% if comparison.invite %}
+      <a class="pathway-nav-title" href="{{ comparison.invite.href }}">{{ comparison.title }}</a>
+    {% else %}
+      {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="pathway-nav-title" press_label=comparison.title %}
+    {% endif %}
   </div>
 </li>

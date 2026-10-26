@@ -14,12 +14,13 @@ from engine.models import Response
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.test_coach_checklist import text
 from tests.journeys.test_comparison_signpost import CARD, card
-from tests.journeys.test_contact_list import with_trusted_voices
+from tests.journeys.test_contact_list import VOICES, with_trusted_voices
 from tests.journeys.test_hub import (  # noqa: F401  (signed_in_client is a fixture, used by name)
     PEOPLE,
     add_people_with_links,
     answer_through,
     signed_in_client,
+    tag_of,
     voices_card,
 )
 from tests.journeys.test_observer_assessment import RESULTS_SEEN, press_compare
@@ -69,30 +70,65 @@ def statuses(html):
     return waiting + [COMPARISON_STATUSES[state] for state in ("ready", "viewed") if COMPARISON_STATUSES[state] in words]
 
 
+def sidebar_entry(client):
+    """✨ The comparison's entry in the sidebar of the calling section's page, or None when it shows none."""
+    page = client.get("/sections/calling/").content.decode()
+    found = re.search(r'<li class="[^"]*pathway-nav-comparison.*?</li>', page, re.S)
+    return found.group(0) if found else None
+
+
+def where_it_leads(html):
+    """✨ Whether the markup leads to Five trusted voices' page, and whether it presses on to the comparison."""
+    return (f'href="/sections/{VOICES}/"' in html, f'action="/results/{SORT}/comparison/visit/"' in html)
+
+
 @pytest.mark.django_db
-def test_once_there_is_a_result_the_hubs_row_shows_with_the_cards_status_and_the_voices_cards_button_without_it(
-    participant,
+def test_below_the_minimum_the_card_the_hubs_row_and_the_sidebar_lead_to_five_trusted_voices_and_from_it_compare(
+    participant, settings
 ):
-    """✨ The voices card's Answered meter and tag already say where the answers stand (developer's call, 23 Oct, ticket
-    81)."""
+    """✨ One rule wherever the comparison is offered, as on the results page (fix-3, ticket 88). The voices card offers
+    nothing in its place: its Manage already leads there, and its Answered meter and tag say where the answers stand
+    (developer's call, 23 Oct, ticket 81)."""
+    settings.ANVILLE_SIDEBAR = True
     answer_through(*participant.links[:2])
     assert hub_row(participant) is None
     assert voices_button(participant) is None
 
     submit_sort(participant, complete_sort())
 
-    on_the_card = statuses(card(participant))
-    assert on_the_card == ["2 of 3 answered"]
-    assert statuses(hub_row(participant)) == on_the_card
-    assert voices_button(participant) is not None
+    for shown in (card(participant), hub_row(participant), sidebar_entry(participant)):
+        assert where_it_leads(shown) == (True, False)
+        assert statuses(shown) == ["2 of 3 answered"]
+    assert voices_button(participant) is None
     assert statuses(voices_card(participant)) == []
 
     answer_through(participant.links[2])
+
+    for shown in (card(participant), hub_row(participant), sidebar_entry(participant)):
+        assert where_it_leads(shown) == (False, True)
+        assert statuses(shown) == [COMPARISON_STATUSES["ready"]]
+    assert voices_button(participant) is not None
+    assert statuses(voices_card(participant)) == []
+
     press_compare(participant)
 
-    assert statuses(card(participant)) == [COMPARISON_STATUSES["viewed"]]
-    assert statuses(hub_row(participant)) == [COMPARISON_STATUSES["viewed"]]
-    assert statuses(voices_card(participant)) == []
+    assert statuses(card(participant)) == statuses(hub_row(participant)) == [COMPARISON_STATUSES["viewed"]]
+
+
+@pytest.mark.django_db
+def test_below_the_minimum_with_too_few_links_each_says_how_many_more_are_needed_as_the_voices_card_does(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    load_pathway(with_the_card_on_the_hub())
+    signed_in_client.post("/sections/onboarding/complete/")
+    answer_through(*add_people_with_links(signed_in_client, *PEOPLE[:2]))
+    submit_sort(signed_in_client, complete_sort())
+
+    phrase = tag_of(voices_card(signed_in_client))
+
+    assert phrase == "1 more needed"
+    assert phrase in text(card(signed_in_client))
+    assert phrase in text(hub_row(signed_in_client))
 
 
 @pytest.mark.django_db

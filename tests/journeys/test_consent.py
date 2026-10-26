@@ -5,8 +5,11 @@
 records the version of the text agreed to. Declining stores nothing beyond the account.
 """
 
+import re
+
 import pytest
 from django.contrib.auth import get_user_model
+from django.template.loader import render_to_string
 from django.utils import dateformat, timezone
 
 from access.consent import current_text_version
@@ -104,6 +107,19 @@ def test_the_consent_text_is_still_marked_as_a_draft_here_and_on_the_entry_page(
     assert "Draft wording" in signed_up.get(ENTRY_PAGE).content.decode()
     give_consent(signed_up)
     assert "Draft wording" in signed_up.get(CONSENT).content.decode()
+
+
+@pytest.mark.django_db
+def test_the_withdrawal_sentence_is_the_same_here_and_on_the_entry_page_and_the_text_stays_version_3(signed_up):
+    """✨ It names where to withdraw, true on either page (fix-3). Version 3 was never deployed, so its rewording asks
+    nobody again."""
+    shared = render_to_string("access/consent_text.html")
+    sentence = re.search(r"You can withdraw[^.]*\.", " ".join(shared.split())).group(0)
+
+    assert sentence in " ".join(signed_up.get(ENTRY_PAGE).content.decode().split())
+    give_consent(signed_up)
+    assert sentence in " ".join(signed_up.get(CONSENT).content.decode().split())
+    assert current_text_version() == 3
 
 
 @pytest.mark.django_db

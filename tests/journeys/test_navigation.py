@@ -307,6 +307,7 @@ def test_how_others_see_you_is_listed_within_section_1_after_the_assessment_as_t
     assert "How others see you" not in sidebar_of(listing.get("/hub/").content.decode())
 
     started(listing)
+    answer_through(*listing.links)  # ✨ the press from the minimum; below it, both lead to Five trusted voices (fix-3)
     sidebar = sidebar_of(listing.get(f"/sections/{CALLING}/").content.decode())
     parts = re.search(r'<ol class="pathway-nav-parts">.*?</ol>', sidebar, re.S).group(0)
 

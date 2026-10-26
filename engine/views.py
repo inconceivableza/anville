@@ -153,8 +153,9 @@ class ParticipantState(NamedTuple):
 
 
 class Invite(NamedTuple):
-    """✨ The way to invite people the results page offers beside a section's finish below the minimum (ticket 88): the
-    address of the Five trusted voices card's page, and the phrase beside it."""
+    """✨ The way to invite people offered below the minimum, beside a section's finish on the results page (ticket 88)
+    and in place of the comparison signpost's press (fix-3): the address of the Five trusted voices card's page, and
+    the phrase beside it."""
 
     href: str
     phrase: str
@@ -851,13 +852,24 @@ def _results_finish(state, block_id):
     finish = _finish_of(state, part) if part["blocks"][-1]["id"] == block_id else None
     if finish is None:
         return None
-    answered, minimum = _answered(state.response), minimum_observers(document)
+    invite = _invite(state)
+    return finish._replace(invite=invite) if invite is not None else finish
+
+
+def _invite(state):
+    """✨ The way to invite people offered in place of the press on to the comparison below the minimum, wherever that
+    press is offered (ticket 88, fix-3): Five trusted voices' page, with how many more its card needs, or else how many
+    of the minimum have answered. None from the minimum, and for a pathway without that card or while it is locked,
+    where the press is offered as before."""
+    answered, minimum = _answered(state.response), minimum_observers(state.version.document)
+    if answered >= minimum:
+        return None
     hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
     voices = _hub_voices(state, hub)
-    if voices is not None and answered < minimum:
-        phrase = voices["more_needed"] or comparison_status(answered, minimum, viewed=False)[1]
-        return finish._replace(invite=Invite(page_url(voices["section"]), phrase))
-    return finish
+    if voices is None:
+        return None
+    phrase = voices["more_needed"] or comparison_status(answered, minimum, viewed=False)[1]
+    return Invite(page_url(voices["section"]), phrase)
 
 
 def _results_drawn(state, result, block_id):
@@ -2452,7 +2464,9 @@ def _sort_results_drawn(state, block):
 
 def _comparison_signpost_shown(state, block):
     """✨ For a `comparison_signpost` block, its sort and where the way to that sort's comparison stands, as
-    `comparison_status` words it, once there is a result; None before, and for any other block (ticket 67a)."""
+    `comparison_status` words it, once there is a result; None before, and for any other block (ticket 67a). Below the
+    minimum, where `_invite` offers the way to invite people in place of its press, `invite` holds it and the status
+    says its phrase (fix-3)."""
     if block["type"] != "comparison_signpost":
         return None
     sort = block["sort"]
@@ -2461,8 +2475,8 @@ def _comparison_signpost_shown(state, block):
     answered = _answered(state.response)
     viewed = comparison_viewed(state.answers, sort)
     status, label = comparison_status(answered, minimum_observers(state.version.document), viewed)
-    # ✨ `unanswered`: nobody has answered yet, when its button is grey, though still pressed as ever (ticket 88).
-    return {"sort": sort, "status": status, "label": label, "unanswered": answered == 0}
+    invite = _invite(state)
+    return {"sort": sort, "status": status, "label": invite.phrase if invite else label, "invite": invite}
 
 
 def _block_for_participant(
