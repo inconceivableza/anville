@@ -914,6 +914,20 @@ def test_each_lock_note_names_exactly_what_is_left_in_the_sections_still_unfinis
 
 
 @pytest.mark.django_db
+def test_a_participant_turned_away_from_section_3_for_want_of_the_side_cards_is_told_what_they_still_need(participant):
+    """✨ The side cards' "Add at least 3 people." and "Choose a coach and send them their link." gate no press: with
+    messages only after a press (ticket 83), their pages list nothing. What they hold back is Section 3, whose address
+    leads to the hub, and its lock note there names both."""
+    through_section_1(participant)
+
+    turned_away = participant.get("/sections/shape/")
+
+    coach, voices = map(what_is_left, ["walk-with-a-coach", "trusted-voices"])
+    assert turned_away.url == "/hub/"
+    assert escape(OPENS_ONCE.format(f"{coach} and {voices}")) in note_under(participant, "shape")
+
+
+@pytest.mark.django_db
 def test_everything_that_opens_section_3_is_done_with_no_observer_answers_at_all(participant):
     """✨ Nothing a participant must do to reach Section 3 waits on an observer (ticket 52): it requires Section 1, which
     is finished on the strengths evaluation alone, and not Section 2, whose reflection does (ADR 0019; ticket 87)."""
