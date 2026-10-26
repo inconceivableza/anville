@@ -612,6 +612,8 @@ def _status(section, answers, completed, sections, moved_past):
         return COMPLETE  # ✨ completing is the participant's own act, so it outlasts any later change
     if is_locked(section, completed, answers, sections, moved_past):
         return LOCKED
+    # ✨ A section's own blocks and its parts' count, so a section whose own blocks take no answer is in progress once
+    # its part is begun (ticket 87).
     parts = [other for other in sections if other.get("part_of") == section["id"]]
     if any(has_content(answers.get(block["id"])) for other in (section, *parts) for block in _interactive_blocks(other)):
         return IN_PROGRESS
@@ -619,6 +621,5 @@ def _status(section, answers, completed, sections, moved_past):
 
 
 def _interactive_blocks(section):
-    """✨ The blocks the participant does something with. Progress counts these and no others: a section's own, and its
-    parts', so a section whose own blocks take no answer is in progress once its part is begun (ticket 87)."""
+    """✨ The section's own blocks the participant does something with. Progress counts these and no others."""
     return [block for block in section["blocks"] if BLOCK_TYPES[block["type"]].is_interactive]
