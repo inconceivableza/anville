@@ -337,9 +337,8 @@ def _block_address(document, block_id):
     page's top, with no anchor, which would scroll past the page's title (ticket 82)."""
     section = section_of(document, block_id)
     number = page_of(section, block_id)
-    block = next(on_page for on_page in pages_of(section)[number - 1] if on_page["id"] == block_id)
-    first = pages_of(section)[number - 1][0] is block
-    if block["type"] == "coach_checklist" and first:
+    opening_block = pages_of(section)[number - 1][0]
+    if opening_block["id"] == block_id and opening_block["type"] == "coach_checklist":
         return page_url(section["id"], number)
     return f"{page_url(section['id'], number)}#block-{block_id}"
 
