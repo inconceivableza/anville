@@ -210,7 +210,7 @@ The homepage (`/`):
 
 ### Ticket 83: Messages only after a press, and Before we begin's "Log out" (rebuild the frontend, load the pathway again, and use a participant started after that)
 
-- Page 1 of Before we begin, on arrival: no message under "Continue →", and the button is green, not grey. Press it with no reason chosen: "Choose what's bringing you to the course to continue." and "This page is not finished yet." show beneath it. Choose a reason and press "Continue →" straight away: page 2 opens.
+- Page 1 of Before we begin, on arrival: no message under "Continue →", and the button is green, not grey. Press it with no reason chosen: "Choose what's bringing you to the course to continue." shows beneath it, alone (fix-2). Choose a reason and press "Continue →" straight away: page 2 opens.
 - Page 2: no "Answer all five to continue" on arrival, and choosing a point shows no "Saved" beside it. Press "Continue →" with one rating unanswered: "Answer all five to continue" shows once, unticked, and nothing ticked is listed.
 - Section 1 ("I've finished Section 1"): no "Complete the…" lines on arrival, and the button is green; pressed before the work is done, only the missing ones show.
 - Walk with a coach and Five trusted voices: no "Choose a coach and send them their link." or "Add at least 3 people." on their pages, at any time.
@@ -224,7 +224,7 @@ The homepage (`/`):
 - Signing up by email lands on "About you" in the wizard's layout: "Log out" top left, "Step 1 of 3" with one of three bars filled, the leaf on green in place of a photo, the Ephesians 2:10 quote beside it. The sign-up form had "First name" and no "I am 18 or over".
 - "First name" shows the name given at sign-up and can be changed; below it "I am 18 or over", then "I agree to Whatever You Do storing my answers, including anything about my faith, work or health, as set out in the privacy notice.", each beside its box, and under it "What this means", closed.
 - "What this means" opens to the consent text, with "Draft wording" at its top, no paragraph on a group's admins, "Agreeing is up to you." with nothing about an enrolment code, nothing about staying in groups after withdrawing, and "Version 3 of this text." at its end. It opens and closes with JavaScript off too, and by keyboard (Tab to it, Enter).
-- On arrival no refusal shows. Press "Continue →" with the name cleared and both boxes unticked: "Add your first name.", "You need to be 18 or over to take part." and "You need to agree to take part." each under what it refuses, the field and boxes outlined in red, and what was typed or ticked kept. `/hub/` still comes back to this page.
+- On arrival no refusal shows. Press "Continue →" with the name cleared and both boxes unticked: "Add your first name.", "You need to be 18 or over to take part." and "You need to agree to take part." each under what it refuses, the field and boxes outlined in red, and what was typed or ticked kept. `/hub/` still comes back to this page. With JavaScript the page neither reloads nor moves, and the focus stays on "Continue →"; without, the page comes back opened at the form, not at the top (fix-2).
 - With all three given, "Continue →" opens Before we begin at "Step 2 of 3". After finishing it, the hub greets you by the name given on the entry page, and "Your consent" at its foot shows "You agreed to version 3 of this text".
 - Withdraw there, then open `/hub/`: it goes to the consent page, not "About you", and `/about-you/` leads to the hub. A participant who agreed to version 2 before is asked again on the consent page too, never on "About you".
 - At about 375px: the field fills the width, each long label wraps beside its box, "What this means" wraps within the page, and "Continue →" fills the width.
@@ -329,22 +329,30 @@ The homepage (`/`):
 
 - In the faithful port, every requirement is listed below the button, a met one ticked (✓) and quieter, an unmet one with a dot (in *Whatever You Do*, only a refused press lists anything, and only what is unmet: ticket 83). As you type, an item changes between the two in place: scrolled to the very bottom of the page, nothing moves.
 - Screen reader: a met item is read as "Done: …", and the tick and dot are not read.
-- A refused completion ("This section was not marked complete…") also shows below the button.
+- A refused completion shows below the button: in the faithful port with "This section was not marked complete…" under the list; in *Whatever You Do* the list of what is missing alone (fix-2).
 
 ## Pages within a section (onboarding)
 
 - Onboarding plays as two pages: in Whatever You Do, the wizard's (the reason; the five ratings), and in the faithful port, the reason and four ratings, then "Who knows you best?". In the faithful port each page is headed by the section's title, with "Page 1 of 2" quietly beneath it. A section of one page, such as Section 1, says nothing of pages.
 - Every page but the last ends in "Continue →" (the full width on the first page). In the faithful port it is disabled until that page's own requirements are met, which are listed beneath it as the gate's are; in Whatever You Do it is never disabled, and nothing is listed until a press is refused (ticket 83). The last page ends in onboarding's own "Continue →", which completes it.
-- "Continue →" goes to the next page, at its top. Pressing it on a page with a requirement unmet (in the faithful port, re-enable the button in DevTools) comes back with "This page is not finished yet." beneath it.
+- "Continue →" goes to the next page, at its top. Pressing it on a page with a requirement unmet (in the faithful port, re-enable the button in DevTools) comes back with what is missing beneath it, and in the faithful port "This page is not finished yet." under that.
 - "← Previous page", a secondary button, sits on the left of the way on, level with it, as "Back" sits beside "Continue →" in the coach checklist; the way on takes the rest of the row, and the checklist sits beneath both. It is on every page but the first and goes to the page before, with its answers as left, landing at that page's "Continue →" rather than its top. The first page has none. On a page whose way on is not offered yet (behind an unconfirmed reading), it sits on its own.
 - On the coach page, each checklist screen ("Continue →" to "About Sam", then on to the outcome, "Back", "Choose someone else"): if the top of the checklist had scrolled out of view, the new screen opens at its heading, not part way down; if it was in view, nothing moves. Keyboard focus is on the new screen's heading, so Tab goes on from there. The same screen sent back stays put, focus included: "Continue →" on "About Sam" with an answer missing shows its refusal beside the button, still in view; so do "Get a link for Sam", "Make a new link" and "Revoke link".
 - In the faithful port, going back and clearing the reason, then going forward again: the last page's checklist also lists "Choose what's bringing you to the course…" unticked, and completing is refused with it.
 - Typing `/sections/onboarding/pages/2/` before reaching it lands on the page reached. The hub's "Carry on" and onboarding's entry lead to the page reached, not the first. Once onboarding is complete, its hub entry and its sidebar entry open it at page 1, and "← Back to the hub" at the top of every page goes to the hub.
-- Refreshing any page keeps you on it. (A refused "Continue →" is the exception, as a refused completion is: the browser offers to send the form again.)
+- Refreshing any page keeps you on it. (A refused "Continue →" is the exception, as a refused completion is: the browser offers to send the form again. In *Whatever You Do* with JavaScript a refusal reloads nothing, so there is nothing to send again: fix-2.)
 - Without JavaScript: "Continue →" and "← Previous page" both work, and the coach checklist's buttons come back to the coach page, not the first.
 - Keyboard only: after the page's fields, Tab reaches "← Previous page", then "Continue →".
 - Screen reader: each page's heading is read on arrival, then "Page 2 of 3"; "← Previous page" is read as a link. A new coach checklist screen reads its heading.
 - Phone width: "← Previous page" and "Continue →" share a row at 375px; at 320px "Continue →" drops to its own line beneath, still full width.
+
+### Fix-2: A refused press comes back where it was pressed (no need to rebuild the frontend or load the pathway again)
+
+- In *Whatever You Do*, with JavaScript, scroll to the foot of a wizard page and press "Continue →" with something missing (page 1 with no reason, page 2 with a rating unanswered): what is missing shows beneath the button, the page neither reloads nor moves, and no "This page is not finished yet." under it. The focus stays on the button, so Enter presses it again; a screen reader announces the list. The same for "I've finished Section 1" pressed before the sort is in, and for "I've finished Section 1" on the results page wherever its gate refuses it.
+- Answering what was missing and pressing again goes on as before: the next page at its top, or the hub.
+- Without JavaScript: the same presses come back with the page opened at the button and the list beneath it, not at the top. The page an accepted press then leads to opens at its top.
+- The faithful port is unchanged: a refused press (re-enable the button in DevTools) reloads the page, with "This page is not finished yet." or "This section was not marked complete…" under the list.
+- At about 375px: the list wraps within the page beneath the button.
 
 ### Ticket 82: Where pages land
 
