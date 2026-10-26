@@ -337,13 +337,7 @@ The homepage (`/`):
 - Every page but the last ends in "Continue →" (the full width on the first page). In the faithful port it is disabled until that page's own requirements are met, which are listed beneath it as the gate's are; in Whatever You Do it is never disabled, and nothing is listed until a press is refused (ticket 83). The last page ends in onboarding's own "Continue →", which completes it.
 - "Continue →" goes to the next page, at its top. Pressing it on a page with a requirement unmet (in the faithful port, re-enable the button in DevTools) comes back with "This page is not finished yet." beneath it.
 - "← Previous page", a secondary button, sits on the left of the way on, level with it, as "Back" sits beside "Continue →" in the coach checklist; the way on takes the rest of the row, and the checklist sits beneath both. It is on every page but the first and goes to the page before, with its answers as left, landing at that page's "Continue →" rather than its top. The first page has none. On a page whose way on is not offered yet (behind an unconfirmed reading), it sits on its own.
-- On the coach page, each checklist screen ("Continue →" to "About Sam", then on to the outcome, "Back", "Choose someone else"): if the top of the checklist had scrolled out of view, the new screen opens at its heading, not part way down; if it was in view, nothing moves. Keyboard focus is on the new screen's heading, so Tab goes on from there. The same screen sent back stays put, focus included: "Continue →" on "About Sam" with an answer missing shows its refusal beside the button, still in view; so do "Get a link for Sam", "Reissue link" and "Revoke link".
-### Ticket 82: Where pages land
-
-- In *Whatever You Do*, open Walk with a coach from the hub card's title, the sidebar's "Your coach" and, once Sam is saved, "Manage": the page opens at its top, with "← Back to the hub" and the title in view, not scrolled down to the card. Saving Sam without JavaScript comes back to the top too.
-- Scroll down the intro, press "Continue →", then "Back", "Continue →" through to the outcome: each new screen shows from the top of the page, title included. The same screen sent back (a refusal) stays where it is. At phone width too.
-- In the faithful port, where the coach checklist is part way down onboarding's page, it still opens at the checklist, as above.
-
+- On the coach page, each checklist screen ("Continue →" to "About Sam", then on to the outcome, "Back", "Choose someone else"): if the top of the checklist had scrolled out of view, the new screen opens at its heading, not part way down; if it was in view, nothing moves. Keyboard focus is on the new screen's heading, so Tab goes on from there. The same screen sent back stays put, focus included: "Continue →" on "About Sam" with an answer missing shows its refusal beside the button, still in view; so do "Get a link for Sam", "Make a new link" and "Revoke link".
 - In the faithful port, going back and clearing the reason, then going forward again: the last page's checklist also lists "Choose what's bringing you to the course…" unticked, and completing is refused with it.
 - Typing `/sections/onboarding/pages/2/` before reaching it lands on the page reached. The hub's "Carry on" and onboarding's entry lead to the page reached, not the first. Once onboarding is complete, its hub entry and its sidebar entry open it at page 1, and "← Back to the hub" at the top of every page goes to the hub.
 - Refreshing any page keeps you on it. (A refused "Continue →" is the exception, as a refused completion is: the browser offers to send the form again.)
@@ -351,6 +345,12 @@ The homepage (`/`):
 - Keyboard only: after the page's fields, Tab reaches "← Previous page", then "Continue →".
 - Screen reader: each page's heading is read on arrival, then "Page 2 of 3"; "← Previous page" is read as a link. A new coach checklist screen reads its heading.
 - Phone width: "← Previous page" and "Continue →" share a row at 375px; at 320px "Continue →" drops to its own line beneath, still full width.
+
+### Ticket 82: Where pages land
+
+- In *Whatever You Do*, open Walk with a coach from the hub card's title, the sidebar's "Your coach" and, once Sam is saved, "Manage": the page opens at its top, with "← Back to the hub" and the title in view, not scrolled down to the card. Saving Sam without JavaScript comes back to the top too.
+- Scroll down the intro, press "Continue →", then "Back", "Continue →" through to the outcome: each new screen shows from the top of the page, title included. The same screen sent back (a refusal) stays where it is. At phone width too.
+- In the faithful port, where the coach checklist is part way down onboarding's page, it still opens at the checklist, as above.
 
 ## Fixed ratings (after completing onboarding, or the letter: Section 6 in *Whatever You Do*, 5 in the faithful port)
 
