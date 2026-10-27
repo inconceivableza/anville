@@ -9,7 +9,7 @@
 {% block head_title %}Before you look{% endblock head_title %}
 
 {% block content %}
-  <p class="back-to-hub"><a href="{% url 'results' block_id %}">← Back to results</a></p>
+  <p class="way-back"><a class="pill ghost back-button" href="{% url 'results' block_id %}">← Back to results</a></p>
   <h1>Before you look</h1>
   <div class="hint-box">
     {% if everyone %}

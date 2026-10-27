@@ -62,7 +62,7 @@ def test_the_hub_and_the_sidebar_list_a_part_within_its_sections_entry(signed_in
 @pytest.mark.django_db
 def test_a_parts_page_and_its_results_lead_back_to_the_section_it_is_a_part_of(signed_in):
     """✨ This replaces ticket 09's call that the results page leads back to the Strengths assessment."""
-    back = f'<a href="{CALLING}">← Back to {CALLING_TITLE}</a>'
+    back = f'<a class="pill ghost back-button" href="{CALLING}">← Back to {CALLING_TITLE}</a>'
 
     part = main_of(signed_in.get(f"/sections/{STRENGTHS}/").content.decode())  # ✨ once the sort is in, it is skipped
     submit_sort(signed_in, complete_sort())
@@ -74,15 +74,15 @@ def test_a_parts_page_and_its_results_lead_back_to_the_section_it_is_a_part_of(s
 
 
 @pytest.mark.django_db
-def test_the_comparison_ends_with_a_way_back_to_the_section_its_sort_is_a_part_of(signed_in):
+def test_without_a_comparison_signpost_the_comparison_leads_back_to_the_section_its_sort_is_a_part_of(signed_in):
     """✨ The prototype's "Return to workbook →", naming the section it returns to, since the workbook is now the PDFs of
-    Sections 2–4. Its wording and arrow are a hand check."""
+    Sections 2–4; at the page's top since ticket 96, as its one way back. Its wording and arrow are a hand check."""
     submit_sort(signed_in, complete_sort())
 
     page = main_of(signed_in.get(f"/results/{SORT}/comparison/").content.decode())
 
     links = re.findall(r'<a [^>]*href="([^"]*)"[^>]*>\s*(.*?)\s*</a>', page, re.S)
-    href, label = links[-1]
+    href, label = links[0]
     assert href == CALLING
     assert CALLING_TITLE in label
 

@@ -70,14 +70,16 @@ def test_with_javascript_a_refused_finish_comes_back_into_a_place_beneath_it_on_
 
 
 @pytest.mark.django_db
-def test_once_section_1_is_complete_its_results_lead_to_the_hub_instead(participant):
-    assert 'href="/hub/"' not in results_page(participant)
+def test_once_section_1_is_complete_its_results_offer_no_finish_and_no_second_way_back(participant):
+    """✨ Ticket 88's "Back to the hub" in the finish's place gave way to the page's one way back, at its top (ticket
+    96)."""
+    assert FINISH_SECTION_1 in results_page(participant)
 
     complete(participant, "designed")
 
     page = results_page(participant)
     assert FINISH_SECTION_1 not in page
-    assert 'href="/hub/"' in page
+    assert 'href="/hub/"' not in page
 
 
 def a_part_of_calling(signed_in_client, load_pathway, last):  # noqa: F811

@@ -12,11 +12,8 @@
 {% block head_title %}{{ section.title }}{% endblock head_title %}
 
 {% block content %}
-  {% if back %}
-    <p class="back-to-hub"><a href="{{ back.href }}">← Back to {{ back.title }}</a></p>
-  {% else %}
-    <p class="back-to-hub"><a href="{% url 'hub' %}">← Back to the hub</a></p>
-  {% endif %}
+  {# ✨ To the section this is a part of, or else the hub (ticket 96). #}
+  {% include "engine/back_button.html" %}
   {# ✨ On a demo system the title is where a press-and-hold reveals the sort's demo-profile link, on a phone (fix-21). #}
   <h1{% if demo_profile %} data-demo-reveal-hold{% endif %}>{{ section.title }}</h1>
   {# ✨ Only for a section split into pages, so the participant knows where they are in it (ticket 41e). #}
