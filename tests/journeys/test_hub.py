@@ -240,6 +240,41 @@ def test_a_hub_rows_tag_names_its_state_so_each_state_is_drawn_its_own_way(signe
     assert re.search(r'<span class="tag[^"]*\bstatus-complete\b', hub_entry(page, "Before we begin"))
 
 
+@pytest.mark.django_db
+def test_an_open_hub_row_is_one_link_to_its_section_and_a_locked_row_has_none(signed_in_client, load_pathway):
+    """✨ The row is clickable whole, by its one link stretched over it in CSS, with an arrow at its right (fix-6). A
+    locked row holds its "Locked" button instead, so no interactive element is nested in a link."""
+    load_pathway(pathway_document())
+    page = signed_in_client.get("/hub/").content.decode()
+
+    open_row = hub_entry(page, "Before we begin")
+    assert re.findall(r'<a [^>]*href="([^"]+)"', open_row) == ["/sections/onboarding/"]
+    assert 'class="srow-arrow"' in open_row
+    locked_row = hub_entry(page, "Putting your calling into words")
+    assert "<a " not in locked_row
+    assert "srow-arrow" not in locked_row
+    assert "<button" in locked_row
+
+
+@pytest.mark.django_db
+def test_an_open_part_row_is_its_own_link_and_its_section_row_still_has_one(signed_in_client, load_pathway):
+    """✨ A part's row sits within its section's, so each must carry its own link and arrow for the click to reach the
+    part (fix-6)."""
+    from tests.journeys.test_results import STRENGTHS  # ✨ here, as that module imports this one
+
+    document = sort_pathway()
+    next(section for section in document["content"]["sections"] if section["id"] == STRENGTHS)["part_of"] = "calling"
+    load_pathway(document)
+    signed_in_client.post("/sections/onboarding/complete/")
+    page = signed_in_client.get("/hub/").content.decode()
+
+    parts = re.findall(r'<li class="hub-section srow hub-part.*?</li>', page, re.S)
+    part = next(row for row in parts if f'href="/sections/{STRENGTHS}/"' in row)
+    assert len(re.findall(r"<a ", part)) == 1
+    assert 'class="srow-arrow"' in part
+    assert 'href="/sections/calling/"' in page  # ✨ and the section's own row still links to it
+
+
 @pytest.fixture
 def trusted_voices(signed_in_client, load_pathway):
     """✨ A participant past Before we begin, whose hub has Five trusted voices beside it, over the sort pathway so that
