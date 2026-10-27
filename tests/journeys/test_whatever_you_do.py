@@ -614,9 +614,9 @@ def a_download_in_place_of_each_of_sections_2_to_4(document):
 
 def in_six_sections(document):
     """✨ Section 1 splits in two here (ticket 87): its passages, with nothing to confirm, so the strengths evaluation
-    opens with it, and the evaluation, which is all it needs to be finished; then Section 2, "How others see you", with
-    the faithful port's reflection. Section 2 is new, with nothing in the faithful port to compare it with but the
-    reflection, so the rest of it is taken as it is."""
+    opens with it, and the evaluation, which is all it needs to be finished; then Section 2, "Your gifts, seen
+    together", with the faithful port's reflection. Section 2 is new, with nothing in the faithful port to compare it
+    with but the reflection, so the rest of it is taken as it is."""
     sections = document["content"]["sections"]
     designed = next(section for section in sections if section["id"] == "designed")
     designed["title"] += " – your strengths"
@@ -669,7 +669,7 @@ def three_people_each_with_their_link(document):
 ON_PAPER = ("shape", "calling", "growth")
 TITLES = {
     "designed": "How you've been designed – your strengths",
-    "others": "How others see you",
+    "others": "Your gifts, seen together",
     "shape": "The shape of your life",
     "calling": "Putting your calling into words",
     "growth": "Growth plan",

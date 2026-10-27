@@ -213,7 +213,7 @@
       },
       {
         "id": "others",
-        "title": "How others see you",
+        "title": "Your gifts, seen together",
         "number": "02",
         "requires": ["designed"],
         "to_finish": "completed {section}",

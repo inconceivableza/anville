@@ -127,7 +127,7 @@ python manage.py load_pathway pathways/whatever-you-do.json
 `pathways/whatever-you-do.json` is *Whatever You Do* itself, as far as it has been authored:
 five baseline ratings, then six numbered sections. Section 1 holds the scripture on gifts and the Strengths evaluation
 (the sort and its results, in a section of its own so the offline track can share it), and is finished once the sort
-is in. Section 2, "How others see you", holds the way to the comparison and the reflection, and opens once Section 1
+is in. Section 2, "Your gifts, seen together", holds the way to the comparison and the reflection, and opens once Section 1
 is finished. Sections 3–5 are done on paper, each in its part of the content owner's workbook, which the section
 offers as a PDF, and Section 6 is the letter.
 Section 3 opens once Section 1 is finished and the side cards Walk with a coach and Five trusted voices are
