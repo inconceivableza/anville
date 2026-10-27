@@ -869,3 +869,9 @@ Walked at a wide screen on 22 Oct 2026, with staging on `56924e5`; each passed, 
 - The sidebar's chips read the same, above each title.
 - Inside Section 1: the Strengths evaluation card shows no pill, before the sort or after; once the sort is in it is tinted green, with its finished line and "View my results →". Section 2's "How others see you" card shows its status as plain small text, not a pill.
 - Nothing inside any section carries a pill. At phone width, no pill overflows its row or the card.
+
+### Ticket 90: Even line lengths (rebuild the frontend first; a current Chrome, Edge, Safari or Firefox; phone width too; no pathway reload needed)
+
+- The homepage, the hub, a section page, the results, the comparison and an observer's page: every heading, lede and short centred line (the hero, "Sort your strengths", the signposts, the demo strip) breaks into lines of near-equal length, never a long line over a short one.
+- Paragraphs never end on a single word; narrow the window to see several widths.
+- In a browser without `text-wrap` (an older one, or the property switched off in the developer tools), the same text wraps as it did before and nothing is cut off or overlapping.

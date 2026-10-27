@@ -851,6 +851,38 @@ body:not(.framed) > main.container > .section-header > h2,
   text-wrap: balance;
 }
 
+/* ✨ Even line lengths across the site (ticket 90): headings, ledes and short centred copy balance their lines, so
+   "Sort your strengths" does not break into one long line and a short one; paragraphs and list items avoid a lone word
+   on their last line. A browser that cannot do either ignores the declaration and wraps as it always did. */
+h1,
+h2,
+h3,
+h4,
+.section-header p,
+.hero p,
+.coach-sub,
+.coach-brief-sub,
+.coach-option span,
+.signpost,
+.pair-count,
+.pair-question,
+.demo-strip,
+.results-next,
+.comparison-waiting,
+.sort-card,
+.sort-done,
+.mission .in,
+.meet {
+  text-wrap: balance;
+}
+
+p,
+li,
+dd,
+blockquote {
+  text-wrap: pretty;
+}
+
 .section {
   margin-bottom: 40px;
 }
