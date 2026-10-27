@@ -373,6 +373,15 @@ html:has(.top-bar) {
   color: var(--ink);
 }
 
+/* ✨ Locked is the same grey fill with grey text and a grey outline (fix-12), against not started's black, so the two
+   read apart at a glance; the outline is drawn inside, as above. */
+.pathway-nav-row .status-chip.status-locked,
+.pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-locked {
+  background: var(--cream-2);
+  box-shadow: inset 0 0 0 1px var(--muted);
+  color: var(--muted);
+}
+
 .pathway-nav-row .status-chip.status-complete,
 .pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-complete {
   background: var(--green);
@@ -1260,6 +1269,20 @@ main > .hub ~ .hub-consent {
   background: var(--on-dark-12);
   box-shadow: inset 0 0 0 1px var(--on-dark);
   color: var(--on-dark);
+}
+
+/* ✨ Locked: grey text and a grey outline on the same pale grey (fix-12), against not started's black; on the dark card
+   its light equivalent, dimmer than not started's. It sits inside ticket 97's "Locked" button, which draws nothing. */
+.tag.status-locked {
+  background: var(--cream-2);
+  box-shadow: inset 0 0 0 1px var(--muted);
+  color: var(--muted);
+}
+
+.card.dark .tag.status-locked {
+  background: var(--on-dark-12);
+  box-shadow: inset 0 0 0 1px var(--on-dark-55);
+  color: var(--on-dark-70);
 }
 
 .tag.status-complete {
