@@ -949,6 +949,7 @@ Walked at a wide screen on 22 Oct 2026, with staging on `56924e5`; each passed, 
 - "Locked" has grey text and a grey outline on the pale grey fill, and "Not started" keeps black text and a black outline on the same fill, so the two read apart. Look at both together on the hub (a locked section beside an open one that is not started), in a part's row, on the side cards, and in the sidebar's chips.
 - On the dark Five trusted voices card a locked pill is a pale fill with a dimmer light text and outline than "Not started" has.
 - A locked row's "Locked" is still a button: hover or focus it for its note, and tap it at phone width. Its keyboard focus ring still shows.
+- The comparison's row (hub and sidebar) and Five trusted voices' card follow the same rule by what the pill says. Grey text and outline: "Locked", and any count of people still needed ("3 more needed", "2 of 3 answered"), including the comparison row below the minimum even after "Viewed" (it then shows its count). Black text and outline: "Not started", "Ready to view". Unchanged: "In progress", "Complete" and "Viewed" (lime), and the coach's "Link issued", "Accepted", "Declined", "Withdrawn". Walk the voices card through "N more needed", "Links issued", "Some answers received", "All answers received" and "Enough answers received" (the last four keep the section's own colours), on the dark card too.
 
 ### Ticket 90: Even line lengths (rebuild the frontend first; a current Chrome, Edge, Safari or Firefox; phone width too; no pathway reload needed)
 

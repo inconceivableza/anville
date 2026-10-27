@@ -279,7 +279,7 @@ def _side_cards(state, hub, voices):
         if card.id == coach_section:
             card = with_coach_answer(card, answer)
         elif voices is not None and card.id == voices["section"]:
-            card = card._replace(label=voices["tag"])
+            card = card._replace(label=voices["tag"], tone=voices["tone"])
         cards.append(card)
     return cards
 

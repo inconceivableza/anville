@@ -10,7 +10,7 @@
 <section class="card dark hub-side-card hub-voices">
   <div class="row">
     <h3><a href="{% page_url section.id section.page %}">{{ section.title }}</a></h3>
-    <span class="tag status-{{ section.status }}{% if section.is_next %} up-next{% endif %}">{{ section.label }}</span>
+    <span class="tag status-{{ section.look }}{% if section.is_next %} up-next{% endif %}">{{ section.label }}</span>
   </div>
   {% if voices.line %}<p class="hub-voices-line">{{ voices.line }}</p>{% endif %}
   {% if section.side_card_lead %}<p class="hub-side-line">{{ section.side_card_lead }}</p>{% endif %}

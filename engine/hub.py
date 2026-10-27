@@ -115,10 +115,17 @@ class SectionState(NamedTuple):
     side_card: str | None = None
     side_card_lead: str | None = None
     next_step: NextStepWording | None = None
+    tone: str | None = None
 
     @property
     def is_locked(self):
         return self.status == LOCKED
+
+    @property
+    def look(self):
+        """✨ The state a pill's colours follow (fix-12): the card's `tone` where its tag says something other than its
+        status ("waiting", for a count of people still needed), otherwise its status."""
+        return self.tone or self.status
 
     @property
     def called(self):
