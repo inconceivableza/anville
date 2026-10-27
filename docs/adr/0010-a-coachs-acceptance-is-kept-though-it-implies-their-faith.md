@@ -16,5 +16,5 @@ The coach's link asks them to accept or decline six commitments, and only the an
 
 ## Consequences
 
-- Before real data, the lawful basis for this processing has to be settled with the rest of the legal list (spec, Legalities are parked, not forgotten): the coach's explicit consent (Article 9(2)(a)), which the page's line on what is kept would then have to become, or the exemption for a not-for-profit religious body's own members and regular contacts (Article 9(2)(d)).
+- Before real data, the lawful basis for this processing has to be settled with the rest of the legal list (spec, Legalities are parked, not forgotten): the coach's explicit consent (Article 9(2)(a)), which the page's line on what is kept would then have to become, or the exemption for a not-for-profit religious body's own members and regular contacts (Article 9(2)(d)). Settled as the coach's explicit consent, which they can withdraw (ADR 0024).
 - The answer belongs to the link it came through: revoking or reissuing deletes it, and saving another coach or removing this one deletes the contact with it.
