@@ -136,6 +136,33 @@ def test_each_hub_entry_shows_its_sections_time_estimate_even_while_locked(signe
     assert "time-estimate" not in hub_entry(page, "Before we begin")
 
 
+def lock_button(page, entry):
+    """✨ A locked entry's status, as its button's words and, found by id on the whole page, what describes it (ticket
+    97). Each id is on the page once, so the description is the entry's own."""
+    button = re.search(r'<button [^>]*aria-describedby="([^"]+)"[^>]*>(.*?)</button>', entry, re.S)
+    assert button, "the status is not a button described by anything"
+    assert page.count(f'id="{button.group(1)}"') == 1
+    note = re.search(rf'id="{button.group(1)}"[^>]*>(.*?)</span>', page, re.S).group(1)
+    return re.sub(r"<[^>]+>", "", button.group(2)).strip(), note
+
+
+# ✨ The test pathway's lock note on the calling section, engine wording (ticket 79).
+CALLING_NOTE = "Opens once you&#x27;ve finished <em>Before we begin</em>."
+
+
+@pytest.mark.django_db
+def test_a_locked_rows_status_is_a_button_described_by_its_lock_note_in_place_of_a_line_under_it(
+    signed_in_client, load_pathway
+):
+    load_pathway(pathway_document())
+
+    page = signed_in_client.get("/hub/").content.decode()
+
+    assert lock_button(page, hub_entry(page, "Putting your calling into words")) == ("Locked", CALLING_NOTE)
+    assert "srow-note" not in page
+    assert "aria-describedby" not in hub_entry(page, "Before we begin")  # ✨ an open row's status is no button
+
+
 @pytest.mark.django_db
 def test_a_hub_entry_drops_its_estimate_once_the_section_is_started(signed_in_client, load_pathway):
     document = pathway_document()

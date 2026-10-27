@@ -4,7 +4,7 @@
 
 **Blocked by:** 96 (A back button at the top of every participant page), E1; 89 (Status pills), B1
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 3c (ends Fri 30 Oct)
 

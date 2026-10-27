@@ -1105,7 +1105,8 @@ main > .hub ~ .hub-consent {
   min-width: 0;
 }
 
-.slist > .srow > .tag {
+.slist > .srow > .tag,
+.slist > .srow > .lock {
   grid-column: 3;
 }
 
@@ -1144,10 +1145,6 @@ main > .hub ~ .hub-consent {
   color: var(--muted);
 }
 
-.srow-note {
-  margin-top: var(--space-2xs);
-}
-
 /* ✨ A part of a section (the Strengths assessment within Section 1), on a line of its own within that section's entry,
    indented and quieter than a section of its own (ticket 41b) */
 .hub-parts {
@@ -1177,7 +1174,8 @@ main > .hub ~ .hub-consent {
   text-transform: uppercase;
 }
 
-.hub-part .tag {
+.hub-part .tag,
+.hub-part > .lock {
   align-self: start;
 }
 
@@ -1219,8 +1217,73 @@ main > .hub ~ .hub-consent {
 }
 
 /* ✨ A tag sits at its row's right edge, so the rows' pills line up whatever their words (ticket 89) */
-.srow > .tag {
+.srow > .tag,
+.srow > .lock {
   justify-self: end;
+}
+
+/* ✨ A locked section's "Locked" is a small button holding its pill, drawn as the pill alone, whose lock note shows
+   on hovering or focusing it, a tap focusing it, and goes once the pointer or the focus moves away (ticket 97). On the
+   hub the note floats below the pill, from the right edge where the pill sits, no wider than the screen less its
+   gutters; the bridge above it keeps it open while the pointer crosses the gap. Escape adds `is-dismissed`, until the
+   pointer and the focus have left. */
+.lock {
+  position: relative;
+  display: inline-block;
+}
+
+.lock-button {
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill-shape);
+  background: none;
+  font: inherit;
+  line-height: inherit;
+  cursor: help;
+}
+
+.lock-button:focus-visible {
+  outline: 2px solid var(--green-deep);
+  outline-offset: 2px;
+}
+
+.lock-note {
+  display: none;
+  position: absolute;
+  top: calc(100% + var(--space-xs));
+  right: 0;
+  z-index: 5;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 2 * var(--space-md)));
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  box-shadow: 0 8px 24px var(--shadow);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+}
+
+.lock-note::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  height: var(--space-xs);
+}
+
+.lock:hover > .lock-note,
+.lock:focus-within > .lock-note {
+  display: block;
+}
+
+.lock.is-dismissed > .lock-note {
+  display: none;
 }
 
 .side {

@@ -3,6 +3,7 @@
 {% load section_pages %}
 {# ✨ One section's entry on the hub, with any `parts` of it listed within it (ticket 41b). A part is given no parts. #}
 {# ✨ The `comparison` link in this section is listed after the part holding its sort (ticket 67b), or first where no part of it holds the sort (ticket 87). #}
+{# ✨ A locked one's note is no line under it but the description of its "Locked" button (ticket 97). #}
 <li class="hub-section srow{% if section.part_of %} hub-part{% endif %}{% if section.is_locked %} locked{% endif %}{% if section.is_next %} up-next{% endif %}">
   {% if section.number and not section.part_of %}<span class="srow-number">{{ section.number }}</span>{% endif %}
   <div class="srow-body">
@@ -13,7 +14,6 @@
     {% endif %}
     {% if section.part_of %}<span class="row-kind">Activity</span>{% endif %}
     {% if section.estimate %}<p>{{ section.estimate }}</p>{% endif %}
-    {% if section.is_locked and section.lock_note %}<p class="srow-note">{{ section.lock_note }}</p>{% endif %}
     {% if parts or comparison.section == section.id %}
       <ol class="hub-parts">
         {% if comparison.section == section.id and not comparison.after %}{% include "engine/hub_comparison.html" %}{% endif %}
@@ -26,5 +26,9 @@
       </ol>
     {% endif %}
   </div>
-  <span class="tag status-{{ section.status }}{% if section.is_next %} up-next{% endif %}">{{ section.label }}</span>
+  {% if section.is_locked and section.lock_note %}
+    {% include "engine/lock_status.html" with pill="tag" note_id="lock-note-"|add:section.id %}
+  {% else %}
+    <span class="tag status-{{ section.status }}{% if section.is_next %} up-next{% endif %}">{{ section.label }}</span>
+  {% endif %}
 </li>

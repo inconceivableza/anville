@@ -881,8 +881,12 @@ def what_is_left(section_id, called=None):
 
 
 def note_under(client, section_id):
-    """✨ The hub's entry for a section, its titles' italics left out, so its note reads as plain text."""
-    return re.sub(r"</?em>", "", hub_entry(client.get("/hub/").content.decode(), escape(TITLES[section_id])))
+    """✨ A section's lock note on the hub, its titles' italics left out, so it reads as plain text: the description of
+    its "Locked" button (ticket 97), found by its id, as it follows any rows listed within the section."""
+    page = client.get("/hub/").content.decode()
+    note = re.search(rf'id="lock-note-{section_id}"[^>]*>(.*?)</span>', page, re.S)
+    assert note, f"{section_id} has no lock note"
+    return re.sub(r"</?em>", "", note.group(1))
 
 
 @pytest.mark.django_db
