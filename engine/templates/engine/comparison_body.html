@@ -4,7 +4,7 @@
   ✨ The comparison itself, from `comparison`: the participant's stored result beside their observers' means, drawn
   and worded as variant F did (ticket 38) in the results page's wording, with how far the observers agree on each,
   then the largest gaps and the questions to reflect on. Below the minimum there is a count and no numbers at
-  all. Neither state names who has answered. Shared by the participant's comparison and, once they consent, their
+  all, as a page waiting on answers where `invite` is given (fix-16), or else as a refusal. Neither state names who has answered. Shared by the participant's comparison and, once they consent, their
   coach's link (ticket 27), so the coach sees no more than the participant. With `for_coach`, the engine's own words
   name the participant (`name`) in place of "you", and the participant's own way to invite people goes; the pathway's
   authored words stay in the participant's wording.
@@ -13,7 +13,20 @@
   <p class="comparison-illustrative" role="note">This comparison is illustrative: every answer in it is test data, not from someone who knows {% if for_coach %}{{ name }}{% else %}you{% endif %}.</p>
 {% endif %}
 
-{% if comparison.frameworks is None %}
+{% if comparison.frameworks is None and invite and not for_coach %}
+  {% comment %}
+    ✨ Below the minimum, where the pathway has a Five trusted voices card, a page that waits rather than an empty
+    comparison (fix-16): the phrase that card's way in shows, how many more are needed or how many have answered, the
+    card's own line on when the comparison shows, and the way to invite people. Only a count: below the minimum the
+    observers' answers are never worked into anything (ADR 0005).
+  {% endcomment %}
+  <section class="results-section comparison-waiting">
+    <h2>Not enough answers yet</h2>
+    <p><strong>{{ invite.phrase }}</strong></p>
+    <p>You'll see how others see you once {{ comparison.minimum }} people have answered.</p>
+    <p><a class="pill" href="{{ invite.href }}">Invite people who know you →</a></p>
+  </section>
+{% elif comparison.frameworks is None %}
   <p class="results-desc">{% if for_coach %}Comparing {{ name }}'s strengths evaluation with the averaged responses of the people {{ name }} asked.{% else %}Comparing your strengths evaluation with the averaged responses of people who know you.{% endif %}</p>
   <section class="results-section comparison-waiting">
     <h2>Not enough answers yet</h2>
