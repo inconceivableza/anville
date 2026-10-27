@@ -13,6 +13,10 @@
   next" promises; it goes with them. The mock-up's "Thank you — Sam will be told" is said only on the page accepting
   leads to; later visits open "You're Sam's coach", since the coach comes back to read the results (ticket 25a).
 
+  Accepting is the coach's consent to their answer being kept, which implies their faith, so the line above "Accept →"
+  says what is kept, who is told and that it can be withdrawn here, and once accepted the page offers "Withdraw my
+  answer" (ADR 0024).
+
   Departures from the mock-up: "Accept and get the first session guide →" is "Accept →", and its promise to send a
   briefing pack is gone, since there is no email yet; "What happens next" keeps the mock-up's first sentence with "the
   first section" as "the strengths evaluation", promises the comparison beside the results and the guide, and says
@@ -51,6 +55,8 @@
         {% include "engine/comparison_body.html" with comparison=shared.comparison for_coach=True %}
       </section>
     {% endif %}
+    {# ✨ As easy to take back as it was to give (ADR 0024): the page it leads to asks before anything is deleted. #}
+    <p><a href="{% url 'coach_withdrawal' token %}">Withdraw my answer</a></p>
   {% elif answer == "declined" %}
     <div class="coach-outcome coach-check">
       <h2>That's a good answer</h2>
