@@ -10,10 +10,11 @@
   to that card's page; below the minimum the press is greyed and not followable, and the status is the invite's phrase
   (ticket 88, fix-3, changed by fix-8: fix-3 swapped one button for the other, which hid the comparison's button until
   it could be pressed; two buttons show where the participant is going, and the grey one says it is not yet). The
-  status is a plain line, not a pill (ticket 89).
+  status is a plain line, not a pill (ticket 89). Once the comparison is viewed, the card is marked complete in lime, as
+  a section signpost's is once its section is (fix-6, fix-9).
 {% endcomment %}
 {% if block.comparison %}
-  <div id="block-{{ block.id }}" class="signpost comparison-signpost">
+  <div id="block-{{ block.id }}" class="signpost comparison-signpost{% if block.comparison.status == 'viewed' %} is-complete{% endif %}">
     <p class="signpost-title">{{ block.text.title }}</p>
     <div class="signpost-actions">
       {% include "engine/comparison_press.html" with press_sort=block.comparison.sort press_class="pill" press_waiting=block.comparison.invite.waiting %}
