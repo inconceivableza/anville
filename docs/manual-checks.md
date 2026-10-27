@@ -147,10 +147,20 @@ Page by page:
 - **The tie-break's pairs** (a participant tied on a framework): the pairs sit centred in the frame, and each option fills the column. At phone width the options are easy to tap.
 - **Results:** each framework is a card. Each construct's name sits on the left and its standing on the right, with a gap between them even at phone width, where a long name wraps rather than running into its standing. Every drawing, the generalist's box and a framework's tie-break box are as D5-59b left them, each construct in its standing's colour (fix-16). Centred below: in *Whatever You Do*, Section 1's finish with an outline button beside it (ticket 88); in the faithful port, "Compare with how others see you →".
 - **"Before you look"** (the freeze warning): its pale green box, then "Compare with how others see you →", centred.
-- **The comparison:** the illustrative note is amber with its right-hand corners rounded. "You" is green and "Others" blue as before. The largest gaps and the questions to reflect on are cards, and "← Return to …" is at the foot. At phone width each construct stacks: its name, then the drawing, then the words.
+- **The comparison:** the illustrative note is amber with its right-hand corners rounded. "You" is green and "Others" blue as before. The largest gaps and the questions to reflect on are cards, with no way back at the foot (ticket 96). At phone width each construct stacks: its name, then the drawing, then the words.
 - **Removing a contact** (without JavaScript, a person's "Remove" on the contact list): framed like the rest, with its form and buttons as before.
 - **Credits:** signed in, framed with the header; signed out, plain cream with no frame and no header.
 - **Not framed:** the wizard (Before we begin as new), the observer's pages, the coach's link, sign in, sign up, consent, and the organisations pages (Your groups, Your organisations, leaving a group, replacing a join link, and "This page is for admins") all stay plain cream, with no brown frame (their look is checked below, ticket 53c).
+
+### Ticket 96: A back button at the top of every participant page
+
+Rebuild the frontend. No need to load the pathway again: a participant started on ticket 87's version will do.
+
+- In *Whatever You Do*, each of these opens with an outline button above its title, the first thing on the page, and nowhere else on it a way back: Section 1, Section 2 and a section on paper ("← Back to the hub"); Walk with a coach and Five trusted voices ("← Back to the hub", a button, not the quiet grey link it was); the Strengths evaluation before the sort ("← Back to How you've been designed – your strengths"); the results ("← Back to How you've been designed – your strengths"); and the comparison ("← Back to How others see you" once Section 1 is finished, Section 1's button before then). Each lands where it says.
+- The results page, once Section 1 is finished, has no "Back to the hub" below the results; the comparison has no "← Return to …" at its foot and no "← Back to results" at its top.
+- "Before you look", the retake page (demo only), removing a contact without JavaScript, a refusal page and the credits page (signed in) have their way back as the same button, leading where it did.
+- Walk with a coach's "Back to the hub" beside "Choose someone else", once a coach is chosen, stays as it was.
+- At about 375px the long "← Back to How you've been designed – your strengths" wraps inside its button, with no sideways scroll. With JavaScript turned off, every one of these buttons works the same.
 
 ## The observer's, coach's and account pages in the new look (ticket 53c; each at a wide screen and at about 375px)
 
@@ -243,7 +253,7 @@ The homepage (`/`):
 - A screen reader announces the Strengths evaluation as a list nested within Section 1's entry.
 - Before the sort, the Strengths evaluation's page starts with "← Back to How you've been designed – your strengths" and has no "Mark complete". Once the sort is in, its chip reads "Complete" on the hub, in the sidebar and on Section 1's card.
 - Once the sort is in, opening the Strengths evaluation from the hub, from "Your pathway", or by typing `/sections/strengths/` opens your results (or, with tie-break pairs still to answer, the next pair); the page saying only "Your sort is in. See your results" never shows. Same in both pathways.
-- The results page's "← Back to How you've been designed – your strengths" and the comparison's closing "← Return to How you've been designed – your strengths" both land on Section 1 (the faithful port's, without " – your strengths").
+- The results page's "← Back to How you've been designed – your strengths" lands on Section 1 (the faithful port's "← Back to Section 1: How you've been designed"). The faithful port's comparison has the same at its top; *Whatever You Do*'s leads to Section 2 once that is open (ticket 96).
 - On the hub, Section 1 and Section 6 read "How you've been designed – your strengths" and "A letter to your future self", with no "Section 1: " or "Section 6: " before them, beside their "01" and "06".
 - In a pathway whose Section 1 asks for the coach's or the observers' links (Whatever You Do no longer does, ticket 52), those requirements beneath "Mark complete" are links, to the coach page and the invitations page; once met, each is ticked and plain.
 
@@ -486,7 +496,7 @@ The homepage (`/`):
 Rebuild the frontend. No need to load the pathway again: a participant started on ticket 87's version will do.
 
 - *Whatever You Do*, the sort in and Section 1 not yet finished: below the results, centred, a green "I've finished Section 1" and beside it an outline "Invite people who know you →" with "3 more needed" in small grey under it. Pressing "I've finished Section 1" lands on the hub, with Section 1 "Complete". Section 1's own page still has its "I've finished Section 1".
-- Back on the results page: the green button reads "Back to the hub" and leads there.
+- Back on the results page: no green button below the results, only the outline one; the way back is the button at the top (ticket 96).
 - Give three people links: the phrase under "Invite people who know you →" reads "0 of 3 answered", then "2 of 3 answered" once two have answered (their links in private windows). The button opens Five trusted voices.
 - With three answered: the outline button is "Compare with how others see you →", opening "Before you look" as before.
 - With JavaScript turned off, every one of these buttons works the same.

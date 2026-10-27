@@ -4,13 +4,13 @@
 
 **Blocked by:** 87 (Six sections), A2
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 3c (ends Fri 30 Oct)
 
 **Spec:** Sprint 3c: the content owner's feedback
 
-- [ ] Every participant page past the wizard (sections, the part, the side cards, the results, the comparison) has a back button at its top, drawn as a button, not a quiet link
-- [ ] It leads to the page's parent: the hub, for a section or side card; a part's section, for the part; for the results and the comparison, the section holding their signpost; and it names where it goes by that page's title
-- [ ] No page keeps a second way back elsewhere: the comparison's "Back to 1: How you've been designed", the results page's link at its foot and Five trusted voices' "Back to the hub" give way to it
-- [ ] It works without JavaScript and at phone width
+- [x] Every participant page past the wizard (sections, the part, the side cards, the results, the comparison) has a back button at its top, drawn as a button, not a quiet link
+- [x] It leads to the page's parent: the hub, for a section or side card; a part's section, for the part; for the results and the comparison, the section holding their signpost; and it names where it goes by that page's title
+- [x] No page keeps a second way back elsewhere: the comparison's "Back to 1: How you've been designed", the results page's link at its foot and Five trusted voices' "Back to the hub" give way to it
+- [x] It works without JavaScript and at phone width

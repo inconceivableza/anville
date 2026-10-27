@@ -48,12 +48,11 @@
     <div id="gate-refusal">{% include "engine/gate_refusal.html" %}</div>
   {% elif offers_way_on and section.finish %}
     {# ✨ A part that is the last thing in its section ends in that section's finish (ticket 88), refused by its gate: #}
-    {# ✨ with JavaScript, into `#gate-refusal` beneath it; without, on that section's last page, at its way on. #}
+    {# ✨ with JavaScript, into `#gate-refusal` beneath it; without, on that section's last page, at its way on. Once #}
+    {# ✨ that section is complete, the way back at the page's top is the only one (ticket 96). #}
     <div class="way-on">
       {% include "engine/previous_page.html" %}
-      {% if section.finish.done %}
-        <a class="pill full" href="{% url 'hub' %}">Back to the hub</a>
-      {% else %}
+      {% if not section.finish.done %}
         {% include "engine/finish_form.html" with finish=section.finish button_class="pill full" %}
       {% endif %}
     </div>

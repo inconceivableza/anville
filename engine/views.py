@@ -966,7 +966,7 @@ def _comparison_shown(request, state, result, section, block_id, status=200, sha
         "block_id": block_id,
         "coach": _coach_sharing(state.response, block_id),
         "brief": coach_brief(sort),
-        "back": section["back"],
+        "back": _section_holding_comparison_signpost(state, block_id) or section["back"],
         "share_refusal": share_refusal,
     }
     return render(request, "engine/comparison.html", context, status=status)
@@ -2444,10 +2444,24 @@ def _section_this_is_part_of(state, section):
     return {"title": text_for(parent_section["title"], "participant"), "href": page_url(parent_section["id"], reached)}
 
 
+def _section_holding_comparison_signpost(state, sort_id):
+    """✨ Where the comparison of a sort leads back to (ticket 96): the open section in the track holding a comparison
+    signpost to it, as its ways back name it, {"title", "href"}, at the page reached. None where no open section holds
+    one, as in the faithful port or while that section is locked, when the comparison leads back as its results do."""
+    for section in state.sections:
+        holds = any(block["type"] == "comparison_signpost" and block["sort"] == sort_id for block in section["blocks"])
+        reached = state.reached(section) if holds else None
+        if reached is not None:
+            return {"title": text_for(section["title"], "participant"), "href": page_url(section["id"], reached)}
+    return None
+
+
 def _finish_of(state, part):
     """✨ The finish a part's end offers when the part is the last thing in its section (ticket 88), as a `Finish`
-    without an invitation; once its section is complete, the end offers "Back to the hub" instead. None for a part that ends nothing, or whose section the participant has not reached. Pressing it is that section's
-    own completion, so its gate refuses it exactly as it refuses the section's own button."""
+    without an invitation; once its section is complete, the end offers nothing in its place, the way back at the
+    page's top being the only one (ticket 96). None for a part that ends nothing, or whose section the participant
+    has not reached. Pressing it is that section's own completion, so its gate refuses it exactly as it refuses the
+    section's own button."""
     ended = section_ended_by(state.version.document, part)
     if ended is None or state.reached(ended) is None:
         return None

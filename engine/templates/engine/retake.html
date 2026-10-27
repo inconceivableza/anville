@@ -15,9 +15,9 @@
 
 {% block content %}
   {% if clearing %}
-    <p class="back-to-hub"><a href="{% url 'results' block_id %}">← Back to results</a></p>
+    <p class="way-back"><a class="pill ghost back-button" href="{% url 'results' block_id %}">← Back to results</a></p>
   {% else %}
-    <p class="back-to-hub"><a href="{{ sort_page }}">← Back to the sort</a></p>
+    <p class="way-back"><a class="pill ghost back-button" href="{{ sort_page }}">← Back to the sort</a></p>
   {% endif %}
   <div class="section-header">
     <h2>{% if clearing %}Retake the strengths evaluation?{% else %}Load a demo profile?{% endif %}</h2>

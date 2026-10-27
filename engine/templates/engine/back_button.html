@@ -1,0 +1,13 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ A participant page's one way back, at its top, drawn as a button rather than a quiet link (ticket 96): to `back`,
+  {"title", "href"}, the page's parent, or else to the hub. A plain link, so it works without JavaScript.
+{% endcomment %}
+<p class="way-back">
+  {% if back %}
+    <a class="pill ghost back-button" href="{{ back.href }}">← Back to {{ back.title }}</a>
+  {% else %}
+    <a class="pill ghost back-button" href="{% url 'hub' %}">← Back to the hub</a>
+  {% endif %}
+</p>
