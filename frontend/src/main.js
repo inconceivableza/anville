@@ -118,6 +118,16 @@ document.addEventListener("keydown", (event) => {
   sidebar.querySelector("summary").focus();
 });
 
+// ✨ The top bar stays in view (ticket 91), so a jump to a place on the page would land under it. Keep its height in
+// --top-bar-height, which the stylesheet adds to the page's scroll padding; it changes with the demo strip, the phone's
+// width and a long title wrapping. Without JavaScript the stylesheet's fallback height stands.
+const topBar = document.querySelector(".top-bar, .hero > .nav");
+if (topBar) {
+  const keepHeight = () => document.documentElement.style.setProperty("--top-bar-height", `${topBar.offsetHeight}px`);
+  keepHeight();
+  if (window.ResizeObserver) new ResizeObserver(keepHeight).observe(topBar);
+}
+
 // ✨ Near a text box's length limit, say how much room is left; the browser stops typing at the limit itself.
 const SHOW_LENGTH_LEFT_BELOW = 0.1;
 

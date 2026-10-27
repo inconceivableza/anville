@@ -240,6 +240,36 @@ body {
   position: relative;
 }
 
+/* ✨ The top bar (ticket 91): the demo strip, where there is one, and the header, held in view as the page scrolls so
+   "Your pathway" and "Sign out" are always to hand. Its height is kept in --top-bar-height by main.js (the fallback
+   stands without JavaScript), and the page's scroll padding adds it, so a jump to a place on the page lands below the
+   bar. The open sidebar hangs from the header inside it, so it is held in view too. */
+html {
+  scroll-padding-top: calc(var(--top-bar-height, 4.5rem) + var(--space-md));
+}
+
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--cream);
+}
+
+/* ✨ The logo: the "/whateveryoudo" wordmark, in the colour of the text it sits in. Its height is set here and the
+   width follows, 22px on a phone, where the bar still keeps to one row. */
+.brand-logo {
+  display: block;
+  flex: none;
+  width: auto;
+  height: 26px;
+}
+
+@media (max-width: 760px) {
+  .brand-logo {
+    height: 22px;
+  }
+}
+
 /* ✨ The leaf icon's vein, set here so no template holds a raw colour */
 .leaf-vein {
   stroke: var(--brown);
@@ -936,16 +966,16 @@ body.framed {
   padding: 10px;
 }
 
-body.framed > .demo-strip {
+body.framed > .top-bar > .demo-strip {
   border-radius: var(--radius-panel) var(--radius-panel) 0 0;
 }
 
-body.framed > .site-header {
+body.framed > .top-bar > .site-header {
   background: var(--cream);
   border-radius: var(--radius-panel) var(--radius-panel) 0 0;
 }
 
-body.framed > .demo-strip + .site-header {
+body.framed > .top-bar > .demo-strip + .site-header {
   border-radius: 0;
 }
 
@@ -1463,11 +1493,16 @@ main > .hub ~ .hub-consent {
   position: relative;
   color: var(--ink);
   display: flex;
+  flex-wrap: nowrap;
   justify-content: space-between;
+  padding-block: var(--space-md);
 }
 
-.nav.light .mark {
-  color: var(--ink);
+/* ✨ At phone width the logo, "Your pathway" and "Sign out" keep to one row (ticket 91) */
+@media (max-width: 520px) {
+  .nav.light .nav-right {
+    gap: var(--space-xs);
+  }
 }
 
 .linkbtn {
@@ -4150,18 +4185,13 @@ body > svg[aria-hidden="true"] {
   opacity: 1;
 }
 
-.nav .mark {
-  width: 30px;
-  height: 30px;
-  color: var(--on-dark);
-}
-
-/* ✨ The homepage's nav only: the participant's header (.nav.light) keeps its pathway's links on a phone (ticket 53b). */
-@media (max-width: 760px) {
-  .nav:not(.light) .nav-left a:not(:first-child),
-  .nav:not(.light) .nav-right a {
-    display: none;
-  }
+/* ✨ The homepage's top bar (ticket 91): the logo alone, held at the top of the window as the page scrolls. It is
+   brown, so the logo reads over the video and over the lighter parts of the page below it alike. */
+.hero > .nav {
+  position: fixed;
+  display: flex;
+  padding-block: var(--space-md);
+  background: var(--brown);
 }
 
 /* ---------- HERO ---------- */
@@ -4214,17 +4244,16 @@ body > svg[aria-hidden="true"] {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
   color: inherit;
   text-decoration: none;
-  font-family: var(--font-heading);
-  font-size: 21px;
-  white-space: nowrap;
 }
 
-.brand .mark {
-  width: 30px;
-  height: 30px;
+.nav .brand {
+  opacity: 1;
+}
+
+.hp-footer .brand {
+  color: var(--on-dark);
 }
 
 .hero .logos:has(.logo-row:empty) {
