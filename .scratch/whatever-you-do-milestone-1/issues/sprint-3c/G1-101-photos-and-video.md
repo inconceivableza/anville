@@ -20,4 +20,5 @@
 
 - The video and its poster are in place beside today's hero video (26 Oct), at 720p. Its credit: "Video by Marian Croitoru from Pexels", linking to https://www.pexels.com/video/healthy-light-landscape-nature-4524595/
 - The developer puts the churches photo in place if one is picked by Wed 28 Oct
+- The churches photo is in place (27 Oct): `frontend/img/churches.jpg`, 1920 × 1280, from https://unsplash.com/photos/woman-reading-book-dGxOgeXAXm8. Its credit: "Photograph of a church gathering with Bibles open, by Sincerely Media on Unsplash."
 - Last but one in the cut order: if time runs short, the video and churches photo go before the wizard and side-card photos (spec)
