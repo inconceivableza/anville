@@ -1256,10 +1256,16 @@ main > .hub ~ .hub-consent {
   color: var(--muted);
 }
 
-/* ✨ What a section waits on the coach for, under the coach card's tag (ticket 65): darker than the sentence below it. */
+/* ✨ A side card's authored lead, under its tag, as Walk with a coach's says what a coach is for (ticket 95; ticket 65's
+   line of what a section waited on the coach for before it): bold and darker than the sentence below it, or on a dark
+   card lighter. */
 .card p.hub-side-line {
   color: var(--ink);
   font-weight: 600;
+}
+
+.card.dark p.hub-side-line {
+  color: var(--on-dark);
 }
 
 /* ✨ A side card's buttons (ticket 65): small pills in a row at their own width, not stretched across the card, so

@@ -403,7 +403,8 @@
         "requires": ["onboarding"],
         "to_finish": "sent a coach their link in {title}",
         "side_card": {
-          "sentence": "When you're ready, ask someone to walk this with you."
+          "lead": "A coach helps you test what you're discovering with someone who knows you and your faith.",
+          "sentence": "You'll need one before the later sections open."
         },
         "blocks": [
           {

@@ -218,7 +218,7 @@ def hub(request):
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
             "coach_wait": _coach_wait_panel(hub, coach, coach_page),
             "side_cards": _side_cards(hub, coach, coach_section),
-            "coach_card": _coach_card(hub, coach, coach_section, coach_page),
+            "coach_card": _coach_card(coach, coach_section, coach_page),
             "voices": _hub_voices(state, hub),
             "comparison": _hub_comparison(state),
             "waiting_sentence": waiting.waiting_sentence(minimum) if waiting is not None else None,
@@ -261,17 +261,11 @@ def _side_cards(hub, coach, coach_section):
     ]
 
 
-def _coach_card(hub, coach, coach_section, coach_page):
-    """✨ What the Walk with a coach card adds to a side card's own (ticket 65): {"section", "page", "chosen", "line"},
-    its button leading to the `coach_page`, None while the card is locked, whether a `coach` is chosen, which its
-    button's words say (ticket 95), and its line while a section waits on the `coach` at all, None otherwise."""
-    wait = hub.coach_wait
-    return {
-        "section": coach_section,
-        "page": coach_page,
-        "chosen": coach is not None,
-        "line": wait.line(_answer_of(coach)) if wait is not None else None,
-    }
+def _coach_card(coach, coach_section, coach_page):
+    """✨ What the Walk with a coach card adds to a side card's own (ticket 65): {"section", "page", "chosen"}, its
+    button leading to the `coach_page`, None while the card is locked, and whether a `coach` is chosen, which its
+    button's words say (ticket 95)."""
+    return {"section": coach_section, "page": coach_page, "chosen": coach is not None}
 
 
 def _coach_wait_panel(hub, coach, coach_page):
