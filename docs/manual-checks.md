@@ -961,6 +961,10 @@ Walked at a wide screen on 22 Oct 2026, with staging on `56924e5`; each passed, 
 - A locked row's "Locked" is still a button: hover or focus it for its note, and tap it at phone width. Its keyboard focus ring still shows.
 - The comparison's row (hub and sidebar) and Five trusted voices' card follow the same rule by what the pill says. Grey text and outline: "Locked", and any count of people still needed ("3 more needed", "2 of 3 answered"), including the comparison row below the minimum even after "Viewed" (it then shows its count). Black text and outline: "Not started", "Ready to view". Unchanged: "In progress", "Complete" and "Viewed" (lime), and the coach's "Link issued", "Accepted", "Declined", "Withdrawn". Walk the voices card through "N more needed", "Links issued", "Some answers received", "All answers received" and "Enough answers received" (the last four keep the section's own colours), on the dark card too.
 
+### Fix-13: "Viewed" pill lime (rebuild the frontend; phone width too)
+
+- The comparison row's "Viewed" pill, on the hub and in the sidebar, is lime (green fill, dark green text) like "Complete", not grey. If an observer then withdraws, leaving fewer than the minimum, the row shows its count ("2 of 3 answered") in grey, as fix-12 made it.
+
 ### Ticket 90: Even line lengths (rebuild the frontend first; a current Chrome, Edge, Safari or Firefox; phone width too; no pathway reload needed)
 
 - The homepage, the hub, a section page, the results, the comparison and an observer's page: every heading, lede and short centred line (the hero, "Sort your strengths", the signposts, the demo strip) breaks into lines of near-equal length, never a long line over a short one.

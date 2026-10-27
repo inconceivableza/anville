@@ -385,8 +385,12 @@ html:has(.top-bar) {
   color: var(--muted);
 }
 
+/* ✨ The comparison row's "Viewed" is lime like "Complete" (fix-13); while the count phrase shows after a withdrawal,
+   the row carries `status-waiting` instead and stays grey (fix-12). */
 .pathway-nav-row .status-chip.status-complete,
-.pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-complete {
+.pathway-nav-row .status-chip.status-viewed,
+.pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-complete,
+.pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-viewed {
   background: var(--green);
   color: var(--green-ink);
 }
@@ -1292,7 +1296,9 @@ main > .hub ~ .hub-consent {
   color: var(--on-dark-70);
 }
 
-.tag.status-complete {
+/* ✨ The comparison row's "Viewed" is lime like "Complete" (fix-13). */
+.tag.status-complete,
+.tag.status-viewed {
   background: var(--green);
   color: var(--green-ink);
 }
