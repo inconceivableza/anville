@@ -13,11 +13,7 @@
     {% else %}
       <h3><a href="{% page_url section.id section.page %}">{{ section.title }}</a></h3>
     {% endif %}
-    {% if section.is_locked and section.lock_note %}
-      {% include "engine/lock_status.html" with pill="tag" note_id="lock-note-"|add:section.id %}
-    {% else %}
-      <span class="tag status-{{ section.status }}{% if section.is_next %} up-next{% endif %}">{{ section.label }}</span>
-    {% endif %}
+    {% include "engine/lock_status.html" with pill="tag" note_id="lock-note-"|add:section.id up_next=True %}
   </div>
   {% if section.side_card_lead %}<p class="hub-side-line">{{ section.side_card_lead }}</p>{% endif %}
   <p>{{ section.side_card }}</p>

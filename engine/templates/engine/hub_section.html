@@ -28,10 +28,6 @@
       </ol>
     {% endif %}
   </div>
-  {% if section.is_locked and section.lock_note %}
-    {% include "engine/lock_status.html" with pill="tag" note_id="lock-note-"|add:section.id %}
-  {% else %}
-    <span class="tag status-{{ section.status }}{% if section.is_next %} up-next{% endif %}">{{ section.label }}</span>
-  {% endif %}
+  {% include "engine/lock_status.html" with pill="tag" note_id="lock-note-"|add:section.id up_next=True %}
   {% if not section.is_locked %}<span class="srow-arrow" aria-hidden="true">&rarr;</span>{% endif %}
 </li>

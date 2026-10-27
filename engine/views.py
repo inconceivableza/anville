@@ -1118,7 +1118,13 @@ def visit_comparison(request, block_id):
     if response.collection_frozen_at is None and viewed:
         if request.POST.get("confirmed") != "yes":
             invited = response.contacts.filter(role=Contact.Role.CONTACT).count()
-            context = {"block_id": block_id, "answered": answered, "invited": invited, "everyone": answered >= invited}
+            context = {
+                "block_id": block_id,
+                "answered": answered,
+                "invited": invited,
+                "everyone": answered >= invited,
+                "back": {"title": "results", "href": reverse("results", args=[block_id])},
+            }
             return render(request, "engine/comparison_confirm.html", context)
         # ✨ Counted again under the freeze's lock: a withdrawal since may have left fewer than the minimum.
         viewed = response.freeze_collection()
@@ -1176,6 +1182,11 @@ def retake(request, block_id):
         context = {
             "block_id": block_id,
             "clearing": result is not None,
+            "back": (
+                {"title": "results", "href": reverse("results", args=[block_id])}
+                if result is not None
+                else {"title": "the sort", "href": sort_page}
+            ),
             "sort_page": sort_page,
             "offer": offer,
             "myself": MYSELF,
@@ -1543,7 +1554,8 @@ def contact_removal(request, block_id, contact_id):
     if not confirmed and is_htmx:
         return _rows_sent_back(request, state, block, [_listed_row(state, block, person.pk, confirming=True)])
     if not confirmed:
-        context = {"person": person, "back": _listed_at(person), "has_live_link": person.live_invitation() is not None}
+        back = {"title": "your list", "href": _listed_at(person)}
+        context = {"person": person, "back": back, "has_live_link": person.live_invitation() is not None}
         return render(request, "engine/contact_removal.html", context)
     number = _listed_row(state, block, person.pk)["number"] if is_htmx else None
     person.delete()  # ✨ their invitation goes with them
@@ -1993,7 +2005,7 @@ def coach_withdrawal(request, token):
         return _refuse_link(request)
     _, name = _asked_by(invitation)
     if request.method == "POST":
-        _as_first_seen(invitation.contact.response)
+        _store_completions_and_openings(invitation.contact.response)
         if not Invitation.withdraw_as_coach(token):
             return _refuse_link(request)
         shown = render(request, "engine/coach_withdrawal.html", {"name": name, "withdrawn": True})
@@ -2289,7 +2301,7 @@ def _participant(user, first_version=Publication.current_version):
         version = first_version()
         sections = track_sections(version.document) if version else []
         return ParticipantState(None, version, sections, {}, complete_sections(sections, {}, ()), {}, set())
-    sections, answers, completed, moved_past = _as_first_seen(participant_response)
+    sections, answers, completed, moved_past = _store_completions_and_openings(participant_response)
     return ParticipantState(
         response=participant_response,
         version=participant_response.version,
@@ -2301,9 +2313,10 @@ def _participant(user, first_version=Publication.current_version):
     )
 
 
-def _as_first_seen(participant_response):
-    """✨ The response's track sections, the answers the gate reads, the sections complete and the pages moved past,
-    having stored each hub side card's completion and each opened section's opening the first time either is seen."""
+def _store_completions_and_openings(participant_response):
+    """✨ Store each hub side card's completion and each opened section's opening the first time either is seen, and
+    return the response's track sections, the answers the gate reads, the sections complete and the pages moved past,
+    those included."""
     sections = track_sections(participant_response.version.document)
     answers = participant_response.answers_with_contacts_and_visits()
     # ✨ A part of a section, or a hub side card, is complete once its gate passes, so locks and the hub count it without

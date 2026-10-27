@@ -1,13 +1,18 @@
 {# Copyright (C) New Community Church SE London 2026. #}
 {# For licensing information see ../../../LICENSE.md #}
 {% comment %}
-  ✨ A locked section's status on the hub and in the sidebar (ticket 97): "Locked", as a small button whose lock note is
-  its description, so screen readers hear the note with it. The note shows while the button is hovered or focused, a tap
-  focusing it, and goes once the pointer or the focus moves away, all in CSS, so it needs no JavaScript; with it,
-  Escape closes it too, through the sidebar's Escape handler. `pill` is the status's own class, the hub's "tag" or the
-  sidebar's "status-chip", and `note_id` the note's id, unique on the page, which carries both.
+  ✨ A section's status on the hub and in the sidebar. A locked section with a lock note shows "Locked" as a small
+  button whose lock note is its description (ticket 97), so screen readers hear the note with it. The note shows while
+  the button is hovered or focused, a tap focusing it, and goes once the pointer or the focus moves away, all in CSS, so
+  it needs no JavaScript; with it, Escape closes it too, through the sidebar's Escape handler. Any other status is the
+  plain pill. `pill` is the status's own class, the hub's "tag" or the sidebar's "status-chip", and `note_id` the note's
+  id, unique on the page, which carries both. `up_next` marks the next step's pill, as the hub's tag does.
 {% endcomment %}
-<span class="lock">
-  <button type="button" class="lock-button" aria-describedby="{{ note_id }}"><span class="{{ pill }} status-{{ section.status }}{% if section.is_next %} up-next{% endif %}">{{ section.label }}</span></button>
-  <span class="lock-note" role="tooltip" id="{{ note_id }}">{{ section.lock_note }}</span>
-</span>
+{% if section.is_locked and section.lock_note %}
+  <span class="lock">
+    <button type="button" class="lock-button" aria-describedby="{{ note_id }}"><span class="{{ pill }} status-{{ section.status }}">{{ section.label }}</span></button>
+    <span class="lock-note" role="tooltip" id="{{ note_id }}">{{ section.lock_note }}</span>
+  </span>
+{% else %}
+  <span class="{{ pill }} status-{{ section.status }}{% if up_next and section.is_next %} up-next{% endif %}">{{ section.label }}</span>
+{% endif %}

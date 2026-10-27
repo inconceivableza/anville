@@ -53,25 +53,22 @@ COACH_ANSWER_LABELS = {
 
 class CoachWaitWording(NamedTuple):
     """✨ What the engine says of a section waiting on the coach's acceptance, for one answer of the coach's: the
-    next-step panel's `heading` and `sentence`, while nothing else is open. The coach card's line under its tag, which
-    said the same while the section waited on the coach at all (ticket 65), gave way to the card's authored lead (ticket
-    95)."""
+    next-step panel's `heading` and `sentence`, while nothing else is open."""
 
     heading: str
     sentence: str
 
+
+# ✨ The sentence after a coach has said no, by declining or by withdrawing an acceptance.
+CHOOSE_SOMEONE_ELSE = "Choose someone else to walk with you. {section} opens once they accept."
 
 # ✨ Engine wording for a section waiting on the coach's acceptance (ADR 0019), by the coach's answer as the coach page
 # tells it: "waiting" while a working link is unanswered, "declined", "withdrawn" once an acceptance is taken back (ADR
 # 0024), or None with no working link (none made, expired unanswered, or revoked).
 COACH_WAIT_WORDING = {
     "waiting": CoachWaitWording("Waiting on your coach to respond", "{section} opens once {coach} has accepted."),
-    "declined": CoachWaitWording(
-        "{coach} has said no", "Choose someone else to walk with you. {section} opens once they accept."
-    ),
-    "withdrawn": CoachWaitWording(
-        "{coach} has withdrawn", "Choose someone else to walk with you. {section} opens once they accept."
-    ),
+    "declined": CoachWaitWording("{coach} has said no", CHOOSE_SOMEONE_ELSE),
+    "withdrawn": CoachWaitWording("{coach} has withdrawn", CHOOSE_SOMEONE_ELSE),
     None: CoachWaitWording("Choose a coach", "{section} opens once your coach has accepted."),
 }
 

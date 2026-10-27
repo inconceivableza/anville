@@ -14,11 +14,7 @@
 {% block head_title %}{% if clearing %}Retake the strengths evaluation{% else %}Load a demo profile{% endif %}{% endblock head_title %}
 
 {% block content %}
-  {% if clearing %}
-    <p class="way-back"><a class="pill ghost back-button" href="{% url 'results' block_id %}">← Back to results</a></p>
-  {% else %}
-    <p class="way-back"><a class="pill ghost back-button" href="{{ sort_page }}">← Back to the sort</a></p>
-  {% endif %}
+  {% include "engine/back_button.html" %}
   <div class="section-header">
     <h2>{% if clearing %}Retake the strengths evaluation?{% else %}Load a demo profile?{% endif %}</h2>
   </div>
