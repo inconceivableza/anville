@@ -217,7 +217,7 @@ def hub(request):
             "hub": hub,
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
             "coach_wait": _coach_wait_panel(hub, coach, coach_page),
-            "side_cards": _side_cards(hub, coach, coach_section),
+            "side_cards": _side_cards(state, hub),
             "coach_card": _coach_card(coach, coach_section, coach_page),
             "voices": _hub_voices(state, hub),
             "comparison": _hub_comparison(state),
@@ -253,12 +253,23 @@ def _coach_section_of(document):
     return section_of(document, checklists[0])["id"] if checklists else None
 
 
-def _side_cards(hub, coach, coach_section):
-    """✨ The hub's side cards, the coach's section's (`coach_section`) tagged with where the `coach` stands (ticket
-    51b)."""
-    return [
-        with_coach_answer(card, _answer_of(coach)) if card.id == coach_section else card for card in hub.side_cards()
-    ]
+def _side_cards(state, hub):
+    """✨ The hub's side cards, each with the status its card shows, for the hub and the sidebar alike, so the two never
+    disagree (ticket 95): the coach's tagged with where the coach stands (ticket 51b), and Five trusted voices with its
+    own tag while it is unlocked (ticket 51a)."""
+    coach_section = _coach_section_of(state.version.document)
+    # ✨ The coach is read only where a side card is theirs, so a page without that card never depends on the coach.
+    on_a_card = any(card.id == coach_section for card in hub.side_cards())
+    answer = _answer_of(_coach_of(state.response, state.answers)) if on_a_card else None
+    voices = _hub_voices(state, hub)
+    cards = []
+    for card in hub.side_cards():
+        if card.id == coach_section:
+            card = with_coach_answer(card, answer)
+        elif voices is not None and card.id == voices["section"]:
+            card = card._replace(label=voices["tag"])
+        cards.append(card)
+    return cards
 
 
 def _coach_card(coach, coach_section, coach_page):
@@ -375,25 +386,11 @@ def participant_nav(request):
         "sidebar": {
             "outline": hub.outline(),
             "comparison": _hub_comparison(state),
-            "side_cards": _sidebar_side_cards(state, hub),
+            "side_cards": _side_cards(state, hub),
             "current": _current_section(request, document),
             "links": [{"label": label, "href": href, "is_current": href == request.path} for label, href in links],
         },
     }
-
-
-def _sidebar_side_cards(state, hub):
-    """✨ The hub's side cards as the sidebar lists them (ticket 80), each with the status its card shows: the coach's
-    by where the coach stands, and Five trusted voices by its own tag while it is unlocked."""
-    document = state.version.document
-    coach_section = _coach_section_of(document)
-    # ✨ The coach is read only where a side card is theirs, so a page without that card never depends on the coach.
-    on_a_card = any(card.id == coach_section for card in hub.side_cards())
-    cards = _side_cards(hub, _coach_of(state.response, state.answers) if on_a_card else None, coach_section)
-    voices = _hub_voices(state, hub)
-    if voices is None:
-        return cards
-    return [card._replace(label=voices["tag"]) if card.id == voices["section"] else card for card in cards]
 
 
 def _current_section(request, document):
