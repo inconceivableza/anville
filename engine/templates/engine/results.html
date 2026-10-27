@@ -7,7 +7,7 @@
 {% block head_title %}{{ results.title }}{% endblock head_title %}
 
 {% block content %}
-  <p class="back-to-hub"><a href="{{ section.back.href }}">← Back to {{ section.back.title }}</a></p>
+  {% include "engine/back_button.html" with back=section.back %}
   {% comment %}✨ On a demo system the title is where a press-and-hold reveals the retake link below, on a phone (fix-20).{% endcomment %}
   <h1{% if retake %} data-demo-reveal-hold{% endif %}>{{ results.title }}</h1>
 

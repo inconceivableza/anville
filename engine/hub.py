@@ -47,6 +47,7 @@ COACH_ANSWER_LABELS = {
     "waiting": "Link issued",
     "accepted": "Accepted",
     "declined": "Declined",
+    "withdrawn": "Withdrawn",
 }
 
 
@@ -61,12 +62,15 @@ class CoachWaitWording(NamedTuple):
 
 
 # ✨ Engine wording for a section waiting on the coach's acceptance (ADR 0019), by the coach's answer as the coach page
-# tells it: "waiting" while a working link is unanswered, "declined", or None with no working link (none made, expired
-# unanswered, or revoked).
+# tells it: "waiting" while a working link is unanswered, "declined", "withdrawn" once an acceptance is taken back (ADR
+# 0024), or None with no working link (none made, expired unanswered, or revoked).
 COACH_WAIT_WORDING = {
     "waiting": CoachWaitWording("Waiting on your coach to respond", "{section} opens once {coach} has accepted."),
     "declined": CoachWaitWording(
         "{coach} has said no", "Choose someone else to walk with you. {section} opens once they accept."
+    ),
+    "withdrawn": CoachWaitWording(
+        "{coach} has withdrawn", "Choose someone else to walk with you. {section} opens once they accept."
     ),
     None: CoachWaitWording("Choose a coach", "{section} opens once your coach has accepted."),
 }

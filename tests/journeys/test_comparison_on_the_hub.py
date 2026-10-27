@@ -2,8 +2,8 @@
 # For licensing information see ../../LICENSE.md
 
 """✨ The comparison signpost on the hub (ticket 67b): a row within its section, after the part holding its sort, and a
-button beside Manage on the Five trusted voices card. Each makes the same press as the section's card, through the
-same freeze warning (ADR 0017), and the row shows the same status (the button no longer does, ticket 81)."""
+button beside "Invite people" on the Five trusted voices card. Each makes the same press as the section's card, through
+the same freeze warning (ADR 0017), and the row shows the same status (the button no longer does, ticket 81)."""
 
 import re
 
@@ -87,8 +87,8 @@ def test_below_the_minimum_the_card_the_hubs_row_and_the_sidebar_lead_to_five_tr
     participant, settings
 ):
     """✨ One rule wherever the comparison is offered, as on the results page (fix-3, ticket 88). The voices card offers
-    nothing in its place: its Manage already leads there, and its Answered meter and tag say where the answers stand
-    (developer's call, 23 Oct, ticket 81)."""
+    nothing in its place: its "Invite people" already leads there, and its Answered meter and tag say where the answers
+    stand (developer's call, 23 Oct, ticket 81)."""
     settings.ANVILLE_SIDEBAR = True
     answer_through(*participant.links[:2])
     assert hub_row(participant) is None

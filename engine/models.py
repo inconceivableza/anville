@@ -385,6 +385,8 @@ class Invitation(models.Model):
     It is never claimed: the participant holding a copy could claim it as easily as use it. Only the answer is kept, on
     the link, so revoking or reissuing asks again. Each kind of link works only at its own address. Once the coach has
     accepted, the participant's consent for them to see the results and comparison is kept on the link too (ticket 27).
+    The acceptance is the coach's consent, which they can withdraw while the link works: that leaves "withdrawn" in its
+    place, clears the sharing and stops the link (ADR 0024).
 
     While the participant's consent is withdrawn, every link they gave out is refused as a dead one is, and works again,
     as it was, once they agree again (ticket 45). Nothing about the link changes meanwhile, its expiry included.
@@ -393,6 +395,9 @@ class Invitation(models.Model):
     class CoachAnswer(models.TextChoices):
         ACCEPTED = "accepted"
         DECLINED = "declined"
+        # ✨ An acceptance the coach took back (ADR 0024), kept in its place so the participant is told, until the link
+        # is reissued or revoked or the coach changed, as any answer is.
+        WITHDRAWN = "withdrawn"
 
     contact = models.OneToOneField(Contact, on_delete=models.CASCADE, related_name="invitation")
     token_hash = models.CharField(max_length=64, unique=True)
@@ -503,6 +508,37 @@ class Invitation(models.Model):
             coach_answer__isnull=True,
         ).update(coach_answer=answer)
         return answered == 1
+
+    @classmethod
+    def withdrawable_by_coach(cls, token):
+        """✨ The coach's link a token belongs to while its acceptance can be withdrawn (ADR 0024): accepted, and the
+        link still working; otherwise None, saying nothing of why. Also while the participant's consent is withdrawn,
+        since closing a link never stops its coach taking back their consent, as it never stops an observer."""
+        return (
+            cls._withdrawable_by_coach(token)
+            .select_related("contact__response__participant", "contact__response__version")
+            .first()
+        )
+
+    @classmethod
+    def withdraw_as_coach(cls, token):
+        """✨ Delete the coach's acceptance, and the participant's consent to share with them that rests on it, and stop
+        the link, in one UPDATE, so of two withdrawals at once exactly one is made; False if it is not
+        `withdrawable_by_coach`. What stays in the acceptance's place says only that it was withdrawn."""
+        now = timezone.now()
+        withdrawn = cls._withdrawable_by_coach(token).update(
+            coach_answer=cls.CoachAnswer.WITHDRAWN, results_shared_at=None, expires_at=now
+        )
+        return withdrawn == 1
+
+    @classmethod
+    def _withdrawable_by_coach(cls, token):
+        return cls.objects.filter(
+            token_hash=_hash_of(token),
+            expires_at__gt=timezone.now(),
+            contact__role=Contact.Role.COACH,
+            coach_answer=cls.CoachAnswer.ACCEPTED,
+        )
 
     @classmethod
     def accepted_coach_of(cls, response):

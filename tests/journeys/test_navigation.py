@@ -149,9 +149,24 @@ def test_every_participant_page_carries_the_header_with_sign_out_and_the_sidebar
     page = under_way.get(address).content.decode()
 
     header = the_header(page)
-    assert re.search(r'<a [^>]*href="/hub/"[^>]*>\s*Test Pathway\s*</a>', header)
+    # ✨ The pathway's name is the logo link's accessible name now, the logo replacing the written name (ticket 91)
+    logo_link = r'<a [^>]*href="/hub/"[^>]*aria-label="Test Pathway"[^>]*>\s*<svg [^>]*>\s*<use href="#logo"'
+    assert re.search(logo_link, header)
     assert re.search(r'<form [^>]*method="post"[^>]*action="/accounts/logout/"', header)
     assert sidebar_of(page) is not None
+
+
+@pytest.mark.django_db
+def test_the_demo_strip_and_the_header_share_one_top_bar_so_they_stay_in_view_together(under_way, settings):
+    """✨ Ticket 91: the bar that stays at the top holds the demo notice where there is one, with the header."""
+    settings.ANVILLE_DEMO_NOTICE = "A demo."
+
+    page = under_way.get(f"/sections/{CALLING}/").content.decode()
+
+    bar = re.search(r'<div class="top-bar">(.*?)</header>', page, re.S)
+    assert bar is not None, "no top bar on the page"
+    assert 'class="demo-strip"' in bar.group(1)
+    assert '<header class="site-header"' in bar.group(1)
 
 
 @pytest.mark.django_db

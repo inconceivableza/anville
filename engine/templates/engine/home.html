@@ -16,9 +16,8 @@
         <source src="{% static 'hero.mp4' %}" type="video/mp4">
       </video>
       <nav class="nav" aria-label="Main">
-        <div class="nav-left"><a href="#top">Home</a><a href="#how">How it works</a><a href="#journey">The evaluation</a></div>
-        <a class="brand" href="#top" aria-label="Whatever You Do home"><svg class="mark"><use href="#mark"/></svg><span>Whatever You Do</span></a>
-        <div class="nav-right"><a href="#impact">Impact</a><a href="#coach">Coaches</a><a href="{{ begin }}">Begin</a></div>
+        {# ✨ The logo alone (ticket 91); the bar stays at the top as the page scrolls #}
+        <a class="brand" href="#top" aria-label="Whatever You Do home"><svg class="brand-logo" viewBox="0 0 910.32 157.7" aria-hidden="true" focusable="false"><use href="#logo"/></svg></a>
       </nav>
       <div class="hero-copy">
         <h1>Everyone has a purpose. Do you know yours?</h1>
@@ -137,7 +136,7 @@
     <!-- =================== FOOTER =================== -->
     <footer class="panel hp-footer">
       <div class="cols">
-        <div><b>Whatever You Do</b><span>A guided calling journey</span></div>
+        <div><a class="brand" href="#top" aria-label="Whatever You Do home"><svg class="brand-logo" viewBox="0 0 910.32 157.7" aria-hidden="true" focusable="false"><use href="#logo"/></svg></a><span>A guided calling journey</span></div>
         <div><b>Explore</b><a href="#how">How it works</a><a href="#journey">The evaluation</a><a href="#impact">Impact</a><a href="#connect">Writing</a></div>
         <div><b>For churches</b><a href="#churches">Run it in a group</a><a href="#coach">For coaches</a></div>
         <div><b>Note</b><span>“Whatever you do, work at it with all your heart, as working for the Lord.”<br>Colossians 3:23 (NIV)</span></div>

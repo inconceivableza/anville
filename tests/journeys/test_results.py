@@ -205,7 +205,7 @@ def test_the_results_page_leads_back_to_the_sorts_section_where_it_is_completed(
 
     page = results(signed_in).content.decode()
 
-    assert f'<a href="/sections/{STRENGTHS}/">← Back to Strengths assessment</a>' in page
+    assert f'<a class="pill ghost back-button" href="/sections/{STRENGTHS}/">← Back to Strengths assessment</a>' in page
     assert "← Back to the hub" not in page
 
 
