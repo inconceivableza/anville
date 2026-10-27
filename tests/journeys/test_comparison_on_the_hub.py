@@ -104,8 +104,12 @@ def test_below_the_minimum_the_card_the_hubs_row_and_the_sidebar_lead_to_five_tr
 
     answer_through(participant.links[2])
 
-    for shown in (card(participant), hub_row(participant), sidebar_entry(participant)):
-        assert where_it_leads(shown) == (False, True)
+    for with_invitation, shown in (
+        (True, card(participant)),  # ✨ the section's card keeps its invitation from the minimum (fix-8)
+        (False, hub_row(participant)),
+        (False, sidebar_entry(participant)),
+    ):
+        assert where_it_leads(shown) == (with_invitation, True)
         assert statuses(shown) == [COMPARISON_STATUSES["ready"]]
     assert voices_button(participant) is not None
     assert statuses(voices_card(participant)) == []

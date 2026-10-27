@@ -153,12 +153,14 @@ class ParticipantState(NamedTuple):
 
 
 class Invite(NamedTuple):
-    """✨ The way to invite people offered below the minimum, beside a section's finish on the results page (ticket 88)
-    and in place of the comparison signpost's press (fix-3): the address of the Five trusted voices card's page, and
-    the phrase beside it."""
+    """✨ The way to invite people, beside the press on to the comparison on the results page (ticket 88) and on the
+    comparison signpost (fix-3, reversed by fix-8: it is offered before and after the minimum, and below it the press
+    is greyed rather than replaced): the address of the Five trusted voices card's page, the phrase beside it
+    (empty from the minimum), and whether the comparison is still waiting on answers."""
 
     href: str
     phrase: str
+    waiting: bool = False
 
 
 class Finish(NamedTuple):
@@ -838,9 +840,9 @@ def results(request, block_id):
 def _results_finish(state, block_id):
     """✨ What the results page offers in place of "Compare with how others see you →" alone, when its sort is the last
     thing in a part that is the last thing in its section, so the results are that section's end (ticket 88): the
-    section's finish, as `_finish_of` gives it, and beside it, below the minimum, the way to invite people, with how many
-    more the Five trusted voices card needs, or else how many of the minimum have answered. None otherwise, when the
-    page is as before."""
+    section's finish, as `_finish_of` gives it, and beside it the way to invite people, as `_invite` gives it (below
+    the minimum with how many more the Five trusted voices card needs, or else how many of the minimum have answered).
+    None otherwise, when the page is as before."""
     document = state.version.document
     part = section_of(document, block_id)
     finish = _finish_of(state, part) if part["blocks"][-1]["id"] == block_id else None
@@ -851,19 +853,20 @@ def _results_finish(state, block_id):
 
 
 def _invite(state):
-    """✨ The way to invite people offered in place of the press on to the comparison below the minimum, wherever that
-    press is offered (ticket 88, fix-3): Five trusted voices' page, with how many more its card needs, or else how many
-    of the minimum have answered. None from the minimum, and for a pathway without that card or while it is locked,
-    where the press is offered as before."""
+    """✨ The way to invite people offered beside the press on to the comparison, wherever that press is offered
+    (ticket 88, fix-3, fix-8): Five trusted voices' page. Below the minimum it is `waiting` and its phrase says how many
+    more its card needs, or else how many of the minimum have answered; the press is greyed then. From the minimum the
+    phrase is empty. None for a pathway without that card or while it is locked, where the press is offered alone, as
+    before."""
     answered, minimum = _answered(state.response), minimum_observers(state.version.document)
-    if answered >= minimum:
-        return None
     hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
     voices = _hub_voices(state, hub)
     if voices is None:
         return None
+    if answered >= minimum:
+        return Invite(page_url(voices["section"]), "")
     phrase = voices["more_needed"] or comparison_status(answered, minimum, viewed=False)[1]
-    return Invite(page_url(voices["section"]), phrase)
+    return Invite(page_url(voices["section"]), phrase, waiting=True)
 
 
 def _results_drawn(state, result, block_id):
@@ -2504,8 +2507,8 @@ def _sort_results_drawn(state, block):
 def _comparison_signpost_shown(state, block):
     """✨ For a `comparison_signpost` block, its sort and where the way to that sort's comparison stands, as
     `comparison_status` words it, once there is a result; None before, and for any other block (ticket 67a). Below the
-    minimum, where `_invite` offers the way to invite people in place of its press, `invite` holds it and the status
-    says its phrase (fix-3)."""
+    minimum, where `_invite` marks the way to invite people `waiting`, the status says its phrase (fix-3), and the press
+    is greyed (fix-8)."""
     if block["type"] != "comparison_signpost":
         return None
     sort = block["sort"]
@@ -2515,7 +2518,8 @@ def _comparison_signpost_shown(state, block):
     viewed = comparison_viewed(state.answers, sort)
     status, label = comparison_status(answered, minimum_observers(state.version.document), viewed)
     invite = _invite(state)
-    return {"sort": sort, "status": status, "label": invite.phrase if invite else label, "invite": invite}
+    shown = invite.phrase if invite and invite.waiting else label
+    return {"sort": sort, "status": status, "label": shown, "invite": invite}
 
 
 def _block_for_participant(

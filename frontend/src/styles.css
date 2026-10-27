@@ -3387,6 +3387,38 @@ html[data-javascript="loaded"] .invitation-copy {
   color: var(--muted);
 }
 
+/* ✨ The press on to a comparison while too few have answered (fix-8): grey as a disabled button is, but a span, not a
+   button, so it carries no link and no form. Its specificity beats .pill.ghost's fill and ring. */
+.pill.is-waiting {
+  background: var(--border);
+  color: var(--muted);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.pill.is-waiting:hover {
+  filter: none;
+}
+
+/* ✨ The comparison signpost's two buttons (fix-8): the press, then the quieter invitation, side by side, wrapping one
+   under the other at phone width. */
+.signpost-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  margin-top: var(--space-md);
+}
+
+/* ✨ The invitation beside the results page's finish and comparison buttons (fix-8): text, underlined, quieter than they. */
+.invite-link {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  padding: var(--space-sm) var(--space-xs);
+}
+
 /* ✨ The comparison: per construct, a "You" bar above an "Others" bar in --blue-soft, as the prototype's comparison
    screen paired them. "You" is --green-deep, or the rank colours where the results page ranks the bars. */
 

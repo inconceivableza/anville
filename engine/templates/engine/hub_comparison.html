@@ -6,11 +6,12 @@
   how others see you →": a form posting to the same address, so it warns before collection freezes and works without
   JavaScript. A row's title is a link elsewhere; a link here could be loaded ahead of time without the press. Below the
   minimum, where the card offers the way to invite people instead, the title is a link to Five trusted voices' page, as
-  other rows' titles are, and the tag the card's phrase (fix-3).
+  other rows' titles are, and the tag the card's phrase (fix-3). Only the section's signpost and the results page
+  show both buttons (fix-8); the hub's row and the sidebar's keep this single switching title.
 {% endcomment %}
 <li class="hub-section srow hub-part hub-comparison">
   <div class="srow-body">
-    {% if comparison.invite %}
+    {% if comparison.invite.waiting %}
       <h3><a class="hub-section-title" href="{{ comparison.invite.href }}">{{ comparison.title }}</a></h3>
     {% else %}
       {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="hub-section-title" press_label=comparison.title press_in_heading=True %}
