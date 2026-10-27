@@ -294,6 +294,30 @@ def test_a_section_is_in_progress_once_a_part_of_it_is_begun():
     assert statuses([gifts, part], answers={"sort": "Sorted"}) == [IN_PROGRESS, COMPLETE]
 
 
+# A comparison signpost
+
+
+def comparison_section():
+    """✨ As *Whatever You Do*'s Section 2: a comparison signpost, then a reflection."""
+    signpost_block = {"id": "how-others", "type": "comparison_signpost", "sort": "sort", "title": "How others see you"}
+    return section("others", blocks=[signpost_block, long_text("summary")])
+
+
+def test_a_section_whose_comparison_signpost_reads_viewed_is_in_progress():
+    """✨ Viewing the comparison is the participant's first act in *Whatever You Do*'s Section 2 (fix-24)."""
+    assert statuses([comparison_section()], answers={"sort/viewed": "2026-10-27T10:00:00Z"}) == [IN_PROGRESS]
+
+
+def test_a_visit_to_the_comparison_that_was_not_viewing_it_does_not_start_the_section():
+    """✨ A visit below the minimum, or a press that only showed "Before you look", is stored as a visit alone."""
+    assert statuses([comparison_section()], answers={"sort/comparison": "2026-10-27T10:00:00Z"}) == [NOT_STARTED]
+
+
+def test_a_complete_section_whose_comparison_was_viewed_stays_complete():
+    answers = {"sort/viewed": "2026-10-27T10:00:00Z", "summary": "Written"}
+    assert statuses([comparison_section()], answers=answers, completed=["others"]) == [COMPLETE]
+
+
 # A hub side card
 
 

@@ -18,6 +18,7 @@ from engine.document.blocks import BLOCK_TYPES, page_count, page_of, pages_of
 from engine.document.gates import (
     clause_passes,
     clauses_of,
+    comparison_viewed,
     gate_passes,
     has_content,
     opened_key,
@@ -658,9 +659,12 @@ def _status(section, answers, completed, sections, moved_past):
     if is_locked(section, completed, answers, sections, moved_past):
         return LOCKED
     # ✨ A section's own blocks and its parts' count, so a section whose own blocks take no answer is in progress once
-    # its part is begun (ticket 87).
+    # its part is begun (ticket 87), and so does a comparison signpost once it reads "Viewed" (fix-24).
     parts = [other for other in sections if other.get("part_of") == section["id"]]
     if any(has_content(answers.get(block["id"])) for other in (section, *parts) for block in _interactive_blocks(other)):
+        return IN_PROGRESS
+    blocks = [block for other in (section, *parts) for block in other["blocks"]]
+    if any(comparison_viewed(answers, block["sort"]) for block in blocks if block["type"] == "comparison_signpost"):
         return IN_PROGRESS
     return NOT_STARTED
 

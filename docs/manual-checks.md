@@ -587,6 +587,14 @@ No rebuild and no pathway reload needed.
 - The dark card's light equivalent: if the coach card shows dark anywhere, its "Declined" is a dimmer light text and outline than "Not started" has.
 - At phone width the button at the comparison's end fits with no sideways scroll.
 
+### Fix-24: Section 2 is in progress once its comparison is viewed (no rebuild needed)
+
+- With Section 1 complete and fewer than three people answered, open "How others see you" (the waiting page), then go back to the hub: Section 2 still reads "Not started" on the hub and in the sidebar.
+- With three or more answered, press "Compare with how others see you →" and stop at "Before you look" without going on: Section 2 still reads "Not started".
+- Go on to the comparison, so that its card reads "Viewed", and return to the hub: Section 2 reads "In progress" on its hub row, in the sidebar, and in the next-step panel where it names Section 2, before the reflection is written.
+- Write the reflection and finish Section 2: it reads "Complete", as before.
+- The faithful port, with a fresh participant: its sections' statuses are as before.
+
 ### Fix-23: The comparison's row on the hub is one link like the others (rebuild the frontend; phone width too)
 
 - With Section 2 open and fewer than three people answered, hover "How others see you" under Section 2 anywhere on its row, not only the title: the whole row washes pale green, as the Strengths evaluation's row does, and the `→` at its right turns green. Click anywhere on it: it opens the comparison (the waiting page).
