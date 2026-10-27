@@ -1263,7 +1263,7 @@ main > .hub ~ .hub-consent {
 }
 
 /* ✨ A side card's buttons (ticket 65): small pills in a row at their own width, not stretched across the card, so
-   the card grows as little as possible and another button can sit beside Manage, wrapping on a narrow phone. */
+   the card grows as little as possible and another button can sit beside the card's own, wrapping on a narrow phone. */
 .hub-side-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1276,8 +1276,14 @@ main > .hub ~ .hub-consent {
   height: 18px;
 }
 
-/* ✨ The comparison's press beside Manage on the dark Five trusted voices card (ticket 67b): its ring in the card's
-   light text, no fill, so Manage stays the one to press first. */
+/* ✨ The dark Five trusted voices card's "Invite people": the coach card's light pill, but white, not green (ticket 95). */
+.card.dark .hub-side-actions .pill.light {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* ✨ The comparison's press beside "Invite people" on the dark Five trusted voices card (ticket 67b): its ring in the
+   card's light text, no fill, so "Invite people" stays the one to press first. */
 .card.dark .hub-side-actions .pill.ghost {
   background: none;
   color: var(--on-dark);

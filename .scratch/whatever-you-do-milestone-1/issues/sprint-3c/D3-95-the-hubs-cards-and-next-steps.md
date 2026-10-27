@@ -4,7 +4,7 @@
 
 **Blocked by:** 94 (Walk with a coach on one screen, with no email address), D2; 87 (Six sections), A2; 89 (Status pills), B1
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 3c (ends Fri 30 Oct)
 

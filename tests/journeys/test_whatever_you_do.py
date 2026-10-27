@@ -1352,11 +1352,35 @@ COACH_STATES = {
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("coach", COACH_STATES)
-def test_the_coach_card_has_manage_to_the_coach_page_in_every_state_once_unlocked(participant, coach):
+def test_the_coach_cards_button_leads_to_the_coach_page_saying_whether_one_is_chosen(participant, coach):
     client = to_the_coach_page(participant)
     COACH_STATES[coach](client)
 
-    assert button_to(coach_card(client), "Manage") == the_coach_page(client)
+    card = coach_card(client)
+
+    shown, not_shown = ("Choose your coach", "See your coach")
+    if coach != "no coach":
+        shown, not_shown = not_shown, shown
+    assert button_to(card, shown) == the_coach_page(client)
+    assert button_to(card, not_shown) is None
+
+
+@pytest.mark.django_db
+def test_once_the_coach_is_removed_the_coach_cards_button_asks_for_one_again(participant):
+    client = to_the_coach_page(participant)
+    choose(client)
+    step(client, "remove")
+
+    assert button_to(coach_card(client), "Choose your coach") == the_coach_page(client)
+
+
+@pytest.mark.django_db
+def test_the_five_trusted_voices_cards_button_invites_people_on_its_page(participant):
+    client = to_the_coach_page(participant)
+
+    card = side_card(client.get("/hub/").content.decode(), "Five trusted voices")
+
+    assert button_to(card, "Invite people") == CONTACTS_PAGE
 
 
 @pytest.mark.django_db

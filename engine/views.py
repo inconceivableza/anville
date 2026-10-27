@@ -228,11 +228,11 @@ def hub(request):
 
 
 def _hub_comparison(state):
-    """✨ The document's comparison signpost as the hub shows it, in a row and beside Manage on the Five trusted voices
-    card (ticket 67b): its status and press as its section's card has them (`_comparison_signpost_shown`), with its
-    title, the section it is in and the part of that section holding its sort, after which its row is listed, or None
-    where its sort is not in a part of that section, as in *Whatever You Do*'s Section 2, which lists it first (ticket
-    87). None before there is a result, and for a pathway without one."""
+    """✨ The document's comparison signpost as the hub shows it, in a row and beside "Invite people" on the Five trusted
+    voices card (ticket 67b): its status and press as its section's card has them (`_comparison_signpost_shown`), with
+    its title, the section it is in and the part of that section holding its sort, after which its row is listed, or
+    None where its sort is not in a part of that section, as in *Whatever You Do*'s Section 2, which lists it first
+    (ticket 87). None before there is a result, and for a pathway without one."""
     document = state.version.document
     for block in blocks_of(document):
         shown = _comparison_signpost_shown(state, block)
@@ -262,13 +262,14 @@ def _side_cards(hub, coach, coach_section):
 
 
 def _coach_card(hub, coach, coach_section, coach_page):
-    """✨ What the Walk with a coach card adds to a side card's own (ticket 65): {"section", "manage", "line"}, its
-    "Manage" leading to the `coach_page`, None while the card is locked, and its line while a section waits on the
-    `coach` at all, None otherwise."""
+    """✨ What the Walk with a coach card adds to a side card's own (ticket 65): {"section", "page", "chosen", "line"},
+    its button leading to the `coach_page`, None while the card is locked, whether a `coach` is chosen, which its
+    button's words say (ticket 95), and its line while a section waits on the `coach` at all, None otherwise."""
     wait = hub.coach_wait
     return {
         "section": coach_section,
-        "manage": coach_page,
+        "page": coach_page,
+        "chosen": coach is not None,
         "line": wait.line(_answer_of(coach)) if wait is not None else None,
     }
 
