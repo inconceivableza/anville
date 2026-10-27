@@ -1333,6 +1333,18 @@ main > .hub ~ .hub-consent {
 
 /* A section page: the way back, and the completion the participant chooses */
 
+/* ✨ A participant page's one way back, at its top, drawn as a button (ticket 96). A long section title wraps inside it
+   at phone width rather than pushing the page sideways. */
+.way-back {
+  margin-bottom: var(--space-md);
+}
+
+.way-back .pill {
+  max-width: 100%;
+  text-align: left;
+}
+
+/* ✨ The quiet demo-only links (fix-19, fix-21), which kept the look the way back had before ticket 96. */
 .back-to-hub {
   font-size: var(--text-sm);
   margin-bottom: 16px;
