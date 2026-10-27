@@ -2576,6 +2576,14 @@ body:not(.framed) .question-card > p + form {
   color: var(--muted);
 }
 
+/* ✨ The comparison's card is plain until it has been viewed (fix-10): the base signpost's pale fill is itself a light
+   lime, which read as the lime mark of a complete card before anything was done, so this one starts on the paper's
+   white and takes the lime only through .is-complete above. */
+.comparison-signpost:not(.is-complete) {
+  background: var(--paper);
+  border-color: var(--border);
+}
+
 .signpost-line {
   margin-top: 8px;
   font-size: var(--text-xs);
@@ -2974,12 +2982,16 @@ body:not(.framed) .question-card > p + form {
   margin-top: 8px;
 }
 
-/* ✨ A block waiting on the comparison (ticket 68): shown, its controls disabled by the fieldset, and why above it. */
+/* ✨ A block waiting on the comparison (ticket 68): shown, its controls disabled by the fieldset, and why above it.
+   The fieldset is the field's box and the message its header band inside (fix-10), so it reads as part of the field it
+   locks rather than a paragraph between two cards. */
 .waits-on-comparison {
-  border: 0;
-  margin: 0;
-  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 0 0 var(--space-lg);
+  padding: 0 var(--space-lg) var(--space-lg);
   min-width: 0;
+  overflow: hidden;
 }
 
 .waits-on-comparison > :not(.waiting-note) {
@@ -2995,7 +3007,10 @@ body:not(.framed) .question-card > p + form {
 .waiting-note {
   font-size: var(--text-sm);
   color: var(--muted);
-  margin-bottom: 8px;
+  background: var(--gold-pale);
+  margin: 0 calc(-1 * var(--space-lg)) var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
+  border-bottom: 1px solid var(--border);
 }
 
 /* Form panel: the prototype's .name-section, used by the account pages' forms. The fields inside are
@@ -3415,26 +3430,11 @@ html[data-javascript="loaded"] .invitation-copy {
   margin: var(--space-xl) 0 var(--space-lg);
 }
 
-/* ✨ The results as the end of their section (ticket 88): its finish, then the outline button beside it, wrapping
-   one under the other at phone width; how many more are needed sits under the invitation. */
+/* ✨ The results as the end of their section (ticket 88): its finish, alone (fix-10 took the comparison's press and
+   the invitation off the page). */
 .results-finish {
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
-  align-items: flex-start;
-  gap: var(--space-md);
-}
-
-.results-invite {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-xs);
-}
-
-.results-invite-phrase {
-  font-size: var(--text-xs);
-  color: var(--muted);
 }
 
 /* ✨ The press on to a comparison while too few have answered (fix-8): grey as a disabled button is, but a span, not a
@@ -3458,15 +3458,6 @@ html[data-javascript="loaded"] .invitation-copy {
   align-items: center;
   gap: var(--space-sm) var(--space-md);
   margin-top: var(--space-md);
-}
-
-/* ✨ The invitation beside the results page's finish and comparison buttons (fix-8): text, underlined, quieter than they. */
-.invite-link {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: inherit;
-  text-decoration: underline;
-  padding: var(--space-sm) var(--space-xs);
 }
 
 /* ✨ The comparison: per construct, a "You" bar above an "Others" bar in --blue-soft, as the prototype's comparison

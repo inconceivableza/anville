@@ -122,8 +122,9 @@ def test_a_part_with_more_of_its_section_after_it_offers_no_finish_as_in_the_fai
 
 
 def sections_and_comparison(page):
-    """✨ Where the results page's two buttons lead (fix-8): Five trusted voices' page, and the press on to the
-    comparison, which is a form posting to the visit, or else greyed with `aria-disabled` and no form or link."""
+    """✨ Where a page's two buttons lead (fix-8; the signpost's alone since fix-10): Five trusted voices' page, and
+    the press on to the comparison, which is a form posting to the visit, or else greyed with `aria-disabled` and
+    no form or link."""
     return ("/sections/trusted-voices/" in page, 'action="/results/strengths-sort/comparison/visit/"' in page)
 
 
@@ -134,40 +135,35 @@ def the_third_person_answers(participant):
 
 
 @pytest.mark.django_db
-def test_below_the_minimum_the_compare_button_has_no_link_and_the_invite_button_leads_to_five_trusted_voices(
-    participant,
-):
+def test_the_results_ending_a_section_offer_only_its_finish_below_the_minimum_and_from_it(participant):
+    """✨ fix-10: the comparison and the invitation are the Section 2 card's, not the results page's (fix-8's two
+    buttons there are gone)."""
     people_answer(participant, count=2)
-
-    page = results_page(participant)
-
-    assert sections_and_comparison(page) == (True, False)
-    assert 'aria-disabled="true"' in page
-
-
-@pytest.mark.django_db
-def test_from_the_minimum_the_compare_button_leads_to_the_comparison_and_the_invite_button_stays(participant):
-    people_answer(participant, count=2)
+    below = results_page(participant)
     the_third_person_answers(participant)
+    above = results_page(participant)
 
-    page = results_page(participant)
-
-    assert sections_and_comparison(page) == (True, True)
-    assert 'aria-disabled="true"' not in page
+    for page in (below, above):
+        assert sections_and_comparison(page) == (False, False)
+        assert 'aria-disabled="true"' not in page
+        assert FINISH_SECTION_1 in page
 
 
 @pytest.mark.django_db
-def test_the_section_2_signpost_shows_the_same_two_buttons_before_and_after_the_minimum(participant):
-    """✨ fix-8: the comparison signpost greys its press below the minimum, beside the invitation, as the results do."""
+def test_the_section_2_signpost_puts_the_invitation_left_of_the_press_before_and_after_the_minimum(participant):
+    """✨ fix-8's two buttons on the comparison signpost, in fix-10's order: the invitation, then the press (greyed
+    below the minimum)."""
     complete(participant, "designed")
     people_answer(participant, count=2)
 
     below = main_of(participant.get("/sections/others/").content.decode())
     assert sections_and_comparison(below) == (True, False)
     assert 'aria-disabled="true"' in below
+    assert below.index("/sections/trusted-voices/") < below.index('aria-disabled="true"')
 
     the_third_person_answers(participant)
 
     above = main_of(participant.get("/sections/others/").content.decode())
     assert sections_and_comparison(above) == (True, True)
     assert 'aria-disabled="true"' not in above
+    assert above.index("/sections/trusted-voices/") < above.index('action="/results/strengths-sort/comparison/visit/"')

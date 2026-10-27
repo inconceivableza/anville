@@ -529,12 +529,12 @@ The homepage (`/`):
 
 Rebuild the frontend. No need to load the pathway again: a participant started on ticket 87's version will do.
 
-- *Whatever You Do*, the sort in and Section 1 not yet finished: below the results, centred, a green "I've finished Section 1" and beside it a grey "Compare with how others see you →" that cannot be pressed, and an underlined "Invite people who know you →" with "3 more needed" in small grey under it (fix-8). Pressing "I've finished Section 1" lands on the hub, with Section 1 "Complete". Section 1's own page still has its "I've finished Section 1".
-- Back on the results page: no green button below the results, only the comparison and invitation ones; the way back is the button at the top (ticket 96).
-- Give three people links: the phrase under "Invite people who know you →" reads "0 of 3 answered", then "2 of 3 answered" once two have answered (their links in private windows). The button opens Five trusted voices.
-- With three answered: the outline "Compare with how others see you →" is no longer grey and opens "Before you look" as before; "Invite people who know you →" stays, with no phrase.
-- With JavaScript turned off, every one of these buttons works the same.
-- Phone width: the buttons sit one under the other, centred, with no sideways scroll.
+- *Whatever You Do*, the sort in and Section 1 not yet finished: below the results, centred, a green "I've finished Section 1" alone (fix-10 took the comparison and invitation buttons off the page; they are Section 2's card's). Pressing "I've finished Section 1" lands on the hub, with Section 1 "Complete". Section 1's own page still has its "I've finished Section 1".
+- Back on the results page: no button below the results; the way back is the button at the top (ticket 96).
+- Give three people links: the phrase under "Invite people who know you →" on Section 2's card reads "0 of 3 answered", then "2 of 3 answered" once two have answered (their links in private windows). The button opens Five trusted voices.
+- With three answered: Section 2's "Compare with how others see you →" is no longer grey and opens "Before you look" as before; "Invite people who know you →" stays, with no phrase.
+- With JavaScript turned off, the finish button works the same.
+- Phone width: the finish button is centred, with no sideways scroll.
 
 ### Fix-3: The comparison's other buttons below the minimum
 
@@ -547,15 +547,25 @@ Rebuild the frontend. No need to load the pathway again.
 - With JavaScript turned off, each works the same.
 - The faithful port: the results page keeps its single green "Compare with how others see you →", and Section 1 is finished from its own page.
 
-### Fix-8: The comparison's two buttons, on Section 2's card and the results page
+### Fix-8: The comparison's two buttons, on Section 2's card
+
+Changed by fix-10 (below): the results page no longer has either button, and the card's order is swapped.
 
 Rebuild the frontend. No need to load the pathway again.
 
-- *Whatever You Do*, the sort in, Section 1 finished, fewer than three answered: Section 2's "How others see you" card shows a grey "Compare with how others see you →" and beside it an outlined "Invite people who know you →", with "3 more needed" (or "2 of 3 answered") as the status under them. Pressing the grey one does nothing, and Tab skips it; the other opens Five trusted voices.
-- The results page, with Section 1 not yet finished, shows its green "I've finished Section 1", a grey "Compare with how others see you →" and an underlined "Invite people who know you →" with the same phrase under it.
-- With three answered: on both, "Compare with how others see you →" is no longer grey (green on the card, outlined on the results page) and opens "Before you look" as before; "Invite people who know you →" is still there, quieter than it, with no phrase on the results page and "Ready to view" on the card.
+- *Whatever You Do*, the sort in, Section 1 finished, fewer than three answered: Section 2's "How others see you" card shows an outlined "Invite people who know you →" on the left and a grey "Compare with how others see you →" on the right, with "3 more needed" (or "2 of 3 answered") as the status under them. Pressing the grey one does nothing, and Tab skips it; the other opens Five trusted voices.
+- With three answered: "Compare with how others see you →" is no longer grey (green) and opens "Before you look" as before; "Invite people who know you →" is still there, quieter than it, with "Ready to view" as the status.
 - Phone width: the two buttons wrap one under the other with no sideways scroll. With JavaScript turned off, both work the same. A screen reader reads the grey one as a link that is dimmed.
 - The faithful port is unchanged: its results page keeps one green "Compare with how others see you →".
+
+### Fix-10: The results page finishes alone, the card's buttons swap, and the locked field is boxed
+
+Rebuild the frontend. No need to load the pathway again.
+
+- *Whatever You Do*, the sort in, Section 1 not yet finished: the results page has only "I've finished Section 1" below the results, with no "Compare with how others see you →", no "Invite people who know you →" and no count phrase. The back button at the top is still there. Phone width too.
+- Section 2, fewer than three answered, the comparison not yet viewed: the "How others see you" card is on a plain cream fill with a grey edge, not lime. It shows "Invite people who know you →" on the left, the grey "Compare with how others see you →" on the right and "3 more needed" beneath.
+- Have three answer, press "Compare with how others see you →" and confirm: back on Section 2 the card turns lime. Before the press, "Ready to view" leaves it plain.
+- Section 2's reflection, comparison not yet viewed: "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer." is a pale band at the top of the field's own bordered box, with the faded field beneath it inside the same box, not a loose line between the card above and the field below. Once the comparison is viewed, the box and band are gone and the field is as before. Phone width: the box fits with no sideways scroll.
 
 ## The comparison (the results page's "Compare with how others see you →")
 
@@ -798,7 +808,7 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 
 ## Section 2's reflection waits for the comparison (ticket 68, Section 1's until ticket 87; rebuild the frontend and load both pathways again, then start a new participant)
 
-- Section 2, with the sort in and Section 1 finished: the reflection's box shows, faded, with "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer." above it. Nothing can be typed in it, and its "Save" (without JavaScript) cannot be pressed.
+- Section 2, with the sort in and Section 1 finished: the reflection's box shows, faded, with "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer." as a band at the top of the same bordered box (fix-10). Nothing can be typed in it, and its "Save" (without JavaScript) cannot be pressed.
 - Choose a coach and give three people links: the hub's next step is Section 3, not Section 2. Mark Section 3 finished: the next step reads "Waiting on answers" / "Section 2's reflection opens once at least 3 of the people you invited have answered and you've seen how others see you.", with a button to Section 2.
 - Have two people answer (their links in private windows), then press "Compare with how others see you →" on Section 2's card: the explanation shows, and the reflection is still faded. Have a third answer and press it again, confirming: back on Section 2 the reflection can be written, and saves. The hub's next step is Section 2 again, under its title "How others see you".
 - Have one of the three withdraw (collection unfreezes): the reflection still saves.
