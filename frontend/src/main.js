@@ -121,7 +121,7 @@ document.addEventListener("keydown", (event) => {
 // ✨ The top bar stays in view (ticket 91), so a jump to a place on the page would land under it. Keep its height in
 // --top-bar-height, which the stylesheet adds to the page's scroll padding; it changes with the demo strip, the phone's
 // width and a long title wrapping. Without JavaScript the stylesheet's fallback height stands.
-const topBar = document.querySelector(".top-bar, .hero > .nav");
+const topBar = document.querySelector(".top-bar");
 if (topBar) {
   const keepHeight = () => document.documentElement.style.setProperty("--top-bar-height", `${topBar.offsetHeight}px`);
   keepHeight();

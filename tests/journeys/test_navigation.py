@@ -180,6 +180,18 @@ def test_the_demo_strip_and_the_header_share_one_top_bar_so_they_stay_in_view_to
 
 
 @pytest.mark.django_db
+def test_the_account_pages_carry_the_top_bar_and_logo_signed_in_only(under_way, client):
+    """✨ Fix-5: the sign-out page, which does not extend the engine's base, draws the logo and the same bar."""
+    signed_in = under_way.get("/accounts/logout/").content.decode()
+    assert '<div class="top-bar">' in signed_in
+    assert '<symbol id="logo"' in signed_in
+    assert '<use href="#logo"' in signed_in
+
+    signed_out = client.get("/accounts/login/").content.decode()
+    assert 'class="top-bar"' not in signed_out
+
+
+@pytest.mark.django_db
 def test_with_the_sidebar_switched_off_the_header_and_sign_out_remain(under_way, settings):
     settings.ANVILLE_SIDEBAR = False
 

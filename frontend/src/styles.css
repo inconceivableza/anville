@@ -244,15 +244,17 @@ body {
    "Your pathway" and "Sign out" are always to hand. Its height is kept in --top-bar-height by main.js (the fallback
    stands without JavaScript), and the page's scroll padding adds it, so a jump to a place on the page lands below the
    bar. The open sidebar hangs from the header inside it, so it is held in view too. */
-html {
-  scroll-padding-top: calc(var(--top-bar-height, 4.5rem) + var(--space-md));
+html:has(.top-bar) {
+  scroll-padding-top: calc(var(--top-bar-height, 3.5rem) + var(--space-md));
 }
 
+/* ✨ The bar is --cream-2, a shade off the page's --cream, so a heading half hidden under it reads as passing beneath
+   a bar and not as a broken element (fix-5). */
 .top-bar {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: var(--cream);
+  background: var(--cream-2);
 }
 
 /* ✨ The logo: the "/whateveryoudo" wordmark, in the colour of the text it sits in. Its height is set here and the
@@ -621,11 +623,6 @@ main.container:has(> .ob) {
   cursor: pointer;
 }
 
-.ob-mark {
-  width: 28px;
-  height: 28px;
-}
-
 .prog {
   display: flex;
   align-items: center;
@@ -818,11 +815,6 @@ main.container:has(> .ob) {
     font-size: 10px;
   }
 
-  .ob-mark {
-    width: 24px;
-    height: 24px;
-  }
-
   .ob-main {
     padding: var(--space-lg) var(--space-md) var(--space-xl);
   }
@@ -971,7 +963,7 @@ body.framed > .top-bar > .demo-strip {
 }
 
 body.framed > .top-bar > .site-header {
-  background: var(--cream);
+  background: var(--cream-2);
   border-radius: var(--radius-panel) var(--radius-panel) 0 0;
 }
 
@@ -1507,7 +1499,7 @@ main > .hub ~ .hub-consent {
   display: flex;
   flex-wrap: nowrap;
   justify-content: space-between;
-  padding-block: var(--space-md);
+  padding-block: var(--space-sm);
 }
 
 /* ✨ At phone width the logo, "Your pathway" and "Sign out" keep to one row (ticket 91) */
@@ -4218,13 +4210,11 @@ body > svg[aria-hidden="true"] {
   opacity: 1;
 }
 
-/* ✨ The homepage's top bar (ticket 91): the logo alone, held at the top of the window as the page scrolls. It is
-   brown, so the logo reads over the video and over the lighter parts of the page below it alike. */
+/* ✨ The homepage's nav (ticket 91, fix-5): the new logo alone, centred where the old mark and name sat, over the
+   hero's video and scrolling away with it. It is not fixed; only the signed-in pages' top bar is. */
 .hero > .nav {
-  position: fixed;
   display: flex;
-  padding-block: var(--space-md);
-  background: var(--brown);
+  justify-content: center;
 }
 
 /* ---------- HERO ---------- */
@@ -4501,9 +4491,7 @@ body > svg[aria-hidden="true"] {
   font-size: 13.5px;
 }
 
-.mission .sign svg {
-  width: 30px;
-  height: 30px;
+.mission .sign .brand-logo {
   color: var(--ink);
 }
 

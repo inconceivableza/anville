@@ -35,7 +35,7 @@
           <span class="label">Step {{ step.number }} of {{ step.count }}</span>
           <span class="bar" aria-hidden="true">{% for each in steps %}<i{% if each <= step.number %} class="on"{% endif %}></i>{% endfor %}</span>
         </div>
-        <svg class="ob-mark" aria-hidden="true"><use href="#mark"/></svg>
+        {% include "engine/logo.html" %}
       </header>
 
       <div class="ob-main">
