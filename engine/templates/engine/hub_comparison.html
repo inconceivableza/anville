@@ -9,7 +9,8 @@
   to invite people (fix-16, in place of fix-3's link to Five trusted voices): opening it records nothing, so being
   loaded ahead of time does no harm, and the tag is the card's phrase (fix-3). While `holder`, the section it is listed
   in, is locked, the comparison is shut with it (fix-19): the row shows that section's "Locked" button and lock note,
-  and leads nowhere.
+  and leads nowhere. An open row is one control like the other rows (fix-23): its link or its press is stretched over
+  the row in CSS, with a hover wash and the arrow at its right; a locked row has no arrow.
 {% endcomment %}
 <li class="hub-section srow hub-part hub-comparison{% if holder.is_locked %} locked{% endif %}">
   <div class="srow-body">
@@ -26,4 +27,5 @@
   {% else %}
     <span class="tag status-{% if comparison.invite.waiting %}waiting{% else %}{{ comparison.status }}{% endif %}">{{ comparison.label }}</span>
   {% endif %}
+  {% if not holder.is_locked %}<span class="srow-arrow" aria-hidden="true">&rarr;</span>{% endif %}
 </li>

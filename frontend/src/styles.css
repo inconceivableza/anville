@@ -1334,13 +1334,17 @@ main > .hub ~ .hub-consent {
   position: relative;
 }
 
-.srow h3 a.hub-section-title::after {
+/* ✨ The comparison's row (fix-23) is the same, its title being the press: a form's button, stretched as the link is
+   (the form, the heading and the button are not positioned, so the stretch reaches the row), and the link below the
+   minimum. While its section is locked its title is neither, so it has no stretch, wash or arrow. */
+.srow h3 a.hub-section-title::after,
+.srow h3 button.hub-section-title::after {
   content: "";
   position: absolute;
   inset: 0;
 }
 
-.srow:has(> .srow-body > h3 > a.hub-section-title):hover:not(:has(.hub-parts:hover)) {
+.srow:has(> .srow-body :is(h3 > a, h3 > button).hub-section-title):hover:not(:has(.hub-parts:hover)) {
   background: var(--gold-pale);
 }
 
@@ -1353,7 +1357,7 @@ main > .hub ~ .hub-consent {
   color: var(--muted);
 }
 
-.srow:has(> .srow-body > h3 > a.hub-section-title):hover:not(:has(.hub-parts:hover)) > .srow-arrow {
+.srow:has(> .srow-body :is(h3 > a, h3 > button).hub-section-title):hover:not(:has(.hub-parts:hover)) > .srow-arrow {
   color: var(--green-deep);
 }
 

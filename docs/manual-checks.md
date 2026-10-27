@@ -587,6 +587,14 @@ No rebuild and no pathway reload needed.
 - The dark card's light equivalent: if the coach card shows dark anywhere, its "Declined" is a dimmer light text and outline than "Not started" has.
 - At phone width the button at the comparison's end fits with no sideways scroll.
 
+### Fix-23: The comparison's row on the hub is one link like the others (rebuild the frontend; phone width too)
+
+- With Section 2 open and fewer than three people answered, hover "How others see you" under Section 2 anywhere on its row, not only the title: the whole row washes pale green, as the Strengths evaluation's row does, and the `→` at its right turns green. Click anywhere on it: it opens the comparison (the waiting page).
+- With three or more answered the same: the wash and the arrow, and a click anywhere on the row presses "How others see you", as before (the warning before collection freezes shows if it should, and the comparison opens; "Viewed" then shows).
+- Tab through the hub: the comparison's row takes one stop, the link or the press, with the focus ring on the title; a screen reader reads one control, the title (the arrow is not read).
+- Hovering a part's row, or Section 2's own row, washes only that row.
+- While Section 2 is locked, the comparison's row has no link, no wash and no arrow; its "Locked" button still shows its note on hover or focus.
+
 ### Fix-22: The comparison's press pills drift toward the pointer (no rebuild needed; a fine pointer, not touch)
 
 - On the hub, move the pointer over the Five trusted voices card's "How others see you →" (with three or more answered) and the pill drifts toward it and its arrow a little further, as "Invite people" does; moving off, it settles back.
@@ -998,7 +1006,7 @@ Walked at a wide screen on 22 Oct 2026, with staging on `56924e5`; each passed, 
 - A complete section's signpost inside a section (Section 1's Strengths evaluation card once the sort is in) has a lime edge and a light lime tint, not the deep green.
 - So does Section 2's "How others see you" card once its status reads "Viewed" (fix-9), and not before: "2 of 3 answered" and "Ready to view" keep the gold card. An observer withdrawing after "Viewed" leaves it lime.
 - On the hub every row's pill ends at the same right edge: the sections' pills, and the pills beside "Strengths evaluation" under "How you've been designed", beside "How others see you", and "Locked" on a locked row, are all in one line down the page. Check at phone width too, where the titles narrow but the pills still line up.
-- An open hub row is one link: hover it anywhere (not only its title) for a pale green wash and its arrow turning green, and a click anywhere on it leads to its section. A part's row within a section is its own link, and hovering it washes only it, not its section. Tab through the hub: each open row takes one stop. A locked row has no link and no arrow; its "Locked" button still shows its note on hover or focus. Tapping a locked row opens nothing.
+- An open hub row is one link: hover it anywhere (not only its title) for a pale green wash and its arrow turning green, and a click anywhere on it leads to its section. A part's row within a section is its own link, and hovering it washes only it, not its section. Tab through the hub: each open row takes one stop. A locked row has no link and no arrow; its "Locked" button still shows its note on hover or focus. Tapping a locked row opens nothing. The comparison's row ("How others see you") is one too, from fix-23 (see Fix-23 above).
 
 ### Fix-12: Locked pills' grey (rebuild the frontend; load the pathway again and use a participant started after that; phone width too)
 

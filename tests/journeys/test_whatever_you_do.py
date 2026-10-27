@@ -807,6 +807,10 @@ def test_the_comparisons_row_is_listed_under_section_2_and_locked_with_it(partic
         row, section_2 = comparison_row(html, kind)
         assert row in section_2
         assert "Locked" not in row and COMPARISON_LINK.search(row)
+        # ✨ Fix-23: one control, the link or the press, and the arrow at the right like the other open rows
+        if kind == "hub":
+            assert 'class="srow-arrow"' in row
+            assert len(re.findall(r"<a |<button", row)) == 1
 
 
 @pytest.mark.django_db
