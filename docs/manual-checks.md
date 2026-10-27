@@ -829,7 +829,7 @@ Reload the page for the rebuilt frontend; no new participant is needed.
 
 - At a wide screen, "Your pathway" opens a panel down the right-hand side of the page, under the header, its right edge at the header's, all inside the window.
 - Every entry has its status above its title, in small capitals on a grey pill, short titles and long ones alike; "How others see you" fits on one line.
-- The next step's entry has a pale green background and a green status pill, as the hub's next step has a green tag; the page you are on has a deep green edge.
+- The next step's entry has a pale green background; its status pill is green only if it is under way, as the hub's, and "Not started" stays grey with its black outline (fix-6); the page you are on has a deep green edge.
 - Beside the hub, the panel lists the same entries in the same order with the same statuses and locks: the sections, the Strengths evaluation within Section 1, then, below a rule and each as a small outlined card, Walk with a coach and Five trusted voices, Five trusted voices with its card's tag ("2 more needed", "Links issued" …).
 - Once the sort is in, "How others see you" is listed within Section 2 (ticket 87), with the hub row's status ("0 of 3 answered"). Pressing it does what the hub's row does: with the minimum in and not yet confirmed, it asks before collection freezes.
 - Regression: the links below read as before: "Your results" and "How others experience you" once the sort is in, "Invite others to assess you", and "Your coach".
@@ -902,11 +902,19 @@ Walked at a wide screen on 22 Oct 2026, with staging on `56924e5`; each passed, 
 
 ### Ticket 89: Status pills (load the pathway again, and use a participant started after that; both pathways; at phone width too)
 
-- The hub: "Not started" rows show a black outline with no fill, "Complete" rows a filled deep green pill, "In progress" the grey it had (green when it is the next step), and "Locked" the grey, in the same place at the right of its row as the others, so the pills' right edges line up.
-- The side cards (Five trusted voices, Walk with a coach) use the same looks for the same states; on the dark Five trusted voices card the outline is light.
+- The hub: "Not started" rows show the grey with a black outline (fix-6: even as the next step, never green), "Complete" rows a lime pill (fix-6: not deep green), "In progress" the grey it had (green when it is the next step), and "Locked" the grey, in the same place at the right of its row as the others, so the pills' right edges line up (see Fix-6 for the parts' rows).
+- The side cards (Five trusted voices, Walk with a coach) use the same looks for the same states; on the dark Five trusted voices card the outline and the grey are light.
 - The sidebar's chips read the same, above each title.
-- Inside Section 1: the Strengths evaluation card shows no pill, before the sort or after; once the sort is in it is tinted green, with its finished line and "View my results →". Section 2's "How others see you" card shows its status as plain small text, not a pill.
+- Inside Section 1: the Strengths evaluation card shows no pill, before the sort or after; once the sort is in it is edged in lime with a light lime tint (fix-6), with its finished line and "View my results →". Section 2's "How others see you" card shows its status as plain small text, not a pill.
 - Nothing inside any section carries a pill. At phone width, no pill overflows its row or the card.
+
+### Fix-6: Status pills' colours, the pills' right edge and the hub's rows as links (rebuild the frontend; load the pathway again and use a participant started after that; phone width too)
+
+- "Not started" is the grey with a black outline wherever it shows: the hub's rows (also when it is the next step, where it was green), the side cards, the sidebar's chips (also on the next step's entry). On the dark Five trusted voices card it is a pale fill with a light outline.
+- "Complete" is lime (the green of the "next step" tag, dark text), not the deep green, on the hub's rows, the side cards and the sidebar's chips.
+- A complete section's signpost inside a section (Section 1's Strengths evaluation card once the sort is in) has a lime edge and a light lime tint, not the deep green.
+- On the hub every row's pill ends at the same right edge: the sections' pills, and the pills beside "Strengths evaluation" under "How you've been designed", beside "How others see you", and "Locked" on a locked row, are all in one line down the page. Check at phone width too, where the titles narrow but the pills still line up.
+- An open hub row is one link: hover it anywhere (not only its title) for a pale green wash and its arrow turning green, and a click anywhere on it leads to its section. A part's row within a section is its own link, and hovering it washes only it, not its section. Tab through the hub: each open row takes one stop. A locked row has no link and no arrow; its "Locked" button still shows its note on hover or focus. Tapping a locked row opens nothing.
 
 ### Ticket 90: Even line lengths (rebuild the frontend first; a current Chrome, Edge, Safari or Firefox; phone width too; no pathway reload needed)
 

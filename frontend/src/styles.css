@@ -167,6 +167,7 @@
   --warm-pale-08: rgba(255, 245, 230, 0.08);
   --track-on-dark: rgba(255, 240, 220, 0.15);
   --green-45: rgba(166, 207, 114, 0.45);
+  --green-15: rgba(166, 207, 114, 0.15);
   --green-deep-10: rgba(47, 90, 43, 0.1);
   --green-deep-12: rgba(47, 90, 43, 0.12);
   --green-forest: #27432a;
@@ -359,20 +360,21 @@ html {
   color: var(--green-ink);
 }
 
-/* ✨ Each state is plain at a glance on the sidebar's chips and the hub's tags alike (ticket 89): not started is a
-   black outline, complete is filled green, and the others keep the grey (or the next step's green). The outline is
-   drawn inside the pill so it stays the size of the rest. */
+/* ✨ Each state is plain at a glance on the sidebar's chips and the hub's tags alike (ticket 89, corrected by fix-6):
+   not started is the grey with a black outline, even as the next step, never green; complete is lime (--green with
+   its ink), not the deep green, which read as a different state; the others keep the grey (or the next step's
+   green). The outline is drawn inside the pill so it stays the size of the rest. */
 .pathway-nav-row .status-chip.status-not-started,
 .pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-not-started {
-  background: transparent;
+  background: var(--cream-2);
   box-shadow: inset 0 0 0 1px var(--ink);
   color: var(--ink);
 }
 
 .pathway-nav-row .status-chip.status-complete,
 .pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-complete {
-  background: var(--green-deep);
-  color: var(--paper);
+  background: var(--green);
+  color: var(--green-ink);
 }
 
 /* ✨ In the sidebar a lock note opens in the entry's own row, just below its "Locked", rather than floating, as the
@@ -1137,7 +1139,7 @@ main > .hub ~ .hub-consent {
 
 .srow {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
+  grid-template-columns: 40px minmax(0, 1fr) var(--hub-pill-column, 7.5rem) var(--hub-arrow-column, 1rem);
   gap: var(--space-md);
   align-items: start;
   padding: var(--space-lg) var(--space-2xs);
@@ -1202,13 +1204,19 @@ main > .hub ~ .hub-consent {
   list-style: none;
   margin-top: var(--space-sm);
   padding-left: var(--space-lg);
+  /* ✨ Out to the section's right edge, so a part's pill ends where its section's does (fix-6) */
+  margin-right: calc(-1 * (var(--hub-pill-column) + var(--hub-arrow-column) + 2 * var(--space-md)));
 }
 
 .hub-parts .srow {
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-sm);
+  grid-template-columns: minmax(0, 1fr) var(--hub-pill-column) var(--hub-arrow-column);
+  gap: var(--space-sm) var(--space-md);
   padding: var(--space-md) var(--space-2xs);
   border-top: 1px solid var(--cream-2);
+}
+
+.hub-parts .srow > .srow-arrow {
+  grid-column: 3;
 }
 
 .hub-parts .hub-part:first-child {
@@ -1251,26 +1259,72 @@ main > .hub ~ .hub-consent {
   color: var(--green-ink);
 }
 
+/* ✨ Not started keeps the grey with 89's black outline, even as the next step (this rule comes after `.up-next`'s and
+   is as specific, so it wins); on the dark card its light equivalent. Complete is lime (fix-6). */
 .tag.status-not-started {
-  background: transparent;
+  background: var(--cream-2);
   box-shadow: inset 0 0 0 1px var(--ink);
   color: var(--ink);
 }
 
 .card.dark .tag.status-not-started {
+  background: var(--on-dark-12);
   box-shadow: inset 0 0 0 1px var(--on-dark);
   color: var(--on-dark);
 }
 
 .tag.status-complete {
-  background: var(--green-deep);
-  color: var(--paper);
+  background: var(--green);
+  color: var(--green-ink);
 }
 
-/* ✨ A tag sits at its row's right edge, so the rows' pills line up whatever their words (ticket 89) */
+/* ✨ Every row's pill ends at the same right edge (ticket 89, fix-6). A row's pill column is one fixed width, so a
+   part's row, which sits within its section's body, is drawn out to the section's right edge by `.hub-parts`'s negative
+   margin (the pill's column, the arrow's, and their two gaps) and its pill ends where its section's does. The arrow's
+   column is kept on a locked row too, where it is empty, so a locked pill ends there as well. */
+.slist {
+  --hub-pill-column: 7.5rem;
+  --hub-arrow-column: 1rem;
+}
+
 .srow > .tag,
 .srow > .lock {
   justify-self: end;
+}
+
+/* ✨ An open row is one link (fix-6): its title's link is stretched over the row, so the whole row is clickable, with
+   a hover state and a small arrow at its right. The title stays the only link (the arrow is decoration), and a locked
+   row has none, holding the "Locked" button instead. A part's row is above its section's stretched link, so its own
+   link is what its area reaches. */
+.srow {
+  position: relative;
+}
+
+.hub-parts {
+  position: relative;
+}
+
+.srow h3 a.hub-section-title::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.srow:has(> .srow-body > h3 > a.hub-section-title):hover:not(:has(.hub-parts:hover)) {
+  background: var(--gold-pale);
+}
+
+.srow-arrow {
+  grid-column: 4;
+  align-self: start;
+  justify-self: end;
+  font-size: var(--text-md);
+  line-height: 1.2;
+  color: var(--muted);
+}
+
+.srow:has(> .srow-body > h3 > a.hub-section-title):hover:not(:has(.hub-parts:hover)) > .srow-arrow {
+  color: var(--green-deep);
 }
 
 /* ✨ A locked section's "Locked" is a small button holding its pill, drawn as the pill alone, whose lock note shows
@@ -2515,11 +2569,12 @@ body:not(.framed) .question-card > p + form {
   margin-bottom: 8px;
 }
 
-/* ✨ A signpost carries no status pill (ticket 89): a complete section's card is marked green, a locked one is quiet,
-   and the comparison's status is a plain line. */
+/* ✨ A signpost carries no status pill (ticket 89): a complete section's card is marked lime (fix-6: the pill's lime,
+   its edge and a light tint of it, not the deep green), a locked one is quiet, and the comparison's status is a plain
+   line. */
 .signpost.is-complete {
-  background: var(--green-deep-10);
-  border-color: var(--green-deep);
+  background: var(--green-15);
+  border-color: var(--green);
 }
 
 .signpost.is-locked {
