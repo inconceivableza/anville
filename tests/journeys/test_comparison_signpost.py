@@ -51,7 +51,7 @@ def participant(signed_in_client, load_pathway):  # noqa: F811
 def card(client):
     """✨ The card's markup on its section's page, or None when the page shows none."""
     page = client.get("/sections/calling/").content.decode()
-    found = re.search(rf'<div id="block-{CARD}".*?status-chip.*?</div>', page, re.S)
+    found = re.search(rf'<div id="block-{CARD}".*?signpost-line.*?</div>', page, re.S)
     return found.group(0) if found else None
 
 

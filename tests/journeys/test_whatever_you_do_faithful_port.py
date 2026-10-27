@@ -503,7 +503,7 @@ def test_after_the_reading_section_1_links_to_the_strengths_assessment_by_the_pr
     assert "you sort and rate your strengths across 36 areas" in page
     assert re.search(rf"{STRENGTHS_LINK}[^>]*>\s*Open Strengths Assessment →\s*</a>", page)
     assert "Sort your strengths into buckets, fine-tune the intensity of each" in page
-    assert "status-chip status-not-started" in page
+    assert "status-chip" not in page
 
 
 # ✨ The prototype's step once the assessment is done, its label and sentence kept as they are (ticket 61).
@@ -570,7 +570,7 @@ def test_the_signpost_in_section_1_shows_how_far_the_strengths_assessment_has_go
     client = through_to_section_1s_activity(participant)
     submit_the_sort(client)
 
-    assert "status-chip status-complete" in main_of(client.get(SECTION_1).content.decode())
+    assert 'class="signpost is-complete"' in main_of(client.get(SECTION_1).content.decode())
 
 
 @pytest.mark.django_db

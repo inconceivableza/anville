@@ -388,17 +388,17 @@ The homepage (`/`):
 
 ## A link to another section (Section 1's Strengths evaluation card)
 
-- The card reads as a way somewhere else: the Strengths evaluation's title, the text, the "Open the strengths evaluation →" button, then its status chip on a line of its own, coloured as on the hub.
+- The card reads as a way somewhere else: the Strengths evaluation's title, the text, the "Open the strengths evaluation →" button, and no status pill after it.
 - In the faithful port, before the sort is in, nothing follows the card: no reflection and no "Mark complete". After the sort, coming back to Section 1 shows the reflection. In *Whatever You Do* the card is the end of Section 1, before its "I've finished Section 1", and the reflection is Section 2's (ticket 87).
 - Keyboard only: Tab reaches the button, its focus is visible, and Enter opens the Strengths evaluation.
 - Screen reader: Tab to the button. It is a link styled as a button, since it goes to another page, so VoiceOver reads "Open the strengths evaluation, right arrow, link" and tells you how to follow it. Control-Option-Right arrow then reads the status.
-- Phone width: the card's text and button wrap, and the status chip stays a small pill the width of its words rather than stretching across the card.
-- Once the sort is in, back on Section 1 the card reads "You've completed the strengths evaluation. You can review your results any time." in place of "Sort your strengths into buckets…", and the button reads "View my results →". Clicking it opens your results page (or, with tie-break pairs still to answer, the next pair), never the assessment's start page. The status chip reads "Complete". Same in both pathways.
+- Phone width: the card's text and button wrap, and no status pill appears (ticket 89).
+- Once the sort is in, back on Section 1 the card reads "You've completed the strengths evaluation. You can review your results any time." in place of "Sort your strengths into buckets…", and the button reads "View my results →". Clicking it opens your results page (or, with tie-break pairs still to answer, the next pair), never the assessment's start page. The card is marked green (a pale green fill and a deep green edge) and shows no pill. Same in both pathways.
 - Phone width: the finished sentence and the "View my results →" button wrap within the card.
 
 ## How others see you (ticket 67a; Section 2's card, above its reflection since ticket 87; after `migrate`, rebuild the frontend and load the pathway again, with a participant started after that)
 
-- Section 2 opens only once Section 1 is finished, which needs the sort. There, the card sits above the reflection, drawn as the Strengths evaluation card is: its title, the "Compare with how others see you →" button, then its status chip on a line of its own.
+- Section 2 opens only once Section 1 is finished, which needs the sort. There, the card sits above the reflection, drawn as the Strengths evaluation card is: its title, the "Compare with how others see you →" button, then its status as a plain line of small grey text, not a pill.
 - With fewer than three observers answered, the chip says how many of three have answered, "2 of 3 answered" with two in (ticket 81). Pressing the button opens "Not enough answers yet", and back on Section 2 the chip still says "2 of 3 answered".
 - With three answered, the chip reads "Ready to view". Pressing the button opens "Before you look", exactly as from the results page; "← Back to results" changes nothing, and back on Section 2 the chip still reads "Ready to view". Confirming opens the comparison, and back on Section 2 the chip reads "Viewed".
 - Typing the comparison's address (`/results/strengths-sort/comparison/`) before pressing anything shows it, but the chip stays "Ready to view".
@@ -871,3 +871,17 @@ Before starting: `curl -s https://anville.vabl.dev/healthz` gives the commit sta
 - **An error page**: `/observe/made-up-token/nothing-here/` shows "Page not found" in the site's styles. Delete the `csrftoken` cookie on sign in (in the console, `document.cookie = "csrftoken=; Max-Age=0; path=/; secure"`), then send the form: "This page was out of date".
 
 Walked at a wide screen on 22 Oct 2026, with staging on `56924e5`; each passed, with findings still to fix. Phone width is still to walk.
+
+### Ticket 89: Status pills (load the pathway again, and use a participant started after that; both pathways; at phone width too)
+
+- The hub: "Not started" rows show a black outline with no fill, "Complete" rows a filled deep green pill, "In progress" the grey it had (green when it is the next step), and "Locked" the grey, in the same place at the right of its row as the others, so the pills' right edges line up.
+- The side cards (Five trusted voices, Walk with a coach) use the same looks for the same states; on the dark Five trusted voices card the outline is light.
+- The sidebar's chips read the same, above each title.
+- Inside Section 1: the Strengths evaluation card shows no pill, before the sort or after; once the sort is in it is tinted green, with its finished line and "View my results →". Section 2's "How others see you" card shows its status as plain small text, not a pill.
+- Nothing inside any section carries a pill. At phone width, no pill overflows its row or the card.
+
+### Ticket 90: Even line lengths (rebuild the frontend first; a current Chrome, Edge, Safari or Firefox; phone width too; no pathway reload needed)
+
+- The homepage, the hub, a section page, the results, the comparison and an observer's page: every heading, lede and short centred line (the hero, "Sort your strengths", the signposts, the demo strip) breaks into lines of near-equal length, never a long line over a short one.
+- Paragraphs never end on a single word; narrow the window to see several widths.
+- In a browser without `text-wrap` (an older one, or the property switched off in the developer tools), the same text wraps as it did before and nothing is cut off or overlapping.
