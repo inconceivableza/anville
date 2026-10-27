@@ -26,5 +26,5 @@
       </ol>
     {% endif %}
   </div>
-  <span class="tag{% if section.is_next %} up-next{% endif %}">{{ section.label }}</span>
+  <span class="tag status-{{ section.status }}{% if section.is_next %} up-next{% endif %}">{{ section.label }}</span>
 </li>

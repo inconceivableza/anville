@@ -327,6 +327,22 @@ body {
   color: var(--green-ink);
 }
 
+/* ✨ Each state is plain at a glance on the sidebar's chips and the hub's tags alike (ticket 89): not started is a
+   black outline, complete is filled green, and the others keep the grey (or the next step's green). The outline is
+   drawn inside the pill so it stays the size of the rest. */
+.pathway-nav-row > .status-chip.status-not-started,
+.pathway-nav-section.is-next > .pathway-nav-row > .status-chip.status-not-started {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--ink);
+  color: var(--ink);
+}
+
+.pathway-nav-row > .status-chip.status-complete,
+.pathway-nav-section.is-next > .pathway-nav-row > .status-chip.status-complete {
+  background: var(--green-deep);
+  color: var(--paper);
+}
+
 /* ✨ The comparison signpost's entry: its title is a button, the hub row's press, drawn as the other titles are */
 .pathway-nav-comparison button.pathway-nav-title {
   padding: 0;
@@ -1152,6 +1168,27 @@ main > .hub ~ .hub-consent {
 .tag.up-next {
   background: var(--green);
   color: var(--green-ink);
+}
+
+.tag.status-not-started {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--ink);
+  color: var(--ink);
+}
+
+.card.dark .tag.status-not-started {
+  box-shadow: inset 0 0 0 1px var(--on-dark);
+  color: var(--on-dark);
+}
+
+.tag.status-complete {
+  background: var(--green-deep);
+  color: var(--paper);
+}
+
+/* ✨ A tag sits at its row's right edge, so the rows' pills line up whatever their words (ticket 89) */
+.srow > .tag {
+  justify-self: end;
 }
 
 .side {
@@ -2301,19 +2338,21 @@ body:not(.framed) .question-card > p + form {
   margin-bottom: 8px;
 }
 
-/* ✨ The linked section's status, drawn as the hub's tag draws it (ticket 53b). */
-.signpost .status-chip {
-  display: inline-block;
-  margin-top: 8px;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: var(--space-2xs) var(--space-sm);
-  border-radius: var(--radius-pill-shape);
-  background: var(--cream-2);
+/* ✨ A signpost carries no status pill (ticket 89): a complete section's card is marked green, a locked one is quiet,
+   and the comparison's status is a plain line. */
+.signpost.is-complete {
+  background: var(--green-deep-10);
+  border-color: var(--green-deep);
+}
+
+.signpost.is-locked {
   color: var(--muted);
-  white-space: nowrap;
+}
+
+.signpost-line {
+  margin-top: 8px;
+  font-size: var(--text-xs);
+  color: var(--muted);
 }
 
 /* ✨ Demo only (fix-24): a demo profile's guide, quiet and closed, below the sort and each pair, so they keep their
