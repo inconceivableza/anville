@@ -587,6 +587,12 @@ No rebuild and no pathway reload needed.
 - The dark card's light equivalent: if the coach card shows dark anywhere, its "Declined" is a dimmer light text and outline than "Not started" has.
 - At phone width the button at the comparison's end fits with no sideways scroll.
 
+### Fix-22: The comparison's press pills drift toward the pointer (no rebuild needed; a fine pointer, not touch)
+
+- On the hub, move the pointer over the Five trusted voices card's "How others see you →" (with three or more answered) and the pill drifts toward it and its arrow a little further, as "Invite people" does; moving off, it settles back.
+- The same on Section 2's comparison card and on the results page's "Compare with how others see you →". With fewer than three answered where invitations are offered, the greyed signpost press stays still.
+- The comparison's row titles on the hub and in the sidebar ("How others see you") stay still.
+
 ### Fix-20: The Walk with a coach pill follows the pill rule (no rebuild needed; phone width too)
 
 - Lime means done, grey text and outline mean locked or waiting, black means open. Walk the Walk with a coach card on the hub and in the sidebar: "Locked" and "Declined" and "Withdrawn" grey; "Not started" black (also after a link is revoked or expires unanswered); "Link issued" (a working link, unanswered, including right after reissuing) grey text and outline on the pale grey; "Accepted" filled lime. Next step or not, the colours are the same.

@@ -28,7 +28,7 @@
   <div class="hub-side-actions">
     <a class="pill light small" data-magnetic href="{% page_url section.id section.page %}">Invite people <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span></a>
     {% if comparison and not comparison.invite.waiting and not comparison.locked %}
-      {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="pill ghost small" press_label=comparison.title press_arrow=True %}
+      {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="pill ghost small" press_label=comparison.title press_arrow=True press_magnetic=True %}
     {% endif %}
   </div>
 </section>

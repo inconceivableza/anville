@@ -20,7 +20,7 @@
       {% if block.comparison.invite %}
         <a class="pill ghost" href="{{ block.comparison.invite.href }}">Invite people who know you →</a>
       {% endif %}
-      {% include "engine/comparison_press.html" with press_sort=block.comparison.sort press_class="pill" press_waiting=block.comparison.invite.waiting %}
+      {% include "engine/comparison_press.html" with press_sort=block.comparison.sort press_class="pill" press_waiting=block.comparison.invite.waiting press_magnetic=True %}
     </div>
     <p class="signpost-line">{{ block.comparison.label }}</p>
   </div>

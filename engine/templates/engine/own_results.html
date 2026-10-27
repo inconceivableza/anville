@@ -30,6 +30,6 @@
     {% if not finish.done %}<div id="gate-refusal"></div>{% endif %}
   {% else %}
     {% comment %}✨ A form, not a link: pressing it is the visit Section 1 waits on, and a browser never loads a POST ahead of time.{% endcomment %}
-    {% include "engine/comparison_press.html" with press_sort=drawn.block_id press_class="pill" press_form_class="results-next" %}
+    {% include "engine/comparison_press.html" with press_sort=drawn.block_id press_class="pill" press_form_class="results-next" press_magnetic=True %}
   {% endif %}
 </div>

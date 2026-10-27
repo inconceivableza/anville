@@ -9,13 +9,15 @@
   `press_arrow`, for a pill's arrow; and `press_waiting` (fix-8), while too few have answered where the pathway has a
   way to invite people beside it: then the press is greyed and cannot be followed, a span with no form or link, marked
   `aria-disabled`, not a disabled button, so a screen reader still reads it as the button it will be. The comparison
-  page's own refusal stands behind it. Named apart from the page's own context, which an include still sees.
+  page's own refusal stands behind it. `press_magnetic` (fix-22), where the press is drawn as a pill: it carries
+  `data-magnetic`, as the other pill buttons do, so it drifts toward the pointer (main.js's handler finds a button
+  as it does a link); never for a heading or a hub row's title, nor the greyed span. Named apart from the page's own context, which an include still sees.
 {% endcomment %}
 {% if press_waiting %}
 <span class="{{ press_class }} is-waiting" role="link" aria-disabled="true">{% if press_label %}{{ press_label }}{% else %}Compare with how others see you →{% endif %}</span>
 {% else %}
 <form{% if press_form_class %} class="{{ press_form_class }}"{% endif %} method="post" action="{% url 'visit_comparison' press_sort %}">
   {% csrf_token %}
-  {% if press_in_heading %}<h3>{% endif %}<button type="submit" class="{{ press_class }}">{% if press_label %}{{ press_label }}{% else %}Compare with how others see you →{% endif %}{% if press_arrow %} <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span>{% endif %}</button>{% if press_in_heading %}</h3>{% endif %}
+  {% if press_in_heading %}<h3>{% endif %}<button type="submit" class="{{ press_class }}"{% if press_magnetic %} data-magnetic{% endif %}>{% if press_label %}{{ press_label }}{% else %}Compare with how others see you →{% endif %}{% if press_arrow %} <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span>{% endif %}</button>{% if press_in_heading %}</h3>{% endif %}
 </form>
 {% endif %}
