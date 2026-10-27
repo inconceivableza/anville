@@ -5,14 +5,14 @@
   or first where no part of it holds the sort (ticket 87), with the status its section's card shows as the row's tag. Its title is the card's press, the results page's "Compare with
   how others see you →": a form posting to the same address, so it warns before collection freezes and works without
   JavaScript. A row's title is a link elsewhere; a link here could be loaded ahead of time without the press. Below the
-  minimum, where the card offers the way to invite people instead, the title is a link to Five trusted voices' page, as
-  other rows' titles are, and the tag the card's phrase (fix-3). Only the section's signpost and the results page
-  show both buttons (fix-8); the hub's row and the sidebar's keep this single switching title.
+  minimum, where the card greys its press, the title is a plain link to the comparison, which waits there with the way
+  to invite people (fix-16, in place of fix-3's link to Five trusted voices): opening it records nothing, so being
+  loaded ahead of time does no harm, and the tag is the card's phrase (fix-3).
 {% endcomment %}
 <li class="hub-section srow hub-part hub-comparison">
   <div class="srow-body">
     {% if comparison.invite.waiting %}
-      <h3><a class="hub-section-title" href="{{ comparison.invite.href }}">{{ comparison.title }}</a></h3>
+      <h3><a class="hub-section-title" href="{% url 'comparison' comparison.sort %}">{{ comparison.title }}</a></h3>
     {% else %}
       {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="hub-section-title" press_label=comparison.title press_in_heading=True %}
     {% endif %}

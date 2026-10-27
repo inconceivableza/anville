@@ -855,8 +855,9 @@ def _results_finish(state, block_id):
 
 def _invite(state):
     """✨ The way to invite people offered beside the press on to the comparison, wherever that press is offered
-    (ticket 88, fix-3, fix-8): Five trusted voices' page. Below the minimum it is `waiting` and its phrase says how many
-    more its card needs, or else how many of the minimum have answered; the press is greyed then. From the minimum the
+    (ticket 88, fix-3, fix-8), and on the comparison's own page while it waits (fix-16): Five trusted voices' page.
+    Below the minimum it is `waiting` and its phrase says how many more its card needs, or else how many of the minimum
+    have answered; the press is greyed then. From the minimum the
     phrase is empty. None for a pathway without that card or while it is locked, where the press is offered alone, as
     before."""
     answered, minimum = _answered(state.response), minimum_observers(state.version.document)
@@ -953,12 +954,16 @@ def comparison(request, block_id):
 
 def _comparison_shown(request, state, result, section, block_id, status=200, share_refusal=None):
     """✨ The comparison page, from `_own_result`'s state, result and section, with `share_refusal`, a refused tick of the
-    coach's box sent without JavaScript, said above the box (fix-2)."""
+    coach's box sent without JavaScript, said above the box (fix-2). Below the minimum, where the pathway has a Five
+    trusted voices card, `invite` is the way to it, and the page waits on answers with it in place of its refusal
+    (fix-16); otherwise None, and the refusal stands, as in the faithful port."""
     scores = _scores_shown_storing_reweighted(state.version.document, result)
     shown = _comparison_of(state.response, scores, state.answers[block_id])
     sort = next(block for block in blocks_of(state.response.version.document) if block["id"] == block_id)
+    invite = _invite(state) if shown["frameworks"] is None else None
     context = {
         "comparison": shown,
+        "invite": invite if invite and invite.waiting else None,
         "block_id": block_id,
         "coach": _coach_sharing(state.response, block_id),
         "brief": coach_brief(sort),

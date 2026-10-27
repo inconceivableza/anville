@@ -442,7 +442,7 @@ The homepage (`/`):
 ## How others see you (ticket 67a; Section 2's card, above its reflection since ticket 87; after `migrate`, rebuild the frontend and load the pathway again, with a participant started after that)
 
 - Section 2 opens only once Section 1 is finished, which needs the sort. There, the card sits above the reflection, drawn as the Strengths evaluation card is: its title, the "Compare with how others see you →" button, then its status as a plain line of small grey text, not a pill.
-- With fewer than three observers answered, the chip says how many of three have answered, "2 of 3 answered" with two in (ticket 81). Pressing the button opens "Not enough answers yet", and back on Section 2 the chip still says "2 of 3 answered".
+- With fewer than three observers answered, the chip says how many of three have answered, "2 of 3 answered" with two in (ticket 81). The card's "Compare with how others see you →" is greyed and opens nothing (fix-8); the hub's row and the sidebar's entry open the comparison's waiting page instead (fix-16, below), and back on Section 2 the chip still says "2 of 3 answered".
 - With three answered, the chip reads "Ready to view". Pressing the button opens "Before you look", exactly as from the results page; "← Back to results" changes nothing, and back on Section 2 the chip still reads "Ready to view". Confirming opens the comparison, and back on Section 2 the chip reads "Viewed".
 - Typing the comparison's address (`/results/strengths-sort/comparison/`) before pressing anything shows it, but the chip stays "Ready to view".
 - An observer withdraws after "Viewed", leaving two: the chip still reads "Viewed".
@@ -538,11 +538,11 @@ Rebuild the frontend. No need to load the pathway again: a participant started o
 
 ### Fix-3: The comparison's other buttons below the minimum
 
-Changed by fix-8 (below): Section 2's card and the results page now show both buttons; only the hub's row, the sidebar's entry and the Five trusted voices card follow this.
+Changed by fix-8 (below): Section 2's card and the results page now show both buttons; only the hub's row, the sidebar's entry and the Five trusted voices card follow this. Changed by fix-16 (below): the row and the sidebar's entry now open the comparison's waiting page, not Five trusted voices.
 
 Rebuild the frontend. No need to load the pathway again.
 
-- *Whatever You Do*, the sort in, fewer than three answered: the hub's "How others see you" row and the sidebar's entry show the results page's phrase as their status ("3 more needed", or "2 of 3 answered" once three have links) and open Five trusted voices. (Section 2's card: see fix-8.) The Five trusted voices card has "Invite people" alone, with no "How others see you →" beside it.
+- *Whatever You Do*, the sort in, fewer than three answered: the hub's "How others see you" row and the sidebar's entry show the results page's phrase as their status ("3 more needed", or "2 of 3 answered" once three have links) and open the comparison's waiting page (fix-16). (Section 2's card: see fix-8.) The Five trusted voices card has "Invite people" alone, with no "How others see you →" beside it.
 - With three answered: the row and the sidebar's entry press on to "Before you look", and "How others see you →" is back beside "Invite people". Each reads "Ready to view", then "Viewed" once pressed through.
 - With JavaScript turned off, each works the same.
 - The faithful port: the results page keeps its single green "Compare with how others see you →", and Section 1 is finished from its own page.
@@ -567,10 +567,22 @@ Rebuild the frontend. No need to load the pathway again.
 - Have three answer, press "Compare with how others see you →" and confirm: back on Section 2 the card turns lime. Before the press, "Ready to view" leaves it plain.
 - Section 2's reflection, comparison not yet viewed: "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer." is a pale band at the top of the field's own bordered box, with the faded field beneath it inside the same box, not a loose line between the card above and the field below. Once the comparison is viewed, the box and band are gone and the field is as before. Phone width: the box fits with no sideways scroll.
 
+### Fix-16: The comparison row opens the comparison, which waits below the minimum
+
+No rebuild and no pathway reload needed.
+
+- *Whatever You Do*, the sort in, three people with links and two answered: the hub's "How others see you" row reads "2 of 3 answered"; its title opens "How others experience you", which shows "Not enough answers yet", "2 of 3 answered", "You'll see how others see you once 3 people have answered." and a green "Invite people who know you →", and nothing else: no "Comparing your strengths evaluation…" line, no "You need at least…", no dots, words or percents. The button opens Five trusted voices.
+- With fewer than three given links, the page says "1 more needed" (or however many) in place of "2 of 3 answered", as the row's tag does.
+- The sidebar's "How others see you" entry opens the same page.
+- Back on the hub after opening it: the row still reads "2 of 3 answered", Section 2's card is still plain (not lime) with the same status, and Five trusted voices' card is unchanged. Have a third answer: the row reads "Ready to view", not "Viewed", and its title then opens "Before you look" as before.
+- The Five trusted voices card still has "Invite people" alone below three; Section 2's card still has both its buttons.
+- The faithful port's comparison below the minimum is unchanged: "You need at least 3 people…" and "2 of 3 have answered so far".
+- Phone width: the waiting page's lines and button fit with no sideways scroll. With JavaScript turned off, everything above works the same.
+
 ## The comparison (the results page's "Compare with how others see you →")
 
 - Seed with `python manage.py seed_observers` and sign in as the participant it prints, with the banner saying the comparison is illustrative. Each construct is laid out as variant F (`prototype/result-bars`, `?variant=F`) did: the name on the left in a narrow column, any persona ("The Philosopher") on its own line beneath it and never wrapping, the line in the middle with a dashed tick at an even share, a green dot for you and a blue dot for the others, the stretch between them shaded grey, and on the right "You: Leading" in green, "Others: Strong" in blue, then in small grey "Others place this higher", "Others place this lower" or "Much the same". No agreement words until the spread is ticked (below). Over and above F, a green single-person icon sits just above your dot and a blue group icon just below the others', each centred on its dot, so where the dots overlap (a construct reading "Much the same") both icons still show in full. Only green and blue, in both frameworks. No "You / Others (average)" legend, and no percent anywhere on the page. The tick lines up down a framework's rows.
-- With one or two observers (`seed_observers --observers 2`): "Not enough answers yet", "2 of 3 have answered so far", no percent anywhere and no banner. "Invite people who know you →" leads to the invitations page.
+- With one or two observers (`seed_observers --observers 2`): "Not enough answers yet", no percent anywhere and no banner. In *Whatever You Do*, the waiting page of fix-16 (below): "2 of 3 answered", "You'll see how others see you once 3 people have answered." and "Invite people who know you →" to Five trusted voices. In the faithful port, as before: "You need at least 3 people…", "2 of 3 have answered so far", and "Invite people who know you →" leads to the invitations page.
 - "← Back to results" returns to the results page.
 - In the faithful port, Section 1, with the sort in and the reflection written, before any visit: the checklist lists "View the 'Compare with how others see you' results to continue." unticked, between the strengths evaluation and the reflections, and "Mark complete" stays disabled. Find the way there from Section 1 alone (the Strengths card, then its results link, then "Compare with how others see you →"). With no observers, that page is "Not enough answers yet"; back in Section 1 the item is ticked and the section completes. Whatever You Do's Section 1 no longer asks for the visit (ticket 52).
 - "Compare with how others see you →" is now a button in a form: it looks and sits as it did, works without JavaScript and by keyboard, and VoiceOver reads it as a button. In the faithful port, opening the comparison by typing its address shows it but leaves Section 1's item unticked.
@@ -829,10 +841,10 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 
 - Before the sort is in, the hub lists no "How others see you" row within Section 2, and the Five trusted voices card has only "Invite people".
 - Once the sort is in: within Section 2, "How others see you", the first line under its title, a row "How others see you" with its status as the row's tag (ticket 87; it followed the Strengths evaluation within Section 1 before); on the Five trusted voices card, from three answered, beside "Invite people", a small ringed "How others see you →" pill, with no status after it (ticket 81: the card's meter and tag say it; below three it is not there, fix-3). The row reads the same as Section 2's card: "2 of 3 answered" with two answered of three with links (ticket 81), "Ready to view" with three, "Viewed" once confirmed.
-- With three answered, pressing the row's title, and pressing the card's pill, each open "Before you look", exactly as Section 2's card and the results page do; "← Back to results" changes nothing. With fewer than three, the row's title opens Five trusted voices (fix-3).
+- With three answered, pressing the row's title, and pressing the card's pill, each open "Before you look", exactly as Section 2's card and the results page do; "← Back to results" changes nothing. With fewer than three, the row's title opens the comparison's waiting page (fix-16; Five trusted voices under fix-3).
 - With JavaScript turned off, both still open "Before you look", and confirming opens the comparison.
 - Once confirmed (collection frozen): the voices card still reads "You've seen your results, so no more answers are added." under its tag, and its pill still opens the comparison, with nothing asked.
-- Keyboard only: Tab reaches the row's title and the card's pill, each with visible focus, and Enter presses it. Screen reader: each reads as a button.
+- Keyboard only: Tab reaches the row's title and the card's pill, each with visible focus, and Enter presses it. Screen reader: each reads as a button from three answered, and the row's title as a link below three (fix-16).
 - The faithful port's hub has no such row and no side cards.
 - Phone width: the row stays one line high beside its tag, as the Strengths evaluation's does; on the card, "Invite people" and the comparison's pill share a line where they fit, the status wrapping under them, with no sideways scroll.
 
@@ -868,7 +880,7 @@ Reload the page for the rebuilt frontend; no new participant is needed.
 - Every entry has its status above its title, in small capitals on a grey pill, short titles and long ones alike; "How others see you" fits on one line.
 - The next step's entry has a pale green background; its status pill is green only if it is under way, as the hub's, and "Not started" stays grey with its black outline (fix-6); the page you are on has a deep green edge.
 - Beside the hub, the panel lists the same entries in the same order with the same statuses and locks: the sections, the Strengths evaluation within Section 1, then, below a rule and each as a small outlined card, Walk with a coach and Five trusted voices, Five trusted voices with its card's tag ("2 more needed", "Links issued" …).
-- Once the sort is in, "How others see you" is listed within Section 2 (ticket 87), with the hub row's status ("0 of 3 answered"). Pressing it does what the hub's row does: with the minimum in and not yet confirmed, it asks before collection freezes.
+- Once the sort is in, "How others see you" is listed within Section 2 (ticket 87), with the hub row's status ("0 of 3 answered"). Pressing it does what the hub's row does: with the minimum in and not yet confirmed, it asks before collection freezes; below it, it opens the comparison's waiting page (fix-16).
 - Regression: the links below read as before: "Your results" and "How others experience you" once the sort is in, "Invite others to assess you", and "Your coach".
 - Phone width: the panel spans the header's width with no sideways scroll, and long titles wrap under their statuses.
 

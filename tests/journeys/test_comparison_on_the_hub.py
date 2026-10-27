@@ -82,13 +82,19 @@ def where_it_leads(html):
     return (f'href="/sections/{VOICES}/"' in html, f'action="/results/{SORT}/comparison/visit/"' in html)
 
 
+def opens_the_comparison(html):
+    """✨ Whether the markup opens the comparison itself, by a link and without the press, as it does while waiting."""
+    return f'href="/results/{SORT}/comparison/"' in html
+
+
 @pytest.mark.django_db
-def test_below_the_minimum_the_card_the_hubs_row_and_the_sidebar_lead_to_five_trusted_voices_and_from_it_compare(
+def test_below_the_minimum_the_hubs_row_and_the_sidebar_open_the_comparison_and_from_it_compare(
     participant, settings
 ):
-    """✨ One rule wherever the comparison is offered, as on the results page (fix-3, ticket 88). The voices card offers
-    nothing in its place: its "Invite people" already leads there, and its Answered meter and tag say where the answers
-    stand (developer's call, 23 Oct, ticket 81)."""
+    """✨ The hub's row and the sidebar's entry always lead to the comparison (fix-16, reversing fix-3 there): below the
+    minimum by a link to its waiting page, from it by the press. The section's card offers the way to invite people
+    beside its greyed press (fix-8). The voices card offers nothing in its place: its "Invite people" already leads
+    there, and its Answered meter and tag say where the answers stand (developer's call, 23 Oct, ticket 81)."""
     settings.ANVILLE_SIDEBAR = True
     answer_through(*participant.links[:2])
     assert hub_row(participant) is None
@@ -96,8 +102,11 @@ def test_below_the_minimum_the_card_the_hubs_row_and_the_sidebar_lead_to_five_tr
 
     submit_sort(participant, complete_sort())
 
+    assert where_it_leads(card(participant)) == (True, False)
+    for shown in (hub_row(participant), sidebar_entry(participant)):
+        assert where_it_leads(shown) == (False, False)
+        assert opens_the_comparison(shown)
     for shown in (card(participant), hub_row(participant), sidebar_entry(participant)):
-        assert where_it_leads(shown) == (True, False)
         assert statuses(shown) == ["2 of 3 answered"]
     assert voices_button(participant) is None
     assert statuses(voices_card(participant)) == []
@@ -117,6 +126,44 @@ def test_below_the_minimum_the_card_the_hubs_row_and_the_sidebar_lead_to_five_tr
     press_compare(participant)
 
     assert statuses(card(participant)) == statuses(hub_row(participant)) == [COMPARISON_STATUSES["viewed"]]
+
+
+def followed(client, html):
+    """✨ The page the markup's first link opens."""
+    return client.get(re.search(r'href="([^"]+)"', html).group(1))
+
+
+@pytest.mark.django_db
+def test_below_the_minimum_the_comparison_waits_with_the_way_to_invite_people_and_no_observer_data(participant):
+    """✨ The row's link opens a waiting page, not an empty comparison (fix-16): the count phrase the row shows and the
+    way to Five trusted voices, and nothing of the two answers in, which stay hidden below the minimum (ADR 0005)."""
+    answer_through(*participant.links[:2])
+    submit_sort(participant, complete_sort())
+
+    page = followed(participant, hub_row(participant))
+
+    assert page.status_code == 200
+    assert page.context["comparison"]["frameworks"] is None
+    assert "comparison-pair" not in page.content.decode()
+    assert f'href="/sections/{VOICES}/"' in page.content.decode()
+    assert "2 of 3 answered" in text(page)
+
+
+@pytest.mark.django_db
+def test_opening_the_comparison_from_the_row_below_the_minimum_marks_nothing_viewed(participant, settings):
+    """✨ Only the press from the minimum is the view "Viewed" reads (ticket 67a); the row's link below it is not, so
+    once the minimum is in, the comparison is ready, not viewed (fix-16)."""
+    settings.ANVILLE_SIDEBAR = True
+    answer_through(*participant.links[:2])
+    submit_sort(participant, complete_sort())
+    before = [statuses(card(participant)), statuses(hub_row(participant)), tag_of(voices_card(participant))]
+
+    followed(participant, hub_row(participant))
+    followed(participant, sidebar_entry(participant))
+
+    assert [statuses(card(participant)), statuses(hub_row(participant)), tag_of(voices_card(participant))] == before
+    answer_through(participant.links[2])
+    assert statuses(card(participant)) == statuses(hub_row(participant)) == [COMPARISON_STATUSES["ready"]]
 
 
 @pytest.mark.django_db
