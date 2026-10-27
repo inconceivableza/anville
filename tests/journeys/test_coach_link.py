@@ -17,7 +17,7 @@ import pytest
 import time_machine
 from django.utils import timezone
 
-from engine.hub import COACH_ANSWER_LABELS
+from engine.hub import COACH_ANSWER_LABELS, LABELS, NOT_STARTED
 from engine.models import Contact, Invitation, ObserverResponse, Response
 from tests.documents import pathway_document
 from tests.journeys.test_answers import shown
@@ -343,13 +343,14 @@ def test_the_participant_is_told_the_answer_and_nothing_of_the_boxes(participant
 
 
 def withdraw_as_coach(client, link):
-    """✨ The coach pressing "Withdraw my answer" on their link's withdrawal page."""
+    """✨ The coach pressing "Withdraw my data" on their link's withdrawal page."""
     return client.post(f"{link}withdraw/")
 
 
 @pytest.mark.django_db
-def test_withdrawing_an_acceptance_deletes_it_and_the_sharing_and_stops_the_link(participant, observer):
-    """✨ The acceptance implies the coach's faith, kept on their consent: withdrawn, nothing of it stays."""
+def test_withdrawing_an_acceptance_deletes_the_coach_at_once_leaving_only_that_they_withdrew(participant, observer):
+    """✨ The acceptance implies the coach's faith, kept on their consent: withdrawn, nothing of the coach stays, name,
+    answer, link or sharing; the participant's response keeps only that their coach withdrew (ADR 0024)."""
     link = issue_coach_link(participant)
     answer_as_coach(observer, link, "accept")
     Invitation.objects.update(results_shared_at=timezone.now())  # ✨ as the participant's tick leaves it
@@ -357,9 +358,9 @@ def test_withdrawing_an_acceptance_deletes_it_and_the_sharing_and_stops_the_link
 
     assert withdraw_as_coach(observer, link).status_code == 200
 
-    kept = Invitation.objects.values("coach_answer", "results_shared_at").get()
-    assert kept["coach_answer"] != "accepted"
-    assert kept["results_shared_at"] is None
+    assert not Contact.objects.filter(role=Contact.Role.COACH).exists()
+    assert not Invitation.objects.exists()
+    assert Response.objects.get().coach_withdrew
     refused = observer.get(link)
     assert refused.status_code == 404
     assert refused.content.decode() == refused_as_wrong
@@ -392,35 +393,53 @@ def test_the_coach_can_withdraw_while_the_participant_has_withdrawn_their_own_co
 
     assert withdraw_as_coach(observer, link).status_code == 200
 
-    assert Invitation.objects.get().coach_answer != "accepted"
+    assert not Invitation.objects.exists()
+
+
+def a_coach_who_withdrew(client, observer):  # noqa: F811
+    """✨ The coach card's pathway, with Sam chosen, accepting on their link, then withdrawing."""
+    client.post(f"/sections/{ONBOARDING}/complete/")
+    link = link_shown(choose(client).content.decode())
+    answer_as_coach(observer, link, "accept")
+    assert withdraw_as_coach(observer, link).status_code == 200
+
+
+def coach_checklist_shown(client):
+    """✨ The coach checklist as the Walk with a coach page opens it."""
+    return re.search(r'<form id="block-coach".*?</form>', shown(client, "walk-with-a-coach"), re.S).group(0)
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("told_on", ["coach page", "hub"])
-def test_once_the_coach_withdraws_the_participant_is_told_once_and_the_coach_is_then_forgotten(
-    signed_in_client, load_pathway, observer, told_on  # noqa: F811
+def test_once_the_coach_withdraws_the_participant_is_told_on_every_visit_naming_nobody(
+    signed_in_client, load_pathway, observer  # noqa: F811
 ):
-    """✨ As after a decline: the coach page says where the coach stands and leads with choosing someone else, and the
-    hub's card tags it. A kept "withdrawn" still says the coach once accepted, so it stays only until the participant
-    has been told, on whichever page they open first; then they are as if no coach had been chosen (ADR 0024)."""
+    """✨ As after a decline: the coach page says the coach has withdrawn and leads with choosing someone else, and the
+    hub's card tags it, however often they are opened; nothing names the coach, of whom nothing is kept (ADR 0024)."""
     load_pathway(with_a_coach_card())
-    signed_in_client.post(f"/sections/{ONBOARDING}/complete/")
-    before = coach_card_tag(signed_in_client)
-    link = link_shown(choose(signed_in_client).content.decode())
-    answer_as_coach(observer, link, "accept")
 
-    withdraw_as_coach(observer, link)
+    a_coach_who_withdrew(signed_in_client, observer)
 
-    if told_on == "coach page":
-        page = shown(signed_in_client, "walk-with-a-coach")
-        assert re.search(r'data-coach-answer="withdrawn"', page)
-        assert re.search(r'<button[^>]*name="step" value="restart" class="pill"', page)
-    else:
+    for _ in range(2):
         assert coach_card_tag(signed_in_client) == COACH_ANSWER_LABELS["withdrawn"]
-    assert not Contact.objects.filter(role=Contact.Role.COACH).exists()
-    assert not Invitation.objects.exists()
-    assert "data-coach-answer" not in shown(signed_in_client, "walk-with-a-coach")
-    assert coach_card_tag(signed_in_client) == before
+        checklist = coach_checklist_shown(signed_in_client)
+        assert 'data-coach-answer="withdrawn"' in checklist
+        assert re.search(r'<button[^>]*name="step" value="restart" class="pill"', checklist)
+        assert "Sam" not in checklist
+
+
+@pytest.mark.django_db
+def test_choosing_a_coach_after_a_withdrawal_ends_the_telling(signed_in_client, load_pathway, observer):  # noqa: F811
+    """✨ The withdrawal is kept only until another coach is chosen: removing that one says nothing of it again."""
+    load_pathway(with_a_coach_card())
+    a_coach_who_withdrew(signed_in_client, observer)
+
+    choose(signed_in_client, name="Jo")
+
+    assert coach_card_tag(signed_in_client) == COACH_ANSWER_LABELS["waiting"]
+    assert 'data-coach-answer="waiting"' in coach_checklist_shown(signed_in_client)
+    signed_in_client.post("/coach/coach/", {"step": "remove"})
+    assert "data-coach-answer" not in coach_checklist_shown(signed_in_client)
+    assert coach_card_tag(signed_in_client) == LABELS[NOT_STARTED]
 
 
 # Whose link

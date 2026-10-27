@@ -95,6 +95,9 @@ class Response(models.Model):
     # card's completion is, so a section once open stays open whatever later happens to its conditions, such as the
     # coach's link revoked. Empty on a response from before opening conditions, whose sections carry none.
     sections_opened = models.JSONField(default=dict)
+    # ✨ That the participant's coach withdrew their acceptance (ADR 0024), and nothing about that coach: they are
+    # deleted as they withdraw. Kept so the participant is told, until they choose a coach again.
+    coach_withdrew = models.BooleanField(default=False)
     is_test_data = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -265,8 +268,9 @@ class Response(models.Model):
         observer's link keeps working; any other id (someone else's, or one since deleted) is taken as a new
         person. Done together or not at all, so a list is never kept half-replaced. Someone taken off the list is
         deleted, not merely hidden: they are another person's details, kept only while the participant wants them,
-        and their link goes with them.
+        and their link goes with them. Keeping a coach ends the telling that the last one withdrew (ADR 0024).
         """
+        coach_chosen = {"coach_withdrew": False} if role == Contact.Role.COACH and contacts else {}
         with transaction.atomic():
             held = {str(contact.pk): contact for contact in self.contacts.filter(block_id=block_id)}
             # ✨ Out of the way of the positions about to be taken, which one_contact_per_row keeps one to a row.
@@ -281,7 +285,7 @@ class Response(models.Model):
                 contact.position, contact.name, contact.email = position, person["name"], person["email"]
                 contact.save()
                 kept[position] = contact
-        Response.objects.filter(pk=self.pk).update(updated_at=timezone.now())
+            Response.objects.filter(pk=self.pk).update(updated_at=timezone.now(), **coach_chosen)
         return kept
 
     def add_contact(self, block_id, person, lifetime, most):
@@ -385,8 +389,8 @@ class Invitation(models.Model):
     It is never claimed: the participant holding a copy could claim it as easily as use it. Only the answer is kept, on
     the link, so revoking or reissuing asks again. Each kind of link works only at its own address. Once the coach has
     accepted, the participant's consent for them to see the results and comparison is kept on the link too (ticket 27).
-    The acceptance is the coach's consent, which they can withdraw while the link works: that leaves "withdrawn" in its
-    place, clears the sharing and stops the link; once the participant has been told, the coach is deleted (ADR 0024).
+    The acceptance is the coach's consent, which they can withdraw while the link works: that deletes the coach, name,
+    link, answer and sharing, leaving on the participant's response only that their coach withdrew (ADR 0024).
 
     While the participant's consent is withdrawn, every link they gave out is refused as a dead one is, and works again,
     as it was, once they agree again (ticket 45). Nothing about the link changes meanwhile, its expiry included.
@@ -395,9 +399,6 @@ class Invitation(models.Model):
     class CoachAnswer(models.TextChoices):
         ACCEPTED = "accepted"
         DECLINED = "declined"
-        # ✨ An acceptance the coach took back (ADR 0024), kept in its place only until the participant is told, when the
-        # coach goes with it (`forget_withdrawn_coach`), or until the link is reissued or revoked or the coach changed.
-        WITHDRAWN = "withdrawn"
 
     contact = models.OneToOneField(Contact, on_delete=models.CASCADE, related_name="invitation")
     token_hash = models.CharField(max_length=64, unique=True)
@@ -522,24 +523,19 @@ class Invitation(models.Model):
 
     @classmethod
     def withdraw_as_coach(cls, token):
-        """✨ Delete the coach's acceptance, and the participant's consent to share with them that rests on it, and stop
-        the link, in one UPDATE, so of two withdrawals at once exactly one is made; False if it is not
-        `withdrawable_by_coach`. What stays in the acceptance's place says only that it was withdrawn."""
-        now = timezone.now()
-        withdrawn = cls._withdrawable_by_coach(token).update(
-            coach_answer=cls.CoachAnswer.WITHDRAWN, results_shared_at=None, expires_at=now
-        )
-        return withdrawn == 1
-
-    @classmethod
-    def forget_withdrawn_coach(cls, response):
-        """✨ Delete a response's coach whose acceptance was withdrawn, name, link and answer together, once the
-        participant has been told: a kept "withdrawn" still says the coach once accepted, which implies their faith
-        (ADRs 0010, 0024). The participant is then as if no coach had been chosen; what the acceptance opened stays open
-        (ADR 0019). A coach chosen since is untouched."""
-        Contact.objects.filter(
-            response=response, role=Contact.Role.COACH, invitation__coach_answer=cls.CoachAnswer.WITHDRAWN
-        ).delete()
+        """✨ Delete the coach whose link this is, name, link and acceptance, with the participant's consent to share
+        with them that rests on it, and mark the participant's response with only that their coach withdrew (ADR 0024):
+        anything kept of the coach would still say they once accepted, which implies their faith (ADR 0010). Together or
+        not at all, the link's row locked first, so of two withdrawals at once exactly one is made; False if it is not
+        `withdrawable_by_coach`."""
+        with transaction.atomic():
+            invitation = cls._withdrawable_by_coach(token).select_for_update().first()
+            if invitation is None:
+                return False
+            response_id = invitation.contact.response_id
+            Contact.objects.filter(pk=invitation.contact_id).delete()
+            Response.objects.filter(pk=response_id).update(coach_withdrew=True, updated_at=timezone.now())
+        return True
 
     @classmethod
     def _withdrawable_by_coach(cls, token):

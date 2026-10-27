@@ -12,10 +12,6 @@
   {% elif link.answer == "declined" %}
     <p>They've said they can't commit to all {{ checklist.count }}. That's a good answer, not a failure: far better now than halfway through.</p>
     <p>You can choose someone else, or carry on without a coach.</p>
-  {% elif link.answer == "withdrawn" %}
-    {# ✨ ADR 0024: their acceptance is deleted and their link stopped; nothing they saw before is taken back. #}
-    <p>{{ coach.name }} has withdrawn their answer, so they're no longer your coach, and their link has stopped working.</p>
-    <p>You can choose someone else, or carry on without a coach.</p>
   {% else %}
     <p>The next step is to ask {{ coach.name }} properly. Send them a link: it explains what's involved and asks them to commit to the same {{ checklist.count }} things you've just weighed up. They can accept or decline, and you'll be told either way.</p>
   {% endif %}
@@ -35,9 +31,8 @@
   {% endif %}
   {% comment %}
     ✨ Offered after an answer too: reissuing asks again, and revoking stops the link, taking the answer with it, since
-    it belongs to the link it came through. Not after a withdrawal: drawing this page forgets that coach (ADR 0024).
+    it belongs to the link it came through.
   {% endcomment %}
-  {% if link.answer != "withdrawn" %}
   <div class="coach-buttons">
     {% url 'issue_invitation' link.contact_id as issue %}
     <button type="submit" formaction="{{ issue }}" hx-post="{{ issue }}" hx-target="#block-{{ block.id }}"
@@ -50,5 +45,4 @@
               hx-select="#block-{{ block.id }}" hx-swap="outerHTML" class="pill ghost">Revoke link</button>
     {% endif %}
   </div>
-  {% endif %}
 </div>

@@ -80,6 +80,7 @@ from engine.document.gates import (
 )
 from engine.document.scoring import score
 from engine.hub import (
+    COACH_WITHDREW,
     COMPLETE,
     block_ids_fixed_on_completion,
     complete_sections,
@@ -196,8 +197,7 @@ def credits_page(request):
 @login_required
 @consent_required
 def hub(request):
-    """✨ Where the participant always starts: their track's sections, their status, and the next step. Once it has told
-    them their coach withdrew, that coach is forgotten (ADR 0024)."""
+    """✨ Where the participant always starts: their track's sections, their status, and the next step."""
     state = _participant(request.user)
     if state.version is None:
         return render(request, "engine/hub.html", {})
@@ -214,8 +214,8 @@ def hub(request):
     waiting = hub.waiting_on_answers
     voices = _hub_voices(state, hub)
     side_cards = _side_cards(state, hub, voices)
-    coach_wait = _coach_wait_panel(hub, coach, coach_page)
-    shown = render(
+    coach_wait = _coach_wait_panel(hub, state.response, coach, coach_page)
+    return render(
         request,
         "engine/hub.html",
         {
@@ -231,13 +231,6 @@ def hub(request):
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
-    # ✨ The coach card's tag says "Withdrawn" while the card is open, and the next-step panel says it while it is shown,
-    # in place of "Waiting on answers".
-    on_the_card = any(card.id == coach_section and not card.is_locked for card in side_cards)
-    on_the_panel = coach_wait is not None and waiting is None
-    if _answer_of(coach) == Invitation.CoachAnswer.WITHDRAWN and (on_the_card or on_the_panel):
-        Invitation.forget_withdrawn_coach(state.response)
-    return shown
 
 
 def _hub_comparison(state):
@@ -273,7 +266,7 @@ def _side_cards(state, hub, voices):
     coach_section = _coach_section_of(state.version.document)
     # ✨ The coach is read only where a side card is theirs, so a page without that card never depends on the coach.
     on_a_card = any(card.id == coach_section for card in hub.side_cards())
-    answer = _answer_of(_coach_of(state.response, state.answers)) if on_a_card else None
+    answer = _coach_standing(state.response, _coach_of(state.response, state.answers)) if on_a_card else None
     cards = []
     for card in hub.side_cards():
         if card.id == coach_section:
@@ -291,20 +284,23 @@ def _coach_card(coach, coach_section, coach_page):
     return {"section": coach_section, "page": coach_page, "chosen": coach is not None}
 
 
-def _coach_wait_panel(hub, coach, coach_page):
+def _coach_wait_panel(hub, response, coach, coach_page):
     """✨ What the hub's next-step panel says in place of "Nothing is waiting for you right now" while nothing is next
     and a section waits on nothing but the coach's acceptance (ticket 65): {"heading", "sentence", "coach_page"}, by
-    the `coach`'s answer, or None otherwise, or with no `coach_page` to lead to."""
+    where the `coach` stands (`_coach_standing`), or None otherwise, or with no `coach_page` to lead to."""
     wait = hub.coach_wait
     if hub.next_step is not None or wait is None or not wait.only or coach_page is None:
         return None
-    wording = wait.panel(_answer_of(coach), coach["name"] if coach else "")
+    wording = wait.panel(_coach_standing(response, coach), coach["name"] if coach else "")
     return {**wording._asdict(), "coach_page": coach_page}
 
 
-def _answer_of(coach):
-    """✨ The coach's answer, as `_coach_of` gives it, or None with no coach."""
-    return coach["answer"] if coach else None
+def _coach_standing(response, coach):
+    """✨ The coach's answer, as `_coach_of` gives it; with no coach, `COACH_WITHDREW` while the response keeps that the
+    last one withdrew their acceptance, saying nothing of who (ADR 0024), and otherwise None."""
+    if coach is not None:
+        return coach["answer"]
+    return COACH_WITHDREW if response is not None and response.coach_withdrew else None
 
 
 def _photo_of(document, section_id):
@@ -338,23 +334,8 @@ def _section_shown(request, state, section, shown, status=200):
         step = wizard_step(state.sections, section, shown["page"]["number"])
         photo = _photo_of(state.version.document, section["id"])
         shown = {**shown, "photo": photo, "step": step, "steps": step.numbers}
-        page = render(request, "engine/wizard.html", shown, status=status)
-    else:
-        page = render(request, "engine/section.html", shown, status=status)
-    return _forgetting_a_withdrawn_coach_once_told(state, shown["section"]["blocks"], page)
-
-
-def _forgetting_a_withdrawn_coach_once_told(state, blocks, page):
-    """✨ `page`, already drawn with these `blocks`; if a coach checklist among them told the participant that their
-    coach withdrew, that coach is then forgotten (ADR 0024), so the page, its sidebar included, says it this once."""
-    told = any(
-        (block.get("checklist") or {}).get("link")
-        and block["checklist"]["link"]["answer"] == Invitation.CoachAnswer.WITHDRAWN
-        for block in blocks
-    )
-    if told:
-        Invitation.forget_withdrawn_coach(state.response)
-    return page
+        return render(request, "engine/wizard.html", shown, status=status)
+    return render(request, "engine/section.html", shown, status=status)
 
 
 def _coach_page_of(document, hub):
@@ -708,11 +689,10 @@ def coach_checklist(request, block_id):
         result = render(request, "engine/coach_checklist_result.html", context, status=status)
         if coach is not None:
             result["Cache-Control"] = "no-store"  # ✨ it holds the link, shown this once
-        return _forgetting_a_withdrawn_coach_once_told(state, [checklist_block], result)
+        return result
     # ✨ Never a redirect without JavaScript while choosing: the answers would have to go in the address, where they
     # are logged. The page returned is the one the checklist is on.
-    page = render(request, "engine/section.html", shown, status=status)
-    return _forgetting_a_withdrawn_coach_once_told(state, shown["section"]["blocks"], page)
+    return render(request, "engine/section.html", shown, status=status)
 
 
 # ✨ The buttons of the coach checklist: back to the intro keeping what was given, on to the questions, to see how
@@ -807,9 +787,10 @@ def _coach_kept(answers, block_id):
 
 def _coach_link_state(contact_id, issued=None):
     """✨ The coach's link as the coach page shows it: the contact it is for, its invitation while it works, the coach's
-    answer ("waiting" while a working link is unanswered, None with no link at all), whether the coach has said no,
-    by declining or by withdrawing an acceptance (ADR 0024), and the link itself if it was just issued. An answer
-    outlasts the link's expiry, but not its revoking: it belongs to the link it came through."""
+    answer ("waiting" while a working link is unanswered, None with no link at all), whether the coach has said no by
+    declining, and the link itself if it was just issued. An answer outlasts the link's expiry, but not its revoking:
+    it belongs to the link it came through. A coach who withdraws their acceptance has no link to show: they are
+    deleted as they withdraw (ADR 0024)."""
     invitation = Invitation.objects.filter(contact_id=contact_id).first()
     live = invitation if invitation is not None and invitation.works() else None
     answer = invitation.coach_answer if invitation is not None else None
@@ -817,7 +798,7 @@ def _coach_link_state(contact_id, issued=None):
         "contact_id": contact_id,
         "invitation": live,
         "answer": answer or ("waiting" if live else None),
-        "said_no": answer in (Invitation.CoachAnswer.DECLINED, Invitation.CoachAnswer.WITHDRAWN),
+        "said_no": answer == Invitation.CoachAnswer.DECLINED,
         "issued": issued["link"] if issued and issued["contact"] == contact_id else None,
     }
 
@@ -1035,7 +1016,8 @@ def _coach_sharing(response, block_id):
     """✨ The participant's coach as the comparison's consent needs them, or None when there is nothing to say: with
     `offer` "tick" once they accepted through a working link and the comparison was visited by its button; "expired"
     when they accepted but the link no longer works; "awaiting" while they have not answered or have no link yet. A
-    coach who declined, or withdrew their acceptance, is offered nothing here: the coach page already says so."""
+    coach who declined is offered nothing here: the coach page already says so. One who withdrew their acceptance is no
+    coach at all, deleted as they withdrew (ADR 0024)."""
     coach = _coach_of(response)
     if coach is None:
         return None
@@ -1995,8 +1977,9 @@ def answer_coaching(request, token):
 @require_http_methods(["GET", "POST"])
 def coach_withdrawal(request, token):
     """✨ The coach withdrawing their acceptance (ADR 0024), as an observer withdraws (ticket 15b): opening the page only
-    asks, and its button deletes the acceptance and stops the link. Only a working link that accepted can, whether or
-    not the participant's consent stands; any other gets the one refusal, naming nobody.
+    asks, and its button deletes the coach, acceptance, name and link, leaving the participant told only that their
+    coach withdrew. Only a working link that accepted can, whether or not the participant's consent stands; any other
+    gets the one refusal, naming nobody.
 
     Before the acceptance goes, whatever it opened is recorded as opened, as the participant's next page would have
     recorded it, so a section it opened stays open (ADR 0019) however soon the coach withdraws."""
@@ -2435,6 +2418,7 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
                     demo=demo,
                     comparison=_comparison_signpost_shown(state, block),
                     rows_back=rows_back.get(block["id"]),
+                    coach_withdrew=state.response is not None and state.response.coach_withdrew,
                 )
                 for block in blocks
             ],
@@ -2573,6 +2557,7 @@ def _block_for_participant(
     demo=None,
     comparison=None,
     rows_back=None,
+    coach_withdrew=False,
 ):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
     identifier; a signpost to a section outside the participant's track has no state and shows nothing. `issued` is a
@@ -2581,7 +2566,8 @@ def _block_for_participant(
     rows come back from a press without JavaScript as `rows_back` gives them (fix-1). `drawn` is a `sort_results`
     block's results, from `_sort_results_drawn`, and `comparison` a `comparison_signpost`'s status, from
     `_comparison_signpost_shown`. A sort not yet in starts from `demo`, a demo profile, with its guide beside it
-    (fix-23)."""
+    (fix-23). A coach checklist opens saying the coach withdrew while the response keeps that they did
+    (`coach_withdrew`, ADR 0024)."""
     rows = _contact_rows(block, answers, issued, **(rows_back or {})) if block["type"] == "contact_list" else None
     widget = BLOCK_TYPES[block["type"]].widget
     shown_widget = widget(document, "participant", "") if widget else None  # ✨ the participant's wording names no one
@@ -2606,7 +2592,11 @@ def _block_for_participant(
         "rows_shown": len(rows) if rows is not None else None,
         "adds_rows": rows is not None and not frozen and can_add_row(len(rows)),
         "press": _press_of(block, rows) if rows is not None else None,
-        "checklist": _opening_checklist(text, _coach_kept(answers, block["id"]), issued) if is_checklist else None,
+        "checklist": (
+            _opening_checklist(text, _coach_kept(answers, block["id"]), issued, coach_withdrew)
+            if is_checklist
+            else None
+        ),
         "id": block["id"],
         "landing": landing_of(block),  # ✨ where saving it without JavaScript comes back to
         "type": block["type"],
@@ -2627,11 +2617,14 @@ def _block_for_participant(
     }
 
 
-def _opening_checklist(text, kept, issued=None):
-    """✨ A coach checklist as a page opens it: the coach kept, if one was chosen, with their link, and otherwise its
-    intro, empty, since nothing from an earlier visit to the checklist itself was kept."""
+def _opening_checklist(text, kept, issued=None, coach_withdrew=False):
+    """✨ A coach checklist as a page opens it: the coach kept, if one was chosen, with their link; with none, that the
+    last coach withdrew, while the response keeps it (ADR 0024); and otherwise its intro, empty, since nothing from an
+    earlier visit to the checklist itself was kept."""
     if kept:
         return _checklist_screen(text, screen="chosen", coach=kept, issued=issued)
+    if coach_withdrew:
+        return _checklist_screen(text, screen="withdrawn")
     return _checklist_screen(text)
 
 

@@ -97,24 +97,37 @@
     {% comment %}
       ✨ Only the coach kept: nothing of the checklist that chose them. They are called the participant's coach only
       once they have accepted; until then, chosen. A coach who declined is still kept until someone else is chosen, but
-      the card turns from gold to the amber of the mock-up's decline, and choosing someone else leads. So too for a
-      coach who withdrew their acceptance, said this once: drawing it forgets them (ADR 0024), so it offers nothing
-      that acts on them.
+      the card turns from gold to the amber of the mock-up's decline, and choosing someone else leads.
     {% endcomment %}
     <div class="coach-outcome {% if checklist.link.said_no %}coach-check{% else %}coach-go{% endif %}">
       <h2>
         {% if checklist.link.answer == "accepted" %}{{ checklist.coach.name }} is your coach
         {% elif checklist.link.answer == "declined" %}{{ checklist.coach.name }} isn't able to be your coach
-        {% elif checklist.link.answer == "withdrawn" %}{{ checklist.coach.name }} has withdrawn
         {% else %}You've chosen {{ checklist.coach.name }}{% endif %}
       </h2>
       {# ✨ No email address: a coach is a name alone (ADR 0022), though one saved before may still hold one. #}
       {% if checklist.link %}{% include "engine/blocks/coach_link.html" with link=checklist.link coach=checklist.coach %}{% endif %}
-      {# ✨ The way on (ticket 94); after a decline or a withdrawal, choosing someone else leads instead. #}
+      {# ✨ The way on (ticket 94); after a decline, choosing someone else leads instead. #}
       <div class="coach-buttons">
         <a href="{% url 'hub' %}" class="pill{% if checklist.link.said_no %} ghost{% endif %}">Back to the hub</a>
         <button type="submit" name="step" value="restart" class="pill{% if not checklist.link.said_no %} ghost{% endif %}">Choose someone else</button>
-        {% if checklist.link.answer != "withdrawn" %}<button type="submit" name="step" value="remove" class="pill ghost">Remove</button>{% endif %}
+        <button type="submit" name="step" value="remove" class="pill ghost">Remove</button>
+      </div>
+    </div>
+
+  {% elif checklist.screen == "withdrawn" %}
+    {% comment %}
+      ✨ The coach withdrew their acceptance on their link and was deleted as they did, so nothing names them: the
+      participant's response keeps only that they withdrew, and this screen says so, in the amber of a decline with
+      choosing someone else leading, until another coach is saved (ADR 0024).
+    {% endcomment %}
+    <div class="coach-outcome coach-check" data-coach-answer="withdrawn">
+      <h2>Your coach has withdrawn</h2>
+      <p>Your coach has withdrawn their agreement, so they're no longer your coach, and their link has stopped working.</p>
+      <p>You can choose someone else, or carry on without a coach.</p>
+      <div class="coach-buttons">
+        <a href="{% url 'hub' %}" class="pill ghost">Back to the hub</a>
+        <button type="submit" name="step" value="restart" class="pill">Choose someone else</button>
       </div>
     </div>
 

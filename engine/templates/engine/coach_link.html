@@ -15,7 +15,7 @@
 
   Accepting is the coach's consent to their answer being kept, which implies their faith, so the line above "Accept →"
   says what is kept, who is told and that it can be withdrawn here, and once accepted the page offers "Withdraw my
-  answer" (ADR 0024).
+  data", which deletes the coach altogether (ADR 0024).
 
   Departures from the mock-up: "Accept and get the first session guide →" is "Accept →", and its promise to send a
   briefing pack is gone, since there is no email yet; "What happens next" keeps the mock-up's first sentence with "the
@@ -56,7 +56,7 @@
       </section>
     {% endif %}
     {# ✨ As easy to take back as it was to give (ADR 0024): the page it leads to asks before anything is deleted. #}
-    <p><a href="{% url 'coach_withdrawal' token %}">Withdraw my answer</a></p>
+    <p><a href="{% url 'coach_withdrawal' token %}">Withdraw my data</a></p>
   {% elif answer == "declined" %}
     <div class="coach-outcome coach-check">
       <h2>That's a good answer</h2>
