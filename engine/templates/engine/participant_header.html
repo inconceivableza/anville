@@ -16,7 +16,7 @@
 <header class="site-header">
   <div class="nav light">
     <div class="nav-left">
-      <a class="site-header-title brand" href="{% url 'hub' %}" aria-label="{{ nav.title|default:"Anville" }}"><svg class="brand-logo" viewBox="0 0 910.32 157.7" aria-hidden="true" focusable="false"><use href="#logo"/></svg></a>
+      <a class="site-header-title brand" href="{% url 'hub' %}" aria-label="{{ nav.title|default:"Anville" }}">{% include "engine/logo.html" %}</a>
     </div>
     <div class="nav-right">
       {% if nav.sidebar %}

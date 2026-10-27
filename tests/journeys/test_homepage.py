@@ -66,7 +66,18 @@ def test_the_new_logo_replaces_the_old_mark_and_name_in_the_bar_and_the_footer(c
 
 
 @pytest.mark.django_db
-def test_the_homepage_states_adult_eligibility_up_front(client):
+def test_the_homepage_has_no_fixed_bar_and_the_new_logo_shows_in_the_overview_section_too(client):
+    """✨ Fix-5: the logo sits in the hero's nav as before ticket 91, and replaces the old mark in the overview."""
+    page = client.get("/").content.decode()
+    overview = re.search(r'<section class="panel mission".*?</section>', page, re.S).group(0)
+
+    assert 'class="top-bar"' not in page
+    assert '<use href="#logo"' in overview
+    assert '<use href="#mark"' not in overview
+    assert not re.search(r'<symbol id="[^"]*"[a-zA-Z]', page), "an attribute runs into the one before it"
+
+
+
     assert "For adults aged 18 and over." in client.get("/").content.decode()
 
 

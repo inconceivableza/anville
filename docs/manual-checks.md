@@ -30,7 +30,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 ## The homepage (`/`, signed out and signed in; beside v3's, `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`)
 
 - Top to bottom: the forest video under a top bar, with "Everyone has a purpose. Do you know yours?"; "Whatever You Do is a pathway for discerning your purpose." with its five pillars; "How it works" with its five steps and the coach's line; Impact's three cards; For churches; "Ideas to explore"; a parent's story; the callings carousel; the footer. Nothing offers a newsletter, donations or a contact address.
-- The top bar holds the "/whateveryoudo" logo alone (ticket 91): no link or button but the logo, which scrolls to the top of the page. It stays at the top as you scroll, over every part of the page.
+- The top of the hero holds the "/whateveryoudo" logo alone, centred where the old mark and name sat (ticket 91, fix-5): no link or button but the logo, which scrolls to the top of the page. It is not fixed: it scrolls away with the hero.
 - The forest video plays muted and loops, with no sound and no controls. With the video blocked (DevTools, Network, right-click `hero.mp4`, "Block request URL", then reload), the still frame shows in its place.
 - Reduced motion, and without JavaScript: the still frame shows from the start and the forest never moves, not even for a moment.
 - "How it works": STEP 01 to STEP 05, each with its activities and an "In your journey" outcome; the tabs and ← → move between them. The tabs and the carousel are checked in detail under fix-14 and fix-17 below.
@@ -122,8 +122,16 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 - Open "Your pathway", then scroll: the panel stays hanging from the header, and a long list scrolls inside it.
 - Follow a link to a place on a page, or press a refused button (a refusal reopens the page at its message): the place lands below the bar, never under it.
 - The logo reads "/whateveryoudo", dark on the cream, and leads to the hub. It replaces the written name in the header and, on the homepage, the old mark and name in the top bar and the footer.
-- The homepage's bar (signed out too) holds the logo alone, light on dark brown, and stays at the top while you scroll the whole page; the footer's logo is light on the black.
-- At about 375px, the header keeps to one row: the logo, "Your pathway" and "Sign out" side by side, none wrapping, the logo still readable. The homepage's bar likewise.
+- The homepage has no fixed bar since fix-5 (see its checks below); the footer's logo is light on the black.
+- At about 375px, the header keeps to one row: the logo, "Your pathway" and "Sign out" side by side, none wrapping, the logo still readable.
+
+### Fix-5: The homepage's logo back in place, a calmer top bar, and the logo everywhere (rebuild the frontend first; wide screen and about 375px; no pathway reload needed)
+
+- The homepage (signed out): no bar stays at the top while you scroll. The new logo sits centred at the top of the hero, where the old mark and name were, light on the video, and scrolls away with it. Following "How it works" or another link in the page lands with no gap left for a bar.
+- The homepage's overview section ("Whatever You Do is a pathway for discerning your purpose.") ends with the new logo, dark, where the old mark was.
+- Onboarding (the first steps' pages): the old mark at the top right of the step header is the new logo.
+- Sign out page (`/accounts/logout/`) signed in: the same top bar as the other pages (logo, "Your pathway", "Sign out"). Sign in and sign up (signed out): no bar.
+- Signed in, scroll a long page until a heading is half behind the bar: the bar is a shade darker than the page, so the heading reads as passing under it. The bar is a little less tall than before.
 
 ## The hub's layout (the hub, beside the prototype's: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html#hub`)
 

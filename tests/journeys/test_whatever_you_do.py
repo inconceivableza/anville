@@ -324,6 +324,15 @@ def test_the_coach_step_asks_the_mock_ups_six_questions_word_for_word():
     assert [question["id"] for question in questions if question["critical"]] == ["faith", "objectivity", "coaching"]
 
 
+def test_the_onboarding_wizard_header_shows_the_new_logo_not_the_old_mark(participant):
+    """✨ Fix-5: the wizard's own header, which the participant header does not replace, draws the new logo."""
+    page = participant.get("/sections/onboarding/").content.decode()
+    header = re.search(r'<header class="ob-top">.*?</header>', page, re.S).group(0)
+
+    assert '<use href="#logo"' in header
+    assert '<use href="#mark"' not in header
+
+
 def test_before_we_begin_is_a_wizard_of_the_reason_then_the_ratings_and_the_coach_and_contacts_are_side_cards():
     """✨ The hackathon's wizard asked the reason, then the ratings; the original prototype's mentor and contacts
     screens became the hub side cards Walk with a coach and Five trusted voices (ticket 50)."""

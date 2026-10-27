@@ -18,6 +18,14 @@
     {% block extra_head %}{% endblock extra_head %}
   </head>
   <body>
+    {# ✨ Only the logo's symbol is wanted here (fix-5): the page does not extend engine/base.html, which holds the whole sprite #}
+    <svg aria-hidden="true">
+      {% include "engine/logo_symbol.html" %}
+    </svg>
+    {# ✨ A signed-in visitor (the sign-out page) gets the participant pages' top bar (fix-5); a signed-out one has none to show #}
+    {% if user.is_authenticated %}
+      <div class="top-bar">{% include "engine/participant_header.html" %}</div>
+    {% endif %}
     <main class="container account-page">
       {% include "access/demo_notice.html" %}
       {% block body %}
