@@ -44,6 +44,28 @@ def test_a_signed_in_participant_gets_the_homepage_and_begin_leads_to_the_hub(cl
 
 
 @pytest.mark.django_db
+def test_the_homepages_top_bar_holds_the_logo_alone(client):
+    """✨ Ticket 91: no link or button but the logo, which leads to the top of the page."""
+    page = client.get("/").content.decode()
+
+    bar = re.search(r'<nav class="nav"[^>]*>(.*?)</nav>', page, re.S)
+    assert bar is not None, "no top bar on the page"
+    assert re.findall(r'<a\s[^>]*href="([^"]*)"', bar.group(1)) == ["#top"]
+    assert "<button" not in bar.group(1)
+    assert '<use href="#logo"' in bar.group(1)
+
+
+@pytest.mark.django_db
+def test_the_new_logo_replaces_the_old_mark_and_name_in_the_bar_and_the_footer(client):
+    page = client.get("/").content.decode()
+    footer = re.search(r"<footer.*?</footer>", page, re.S).group(0)
+
+    assert '<use href="#logo"' in footer
+    assert "<b>Whatever You Do</b>" not in footer
+    assert "<span>Whatever You Do</span>" not in page
+
+
+@pytest.mark.django_db
 def test_the_homepage_states_adult_eligibility_up_front(client):
     assert "For adults aged 18 and over." in client.get("/").content.decode()
 

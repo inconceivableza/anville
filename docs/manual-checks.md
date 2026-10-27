@@ -30,16 +30,16 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 ## The homepage (`/`, signed out and signed in; beside v3's, `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`)
 
 - Top to bottom: the forest video under a top bar, with "Everyone has a purpose. Do you know yours?"; "Whatever You Do is a pathway for discerning your purpose." with its five pillars; "How it works" with its five steps and the coach's line; Impact's three cards; For churches; "Ideas to explore"; a parent's story; the callings carousel; the footer. Nothing offers a newsletter, donations or a contact address.
-- The top bar reads Home, How it works, The evaluation, Impact, Coaches and Begin. Each but Begin scrolls to its part of the page; there is no round menu button.
+- The top bar holds the "/whateveryoudo" logo alone (ticket 91): no link or button but the logo, which scrolls to the top of the page. It stays at the top as you scroll, over every part of the page.
 - The forest video plays muted and loops, with no sound and no controls. With the video blocked (DevTools, Network, right-click `hero.mp4`, "Block request URL", then reload), the still frame shows in its place.
 - Reduced motion, and without JavaScript: the still frame shows from the start and the forest never moves, not even for a moment.
 - "How it works": STEP 01 to STEP 05, each with its activities and an "In your journey" outcome; the tabs and ← → move between them. The tabs and the carousel are checked in detail under fix-14 and fix-17 below.
-- Without JavaScript, the top bar's and the footer's links still scroll to their parts.
-- Keyboard only: Tab reaches each top bar link with a visible focus ring, and Enter follows it.
+- Without JavaScript, the footer's links still scroll to their parts.
+- Keyboard only: Tab reaches the top bar's logo with a visible focus ring, and Enter follows it.
 - DevTools, Network, reload: every request goes to this site (no Google Fonts, nothing else).
 - With `ANVILLE_DEMO_NOTICE` set in `.env` (as every staging environment has it), the amber "Demo" notice sits under "Begin your journey" over the video, easy to read at phone width and on a wide screen, and at the top of the sign-up and sign-in pages. With it unset, neither shows.
 - The footer's Explore and For churches links scroll to their parts, and Credits opens `/credits/`.
-- Phone width: the headline and the top bar fit without sideways scrolling, and the Begin buttons are easy to tap.
+- Phone width: the headline and the top bar's logo fit without sideways scrolling, and the Begin buttons are easy to tap.
 - Signed out, Begin and every "Begin your journey" button open sign-up; signed in, they open the hub. Signing in, and agreeing to consent, both land on the hub, not the homepage.
 
 ## The demo notice beyond the homepage (ticket 46; `ANVILLE_DEMO_NOTICE` set in `.env`)
@@ -105,16 +105,25 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 
 ## The header and the pathway sidebar (every participant page)
 
-- The hub, each section page, results, the comparison and invitations have the header: the pathway's name (leading to the hub) on the left, and "Your pathway" and "Sign out" on the right. The coach's page and the observer's pages have none of it, even in the participant's own signed-in browser.
+- The hub, each section page, results, the comparison and invitations have the header: the logo (leading to the hub) on the left, and "Your pathway" and "Sign out" on the right. The coach's page and the observer's pages have none of it, even in the participant's own signed-in browser.
 - "Your pathway" opens a panel down the right listing what the hub lists (ticket 80): its sections, the comparison's row and its side cards, with their statuses; the section you are in is highlighted, and a locked section is greyed and not a link. Below them: invitations, the coach page once Section 1 is open, and results and the comparison once the sort is in. Pressing "Your pathway" again closes it.
 - Without JavaScript, the panel opens and closes just the same.
 - Keyboard only: Tab reaches "Your pathway", Enter or Space opens it, and Tab then moves through its links, with the focus ring showing on each.
 - Screen reader: "Your pathway" is announced as collapsed or expanded, and the step you are on as the current page.
 - Phone width: the header fits on one line or wraps tidily, the panel fills most of the width without sideways scrolling, and a long list scrolls inside the panel.
-- Phone width (ticket 53b): every section in the panel that isn't locked is a link, and so are the links below them; none is missing, as they were on a phone before. On the homepage, the menu still hides its links at phone width as before.
+- Phone width (ticket 53b): every section in the panel that isn't locked is a link, and so are the links below them; none is missing, as they were on a phone before.
 - "Sign out" lands on the homepage, signed out.
 - The footer's "Credits" shows the header while signed in, and the plain page once signed out.
-- With `ANVILLE_SIDEBAR=false` in `.env` and the server restarted, "Your pathway" is gone; the pathway's name and "Sign out" remain.
+- With `ANVILLE_SIDEBAR=false` in `.env` and the server restarted, "Your pathway" is gone; the logo and "Sign out" remain.
+
+### Ticket 91: A fixed top bar, and the new logo (rebuild the frontend first; signed in at a wide screen and at about 375px; no pathway reload needed)
+
+- Scroll a long page (a section page, the results) and the hub: the header, with the logo, "Your pathway" and "Sign out", stays at the top of the window, and the page's text passes under it. With `ANVILLE_DEMO_NOTICE` set, the thin demo strip stays with it, above the header on every page but the hub.
+- Open "Your pathway", then scroll: the panel stays hanging from the header, and a long list scrolls inside it.
+- Follow a link to a place on a page, or press a refused button (a refusal reopens the page at its message): the place lands below the bar, never under it.
+- The logo reads "/whateveryoudo", dark on the cream, and leads to the hub. It replaces the written name in the header and, on the homepage, the old mark and name in the top bar and the footer.
+- The homepage's bar (signed out too) holds the logo alone, light on dark brown, and stays at the top while you scroll the whole page; the footer's logo is light on the black.
+- At about 375px, the header keeps to one row: the logo, "Your pathway" and "Sign out" side by side, none wrapping, the logo still readable. The homepage's bar likewise.
 
 ## The hub's layout (the hub, beside the prototype's: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html#hub`)
 
@@ -637,7 +646,7 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - The sort, framed (a participant's Section 1) and on the cream (an observer's link, in a private window): the card on show stands out from the page, with its outline and soft shadow, before and while it flies to a bucket, and reads as easily as before. Keyboard only: each bucket button, Undo and each fine-tuning slider still shows its ring when focused.
 - The coach's view of the results and comparison (the coach's link, once shared): the sections look the same as the participant's, outline included.
 - Phone width: on the hub, the sort, fine-tuning, results and the comparison, each card fits with a margin each side, its outline whole, its words clear of its edges, and nothing scrolls sideways.
-- Homepage (signed out): the header's "Coaches", the hero's "For coaches" and the footer's "For coaches" each scroll to the coach panel in "How it works"; the pillars read "Coach oversight". No "mentor" shows on the page.
+- Homepage (signed out): the hero's "For coaches" and the footer's "For coaches" each scroll to the coach panel in "How it works"; the pillars read "Coach oversight". No "mentor" shows on the page.
 
 ## Hand-check fixes (fix-14; rebuild the frontend first)
 

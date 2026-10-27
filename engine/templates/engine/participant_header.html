@@ -2,8 +2,9 @@
 {# For licensing information see ../../../LICENSE.md #}
 {% load navigation %}
 {% comment %}
-  ✨ The header of every participant page (ticket 41a): the pathway's name, leading to the hub; the sidebar; and "Sign
-  out", allauth's own, a POST so no page loaded ahead of time signs anyone out, leading to the homepage.
+  ✨ The header of every participant page (ticket 41a): the logo, named by the pathway's name and leading to the hub
+  (ticket 91); the sidebar; and "Sign out", allauth's own, a POST so no page loaded ahead of time signs anyone out,
+  leading to the homepage. base.html holds it in the top bar, which stays in view as the page scrolls.
 
   The sidebar is a <details>, so it opens and closes without JavaScript; with it, a click outside or Escape closes it
   too (ticket 79). It lists what the hub lists, in its order (ticket 80): the sections, with the
@@ -15,7 +16,7 @@
 <header class="site-header">
   <div class="nav light">
     <div class="nav-left">
-      <a class="site-header-title" href="{% url 'hub' %}">{{ nav.title|default:"Anville" }}</a>
+      <a class="site-header-title brand" href="{% url 'hub' %}" aria-label="{{ nav.title|default:"Anville" }}"><svg class="brand-logo" viewBox="0 0 910.32 157.7" aria-hidden="true" focusable="false"><use href="#logo"/></svg></a>
     </div>
     <div class="nav-right">
       {% if nav.sidebar %}
