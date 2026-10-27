@@ -96,9 +96,10 @@
   {% elif checklist.screen == "chosen" %}
     {% comment %}
       ✨ Only the coach kept: nothing of the checklist that chose them. They are called the participant's coach only
-      once they have accepted; until then, chosen. A coach who declined, or withdrew their acceptance (ADR 0024), is
-      still kept until someone else is chosen, but the card turns from gold to the amber of the mock-up's decline, and
-      choosing someone else leads.
+      once they have accepted; until then, chosen. A coach who declined is still kept until someone else is chosen, but
+      the card turns from gold to the amber of the mock-up's decline, and choosing someone else leads. So too for a
+      coach who withdrew their acceptance, said this once: drawing it forgets them (ADR 0024), so it offers nothing
+      that acts on them.
     {% endcomment %}
     <div class="coach-outcome {% if checklist.link.said_no %}coach-check{% else %}coach-go{% endif %}">
       <h2>
@@ -113,7 +114,7 @@
       <div class="coach-buttons">
         <a href="{% url 'hub' %}" class="pill{% if checklist.link.said_no %} ghost{% endif %}">Back to the hub</a>
         <button type="submit" name="step" value="restart" class="pill{% if not checklist.link.said_no %} ghost{% endif %}">Choose someone else</button>
-        <button type="submit" name="step" value="remove" class="pill ghost">Remove</button>
+        {% if checklist.link.answer != "withdrawn" %}<button type="submit" name="step" value="remove" class="pill ghost">Remove</button>{% endif %}
       </div>
     </div>
 

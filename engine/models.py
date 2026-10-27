@@ -386,7 +386,7 @@ class Invitation(models.Model):
     the link, so revoking or reissuing asks again. Each kind of link works only at its own address. Once the coach has
     accepted, the participant's consent for them to see the results and comparison is kept on the link too (ticket 27).
     The acceptance is the coach's consent, which they can withdraw while the link works: that leaves "withdrawn" in its
-    place, clears the sharing and stops the link (ADR 0024).
+    place, clears the sharing and stops the link; once the participant has been told, the coach is deleted (ADR 0024).
 
     While the participant's consent is withdrawn, every link they gave out is refused as a dead one is, and works again,
     as it was, once they agree again (ticket 45). Nothing about the link changes meanwhile, its expiry included.
@@ -395,8 +395,8 @@ class Invitation(models.Model):
     class CoachAnswer(models.TextChoices):
         ACCEPTED = "accepted"
         DECLINED = "declined"
-        # ✨ An acceptance the coach took back (ADR 0024), kept in its place so the participant is told, until the link
-        # is reissued or revoked or the coach changed, as any answer is.
+        # ✨ An acceptance the coach took back (ADR 0024), kept in its place only until the participant is told, when the
+        # coach goes with it (`forget_withdrawn_coach`), or until the link is reissued or revoked or the coach changed.
         WITHDRAWN = "withdrawn"
 
     contact = models.OneToOneField(Contact, on_delete=models.CASCADE, related_name="invitation")
@@ -530,6 +530,16 @@ class Invitation(models.Model):
             coach_answer=cls.CoachAnswer.WITHDRAWN, results_shared_at=None, expires_at=now
         )
         return withdrawn == 1
+
+    @classmethod
+    def forget_withdrawn_coach(cls, response):
+        """✨ Delete a response's coach whose acceptance was withdrawn, name, link and answer together, once the
+        participant has been told: a kept "withdrawn" still says the coach once accepted, which implies their faith
+        (ADRs 0010, 0024). The participant is then as if no coach had been chosen; what the acceptance opened stays open
+        (ADR 0019). A coach chosen since is untouched."""
+        Contact.objects.filter(
+            response=response, role=Contact.Role.COACH, invitation__coach_answer=cls.CoachAnswer.WITHDRAWN
+        ).delete()
 
     @classmethod
     def _withdrawable_by_coach(cls, token):

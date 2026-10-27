@@ -196,7 +196,8 @@ def credits_page(request):
 @login_required
 @consent_required
 def hub(request):
-    """✨ Where the participant always starts: their track's sections, their status, and the next step."""
+    """✨ Where the participant always starts: their track's sections, their status, and the next step. Once it has told
+    them their coach withdrew, that coach is forgotten (ADR 0024)."""
     state = _participant(request.user)
     if state.version is None:
         return render(request, "engine/hub.html", {})
@@ -211,22 +212,32 @@ def hub(request):
     coach_page = _coach_page_of(state.version.document, hub)
     minimum = minimum_observers(state.version.document)
     waiting = hub.waiting_on_answers
-    return render(
+    voices = _hub_voices(state, hub)
+    side_cards = _side_cards(state, hub, voices)
+    coach_wait = _coach_wait_panel(hub, coach, coach_page)
+    shown = render(
         request,
         "engine/hub.html",
         {
             "title": text_for(state.version.document["title"], "participant"),
             "hub": hub,
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
-            "coach_wait": _coach_wait_panel(hub, coach, coach_page),
-            "side_cards": _side_cards(state, hub),
+            "coach_wait": coach_wait,
+            "side_cards": side_cards,
             "coach_card": _coach_card(coach, coach_section, coach_page),
-            "voices": _hub_voices(state, hub),
+            "voices": voices,
             "comparison": _hub_comparison(state),
             "waiting_sentence": waiting.waiting_sentence(minimum) if waiting is not None else None,
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
+    # ✨ The coach card's tag says "Withdrawn" while the card is open, and the next-step panel says it while it is shown,
+    # in place of "Waiting on answers".
+    on_the_card = any(card.id == coach_section and not card.is_locked for card in side_cards)
+    on_the_panel = coach_wait is not None and waiting is None
+    if _answer_of(coach) == Invitation.CoachAnswer.WITHDRAWN and (on_the_card or on_the_panel):
+        Invitation.forget_withdrawn_coach(state.response)
+    return shown
 
 
 def _hub_comparison(state):
@@ -255,15 +266,14 @@ def _coach_section_of(document):
     return section_of(document, checklists[0])["id"] if checklists else None
 
 
-def _side_cards(state, hub):
+def _side_cards(state, hub, voices):
     """✨ The hub's side cards, each with the status its card shows, for the hub and the sidebar alike, so the two never
-    disagree (ticket 95): the coach's tagged with where the coach stands (ticket 51b), and Five trusted voices with its
-    own tag while it is unlocked (ticket 51a)."""
+    disagree (ticket 95): the coach's tagged with where the coach stands (ticket 51b), and Five trusted voices, as
+    `_hub_voices` gives it, with its own tag while it is unlocked (ticket 51a)."""
     coach_section = _coach_section_of(state.version.document)
     # ✨ The coach is read only where a side card is theirs, so a page without that card never depends on the coach.
     on_a_card = any(card.id == coach_section for card in hub.side_cards())
     answer = _answer_of(_coach_of(state.response, state.answers)) if on_a_card else None
-    voices = _hub_voices(state, hub)
     cards = []
     for card in hub.side_cards():
         if card.id == coach_section:
@@ -328,8 +338,23 @@ def _section_shown(request, state, section, shown, status=200):
         step = wizard_step(state.sections, section, shown["page"]["number"])
         photo = _photo_of(state.version.document, section["id"])
         shown = {**shown, "photo": photo, "step": step, "steps": step.numbers}
-        return render(request, "engine/wizard.html", shown, status=status)
-    return render(request, "engine/section.html", shown, status=status)
+        page = render(request, "engine/wizard.html", shown, status=status)
+    else:
+        page = render(request, "engine/section.html", shown, status=status)
+    return _forgetting_a_withdrawn_coach_once_told(state, shown["section"]["blocks"], page)
+
+
+def _forgetting_a_withdrawn_coach_once_told(state, blocks, page):
+    """✨ `page`, already drawn with these `blocks`; if a coach checklist among them told the participant that their
+    coach withdrew, that coach is then forgotten (ADR 0024), so the page, its sidebar included, says it this once."""
+    told = any(
+        (block.get("checklist") or {}).get("link")
+        and block["checklist"]["link"]["answer"] == Invitation.CoachAnswer.WITHDRAWN
+        for block in blocks
+    )
+    if told:
+        Invitation.forget_withdrawn_coach(state.response)
+    return page
 
 
 def _coach_page_of(document, hub):
@@ -388,7 +413,7 @@ def participant_nav(request):
         "sidebar": {
             "outline": hub.outline(),
             "comparison": _hub_comparison(state),
-            "side_cards": _side_cards(state, hub),
+            "side_cards": _side_cards(state, hub, _hub_voices(state, hub)),
             "current": _current_section(request, document),
             "links": [{"label": label, "href": href, "is_current": href == request.path} for label, href in links],
         },
@@ -683,10 +708,11 @@ def coach_checklist(request, block_id):
         result = render(request, "engine/coach_checklist_result.html", context, status=status)
         if coach is not None:
             result["Cache-Control"] = "no-store"  # ✨ it holds the link, shown this once
-        return result
+        return _forgetting_a_withdrawn_coach_once_told(state, [checklist_block], result)
     # ✨ Never a redirect without JavaScript while choosing: the answers would have to go in the address, where they
     # are logged. The page returned is the one the checklist is on.
-    return render(request, "engine/section.html", shown, status=status)
+    page = render(request, "engine/section.html", shown, status=status)
+    return _forgetting_a_withdrawn_coach_once_told(state, shown["section"]["blocks"], page)
 
 
 # ✨ The buttons of the coach checklist: back to the intro keeping what was given, on to the questions, to see how

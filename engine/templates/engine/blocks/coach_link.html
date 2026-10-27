@@ -35,8 +35,9 @@
   {% endif %}
   {% comment %}
     ✨ Offered after an answer too: reissuing asks again, and revoking stops the link, taking the answer with it, since
-    it belongs to the link it came through.
+    it belongs to the link it came through. Not after a withdrawal: drawing this page forgets that coach (ADR 0024).
   {% endcomment %}
+  {% if link.answer != "withdrawn" %}
   <div class="coach-buttons">
     {% url 'issue_invitation' link.contact_id as issue %}
     <button type="submit" formaction="{{ issue }}" hx-post="{{ issue }}" hx-target="#block-{{ block.id }}"
@@ -49,4 +50,5 @@
               hx-select="#block-{{ block.id }}" hx-swap="outerHTML" class="pill ghost">Revoke link</button>
     {% endif %}
   </div>
+  {% endif %}
 </div>

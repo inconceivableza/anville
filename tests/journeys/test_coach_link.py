@@ -396,22 +396,31 @@ def test_the_coach_can_withdraw_while_the_participant_has_withdrawn_their_own_co
 
 
 @pytest.mark.django_db
-def test_once_the_coach_withdraws_the_participant_is_told_and_offered_someone_else_first(
-    signed_in_client, load_pathway, observer  # noqa: F811
+@pytest.mark.parametrize("told_on", ["coach page", "hub"])
+def test_once_the_coach_withdraws_the_participant_is_told_once_and_the_coach_is_then_forgotten(
+    signed_in_client, load_pathway, observer, told_on  # noqa: F811
 ):
     """✨ As after a decline: the coach page says where the coach stands and leads with choosing someone else, and the
-    hub's card tags it."""
+    hub's card tags it. A kept "withdrawn" still says the coach once accepted, so it stays only until the participant
+    has been told, on whichever page they open first; then they are as if no coach had been chosen (ADR 0024)."""
     load_pathway(with_a_coach_card())
     signed_in_client.post(f"/sections/{ONBOARDING}/complete/")
+    before = coach_card_tag(signed_in_client)
     link = link_shown(choose(signed_in_client).content.decode())
     answer_as_coach(observer, link, "accept")
 
     withdraw_as_coach(observer, link)
 
-    page = shown(signed_in_client, "walk-with-a-coach")
-    assert re.search(r'data-coach-answer="withdrawn"', page)
-    assert re.search(r'<button[^>]*name="step" value="restart" class="pill"', page)
-    assert coach_card_tag(signed_in_client) == COACH_ANSWER_LABELS["withdrawn"]
+    if told_on == "coach page":
+        page = shown(signed_in_client, "walk-with-a-coach")
+        assert re.search(r'data-coach-answer="withdrawn"', page)
+        assert re.search(r'<button[^>]*name="step" value="restart" class="pill"', page)
+    else:
+        assert coach_card_tag(signed_in_client) == COACH_ANSWER_LABELS["withdrawn"]
+    assert not Contact.objects.filter(role=Contact.Role.COACH).exists()
+    assert not Invitation.objects.exists()
+    assert "data-coach-answer" not in shown(signed_in_client, "walk-with-a-coach")
+    assert coach_card_tag(signed_in_client) == before
 
 
 # Whose link

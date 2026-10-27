@@ -22,7 +22,7 @@ from django.utils import timezone
 from django.utils.html import escape
 
 from engine.document.observers import minimum_observers, relationship_question
-from engine.hub import COACH_WAIT_WORDING
+from engine.hub import COACH_WAIT_WORDING, hub_for, track_sections
 from engine.models import Contact, ObserverResponse, Response
 from tests.journeys.test_coach_checklist import choose, step
 from tests.journeys.test_coach_link import answer_as_coach, coach_link_action, link_shown
@@ -926,6 +926,19 @@ def test_each_lock_note_names_exactly_what_is_left_in_the_sections_still_unfinis
     assert escape(OPENS_ONCE.format(what_is_left("others"))) in note_under(participant, "calling")
 
 
+def test_the_strengths_evaluation_is_locked_only_as_section_1_is_and_opens_with_it():
+    """✨ Section 1's passages have nothing to confirm (ticket 87), so its part never waits on reading them: while
+    locked, its note is Section 1's own, and it opens with Section 1, before anything is read (fix-9)."""
+    sections = track_sections(the_pathway())
+
+    locked = {state.id: state for state in hub_for(sections, {}, completed=[]).sections}
+    opened = {state.id: state for state in hub_for(sections, {}, completed=["onboarding"]).sections}
+
+    assert locked["strengths"].is_locked
+    assert locked["strengths"].lock_note == locked["designed"].lock_note
+    assert not opened["strengths"].is_locked
+
+
 @pytest.mark.django_db
 def test_a_participant_turned_away_from_section_3_for_want_of_the_side_cards_is_told_what_they_still_need(participant):
     """✨ The side cards' "Add at least 3 people." and "Choose a coach and send them their link." gate no press: with
@@ -1148,6 +1161,24 @@ def test_a_section_4_the_acceptance_opened_stays_open_once_the_coach_withdraws_i
 
     assert coach.post(f"{link}withdraw/").status_code == 200
 
+    assert client.get(SECTION_4).status_code == 200
+    assert "Locked" not in hub_entry(client.get("/hub/").content.decode(), TITLES["calling"])
+
+
+@pytest.mark.django_db
+def test_section_4_stays_open_once_the_participant_is_told_of_the_withdrawal_and_the_coach_is_forgotten(participant):
+    """✨ Telling the participant forgets the coach, name and answer, but not what the acceptance opened (ADRs 0019,
+    0024), however soon after it the coach withdrew."""
+    client = through_to_section_3(participant)
+    complete(client, "shape")
+    link = reissue_coach_link(client)
+    coach = Client()
+    assert answer_as_coach(coach, link, "accept").status_code == 303
+    assert coach.post(f"{link}withdraw/").status_code == 200
+
+    client.get("/hub/")
+
+    assert not Contact.objects.filter(role=Contact.Role.COACH).exists()
     assert client.get(SECTION_4).status_code == 200
     assert "Locked" not in hub_entry(client.get("/hub/").content.decode(), TITLES["calling"])
 
