@@ -1317,6 +1317,7 @@ def test_the_panel_is_as_before_while_something_else_is_next(participant):
 
     assert button_to(panel, "Begin") == SECTION_3
     assert button_to(panel, "Your coach") is None
+    assert re.findall(r"<(?:a|button)\b", panel) == ["<a"]  # ✨ one way to start Section 3 (ticket 95)
 
 
 @pytest.mark.django_db

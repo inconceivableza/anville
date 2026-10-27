@@ -42,11 +42,12 @@ def participant(client, django_user_model):
 
 
 @pytest.mark.django_db
-def test_the_hub_links_your_groups_at_its_foot_beside_your_consent(client, participant):
+def test_the_hub_links_your_consent_at_its_foot_but_not_your_groups(client, participant):
+    """✨ No organisation is set up in this release, so the hub no longer shows "Your groups" (ADR 0021, ticket 95)."""
     hub = main_of(client.get("/hub/").content.decode())
 
-    foot = re.search(r'<p[^>]*>(?:(?!</p>).)*href="/consent/".*?</p>', hub, re.S).group(0)
-    assert re.search(rf'<a href="{YOUR_GROUPS}">Your groups</a>', foot)
+    assert re.search(r'<p[^>]*>(?:(?!</p>).)*href="/consent/".*?</p>', hub, re.S)
+    assert f'href="{YOUR_GROUPS}"' not in hub
 
 
 @pytest.mark.django_db
