@@ -17,6 +17,7 @@ from tests.journeys.test_whatever_you_do import (
     TITLES,
     answer_onboarding,
     participant,  # noqa: F401  (a fixture, used by name)
+    people_answer,
     through_section_1,
 )
 from tests.journeys.test_whatever_you_do_faithful_port import complete, submit_the_sort
@@ -84,6 +85,33 @@ def test_the_results_pages_one_way_back_leads_to_the_section_holding_its_signpos
     assert href == "/sections/designed/"
     assert TITLES["designed"] in words
     assert leads_elsewhere_to(client, RESULTS, "/hub/") == []
+
+
+@pytest.mark.django_db
+def test_a_comparison_that_shows_ends_on_to_the_reflection_with_the_top_button_kept(participant):  # noqa: F811
+    """✨ Fix-18: the second exception to one way back per page. Section 2 open, the end leads on to its reflection, at
+    the field's anchor, and the top back button stays."""
+    client = through_section_1(participant)
+    people_answer(client)
+
+    page = client.get(COMPARISON).content.decode()
+
+    assert the_way_back(client, COMPARISON)[0] == "/sections/others/"
+    assert '<a class="pill" href="/sections/others/#block-gifts-summary">On to your reflection →</a>' in page
+
+
+@pytest.mark.django_db
+def test_while_section_2_is_locked_the_comparisons_end_leads_where_its_top_button_does(participant):  # noqa: F811
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+    submit_the_sort(participant)
+    people_answer(participant)
+
+    page = participant.get(COMPARISON).content.decode()
+    backs = re.findall(r'<a class="pill ghost back-button" href="[^"]*">[^<]*</a>', page)
+
+    assert len(backs) == 2 and backs[0] == backs[1]
+    assert "On to your reflection" not in page
 
 
 # ✨ Each page by its address, with where its way back leads and the words that must name it.

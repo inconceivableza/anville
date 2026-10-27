@@ -968,6 +968,7 @@ def _comparison_shown(request, state, result, section, block_id, status=200, sha
         "coach": _coach_sharing(state.response, block_id),
         "brief": coach_brief(sort),
         "back": _section_holding_comparison_signpost(state, block_id) or section["back"],
+        "onward": _reflection_after_comparison(state, block_id),
         "share_refusal": share_refusal,
     }
     return render(request, "engine/comparison.html", context, status=status)
@@ -2465,11 +2466,38 @@ def _section_holding_comparison_signpost(state, sort_id):
     """✨ Where the comparison of a sort leads back to (ticket 96): the open section in the track holding a comparison
     signpost to it, as its ways back name it, {"title", "href"}, at the page reached. None where no open section holds
     one, as in the faithful port or while that section is locked, when the comparison leads back as its results do."""
+    held = _open_section_holding_comparison_signpost(state, sort_id)
+    if held is None:
+        return None
+    section, reached = held
+    return {"title": text_for(section["title"], "participant"), "href": page_url(section["id"], reached)}
+
+
+def _open_section_holding_comparison_signpost(state, sort_id):
+    """✨ The open section holding a comparison signpost to the sort, and the page reached, or None."""
     for section in state.sections:
         holds = any(block["type"] == "comparison_signpost" and block["sort"] == sort_id for block in section["blocks"])
         reached = state.reached(section) if holds else None
         if reached is not None:
-            return {"title": text_for(section["title"], "participant"), "href": page_url(section["id"], reached)}
+            return section, reached
+    return None
+
+
+def _reflection_after_comparison(state, sort_id):
+    """✨ Where the comparison's last button leads (fix-18): the section holding its signpost, at the field that waits on
+    the comparison (the block carrying `after_comparison` for the sort), as {"label", "href"}, the address anchored at
+    that field. None while that section is locked, or where it has no such field, when the page's top back button's
+    place stands in for it."""
+    held = _open_section_holding_comparison_signpost(state, sort_id)
+    if held is None:
+        return None
+    section = held[0]
+    for block in section["blocks"]:
+        if block.get("after_comparison", {}).get("sort") == sort_id and page_of(section, block["id"]) is not None:
+            return {
+                "label": "On to your reflection →",
+                "href": f"{page_url(section['id'], page_of(section, block['id']))}#{landing_of(block)}",
+            }
     return None
 
 

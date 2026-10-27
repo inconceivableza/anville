@@ -85,10 +85,12 @@ COACH_WAIT_WORDING = {
 def with_coach_answer(state, answer):
     """✨ The coach's section as its side card shows it: "Locked" while locked, the coach's answer while there is one or
     a working link awaits it (ticket 51b), and otherwise, with no coach, or their link revoked or expired unanswered,
-    what it showed before any link was made, though the section stays complete (fix-2)."""
+    what it showed before any link was made, though the section stays complete (fix-2). "Declined" and "Withdrawn"
+    take the locked and waiting look through `tone` (fix-18), as a count of people still needed does (fix-12)."""
     if state.is_locked:
         return state
-    return state._replace(label=COACH_ANSWER_LABELS.get(answer, LABELS[NOT_STARTED]))
+    state = state._replace(label=COACH_ANSWER_LABELS.get(answer, LABELS[NOT_STARTED]))
+    return state._replace(tone="waiting") if answer in ("declined", COACH_WITHDREW) else state
 
 
 class NextStepWording(NamedTuple):

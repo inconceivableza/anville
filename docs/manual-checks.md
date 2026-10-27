@@ -190,7 +190,7 @@ Page by page:
 Rebuild the frontend. No need to load the pathway again: a participant started on ticket 87's version will do.
 
 - In *Whatever You Do*, each of these opens with an outline button above its title, the first thing on the page, and nowhere else on it a way back: Section 1, Section 2 and a section on paper ("← Back to the hub"); Walk with a coach and Five trusted voices ("← Back to the hub", a button, not the quiet grey link it was); the Strengths evaluation before the sort ("← Back to How you've been designed – your strengths"); the results ("← Back to How you've been designed – your strengths"); and the comparison ("← Back to Your gifts, seen together" once Section 1 is finished, Section 1's button before then). Each lands where it says.
-- The results page, once Section 1 is finished, has no "Back to the hub" below the results; the comparison has no "← Return to …" at its foot and no "← Back to results" at its top.
+- The results page, once Section 1 is finished, has no "Back to the hub" below the results; the comparison has no "← Return to …" at its foot and no "← Back to results" at its top (once it shows, it ends with a green "On to your reflection →", or the top button again while Section 2 is locked, fix-18).
 - "Before you look", the retake page (demo only), removing a contact without JavaScript, a refusal page and the credits page (signed in) have their way back as the same button, leading where it did.
 - Walk with a coach's "Back to the hub" beside "Choose someone else", once a coach is chosen, stays as it was.
 - At about 375px the long "← Back to How you've been designed – your strengths" wraps inside its button, with no sideways scroll. With JavaScript turned off, every one of these buttons works the same.
@@ -578,6 +578,14 @@ No rebuild and no pathway reload needed.
 - The Five trusted voices card still has "Invite people" alone below three; Section 2's card still has both its buttons.
 - The faithful port's comparison below the minimum is unchanged: "You need at least 3 people…" and "2 of 3 have answered so far".
 - Phone width: the waiting page's lines and button fit with no sideways scroll. With JavaScript turned off, everything above works the same.
+
+### Fix-18: The comparison ends on to the reflection; "Declined" and "Withdrawn" pills grey (rebuild the frontend; phone width too)
+
+- With enough answers (three) and Section 1 finished, the comparison, "How others experience you", ends below its last card with a green button, "On to your reflection →", like "I've finished Section 1" at the strengths evaluation's end. It opens Section 2 scrolled to the reflection field, and marks nothing complete. The top "← Back to Your gifts, seen together" button is unchanged.
+- While Section 2 is still locked, the end instead repeats the top outline button, with the same label and destination. Below the minimum (the waiting page) there is only the top button.
+- Have the coach decline on their link: the Walk with a coach card's "Declined" on the hub, and its entry in the sidebar, has grey text and a grey outline on the pale grey, like "Locked", not black. A coach who then accepts and withdraws their data: "Withdrawn" looks the same. "Accepted" and "Link issued" are unchanged.
+- The dark card's light equivalent: if the coach card shows dark anywhere, its "Declined" is a dimmer light text and outline than "Not started" has.
+- At phone width the button at the comparison's end fits with no sideways scroll.
 
 ## The comparison (the results page's "Compare with how others see you →")
 
@@ -971,7 +979,7 @@ Walked at a wide screen on 22 Oct 2026, with staging on `56924e5`; each passed, 
 - "Locked" has grey text and a grey outline on the pale grey fill, and "Not started" keeps black text and a black outline on the same fill, so the two read apart. Look at both together on the hub (a locked section beside an open one that is not started), in a part's row, on the side cards, and in the sidebar's chips.
 - On the dark Five trusted voices card a locked pill is a pale fill with a dimmer light text and outline than "Not started" has.
 - A locked row's "Locked" is still a button: hover or focus it for its note, and tap it at phone width. Its keyboard focus ring still shows.
-- The comparison's row (hub and sidebar) and Five trusted voices' card follow the same rule by what the pill says. Grey text and outline: "Locked", and any count of people still needed ("3 more needed", "2 of 3 answered"), including the comparison row below the minimum even after "Viewed" (it then shows its count). Black text and outline: "Not started", "Ready to view" ("In progress" joined them in fix-15). Unchanged: "Complete" and "Viewed" (lime), and the coach's "Link issued", "Accepted", "Declined", "Withdrawn". Walk the voices card through "N more needed", "Links issued", "Some answers received", "All answers received" and "Enough answers received" (the last four follow Fix-17's rule below), on the dark card too.
+- The comparison's row (hub and sidebar) and Five trusted voices' card follow the same rule by what the pill says. Grey text and outline: "Locked", and any count of people still needed ("3 more needed", "2 of 3 answered"), including the comparison row below the minimum even after "Viewed" (it then shows its count). Black text and outline: "Not started", "Ready to view" ("In progress" joined them in fix-15). Unchanged: "Complete" and "Viewed" (lime), and the coach's "Link issued", "Accepted" ("Declined" and "Withdrawn" are grey from fix-18). Walk the voices card through "N more needed", "Links issued", "Some answers received", "All answers received" and "Enough answers received" (the last four follow Fix-17's rule below), on the dark card too.
 
 ### Fix-13: "Viewed" pill lime (rebuild the frontend; phone width too)
 
