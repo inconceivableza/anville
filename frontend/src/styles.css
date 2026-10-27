@@ -375,23 +375,20 @@ html {
   color: var(--paper);
 }
 
-/* ✨ In the sidebar a lock note opens in the entry's own row, just below its "Locked", rather than floating, as the
-   panel scrolls and its cards clip what runs past them (ticket 97). */
+/* ✨ In the sidebar a lock note floats as the hub's does (fix-7), though the panel scrolls and its side cards clip
+   whatever runs past them (ticket 97): fixed to the window, it is clipped by neither, and with no offsets of its own it
+   stays where it would sit in the row, just below "Locked", moving nothing else; so it needs no JavaScript. It keeps its
+   bridge over the gap, so the pointer can move into it. Its width leaves room for the entry's indent on a phone. */
 .pathway-nav-row > .lock {
   display: block;
 }
 
 .pathway-nav-row .lock-note {
-  position: static;
-  margin-top: var(--space-2xs);
-  width: auto;
-  max-width: none;
-  box-shadow: none;
-  font-size: var(--text-xs);
-}
-
-.pathway-nav-row .lock-note::before {
-  content: none;
+  position: fixed;
+  top: auto;
+  right: auto;
+  margin-top: var(--space-xs);
+  max-width: min(18rem, calc(100vw - 7rem));
 }
 
 /* ✨ The comparison signpost's entry: its title is a button, the hub row's press, drawn as the other titles are */
@@ -2505,6 +2502,12 @@ body:not(.framed) .question-card > p + form {
   font-size: var(--text-sm);
   line-height: 1.5;
   color: var(--ink-light);
+}
+
+/* ✨ The signpost's sentence sits in a paragraph of its own, which the site-wide `p { text-wrap: pretty }` styles
+   directly, so the balance set on `.signpost` (ticket 90) was inherited only to be overridden (fix-7). */
+.signpost p {
+  text-wrap: balance;
 }
 
 .signpost-title {

@@ -141,11 +141,17 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 
 - On the hub, with Before we begin done and nothing else: no locked section has a line under its title. Each "Locked" pill looks as before, at the right of its row; hovering it shows its note in a small box below it ("Opens once you've completed Section 1." on Section 2), which stays while the pointer moves into the box and goes once it leaves both.
 - Keyboard only: Tab reaches each "Locked", with a focus ring, and its note shows while it has the focus; Escape closes the note, the focus staying on "Locked"; Tab on, and the next one's note shows.
-- In the sidebar ("Your pathway"), a locked entry's "Locked" shows its note in the entry's row, just below the pill, on hover, focus or a tap. With the note open, Escape closes the note and leaves the sidebar open; a second Escape closes the sidebar.
+- In the sidebar ("Your pathway"), a locked entry's "Locked" shows its note floating just below the pill, as on the hub, on hover, focus or a tap (fix-7). With the note open, Escape closes the note and leaves the sidebar open; a second Escape closes the sidebar.
 - Without JavaScript (switched off in the developer tools): hovering or tabbing to "Locked" still shows the note, and moving away or tabbing on closes it.
 - Screen reader: "Locked, button" is followed by its note, as its description.
 - Phone width (about 375px): a tap on "Locked" shows the note, and a tap elsewhere closes it; the note stays within the screen, wrapping, with nothing scrolling sideways, on the hub and in the sidebar. A locked side card, if any, works the same.
 - Faithful port: its locked sections behave the same, their notes reading as before ("Opens once you've finished *Before we begin*.").
+
+### Fix-7: The sidebar's lock note floats; the strengths evaluation signpost's lines are even (rebuild the frontend; no need to load the pathway again or start a new participant)
+
+- Open "Your pathway" with Before we begin done and nothing else: hover "Locked" on Section 2 (a section entry), then on a locked entry in the side cards at the foot of the panel. The note floats in a small box just below the pill, over the entries beneath, which do not move. It is not cut off by the panel's edge or by the side card it sits in, even on the last entry at the foot of a scrolled panel. The pointer can move into the box and it stays; it goes when the pointer leaves both.
+- Keyboard: Tab to a "Locked" in the sidebar, with a focus ring: the note shows. Escape closes the note and leaves the sidebar open; a second Escape closes the sidebar. A tap on a phone shows the note, and a tap elsewhere closes it. Phone width (about 375px): the note stays within the screen, wrapping, on a part's indented entry too, with nothing scrolling sideways.
+- Section 1 in *Whatever You Do*, the Strengths evaluation card: "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 3 trusted people to evaluate you too" breaks into lines of about the same length, at a wide screen and at phone width, with no long line over a short one.
 
 ## The participant's pages in the hub's look (ticket 53b; each page signed in, at a wide screen and at about 375px)
 
