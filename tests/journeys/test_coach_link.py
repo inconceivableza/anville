@@ -17,6 +17,7 @@ import pytest
 import time_machine
 from django.utils import timezone
 
+from engine.hub import COACH_ANSWER_LABELS
 from engine.models import Contact, Invitation, ObserverResponse, Response
 from tests.documents import pathway_document
 from tests.journeys.test_answers import shown
@@ -392,6 +393,25 @@ def test_the_coach_can_withdraw_while_the_participant_has_withdrawn_their_own_co
     assert withdraw_as_coach(observer, link).status_code == 200
 
     assert Invitation.objects.get().coach_answer != "accepted"
+
+
+@pytest.mark.django_db
+def test_once_the_coach_withdraws_the_participant_is_told_and_offered_someone_else_first(
+    signed_in_client, load_pathway, observer  # noqa: F811
+):
+    """✨ As after a decline: the coach page says where the coach stands and leads with choosing someone else, and the
+    hub's card tags it."""
+    load_pathway(with_a_coach_card())
+    signed_in_client.post(f"/sections/{ONBOARDING}/complete/")
+    link = link_shown(choose(signed_in_client).content.decode())
+    answer_as_coach(observer, link, "accept")
+
+    withdraw_as_coach(observer, link)
+
+    page = shown(signed_in_client, "walk-with-a-coach")
+    assert re.search(r'data-coach-answer="withdrawn"', page)
+    assert re.search(r'<button[^>]*name="step" value="restart" class="pill"', page)
+    assert coach_card_tag(signed_in_client) == COACH_ANSWER_LABELS["withdrawn"]
 
 
 # Whose link

@@ -787,8 +787,9 @@ def _coach_kept(answers, block_id):
 
 def _coach_link_state(contact_id, issued=None):
     """✨ The coach's link as the coach page shows it: the contact it is for, its invitation while it works, the coach's
-    answer ("waiting" while a working link is unanswered, None with no link at all), and the link itself if it was
-    just issued. An answer outlasts the link's expiry, but not its revoking: it belongs to the link it came through."""
+    answer ("waiting" while a working link is unanswered, None with no link at all), whether the coach has said no,
+    by declining or by withdrawing an acceptance (ADR 0024), and the link itself if it was just issued. An answer
+    outlasts the link's expiry, but not its revoking: it belongs to the link it came through."""
     invitation = Invitation.objects.filter(contact_id=contact_id).first()
     live = invitation if invitation is not None and invitation.works() else None
     answer = invitation.coach_answer if invitation is not None else None
@@ -796,6 +797,7 @@ def _coach_link_state(contact_id, issued=None):
         "contact_id": contact_id,
         "invitation": live,
         "answer": answer or ("waiting" if live else None),
+        "said_no": answer in (Invitation.CoachAnswer.DECLINED, Invitation.CoachAnswer.WITHDRAWN),
         "issued": issued["link"] if issued and issued["contact"] == contact_id else None,
     }
 
