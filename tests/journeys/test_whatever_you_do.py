@@ -1124,6 +1124,22 @@ def test_once_section_4_has_opened_it_stays_open_whatever_happens_to_the_coach(p
 
 
 @pytest.mark.django_db
+def test_a_section_4_the_acceptance_opened_stays_open_once_the_coach_withdraws_it_at_once(participant):
+    """✨ ADR 0024: an opening condition, once met, is not taken back (ADR 0019), even when the coach withdraws before
+    the participant has loaded a page since accepting."""
+    client = through_to_section_3(participant)
+    complete(client, "shape")
+    link = reissue_coach_link(client)
+    coach = Client()
+    assert answer_as_coach(coach, link, "accept").status_code == 303
+
+    assert coach.post(f"{link}withdraw/").status_code == 200
+
+    assert client.get(SECTION_4).status_code == 200
+    assert "Locked" not in hub_entry(client.get("/hub/").content.decode(), TITLES["calling"])
+
+
+@pytest.mark.django_db
 def test_section_4s_lock_note_names_the_unfinished_sections_and_the_coach_then_the_coach_alone(participant):
     client = through_to_section_3(participant)
     authored = opening_condition()
