@@ -83,15 +83,35 @@ document.addEventListener("keydown", (event) => {
 
 // ✨ The sidebar ("Your pathway") is a <details>, which stays open until its button is pressed again. Close it too on a
 // click anywhere outside it, or on Escape, leaving the focus on its button (ticket 79). Without JavaScript only its
-// button closes it.
+// button closes it. The same Escape handler closes an open lock note (ticket 97).
 document.addEventListener("click", (event) => {
   document.querySelectorAll("details.pathway-nav-toggle[open]").forEach((sidebar) => {
     if (!sidebar.contains(event.target)) sidebar.open = false;
   });
 });
 
+// ✨ A lock note open on "Locked" (ticket 97) closes first, the focus staying where it is, and stays closed until the
+// pointer and the focus have both left it; with none open, Escape closes the sidebar.
+const OPEN_LOCK = ".lock:not(.is-dismissed):is(:hover, :focus-within)";
+
+function reopenLeftLocks() {
+  setTimeout(() => {
+    document.querySelectorAll(".lock.is-dismissed").forEach((lock) => {
+      if (!lock.matches(":hover, :focus-within")) lock.classList.remove("is-dismissed");
+    });
+  });
+}
+
+document.addEventListener("pointerout", reopenLeftLocks);
+document.addEventListener("focusout", reopenLeftLocks);
+
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
+  const openLocks = document.querySelectorAll(OPEN_LOCK);
+  if (openLocks.length) {
+    openLocks.forEach((lock) => lock.classList.add("is-dismissed"));
+    return;
+  }
   const sidebar = document.querySelector("details.pathway-nav-toggle[open]");
   if (!sidebar) return;
   sidebar.open = false;

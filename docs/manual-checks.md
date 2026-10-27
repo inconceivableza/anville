@@ -128,6 +128,16 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 - Walk with a coach's tag (ticket 51b): "Locked" before Before we begin is done, then "Not started"; once Sam is saved, "Link issued"; after Sam accepts or declines on the link, "Accepted" or "Declined"; reissuing the link goes back to "Link issued"; revoking it, "Not started". Its sentence is "When you're ready, ask someone to walk this with you.", with no briefing pack. At phone width the tag fits beside the title.
 - Five trusted voices (ticket 51a) is a dark card, as the prototype's, with no names and no name box: "Not started" before anyone is added; with one person, "2 more needed" and "You'll see how others see you once 3 people have answered."; with three, "Complete" (ticket 52), as the section completes once three people have links. "Invited" counts people with a working link (revoking one counts down) and "Answered" counts assessments sent (starting from a link does not count), each "n / 5". "Manage" and the title lead to the section's page. Once the section is complete, a revoke, an expiry or someone taken off the list that leaves fewer than three with working links makes the tag ask for more people again ("1 more needed"), with "You'll see how others see you …" only while fewer than three have answered; the card stays complete and what it opened stays open (ticket 81). Phone width: the meters fill the card.
 
+### Ticket 97: Lock notes on "Locked" (rebuild the frontend; no need to load the pathway again or start a new participant)
+
+- On the hub, with Before we begin done and nothing else: no locked section has a line under its title. Each "Locked" pill looks as before, at the right of its row; hovering it shows its note in a small box below it ("Opens once you've completed Section 1." on Section 2), which stays while the pointer moves into the box and goes once it leaves both.
+- Keyboard only: Tab reaches each "Locked", with a focus ring, and its note shows while it has the focus; Escape closes the note, the focus staying on "Locked"; Tab on, and the next one's note shows.
+- In the sidebar ("Your pathway"), a locked entry's "Locked" shows its note in the entry's row, just below the pill, on hover, focus or a tap. With the note open, Escape closes the note and leaves the sidebar open; a second Escape closes the sidebar.
+- Without JavaScript (switched off in the developer tools): hovering or tabbing to "Locked" still shows the note, and moving away or tabbing on closes it.
+- Screen reader: "Locked, button" is followed by its note, as its description.
+- Phone width (about 375px): a tap on "Locked" shows the note, and a tap elsewhere closes it; the note stays within the screen, wrapping, with nothing scrolling sideways, on the hub and in the sidebar. A locked side card, if any, works the same.
+- Faithful port: its locked sections behave the same, their notes reading as before ("Opens once you've finished *Before we begin*.").
+
 ## The participant's pages in the hub's look (ticket 53b; each page signed in, at a wide screen and at about 375px)
 
 On every page below, check:
@@ -423,7 +433,7 @@ The homepage (`/`):
 - Section 1 completes with the sort in, without visiting the comparison and with nobody invited; its checklist lists only the strengths evaluation (ticket 87).
 - With Section 1 complete and nobody invited, Section 3's entry says "Opens once you've sent a coach their link in *Walk with a coach* and added at least 3 people in *Five trusted voices*."; once the coach is saved, "Opens once you've added at least 3 people in *Five trusted voices*."; once three people are added, it opens (the wording of ticket 79). Section 3 does not wait on Section 2.
 - Walk with a coach's and Five trusted voices' pages have no "Mark complete" and no "Mark as not complete". Neither lists what it waits on, since nothing on them is a press that could be refused (ticket 83). The header's count does not change as each completes, since it counts only the six numbered sections (ticket 87).
-- After revoking one person's link, Five trusted voices stays complete, its tag saying "1 more needed" (ticket 81), and Section 3 stays open. Phone width: Section 3's lock note wraps within its entry.
+- After revoking one person's link, Five trusted voices stays complete, its tag saying "1 more needed" (ticket 81), and Section 3 stays open. Phone width: Section 3's lock note, opened from its "Locked" (ticket 97), wraps within the screen.
 - While Section 3 is the next step, the hub's next step shows its title and "About 30–40 minutes". Section 4's entry says "Opens once you've completed Sections 2 and 3, and your coach has accepted." while the coach has not accepted and Section 2 is unfinished, and Section 5's "Opens once you've completed Section 4.".
 - In each of Sections 3, 4 and 5, "Download Section 3 (PDF)" (4, 5) opens that section's PDF in a new tab, in the browser's own viewer, not a blank page or a download of an HTML error, and saving it keeps the name `whatever-you-do-workbook-section-2.pdf` (3, 4): the files keep their old numbers until the content owner's revised PDFs arrive. Its text reads plainly, with no mention of a draft.
 - "I've finished Section 3" leads to the hub with Section 4 open as the next step once Section 2 is finished and the coach has accepted; the same for 4 and then 5, after which the letter, Section 6, opens.
@@ -722,10 +732,10 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 
 ## Section 4 waits on the coach (A1-64, Section 3 until ticket 87; migrate, load both pathways again, and use a participant started after that)
 
-- With the sections Section 4 requires unfinished and the coach not yet accepted, the hub's note under Section 4 reads "Opens once you've completed {those sections}, and your coach has accepted.", such as "Sections 1, 2 and 3" (the wording of ticket 79). Finish them: it reads "Opens once your coach has accepted. If they decline, choose someone else." Section 4 shows "Locked" on the hub and in the sidebar, with no link, and typing `/sections/calling/` leads back to the hub.
+- With the sections Section 4 requires unfinished and the coach not yet accepted, the hub's note on Section 4's "Locked" (ticket 97) reads "Opens once you've completed {those sections}, and your coach has accepted.", such as "Sections 1, 2 and 3" (the wording of ticket 79). Finish them: it reads "Opens once your coach has accepted. If they decline, choose someone else." Section 4 shows "Locked" on the hub and in the sidebar, with no link, and typing `/sections/calling/` leads back to the hub.
 - From the coach page, open the coach's link in a private window and decline: Section 4 stays locked. Reissue the link and accept: Section 4 opens on the hub and in the sidebar.
 - Then revoke or reissue the coach's link, or choose another coach: Section 4 stays open.
-- On the faithful port, its Section 3 opens as before, with no coach. Same at phone width: the longer note wraps under the section's title, nothing scrolls sideways.
+- On the faithful port, its Section 3 opens as before, with no coach. Same at phone width: the longer note, opened from "Locked", wraps within the screen, nothing scrolls sideways.
 
 ## Refusals without JavaScript (ticket 71; JavaScript switched off in the browser's developer tools)
 
@@ -801,8 +811,8 @@ Load *Whatever You Do* again, then start a new participant (the notes come from 
 - Section 1's button reads "I've finished Section 1", as Sections 2–5's read for theirs.
 - In the faithful port, before Section 1's reading is confirmed, the Strengths assessment's note reads "Opens from *How you've been designed*, once you've read the passages.", the title in italics. *Whatever You Do*'s opens with Section 1 (ticket 87).
 - The faithful port's notes read as before ("Opens once you've finished …"), with the titles now in italics.
-- The sidebar ("Your pathway") shows no notes, only each entry's status and title. Open it, then click anywhere outside it: it closes. Open it again and press Escape: it closes and the focus is on "Your pathway". A click inside it, on a status or between entries, leaves it open.
-- Phone width: the longest notes wrap within their entries, italics and all, with no sideways scroll; the sidebar closes on a tap outside it.
+- The sidebar ("Your pathway") shows no notes as lines, only each entry's status and title; a locked entry's note opens from its "Locked" (ticket 97). Open it, then click anywhere outside it: it closes. Open it again and press Escape: it closes and the focus is on "Your pathway". A click inside it, on a status or between entries, leaves it open.
+- Phone width: the longest notes, opened from "Locked" (ticket 97), wrap within the screen, italics and all, with no sideways scroll; the sidebar closes on a tap outside it.
 
 ### Ticket 80: The sidebar opens on the right and lists what the hub lists
 

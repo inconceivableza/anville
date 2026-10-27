@@ -415,8 +415,8 @@ def italic(text):
 
 
 class LockNote(str):
-    """✨ What the hub says under a locked section (ticket 79), always built from `pieces`, each a `Piece` (ticket 86):
-    plain text as a string, and, as a page draws it, each italic piece in italics."""
+    """✨ What the hub says of a locked section (ticket 79), on its "Locked" (ticket 97), always built from `pieces`,
+    each a `Piece` (ticket 86): plain text as a string, and, as a page draws it, each italic piece in italics."""
 
     def __new__(cls, pieces):
         note = super().__new__(cls, "".join(piece.text for piece in pieces))
@@ -436,7 +436,7 @@ GENERAL_LOCK_NOTE = "Complete what comes before this to open it."
 
 
 def _lock_note(section, completed, answers, sections, moved_past, role):
-    """✨ What the hub says under a locked section: the sections it requires still unfinished, and with them its
+    """✨ What the hub says of a locked section: the sections it requires still unfinished, and with them its
     opening conditions in the sentence it carries for that; once those sections are done, the message of each failing
     opening condition (ADR 0019); for a part waiting on its section, where it opens from and, while a reading there is
     unconfirmed, what opens it; otherwise the engine's general note."""
