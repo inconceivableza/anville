@@ -115,7 +115,7 @@
         "complete_label": "I've finished Section 1",
         "next_step": {
           "heading": "Start with your gifts.",
-          "sentence": "Take the ten-minute strengths evaluation and read three short passages on gifts."
+          "sentence": "Start with the ten-minute strengths evaluation."
         },
         "blocks": [
           {
@@ -403,7 +403,8 @@
         "requires": ["onboarding"],
         "to_finish": "sent a coach their link in {title}",
         "side_card": {
-          "sentence": "When you're ready, ask someone to walk this with you."
+          "lead": "A coach helps you test what you're discovering with someone who knows you and your faith.",
+          "sentence": "You'll need one before the later sections open."
         },
         "blocks": [
           {

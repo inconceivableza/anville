@@ -1402,14 +1402,20 @@ main > .hub ~ .hub-consent {
   color: var(--muted);
 }
 
-/* ✨ What a section waits on the coach for, under the coach card's tag (ticket 65): darker than the sentence below it. */
+/* ✨ A side card's authored lead, under its tag, as Walk with a coach's says what a coach is for (ticket 95; ticket 65's
+   line of what a section waited on the coach for before it): bold and darker than the sentence below it, or on a dark
+   card lighter. */
 .card p.hub-side-line {
   color: var(--ink);
   font-weight: 600;
 }
 
+.card.dark p.hub-side-line {
+  color: var(--on-dark);
+}
+
 /* ✨ A side card's buttons (ticket 65): small pills in a row at their own width, not stretched across the card, so
-   the card grows as little as possible and another button can sit beside Manage, wrapping on a narrow phone. */
+   the card grows as little as possible and another button can sit beside the card's own, wrapping on a narrow phone. */
 .hub-side-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1422,8 +1428,14 @@ main > .hub ~ .hub-consent {
   height: 18px;
 }
 
-/* ✨ The comparison's press beside Manage on the dark Five trusted voices card (ticket 67b): its ring in the card's
-   light text, no fill, so Manage stays the one to press first. */
+/* ✨ The dark Five trusted voices card's "Invite people": the coach card's light pill, but white, not green (ticket 95). */
+.card.dark .hub-side-actions .pill.light {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* ✨ The comparison's press beside "Invite people" on the dark Five trusted voices card (ticket 67b): its ring in the
+   card's light text, no fill, so "Invite people" stays the one to press first. */
 .card.dark .hub-side-actions .pill.ghost {
   background: none;
   color: var(--on-dark);
@@ -1554,10 +1566,12 @@ main > .hub ~ .hub-consent {
   -webkit-touch-callout: none;
 }
 
+/* ✨ More room above a section's finish, so Section 1's "I've finished Section 1" stands clear of the strengths
+   evaluation's card above it (ticket 95). */
 .completion {
   border-top: 1px solid var(--border);
   padding-top: 24px;
-  margin-top: 32px;
+  margin-top: var(--space-2xl);
 }
 
 /* ✨ "Page 2 of 3", under a paged section's heading */
@@ -2516,6 +2530,25 @@ body:not(.framed) .question-card > p + form {
   margin-top: 8px;
   font-size: var(--text-xs);
   color: var(--muted);
+}
+
+/* ✨ Room between a signpost's words and its green button, which sat tight beneath them (ticket 95). */
+.signpost > p:has(> .pill) {
+  margin-top: var(--space-md);
+}
+
+/* ✨ A file to download, as Section 3's workbook: its paragraphs apart, as a rich text's are, then its button, set
+   apart from them, so the words, the PDF and the section's finish beneath read in that order (ticket 95). */
+.download {
+  margin-bottom: var(--space-lg);
+}
+
+.download p + p {
+  margin-top: var(--space-sm);
+}
+
+.download > p:has(> .pill) {
+  margin-top: var(--space-lg);
 }
 
 /* ✨ Demo only (fix-24): a demo profile's guide, quiet and closed, below the sort and each pair, so they keep their

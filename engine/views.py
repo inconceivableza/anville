@@ -217,8 +217,8 @@ def hub(request):
             "hub": hub,
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
             "coach_wait": _coach_wait_panel(hub, coach, coach_page),
-            "side_cards": _side_cards(hub, coach, coach_section),
-            "coach_card": _coach_card(hub, coach, coach_section, coach_page),
+            "side_cards": _side_cards(state, hub),
+            "coach_card": _coach_card(coach, coach_section, coach_page),
             "voices": _hub_voices(state, hub),
             "comparison": _hub_comparison(state),
             "waiting_sentence": waiting.waiting_sentence(minimum) if waiting is not None else None,
@@ -228,11 +228,11 @@ def hub(request):
 
 
 def _hub_comparison(state):
-    """✨ The document's comparison signpost as the hub shows it, in a row and beside Manage on the Five trusted voices
-    card (ticket 67b): its status and press as its section's card has them (`_comparison_signpost_shown`), with its
-    title, the section it is in and the part of that section holding its sort, after which its row is listed, or None
-    where its sort is not in a part of that section, as in *Whatever You Do*'s Section 2, which lists it first (ticket
-    87). None before there is a result, and for a pathway without one."""
+    """✨ The document's comparison signpost as the hub shows it, in a row and beside "Invite people" on the Five trusted
+    voices card (ticket 67b): its status and press as its section's card has them (`_comparison_signpost_shown`), with
+    its title, the section it is in and the part of that section holding its sort, after which its row is listed, or
+    None where its sort is not in a part of that section, as in *Whatever You Do*'s Section 2, which lists it first
+    (ticket 87). None before there is a result, and for a pathway without one."""
     document = state.version.document
     for block in blocks_of(document):
         shown = _comparison_signpost_shown(state, block)
@@ -253,24 +253,30 @@ def _coach_section_of(document):
     return section_of(document, checklists[0])["id"] if checklists else None
 
 
-def _side_cards(hub, coach, coach_section):
-    """✨ The hub's side cards, the coach's section's (`coach_section`) tagged with where the `coach` stands (ticket
-    51b)."""
-    return [
-        with_coach_answer(card, _answer_of(coach)) if card.id == coach_section else card for card in hub.side_cards()
-    ]
+def _side_cards(state, hub):
+    """✨ The hub's side cards, each with the status its card shows, for the hub and the sidebar alike, so the two never
+    disagree (ticket 95): the coach's tagged with where the coach stands (ticket 51b), and Five trusted voices with its
+    own tag while it is unlocked (ticket 51a)."""
+    coach_section = _coach_section_of(state.version.document)
+    # ✨ The coach is read only where a side card is theirs, so a page without that card never depends on the coach.
+    on_a_card = any(card.id == coach_section for card in hub.side_cards())
+    answer = _answer_of(_coach_of(state.response, state.answers)) if on_a_card else None
+    voices = _hub_voices(state, hub)
+    cards = []
+    for card in hub.side_cards():
+        if card.id == coach_section:
+            card = with_coach_answer(card, answer)
+        elif voices is not None and card.id == voices["section"]:
+            card = card._replace(label=voices["tag"])
+        cards.append(card)
+    return cards
 
 
-def _coach_card(hub, coach, coach_section, coach_page):
-    """✨ What the Walk with a coach card adds to a side card's own (ticket 65): {"section", "manage", "line"}, its
-    "Manage" leading to the `coach_page`, None while the card is locked, and its line while a section waits on the
-    `coach` at all, None otherwise."""
-    wait = hub.coach_wait
-    return {
-        "section": coach_section,
-        "manage": coach_page,
-        "line": wait.line(_answer_of(coach)) if wait is not None else None,
-    }
+def _coach_card(coach, coach_section, coach_page):
+    """✨ What the Walk with a coach card adds to a side card's own (ticket 65): {"section", "page", "chosen"}, its
+    button leading to the `coach_page`, None while the card is locked, and whether a `coach` is chosen, which its
+    button's words say (ticket 95)."""
+    return {"section": coach_section, "page": coach_page, "chosen": coach is not None}
 
 
 def _coach_wait_panel(hub, coach, coach_page):
@@ -380,25 +386,11 @@ def participant_nav(request):
         "sidebar": {
             "outline": hub.outline(),
             "comparison": _hub_comparison(state),
-            "side_cards": _sidebar_side_cards(state, hub),
+            "side_cards": _side_cards(state, hub),
             "current": _current_section(request, document),
             "links": [{"label": label, "href": href, "is_current": href == request.path} for label, href in links],
         },
     }
-
-
-def _sidebar_side_cards(state, hub):
-    """✨ The hub's side cards as the sidebar lists them (ticket 80), each with the status its card shows: the coach's
-    by where the coach stands, and Five trusted voices by its own tag while it is unlocked."""
-    document = state.version.document
-    coach_section = _coach_section_of(document)
-    # ✨ The coach is read only where a side card is theirs, so a page without that card never depends on the coach.
-    on_a_card = any(card.id == coach_section for card in hub.side_cards())
-    cards = _side_cards(hub, _coach_of(state.response, state.answers) if on_a_card else None, coach_section)
-    voices = _hub_voices(state, hub)
-    if voices is None:
-        return cards
-    return [card._replace(label=voices["tag"]) if card.id == voices["section"] else card for card in cards]
 
 
 def _current_section(request, document):

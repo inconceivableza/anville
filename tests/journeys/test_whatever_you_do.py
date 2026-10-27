@@ -1322,7 +1322,7 @@ def test_with_nothing_next_and_section_4_waiting_only_on_the_coach_the_panel_nam
         client.force_login(Response.objects.get().participant)  # ✨ a session lasts two weeks
         panel = next_step_panel(client)
 
-        heading, sentence, _ = COACH_WAIT_WORDING[answer]
+        heading, sentence = COACH_WAIT_WORDING[answer]
         assert escape(heading.format(coach="Sam")) in panel
         assert escape(sentence.format(section="Section 4", coach="Sam")) in panel
         assert button_to(panel, "Your coach") == the_coach_page(client)
@@ -1337,6 +1337,7 @@ def test_the_panel_is_as_before_while_something_else_is_next(participant):
 
     assert button_to(panel, "Begin") == SECTION_3
     assert button_to(panel, "Your coach") is None
+    assert re.findall(r"<(?:a|button)\b", panel) == ["<a"]  # ✨ one way to start Section 3 (ticket 95)
 
 
 @pytest.mark.django_db
@@ -1372,25 +1373,54 @@ COACH_STATES = {
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("coach", COACH_STATES)
-def test_the_coach_card_has_manage_to_the_coach_page_in_every_state_once_unlocked(participant, coach):
+def test_the_coach_cards_button_leads_to_the_coach_page_saying_whether_one_is_chosen(participant, coach):
     client = to_the_coach_page(participant)
     COACH_STATES[coach](client)
 
-    assert button_to(coach_card(client), "Manage") == the_coach_page(client)
+    card = coach_card(client)
+
+    shown, not_shown = ("Choose your coach", "See your coach")
+    if coach != "no coach":
+        shown, not_shown = not_shown, shown
+    assert button_to(card, shown) == the_coach_page(client)
+    assert button_to(card, not_shown) is None
 
 
 @pytest.mark.django_db
-def test_the_coach_cards_line_shows_while_section_4_waits_on_the_coach_and_not_once_it_is_open(participant):
+def test_once_the_coach_is_removed_the_coach_cards_button_asks_for_one_again(participant):
+    client = to_the_coach_page(participant)
+    choose(client)
+    step(client, "remove")
+
+    assert button_to(coach_card(client), "Choose your coach") == the_coach_page(client)
+
+
+@pytest.mark.django_db
+def test_the_five_trusted_voices_cards_button_invites_people_on_its_page(participant):
+    client = to_the_coach_page(participant)
+
+    card = side_card(client.get("/hub/").content.decode(), "Five trusted voices")
+
+    assert button_to(card, "Invite people") == CONTACTS_PAGE
+
+
+def coach_card_lines(client):
+    """✨ The words of the Walk with a coach card's paragraphs, in order."""
+    lines = re.findall(r"<p[^>]*>(.*?)</p>", coach_card(client), re.S)
+    return [" ".join(re.sub(r"<[^>]+>", "", line).split()) for line in lines]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("coach", COACH_STATES)
+def test_the_coach_card_says_what_a_coach_is_for_and_that_one_is_needed_whatever_they_have_said(participant, coach):
+    """✨ Its authored lead and sentence alone (ticket 95): what Section 4 waits for is the tag's, the lock note's and
+    the next step's to say, not a line of the card's."""
     client = through_to_section_3(participant)
-    assert escape(COACH_WAIT_WORDING["waiting"].line.format(section="Section 4")) in coach_card(client)
+    if coach == "no coach":
+        step(client, "remove")
+    elif coach != "unanswered":
+        coach_accepts(client, "decline" if coach == "declined" else "accept")
+    sections = the_pathway()["content"]["sections"]
+    authored = next(section for section in sections if section["id"] == "walk-with-a-coach")["side_card"]
 
-    coach_accepts(client, "decline")
-    assert escape(COACH_WAIT_WORDING["declined"].line.format(section="Section 4")) in coach_card(client)
-
-    coach_accepts(client)
-    complete(client, "shape")
-    assert client.get(SECTION_4).status_code == 200
-    revoke_coach_link(client)  # ✨ which never locks Section 4 again, once open
-
-    card = coach_card(client)
-    assert not any(escape(line.format(section="Section 4")) in card for *_, line in COACH_WAIT_WORDING.values())
+    assert coach_card_lines(client) == [escape(authored["lead"]), escape(authored["sentence"])]

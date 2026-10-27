@@ -53,41 +53,26 @@ COACH_ANSWER_LABELS = {
 
 class CoachWaitWording(NamedTuple):
     """✨ What the engine says of a section waiting on the coach's acceptance, for one answer of the coach's: the
-    next-step panel's `heading` and `sentence`, while nothing else is open, and the coach card's `line` under its tag,
-    while the section waits on the coach at all (ticket 65)."""
+    next-step panel's `heading` and `sentence`, while nothing else is open. The coach card's line under its tag, which
+    said the same while the section waited on the coach at all (ticket 65), gave way to the card's authored lead (ticket
+    95)."""
 
     heading: str
     sentence: str
-    line: str
 
-
-# ✨ The coach card's line while no coach has said no, whether a link awaits their answer or there is none.
-_OPENS_ONCE_YOUR_COACH_ACCEPTS = "{section} opens once your coach accepts"
 
 # ✨ Engine wording for a section waiting on the coach's acceptance (ADR 0019), by the coach's answer as the coach page
 # tells it: "waiting" while a working link is unanswered, "declined", "withdrawn" once an acceptance is taken back (ADR
 # 0024), or None with no working link (none made, expired unanswered, or revoked).
 COACH_WAIT_WORDING = {
-    "waiting": CoachWaitWording(
-        "Waiting on your coach to respond",
-        "{section} opens once {coach} has accepted.",
-        _OPENS_ONCE_YOUR_COACH_ACCEPTS,
-    ),
+    "waiting": CoachWaitWording("Waiting on your coach to respond", "{section} opens once {coach} has accepted."),
     "declined": CoachWaitWording(
-        "{coach} has said no",
-        "Choose someone else to walk with you. {section} opens once they accept.",
-        "Choose another coach to open {section}",
+        "{coach} has said no", "Choose someone else to walk with you. {section} opens once they accept."
     ),
     "withdrawn": CoachWaitWording(
-        "{coach} has withdrawn",
-        "Choose someone else to walk with you. {section} opens once they accept.",
-        "Choose another coach to open {section}",
+        "{coach} has withdrawn", "Choose someone else to walk with you. {section} opens once they accept."
     ),
-    None: CoachWaitWording(
-        "Choose a coach",
-        "{section} opens once your coach has accepted.",
-        _OPENS_ONCE_YOUR_COACH_ACCEPTS,
-    ),
+    None: CoachWaitWording("Choose a coach", "{section} opens once your coach has accepted."),
 }
 
 
@@ -116,7 +101,8 @@ class SectionState(NamedTuple):
     the participant has reached, or the first once it is complete, which is where the hub leads. `part_of` is the
     section it is a part of, if any. `lock_note` says, while it is locked, what opens it. `number` is the authored number
     the hub shows beside it, if any, and `side_card` the authored sentence of a section the hub draws as a side card, or
-    None for one it lists (ticket 49a). `next_step` is the authored heading and sentence the hub's next step shows while
+    None for one it lists (ticket 49a), with `side_card_lead` the bold line above it, if it has one (ticket 95).
+    `next_step` is the authored heading and sentence the hub's next step shows while
     this section is the next step, or None for a section without them (ticket 49b)."""
 
     id: str
@@ -130,6 +116,7 @@ class SectionState(NamedTuple):
     lock_note: str | None = None
     number: str | None = None
     side_card: str | None = None
+    side_card_lead: str | None = None
     next_step: NextStepWording | None = None
 
     @property
@@ -186,10 +173,6 @@ class CoachWait(NamedTuple):
         return NextStepWording(
             wording.heading.format(coach=coach), wording.sentence.format(section=self.section.called, coach=coach)
         )
-
-    def line(self, answer):
-        """✨ The coach card's line under its tag, by the coach's `answer` as the coach page tells it."""
-        return _coach_wait_wording(answer).line.format(section=self.section.called)
 
 
 def _coach_wait_wording(answer):
@@ -629,6 +612,7 @@ def _state(section, answers, completed, role, moved_past, sections):
         lock_note=_lock_note(section, completed, answers, sections, moved_past, role) if status == LOCKED else None,
         number=section.get("number"),
         side_card=text_for(section["side_card"]["sentence"], role) if "side_card" in section else None,
+        side_card_lead=text_for(section["side_card"]["lead"], role) if "lead" in section.get("side_card", {}) else None,
         next_step=_next_step_wording(section, role),
     )
 

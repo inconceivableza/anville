@@ -13,12 +13,19 @@ import re
 from html.parser import HTMLParser
 
 import pytest
+from django.test import Client
 
 from engine.document.blocks import COMPARISON_STATUSES
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.test_answers import answer
 from tests.journeys.test_coach_checklist import choose, the_coach_checklist
-from tests.journeys.test_coach_link import issue_coach_link, with_a_coach_and_contacts, with_a_coach_card
+from tests.journeys.test_coach_link import (
+    answer_as_coach,
+    coach_link_action,
+    issue_coach_link,
+    with_a_coach_and_contacts,
+    with_a_coach_card,
+)
 from tests.journeys.test_comparison_on_the_hub import ACTION, hub_row, with_the_card_on_the_hub
 from tests.journeys.test_contact_list import JO, PRIYA, save_contacts
 from tests.journeys.test_hub import CALLING_NOTE, PEOPLE, add_people_with_links, answer_through, lock_button
@@ -318,6 +325,14 @@ def test_the_sidebar_lists_what_the_hub_lists_in_its_order_with_its_statuses_and
     hub, sidebar = both()
     assert sidebar == hub
     assert "How others see you" in [title for title, _, _ in hub]
+
+    # ✨ The coach's card tagged by their answer, and Five trusted voices by its own tag (ticket 95).
+    reissued = listing.post(coach_link_action(listing, "issue", section="walk-with-a-coach"), follow=True)
+    link = re.search(r"http://testserver(/coaching/[A-Za-z0-9_-]+/)", reissued.content.decode()).group(1)
+    answer_as_coach(Client(), link, "decline")
+    hub, sidebar = both()
+    assert sidebar == hub
+    assert ("Walk with a coach", "Declined", False) in hub
 
     answer_through(*listing.links)
     press_compare(listing)

@@ -177,7 +177,7 @@ def test_a_hub_entry_drops_its_estimate_once_the_section_is_started(signed_in_cl
 
 def side_card(page, title):
     """✨ The hub's side card for one section, found by its title."""
-    cards = re.findall(r'<section class="card hub-side-card.*?</section>', page, re.S)
+    cards = re.findall(r'<section class="card [^"]*\bhub-side-card.*?</section>', page, re.S)
     return next(card for card in cards if title in card)
 
 
