@@ -17,5 +17,5 @@
       {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="hub-section-title" press_label=comparison.title press_in_heading=True %}
     {% endif %}
   </div>
-  <span class="tag status-{{ comparison.status }}">{{ comparison.label }}</span>
+  <span class="tag status-{% if comparison.invite.waiting %}waiting{% else %}{{ comparison.status }}{% endif %}">{{ comparison.label }}</span>
 </li>

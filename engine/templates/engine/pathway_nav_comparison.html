@@ -8,7 +8,7 @@
 {% endcomment %}
 <li class="pathway-nav-section pathway-nav-comparison">
   <div class="pathway-nav-row">
-    <span class="status-chip status-{{ comparison.status }}">{{ comparison.label }}</span>
+    <span class="status-chip status-{% if comparison.invite.waiting %}waiting{% else %}{{ comparison.status }}{% endif %}">{{ comparison.label }}</span>
     {% if comparison.invite.waiting %}
       <a class="pathway-nav-title" href="{{ comparison.invite.href }}">{{ comparison.title }}</a>
     {% else %}

@@ -154,10 +154,10 @@ class ParticipantState(NamedTuple):
 
 
 class Invite(NamedTuple):
-    """✨ The way to invite people, beside the press on to the comparison on the results page (ticket 88) and on the
-    comparison signpost (fix-3, reversed by fix-8: it is offered before and after the minimum, and below it the press
-    is greyed rather than replaced): the address of the Five trusted voices card's page, the phrase beside it
-    (empty from the minimum), and whether the comparison is still waiting on answers."""
+    """✨ The way to invite people, beside the press on to the comparison on the comparison signpost (ticket 88, fix-3,
+    reversed by fix-8: it is offered before and after the minimum, and below it the press is greyed rather than
+    replaced; fix-10 took it off the results page): the address of the Five trusted voices card's page, the phrase
+    beside it (empty from the minimum), and whether the comparison is still waiting on answers."""
 
     href: str
     phrase: str
@@ -166,13 +166,12 @@ class Invite(NamedTuple):
 
 class Finish(NamedTuple):
     """✨ The finish a part's end offers when the part is the last thing in its section (ticket 88): that section's
-    identifier, its finish button's label, whether it is complete already, and on the results page the way to invite
-    people, if offered."""
+    identifier, its finish button's label, and whether it is complete already. (Fix-10: the results page no longer
+    carries the way to invite people beside it; that is the comparison signpost's.)"""
 
     section_id: str
     label: str
     done: bool
-    invite: Invite | None = None
 
 
 def home(request):
@@ -272,7 +271,7 @@ def _side_cards(state, hub, voices):
         if card.id == coach_section:
             card = with_coach_answer(card, answer)
         elif voices is not None and card.id == voices["section"]:
-            card = card._replace(label=voices["tag"])
+            card = card._replace(label=voices["tag"], tone=voices["tone"])
         cards.append(card)
     return cards
 
@@ -845,18 +844,13 @@ def results(request, block_id):
 
 
 def _results_finish(state, block_id):
-    """✨ What the results page offers in place of "Compare with how others see you →" alone, when its sort is the last
+    """✨ What the results page offers in place of "Compare with how others see you →", when its sort is the last
     thing in a part that is the last thing in its section, so the results are that section's end (ticket 88): the
-    section's finish, as `_finish_of` gives it, and beside it the way to invite people, as `_invite` gives it (below
-    the minimum with how many more the Five trusted voices card needs, or else how many of the minimum have answered).
-    None otherwise, when the page is as before."""
+    section's finish alone, as `_finish_of` gives it (fix-10: the comparison and the invitation are the comparison
+    signpost's, in the section after). None otherwise, when the page is as before."""
     document = state.version.document
     part = section_of(document, block_id)
-    finish = _finish_of(state, part) if part["blocks"][-1]["id"] == block_id else None
-    if finish is None:
-        return None
-    invite = _invite(state)
-    return finish._replace(invite=invite) if invite is not None else finish
+    return _finish_of(state, part) if part["blocks"][-1]["id"] == block_id else None
 
 
 def _invite(state):
@@ -2475,8 +2469,8 @@ def _section_holding_comparison_signpost(state, sort_id):
 
 
 def _finish_of(state, part):
-    """✨ The finish a part's end offers when the part is the last thing in its section (ticket 88), as a `Finish`
-    without an invitation; once its section is complete, the end offers nothing in its place, the way back at the
+    """✨ The finish a part's end offers when the part is the last thing in its section (ticket 88), as a `Finish`;
+    once its section is complete, the end offers nothing in its place, the way back at the
     page's top being the only one (ticket 96). None for a part that ends nothing, or whose section the participant
     has not reached. Pressing it is that section's own completion, so its gate refuses it exactly as it refuses the
     section's own button."""

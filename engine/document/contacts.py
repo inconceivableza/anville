@@ -81,6 +81,10 @@ def voices_card(block, card, invited, answered, minimum, frozen=False):
     tag, line = _voices_tag(card, needed(block), invited, answered, minimum, frozen)
     return {
         "tag": tag,
+        # ✨ The pill's colours follow the tag's meaning, not the section's status (fix-12): "waiting" for a count of
+        # people still needed, grey like "Locked"; None leaves them following the section's status.
+        "tone": "waiting" if not frozen and card.status not in (LOCKED, NOT_STARTED) and more_needed(
+            needed(block), invited) else None,
         "line": line,
         # ✨ How many more people need a working link, as the tag says it, or None once enough have; the results page
         # says it beside "Invite people who know you →" (ticket 88), whatever the tag says meanwhile.
