@@ -217,6 +217,16 @@ def test_a_side_card_section_is_drawn_as_a_card_and_not_listed_with_the_sections
 
 
 @pytest.mark.django_db
+def test_a_locked_side_cards_status_is_a_button_described_by_its_lock_note(signed_in_client, load_pathway):
+    """✨ As a row's is (ticket 97)."""
+    load_pathway(with_a_side_card(pathway_document()))
+
+    page = signed_in_client.get("/hub/").content.decode()
+
+    assert lock_button(page, side_card(page, "Five trusted voices")) == ("Locked", CALLING_NOTE)
+
+
+@pytest.mark.django_db
 def test_a_hub_rows_tag_names_its_state_so_each_state_is_drawn_its_own_way(signed_in_client, load_pathway):
     load_pathway(pathway_document())
     page = signed_in_client.get("/hub/").content.decode()

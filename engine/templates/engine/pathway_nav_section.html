@@ -6,11 +6,16 @@
   The highlight of the section you are in, or of the next step, is on the entry's own row, not on the parts within it.
   The status sits above the title, in every entry, so the title has the panel's width; the comparison signpost's entry
   follows the part holding its sort, as on the hub (ticket 80), or comes first where no part of its section holds the
-  sort (ticket 87).
+  sort (ticket 87). A locked entry's note, which the sidebar shows no line for, is the description of its "Locked"
+  button, as on the hub (ticket 97).
 {% endcomment %}
 <li class="pathway-nav-section{% if section.is_next %} is-next{% endif %}{% if section.id == current %} is-current{% endif %}">
   <div class="pathway-nav-row">
-    <span class="status-chip status-{{ section.status }}">{{ section.label }}</span>
+    {% if section.is_locked and section.lock_note %}
+      {% include "engine/lock_status.html" with pill="status-chip" note_id="nav-lock-note-"|add:section.id %}
+    {% else %}
+      <span class="status-chip status-{{ section.status }}">{{ section.label }}</span>
+    {% endif %}
     {% if section.is_locked %}
       <span class="pathway-nav-title">{{ section.title }}</span>
     {% else %}

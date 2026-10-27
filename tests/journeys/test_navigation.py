@@ -21,7 +21,7 @@ from tests.journeys.test_coach_checklist import choose, the_coach_checklist
 from tests.journeys.test_coach_link import issue_coach_link, with_a_coach_and_contacts, with_a_coach_card
 from tests.journeys.test_comparison_on_the_hub import ACTION, hub_row, with_the_card_on_the_hub
 from tests.journeys.test_contact_list import JO, PRIYA, save_contacts
-from tests.journeys.test_hub import PEOPLE, add_people_with_links, answer_through
+from tests.journeys.test_hub import CALLING_NOTE, PEOPLE, add_people_with_links, answer_through, lock_button
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_invitations import issue_link
 from tests.journeys.test_observer_assessment import press_compare
@@ -111,6 +111,16 @@ def test_a_locked_section_is_listed_but_its_address_is_nowhere_in_the_sidebar(pa
     assert "Locked" in section_in(sidebar, "Strengths assessment")
     assert f"/sections/{CALLING}/" not in sidebar  # ✨ the coach page is on it, so not that either
     assert f"/sections/{STRENGTHS}/" not in sidebar
+
+
+@pytest.mark.django_db
+def test_a_locked_entrys_status_in_the_sidebar_is_a_button_described_by_the_hubs_lock_note(participant):
+    """✨ On the hub's own page too, so neither the hub's note nor the sidebar's is the other's (ticket 97)."""
+    page = participant.get("/hub/").content.decode()
+
+    calling = section_in(sidebar_of(page), "Putting your calling into words")
+    assert lock_button(page, calling) == ("Locked", CALLING_NOTE)
+    assert "aria-describedby" not in section_in(sidebar_of(page), "Before we begin")
 
 
 @pytest.mark.django_db

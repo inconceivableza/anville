@@ -310,8 +310,10 @@ body {
   border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
 }
 
-/* ✨ The status as the hub's tag reads, smaller: grey, and green for the next step, as the hub's is (ticket 80) */
-.pathway-nav-row > .status-chip {
+/* ✨ The status as the hub's tag reads, smaller: grey, and green for the next step, as the hub's is (ticket 80). A
+   locked entry's is within its "Locked" button (ticket 97). */
+.pathway-nav-row .status-chip {
+  display: inline-block;
   font-family: var(--font-mono);
   font-size: 10.5px;
   letter-spacing: 0.1em;
@@ -322,7 +324,7 @@ body {
   color: var(--muted);
 }
 
-.pathway-nav-section.is-next > .pathway-nav-row > .status-chip {
+.pathway-nav-section.is-next > .pathway-nav-row .status-chip {
   background: var(--green);
   color: var(--green-ink);
 }
@@ -330,17 +332,36 @@ body {
 /* ✨ Each state is plain at a glance on the sidebar's chips and the hub's tags alike (ticket 89): not started is a
    black outline, complete is filled green, and the others keep the grey (or the next step's green). The outline is
    drawn inside the pill so it stays the size of the rest. */
-.pathway-nav-row > .status-chip.status-not-started,
-.pathway-nav-section.is-next > .pathway-nav-row > .status-chip.status-not-started {
+.pathway-nav-row .status-chip.status-not-started,
+.pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-not-started {
   background: transparent;
   box-shadow: inset 0 0 0 1px var(--ink);
   color: var(--ink);
 }
 
-.pathway-nav-row > .status-chip.status-complete,
-.pathway-nav-section.is-next > .pathway-nav-row > .status-chip.status-complete {
+.pathway-nav-row .status-chip.status-complete,
+.pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-complete {
   background: var(--green-deep);
   color: var(--paper);
+}
+
+/* ✨ In the sidebar a lock note opens in the entry's own row, just below its "Locked", rather than floating, as the
+   panel scrolls and its cards clip what runs past them (ticket 97). */
+.pathway-nav-row > .lock {
+  display: block;
+}
+
+.pathway-nav-row .lock-note {
+  position: static;
+  margin-top: var(--space-2xs);
+  width: auto;
+  max-width: none;
+  box-shadow: none;
+  font-size: var(--text-xs);
+}
+
+.pathway-nav-row .lock-note::before {
+  content: none;
 }
 
 /* ✨ The comparison signpost's entry: its title is a button, the hub row's press, drawn as the other titles are */
