@@ -20,11 +20,11 @@
   </div>
   {% if parts or comparison.section == section.id %}
     <ol class="pathway-nav-parts">
-      {% if comparison.section == section.id and not comparison.after %}{% include "engine/pathway_nav_comparison.html" %}{% endif %}
+      {% if comparison.section == section.id and not comparison.after %}{% include "engine/pathway_nav_comparison.html" with holder=section %}{% endif %}
       {% for part in parts %}
         {% include "engine/pathway_nav_section.html" with section=part parts=None %}
         {% if comparison.section == section.id and comparison.after == part.id %}
-          {% include "engine/pathway_nav_comparison.html" %}
+          {% include "engine/pathway_nav_comparison.html" with holder=section %}
         {% endif %}
       {% endfor %}
     </ol>

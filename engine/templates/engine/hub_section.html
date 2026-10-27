@@ -18,11 +18,11 @@
     {% if section.estimate %}<p>{{ section.estimate }}</p>{% endif %}
     {% if parts or comparison.section == section.id %}
       <ol class="hub-parts">
-        {% if comparison.section == section.id and not comparison.after %}{% include "engine/hub_comparison.html" %}{% endif %}
+        {% if comparison.section == section.id and not comparison.after %}{% include "engine/hub_comparison.html" with holder=section %}{% endif %}
         {% for part in parts %}
           {% include "engine/hub_section.html" with section=part parts=None %}
           {% if comparison.section == section.id and comparison.after == part.id %}
-            {% include "engine/hub_comparison.html" %}
+            {% include "engine/hub_comparison.html" with holder=section %}
           {% endif %}
         {% endfor %}
       </ol>

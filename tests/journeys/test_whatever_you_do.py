@@ -770,6 +770,45 @@ def test_once_the_evaluation_is_done_section_1_shows_no_results_and_section_2_th
     assert "hub-comparison" in hub_entry(client.get("/hub/").content.decode(), TITLES["others"])
 
 
+COMPARISON_LINK = re.compile(r'(href|action)="/results/strengths-sort/comparison/')
+
+
+def comparison_row(html, kind):
+    """✨ The comparison's row in the hub's or the sidebar's markup (`kind` "hub" or "pathway-nav"), and the markup
+    after Section 2's title and before Section 3's, which holds it when it is listed under Section 2."""
+    row = re.search(rf'<li class="[^"]*{kind}-comparison.*?</li>', html, re.S).group(0)
+    return row, html[html.index(TITLES["others"]) : html.index(TITLES["shape"])]
+
+
+@pytest.mark.django_db
+def test_the_comparisons_row_is_listed_under_section_2_and_locked_with_it(participant, settings):
+    """✨ Fix-19: on the hub and in the sidebar, the row is Section 2's, "Locked" with its lock note and leading nowhere
+    while Section 2 is locked, and so is every other way to the comparison; once open, the row leads to it (fix-16)."""
+    settings.ANVILLE_SIDEBAR = True
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+    submit_the_sort(participant)
+    people_answer(participant)
+    hub = main_of(participant.get("/hub/").content.decode())
+    sidebar = sidebar_of(participant.get("/sections/designed/").content.decode())
+
+    for html, kind in ((hub, "hub"), (sidebar, "pathway-nav")):
+        row, section_2 = comparison_row(html, kind)
+        assert row in section_2
+        assert "Locked" in row and escape(OPENS_ONCE.format(what_is_left("designed"))) in row
+        assert not COMPARISON_LINK.search(html)
+
+    complete(participant, "designed")
+
+    for html, kind in (
+        (main_of(participant.get("/hub/").content.decode()), "hub"),
+        (sidebar_of(participant.get("/sections/designed/").content.decode()), "pathway-nav"),
+    ):
+        row, section_2 = comparison_row(html, kind)
+        assert row in section_2
+        assert "Locked" not in row and COMPARISON_LINK.search(row)
+
+
 @pytest.mark.django_db
 def test_once_the_sort_is_in_opening_the_strengths_assessment_opens_the_results(participant):
     """✨ As in the faithful port (fix-13)."""

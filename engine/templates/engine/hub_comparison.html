@@ -7,15 +7,23 @@
   JavaScript. A row's title is a link elsewhere; a link here could be loaded ahead of time without the press. Below the
   minimum, where the card greys its press, the title is a plain link to the comparison, which waits there with the way
   to invite people (fix-16, in place of fix-3's link to Five trusted voices): opening it records nothing, so being
-  loaded ahead of time does no harm, and the tag is the card's phrase (fix-3).
+  loaded ahead of time does no harm, and the tag is the card's phrase (fix-3). While `holder`, the section it is listed
+  in, is locked, the comparison is shut with it (fix-19): the row shows that section's "Locked" button and lock note,
+  and leads nowhere.
 {% endcomment %}
-<li class="hub-section srow hub-part hub-comparison">
+<li class="hub-section srow hub-part hub-comparison{% if holder.is_locked %} locked{% endif %}">
   <div class="srow-body">
-    {% if comparison.invite.waiting %}
+    {% if holder.is_locked %}
+      <h3 class="hub-section-title">{{ comparison.title }}</h3>
+    {% elif comparison.invite.waiting %}
       <h3><a class="hub-section-title" href="{% url 'comparison' comparison.sort %}">{{ comparison.title }}</a></h3>
     {% else %}
       {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="hub-section-title" press_label=comparison.title press_in_heading=True %}
     {% endif %}
   </div>
-  <span class="tag status-{% if comparison.invite.waiting %}waiting{% else %}{{ comparison.status }}{% endif %}">{{ comparison.label }}</span>
+  {% if holder.is_locked %}
+    {% include "engine/lock_status.html" with section=holder pill="tag" note_id="lock-note-comparison" %}
+  {% else %}
+    <span class="tag status-{% if comparison.invite.waiting %}waiting{% else %}{{ comparison.status }}{% endif %}">{{ comparison.label }}</span>
+  {% endif %}
 </li>

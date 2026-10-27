@@ -5,15 +5,21 @@
   after the part holding its sort or first, with the hub row's status. Its title is the hub row's press, a form posting
   to the same address, so it is the visit Section 2's reflection waits on and warns before collection freezes. Below the
   minimum, as on the hub row, it is a plain link to the comparison's waiting page instead, which records nothing
-  (fix-16, in place of fix-3's link to Five trusted voices).
+  (fix-16, in place of fix-3's link to Five trusted voices). While `holder`, the section it is listed in, is locked, it
+  is locked with it, as on the hub (fix-19): that section's "Locked" button and lock note, and no address.
 {% endcomment %}
 <li class="pathway-nav-section pathway-nav-comparison">
   <div class="pathway-nav-row">
-    <span class="status-chip status-{% if comparison.invite.waiting %}waiting{% else %}{{ comparison.status }}{% endif %}">{{ comparison.label }}</span>
-    {% if comparison.invite.waiting %}
-      <a class="pathway-nav-title" href="{% url 'comparison' comparison.sort %}">{{ comparison.title }}</a>
+    {% if holder.is_locked %}
+      {% include "engine/lock_status.html" with section=holder pill="status-chip" note_id="nav-lock-note-comparison" %}
+      <span class="pathway-nav-title">{{ comparison.title }}</span>
     {% else %}
-      {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="pathway-nav-title" press_label=comparison.title %}
+      <span class="status-chip status-{% if comparison.invite.waiting %}waiting{% else %}{{ comparison.status }}{% endif %}">{{ comparison.label }}</span>
+      {% if comparison.invite.waiting %}
+        <a class="pathway-nav-title" href="{% url 'comparison' comparison.sort %}">{{ comparison.title }}</a>
+      {% else %}
+        {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="pathway-nav-title" press_label=comparison.title %}
+      {% endif %}
     {% endif %}
   </div>
 </li>

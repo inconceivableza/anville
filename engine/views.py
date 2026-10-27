@@ -237,7 +237,8 @@ def _hub_comparison(state):
     voices card (ticket 67b): its status and press as its section's card has them (`_comparison_signpost_shown`), with
     its title, the section it is in and the part of that section holding its sort, after which its row is listed, or
     None where its sort is not in a part of that section, as in *Whatever You Do*'s Section 2, which lists it first
-    (ticket 87). None before there is a result, and for a pathway without one."""
+    (ticket 87), and whether the comparison is `locked`, shut with its section (fix-19), when nothing leads to it. None
+    before there is a result, and for a pathway without one."""
     document = state.version.document
     for block in blocks_of(document):
         shown = _comparison_signpost_shown(state, block)
@@ -248,6 +249,7 @@ def _hub_comparison(state):
                 "title": authored_text(block, "participant")["title"],
                 "section": section["id"],
                 "after": holding["id"] if holding.get("part_of") == section["id"] else None,
+                "locked": _comparison_locked(state, block["sort"]),
             }
     return None
 
@@ -368,7 +370,8 @@ def participant_nav(request):
     their statuses and locks are the hub's; a locked section carries no address, and neither does a page within it,
     such as the coach page. Below them are links, kept beside the entries as quick ways in (developer's call, 23 Oct):
     results and the comparison once there is a result, since before then they lead only back to the sort, the
-    invitations, and the coach page. `current` is the section whose page this is, if any."""
+    comparison only while it is open too (fix-19), the invitations, and the coach page. `current` is the section whose
+    page this is, if any."""
     state = _participant(request.user)
     if state.version is None:
         return {"title": None, "sidebar": None}
@@ -380,10 +383,9 @@ def participant_nav(request):
     links = []
     scored = _scored_block(document)
     if scored and Result.objects.filter(response=state.response, block_id=scored["id"]).exists():
-        links += [
-            ("Your results", reverse("results", args=[scored["id"]])),
-            ("How others experience you", reverse("comparison", args=[scored["id"]])),
-        ]
+        links.append(("Your results", reverse("results", args=[scored["id"]])))
+        if not _comparison_locked(state, scored["id"]):
+            links.append(("How others experience you", reverse("comparison", args=[scored["id"]])))
     links.append(("Invite others to assess you", reverse("invitations")))
     coach_page = _coach_page_of(document, hub)
     if coach_page:
