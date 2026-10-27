@@ -1014,7 +1014,7 @@ def _coach_sharing(response, block_id):
     """✨ The participant's coach as the comparison's consent needs them, or None when there is nothing to say: with
     `offer` "tick" once they accepted through a working link and the comparison was visited by its button; "expired"
     when they accepted but the link no longer works; "awaiting" while they have not answered or have no link yet. A
-    coach who declined is offered nothing here: the coach page already says so."""
+    coach who declined, or withdrew their acceptance, is offered nothing here: the coach page already says so."""
     coach = _coach_of(response)
     if coach is None:
         return None

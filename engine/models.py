@@ -385,6 +385,8 @@ class Invitation(models.Model):
     It is never claimed: the participant holding a copy could claim it as easily as use it. Only the answer is kept, on
     the link, so revoking or reissuing asks again. Each kind of link works only at its own address. Once the coach has
     accepted, the participant's consent for them to see the results and comparison is kept on the link too (ticket 27).
+    The acceptance is the coach's consent, which they can withdraw while the link works: that leaves "withdrawn" in its
+    place, clears the sharing and stops the link (ADR 0024).
 
     While the participant's consent is withdrawn, every link they gave out is refused as a dead one is, and works again,
     as it was, once they agree again (ticket 45). Nothing about the link changes meanwhile, its expiry included.
