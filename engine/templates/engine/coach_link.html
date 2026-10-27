@@ -77,7 +77,7 @@
           </span>
         </label>
       {% endfor %}
-      <p class="coach-hint">We keep only your answer, accept or decline, and the name {{ name }} gave us for you. If you accept, {{ name }} is told you've agreed to all {{ count }}; if you decline, never which boxes you ticked.</p>
+      <p class="coach-hint">We keep only your answer, accept or decline, and the name {{ name }} gave us for you. If you accept, {{ name }} is told you've agreed to all {{ count }}. If you decline, {{ name }} is told only that you declined, not which boxes you ticked.</p>
       <button type="submit" name="answer" value="accept" class="pill full">Accept →</button>
       <button type="submit" name="answer" value="decline" class="pill ghost full">I can't commit to all of this</button>
     </form>
