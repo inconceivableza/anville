@@ -368,7 +368,9 @@ html:has(.top-bar) {
    green). The outline is drawn inside the pill so it stays the size of the rest. */
 .pathway-nav-row .status-chip.status-not-started,
 .pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-not-started,
-.pathway-nav-row .status-chip.status-ready {
+.pathway-nav-row .status-chip.status-ready,
+.pathway-nav-row .status-chip.status-in-progress,
+.pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-in-progress {
   background: var(--cream-2);
   box-shadow: inset 0 0 0 1px var(--ink);
   color: var(--ink);
@@ -1265,16 +1267,19 @@ main > .hub ~ .hub-consent {
 }
 
 /* ✨ Not started keeps the grey with 89's black outline, even as the next step (this rule comes after `.up-next`'s and
-   is as specific, so it wins); on the dark card its light equivalent. Complete is lime (fix-6). */
+   is as specific, so it wins); on the dark card its light equivalent. Complete is lime (fix-6). In progress is the same
+   black (fix-15), next step or not: lime means done, grey text and outline locked or waiting, black open. */
 .tag.status-not-started,
-.tag.status-ready {
+.tag.status-ready,
+.tag.status-in-progress {
   background: var(--cream-2);
   box-shadow: inset 0 0 0 1px var(--ink);
   color: var(--ink);
 }
 
 .card.dark .tag.status-not-started,
-.card.dark .tag.status-ready {
+.card.dark .tag.status-ready,
+.card.dark .tag.status-in-progress {
   background: var(--on-dark-12);
   box-shadow: inset 0 0 0 1px var(--on-dark);
   color: var(--on-dark);

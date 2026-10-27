@@ -939,7 +939,7 @@ Walked at a wide screen on 22 Oct 2026, with staging on `56924e5`; each passed, 
 
 ### Ticket 89: Status pills (load the pathway again, and use a participant started after that; both pathways; at phone width too)
 
-- The hub: "Not started" rows show the grey with a black outline (fix-6: even as the next step, never green), "Complete" rows a lime pill (fix-6: not deep green), "In progress" the grey it had (green when it is the next step), and "Locked" the grey with grey text and a grey outline (fix-12), in the same place at the right of its row as the others, so the pills' right edges line up (see Fix-6 for the parts' rows).
+- The hub: "Not started" rows show the grey with a black outline (fix-6: even as the next step, never green), "Complete" rows a lime pill (fix-6: not deep green), "In progress" the same black text and outline (fix-15: not lime, even as the next step), and "Locked" the grey with grey text and a grey outline (fix-12), in the same place at the right of its row as the others, so the pills' right edges line up (see Fix-6 for the parts' rows).
 - The side cards (Five trusted voices, Walk with a coach) use the same looks for the same states; on the dark Five trusted voices card the outline and the grey are light.
 - The sidebar's chips read the same, above each title.
 - Inside Section 1: the Strengths evaluation card shows no pill, before the sort or after; once the sort is in it is edged in lime with a light lime tint (fix-6), with its finished line and "View my results →". Section 2's "How others see you" card shows its status as plain small text, not a pill.
@@ -959,11 +959,16 @@ Walked at a wide screen on 22 Oct 2026, with staging on `56924e5`; each passed, 
 - "Locked" has grey text and a grey outline on the pale grey fill, and "Not started" keeps black text and a black outline on the same fill, so the two read apart. Look at both together on the hub (a locked section beside an open one that is not started), in a part's row, on the side cards, and in the sidebar's chips.
 - On the dark Five trusted voices card a locked pill is a pale fill with a dimmer light text and outline than "Not started" has.
 - A locked row's "Locked" is still a button: hover or focus it for its note, and tap it at phone width. Its keyboard focus ring still shows.
-- The comparison's row (hub and sidebar) and Five trusted voices' card follow the same rule by what the pill says. Grey text and outline: "Locked", and any count of people still needed ("3 more needed", "2 of 3 answered"), including the comparison row below the minimum even after "Viewed" (it then shows its count). Black text and outline: "Not started", "Ready to view". Unchanged: "In progress", "Complete" and "Viewed" (lime), and the coach's "Link issued", "Accepted", "Declined", "Withdrawn". Walk the voices card through "N more needed", "Links issued", "Some answers received", "All answers received" and "Enough answers received" (the last four keep the section's own colours), on the dark card too.
+- The comparison's row (hub and sidebar) and Five trusted voices' card follow the same rule by what the pill says. Grey text and outline: "Locked", and any count of people still needed ("3 more needed", "2 of 3 answered"), including the comparison row below the minimum even after "Viewed" (it then shows its count). Black text and outline: "Not started", "Ready to view" ("In progress" joined them in fix-15). Unchanged: "Complete" and "Viewed" (lime), and the coach's "Link issued", "Accepted", "Declined", "Withdrawn". Walk the voices card through "N more needed", "Links issued", "Some answers received", "All answers received" and "Enough answers received" (the last four keep the section's own colours), on the dark card too.
 
 ### Fix-13: "Viewed" pill lime (rebuild the frontend; phone width too)
 
 - The comparison row's "Viewed" pill, on the hub and in the sidebar, is lime (green fill, dark green text) like "Complete", not grey. If an observer then withdraws, leaving fewer than the minimum, the row shows its count ("2 of 3 answered") in grey, as fix-12 made it.
+
+### Fix-15: "In progress" pill black (rebuild the frontend; phone width too)
+
+- "In progress" has black text and a black outline on the pale grey fill, exactly like "Not started" and "Ready to view", whether or not it is the next step: the hub's rows and part rows, the side cards, the sidebar's chips, and on the dark Five trusted voices card the same light equivalent as "Not started". It is never lime. Lime is only "Complete" and "Viewed"; grey text and outline mean locked or waiting; black means open.
+- Use a participant with one section begun and that section the next step: its hub row and sidebar chip are black, not lime.
 
 ### Ticket 90: Even line lengths (rebuild the frontend first; a current Chrome, Edge, Safari or Firefox; phone width too; no pathway reload needed)
 
