@@ -20,9 +20,10 @@
 
   {% comment %}
     ✨ Once the comparison shows, its end leads on (fix-18), as the end of the strengths evaluation does: a green
-    primary button to Section 2's reflection, in `onward`, marking nothing complete. While that section is locked there
-    is none, so the top button's own `back` is offered again, one target and label computed once. The second exception
-    to ticket 96's one way back per page.
+    primary button to Section 2's reflection, in `onward`, marking nothing complete. The comparison is never shown while
+    that section is locked (fix-19); where no section holds a signpost to it, as in the faithful port, or the one
+    holding it has no field waiting on it, there is no `onward`, so the top button's own `back` is offered again, one
+    target and label computed once. The second exception to ticket 96's one way back per page.
   {% endcomment %}
   {% if comparison.frameworks is not None %}
     {% if onward %}

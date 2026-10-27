@@ -942,13 +942,16 @@ def _scores_shown_storing_reweighted(document, result):
 @login_required
 @consent_required
 def comparison(request, block_id):
-    """✨ The participant's self-result beside the observer average (ADR 0005), reached from the results page and, like
-    it, open to anyone with a result, whatever sections they have done. Below the minimum it shows how many have
+    """✨ The participant's self-result beside the observer average (ADR 0005), open to anyone with a result, whatever
+    sections they have done, save where a section holds a comparison signpost to the sort: the comparison is then that
+    section's, refused while it is locked, as its pages are (fix-19). Below the minimum it shows how many have
     answered and no numbers; it never shows which person has answered, and single observers' percents only in the
     distribution strip, in ascending order."""
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
+    if _comparison_locked(state, block_id):
+        return redirect("hub")
     return _comparison_shown(request, state, result, section, block_id)
 
 
@@ -1094,6 +1097,8 @@ def visit_comparison(request, block_id):
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return _see_other(page_url(section["id"], section["page"]))
+    if _comparison_locked(state, block_id):
+        return _to_the_hub_when_locked(request)  # ✨ nothing recorded or frozen, as on the page itself (fix-19)
     response = state.response
     answered = _answered(response)
     viewed = answered >= minimum_observers(state.version.document)
@@ -2464,8 +2469,9 @@ def _section_this_is_part_of(state, section):
 
 def _section_holding_comparison_signpost(state, sort_id):
     """✨ Where the comparison of a sort leads back to (ticket 96): the open section in the track holding a comparison
-    signpost to it, as its ways back name it, {"title", "href"}, at the page reached. None where no open section holds
-    one, as in the faithful port or while that section is locked, when the comparison leads back as its results do."""
+    signpost to it, as its ways back name it, {"title", "href"}, at the page reached. None where no section holds one,
+    as in the faithful port, when the comparison leads back as its results do; the comparison is never shown while the
+    section holding one is locked (fix-19)."""
     held = _open_section_holding_comparison_signpost(state, sort_id)
     if held is None:
         return None
@@ -2473,21 +2479,37 @@ def _section_holding_comparison_signpost(state, sort_id):
     return {"title": text_for(section["title"], "participant"), "href": page_url(section["id"], reached)}
 
 
+def _sections_holding_comparison_signpost(state, sort_id):
+    """✨ The sections in the track holding a comparison signpost to the sort."""
+    return [
+        section
+        for section in state.sections
+        if any(block["type"] == "comparison_signpost" and block["sort"] == sort_id for block in section["blocks"])
+    ]
+
+
 def _open_section_holding_comparison_signpost(state, sort_id):
     """✨ The open section holding a comparison signpost to the sort, and the page reached, or None."""
-    for section in state.sections:
-        holds = any(block["type"] == "comparison_signpost" and block["sort"] == sort_id for block in section["blocks"])
-        reached = state.reached(section) if holds else None
+    for section in _sections_holding_comparison_signpost(state, sort_id):
+        reached = state.reached(section)
         if reached is not None:
             return section, reached
     return None
 
 
+def _comparison_locked(state, sort_id):
+    """✨ Whether the comparison of a sort is shut (fix-19): a section in the track holds a comparison signpost to it, as
+    *Whatever You Do*'s Section 2 does, making the comparison that section's, and none of them is open. Never where no
+    section holds one, as in the faithful port, whose comparison is open to anyone with a result."""
+    holding = _sections_holding_comparison_signpost(state, sort_id)
+    return bool(holding) and _open_section_holding_comparison_signpost(state, sort_id) is None
+
+
 def _reflection_after_comparison(state, sort_id):
     """✨ Where the comparison's last button leads (fix-18): the section holding its signpost, at the field that waits on
     the comparison (the block carrying `after_comparison` for the sort), as {"label", "href"}, the address anchored at
-    that field. None while that section is locked, or where it has no such field, when the page's top back button's
-    place stands in for it."""
+    that field. None where no section holds one, as in the faithful port, or where it has no such field, when the
+    page's top back button is offered again in its place."""
     held = _open_section_holding_comparison_signpost(state, sort_id)
     if held is None:
         return None
