@@ -14,5 +14,5 @@
     <span class="lock-note" role="tooltip" id="{{ note_id }}">{{ section.lock_note }}</span>
   </span>
 {% else %}
-  <span class="{{ pill }} status-{{ section.status }}{% if up_next and section.is_next %} up-next{% endif %}">{{ section.label }}</span>
+  <span class="{{ pill }} status-{{ section.look }}{% if up_next and section.is_next %} up-next{% endif %}">{{ section.label }}</span>
 {% endif %}

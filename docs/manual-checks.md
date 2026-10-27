@@ -939,7 +939,7 @@ Walked at a wide screen on 22 Oct 2026, with staging on `56924e5`; each passed, 
 
 ### Ticket 89: Status pills (load the pathway again, and use a participant started after that; both pathways; at phone width too)
 
-- The hub: "Not started" rows show the grey with a black outline (fix-6: even as the next step, never green), "Complete" rows a lime pill (fix-6: not deep green), "In progress" the grey it had (green when it is the next step), and "Locked" the grey, in the same place at the right of its row as the others, so the pills' right edges line up (see Fix-6 for the parts' rows).
+- The hub: "Not started" rows show the grey with a black outline (fix-6: even as the next step, never green), "Complete" rows a lime pill (fix-6: not deep green), "In progress" the grey it had (green when it is the next step), and "Locked" the grey with grey text and a grey outline (fix-12), in the same place at the right of its row as the others, so the pills' right edges line up (see Fix-6 for the parts' rows).
 - The side cards (Five trusted voices, Walk with a coach) use the same looks for the same states; on the dark Five trusted voices card the outline and the grey are light.
 - The sidebar's chips read the same, above each title.
 - Inside Section 1: the Strengths evaluation card shows no pill, before the sort or after; once the sort is in it is edged in lime with a light lime tint (fix-6), with its finished line and "View my results →". Section 2's "How others see you" card shows its status as plain small text, not a pill.
@@ -953,6 +953,13 @@ Walked at a wide screen on 22 Oct 2026, with staging on `56924e5`; each passed, 
 - So does Section 2's "How others see you" card once its status reads "Viewed" (fix-9), and not before: "2 of 3 answered" and "Ready to view" keep the gold card. An observer withdrawing after "Viewed" leaves it lime.
 - On the hub every row's pill ends at the same right edge: the sections' pills, and the pills beside "Strengths evaluation" under "How you've been designed", beside "How others see you", and "Locked" on a locked row, are all in one line down the page. Check at phone width too, where the titles narrow but the pills still line up.
 - An open hub row is one link: hover it anywhere (not only its title) for a pale green wash and its arrow turning green, and a click anywhere on it leads to its section. A part's row within a section is its own link, and hovering it washes only it, not its section. Tab through the hub: each open row takes one stop. A locked row has no link and no arrow; its "Locked" button still shows its note on hover or focus. Tapping a locked row opens nothing.
+
+### Fix-12: Locked pills' grey (rebuild the frontend; load the pathway again and use a participant started after that; phone width too)
+
+- "Locked" has grey text and a grey outline on the pale grey fill, and "Not started" keeps black text and a black outline on the same fill, so the two read apart. Look at both together on the hub (a locked section beside an open one that is not started), in a part's row, on the side cards, and in the sidebar's chips.
+- On the dark Five trusted voices card a locked pill is a pale fill with a dimmer light text and outline than "Not started" has.
+- A locked row's "Locked" is still a button: hover or focus it for its note, and tap it at phone width. Its keyboard focus ring still shows.
+- The comparison's row (hub and sidebar) and Five trusted voices' card follow the same rule by what the pill says. Grey text and outline: "Locked", and any count of people still needed ("3 more needed", "2 of 3 answered"), including the comparison row below the minimum even after "Viewed" (it then shows its count). Black text and outline: "Not started", "Ready to view". Unchanged: "In progress", "Complete" and "Viewed" (lime), and the coach's "Link issued", "Accepted", "Declined", "Withdrawn". Walk the voices card through "N more needed", "Links issued", "Some answers received", "All answers received" and "Enough answers received" (the last four keep the section's own colours), on the dark card too.
 
 ### Ticket 90: Even line lengths (rebuild the frontend first; a current Chrome, Edge, Safari or Firefox; phone width too; no pathway reload needed)
 
