@@ -122,17 +122,52 @@ def test_a_part_with_more_of_its_section_after_it_offers_no_finish_as_in_the_fai
 
 
 def sections_and_comparison(page):
-    """✨ Where the results page's outline button leads: Five trusted voices' page, or the press on to the comparison."""
+    """✨ Where the results page's two buttons lead (fix-8): Five trusted voices' page, and the press on to the
+    comparison, which is a form posting to the visit, or else greyed with `aria-disabled` and no form or link."""
     return ("/sections/trusted-voices/" in page, 'action="/results/strengths-sort/comparison/visit/"' in page)
 
 
-@pytest.mark.django_db
-def test_below_the_minimum_the_results_lead_to_invite_people_and_from_it_to_the_comparison(participant):
-    people_answer(participant, count=2)
-    assert sections_and_comparison(results_page(participant)) == (True, False)
-
+def the_third_person_answers(participant):
     third = Client()  # ✨ the third person on the list answers, from their own browser
     claim(third, issue_link(participant, "Person 2"))
     assert send(third, a_whole_sort()).status_code == 303
 
-    assert sections_and_comparison(results_page(participant)) == (False, True)
+
+@pytest.mark.django_db
+def test_below_the_minimum_the_compare_button_has_no_link_and_the_invite_button_leads_to_five_trusted_voices(
+    participant,
+):
+    people_answer(participant, count=2)
+
+    page = results_page(participant)
+
+    assert sections_and_comparison(page) == (True, False)
+    assert 'aria-disabled="true"' in page
+
+
+@pytest.mark.django_db
+def test_from_the_minimum_the_compare_button_leads_to_the_comparison_and_the_invite_button_stays(participant):
+    people_answer(participant, count=2)
+    the_third_person_answers(participant)
+
+    page = results_page(participant)
+
+    assert sections_and_comparison(page) == (True, True)
+    assert 'aria-disabled="true"' not in page
+
+
+@pytest.mark.django_db
+def test_the_section_2_signpost_shows_the_same_two_buttons_before_and_after_the_minimum(participant):
+    """✨ fix-8: the comparison signpost greys its press below the minimum, beside the invitation, as the results do."""
+    complete(participant, "designed")
+    people_answer(participant, count=2)
+
+    below = main_of(participant.get("/sections/others/").content.decode())
+    assert sections_and_comparison(below) == (True, False)
+    assert 'aria-disabled="true"' in below
+
+    the_third_person_answers(participant)
+
+    above = main_of(participant.get("/sections/others/").content.decode())
+    assert sections_and_comparison(above) == (True, True)
+    assert 'aria-disabled="true"' not in above

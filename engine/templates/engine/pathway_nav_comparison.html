@@ -9,7 +9,7 @@
 <li class="pathway-nav-section pathway-nav-comparison">
   <div class="pathway-nav-row">
     <span class="status-chip status-{{ comparison.status }}">{{ comparison.label }}</span>
-    {% if comparison.invite %}
+    {% if comparison.invite.waiting %}
       <a class="pathway-nav-title" href="{{ comparison.invite.href }}">{{ comparison.title }}</a>
     {% else %}
       {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="pathway-nav-title" press_label=comparison.title %}

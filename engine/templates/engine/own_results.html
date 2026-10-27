@@ -17,20 +17,21 @@
     {% comment %}
       ✨ The results are the end of their section (ticket 88), so the main button finishes it, a form posting to the
       section's own completion, which its gate may refuse; once it is complete, the way back at the page's top is the
-      only one (ticket 96). Beside it, as an outline: below the minimum, the way to invite people, with how many more
-      are needed; from it, the press on to the comparison. Each works without JavaScript.
+      only one (ticket 96). Beside it, as an outline, the press on to the comparison, greyed and not followable while
+      too few have answered (fix-8, which reverses fix-3's swap of it for the invitation); and, where the pathway has a
+      Five trusted voices card, the quieter way to invite people, with how many more are needed while below the minimum.
+      Each works without JavaScript.
     {% endcomment %}
     <div class="results-next results-finish">
       {% if not finish.done %}
         {% include "engine/finish_form.html" with button_class="pill" %}
       {% endif %}
+      {% include "engine/comparison_press.html" with press_sort=drawn.block_id press_class="pill ghost" press_waiting=finish.invite.waiting %}
       {% if finish.invite %}
         <span class="results-invite">
-          <a class="pill ghost" href="{{ finish.invite.href }}">Invite people who know you →</a>
-          <span class="results-invite-phrase">{{ finish.invite.phrase }}</span>
+          <a class="invite-link" href="{{ finish.invite.href }}">Invite people who know you →</a>
+          {% if finish.invite.phrase %}<span class="results-invite-phrase">{{ finish.invite.phrase }}</span>{% endif %}
         </span>
-      {% else %}
-        {% include "engine/comparison_press.html" with press_sort=drawn.block_id press_class="pill ghost" %}
       {% endif %}
     </div>
     {# ✨ Where a refused finish shows, with JavaScript, beneath it (fix-2). #}

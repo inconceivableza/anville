@@ -6,9 +6,16 @@
   it works without JavaScript; a browser never loads a POST ahead of time. Each place passes what differs: `press_sort`;
   `press_class`, the button's classes; and if it needs them, `press_form_class`, the form's; `press_label`, in place of
   "Compare with how others see you →"; `press_in_heading`, to set the button in an h3 as a hub row's title is; and
-  `press_arrow`, for a pill's arrow. Named apart from the page's own context, which an include still sees.
+  `press_arrow`, for a pill's arrow; and `press_waiting` (fix-8), while too few have answered where the pathway has a
+  way to invite people beside it: then the press is greyed and cannot be followed, a span with no form or link, marked
+  `aria-disabled`, not a disabled button, so a screen reader still reads it as the button it will be. The comparison
+  page's own refusal stands behind it. Named apart from the page's own context, which an include still sees.
 {% endcomment %}
+{% if press_waiting %}
+<span class="{{ press_class }} is-waiting" role="link" aria-disabled="true">{% if press_label %}{{ press_label }}{% else %}Compare with how others see you →{% endif %}</span>
+{% else %}
 <form{% if press_form_class %} class="{{ press_form_class }}"{% endif %} method="post" action="{% url 'visit_comparison' press_sort %}">
   {% csrf_token %}
   {% if press_in_heading %}<h3>{% endif %}<button type="submit" class="{{ press_class }}">{% if press_label %}{{ press_label }}{% else %}Compare with how others see you →{% endif %}{% if press_arrow %} <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span>{% endif %}</button>{% if press_in_heading %}</h3>{% endif %}
 </form>
+{% endif %}
