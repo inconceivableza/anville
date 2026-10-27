@@ -15,7 +15,9 @@ from datetime import timedelta
 
 import pytest
 import time_machine
+from django.utils import timezone
 
+from engine.hub import COACH_ANSWER_LABELS
 from engine.models import Contact, Invitation, ObserverResponse, Response
 from tests.documents import pathway_document
 from tests.journeys.test_answers import shown
@@ -335,6 +337,81 @@ def test_the_participant_is_told_the_answer_and_nothing_of_the_boxes(participant
     assert told(participant) == outcome
     assert not re.search(r"\b(5|five) of (6|six)\b", text(page), re.I)
     assert re.search(r'<button[^>]*name="step" value="restart"', page)
+
+
+# Withdrawing an acceptance (ADR 0024)
+
+
+def withdraw_as_coach(client, link):
+    """✨ The coach pressing "Withdraw my answer" on their link's withdrawal page."""
+    return client.post(f"{link}withdraw/")
+
+
+@pytest.mark.django_db
+def test_withdrawing_an_acceptance_deletes_it_and_the_sharing_and_stops_the_link(participant, observer):
+    """✨ The acceptance implies the coach's faith, kept on their consent: withdrawn, nothing of it stays."""
+    link = issue_coach_link(participant)
+    answer_as_coach(observer, link, "accept")
+    Invitation.objects.update(results_shared_at=timezone.now())  # ✨ as the participant's tick leaves it
+    refused_as_wrong = observer.get(f"/coaching/{A_WRONG_TOKEN}/").content.decode()
+
+    assert withdraw_as_coach(observer, link).status_code == 200
+
+    kept = Invitation.objects.values("coach_answer", "results_shared_at").get()
+    assert kept["coach_answer"] != "accepted"
+    assert kept["results_shared_at"] is None
+    refused = observer.get(link)
+    assert refused.status_code == 404
+    assert refused.content.decode() == refused_as_wrong
+    assert answer_as_coach(observer, link, "accept").status_code == 404
+    assert withdraw_as_coach(observer, link).status_code == 404
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("answer", ["unanswered", "declined", "accepted then expired"])
+def test_only_an_acceptance_on_a_working_link_can_be_withdrawn(participant, observer, answer):
+    with time_machine.travel(ISSUED_AT, tick=False):
+        link = issue_coach_link(participant)
+        if answer != "unanswered":
+            answer_as_coach(observer, link, "decline" if answer == "declined" else "accept")
+    before = told(participant)
+
+    with time_machine.travel(ISSUED_AT + timedelta(days=31 if "expired" in answer else 1), tick=False):
+        assert observer.get(f"{link}withdraw/").status_code == 404
+        assert withdraw_as_coach(observer, link).status_code == 404
+
+    assert told(participant) == before
+
+
+@pytest.mark.django_db
+def test_the_coach_can_withdraw_while_the_participant_has_withdrawn_their_own_consent(participant, observer):
+    """✨ Closing the coach's link never stops them taking back their consent, as it never stops an observer."""
+    link = issue_coach_link(participant)
+    answer_as_coach(observer, link, "accept")
+    withdraw_consent(participant)
+
+    assert withdraw_as_coach(observer, link).status_code == 200
+
+    assert Invitation.objects.get().coach_answer != "accepted"
+
+
+@pytest.mark.django_db
+def test_once_the_coach_withdraws_the_participant_is_told_and_offered_someone_else_first(
+    signed_in_client, load_pathway, observer  # noqa: F811
+):
+    """✨ As after a decline: the coach page says where the coach stands and leads with choosing someone else, and the
+    hub's card tags it."""
+    load_pathway(with_a_coach_card())
+    signed_in_client.post(f"/sections/{ONBOARDING}/complete/")
+    link = link_shown(choose(signed_in_client).content.decode())
+    answer_as_coach(observer, link, "accept")
+
+    withdraw_as_coach(observer, link)
+
+    page = shown(signed_in_client, "walk-with-a-coach")
+    assert re.search(r'data-coach-answer="withdrawn"', page)
+    assert re.search(r'<button[^>]*name="step" value="restart" class="pill"', page)
+    assert coach_card_tag(signed_in_client) == COACH_ANSWER_LABELS["withdrawn"]
 
 
 # Whose link

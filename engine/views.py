@@ -787,8 +787,9 @@ def _coach_kept(answers, block_id):
 
 def _coach_link_state(contact_id, issued=None):
     """✨ The coach's link as the coach page shows it: the contact it is for, its invitation while it works, the coach's
-    answer ("waiting" while a working link is unanswered, None with no link at all), and the link itself if it was
-    just issued. An answer outlasts the link's expiry, but not its revoking: it belongs to the link it came through."""
+    answer ("waiting" while a working link is unanswered, None with no link at all), whether the coach has said no,
+    by declining or by withdrawing an acceptance (ADR 0024), and the link itself if it was just issued. An answer
+    outlasts the link's expiry, but not its revoking: it belongs to the link it came through."""
     invitation = Invitation.objects.filter(contact_id=contact_id).first()
     live = invitation if invitation is not None and invitation.works() else None
     answer = invitation.coach_answer if invitation is not None else None
@@ -796,6 +797,7 @@ def _coach_link_state(contact_id, issued=None):
         "contact_id": contact_id,
         "invitation": live,
         "answer": answer or ("waiting" if live else None),
+        "said_no": answer in (Invitation.CoachAnswer.DECLINED, Invitation.CoachAnswer.WITHDRAWN),
         "issued": issued["link"] if issued and issued["contact"] == contact_id else None,
     }
 
@@ -1012,7 +1014,7 @@ def _coach_sharing(response, block_id):
     """✨ The participant's coach as the comparison's consent needs them, or None when there is nothing to say: with
     `offer` "tick" once they accepted through a working link and the comparison was visited by its button; "expired"
     when they accepted but the link no longer works; "awaiting" while they have not answered or have no link yet. A
-    coach who declined is offered nothing here: the coach page already says so."""
+    coach who declined, or withdrew their acceptance, is offered nothing here: the coach page already says so."""
     coach = _coach_of(response)
     if coach is None:
         return None
@@ -1957,6 +1959,30 @@ def answer_coaching(request, token):
     return _see_other("coaching", token)
 
 
+@require_http_methods(["GET", "POST"])
+def coach_withdrawal(request, token):
+    """✨ The coach withdrawing their acceptance (ADR 0024), as an observer withdraws (ticket 15b): opening the page only
+    asks, and its button deletes the acceptance and stops the link. Only a working link that accepted can, whether or
+    not the participant's consent stands; any other gets the one refusal, naming nobody.
+
+    Before the acceptance goes, whatever it opened is recorded as opened, as the participant's next page would have
+    recorded it, so a section it opened stays open (ADR 0019) however soon the coach withdraws."""
+    invitation = Invitation.withdrawable_by_coach(token)
+    if invitation is None:
+        return _refuse_link(request)
+    _, name = _asked_by(invitation)
+    if request.method == "POST":
+        _as_first_seen(invitation.contact.response)
+        if not Invitation.withdraw_as_coach(token):
+            return _refuse_link(request)
+        shown = render(request, "engine/coach_withdrawal.html", {"name": name, "withdrawn": True})
+    else:
+        action = reverse("coach_withdrawal", args=[token])
+        shown = render(request, "engine/coach_withdrawal.html", {"name": name, "action": action})
+    shown["Cache-Control"] = "no-store"
+    return shown
+
+
 ANSWERED_ALREADY = "You've already answered."
 
 # ✨ Marks the page a coach's answer leads to, so its thanks is said once and not on every later visit (ticket 25a).
@@ -2242,6 +2268,21 @@ def _participant(user, first_version=Publication.current_version):
         version = first_version()
         sections = track_sections(version.document) if version else []
         return ParticipantState(None, version, sections, {}, complete_sections(sections, {}, ()), {}, set())
+    sections, answers, completed, moved_past = _as_first_seen(participant_response)
+    return ParticipantState(
+        response=participant_response,
+        version=participant_response.version,
+        sections=sections,
+        answers=answers,
+        completed=completed,
+        moved_past=moved_past,
+        fixed=set(participant_response.fixed_answers),
+    )
+
+
+def _as_first_seen(participant_response):
+    """✨ The response's track sections, the answers the gate reads, the sections complete and the pages moved past,
+    having stored each hub side card's completion and each opened section's opening the first time either is seen."""
     sections = track_sections(participant_response.version.document)
     answers = participant_response.answers_with_contacts_and_visits()
     # ✨ A part of a section, or a hub side card, is complete once its gate passes, so locks and the hub count it without
@@ -2264,15 +2305,7 @@ def _participant(user, first_version=Publication.current_version):
         ):
             participant_response.open_section(section["id"])
             answers[opened_key(section["id"])] = True
-    return ParticipantState(
-        response=participant_response,
-        version=participant_response.version,
-        sections=sections,
-        answers=answers,
-        completed=completed,
-        moved_past=moved_past,
-        fixed=set(participant_response.fixed_answers),
-    )
+    return sections, answers, completed, moved_past
 
 
 def _is_open(state, section, block):

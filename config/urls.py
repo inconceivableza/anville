@@ -26,6 +26,7 @@ from engine.views import (
     another_row,
     answer_coaching,
     coach_checklist,
+    coach_withdrawal,
     coaching,
     comparison,
     complete_section,
@@ -101,6 +102,7 @@ urlpatterns = [
     # ✨ The coach's link (ticket 13c), apart from the observers', so neither kind of link works at the other's address.
     path("coaching/<str:token>/", coaching, name="coaching"),
     path("coaching/<str:token>/answer/", answer_coaching, name="answer_coaching"),
+    path("coaching/<str:token>/withdraw/", coach_withdrawal, name="coach_withdrawal"),
     path("sections/<slug:section_id>/", section, name="section"),
     path("sections/<slug:section_id>/pages/<int:page>/", section, name="section_page"),
     path("sections/<slug:section_id>/pages/<int:page>/continue/", move_past_page, name="move_past_page"),

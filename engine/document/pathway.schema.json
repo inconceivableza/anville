@@ -1092,7 +1092,7 @@
       }
     },
     "coach_accepted": {
-      "description": "The coach chosen through this coach checklist has accepted on their current link, even if that link has since expired. A decline, no link, a revoked or reissued link, or another coach chosen since, does not count.",
+      "description": "The coach chosen through this coach checklist has accepted on their current link, even if that link has since expired. A decline, an acceptance the coach has withdrawn, no link, a revoked or reissued link, or another coach chosen since, does not count.",
       "type": "object",
       "additionalProperties": false,
       "required": ["type", "block", "message"],
