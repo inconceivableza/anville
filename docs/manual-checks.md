@@ -583,9 +583,14 @@ No rebuild and no pathway reload needed.
 
 - With enough answers (three) and Section 1 finished, the comparison, "How others experience you", ends below its last card with a green button, "On to your reflection →", like "I've finished Section 1" at the strengths evaluation's end. It opens Section 2 scrolled to the reflection field, and marks nothing complete. The top "← Back to Your gifts, seen together" button is unchanged.
 - Below the minimum (the waiting page) there is only the top button. (Fix-19 below: the comparison no longer opens while Section 2 is locked, so its end never repeats the top button in *Whatever You Do*; the faithful port's comparison, once it shows, still ends with its top button again.)
-- Have the coach decline on their link: the Walk with a coach card's "Declined" on the hub, and its entry in the sidebar, has grey text and a grey outline on the pale grey, like "Locked", not black. A coach who then accepts and withdraws their data: "Withdrawn" looks the same. "Accepted" and "Link issued" are unchanged.
+- Have the coach decline on their link: the Walk with a coach card's "Declined" on the hub, and its entry in the sidebar, has grey text and a grey outline on the pale grey, like "Locked", not black. A coach who then accepts and withdraws their data: "Withdrawn" looks the same. ("Link issued" and "Accepted" changed in fix-20 below.)
 - The dark card's light equivalent: if the coach card shows dark anywhere, its "Declined" is a dimmer light text and outline than "Not started" has.
 - At phone width the button at the comparison's end fits with no sideways scroll.
+
+### Fix-20: The Walk with a coach pill follows the pill rule (no rebuild needed; phone width too)
+
+- Lime means done, grey text and outline mean locked or waiting, black means open. Walk the Walk with a coach card on the hub and in the sidebar: "Locked" and "Declined" and "Withdrawn" grey; "Not started" black (also after a link is revoked or expires unanswered); "Link issued" (a working link, unanswered, including right after reissuing) grey text and outline on the pale grey; "Accepted" filled lime. Next step or not, the colours are the same.
+- The dark card's light equivalent, if the coach card shows dark anywhere: "Link issued" is the dimmer light text and outline "Declined" has; "Accepted" is lime.
 
 ### Fix-19: The comparison is part of Section 2 (no rebuild or reload needed; a participant started on the current pathway version)
 
@@ -990,7 +995,7 @@ Walked at a wide screen on 22 Oct 2026, with staging on `56924e5`; each passed, 
 - "Locked" has grey text and a grey outline on the pale grey fill, and "Not started" keeps black text and a black outline on the same fill, so the two read apart. Look at both together on the hub (a locked section beside an open one that is not started), in a part's row, on the side cards, and in the sidebar's chips.
 - On the dark Five trusted voices card a locked pill is a pale fill with a dimmer light text and outline than "Not started" has.
 - A locked row's "Locked" is still a button: hover or focus it for its note, and tap it at phone width. Its keyboard focus ring still shows.
-- The comparison's row (hub and sidebar) and Five trusted voices' card follow the same rule by what the pill says. Grey text and outline: "Locked", and any count of people still needed ("3 more needed", "2 of 3 answered"), including the comparison row below the minimum even after "Viewed" (it then shows its count). Black text and outline: "Not started", "Ready to view" ("In progress" joined them in fix-15). Unchanged: "Complete" and "Viewed" (lime), and the coach's "Link issued", "Accepted" ("Declined" and "Withdrawn" are grey from fix-18). Walk the voices card through "N more needed", "Links issued", "Some answers received", "All answers received" and "Enough answers received" (the last four follow Fix-17's rule below), on the dark card too.
+- The comparison's row (hub and sidebar) and Five trusted voices' card follow the same rule by what the pill says. Grey text and outline: "Locked", and any count of people still needed ("3 more needed", "2 of 3 answered"), including the comparison row below the minimum even after "Viewed" (it then shows its count). Black text and outline: "Not started", "Ready to view" ("In progress" joined them in fix-15). Unchanged: "Complete" and "Viewed" (lime). The coach's "Link issued", "Declined" and "Withdrawn" are grey (fix-18, fix-20) and "Accepted" lime (fix-20). Walk the voices card through "N more needed", "Links issued", "Some answers received", "All answers received" and "Enough answers received" (the last four follow Fix-17's rule below), on the dark card too.
 
 ### Fix-13: "Viewed" pill lime (rebuild the frontend; phone width too)
 
