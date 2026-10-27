@@ -514,7 +514,7 @@ def test_a_signpost_shows_the_section_it_leads_to_with_that_sections_status(open
     assert STRENGTHS_LINK in page
     assert "Strengths assessment" in page
     assert "Sort your strengths." in page
-    assert "status-chip status-not-started" in page
+    assert "status-chip" not in main_of(page)
 
 
 @pytest.mark.django_db
@@ -522,10 +522,12 @@ def test_the_links_status_follows_the_participant_through_the_other_section(open
     client = open_calling(linking_to_the_sort())
 
     client.post("/answers/strengths-sort/", {"value": json.dumps(complete_sort()), "version": _version_id()})
-    assert "status-chip status-in-progress" in client.get(CALLING).content.decode()
+    in_progress = main_of(client.get(CALLING).content.decode())
+    assert "status-chip" not in in_progress and "is-complete" not in in_progress
 
     client.post("/sections/strengths/complete/")
-    assert "status-chip status-complete" in client.get(CALLING).content.decode()
+    complete = main_of(client.get(CALLING).content.decode())
+    assert "status-chip" not in complete and 'class="signpost is-complete"' in complete
 
 
 @pytest.mark.django_db
@@ -536,7 +538,7 @@ def test_a_signpost_to_a_locked_section_names_it_but_does_not_lead_there(open_ca
     page = open_calling(document).get(CALLING).content.decode()
 
     assert "Strengths assessment" in page
-    assert "status-chip status-locked" in page
+    assert "status-chip" not in main_of(page)
     assert STRENGTHS_LINK not in page
 
 
@@ -593,7 +595,7 @@ def test_a_signpost_with_a_button_label_leads_there_by_that_button(open_calling)
     assert re.search(r'href="/sections/strengths/"[^>]*>\s*Open Strengths Assessment →\s*</a>', page)
     assert main_of(page).count(STRENGTHS_LINK) == 1  # ✨ the button is the way there, so the title is not a second one
     assert "Strengths assessment" in page
-    assert "status-chip status-not-started" in page
+    assert "status-chip" not in main_of(page)
 
 
 @pytest.mark.django_db

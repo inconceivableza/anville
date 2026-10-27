@@ -12,7 +12,7 @@
     {% else %}
       <h3><a href="{% page_url section.id section.page %}">{{ section.title }}</a></h3>
     {% endif %}
-    <span class="tag{% if section.is_next %} up-next{% endif %}">{{ section.label }}</span>
+    <span class="tag status-{{ section.status }}{% if section.is_next %} up-next{% endif %}">{{ section.label }}</span>
   </div>
   {% if section.id == coach_card.section and coach_card.line %}<p class="hub-side-line">{{ coach_card.line }}</p>{% endif %}
   <p>{{ section.side_card }}</p>

@@ -178,12 +178,29 @@ def test_a_side_card_section_is_drawn_as_a_card_and_not_listed_with_the_sections
     card = side_card(page, "Five trusted voices")
     assert "Invite people who know you well." in card
     assert "Locked" in card
+    assert re.search(r'<span class="tag[^"]*\bstatus-locked\b', card)  # ✨ the same looks as a row's, by state
     listed = re.findall(r'<li class="hub-section.*?</li>', page, re.S)
     assert listed and not any("Five trusted voices" in entry for entry in listed)
 
     signed_in_client.post("/sections/onboarding/complete/")
 
     assert "Not started" in side_card(signed_in_client.get("/hub/").content.decode(), "Five trusted voices")
+    card = side_card(signed_in_client.get("/hub/").content.decode(), "Five trusted voices")
+    assert re.search(r'<span class="tag[^"]*\bstatus-not-started\b', card)
+
+
+@pytest.mark.django_db
+def test_a_hub_rows_tag_names_its_state_so_each_state_is_drawn_its_own_way(signed_in_client, load_pathway):
+    load_pathway(pathway_document())
+    page = signed_in_client.get("/hub/").content.decode()
+
+    assert re.search(r'<span class="tag[^"]*\bstatus-not-started\b', hub_entry(page, "Before we begin"))
+    assert re.search(r'<span class="tag[^"]*\bstatus-locked\b', hub_entry(page, "Putting your calling into words"))
+
+    signed_in_client.post("/sections/onboarding/complete/")
+    page = signed_in_client.get("/hub/").content.decode()
+
+    assert re.search(r'<span class="tag[^"]*\bstatus-complete\b', hub_entry(page, "Before we begin"))
 
 
 @pytest.fixture

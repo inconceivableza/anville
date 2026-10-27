@@ -7,7 +7,7 @@
   warns before collection freezes as that one does and works without JavaScript; a browser never loads a POST ahead of
   time. Before there is a result, nothing is shown. Below the minimum, where the pathway has a Five trusted voices card,
   it is the results page's "Invite people who know you →" instead, leading to that card's page, with its phrase as the
-  status (ticket 88, fix-3).
+  status (ticket 88, fix-3). The status is a plain line, not a pill (ticket 89).
 {% endcomment %}
 {% if block.comparison %}
   <div id="block-{{ block.id }}" class="signpost comparison-signpost">
@@ -17,6 +17,6 @@
     {% else %}
       {% include "engine/comparison_press.html" with press_sort=block.comparison.sort press_class="pill" %}
     {% endif %}
-    <span class="status-chip status-{{ block.comparison.status }}">{{ block.comparison.label }}</span>
+    <p class="signpost-line">{{ block.comparison.label }}</p>
   </div>
 {% endif %}
