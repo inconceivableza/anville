@@ -289,6 +289,15 @@ def test_with_the_minimum_in_pressing_compare_asks_first_with_the_count_and_conf
 
 
 @pytest.mark.django_db
+def test_the_confirmation_pages_back_button_leads_to_the_hub(signed_in, participant):
+    with_observers(signed_in, participant, THREE_OBSERVERS)
+
+    asked = press_compare(signed_in)
+
+    assert re.search(r'class="[^"]*back-button[^"]*" href="/hub/"[^>]*>← Back to the hub<', asked.content.decode())
+
+
+@pytest.mark.django_db
 def test_below_the_minimum_pressing_compare_goes_straight_to_the_explanation_and_freezes_nothing(
     signed_in, participant
 ):
