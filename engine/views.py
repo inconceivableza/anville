@@ -1112,8 +1112,9 @@ def visit_comparison(request, block_id):
                 "answered": answered,
                 "invited": invited,
                 "everyone": answered >= invited,
-                "back": {"title": "results", "href": reverse("results", args=[block_id])},
             }
+            # ✨ No `back`: the button leads to the hub, as a section's does, since the page is reached from the hub's
+            # cards and the sidebar as well as from the results page (fix-21).
             return render(request, "engine/comparison_confirm.html", context)
         # ✨ Counted again under the freeze's lock: a withdrawal since may have left fewer than the minimum.
         viewed = response.freeze_collection()

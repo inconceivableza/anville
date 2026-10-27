@@ -191,7 +191,7 @@ Rebuild the frontend. No need to load the pathway again: a participant started o
 
 - In *Whatever You Do*, each of these opens with an outline button above its title, the first thing on the page, and nowhere else on it a way back: Section 1, Section 2 and a section on paper ("← Back to the hub"); Walk with a coach and Five trusted voices ("← Back to the hub", a button, not the quiet grey link it was); the Strengths evaluation before the sort ("← Back to How you've been designed – your strengths"); the results ("← Back to How you've been designed – your strengths"); and the comparison ("← Back to Your gifts, seen together" once Section 1 is finished, Section 1's button before then). Each lands where it says.
 - The results page, once Section 1 is finished, has no "Back to the hub" below the results; the comparison has no "← Return to …" at its foot and no "← Back to results" at its top (once it shows, it ends with a green "On to your reflection →", fix-18; it is never open while Section 2 is locked, fix-19).
-- "Before you look", the retake page (demo only), removing a contact without JavaScript, a refusal page and the credits page (signed in) have their way back as the same button, leading where it did.
+- "Before you look" (its button now leads to the hub, fix-21), the retake page (demo only), removing a contact without JavaScript, a refusal page and the credits page (signed in) have their way back as the same button, leading where it did.
 - Walk with a coach's "Back to the hub" beside "Choose someone else", once a coach is chosen, stays as it was.
 - At about 375px the long "← Back to How you've been designed – your strengths" wraps inside its button, with no sideways scroll. With JavaScript turned off, every one of these buttons works the same.
 
@@ -443,7 +443,7 @@ The homepage (`/`):
 
 - Section 2 opens only once Section 1 is finished, which needs the sort. There, the card sits above the reflection, drawn as the Strengths evaluation card is: its title, the "Compare with how others see you →" button, then its status as a plain line of small grey text, not a pill.
 - With fewer than three observers answered, the chip says how many of three have answered, "2 of 3 answered" with two in (ticket 81). The card's "Compare with how others see you →" is greyed and opens nothing (fix-8); the hub's row and the sidebar's entry open the comparison's waiting page instead (fix-16, below), and back on Section 2 the chip still says "2 of 3 answered".
-- With three answered, the chip reads "Ready to view". Pressing the button opens "Before you look", exactly as from the results page; "← Back to results" changes nothing, and back on Section 2 the chip still reads "Ready to view". Confirming opens the comparison, and back on Section 2 the chip reads "Viewed".
+- With three answered, the chip reads "Ready to view". Pressing the button opens "Before you look", exactly as from the results page; "← Back to the hub" leads to the hub and changes nothing, and back on Section 2 the chip still reads "Ready to view". Confirming opens the comparison, and back on Section 2 the chip reads "Viewed".
 - Typing the comparison's address (`/results/strengths-sort/comparison/`) before pressing anything shows it, but the chip stays "Ready to view".
 - An observer withdraws after "Viewed", leaving two: the chip still reads "Viewed".
 - With JavaScript turned off, the button still opens "Before you look" and confirming still opens the comparison.
@@ -587,6 +587,10 @@ No rebuild and no pathway reload needed.
 - The dark card's light equivalent: if the coach card shows dark anywhere, its "Declined" is a dimmer light text and outline than "Not started" has.
 - At phone width the button at the comparison's end fits with no sideways scroll.
 
+### Fix-21: "Before you look" goes back to the hub (no rebuild or reload needed; phone width too)
+
+- With three answered, open "Before you look" from the results page, then from the hub's row. At its top the button reads "← Back to the hub" and leads to the hub from either, changing nothing (it read "← Back to results" before). At phone width it fits with no sideways scroll.
+
 ### Fix-20: The Walk with a coach pill follows the pill rule (no rebuild needed; phone width too)
 
 - Lime means done, grey text and outline mean locked or waiting, black means open. Walk the Walk with a coach card on the hub and in the sidebar: "Locked" and "Declined" and "Withdrawn" grey; "Not started" black (also after a link is revoked or expires unanswered); "Link issued" (a working link, unanswered, including right after reissuing) grey text and outline on the pale grey; "Accepted" filled lime. Next step or not, the colours are the same.
@@ -653,7 +657,7 @@ No rebuild and no pathway reload needed.
 
 ## Answer collection freezes (after `migrate`; three observers answered, at least one more person invited)
 
-- On the results page, "Compare with how others see you →" opens "Before you look": "3 of the 4 people you invited have answered…" and the same button again. "← Back to results" changes nothing; pressing the button opens the comparison. With everyone invited answered (or after `seed_observers`), it reads "Everyone you invited has answered. Once you look, you can't add anyone else." Below three answered, the results page and Section 2's "How others see you" card offer "Invite people who know you →" instead (ticket 88, fix-3).
+- On the results page, "Compare with how others see you →" opens "Before you look": "3 of the 4 people you invited have answered…" and the same button again. "← Back to the hub" leads to the hub and changes nothing (fix-21); pressing the button opens the comparison. With everyone invited answered (or after `seed_observers`), it reads "Everyone you invited has answered. Once you look, you can't add anyone else." Below three answered, the results page and Section 2's "How others see you" card offer "Invite people who know you →" instead (ticket 88, fix-3).
 - Once looked: the hub's Five trusted voices card reads "Complete" with "You've seen your results, so no more answers are added." The list's page says the same and why, has no empty row and no "Issue link" or "Make a new link"; names can still be saved, and "Revoke link" still works. The coach page still issues and reissues the coach's link.
 - In a private window, an unanswered person's link shows the notice then "No more answers are being taken." with no button; their own link, if they had started, shows the same in place of the sort.
 - An observer who answered withdraws: with two left, the comparison is "Not enough answers yet" again, the list offers its empty row and links again, and the next press asks again.
@@ -865,7 +869,7 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - Before the sort is in, the hub lists no "How others see you" row within Section 2, and the Five trusted voices card has only "Invite people".
 - Once the sort is in, while Section 2 is locked: within Section 2, the first line under its title, a row "How others see you" whose title is plain text, no link or button, and whose pill is "Locked", showing Section 2's own lock note on hover, focus or a tap; the Five trusted voices card has only "Invite people", even with three answered (fix-19).
 - Once Section 1 is finished: within Section 2, "Your gifts, seen together", the first line under its title, a row "How others see you" with its status as the row's tag (ticket 87; it followed the Strengths evaluation within Section 1 before); on the Five trusted voices card, from three answered, beside "Invite people", a small ringed "How others see you →" pill, with no status after it (ticket 81: the card's meter and tag say it; below three it is not there, fix-3). The row reads the same as Section 2's card: "2 of 3 answered" with two answered of three with links (ticket 81), "Ready to view" with three, "Viewed" once confirmed.
-- With three answered, pressing the row's title, and pressing the card's pill, each open "Before you look", exactly as Section 2's card and the results page do; "← Back to results" changes nothing. With fewer than three, the row's title opens the comparison's waiting page (fix-16; Five trusted voices under fix-3).
+- With three answered, pressing the row's title, and pressing the card's pill, each open "Before you look", exactly as Section 2's card and the results page do; "← Back to the hub" leads to the hub and changes nothing. With fewer than three, the row's title opens the comparison's waiting page (fix-16; Five trusted voices under fix-3).
 - With JavaScript turned off, both still open "Before you look", and confirming opens the comparison.
 - Once confirmed (collection frozen): the voices card still reads "You've seen your results, so no more answers are added." under its tag, and its pill still opens the comparison, with nothing asked.
 - Keyboard only: Tab reaches the row's title and the card's pill, each with visible focus, and Enter presses it. Screen reader: each reads as a button from three answered, and the row's title as a link below three (fix-16).
