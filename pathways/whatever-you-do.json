@@ -345,7 +345,6 @@
           {
             "id": "lt-task",
             "type": "rich_text",
-            "estimate": "About 10 minutes",
             "variant": "hint",
             "label": "The task",
             "body": "Write to yourself as you will be in twelve months' time. You have just done a lot of thinking, and most of it fades faster than you would expect. Put it down now, while it is still warm, and let it find you again when you need it."

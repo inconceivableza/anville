@@ -776,26 +776,13 @@ body.wizard > main.container {
   }
 }
 
-/* ✨ v3's ratings page (sprint-3c-r3-fix-4): each statement a row under a fine line, in the heading face, not a card. */
+/* ✨ v3's ratings page (sprint-3c-r3-fix-4): its statements spaced by the page's gap rather than their own margin. */
 .ob-main .step:has(.baseline-q) {
   gap: 18px;
 }
 
 .ob-main .baseline-q {
   margin: 0;
-  padding: 14px 0 0;
-  border: 0;
-  border-top: 1px solid var(--cream-2);
-  border-radius: 0;
-  background: none;
-}
-
-.ob-main .baseline-label {
-  margin-bottom: 8px;
-  font-family: var(--font-heading);
-  font-size: clamp(18px, 1.5vw, 21px);
-  font-weight: 400;
-  line-height: 1.25;
 }
 
 /* ✨ Closer together, as v3's compact ratings (sprint-3c-r3-fix-7): its smaller heading, and no empty row under each
@@ -3178,12 +3165,12 @@ body:not(.framed) .question-card > p + form {
 
 /* The 1–10 agreement scale. Each point is a radio button drawn as a button. */
 
+/* ✨ As v3's ratings page (sprint-3c-r3-fix-4), wherever a rating is (fix-11): each statement a row under a fine line,
+   in the heading face, not a card. */
 .baseline-q {
-  background: var(--paper);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-lg) var(--space-lg);
-  margin-bottom: 16px;
+  margin: 0 0 18px;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--cream-2);
 }
 
 .baseline-q fieldset {
@@ -3192,11 +3179,12 @@ body:not(.framed) .question-card > p + form {
 }
 
 .baseline-label {
-  font-size: var(--text-md);
+  margin-bottom: 8px;
+  font-family: var(--font-heading);
+  font-size: clamp(18px, 1.5vw, 21px);
+  font-weight: 400;
+  line-height: 1.25;
   color: var(--ink);
-  line-height: 1.5;
-  margin-bottom: 12px;
-  font-weight: 500;
 }
 
 .baseline-scale {
@@ -4422,8 +4410,7 @@ html[data-javascript="loaded"] .save-fallback {
     padding: var(--space-lg) var(--space-md) var(--space-3xl);
   }
 
-  .question-card,
-  .baseline-q {
+  .question-card {
     padding: var(--space-lg) var(--space-md);
   }
 
