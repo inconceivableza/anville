@@ -957,7 +957,7 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 
 - Section 2, with the sort in and Section 1 finished: the reflection's box shows, faded, with "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer." as a band at the top of the same bordered box (fix-10). Nothing can be typed in it, and its "Save" (without JavaScript) cannot be pressed.
 - Choose a coach and give three people links: the hub's next step is Section 3, not Section 2. Mark Section 3 finished: the next step reads "Waiting on answers" / "Section 2's reflection opens once at least 3 of the people you invited have answered and you've seen how others see you.", with a button to Section 2.
-- Have two people answer (their links in private windows), then press "Compare with how others see you →" on Section 2's card: the explanation shows, and the reflection is still faded. Have a third answer and press it again, confirming: back on Section 2 the reflection can be written, and saves. The hub's next step is Section 2 again, under its title "How others see you".
+- Have two people answer (their links in private windows), then press "Compare with how others see you →" on Section 2's card: the explanation shows, and the reflection is still faded. The hub still says "Waiting on answers" (sprint-3c-r3-fix-14). Have a third answer: the hub's next step reads "How others see you" / "Enough of the people you invited have answered. See how they see you, then carry on with Section 2.", with "Compare with how others see you →", which leads through "Before you look". Press it again, confirming: back on Section 2 the reflection can be written, and saves. The hub's next step is Section 2 again, under its title "How others see you".
 - Have one of the three withdraw (collection unfreezes): the reflection still saves.
 - The faithful port's reflection can be written as soon as the sort is in, as before.
 - Phone width: the message wraps above the box with no sideways scroll.
@@ -1167,6 +1167,13 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 - Hover a hub row (a section, a part, the comparison's row): a faint warm neutral wash, no green; the arrow darkens and moves a few pixels right. With reduced motion on, the arrow darkens but does not move. A locked row does nothing.
 - The next-step card: Walk with a coach next, and the coach's wait, show the same photo (two friends beside a lake); Five trusted voices next, and "Waiting on answers", show the same (the church gathering). The row of friends no longer shows on the hub.
 - Finish onboarding and land on the hub: Section 1's card shows the plain dark ground, never the potter's hands, until the grass photo loads (throttle the network in the browser's tools to see it).
+
+### sprint-3c-r3-fix-14: the hub's next step once answers are in (no rebuild or pathway reload needed; wide screen and about 375px)
+
+- Sections 1 and 3 finished, a coach chosen, three people given links, two answered: the next step reads "Waiting on answers" with a button to Section 2, as before.
+- A third answers (a private window): the next step reads "How others see you" / "Enough of the people you invited have answered. See how they see you, then carry on with Section 2.", with a green "Compare with how others see you →" over the church-gathering photo. Pressing it shows "Before you look"; confirming opens the comparison with its numbers. Without JavaScript too.
+- With Section 3 not yet finished and three answered, Section 3 stays the next step.
+- Phone width: the sentence wraps and the button fits with no sideways scroll.
 
 ### sprint-3c-r3-fix-9: the coach card's link buttons (rebuild needed; wide screen and about 375px; no pathway reload needed)
 

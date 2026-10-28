@@ -98,6 +98,14 @@ def with_coach_answer(state, answer):
     return state._replace(tone="complete") if answer == "accepted" else state
 
 
+# ✨ Engine wording for the hub's next step once a section waiting on answers has the minimum in (sprint-3c-r3-fix-14):
+# its heading is the comparison signpost's own title, its button the comparison's press, and this the sentence between,
+# with what the engine's wording calls the section at {section}.
+COMPARISON_READY_SENTENCE = (
+    "Enough of the people you invited have answered. See how they see you, then carry on with {section}."
+)
+
+
 class NextStepWording(NamedTuple):
     """✨ What the hub's next step says for a section that carries its own wording for it (ticket 49b), and `waiting`, what
     it says while the section's only open work waits on others' answers (ticket 68), with its placeholders, or None. A

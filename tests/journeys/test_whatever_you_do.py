@@ -22,7 +22,7 @@ from django.utils import timezone
 from django.utils.html import escape
 
 from engine.document.observers import minimum_observers, relationship_question
-from engine.hub import COACH_WAIT_WORDING, hub_for, track_sections
+from engine.hub import COACH_WAIT_WORDING, COMPARISON_READY_SENTENCE, hub_for, track_sections
 from engine.models import Contact, ObserverResponse, Response
 from tests.journeys.test_coach_checklist import choose, step
 from tests.journeys.test_coach_link import answer_as_coach, coach_link_action, link_shown
@@ -1335,6 +1335,47 @@ def test_once_the_comparison_is_viewed_section_2_is_the_next_step_by_its_title(p
 
     assert f"<h2>{TITLES['others']}</h2>" in panel
     assert f'href="{SECTION_2}"' in panel
+
+
+def nothing_else_open(client, answered):
+    """✨ Section 2 waiting only on the comparison, with nothing else open, and `answered` people's sorts in."""
+    to_the_reflection(client)
+    invite_everyone(client)
+    complete(client, "shape")
+    people_answer(client, count=answered)
+    return next_step(client.get("/hub/").content.decode())
+
+
+@pytest.mark.django_db
+def test_once_the_minimum_have_answered_the_next_step_is_the_press_on_to_the_comparison(participant):
+    """✨ No longer "Waiting on answers" once there is something to compare (sprint-3c-r3-fix-14): the press, through
+    the freeze warning, not a link a browser could load ahead of time."""
+    panel = nothing_else_open(participant, answered=minimum_observers(the_pathway()))
+
+    assert "Waiting on answers" not in panel
+    assert 'action="/results/strengths-sort/comparison/visit/"' in panel
+    assert escape(COMPARISON_READY_SENTENCE.replace("{section}", "Section 2")) in panel
+
+
+@pytest.mark.django_db
+def test_below_the_minimum_the_next_step_still_waits_on_answers_and_offers_no_comparison(participant):
+    panel = nothing_else_open(participant, answered=minimum_observers(the_pathway()) - 1)
+
+    assert "Waiting on answers" in panel
+    assert f'href="{SECTION_2}"' in panel
+    assert "comparison" not in panel
+
+
+@pytest.mark.django_db
+def test_with_the_minimum_in_another_open_section_is_still_the_next_step(participant):
+    """✨ Only the wait's panel leads to the comparison; the comparison's own row and the voices card offer it beside."""
+    client = to_the_reflection(participant)
+    invite_everyone(client)
+    people_answer(client)
+
+    panel = next_step(client.get("/hub/").content.decode())
+
+    assert f'href="{SECTION_3}"' in panel
 
 
 # The hub while Section 4 waits on the coach (ticket 65)

@@ -82,6 +82,7 @@ from engine.document.gates import (
 from engine.document.scoring import score
 from engine.hub import (
     COACH_WITHDREW,
+    COMPARISON_READY_SENTENCE,
     COMPLETE,
     block_ids_fixed_on_completion,
     complete_sections,
@@ -259,6 +260,7 @@ def hub(request):
     voices = _hub_voices(state, hub)
     side_cards = _side_cards(state, hub, voices)
     coach_wait = _coach_wait_panel(hub, state.response, coach, coach_page)
+    comparison = _hub_comparison(state)
     return render(
         request,
         "engine/hub.html",
@@ -271,11 +273,26 @@ def hub(request):
             "side_cards": side_cards,
             "coach_card": _coach_card(coach, coach_section, coach_page),
             "voices": voices,
-            "comparison": _hub_comparison(state),
+            "comparison": comparison,
+            "comparison_next": _comparison_next(hub, comparison),
             "waiting_sentence": waiting.waiting_sentence(minimum) if waiting is not None else None,
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
+
+
+def _comparison_next(hub, comparison):
+    """✨ The comparison as the hub's next step leads to it in place of "Waiting on answers" (sprint-3c-r3-fix-14): once
+    the section waiting on answers, the one holding the comparison signpost, has the document's minimum in and the
+    comparison is not yet viewed (its status "ready", as `comparison_status` has it, the minimum the comparison page's
+    own), with the engine's sentence naming that section. None below the minimum, where the wait stands, never leading
+    to an empty comparison; and wherever nothing waits on answers, or the comparison is shut with its section."""
+    waiting = hub.waiting_on_answers
+    if waiting is None or comparison is None or comparison["section"] != waiting.id:
+        return None
+    if comparison["status"] != "ready" or comparison["locked"]:
+        return None
+    return {**comparison, "sentence": COMPARISON_READY_SENTENCE.replace("{section}", waiting.called)}
 
 
 def next_look(hub, coach_wait):
