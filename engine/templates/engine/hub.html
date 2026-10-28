@@ -40,6 +40,14 @@
                 </a>
               </section>
             {% endwith %}
+          {% elif comparison_next %}
+            {# ✨ Nothing is next, and the section waiting on answers has the minimum in (sprint-3c-r3-fix-14): the comparison signpost's title, the engine's sentence, and the comparison's press, through the freeze warning, as the results page draws it. #}
+            <section class="panel next {{ next_look }}">
+              <p class="label">Your next step</p>
+              <h2>{{ comparison_next.title }}</h2>
+              <p>{{ comparison_next.sentence }}</p>
+              {% include "engine/comparison_press.html" with press_sort=comparison_next.sort press_class="pill" press_magnetic=True %}
+            </section>
           {% elif hub.waiting_on_answers %}
             {# ✨ Nothing is next, but a section's only open work waits on others' answers (ticket 68): the engine's heading, and the sentence the section carries for it (fix-2). #}
             {% with waiting=hub.waiting_on_answers %}
