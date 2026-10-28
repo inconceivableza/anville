@@ -69,3 +69,11 @@ def test_every_photo_the_next_step_can_show_has_a_credit_line():
 
     for subject in ("clay", "carpenter", "Bible", "two friends talking", "row of friends", "misty hills", "notebook"):
         assert subject in credits, subject
+
+
+def test_every_photo_the_stylesheet_shows_has_a_credit_line():
+    """✨ The hero's photo and the four callings' too (fix-8), by a word of each credit's subject."""
+    credits = " ".join(SITE_PHOTO_CREDITS)
+
+    for subject in ("sunhat", "teacher", "baby", "pastor", "headphones"):
+        assert subject in credits, subject

@@ -206,6 +206,11 @@ SITE_PHOTO_CREDITS = [
     "Photograph of a carpenter planing wood from Unsplash.",
     "Photograph of an open Bible on a jetty at sunrise from Unsplash.",
     "Photograph of a woman in a summer dress looking out over a field of wheat from Unsplash.",
+    "Photograph of a woman in a sunhat walking through a field at sunset from Unsplash.",
+    "Photograph of a teacher standing before a classroom of pupils from Unsplash.",
+    "Photograph of a mother holding her sleeping baby from Unsplash.",
+    "Photograph of a pastor speaking with a microphone from Unsplash.",
+    "Photograph of a student with headphones studying in a library from Unsplash.",
 ]
 
 
