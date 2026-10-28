@@ -342,6 +342,7 @@
         "number": "06",
         "estimate": "About 15 minutes",
         "requires": ["growth"],
+        "complete_label": "I've finished Section 6",
         "blocks": [
           {
             "id": "lt-task",
