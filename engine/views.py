@@ -193,6 +193,12 @@ def credits_page(request):
     )
 
 
+def privacy(request):
+    """✨ The privacy notice (ticket 100), open to anyone: visitors, observers and coaches have no account, and a
+    participant reads it before consenting."""
+    return render(request, "engine/privacy.html")
+
+
 @login_required
 @consent_required
 def hub(request):

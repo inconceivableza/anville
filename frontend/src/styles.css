@@ -860,6 +860,51 @@ main.container:has(> .ob) {
   margin-bottom: 16px;
 }
 
+/* ✨ The privacy page (ticket 100): a long read, so its headings set it into parts and its lists breathe. */
+.privacy h2 {
+  margin-top: var(--space-xl);
+}
+
+.privacy h3 {
+  font-size: var(--text-md);
+  margin-top: var(--space-lg);
+}
+
+.privacy p,
+.privacy ul {
+  margin-bottom: 14px;
+}
+
+.privacy ul {
+  padding-left: 1.2em;
+}
+
+.privacy li {
+  margin-bottom: 8px;
+}
+
+/* ✨ What the content owner has still to answer, marked so nobody takes it for the final wording. */
+.privacy mark.placeholder {
+  background: var(--warn-pale);
+  color: var(--warn-text);
+  border: 1px dashed var(--warn);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.privacy mark.placeholder::before {
+  content: "[";
+}
+
+.privacy mark.placeholder::after {
+  content: "]";
+}
+
+/* ✨ The footer's links, Credits and Privacy, side by side. */
+.site-footer a + a {
+  margin-left: var(--space-md);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tab .bar i,
   .tp-anim,

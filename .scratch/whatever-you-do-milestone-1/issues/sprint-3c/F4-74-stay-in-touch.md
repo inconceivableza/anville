@@ -16,6 +16,10 @@
 - [ ] The admin lists the sign-ups and exports them as CSV
 - [ ] "Join the waitlist" and the footer's "Contact us" lead to the form
 
+**Carried from 100**
+
+- [ ] The privacy page's "If you leave your email address on the homepage" and its withdrawal line describe this list ahead of it: check both against what is built, and correct them if they differ
+
 **Context**
 
 - Rewritten 26 Oct to ADR 0023, which replaces the rules it was parked with on 20 Oct

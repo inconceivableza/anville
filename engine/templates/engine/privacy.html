@@ -1,0 +1,180 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/participant.html" %}
+{% comment %}
+  ✨ The privacy page (ticket 100), linked from every page's footer and from the consent tick's "privacy notice". Public,
+  as the credits page is, so visitors, observers and coaches can read it, and the participant header shows only to
+  someone signed in.
+
+  DRAFT. Every sentence is meant to be true of the app as built, and is checked against the ADRs on consent (0004,
+  0021), observers (0005, 0007, 0008, 0014, 0016), the coach (0010, 0011, 0022, 0024), Google (0015) and Stay in touch
+  (0023). The controller, the ICO registration, retention and the companies that host the site and send its email are
+  marked placeholders until the content owner answers (spec, Legalities are parked, not forgotten), and the "Draft
+  wording" notice stays until the content owner signs the page off. Like the consent text, it leaves out group admins
+  while no organisation is set up (ADR 0021); their paragraph comes back when the consent text's does. A change to
+  what the app keeps or shows changes this page too.
+{% endcomment %}
+{% block head_title %}Privacy{% endblock head_title %}
+
+{% block content %}
+  {% if user.is_authenticated %}{% include "engine/back_button.html" with back=None %}{% endif %}
+  <div class="privacy">
+    <h1>Privacy notice</h1>
+
+    <div class="hint-box">
+      <strong>Draft wording</strong>
+      This notice is a draft for trying Whatever You Do out with made-up answers. The parts marked “To be confirmed”
+      are still being decided. Please do not write anything real about yourself or anyone else yet.
+    </div>
+
+    <p>
+      This notice says what Whatever You Do keeps, who sees it, and what you can do about it. It covers the people who
+      take the journey, the people they ask to rate them, their coach, and anyone who leaves an email address on the
+      homepage.
+    </p>
+
+    <h2>Who we are</h2>
+    <p>
+      The controller, who decides how your information is used and is responsible for it, is
+      <mark class="placeholder">To be confirmed: the controller’s name, postal address and contact email address</mark>.
+      Ask them anything about this notice, or about what is kept about you.
+    </p>
+    <p>
+      Registered with the Information Commissioner’s Office:
+      <mark class="placeholder">To be confirmed: the registration number, once the data protection fee is paid</mark>.
+    </p>
+
+    <h2>If you take the journey</h2>
+    <p>
+      Whatever You Do is for adults. Everyone taking part confirms they are 18 or over; we do not ask for a date of
+      birth.
+    </p>
+    <h3>What is kept</h3>
+    <ul>
+      <li>
+        Your account: your first name and email address, your password (stored scrambled, so nobody can read it), when
+        you signed up and last signed in, and when you confirmed you are 18 or over.
+      </li>
+      <li>
+        Your consent: which version of the consent text you agreed to and when, and when you withdrew, if you did.
+      </li>
+      <li>
+        Everything you write or choose in the journey, and your results, so you can come back to them. Some of it may
+        be about your faith, your work, your health, or hard times you have been through, so nothing of it is stored
+        until you agree.
+      </li>
+      <li>
+        The names of the people you ask to rate you, with their email addresses, and the name of your coach, if you
+        choose one.
+      </li>
+    </ul>
+    <p>
+      If you choose to sign in with Google, Google handles your sign-in under its own terms. We ask Google only for
+      your email address and basic profile (your name and profile picture), and keep what it sends with your account.
+      Nobody has to use Google: you can sign up with an email address and password instead.
+    </p>
+    <h3>Who sees it</h3>
+    <ul>
+      <li><strong>You</strong> see everything you write.</li>
+      <li><strong>The people you ask to rate you</strong> see your first name. They never see your answers.</li>
+      <li>
+        <strong>Your coach</strong>, if you choose one, sees your first name. If you then choose to share your
+        strengths evaluation results with them, they also see those results and how the people you asked rate you on
+        the same things, until you stop sharing or change coach. They never see the rest of your answers.
+      </li>
+      <li>
+        <strong>The people who run this service</strong> can reach everything stored, in order to keep it working.
+      </li>
+    </ul>
+
+    <h2>If someone asks you to rate them</h2>
+    <p>
+      The person who asked you gave us your name and email address. We keep them, with your answers and when you
+      opened your link and sent them.
+    </p>
+    <p>
+      They see nothing of your answers until enough people have answered. Then they see everyone’s answers combined,
+      and each person’s without a name, and they may show what they see to their coach. They never see which answers
+      are yours, but the people who run this service can.
+    </p>
+    <p>
+      Until you answer, we may email you a reminder once a week while your link works. Every reminder has a link to
+      stop them.
+    </p>
+
+    <h2>If someone asks you to be their coach</h2>
+    <p>
+      We keep only the name the person who asked you gave us, and your answer, accept or decline. You don’t give us
+      an email address. Accepting means agreeing to every commitment on your link, one of which is about your own
+      faith, so we keep that you accepted only with your agreement, given when you accept. If you decline, they are
+      told only that you declined.
+    </p>
+    <p>
+      If they choose to share their results with you, your link shows you their strengths evaluation results and how
+      the people they asked rate them, until they stop sharing or choose another coach.
+    </p>
+
+    <h2>If you leave your email address on the homepage</h2>
+    <p>
+      If you sign up under “Stay in touch”, we keep your email address, when you left it, and which version of the
+      sentence you agreed to, to send you occasional news of Whatever You Do. Only the people who run this service see
+      the list.
+    </p>
+
+    <h2>What we send by email</h2>
+    <ul>
+      <li>If you take the journey: messages about your account, such as a link to reset your password when you ask for one.</li>
+      <li>If someone asks you to rate them: the weekly reminders above, until you answer, stop them or your link runs out.</li>
+    </ul>
+    <p>
+      Links for the people you ask to rate you, and for your coach, are never sent by us: you send them yourself.
+    </p>
+
+    <h2>Who else handles it</h2>
+    <p>
+      This site’s fonts, photos and video are served from the site itself, and it has no analytics or advertising
+      cookies: only the ones it needs to work, such as the one that keeps you signed in. The site is hosted, and its
+      emails sent, by companies acting on our behalf:
+      <mark class="placeholder">To be confirmed: the hosting company and the email service, and where they keep the data</mark>.
+    </p>
+
+    <h2>How long it is kept</h2>
+    <p>
+      <mark class="placeholder">To be confirmed: how long each kind of information is kept, and what is deleted when</mark>.
+      Until that is decided, nothing is deleted after a set time.
+    </p>
+
+    <h2>How to withdraw</h2>
+    <ul>
+      <li>
+        <strong>If you take the journey:</strong> withdraw your consent at any time from “Your consent”, linked at the
+        foot of your hub. That closes the journey until you agree again, and the links you gave your coach and the
+        people you asked to rate you stop working. For now, what you have already written is kept. To have your
+        account and everything kept with it deleted, ask the controller.
+      </li>
+      <li>
+        <strong>If someone asked you to rate them:</strong> withdraw through your link while it works, and your
+        answers are deleted. After your link has stopped working, ask the controller.
+      </li>
+      <li>
+        <strong>If someone asked you to be their coach:</strong> press “Withdraw my data” on your link while it works,
+        and your name, your answer and the link are deleted at once. After your link has stopped working, ask the
+        controller.
+      </li>
+      <li>
+        <strong>If you left your email address on the homepage:</strong> ask the controller, and it is deleted from the
+        list.
+      </li>
+    </ul>
+    <p>
+      You can also ask the controller for a copy of what is kept about you, or to have it corrected or deleted.
+    </p>
+
+    <h2>How to complain</h2>
+    <p>
+      If you are unhappy with how your information is handled, please tell the controller first. You can also complain
+      to the Information Commissioner’s Office, the UK’s data protection regulator, at
+      <a href="https://ico.org.uk/make-a-complaint/">ico.org.uk/make-a-complaint</a> or on 0303 123 1113.
+    </p>
+  </div>
+{% endblock content %}

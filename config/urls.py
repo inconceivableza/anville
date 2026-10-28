@@ -44,6 +44,7 @@ from engine.views import (
     observe,
     observer,
     photo,
+    privacy,
     reopen_section,
     results,
     retake,
@@ -110,6 +111,7 @@ urlpatterns = [
     path("sections/<slug:section_id>/reopen/", reopen_section, name="reopen_section"),
     path("hub/", hub, name="hub"),
     path("credits/", credits_page, name="credits"),
+    path("privacy/", privacy, name="privacy"),
     # ✨ Joining by link, a participant's groups and admins' pages; each adds its routes in organisations/urls.py.
     path("", include("organisations.urls")),
     path("", home, name="home"),

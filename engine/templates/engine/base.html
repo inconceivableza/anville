@@ -3,7 +3,7 @@
 {% load django_vite %}
 {# ✨ Every engine page. The account pages have their own base, replacing allauth's #}
 {# (access/templates/allauth/layouts/base.html), and the homepage overrides `body`, so anything sitewide, such as #}
-{# the credits link, goes in all three. #}
+{# the credits and privacy links, goes in all three. #}
 {# ✨ The demo notice is the exception: every page here shows the smaller one, and a page showing the full notice #}
 {# (the hub, and the pages observers and coaches land on) empties `demo_notice`, so none shows both (ticket 46). #}
 <!doctype html>
@@ -32,7 +32,7 @@
       <main class="container">
         {% block content %}{% endblock content %}
       </main>
-      <footer class="site-footer"><a href="{% url 'credits' %}">Credits</a></footer>
+      <footer class="site-footer"><a href="{% url 'credits' %}">Credits</a><a href="{% url 'privacy' %}">Privacy</a></footer>
     {% endblock body %}
   </body>
 </html>
