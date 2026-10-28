@@ -279,7 +279,7 @@ The homepage (`/`):
 - `/credits/` lists "Photograph of a figure facing the sun from Unsplash." among the site's photographs (ticket 101).
 - Phone width: the photo sits above the page, the ratings fit without scrolling sideways.
 - The photo is as tall as the window on both pages, at a wide screen and at a tall one (over 900px high): no bare dark strip beneath it, whether at the top of the ratings or scrolled to their end, and the photo the same size and crop on page 2 as on page 1, never zoomed. At about 375px it sits above the page as before (fix-10).
-- Pressing Enter in an answer (with a rating's point focused, chosen or not, or in the reason drop-down) does nothing: the page stays as it was, never "Not saved. No answer was sent." on a page of its own (fix-7).
+- Pressing Enter in an answer (with a rating's point focused, chosen or not, or a reason's card) does nothing: the page stays as it was, never "Not saved. No answer was sent." on a page of its own (fix-7).
 
 ### Ticket 83: Messages only after a press, and Before we begin's "Log out" (rebuild the frontend, load the pathway again, and use a participant started after that)
 
@@ -300,7 +300,17 @@ The homepage (`/`):
 - On arrival no refusal shows. Press "Continue →" with the name cleared and both boxes unticked: "Add your first name.", "You need to be 18 or over to take part." and "You need to agree to take part." each under what it refuses, the field and boxes outlined in red, and what was typed or ticked kept. `/hub/` still comes back to this page. With JavaScript the page neither reloads nor moves, and the focus stays on "Continue →"; without, the page comes back opened at the form, not at the top (fix-2).
 - With all three given, "Continue →" opens Before we begin at "Step 2 of 3". After finishing it, the hub greets you by the name given on the entry page, and "Your consent" at its foot shows "You agreed to version 3 of this text".
 - Withdraw there, then open `/hub/`: it goes to the consent page, not "About you", and `/about-you/` leads to the hub. A participant who agreed to version 2 before is asked again on the consent page too, never on "About you".
-- At about 375px: the field fills the width, each long label wraps beside its box, "What this means" wraps within the page, and "Continue →" fills the width.
+- At about 375px: the field fills the width, each long label wraps beside its box, "What this means" wraps within the page, and "Continue →" sits on the right (sprint-3c-r3-fix-4; it filled the width before).
+
+### sprint-3c-r3-fix-4: the onboarding wizard against v3 (rebuild the frontend; sign up as someone new; beside v3's onboarding, `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html#onboarding`)
+
+- "About you" and both pages of Before we begin fill the window beneath the demo strip, edge to edge: no cream page footer below the box, no side margins, the brown showing only as the thin edge round the photo and the box. "Credits" and "Privacy" sit inside the box at its bottom right and open their pages.
+- Page 1: the reason's seven options are cards in two columns, as v3's, each its label in the heading face; clicking one turns it dark with light text, and clicking another moves the choice. A chosen reason is still chosen after a reload. Tab reaches the cards and the arrow keys move between them, with a green outline on the focused one. With JavaScript off, choose one and press "Save": the page comes back with it chosen.
+- No dark panel behind the heading and questions on any page, and no line above "Continue →". "← Previous page" on page 2 is a plain underlined link on the left, readable, and "Continue →" a pill on the right.
+- Page 2: the five statements are rows under fine lines, in the heading face, not white cards. On a short window the ratings scroll within the box, the photo staying in view, and nothing shows below the box at their end.
+- At about 375px: the photo sits above the page, the cards in one column, and the page scrolls as any other, the demo strip held at the top, ending at the box with nothing below it.
+- The homepage's five steps, with JavaScript off, are still dark panels with light text.
+- The faithful port's onboarding (a section page, not a wizard) still asks the reason in a drop-down, with the page footer below.
 
 ## The hub's next step and its photo (load the pathway again first; ticket 49b)
 
@@ -330,7 +340,7 @@ The homepage (`/`):
 - Without JavaScript, pressing Save (or Enter) on a 1–10 scale with no point chosen comes back to the same page, "Not saved. No answer was sent." beside the button. With JavaScript, Enter in an answer never reloads the page (fix-7).
 - Screen reader: "Saved" and a refusal are announced.
 - Ghost text (Section 1's reflection, the letter): it shows in grey in the empty box, is readable against the background, and disappears as you type. A screen reader names the box by its prompt, not by the ghost text.
-- The reason in onboarding: it looks like the prototype's account-screen drop-down (a small dark caret at the right, not the browser's arrow), and is amber while "Select..." is showing, turning white once a reason is chosen, with or without JavaScript. The drop-down shows "Select..." until a reason is chosen, and choosing one shows "Saved" with no button press. Going back to "Select..." shows "Saved", turns the drop-down amber again, and unticks "Choose what's bringing you to the course" beneath the button; a reload still shows "Select...". Keyboard only: Tab reaches it, and the arrow keys change it (each change saves). It fills the card's width at phone width.
+- The reason in the faithful port's onboarding (in *Whatever You Do*'s wizard it is cards since sprint-3c-r3-fix-4): it looks like the prototype's account-screen drop-down (a small dark caret at the right, not the browser's arrow), and is amber while "Select..." is showing, turning white once a reason is chosen, with or without JavaScript. The drop-down shows "Select..." until a reason is chosen, and choosing one shows "Saved" with no button press. Going back to "Select..." shows "Saved", turns the drop-down amber again, and unticks "Choose what's bringing you to the course" beneath the button; a reload still shows "Select...". Keyboard only: Tab reaches it, and the arrow keys change it (each change saves). It fills the card's width at phone width.
 
 ## The contact list ("Who knows you best?")
 

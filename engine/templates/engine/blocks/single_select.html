@@ -4,7 +4,29 @@
   ✨ A drop-down that saves as soon as an option is chosen. The empty option always leads, placeholder or not:
   a select with none marked shows its first option, which would look like an answer never given. What is sent
   is the option's identifier; the server refuses anything that is not one of this block's options.
+
+  In a wizard (`choices_as_cards`) the options are v3's cards instead, each a radio, saving as soon as one is chosen;
+  nothing is checked until one is, so nothing is sent, and the wizard's gate asks for one. With no empty option to go
+  back to, a choice can be changed but not cleared, as v3's cards are.
 {% endcomment %}
+{% if choices_as_cards %}
+<form id="block-{{ block.id }}" class="choice-q" method="post" action="{% url 'save_answer' block.id %}">
+  {% csrf_token %}
+  <fieldset id="answer-{{ block.id }}" hx-post="{% url 'save_answer' block.id %}" hx-trigger="change"
+            hx-sync="this:queue last" hx-target="next .save-status">
+    <legend class="choice-prompt">{{ block.text.prompt }}</legend>
+    <div class="opts">
+      {% for option in block.text.options %}
+        <label class="opt">
+          <input type="radio" name="value" value="{{ option.id }}"{% if block.answer == option.id %} checked{% endif %}>
+          <b>{{ option.label }}</b>
+        </label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  {% include "engine/save_row.html" %}
+</form>
+{% else %}
 <form id="block-{{ block.id }}" class="question-card" method="post" action="{% url 'save_answer' block.id %}">
   {% csrf_token %}
   <label for="answer-{{ block.id }}">{{ block.text.prompt }}</label>
@@ -18,3 +40,4 @@
   </select>
   {% include "engine/save_row.html" %}
 </form>
+{% endif %}
