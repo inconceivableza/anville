@@ -1342,15 +1342,18 @@ main > .hub ~ .hub-consent {
   background: var(--hero-bg) url("../img/hills.jpg") center / cover;
 }
 
-/* ✨ Each state its own photo, none used twice (fix-8): the coach's wait takes the coach card's old photo, waiting on
-   answers (the trusted voices') that card's, and a step its own; hills, above, stands for nothing waiting and for a
-   pathway's section this list does not name. The classes come from the view's `next_look`. */
-.next.look-coach {
+/* ✨ One photo per subject (fix-8, fix-12): the coach, as the next step or in its wait, takes the coach card's old photo,
+   and the trusted voices, as the next step or waiting on answers, the churches photo; a step its own; hills, above,
+   stands for nothing waiting and for a pathway's section this list does not name. The classes come from the view's
+   `next_look`. */
+.next.look-coach,
+.next.look-section-walk-with-a-coach {
   background-image: url("../img/mentor.jpg");
 }
 
-.next.look-answers {
-  background-image: url("../img/friends.jpg");
+.next.look-answers,
+.next.look-section-trusted-voices {
+  background-image: url("../img/churches.jpg");
 }
 
 .next.look-rest {
@@ -1395,6 +1398,12 @@ main > .hub ~ .hub-consent {
 /* ✨ The section's photo, where the document names one, under the same shade; taller, as the prototype's (ticket 49b). */
 .next:has(> img) {
   min-height: 360px;
+}
+
+/* ✨ A card with its own photo draws none of the stylesheet's under it (fix-12), else the first one flashes before the
+   second loads over it; the plain dark ground stays. Doubled class: it must outrank every `.next.look-*` above. */
+.next.next:has(> img) {
+  background-image: none;
 }
 
 .next > img {
@@ -1631,7 +1640,8 @@ main > .hub ~ .hub-consent {
 }
 
 .srow:has(> .srow-body :is(h3 > a, h3 > button).hub-section-title):hover:not(:has(.hub-parts:hover)) {
-  background: var(--gold-pale);
+  /* ✨ A faint warm neutral, not the green wash (fix-12): the arrow below darkens and nudges right. */
+  background: var(--cream-2);
 }
 
 .srow-arrow {
@@ -1641,10 +1651,24 @@ main > .hub ~ .hub-consent {
   font-size: var(--text-md);
   line-height: 1.2;
   color: var(--muted);
+  transition:
+    transform 0.15s ease,
+    color 0.15s ease;
 }
 
 .srow:has(> .srow-body :is(h3 > a, h3 > button).hub-section-title):hover:not(:has(.hub-parts:hover)) > .srow-arrow {
-  color: var(--green-deep);
+  color: var(--ink);
+  transform: translateX(4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .srow-arrow {
+    transition: none;
+  }
+
+  .srow:has(> .srow-body :is(h3 > a, h3 > button).hub-section-title):hover:not(:has(.hub-parts:hover)) > .srow-arrow {
+    transform: none;
+  }
 }
 
 /* ✨ A locked section's "Locked" is a small button holding its pill, drawn as the pill alone, whose lock note shows
