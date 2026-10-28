@@ -3,7 +3,7 @@
 {% extends "engine/base.html" %}
 {% load static %}
 {# ✨ The public homepage, copied from the original prototype's, with the content owner's newer "How it works" (ticket 32a). Static until ticket 32b generates it from content. #}
-{# ✨ v3's heading and pillars where the hackathon's earlier copy differed; no newsletter, donations or contact address, which do not exist yet (ticket 53c). #}
+{# ✨ v3's heading and pillars where the hackathon's earlier copy differed; no donations or contact address, which do not exist yet (ticket 53c). The newsletter, contact and churches' waitlist are the one "Stay in touch" form (ticket 74). #}
 
 {% block head_title %}Whatever You Do{% endblock head_title %}
 
@@ -103,7 +103,7 @@
           <li><b>Raise up coaches</b><span>Equip wise people in your church to walk alongside others, with a short briefing pack.</span></li>
           <li><b>Free for participants</b><span>No cost to the people you send through it.</span></li>
         </ul>
-        {# ✨ Leads to ticket 74's "Stay in touch" form, whose section takes the id below from the marker above the callings. #}
+        {# ✨ Leads to the "Stay in touch" form below (ticket 74), the churches' waitlist being its list. #}
         <div class="ch-cta"><a class="pill" data-magnetic href="#stay-in-touch">Join the waitlist <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a></div>
       </div>
     </section>
@@ -117,9 +117,10 @@
       </figure>
     </section>
 
+    <!-- =================== STAY IN TOUCH =================== -->
+    {% include "engine/stay_in_touch.html" %}
+
     <!-- =================== MEET =================== -->
-    {# ✨ Ticket 99: a placeholder target for the "Join the waitlist" button until ticket 74 puts the form here. #}
-    <span class="anchor" id="stay-in-touch"></span>
     <section class="panel meet" id="about">
       <h2>Everyone has a purpose. Do you know yours?</h2>
       {# ✨ Each card's class names its photo (drawn in the stylesheet), so the photos show without JavaScript or under reduced motion. #}
@@ -137,7 +138,7 @@
     <footer class="panel hp-footer">
       <div class="cols">
         <div><a class="brand" href="#top" aria-label="Whatever You Do home">{% include "engine/logo.html" %}</a><span>“Whatever you do, work at it with all your heart, as working for the Lord.” Colossians 3:23 (NIV)</span></div>
-        <nav class="foot-links" aria-label="Footer"><a href="#how">How it works</a><a href="#impact">Impact</a><a href="#churches">For churches</a><a href="{% url 'privacy' %}">Privacy</a></nav>
+        <nav class="foot-links" aria-label="Footer"><a href="#how">How it works</a><a href="#impact">Impact</a><a href="#churches">For churches</a><a href="#stay-in-touch">Contact us</a><a href="{% url 'privacy' %}">Privacy</a></nav>
       </div>
       <div class="hp-footer-links">
         <span>© 2026 Whatever You Do</span>

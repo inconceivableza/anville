@@ -8,10 +8,12 @@ from typing import NamedTuple
 from django.conf import settings
 from django.db import models, transaction
 from django.db.models import F, Func, Value
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 from access.consent import withdrawn_participants
 from engine.document.blocks import with_current_names
+from engine.document.contacts import EMAIL_MAX_LENGTH
 from engine.document.gates import (
     coach_answer_key,
     comparison_viewed_key,
@@ -776,6 +778,24 @@ def _submitted_count(response):
 def _sent_by(secret):
     # ✨ Prefixed, so it never equals `Invitation.secret_hash`: the database alone cannot join answers to a contact.
     return _hash_of(f"observer-response:{secret}")
+
+
+class SignUp(models.Model):
+    """✨ An email address left under "Stay in touch" on the homepage (ticket 74, ADR 0023): one list for the
+    newsletter, contact and the churches' waitlist, kept here for the operator to export from the admin, and nothing
+    sent from the app. Kept with when it was left and the version of the form's sentence it was left under. Belongs to
+    no account. One row per address, whatever its case, so a repeat address stores nothing new."""
+
+    email = models.EmailField(max_length=EMAIL_MAX_LENGTH)
+    signed_up_at = models.DateTimeField(default=timezone.now)
+    wording_version = models.PositiveSmallIntegerField()
+
+    class Meta:
+        ordering = ["-signed_up_at"]
+        constraints = [models.UniqueConstraint(Lower("email"), name="one_sign_up_per_address")]
+
+    def __str__(self):
+        return self.email
 
 
 class _MergeJson(Func):
