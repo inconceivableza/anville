@@ -13,6 +13,7 @@ from django.contrib.humanize.templatetags.humanize import apnumber
 from django.db import IntegrityError, transaction
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -894,11 +895,19 @@ def _saved(request, state, section, block_id):
 
     A block that opens what follows (a reading) lands at its confirmation, with what it opened beneath, rather than
     back at its top above what was just read (ticket 41e).
+
+    With htmx, the status goes where the participant is looking, and the section's gate is brought up to date beside
+    it, out of band: without the second part the button would stay as it was rendered, and someone who had just written
+    enough to finish the section would have to reload before the engine would let them say so. htmx swaps everything
+    but the gate into the status, so the templates' line breaks are trimmed: a quiet save's status must stay empty, or
+    the row beneath a wizard's rating shows and moves the next statement down (fix-11).
     """
     page = page_of(section, block_id)
     if request.headers.get("HX-Request") == "true":
         shown = _section_page(state, section, page)
-        return render(request, "engine/save_result.html", shown)
+        status = render_to_string("engine/save_status.html", shown, request).strip()
+        gate = render_to_string("engine/completion.html", {**shown, "out_of_band": True}, request).strip()
+        return HttpResponse(status + gate)
     block = next(block for block in section["blocks"] if block["id"] == block_id)
     return _see_other(f"{page_url(section['id'], page)}#{landing_of(block)}")
 

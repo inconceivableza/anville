@@ -139,6 +139,23 @@ def test_an_opening_question_answered_says_no_saved(participant):
 
 
 @pytest.mark.django_db
+def test_an_opening_question_answered_sends_back_nothing_to_swap_in_but_its_gate(participant):
+    """✨ fix-11: htmx swaps everything but the out-of-band gate into the status, and the row beneath a rating is shown
+    only while its status is empty. A line break sent back took a row and moved the next statement down."""
+    answer(participant, "reason", "exploring")
+    participant.post("/sections/onboarding/pages/1/continue/")
+
+    saved = participant.post(
+        f"/answers/{RATINGS[0]}/",
+        {"value": "7", "version": Publication.current_version().pk},
+        headers={"HX-Request": "true"},
+    ).content.decode()
+
+    assert saved.startswith('<div id="completion"')
+    assert saved.endswith("</div>")
+
+
+@pytest.mark.django_db
 def test_log_out_from_before_we_begin_signs_the_participant_out_and_lands_on_the_homepage(participant):
     page = participant.get(WIZARD).content.decode()
     form = re.search(r'<form [^>]*method="post"[^>]*action="([^"]+)"[^>]*>(?:(?!</form>).)*Log out</button>', page, re.S)
