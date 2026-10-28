@@ -29,11 +29,11 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 ## The homepage (`/`, signed out and signed in; beside v3's, `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`)
 
-- Top to bottom: the forest video under a top bar, with "Everyone has a purpose. Do you know yours?"; "Whatever You Do is a pathway for discerning your purpose." with its five pillars; "How it works" with its five steps and the coach's line; Impact's three cards; For churches; "Ideas to explore"; a parent's story; the callings carousel; the footer. Nothing offers a newsletter, donations or a contact address.
+- Top to bottom: the forest video under a top bar, with "Everyone has a purpose. Do you know yours?"; "Whatever You Do is a pathway for discerning your purpose." with its five pillars; "How it works" with its five steps and the coach's line; For churches; "Ideas to explore"; a parent's story; the callings carousel; the footer. Nothing offers a newsletter, donations or a contact address.
 - The top of the hero holds the "/whateveryoudo" logo alone, centred where the old mark and name sat (ticket 91, fix-5): no link or button but the logo, which scrolls to the top of the page. It is not fixed: it scrolls away with the hero.
 - The forest video plays muted and loops, with no sound and no controls. With the video blocked (DevTools, Network, right-click `hero.mp4`, "Block request URL", then reload), the still frame shows in its place.
 - Reduced motion, and without JavaScript: the still frame shows from the start and the forest never moves, not even for a moment.
-- "How it works": STEP 01 to STEP 05, each with its activities and an "In your journey" outcome; the tabs and ← → move between them. The tabs and the carousel are checked in detail under fix-14 and fix-17 below.
+- "How it works": STEP 01 to STEP 05, each with its title and summary alone (no bullets, no "In your journey" box); the tabs and ← → move between them. Without JavaScript, the five steps show one under another, each with its title and summary. The tabs and the carousel are checked in detail under fix-14 and fix-17 below.
 - Without JavaScript, the footer's links still scroll to their parts.
 - Keyboard only: Tab reaches the top bar's logo with a visible focus ring, and Enter follows it.
 - DevTools, Network, reload: every request goes to this site (no Google Fonts, nothing else).
@@ -124,6 +124,14 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 - The logo reads "/whateveryoudo", dark on the cream, and leads to the hub. It replaces the written name in the header and, on the homepage, the old mark and name in the top bar and the footer.
 - The homepage has no fixed bar since fix-5 (see its checks below); the footer's logo is light on the black.
 - At about 375px, the header keeps to one row: the logo, "Your pathway" and "Sign out" side by side, none wrapping, the logo still readable.
+
+### Ticket 98: The homepage's top half (rebuild the frontend first; wide screen and about 375px; no pathway reload or new participant needed)
+
+- Hero: the summary, then "Begin your journey" alone (no "For coaches"), then "Learn more" with a down arrow below it; pressing it scrolls to the overview.
+- Overview: the heading, the five pillars, the logo and "A calling journey for every season of life", the paragraph beginning "Along the way, you'll come to understand…", then its own "Begin your journey" button, which opens sign-up (signed in, the hub).
+- "How it works" has no "Five steps…" line; each of the five steps shows its title and summary, with no bullets and no box beneath. The step photos still change with the tabs. With JavaScript blocked, the five steps show one under another with the same words.
+- No "Space to reflect on what matters" section and no "Impact" link in the footer.
+- At about 375px, all of it reads in order, nothing cut off or scrolling sideways.
 
 ### Fix-5: The homepage's logo back in place, a calmer top bar, and the logo everywhere (rebuild the frontend first; wide screen and about 375px; no pathway reload needed)
 
@@ -777,7 +785,7 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - The sort, framed (a participant's Section 1) and on the cream (an observer's link, in a private window): the card on show stands out from the page, with its outline and soft shadow, before and while it flies to a bucket, and reads as easily as before. Keyboard only: each bucket button, Undo and each fine-tuning slider still shows its ring when focused.
 - The coach's view of the results and comparison (the coach's link, once shared): the sections look the same as the participant's, outline included.
 - Phone width: on the hub, the sort, fine-tuning, results and the comparison, each card fits with a margin each side, its outline whole, its words clear of its edges, and nothing scrolls sideways.
-- Homepage (signed out): the hero's "For coaches" and the footer's "For coaches" each scroll to the coach panel in "How it works"; the pillars read "Coach oversight". No "mentor" shows on the page.
+- Homepage (signed out): the footer's "For coaches" scrolls to the coach panel in "How it works"; the pillars read "Coach oversight". No "mentor" shows on the page.
 
 ## Hand-check fixes (fix-14; rebuild the frontend first)
 

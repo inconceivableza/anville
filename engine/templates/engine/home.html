@@ -24,8 +24,9 @@
         <p class="hero-summary">A guided journey for discerning your calling through scripture, a strengths evaluation, feedback from people you trust, and a coach. For adults aged 18 and over.</p>
         <div class="hero-cta">
           <a class="pill" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
-          <a class="pill ghost" data-magnetic href="#coach">For coaches</a>
         </div>
+        {# ✨ Ticket 98: an invitation to scroll, to the overview below #}
+        <a class="learn-more" href="#mission">Learn more <svg aria-hidden="true"><use href="#arrow"/></svg></a>
         {% include "access/demo_notice.html" %}
       </div>
       <div class="logos" aria-label="Churches and organisations using Whatever You Do">
@@ -39,6 +40,8 @@
         <p class="reveal" id="reveal">Whatever You Do is a pathway for discerning your purpose.</p>
         <ul class="pillars" aria-label="What it draws on"><li>Scripture</li><li>Strengths evaluation</li><li>Peer feedback</li><li>Coach oversight</li><li>Journey</li></ul>
         <div class="sign">{% include "engine/logo.html" %}<span>A calling journey for every season of life</span></div>
+        <p class="mission-more">Along the way, you’ll come to understand your God-given gifts, talents and limitations, explore what the Bible teaches about work and calling, and find practical next steps. At the start and the end, you answer the same questions, so you can see what has changed.</p>
+        <a class="pill" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
       </div>
     </section>
 
@@ -50,10 +53,17 @@
           <div>
             <span class="label">A guided journey</span>
             <h2>How it works</h2>
-            <p>Five steps to help you reflect on your gifts, hear from people who know you, and explore what comes next.</p>
           </div>
           <a class="pill ghost" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <svg aria-hidden="true"><use href="#arrow"/></svg></a>
         </div>
+        {# ✨ Ticket 98: the five steps are in the page, so they read without JavaScript; with it, main.js shows them one at a time as tabs. #}
+        <ol class="steps" id="aSteps">
+          <li class="step"><span class="tp-step">STEP 01</span><h3>Discover your gifts and talents</h3><p>Reflect on your strengths through a guided evaluation and scripture: sort 36 statements about yourself, and explore the gifts described in Romans 12 and 1 Corinthians 12.</p></li>
+          <li class="step"><span class="tp-step">STEP 02</span><h3>Hear from people who know you</h3><p>Invite at least three people you trust to share their perspective, then compare it with your own and notice where your views align or differ.</p></li>
+          <li class="step"><span class="tp-step">STEP 03</span><h3>Make sense of your story</h3><p>Work through guided prompts on your life, your work and the moments that have shaped you, at your own pace, and notice the themes that run through them.</p></li>
+          <li class="step"><span class="tp-step">STEP 04</span><h3>Explore a sense of calling</h3><p>Draw together your gifts, experience and reflections, put your sense of calling into words, and identify practical next steps.</p></li>
+          <li class="step"><span class="tp-step">STEP 05</span><h3>Return to what you discovered</h3><p>Write a letter to your future self, capturing what matters to you now and the steps you want to take, to revisit later.</p></li>
+        </ol>
         <div class="tabrow">
           <div class="tabbar" role="tablist" id="aTabs"></div>
           <div class="tabnav"><button type="button" id="aPrev" aria-label="Previous section">←</button><button type="button" id="aNext" aria-label="Next section">→</button></div>
@@ -65,22 +75,6 @@
         <div class="journey-coach" id="coach">
           <svg aria-hidden="true"><use href="#mark"/></svg>
           <p><b>A coach can walk alongside you throughout.</b> Invite a pastor, colleague or wise friend when you’re ready.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- =================== IMPACT =================== -->
-    <section class="panel impact" id="impact">
-      <div class="impact-bg" aria-hidden="true"></div>
-      <div class="in">
-        <div class="imp-head">
-          <h2>Space to reflect on what matters</h2>
-          <p>At the beginning and end of the course, participants are asked the same questions about their gifts, work and calling.</p>
-        </div>
-        <div class="stats">
-          <article class="stat"><h3>Understand your gifts</h3><p>Reflect on your God-given gifts, talents and limitations.</p></article>
-          <article class="stat"><h3>Explore work and calling</h3><p>Consider what the Bible teaches about work and calling.</p></article>
-          <article class="stat"><h3>Find a practical direction</h3><p>Think about practical next steps for pursuing your sense of purpose.</p></article>
         </div>
       </div>
     </section>
@@ -137,7 +131,7 @@
     <footer class="panel hp-footer">
       <div class="cols">
         <div><a class="brand" href="#top" aria-label="Whatever You Do home">{% include "engine/logo.html" %}</a><span>A guided calling journey</span></div>
-        <div><b>Explore</b><a href="#how">How it works</a><a href="#journey">The evaluation</a><a href="#impact">Impact</a><a href="#connect">Writing</a></div>
+        <div><b>Explore</b><a href="#how">How it works</a><a href="#journey">The evaluation</a><a href="#connect">Writing</a></div>
         <div><b>For churches</b><a href="#churches">Run it in a group</a><a href="#coach">For coaches</a></div>
         <div><b>Note</b><span>“Whatever you do, work at it with all your heart, as working for the Lord.”<br>Colossians 3:23 (NIV)</span></div>
       </div>

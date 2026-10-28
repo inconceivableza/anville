@@ -358,15 +358,12 @@ if (document.querySelector("main.page") && !reducedMotion) {
   const bar = document.getElementById("aTabs");
   const text = document.getElementById("aText");
   const imgs = document.getElementById("aImgs");
-  const section = document.getElementById("journey");
-  if (!bar || !text) return;
-  const steps = [
-    { title: "Discover your gifts", summary: "Reflect on your strengths through a guided evaluation and scripture.", activities: ["Sort 36 statements about yourself", "Explore gifts described in Romans 12 and 1 Corinthians 12", "Write a summary in your journey"], outcome: "Your gifts and strengths" },
-    { title: "Hear from people who know you", summary: "Invite trusted people to share their perspective, then compare it with your own.", activities: ["Add at least two people, or return to invitations later", "Compare their perspective with your own", "Reflect on where your views align or differ"], outcome: "Your strengths alongside trusted perspectives" },
-    { title: "Make sense of your story", summary: "Use the journey to reflect on your life, work and the moments that have shaped you.", activities: ["Work through guided prompts at your own pace", "Notice themes in your experience", "Connect your story with what matters to you"], outcome: "Your story and reflections" },
-    { title: "Explore a sense of calling", summary: "Draw together your gifts, experience and reflections as you consider possible directions.", activities: ["Put your sense of calling into words", "Consider possible directions", "Identify practical next steps"], outcome: "A calling statement and directions to explore" },
-    { title: "Return to what you discovered", summary: "Write a letter to your future self and revisit your reflections later.", activities: ["Capture what matters to you now", "Record the steps you want to take", "Revisit your letter in the future"], outcome: "A letter to your future self" },
-  ];
+  const section = document.getElementById("how");
+  const list = document.getElementById("aSteps");
+  if (!bar || !text || !list) return;
+  // ✨ The steps are written once, in the page (ticket 98); the tabs show them one at a time.
+  const steps = [...list.children].map((li) => ({ title: li.querySelector("h3").textContent, summary: li.querySelector("p").textContent }));
+  section?.classList.add("tabs-on");
   const STEP_MS = 7000; // ✨ how long each step shows before the next
   let i = 0, timer, start, remain = STEP_MS;
   const pauseReasons = new Set();
@@ -377,7 +374,12 @@ if (document.querySelector("main.page") && !reducedMotion) {
   bar.style.setProperty("--dur", STEP_MS + "ms");
   const render = () => {
     const step = steps[i];
-    text.innerHTML = `<div class="tp-anim"><span class="tp-step">STEP 0${i + 1}</span><h3>${step.title}</h3><p>${step.summary}</p></div><ul class="tp-anim">${step.activities.map((activity) => `<li><svg><use href="#leaf"/></svg>${activity}</li>`).join("")}</ul><div class="out"><span>In your journey</span><b>${step.outcome}</b></div>`;
+    const stepText = document.createElement("div");
+    stepText.className = "tp-anim";
+    stepText.innerHTML = `<span class="tp-step">STEP 0${i + 1}</span><h3></h3><p></p>`;
+    stepText.querySelector("h3").textContent = step.title;
+    stepText.querySelector("p").textContent = step.summary;
+    text.replaceChildren(stepText);
     text.setAttribute("aria-labelledby", "atab" + i);
     tabs.forEach((tab, j) => {
       tab.setAttribute("aria-selected", j === i);
