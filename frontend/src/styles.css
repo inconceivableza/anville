@@ -5099,85 +5099,6 @@ body > svg[aria-hidden="true"] {
   }
 }
 
-/* ---------- CONNECT ---------- */
-.connect {
-  background: var(--cream);
-  padding: clamp(64px, 9vw, 112px) clamp(20px, 5vw, 72px);
-  display: grid;
-  gap: clamp(32px, 4vw, 48px);
-}
-
-.connect > * {
-  max-width: 1180px;
-  width: 100%;
-  margin-inline: auto;
-}
-
-.cn-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: end;
-  gap: 16px;
-}
-
-.cn-head h2 {
-  font-size: clamp(38px, 5vw, 66px);
-  font-weight: 300;
-}
-
-.cn-head .pill.ghost {
-  color: var(--ink);
-}
-
-.posts {
-  margin-bottom: clamp(24px, 4vw, 56px);
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(14px, 2vw, 24px);
-}
-
-.post {
-  display: grid;
-  align-content: start;
-  gap: var(--space-sm);
-  color: var(--ink);
-  text-decoration: none;
-}
-
-.post-art {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  border-radius: var(--radius-md);
-  margin-bottom: 6px;
-  transition: transform 0.5s;
-}
-
-.post-art-1 {
-  background: linear-gradient(135deg, var(--green-deep), var(--green));
-}
-
-.post-art-2 {
-  background: linear-gradient(135deg, var(--brown-3), var(--brown-2));
-}
-
-.post-art-3 {
-  background: linear-gradient(135deg, var(--cream-2), var(--paper));
-}
-
-.post h3 {
-  font-size: clamp(25px, 2.4vw, 34px);
-  line-height: 1.1;
-  margin: 6px 0 8px;
-}
-
-.post p {
-  color: var(--muted);
-  font-size: 14.5px;
-  margin: 0;
-}
-
 .sr {
   position: absolute;
   width: 1px;
@@ -5185,12 +5106,6 @@ body > svg[aria-hidden="true"] {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
-}
-
-@media (max-width: 760px) {
-  .posts {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* ---------- MEET ---------- */
@@ -5352,15 +5267,19 @@ body > svg[aria-hidden="true"] {
   font-size: 13.5px;
 }
 
-.hp-footer .cols div {
+.hp-footer .cols div,
+.hp-footer .foot-links {
   display: grid;
   gap: 8px;
   align-content: start;
 }
 
-.hp-footer .cols b {
-  color: var(--on-dark);
-  font-weight: 500;
+.hp-footer .foot-links a {
+  color: inherit;
+}
+
+.hp-footer .cols span {
+  max-width: 36ch;
 }
 
 .hp-footer-links {
@@ -5504,6 +5423,12 @@ body > svg[aria-hidden="true"] {
   font-weight: 600;
 }
 
+/* ✨ The photo and the text both fill the row, so the photo's foot is level with the text's (ticket 99). */
+.churches > .ch-img,
+.churches > .ch-copy {
+  align-self: stretch;
+}
+
 .churches .ch-img {
   min-height: 520px;
   padding: 0;
@@ -5567,21 +5492,90 @@ body > svg[aria-hidden="true"] {
   padding: 0;
 }
 
-.connect .post-art {
-  background-position: center;
-  background-size: cover;
+.churches .ch-cta .pill {
+  margin: 0;
 }
 
-.connect .post-art-1 {
-  background-image: url("../img/wind.jpg");
+/* ---------- THE DIFFERENCE IT MAKES ---------- */
+/* ✨ v3's three figures, drawn at their values without the count-up; the bars are the figures' own widths (ticket 99). */
+.difference {
+  background: var(--cream);
+  color: var(--ink);
+  padding: clamp(56px, 8vw, 112px) clamp(20px, 5vw, 72px);
 }
 
-.connect .post-art-2 {
-  background-image: url("../img/friends.jpg");
+.difference .in {
+  max-width: 1180px;
+  margin-inline: auto;
+  display: grid;
+  gap: clamp(32px, 5vw, 64px);
 }
 
-.connect .post-art-3 {
-  background-image: url("../img/bible.jpg");
+.difference h2 {
+  text-align: center;
+  font-size: clamp(34px, 5vw, 66px);
+  font-weight: 300;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 3vw, 40px);
+}
+
+.stat {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.stat .num {
+  font-family: var(--font-heading);
+  font-weight: 300;
+  font-size: clamp(64px, 8vw, 120px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+
+.stat .num b {
+  font-weight: 300;
+}
+
+.stat .bar {
+  height: 4px;
+  border-radius: 3px;
+  background: var(--cream-2);
+  overflow: hidden;
+}
+
+.stat .bar i {
+  display: block;
+  height: 100%;
+  background: var(--green);
+}
+
+.stat:nth-child(1) .bar i {
+  width: 71%;
+}
+
+.stat:nth-child(2) .bar i {
+  width: 86%;
+}
+
+.stat:nth-child(3) .bar i {
+  width: 100%;
+}
+
+.stat p {
+  color: var(--muted);
+  font-size: 16px;
+  max-width: 30ch;
+}
+
+@media (max-width: 860px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
 }
 
 .story-sec {
@@ -5610,27 +5604,33 @@ body > svg[aria-hidden="true"] {
 }
 
 .story-copy blockquote {
-  max-width: 28ch;
+  /* ✨ v3's size, at one size throughout (ticket 99). */
+  max-width: 40ch;
   font-family: var(--font-heading);
-  font-size: clamp(26px, 4vw, 52px);
+  font-size: clamp(22px, 2.4vw, 34px);
   font-weight: 300;
-  line-height: 1.24;
+  line-height: 1.35;
 }
 
 .story-copy figcaption {
   color: var(--on-dark-2);
 }
 
-/* ✨ No position here: the ring's position: absolute above places each card on the ring and anchors its photo.
-   A position: relative here stacked the cards below the stage, so only the first ever showed (fix-14). */
-.ring-stage .mc {
+/* ✨ The calling cards carry their photos in the plain grid as well as on the ring, so they show without JavaScript and
+   under reduced motion (ticket 99). Only a card off the ring is made position: relative, to anchor its photo: on the ring
+   the position: absolute above places it, and a position: relative there stacked the cards below the stage (fix-14). */
+.meet-cards:not(.ring) .mc {
+  position: relative;
+}
+
+.meet-cards .mc {
   overflow: hidden;
   padding-top: 170px;
   background: var(--brown-78);
   box-shadow: inset 0 0 0 1px var(--warm-20);
 }
 
-.ring-stage .mc::before {
+.meet-cards .mc::before {
   position: absolute;
   inset: 0 0 auto;
   height: 156px;
@@ -5641,23 +5641,23 @@ body > svg[aria-hidden="true"] {
   mask-image: linear-gradient(var(--mask-solid) 76%, transparent);
 }
 
-.ring-stage .mc:nth-child(1)::before {
+.mc-teacher::before {
   background-image: url("../img/callings/teacher.jpg");
 }
 
-.ring-stage .mc:nth-child(2)::before {
+.mc-carpenter::before {
   background-image: url("../img/carpenter.jpg");
 }
 
-.ring-stage .mc:nth-child(3)::before {
+.mc-parent::before {
   background-image: url("../img/callings/parent.jpg");
 }
 
-.ring-stage .mc:nth-child(4)::before {
+.mc-pastor::before {
   background-image: url("../img/callings/pastor.jpg");
 }
 
-.ring-stage .mc:nth-child(5)::before {
+.mc-student::before {
   background-image: url("../img/callings/student.jpg");
 }
 
@@ -5687,7 +5687,4 @@ body > svg[aria-hidden="true"] {
     gap: var(--space-sm);
   }
 
-  .story-copy blockquote {
-    font-size: clamp(24px, 7vw, 36px);
-  }
 }

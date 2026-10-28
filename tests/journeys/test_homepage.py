@@ -147,12 +147,79 @@ def test_nothing_on_the_homepage_points_at_a_placeholder(client):
 
 
 @pytest.mark.django_db
-def test_homepage_does_not_present_impact_percentages_without_context(client):
+def test_the_difference_it_makes_comes_before_for_churches_with_its_three_figures(client):
+    """✨ Ticket 99: the figures are the spec's unconfirmed ones; this test names them so they are easy to find."""
     page = client.get("/").content.decode()
+    difference = section(page, r'<section class="panel difference"')
 
-    assert "71%" not in page
-    assert "86%" not in page
-    assert "100%" not in page
+    assert re.search(r"<h2[^>]*>The difference it makes</h2>", difference)
+    assert re.findall(r"<b>(\d+)</b>%", difference) == ["71", "86", "100"]
+    assert page.index('class="panel difference"') < page.index('class="panel churches"')
+
+
+@pytest.mark.django_db
+def test_for_churches_has_the_new_copy_and_a_waitlist_button_and_the_articles_are_gone(client):
+    page = client.get("/").content.decode()
+    churches = section(page, r'<section class="panel churches"')
+
+    assert "Releasing and equipping your members to do whatever they do for the glory of God." in churches
+    assert "<b>95%</b>" in churches
+    points = re.findall(r"<li><b>([^<]+)</b>", churches)
+    assert points == ["Run it together", "Raise up coaches", "Free for participants"]
+    waitlist = re.search(r'<a\s[^>]*href="#([^"]*)"[^>]*>\s*Join the waitlist', churches)
+    assert waitlist, "no Join the waitlist button"
+    assert re.search(r'\bid="%s"' % waitlist.group(1), page)
+    assert "Ideas to explore" not in page
+    assert 'class="post' not in page
+
+
+@pytest.mark.django_db
+def test_the_testimonial_is_labelled_impact_and_keeps_its_words(client):
+    page = client.get("/").content.decode()
+    story = section(page, r'<section class="panel story-sec"')
+
+    assert '<span class="label">Impact</span>' in story
+    assert "A story from a parent" not in page
+    assert "My son got saved just a couple of years ago" in story
+    assert "Parent of a participant, 2025" in story
+
+
+@pytest.mark.django_db
+def test_the_five_callings_are_in_the_served_page_each_naming_its_photo(client):
+    """✨ Ticket 99: the photos belong to the cards themselves, so they show with JavaScript off."""
+    page = client.get("/").content.decode()
+    meet = section(page, r'<section class="panel meet"')
+
+    cards = re.findall(r'<div class="mc mc-([a-z]+)">.*?<h3>([^<]+)</h3><p>([^<]+)</p>', meet, re.S)
+    assert [(photo, title) for photo, title, _ in cards] == [
+        ("teacher", "Teacher"),
+        ("carpenter", "Electrician"),
+        ("parent", "Parent"),
+        ("pastor", "Church planter"),
+        ("student", "Student"),
+    ]
+    assert all(line for _, _, line in cards)
+    assert "donat" not in meet.casefold()
+
+
+@pytest.mark.django_db
+def test_the_black_footer_has_the_quote_and_one_column_of_links(client):
+    page = client.get("/").content.decode()
+    footer = re.search(r"<footer.*?</footer>", page, re.S).group(0)
+
+    links = re.findall(r'<a\s[^>]*href="([^"]*)"[^>]*>([^<]+)</a>', footer)
+    assert links == [
+        ("#how", "How it works"),
+        ("#impact", "Impact"),
+        ("#churches", "For churches"),
+        ("/credits/", "Credits"),
+    ]
+    assert "Whatever you do, work at it with all your heart, as working for the Lord." in footer
+    assert "Colossians 3:23 (NIV)" in footer
+    assert "© 2026 Whatever You Do" in footer
+    for gone in ("<b>Note</b>", "The evaluation", "Writing", "A guided calling journey"):
+        assert gone not in footer
+    assert re.search(r'\bid="impact"', page)
 
 
 @pytest.mark.django_db
