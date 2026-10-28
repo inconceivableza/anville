@@ -20,7 +20,7 @@
         <a class="brand" href="#top" aria-label="Whatever You Do home">{% include "engine/logo.html" %}</a>
       </nav>
       <div class="hero-copy">
-        <h1>Everyone has a purpose. Do you know yours?</h1>
+        <h1><span class="ln">Everyone has a purpose.</span> <span class="ln">Do you know yours?</span></h1>
         <p class="hero-summary">A guided journey for discerning your calling through scripture, a strengths evaluation, feedback from people you trust, and a coach. For adults aged 18 and over.</p>
         <div class="hero-cta">
           <a class="pill" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
@@ -39,8 +39,9 @@
       <div class="in">
         <p class="reveal" id="reveal">Whatever You Do is a pathway for discerning your purpose.</p>
         <ul class="pillars" aria-label="What it draws on"><li>Scripture</li><li>Strengths evaluation</li><li>Peer feedback</li><li>Coach oversight</li><li>Journey</li></ul>
-        <div class="sign">{% include "engine/logo.html" %}<span>A calling journey for every season of life</span></div>
-        <p class="mission-more">Along the way, you’ll come to understand your God-given gifts, talents and limitations, explore what the Bible teaches about work and calling, and find practical next steps. At the start and the end, you answer the same questions, so you can see what has changed.</p>
+        {# ✨ "Along the way" belongs to the sign-off above it, in its type (fix-3, 28 Oct). #}
+        <div class="sign">{% include "engine/logo.html" %}<span>A calling journey for every season of life</span>
+          <p class="mission-more">Along the way, you’ll come to understand your God-given gifts, talents and limitations, explore what the Bible teaches about work and calling, and find practical next steps. At the start and the end, you answer the same questions, so you can see what has changed.</p></div>
         <a class="pill" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
       </div>
     </section>
@@ -58,11 +59,11 @@
         </div>
         {# ✨ Ticket 98: the five steps are in the page, so they read without JavaScript; with it, main.js shows them one at a time as tabs. #}
         <ol class="steps" id="aSteps">
-          <li class="step"><span class="tp-step">STEP 01</span><h3>Discover your gifts and talents</h3><p>Reflect on your strengths through a guided evaluation and scripture: sort 36 statements about yourself, and explore the gifts described in Romans 12 and 1 Corinthians 12.</p></li>
-          <li class="step"><span class="tp-step">STEP 02</span><h3>Hear from people who know you</h3><p>Invite at least three people you trust to share their perspective, then compare it with your own and notice where your views align or differ.</p></li>
-          <li class="step"><span class="tp-step">STEP 03</span><h3>Make sense of your story</h3><p>Work through guided prompts on your life, your work and the moments that have shaped you, at your own pace, and notice the themes that run through them.</p></li>
-          <li class="step"><span class="tp-step">STEP 04</span><h3>Explore a sense of calling</h3><p>Draw together your gifts, experience and reflections, put your sense of calling into words, and identify practical next steps.</p></li>
-          <li class="step"><span class="tp-step">STEP 05</span><h3>Return to what you discovered</h3><p>Write a letter to your future self, capturing what matters to you now and the steps you want to take, to revisit later.</p></li>
+          <li class="step step-1"><span class="tp-step">STEP 01</span><h3>Discover your gifts and talents</h3><p>Reflect on your strengths through a guided evaluation and scripture: sort 36 statements about yourself, and explore the gifts described in Romans 12 and 1 Corinthians 12.</p></li>
+          <li class="step step-2"><span class="tp-step">STEP 02</span><h3>Hear from people who know you</h3><p>Invite at least three people you trust to share their perspective, then compare it with your own and notice where your views align or differ.</p></li>
+          <li class="step step-3"><span class="tp-step">STEP 03</span><h3>Make sense of your story</h3><p>Work through guided prompts on your life, your work and the moments that have shaped you, at your own pace, and notice the themes that run through them.</p></li>
+          <li class="step step-4"><span class="tp-step">STEP 04</span><h3>Explore a sense of calling</h3><p>Draw together your gifts, experience and reflections, put your sense of calling into words, and identify practical next steps.</p></li>
+          <li class="step step-5"><span class="tp-step">STEP 05</span><h3>Return to what you discovered</h3><p>Write a letter to your future self, capturing what matters to you now and the steps you want to take, to revisit later.</p></li>
         </ol>
         <div class="tabrow">
           <div class="tabbar" role="tablist" id="aTabs"></div>
@@ -85,9 +86,10 @@
       <div class="in">
         <h2 id="differenceTitle">The difference it makes</h2>
         <div class="stats">
-          <div class="stat"><span class="num"><b>71</b>%</span><span class="bar"><i></i></span><p>had a more detailed understanding of their God-given gifts, talents and limitations</p></div>
-          <div class="stat"><span class="num"><b>86</b>%</span><span class="bar"><i></i></span><p>had a more detailed understanding of what the Bible teaches about work and calling</p></div>
-          <div class="stat"><span class="num"><b>100</b>%</span><span class="bar"><i></i></span><p>had a clearer practical plan for how to pursue God’s purpose for their life</p></div>
+          {# ✨ The figures are written out in full, so they show without JavaScript or with reduced motion; main.js counts them up from 0 as they scroll into view, reading data-v (fix-3). #}
+          <div class="stat" data-v="71"><span class="num"><b>71</b>%</span><span class="bar"><i></i></span><p>had a more detailed understanding of their God-given gifts, talents and limitations</p></div>
+          <div class="stat" data-v="86"><span class="num"><b>86</b>%</span><span class="bar"><i></i></span><p>had a more detailed understanding of what the Bible teaches about work and calling</p></div>
+          <div class="stat" data-v="100"><span class="num"><b>100</b>%</span><span class="bar"><i></i></span><p>had a clearer practical plan for how to pursue God’s purpose for their life</p></div>
         </div>
       </div>
     </section>
@@ -100,6 +102,8 @@
         <p>Most church members spend <b>95%</b> of their week outside the church building. Whatever You Do equips them to see that everyday work as ministry.</p>
         <ul class="ch-points">
           <li><b>Run it together</b><span>Take your congregation, small group or staff team through it as a course.</span></li>
+          {# ✨ Back, reworded towards community and discipleship (fix-3, 28 Oct); on the wording sheet. #}
+          <li><b>Invite trusted voices</b><span>Members ask trusted people in the church what they see in them, so encouragement and discipleship grow within the community.</span></li>
           <li><b>Raise up coaches</b><span>Equip wise people in your church to walk alongside others, with a short briefing pack.</span></li>
           <li><b>Free for participants</b><span>No cost to the people you send through it.</span></li>
         </ul>

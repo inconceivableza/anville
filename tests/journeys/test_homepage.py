@@ -92,7 +92,7 @@ def test_how_it_works_shows_five_steps_with_title_and_summary_in_the_page_itself
     page = client.get("/").content.decode()
     how = section(page, r'<section class="panel atabs"')
 
-    steps = re.findall(r'<li class="step">(.*?)</li>', how, re.S)
+    steps = re.findall(r'<li class="step step-\d">(.*?)</li>', how, re.S)
     assert len(steps) == 5
     for step in steps:
         assert re.search(r"<h3>[^<]+</h3>\s*<p>[^<]{40,}</p>", step)
@@ -159,6 +159,35 @@ def test_the_difference_it_makes_comes_before_for_churches_with_its_three_figure
 
 
 @pytest.mark.django_db
+def test_each_figure_carries_its_value_for_the_count_up_and_already_shows_it(client):
+    """✨ The count-up (main.js) reads data-v; the page holds the final figure, so it shows with JavaScript off."""
+    difference = section(client.get("/").content.decode(), r'<section class="panel difference"')
+
+    assert re.findall(r'<div class="stat" data-v="(\d+)"><span class="num"><b>(\d+)</b>', difference) == [
+        ("71", "71"),
+        ("86", "86"),
+        ("100", "100"),
+    ]
+
+
+@pytest.mark.django_db
+def test_every_step_is_in_the_page_with_its_own_photo_class_for_the_no_javascript_list(client):
+    page = client.get("/").content.decode()
+    steps = re.findall(r'<li class="step (step-\d)"><span class="tp-step">STEP 0\d</span>', page)
+
+    assert steps == ["step-1", "step-2", "step-3", "step-4", "step-5"]
+
+
+@pytest.mark.django_db
+def test_along_the_way_sits_inside_the_calling_journey_sign_off(client):
+    page = client.get("/").content.decode()
+    sign = re.search(r'<div class="sign">.*?</p></div>', page, re.S).group(0)
+
+    assert "A calling journey for every season of life" in sign
+    assert "Along the way, you’ll come to understand" in sign
+
+
+@pytest.mark.django_db
 def test_for_churches_has_the_new_copy_and_a_waitlist_button_and_the_articles_are_gone(client):
     page = client.get("/").content.decode()
     churches = section(page, r'<section class="panel churches"')
@@ -166,7 +195,7 @@ def test_for_churches_has_the_new_copy_and_a_waitlist_button_and_the_articles_ar
     assert "Releasing and equipping your members to do whatever they do for the glory of God." in churches
     assert "<b>95%</b>" in churches
     points = re.findall(r"<li><b>([^<]+)</b>", churches)
-    assert points == ["Run it together", "Raise up coaches", "Free for participants"]
+    assert points == ["Run it together", "Invite trusted voices", "Raise up coaches", "Free for participants"]
     waitlist = re.search(r'<a\s[^>]*href="#([^"]*)"[^>]*>\s*Join the waitlist', churches)
     assert waitlist, "no Join the waitlist button"
     assert re.search(r'\bid="%s"' % waitlist.group(1), page)

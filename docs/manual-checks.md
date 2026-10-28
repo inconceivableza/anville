@@ -129,13 +129,13 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 
 - Hero: the summary, then "Begin your journey" alone (no "For coaches"), then "Learn more" with a down arrow below it; pressing it scrolls to the overview.
 - Overview: the heading, the five pillars, the logo and "A calling journey for every season of life", the paragraph beginning "Along the way, you'll come to understand…", then its own "Begin your journey" button, which opens sign-up (signed in, the hub).
-- "How it works" has no "Five steps…" line; each of the five steps shows its title and summary, with no bullets and no box beneath. The step photos still change with the tabs. With JavaScript blocked, the five steps show one under another with the same words.
+- "How it works" has no "Five steps…" line; each of the five steps shows its title and summary, with no bullets and no box beneath. The step photos still change with the tabs. With JavaScript blocked, the five steps show one under another with the same words, each with its photo (fix-3).
 - No "Space to reflect on what matters" section and no "Impact" link in the footer.
 - At about 375px, all of it reads in order, nothing cut off or scrolling sideways.
 
 ### Ticket 99: The homepage's lower half and footer (rebuild the frontend first; wide screen and about 375px; no pathway reload or new participant needed)
 
-- After "How it works": "The difference it makes" with 71%, 86% and 100%, each over a green bar of that length (these figures are unconfirmed; they come out before release unless the content owner confirms them), then "For churches" with the heading "Releasing and equipping your members to do whatever they do for the glory of God.", the lede with "95%" in bold, three points (Run it together, Raise up coaches, Free for participants) and "Join the waitlist". The photo's foot is level with the text's foot. "Join the waitlist" scrolls down to the "Stay in touch" form (ticket 74).
+- After "How it works": "The difference it makes" with 71%, 86% and 100%, each over a green bar of that length, counting up as they scroll into view (fix-3; these figures are unconfirmed; they come out before release unless the content owner confirms them), then "For churches" with the heading "Releasing and equipping your members to do whatever they do for the glory of God.", the lede with "95%" in bold, four points (Run it together, Invite trusted voices, Raise up coaches, Free for participants) and "Join the waitlist". The photo's foot is level with the text's foot. "Join the waitlist" scrolls down to the "Stay in touch" form (ticket 74).
 - No "Ideas to explore" and no articles. The story is labelled "Impact", its quote at one smaller size throughout (no larger first lines), words unchanged.
 - The five callings (Teacher, Electrician, Parent, Church planter, Student) each show a photo above their caption and line. Block JavaScript (DevTools, Command menu, "Disable JavaScript") and reload: the five still show their photos, one under another at phone width. Turn on reduced motion (DevTools, Rendering) and reload: the same, with no carousel. With both off, the carousel turns and its arrows and pause button work as before.
 - Black footer: the logo with "Whatever you do, work at it with all your heart, as working for the Lord." Colossians 3:23 (NIV) on the left, one column on the right: How it works, Impact, For churches, each scrolling to its part, then Contact us, scrolling to "Stay in touch" (ticket 74), then Privacy (ticket 100). No "Note" column, "The evaluation" or "Writing". "© 2026 Whatever You Do" and "Credits" remain.
@@ -143,7 +143,7 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 
 ### Ticket 74: Stay in touch (rebuild the frontend first, and `migrate`; wide screen and about 375px; no pathway reload or new participant needed)
 
-- Between the story ("Impact") and the callings: a dark card, "Stay in touch" and "Thoughtful writing on vocation, faith and work, and news of Whatever You Do for churches, delivered occasionally." beside a field reading "Your email" and a green "Subscribe", with "We'll only use your email to send these updates, and you can unsubscribe at any time. See our privacy notice." under it, "privacy notice" opening `/privacy/`. Nothing refused on arrival.
+- Between the story ("Impact") and the callings: a dark panel as wide as the others (fix-3), "Stay in touch" and "Thoughtful writing on vocation, faith and work, and news of Whatever You Do for churches, delivered occasionally." beside a field reading "Your email" and a green "Subscribe", with "We'll only use your email to send these updates, and you can unsubscribe at any time. See our privacy notice." under it, "privacy notice" opening `/privacy/`. Nothing refused on arrival.
 - "Join the waitlist" (For churches) and the footer's "Contact us" each scroll to the card.
 - Press "Subscribe" empty: "Add your email address." under the field, its border a soft red, the page not reloading or moving. Type "sam@" and press: "Check your email address.", what you typed still there. Type a real-looking address and press: "Thanks, you're subscribed. Look out for our next note." in the form's place, the page still where it was.
 - Reload and subscribe the same address in capitals: the same thanks. In the admin (`/admin/`, signed in as the operator), "Sign ups" lists the address once, with its time and wording version 1.
@@ -158,6 +158,17 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 - Onboarding (the first steps' pages): the old mark at the top right of the step header is the new logo.
 - Sign out page (`/accounts/logout/`) signed in: the same top bar as the other pages (logo, "Your pathway", "Sign out"). Sign in and sign up (signed out): no bar.
 - Signed in, scroll a long page until a heading is half behind the bar: the bar is a shade darker than the page, so the heading reads as passing under it. The bar is a little less tall than before.
+
+### sprint-3c-r3-fix-3: the homepage against v3 (rebuild the frontend first; wide screen and about 375px; no pathway reload or new participant needed)
+
+- The hero fits the window, beside v3's at the same window size: heading, summary, "Begin your journey" and "Learn more" all in view with no scrolling (with the demo notice on, too, at a window about 800px high), the heading in two lines, "Everyone has a purpose." over "Do you know yours?", from about 700px up. The hero's tint is as it was.
+- Overview: "Along the way, you'll come to understand…" sits directly under "A calling journey for every season of life", in the same small grey type and centred, with "Begin your journey" below it.
+- "How it works": "Begin your journey" is centred on "A guided journey / How it works" beside it; below about 700px it sits under them, at the left, not hanging below the heading's foot at any width.
+- "The difference it makes": scroll it into view and the three figures count up from 0 to 71%, 86% and 100% while their bars fill (about a second and a half). With JavaScript blocked, or reduced motion on (DevTools, Rendering), they show at once, full.
+- Impact: as v3's "A story from a parent": the label and the quote centred in one column, the words coming up as you scroll, the caption under it. The label still says "Impact".
+- "Stay in touch" is as wide as the other panels, its text and form in the same column and side margins as theirs; at 375px the copy, the form and the small print stack.
+- "For churches" lists four points: Run it together, Invite trusted voices, Raise up coaches, Free for participants.
+- With JavaScript blocked, "How it works" shows its five steps one under another, each with its tab's photo above its words (a notebook, friends, a field, a potter, hills).
 
 ## The hub's layout (the hub, beside the prototype's: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html#hub`)
 
