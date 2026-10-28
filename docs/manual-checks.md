@@ -170,6 +170,12 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 - "For churches" lists four points: Run it together, Invite trusted voices, Raise up coaches, Free for participants.
 - With JavaScript blocked, "How it works" shows its five steps one under another, each with its tab's photo above its words (a notebook, friends, a field, a potter, hills).
 
+### sprint-3c-r3-fix-6: the homepage's hero margin and "For churches" (rebuild the frontend first; wide screen and about 375px; no pathway reload or new participant needed)
+
+- Scroll to the very top at a window about 800px high: the hero ends about 12px above the window's foot, as v3's does at the same size, not touching it.
+- "For churches" is shorter than before, nearer v3's: a smaller heading, less padding, the four points closer together with a line above each and one under the last. Nothing is cut off, and at about 375px it still stacks photo above text.
+- "Invite trusted voices" reads: "Participants can ask people who know them well to share their perspective, drawing the church community into walking alongside them."
+
 ## The hub's layout (the hub, beside the prototype's: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html#hub`)
 
 - The page is deep brown, and the hub, header included, is cream with rounded corners, inset a thin brown border from every edge. "Credits" sits below it on the brown, easy to read.
