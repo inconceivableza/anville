@@ -18,8 +18,8 @@
   <h1{% if demo_profile %} data-demo-reveal-hold{% endif %}>{{ section.title }}</h1>
   {# ✨ Only for a section split into pages, so the participant knows where they are in it (ticket 41e). #}
   {% if page.count > 1 %}<p class="page-count">Page {{ page.number }} of {{ page.count }}</p>{% endif %}
-  {# ✨ The lead-ins are the engine's wording, so the section's figure and an activity's just beneath it read apart. #}
-  {% if section.estimate %}<p class="time-estimate">Whole section: {{ section.estimate }}</p>{% endif %}
+  {# ✨ No "Whole section: …" here (fix-16): the section's estimate is the hub's alone, since Sections 1 and 2 have
+     none and a figure under some headings and not others read as missing. An activity's own still shows below. #}
 
   {% for block in section.blocks %}
     {# ✨ Where a section has several activities, the block that starts each one says how long it takes. #}

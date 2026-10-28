@@ -544,4 +544,4 @@ def test_a_paged_sections_estimate_is_said_once_for_the_whole_section(signed_in_
 
     # ✨ in the section's entry; the next step says it too, while the section is next (ticket 49b)
     assert hub_entry(shown(signed_in_client, "/hub/"), "Before we begin").count("About 3 minutes") == 1
-    assert "Whole section: About 3 minutes" in shown(signed_in_client)
+    assert "About 3 minutes" not in shown(signed_in_client)  # ✨ the hub's alone (fix-16)

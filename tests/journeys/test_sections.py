@@ -670,21 +670,12 @@ def with_estimates(section=None, block=None):
 
 
 @pytest.mark.django_db
-def test_a_section_shows_its_time_estimate_at_the_top_as_the_whole_sections(open_calling):
-    """✨ Said in so many words, since an activity's own estimate may sit just beneath it (the letter's does)."""
+def test_a_sections_time_estimate_is_the_hubs_alone(open_calling):
+    """✨ Not under the section page's heading (fix-16): some sections have no figure, so it would show on some pages
+    and not others. The hub's entry says it, until the section is begun (test_hub)."""
     page = open_calling(with_estimates(section="About 15 minutes")).get(CALLING).content.decode()
 
-    heading = "<h1>Putting your calling into words</h1>"
-    assert in_order(page, heading, "Whole section:", "About 15 minutes", "Write your statement.")
-
-
-@pytest.mark.django_db
-def test_a_sections_time_estimate_is_gone_once_something_in_it_is_answered(open_calling):
-    """✨ It says how long the section will take, which no longer holds once the participant has begun."""
-    client = open_calling(with_estimates(section="About 15 minutes"))
-    client.post("/answers/statement/", {"value": "Begun", "version": _version_id()})
-
-    assert "About 15 minutes" not in client.get(CALLING).content.decode()
+    assert "About 15 minutes" not in page
 
 
 @pytest.mark.django_db
@@ -702,7 +693,7 @@ def test_a_block_shows_its_time_estimate_just_above_it(signed_in_client, load_pa
 def test_a_time_estimate_is_in_the_participants_wording(open_calling):
     estimate = {"participant": "About 15 minutes", "observer": "About 5 minutes to read"}
 
-    page = open_calling(with_estimates(section=estimate)).get(CALLING).content.decode()
+    page = open_calling(with_estimates(section=estimate)).get("/hub/").content.decode()
 
     assert "About 15 minutes" in page
     assert "About 5 minutes to read" not in page

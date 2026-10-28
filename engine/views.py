@@ -2482,8 +2482,6 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
     links = _requirement_links(state, section)
     gate_checklist = [(message, met, links.get(message)) for message, met in checklist(section, answers, page=page)]
     states = {other.id: other for other in hub.sections}
-    # ✨ A section the hub does not list, a once-only section once complete (ticket 69), has no state, so no estimate.
-    shown_state = states.get(section["id"])
     return {
         # ✨ Where "← Back" at the top leads: the section this is a part of, or else the hub.
         "back": _section_this_is_part_of(state, section),
@@ -2500,7 +2498,6 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
         "section": {
             "id": section["id"],
             "title": text_for(section["title"], "participant"),
-            "estimate": shown_state.estimate if shown_state is not None else None,
             "complete_label": _complete_label(section),
             "is_part": "part_of" in section,
             # ✨ On a part's last page, the finish of the section it is the last thing in, if it is (ticket 88).
