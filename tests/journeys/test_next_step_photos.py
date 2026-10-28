@@ -1,8 +1,9 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
-"""✨ The hub's next-step photos (fix-8): each state and each step its own photo, none used twice. How each looks is a
-hand check (docs/manual-checks.md)."""
+"""✨ The hub's next-step photos (fix-8, fix-12): one photo per subject. The coach, as the next step or in its
+wait, has one; the trusted voices, as the next step or waiting on answers, another; every other step and nothing
+waiting its own. How each looks is a hand check (docs/manual-checks.md)."""
 
 import json
 import re
@@ -26,8 +27,9 @@ def _hub(next_id=None, waiting=None):
 
 def _photos_by_look():
     """✨ The photo the stylesheet gives each `.next.look-*` class, read from its source."""
-    rule = r'\.next\.(look-[\w-]+)\s*\{\s*background-image: url\("\.\./img/([\w-]+\.jpg)"\)'
-    return dict(re.findall(rule, STYLESHEET))
+    rule = r'((?:\.next\.look-[\w-]+,?\s*)+)\{\s*background-image: url\("\.\./img/([\w-]+\.jpg)"\)'
+    found = re.findall(rule, STYLESHEET)
+    return {look: photo for selectors, photo in found for look in re.findall(r"look-[\w-]+", selectors)}
 
 
 def test_the_next_step_takes_the_look_of_its_section_or_else_of_what_it_waits_on():
@@ -37,20 +39,35 @@ def test_the_next_step_takes_the_look_of_its_section_or_else_of_what_it_waits_on
     assert next_look(_hub(), coach_wait=None) == "look-rest"
 
 
-def test_the_coach_takes_the_coach_cards_old_photo_and_waiting_on_answers_the_voices_cards():
+def test_the_coach_and_the_trusted_voices_each_take_one_photo_as_a_step_and_as_a_wait():
     photos = _photos_by_look()
 
-    assert photos["look-coach"] == "mentor.jpg"
-    assert photos["look-answers"] == "friends.jpg"
+    assert photos["look-coach"] == photos["look-section-walk-with-a-coach"] == "mentor.jpg"
+    assert photos["look-answers"] == photos["look-section-trusted-voices"] == "churches.jpg"
+    assert "friends.jpg" not in photos.values()
 
 
-def test_every_section_of_the_pathway_and_every_state_has_a_photo_and_no_photo_stands_twice():
+def test_every_section_of_the_pathway_and_every_state_has_a_photo_and_no_subject_shares_one():
     photos = _photos_by_look()
-    sections = [s["id"] for s in PATHWAY["content"]["sections"] if "side_card" not in s and s["id"] != "onboarding"]
+    sections = [s["id"] for s in PATHWAY["content"]["sections"] if s["id"] != "onboarding"]
+    pairs = [
+        {"look-coach", "look-section-walk-with-a-coach"},
+        {"look-answers", "look-section-trusted-voices"},
+    ]
 
     for look in [f"look-section-{section}" for section in sections] + ["look-coach", "look-answers", "look-rest"]:
         assert look in photos, look
-    assert len(set(photos.values())) == len(photos)
+    # ✨ One photo per subject: only the two pairs share a photo, so a photo seen twice is a pair or a mistake.
+    by_photo = {}
+    for look, photo in photos.items():
+        by_photo.setdefault(photo, set()).add(look)
+    for photo, looks in by_photo.items():
+        assert len(looks) == 1 or looks in pairs, photo
+
+
+def test_a_card_with_its_own_photo_draws_no_stylesheet_photo_under_it():
+    # ✨ The first section's card showed the potter's hands until its own photo loaded (fix-12).
+    assert re.search(r"\.next\.next:has\(> img\)\s*\{\s*background-image: none;", STYLESHEET)
 
 
 @pytest.mark.django_db
