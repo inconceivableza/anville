@@ -16,6 +16,7 @@
   },
   "show_courtesy_credits": true,
   "messages_after_a_press": true,
+  "ratings_save_quietly": true,
   "content": {
     "sections": [
       {

@@ -572,10 +572,12 @@ def without_the_wizard(document):
 
 def without_the_next_step_and_photos(document):
     """✨ The hub's next-step wording, its photos and their credits' setting are this pathway's alone (ticket 49b): the
-    faithful port takes none. Nor does it take messages only after a press (ticket 83), keeping its checklist."""
+    faithful port takes none. Nor does it take messages only after a press (ticket 83), keeping its checklist, nor
+    quiet ratings (sprint-3c-r3-fix-15), its ratings still saying "Saved"."""
     document.pop("photos", None)
     document.pop("show_courtesy_credits", None)
     document.pop("messages_after_a_press", None)
+    document.pop("ratings_save_quietly", None)
     for section in document["content"]["sections"]:
         section.pop("next_step", None)
     return document

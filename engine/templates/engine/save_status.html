@@ -1,4 +1,5 @@
 {# Copyright (C) New Community Church SE London 2026. #}
 {# For licensing information see ../../../LICENSE.md #}
-{# ✨ A wizard's page saves quietly (ticket 83): nothing on a save, only a refusal's reason. #}
+{# ✨ A wizard's page saves quietly (ticket 83), as does a rating where the document asks (sprint-3c-r3-fix-15): #}
+{# nothing on a save, only a refusal's reason. #}
 {% if refusal %}<span class="save-refused">Not saved. {{ refusal }}</span>{% elif not saves_quietly %}Saved{% endif %}
