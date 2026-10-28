@@ -172,7 +172,7 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 
 ### sprint-3c-r3-fix-6: the homepage's hero margin and "For churches" (rebuild the frontend first; wide screen and about 375px; no pathway reload or new participant needed)
 
-- Scroll to the very top at a window about 800px high: the hero ends about 12px above the window's foot, as v3's does at the same size, not touching it.
+- Scroll to the very top at a window about 800px high, and again at about 650px (a laptop's): the hero ends about 12px above the window's foot, as v3's does at the same size, not touching it, with the demo notice and "Learn more" still inside it (fix-10: the hero used to grow past a window under about 740px high; the heading, the notice and the hero's foot padding now shrink with the window's height). A phone held at about 667px high still runs a little past the window.
 - "For churches" is shorter than before, nearer v3's: a smaller heading, less padding, the four points closer together with a line above each and one under the last. Nothing is cut off, and at about 375px it still stacks photo above text.
 - "Invite trusted voices" reads: "Participants can ask people who know them well to share their perspective, drawing the church community into walking alongside them."
 

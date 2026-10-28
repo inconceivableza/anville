@@ -4670,17 +4670,20 @@ body > svg[aria-hidden="true"] {
      and "Learn more" being more than v3's hero holds (hand check, 28 Oct). */
   gap: clamp(16px, 2.8svh, 30px);
   justify-items: center;
-  padding: clamp(64px, 9svh, 140px) 20px;
+  padding: clamp(64px, 9svh, 140px) 20px clamp(20px, 4svh, 140px);
   max-width: 1240px;
 }
 
+/* ✨ A window under about 740px high (a laptop's) held more content than the hero, which grew past the window and left
+   no margin below it (sprint-3c-r3-fix-10): the notice sits tighter, as the heading does, by the window's height. */
 .hero-copy .demo-notice {
   margin-top: 0;
+  padding: clamp(8px, 1.6svh, var(--space-md)) var(--space-lg);
 }
 
 /* ✨ v3's two lines, "Everyone has a purpose." and "Do you know yours?", each kept whole from 700px up. */
 .hero h1 {
-  font-size: clamp(40px, 6.2vw, 96px);
+  font-size: clamp(40px, min(6.2vw, 10.5svh), 96px);
   font-weight: 300;
   line-height: 1.04;
   text-wrap: balance;
