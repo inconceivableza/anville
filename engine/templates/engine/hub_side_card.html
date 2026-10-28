@@ -6,8 +6,7 @@
 {# its note the description of its "Locked" button, as a row's is (ticket 97). #}
 {# ✨ The coach's card adds, from `coach_card`, a small button to the coach page once unlocked, as Five trusted voices #}
 {# has (ticket 65), saying whether a coach is chosen (ticket 95). #}
-{# ✨ Dark, over a photo the stylesheet draws, as Five trusted voices' card is (ticket 101). #}
-<section class="card dark hub-side-card side-photo{% if section.is_locked %} locked{% endif %}">
+<section class="card hub-side-card{% if section.is_locked %} locked{% endif %}">
   <div class="row">
     {% if section.is_locked %}
       <h3>{{ section.title }}</h3>
