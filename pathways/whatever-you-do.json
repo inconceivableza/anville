@@ -358,7 +358,6 @@
           {
             "id": "pl-intro",
             "type": "rich_text",
-            "estimate": "About 5 minutes",
             "body": "You answered these same questions at the start. Let's see where you are now.\n\nTo what extent would you agree with the following statements?"
           },
           {

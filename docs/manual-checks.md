@@ -217,7 +217,7 @@ On every page below, check:
 - The hub itself looks exactly as it did before this ticket. That includes its wide layout and its "Welcome, …" heading.
 
 Page by page:
-- **A section page** (Section 1, then a paged section such as Before we begin opened from the hub): "← Back to the hub", the title, "Page 1 of 2" where it has pages, then "Whole section: …" and each activity's "This part: …" in small grey capitals, as the hub's "0 of 6 sections complete" is. The scripture passages, the long-text questions and the contact list are the same cards as before, on the cream; the 1–10 scales are rows under a fine line, as the wizard's (fix-11).
+- **A section page** (Section 1, then a paged section such as Before we begin opened from the hub): "← Back to the hub", the title, "Page 1 of 2" where it has pages, then "Whole section: …" in small grey capitals, as the hub's "0 of 6 sections complete" is. The scripture passages, the long-text questions and the contact list are the same cards as before, on the cream; the 1–10 scales are rows under a fine line, as the wizard's (fix-11).
 - **The gate:** under "Mark complete" (or "Continue →"), each requirement still waiting is a pale box with a grey bar on its left; each one met is plain, with a green tick and bar. "← Previous page" sits beside the way on as before.
 - **Section 1's Strengths evaluation card:** its status ("Not started", "Complete" …) is a small rounded tag in grey capitals, as the hub's tags are. Once the strengths evaluation is done, "View my results →" leads to the results as before (ticket 61).
 - **The pages of Sections 3, 4 and 5** (done on paper): "Download Section 3 (PDF)" and "I've finished Section 3" are in the same look as Section 1's buttons; the same for 4 and 5.
@@ -343,7 +343,7 @@ The homepage (`/`):
 
 - "Where are you coming from?": press a number on the first statement. Its number fills and shows top right; the next statement does not move. Change it to another number: nothing below jumps, not even for a moment. Do both on the last statement too, and once with the network slowed (DevTools, "Slow 3G"): "Saving…" may take a row then, as a slow save says so.
 - "A letter to your future self": the five closing ratings are rows under a fine line, the prompt in the heading face and the chosen number top right, the ten buttons as the wizard's, no card around them; pressing one fills the points below it. Each still says "Saved" under it, in a row kept for it, so nothing moves when it appears.
-- The letter has no "This part: About 10 minutes" above its task; "This part: About 5 minutes" stays above the closing ratings' introduction.
+- The letter has no "This part: …" above its task or above the closing ratings' introduction.
 - The faithful port's ratings (its onboarding and letter) take the same rows, and still say "Saved".
 
 ## The hub's next step and its photo (load the pathway again first; ticket 49b)
@@ -500,8 +500,7 @@ The homepage (`/`):
 
 - On the hub, each entry's estimate is quieter than its title: at the right-hand end of the title's line on a wide screen, lined up down the page, and on a line of its own under the title at phone width. A locked entry's note sits beneath.
 - Once something in a section is answered (the sort submitted, one onboarding rating), its estimate has gone from its hub entry and its page.
-- The letter's "This part: …" above its closing ratings stays after answering.
-- On a section page the estimate sits under the heading as "Whole section: …"; in the letter, "This part: …" also sits above the closing ratings' introduction, and reads as belonging to what follows it. Above the letter's task there is none (fix-11).
+- On a section page the estimate sits under the heading as "Whole section: …". No activity shows a "This part: …" of its own (fix-11).
 - Phone width: a long title wraps, and its estimate stays on the line beneath it.
 
 ## A link to another section (Section 1's Strengths evaluation card)

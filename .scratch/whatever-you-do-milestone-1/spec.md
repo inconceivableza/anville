@@ -514,7 +514,7 @@ Both UK and EU data protection law apply. The workbook's free text may contain s
     - Strengths assessment: "About 10 minutes", the original prototype's figure for its sort. The homepage's 30 minutes includes the written questions (31a, 31b).
     - Section 1: none, as it cannot be finished without the sort, which shows its own. Section 2: none, as it waits on other people's answers (ticket 87).
     - Sections 3, 4 and 5 (2, 3 and 4 until ticket 87): "About 30–40 minutes" each, the PDF's "Three or four sittings of half an hour" for all three shared between them (ticket 58; it was the Workbook's estimate). Each section's coach conversation is extra.
-    - Section 6, the letter (5 until ticket 87): "About 15 minutes", about 10 for the letter and 5 for the closing ratings (reasonable; no source gives one). Only the closing ratings say "This part: About 5 minutes"; the letter's "This part" was dropped (fix-11).
+    - Section 6, the letter (5 until ticket 87): "About 15 minutes", about 10 for the letter and 5 for the closing ratings (reasonable; no source gives one). Neither part says "This part": the letter's was dropped in fix-11, the closing ratings' after it.
     - An observer: about 10–15 minutes, the original prototype's.
     - Coach conversations: four, 45–60 minutes for the first (the original prototype), then 60, 60 and 45 (the PDF, which numbers them Two to Four).
     - Where the homepage disagrees with the PDF, for the content owner to settle by changing one or the other: the Workbook (130 minutes over three steps, against 90–120); sittings of "twenty minutes or so", against half an hour; and three coach conversations, against four.

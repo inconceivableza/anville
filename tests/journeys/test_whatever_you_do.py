@@ -263,10 +263,9 @@ def test_every_section_but_sections_1_and_2_says_how_long_it_takes():
     assert not any("?" in section.get("estimate", "") for section in sections)
 
 
-def test_only_the_closing_ratings_say_how_long_they_take_on_their_own():
-    """✨ The letter section is the only one with two activities, on the block that starts each. Its letter carries no
-    "This part" of its own (fix-11), the section's estimate just above it; the closing ratings keep theirs. A scripture
-    reading leads into an activity rather than being one (the spec)."""
+def test_no_activity_says_how_long_it_takes_on_its_own():
+    """✨ The letter section is the only one with two activities, and neither carries a "This part" of its own: the
+    letter's went in fix-11, the closing ratings' after it, so only whole sections say how long they take."""
     estimated = {
         (section["id"], block["id"]): block["estimate"]
         for section in the_pathway()["content"]["sections"]
@@ -274,8 +273,7 @@ def test_only_the_closing_ratings_say_how_long_they_take_on_their_own():
         if block.get("estimate")
     }
 
-    assert list(estimated) == [("letter", "pl-intro")]
-    assert not any("?" in estimate for estimate in estimated.values())
+    assert estimated == {}
 
 
 COACH_PROTOTYPE = (DOCUMENT.parents[1] / "Prototypes for reference" / "coach-selection-prototype.html").read_text(
