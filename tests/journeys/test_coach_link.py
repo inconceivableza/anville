@@ -207,6 +207,26 @@ def test_the_waiting_coach_card_offers_a_new_link_and_no_revoke_button(
 
 
 @pytest.mark.django_db
+def test_the_chosen_coach_card_has_one_button_row_and_no_back_to_the_hub(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    """✨ Fix-13: the page's top button leads to the hub, so the lower row holds the link's button beside "Choose
+    someone else" and "Remove", with "Lost the link?" beneath it."""
+    load_pathway(with_a_coach_card())
+    signed_in_client.post(f"/sections/{ONBOARDING}/complete/")
+    choose(signed_in_client)
+
+    page = shown(signed_in_client, "walk-with-a-coach")
+    row = re.search(r'<div class="coach-buttons">(?:(?!</div>).)*?Make a new link(?:(?!</div>).)*?</div>', page, re.S)
+
+    assert row, "the link's button is not in a button row"
+    assert "Choose someone else" in row.group(0)
+    assert "Remove" in row.group(0)
+    assert "Back to the hub" not in row.group(0)
+    assert page.index("Lost the link?") > page.index(row.group(0))
+
+
+@pytest.mark.django_db
 def test_the_coach_can_be_invited_and_their_link_reissued_once_before_we_begin_is_complete(
     signed_in_client, load_pathway, observer  # noqa: F811
 ):

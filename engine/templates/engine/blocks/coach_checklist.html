@@ -107,12 +107,29 @@
       </h2>
       {# ✨ No email address: a coach is a name alone (ADR 0022), though one saved before may still hold one. #}
       {% if checklist.link %}{% include "engine/blocks/coach_link.html" with link=checklist.link coach=checklist.coach %}{% endif %}
-      {# ✨ The way on (ticket 94); after a decline, choosing someone else leads instead. #}
+      {% comment %}
+        ✨ One row (ticket 94, fix-13): no "Back to the hub", since the page's top button leads there. The link's button
+        names its own address (`formaction` without JavaScript, `hx-post` with) and swaps in this checklist alone. It is
+        offered after an answer too: reissuing asks again, and stops the old link, taking the answer with it. There is
+        no "Revoke link" (fix-9): a new link, choosing someone else and removing the coach all stop the old one
+        already; the trusted-voices rows keep theirs, so the address `revoke_invitation` stays for them. After a
+        decline, choosing someone else leads.
+      {% endcomment %}
       <div class="coach-buttons">
-        <a href="{% url 'hub' %}" class="pill{% if checklist.link.said_no %} ghost{% endif %}">Back to the hub</a>
+        {% if checklist.link %}
+          {% url 'issue_invitation' checklist.link.contact_id as issue %}
+          <button type="submit" formaction="{{ issue }}" hx-post="{{ issue }}" hx-target="#block-{{ block.id }}"
+                  hx-select="#block-{{ block.id }}" hx-swap="outerHTML" class="pill ghost">
+            {% if checklist.link.invitation %}Make a new link{% else %}Get a link for {{ checklist.coach.name }}{% endif %}
+          </button>
+        {% endif %}
         <button type="submit" name="step" value="restart" class="pill{% if not checklist.link.said_no %} ghost{% endif %}">Choose someone else</button>
         <button type="submit" name="step" value="remove" class="pill ghost">Remove</button>
       </div>
+      {# ✨ While waiting only: after an answer a new link takes that answer with it, so it isn't offered as a fix. #}
+      {% if checklist.link.answer == "waiting" %}
+        <p class="invitation-status">Lost the link? Make a new one; the old one stops working.</p>
+      {% endif %}
     </div>
 
   {% elif checklist.screen == "withdrawn" %}
@@ -126,7 +143,6 @@
       <p>Your coach has withdrawn their agreement, so they're no longer your coach, and their link has stopped working.</p>
       <p>You can choose someone else, or carry on without a coach.</p>
       <div class="coach-buttons">
-        <a href="{% url 'hub' %}" class="pill ghost">Back to the hub</a>
         <button type="submit" name="step" value="restart" class="pill">Choose someone else</button>
       </div>
     </div>
