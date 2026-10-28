@@ -11,16 +11,12 @@
   the page offers only the profiles, and "Sort the cards myself" goes back to the sort. A pathway no combination holds
   on offers no profile.
 {% endcomment %}
-{% block head_title %}{% if clearing %}Retake the assessment{% else %}Load a demo profile{% endif %}{% endblock head_title %}
+{% block head_title %}{% if clearing %}Retake the strengths evaluation{% else %}Load a demo profile{% endif %}{% endblock head_title %}
 
 {% block content %}
-  {% if clearing %}
-    <p class="back-to-hub"><a href="{% url 'results' block_id %}">← Back to results</a></p>
-  {% else %}
-    <p class="back-to-hub"><a href="{{ sort_page }}">← Back to the sort</a></p>
-  {% endif %}
+  {% include "engine/back_button.html" %}
   <div class="section-header">
-    <h2>{% if clearing %}Retake the assessment?{% else %}Load a demo profile?{% endif %}</h2>
+    <h2>{% if clearing %}Retake the strengths evaluation?{% else %}Load a demo profile?{% endif %}</h2>
   </div>
   <div class="question-card">
     <p class="fixed-note">Demo only: this is offered only on a demo or development system.</p>
@@ -31,7 +27,7 @@
         <p>Your card sort and your results will be cleared, so you can sort the cards again from the start.</p>
       {% endif %}
       {% for title in reopened %}
-        <p>“{{ title }}” will no longer be marked complete, since it needs the assessment. What you wrote there stays.</p>
+        <p>“{{ title }}” will no longer be marked complete, since it needs the strengths evaluation. What you wrote there stays.</p>
       {% endfor %}
       {% if frozen %}
         <p>The people you invited will be able to send their answers again, until you next compare.</p>

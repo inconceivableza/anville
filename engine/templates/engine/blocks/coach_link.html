@@ -1,10 +1,9 @@
 {# Copyright (C) New Community Church SE London 2026. #}
 {# For licensing information see ../../../../LICENSE.md #}
 {% comment %}
-  ✨ The coach's link on the coach checklist's "is your coach" screen (ticket 13c): issue, copy, revoke and reissue it
-  as for observers, and the coach's answer, without detail. The buttons sit within the checklist's form, so each
-  names its own address (`formaction` without JavaScript, `hx-post` with), and the page the issuing leads back to
-  swaps in this checklist alone. Only the link's hash is kept, so a link is shown once, as it is issued.
+  ✨ The coach's link on the coach checklist's "is your coach" screen (ticket 13c): shown once as it is issued, with
+  its copy button, and the coach's answer, without detail. Only the link's hash is kept. The button that issues or
+  reissues it sits with the checklist's own buttons (coach_checklist.html, fix-13).
 {% endcomment %}
 <div class="coach-link"{% if link.answer %} data-coach-answer="{{ link.answer }}"{% endif %}>
   {% if link.answer == "accepted" %}
@@ -23,26 +22,11 @@
         <input type="text" id="coach-link-{{ block.id }}" value="{{ link.issued }}" readonly autofocus form="coach-link-{{ block.id }}-in-no-form">
         <button type="button" class="pill invitation-copy" data-copy="coach-link-{{ block.id }}">Copy</button>
       </div>
-      <p>This link is shown only this once. If you lose it, reissue it.</p>
+      <p>This link is shown only this once. If you lose it, make a new one here; the old one will stop working.</p>
     </div>
   {% endif %}
   {% if link.answer == "waiting" %}
     <p class="invitation-status">Waiting for {{ coach.name }} to answer. The link works until {{ link.invitation.expires_at|date:"j F Y" }}.</p>
   {% endif %}
-  {% comment %}
-    ✨ Offered after an answer too: reissuing asks again, and revoking stops the link, taking the answer with it, since
-    it belongs to the link it came through.
-  {% endcomment %}
-  <div class="coach-buttons">
-    {% url 'issue_invitation' link.contact_id as issue %}
-    <button type="submit" formaction="{{ issue }}" hx-post="{{ issue }}" hx-target="#block-{{ block.id }}"
-            hx-select="#block-{{ block.id }}" hx-swap="outerHTML" class="pill ghost">
-      {% if link.invitation %}Reissue link{% else %}Get a link for {{ coach.name }}{% endif %}
-    </button>
-    {% if link.invitation %}
-      {% url 'revoke_invitation' link.contact_id as revoke %}
-      <button type="submit" formaction="{{ revoke }}" hx-post="{{ revoke }}" hx-target="#block-{{ block.id }}"
-              hx-select="#block-{{ block.id }}" hx-swap="outerHTML" class="pill ghost">Revoke link</button>
-    {% endif %}
-  </div>
+  {# ✨ The link's button and "Lost the link?" line sit with the checklist's own buttons in coach_checklist.html (fix-13). #}
 </div>

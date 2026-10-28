@@ -199,7 +199,7 @@ def test_revoking_reissuing_or_changing_the_coach_ends_access_and_clears_the_con
     if change == "revoked":
         signed_in.post(coach_link_action(signed_in, "revoke"))
     elif change == "another coach saved":
-        assert choose(signed_in, name="Alex", email="alex@example.com").status_code == 200
+        assert choose(signed_in, name="Alex").status_code == 200
     elif change == "coach removed":
         assert step(signed_in, "remove").status_code == 200
         assert choose(signed_in).status_code == 200

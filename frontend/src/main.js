@@ -83,20 +83,50 @@ document.addEventListener("keydown", (event) => {
 
 // ✨ The sidebar ("Your pathway") is a <details>, which stays open until its button is pressed again. Close it too on a
 // click anywhere outside it, or on Escape, leaving the focus on its button (ticket 79). Without JavaScript only its
-// button closes it.
+// button closes it. The same Escape handler closes an open lock note (ticket 97).
 document.addEventListener("click", (event) => {
   document.querySelectorAll("details.pathway-nav-toggle[open]").forEach((sidebar) => {
     if (!sidebar.contains(event.target)) sidebar.open = false;
   });
 });
 
+// ✨ A lock note open on "Locked" (ticket 97) closes first, the focus staying where it is, and stays closed until the
+// pointer and the focus have both left it; with none open, Escape closes the sidebar.
+const OPEN_LOCK = ".lock:not(.is-dismissed):is(:hover, :focus-within)";
+
+function reopenLeftLocks() {
+  setTimeout(() => {
+    document.querySelectorAll(".lock.is-dismissed").forEach((lock) => {
+      if (!lock.matches(":hover, :focus-within")) lock.classList.remove("is-dismissed");
+    });
+  });
+}
+
+document.addEventListener("pointerout", reopenLeftLocks);
+document.addEventListener("focusout", reopenLeftLocks);
+
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
+  const openLocks = document.querySelectorAll(OPEN_LOCK);
+  if (openLocks.length) {
+    openLocks.forEach((lock) => lock.classList.add("is-dismissed"));
+    return;
+  }
   const sidebar = document.querySelector("details.pathway-nav-toggle[open]");
   if (!sidebar) return;
   sidebar.open = false;
   sidebar.querySelector("summary").focus();
 });
+
+// ✨ The top bar stays in view (ticket 91), so a jump to a place on the page would land under it. Keep its height in
+// --top-bar-height, which the stylesheet adds to the page's scroll padding; it changes with the demo strip, the phone's
+// width and a long title wrapping. Without JavaScript the stylesheet's fallback height stands.
+const topBar = document.querySelector(".top-bar");
+if (topBar) {
+  const keepHeight = () => document.documentElement.style.setProperty("--top-bar-height", `${topBar.offsetHeight}px`);
+  keepHeight();
+  if (window.ResizeObserver) new ResizeObserver(keepHeight).observe(topBar);
+}
 
 // ✨ Near a text box's length limit, say how much room is left; the browser stops typing at the limit itself.
 const SHOW_LENGTH_LEFT_BELOW = 0.1;
@@ -134,7 +164,13 @@ document.addEventListener("htmx:afterSettle", (event) => {
   const checklist = event.target;
   if (!checklist.classList?.contains("coach-checklist")) return;
   if (checklist.dataset.screen === checklistScreenBefore) return;
-  if (checklist.getBoundingClientRect().top < 0) checklist.scrollIntoView({ block: "start" });
+  // ✨ A checklist that is the first block of its page (Walk with a coach) shows the new screen from the top of the
+  // page, its title included, not from the card (ticket 82).
+  const opensPage = checklist.parentElement?.querySelector('[id^="block-"]') === checklist;
+  if (checklist.getBoundingClientRect().top < 0) {
+    if (opensPage) window.scrollTo({ top: 0 });
+    else checklist.scrollIntoView({ block: "start" });
+  }
   const heading = checklist.querySelector("h2");
   if (!heading || checklist.contains(document.activeElement)) return;
   heading.tabIndex = -1;
@@ -174,7 +210,7 @@ document.addEventListener("change", (event) => {
   shown.classList.remove("unset");
 });
 
-// ✨ Demo only (fix-20): a demo-only element marked data-demo-reveal (the results page's "Retake the assessment (demo
+// ✨ Demo only (fix-20): a demo-only element marked data-demo-reveal (the results page's "Retake the strengths evaluation (demo
 // only)") comes `hidden`, and only a demo system's markup carries one. Option/Alt held on its own for a second shows
 // it, or on a phone the element marked data-demo-reveal-hold (the page's title) pressed and held for a second; another
 // key, a click, letting go early or a scroll cancels. Once shown it stays until the page is left, so the participant
@@ -317,20 +353,47 @@ if (document.querySelector("main.page") && !reducedMotion) {
   });
 }
 
-// --- Assessment tabs: auto-advancing, pausable, keyboard-navigable ---
+// --- "The difference it makes": each figure and its bar count up from 0 as it scrolls into view, as v3's do ---
+// ✨ The page holds the final figures, so with JavaScript off, with reduced motion, or in a browser without
+// IntersectionObserver nothing here runs and they show at once.
+(() => {
+  const stats = [...document.querySelectorAll(".stat[data-v]")];
+  if (!stats.length || reducedMotion || !("IntersectionObserver" in window)) return;
+  const COUNT_MS = 1600;
+  stats.forEach((stat) => {
+    stat.querySelector("b").textContent = "0";
+    stat.querySelector(".bar i").style.width = "0";
+  });
+  const seen = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      seen.unobserve(entry.target);
+      const value = Number(entry.target.dataset.v);
+      const figure = entry.target.querySelector("b");
+      entry.target.querySelector(".bar i").style.width = `${value}%`;
+      const began = performance.now();
+      const step = (now) => {
+        const done = Math.min(1, (now - began) / COUNT_MS);
+        figure.textContent = Math.round(value * (1 - Math.pow(1 - done, 3)));
+        if (done < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }, { threshold: 0.4 });
+  stats.forEach((stat) => seen.observe(stat));
+})();
+
+// --- Evaluation tabs: auto-advancing, pausable, keyboard-navigable ---
 (() => {
   const bar = document.getElementById("aTabs");
   const text = document.getElementById("aText");
   const imgs = document.getElementById("aImgs");
-  const section = document.getElementById("journey");
-  if (!bar || !text) return;
-  const steps = [
-    { title: "Discover your gifts", summary: "Reflect on your strengths through a guided assessment and scripture.", activities: ["Sort 36 statements about yourself", "Explore gifts described in Romans 12 and 1 Corinthians 12", "Write a summary in your workbook"], outcome: "Your gifts and strengths" },
-    { title: "Hear from people who know you", summary: "Invite trusted people to share their perspective, then compare it with your own.", activities: ["Add at least two people, or return to invitations later", "Compare their perspective with your own", "Reflect on where your views align or differ"], outcome: "Your strengths alongside trusted perspectives" },
-    { title: "Make sense of your story", summary: "Use the workbook to reflect on your life, work and the moments that have shaped you.", activities: ["Work through guided prompts at your own pace", "Notice themes in your experience", "Connect your story with what matters to you"], outcome: "Your story and reflections" },
-    { title: "Explore a sense of calling", summary: "Draw together your gifts, experience and reflections as you consider possible directions.", activities: ["Put your sense of calling into words", "Consider possible directions", "Identify practical next steps"], outcome: "A calling statement and directions to explore" },
-    { title: "Return to what you discovered", summary: "Write a letter to your future self and revisit your reflections later.", activities: ["Capture what matters to you now", "Record the steps you want to take", "Revisit your letter in the future"], outcome: "A letter to your future self" },
-  ];
+  const section = document.getElementById("how");
+  const list = document.getElementById("aSteps");
+  if (!bar || !text || !list) return;
+  // ✨ The steps are written once, in the page (ticket 98); the tabs show them one at a time.
+  const steps = [...list.children].map((li) => ({ title: li.querySelector("h3").textContent, summary: li.querySelector("p").textContent }));
+  section?.classList.add("tabs-on");
   const STEP_MS = 7000; // ✨ how long each step shows before the next
   let i = 0, timer, start, remain = STEP_MS;
   const pauseReasons = new Set();
@@ -341,7 +404,12 @@ if (document.querySelector("main.page") && !reducedMotion) {
   bar.style.setProperty("--dur", STEP_MS + "ms");
   const render = () => {
     const step = steps[i];
-    text.innerHTML = `<div class="tp-anim"><span class="tp-step">STEP 0${i + 1}</span><h3>${step.title}</h3><p>${step.summary}</p></div><ul class="tp-anim">${step.activities.map((activity) => `<li><svg><use href="#leaf"/></svg>${activity}</li>`).join("")}</ul><div class="out"><span>In your workbook</span><b>${step.outcome}</b></div>`;
+    const stepText = document.createElement("div");
+    stepText.className = "tp-anim";
+    stepText.innerHTML = `<span class="tp-step">STEP 0${i + 1}</span><h3></h3><p></p>`;
+    stepText.querySelector("h3").textContent = step.title;
+    stepText.querySelector("p").textContent = step.summary;
+    text.replaceChildren(stepText);
     text.setAttribute("aria-labelledby", "atab" + i);
     tabs.forEach((tab, j) => {
       tab.setAttribute("aria-selected", j === i);

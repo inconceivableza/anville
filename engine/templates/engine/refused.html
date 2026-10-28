@@ -8,7 +8,7 @@
 {% block head_title %}Not saved{% endblock head_title %}
 
 {% block content %}
-  <p class="back-to-hub"><a href="{% url 'hub' %}">← Back to the hub</a></p>
+  {% include "engine/back_button.html" with back=None %}
   <h1>Not saved</h1>
   <p>{{ refusal }}</p>
 {% endblock content %}

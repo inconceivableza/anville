@@ -180,7 +180,7 @@ SORT_WORDING = {
     },
     "all_sorted": "All {count} sorted!",
     # ✨ Shown to observers only, who may send once every card is placed (see `left_at_seeds`).
-    "send_or_fine_tune": "You can send your assessment now, or fine-tune how strong each one is in {name} first.",
+    "send_or_fine_tune": "You can send your evaluation now, or fine-tune how strong each one is in {name} first.",
     "fine_tune_label": "Continue to fine-tuning →",
     # ✨ Observers only too: sending without fine-tuning, apart from `submit_label`, which sends after it.
     "send_now_label": "Skip fine-tuning and send →",
@@ -188,7 +188,7 @@ SORT_WORDING = {
     "fine_tune_intro": "Grouped by how you sorted them. Adjust the sliders to fine-tune.",
     "slider_min": {"participant": "Not me", "observer": "Not {name}"},
     "slider_max": "Real strength",
-    "submit_label": {"participant": "See my results →", "observer": "Send my assessment →"},
+    "submit_label": {"participant": "See my results →", "observer": "Send my evaluation →"},
 }
 
 
@@ -253,6 +253,10 @@ BLOCK_TYPES = {
             captures=CONFIRMATION,
             opens_what_follows=True,
         ),
+        # ✨ Passages to read with nothing to confirm, so nothing beneath them waits on them (sprint 3c, ticket 87).
+        BlockType(
+            "scripture_passages", text_fields=("heading", "note"), text_lists=(("passages", ("reference", "text")),)
+        ),
         BlockType("long_text", text_fields=("prompt", "placeholder"), captures=TEXT),
         BlockType("agreement_scale", text_fields=("prompt", "min_label", "max_label"), captures=SCALE_POINT),
         BlockType(
@@ -293,6 +297,9 @@ BLOCK_TYPES = {
         BlockType("page_break"),
     ]
 }
+
+# ✨ The block types that quote passages of scripture, each passage from a translation the pathway declares.
+PASSAGE_BLOCK_TYPES = ("scripture_reading", "scripture_passages")
 
 # ✨ Block types renamed since a stored pathway version used them, old name to new (ticket 75). A stored version keeps
 # its old names, since it is never edited, and is read under the new ones (`with_current_names`); a document being
@@ -442,3 +449,16 @@ def section_of(document, block_id):
         if any(block["id"] == block_id for block in section["blocks"]):
             return section
     return None
+
+
+def section_ended_by(document, part):
+    """✨ The section a part is the last thing in, or None: the section it is a part of, when that section's last block
+    is its signpost to the part, as Section 1 ends in the strengths evaluation (ticket 88). The part's end then offers
+    that section's finish. A part its section does not link to, or one with anything after its link, ends nothing."""
+    if "part_of" not in part:
+        return None
+    parent = next((section for section in document["content"]["sections"] if section["id"] == part["part_of"]), None)
+    last = parent["blocks"][-1] if parent and parent["blocks"] else None
+    if last is None or last["type"] != "section_signpost" or last["section"] != part["id"]:
+        return None
+    return parent

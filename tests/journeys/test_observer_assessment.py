@@ -114,7 +114,7 @@ def test_sending_without_fine_tuning_has_wording_of_its_own_apart_from_sending_a
     wording = widget_data(the_observers_page(observer).content.decode())["wording"]
 
     assert wording["send_now_label"] == "Skip fine-tuning and send →"
-    assert wording["submit_label"] == "Send my assessment →"
+    assert wording["submit_label"] == "Send my evaluation →"
 
 
 @pytest.mark.django_db

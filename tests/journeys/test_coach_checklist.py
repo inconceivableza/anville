@@ -224,7 +224,9 @@ def test_one_soft_no_asks_for_a_second_thought_naming_the_answer_and_why_it_matt
         "Would give you a few unhurried conversations over the next few months — you said no "
         "Good intentions and a full diary produce a coach who cancels twice and then apologises."
     ) in text(page)
-    assert "None of this rules Sam out, and it may be worth simply raising it with them." in text(page)
+    assert (
+        "None of this rules Sam out. When Sam opens their link, they'll be asked to agree to the same six things"
+    ) in text(page)
     assert re.search(r'<button type="submit" name="step" value="confident"[^>]*>I’m still confident — ask Sam</button>', page)
     assert re.search(r'<button type="submit" name="step" value="restart"[^>]*>Think about someone else</button>', page)
 
@@ -368,12 +370,13 @@ def test_the_coach_step_can_be_skipped_and_blocks_nothing(participant):
 # Choosing them
 
 
-def choose(client, name="Sam", email="sam@example.com", confirmed=True, answers=ALL_YES, htmx=True):
-    """✨ Send the coach's details from the screen that goes ahead, with the answers it carries."""
+def choose(client, name="Sam", confirmed=True, answers=ALL_YES, htmx=True, **extra):
+    """✨ Press the verdict card's button that makes the coach's link, with the tick and the answers it carries; `extra`
+    is anything else a hand-made form might send."""
     form = {
         "step": "save",
         "name": name,
-        "email": email,
+        **extra,
         **({"confirmed": "on"} if confirmed else {}),
         **{f"answer-{key}": value for key, value in answers.items()},
     }
@@ -381,24 +384,15 @@ def choose(client, name="Sam", email="sam@example.com", confirmed=True, answers=
     return client.post("/coach/coach/", form, **headers)
 
 
-def field_value(page, field):
-    found = re.search(rf'<input type="[a-z]+"[^>]*name="{field}"[^>]*value="([^"]*)"', checklist_of(page))
-    return unescape(found.group(1)) if found else None
-
-
 @pytest.mark.django_db
-def test_going_ahead_asks_for_the_coachs_name_and_email_starting_from_their_first_name(participant):
+def test_the_verdict_card_carries_the_tick_and_the_button_asking_for_nothing_more(participant):
+    """✨ Ticket 94: the name given at the start is carried, not asked for again, and no email address is asked for."""
     page = step(participant, "outcome", answers=ALL_YES).content.decode()
 
-    assert field_value(page, "name") == "Sam"
-    assert re.search(r'<input type="email"[^>]*name="email"', checklist_of(page))
-    assert "Their name" in text(page)
-    assert "Their email" in text(page)
+    assert hidden(page, "name") == "Sam"
+    assert not re.search(r'<input type="(text|email)"', checklist_of(page))
     assert re.search(r'<input type="checkbox"[^>]*name="confirmed"', checklist_of(page))
-    assert (
-        "I've spoken to this person and they're happy to receive a link from me about coaching me through this course."
-    ) in text(page)
-    assert re.search(r'<button type="submit" name="step" value="save"[^>]*>Save Sam as your coach</button>', page)
+    assert re.search(r'<button type="submit" name="step" value="save"', page)
 
 
 @pytest.mark.django_db
@@ -409,14 +403,38 @@ def test_still_confident_asks_for_the_coachs_details_too(participant):
 
 
 @pytest.mark.django_db
-def test_saving_keeps_the_coachs_name_and_email_and_nothing_from_the_checklist(participant):
-    saved = choose(participant, answers=answered(time="no"))
+def test_saving_keeps_the_coachs_name_alone_and_nothing_from_the_checklist(participant):
+    """✨ ADR 0022: a coach is a name alone, so an email address sent with a hand-made form is not kept either."""
+    saved = choose(participant, answers=answered(time="no"), email="sam@example.com")
 
     assert saved.status_code == 200
     assert screen(saved.content.decode()) == "chosen"
     coach = Contact.objects.get()
-    assert (coach.role, coach.block_id, coach.name, coach.email) == (Contact.Role.COACH, "coach", "Sam", "sam@example.com")
+    assert (coach.role, coach.block_id, coach.name, coach.email) == (Contact.Role.COACH, "coach", "Sam", "")
     assert Response.objects.get().answers == {}
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("htmx", [True, False], ids=["htmx", "no javascript"])
+def test_saving_shows_the_coach_chosen_with_no_second_way_back_to_the_hub(participant, htmx):
+    """✨ Ticket 94: the chosen screen follows the verdict card on the same page. Fix-13: its lower row no longer holds
+    "Back to the hub" (it asserted that link), since the page's top button leads there."""
+    saved = choose(participant, htmx=htmx)
+
+    page = saved.content.decode() if htmx else shown(participant, ONBOARDING)
+    assert screen(page) == "chosen"
+    assert 'href="/hub/"' not in checklist_of(page)
+
+
+@pytest.mark.django_db
+def test_a_coach_kept_with_an_email_address_from_before_is_shown_without_it(participant):
+    """✨ ADR 0022: a coach saved before the field went may still hold an address; nothing shows it."""
+    choose(participant)
+    Contact.objects.update(email="sam@example.com")
+
+    page = shown(participant, ONBOARDING)
+
+    assert "sam@example.com" not in page
 
 
 @pytest.mark.django_db
@@ -427,42 +445,19 @@ def test_the_chosen_coach_is_shown_again_after_a_reload(participant):
 
     assert screen(page) == "chosen"
     assert "You've chosen Sam" in text(checklist_of(page))
-    assert "sam@example.com" in text(checklist_of(page))
     assert re.search(r'<button type="submit" name="step" value="restart"[^>]*>Choose someone else</button>', page)
     assert re.search(r'<button type="submit" name="step" value="remove"[^>]*>Remove</button>', page)
 
 
 @pytest.mark.django_db
-def test_saving_without_the_box_ticked_is_refused_keeping_what_was_typed(participant):
+def test_saving_without_the_box_ticked_is_refused_keeping_the_name(participant):
     refused = choose(participant, confirmed=False)
 
     assert refused.status_code == 400
     page = refused.content.decode()
     assert screen(page) == "proceed"
     assert "Tick the box to confirm you've spoken to them." in text(page)
-    assert field_value(page, "name") == "Sam"
-    assert field_value(page, "email") == "sam@example.com"
-    assert not Contact.objects.exists()
-
-
-@pytest.mark.django_db
-@pytest.mark.parametrize(
-    ("email", "refusal"),
-    [
-        ("sam", "Check their email address."),
-        ("sam@", "Check their email address."),
-        ("sam@example", "Check their email address."),
-        ("sam@@example.com", "Check their email address."),
-        ("s" * 250 + "@example.com", "Check their email address."),
-    ],
-)
-def test_an_email_address_that_mail_could_not_reach_is_refused(participant, email, refusal):
-    refused = choose(participant, email=email)
-
-    assert refused.status_code == 400
-    assert screen(refused.content.decode()) == "proceed"
-    assert refusal in text(refused)
-    assert re.search(r'<input type="email"[^>]*aria-invalid="true"', checklist_of(refused.content.decode()))
+    assert hidden(page, "name") == "Sam"
     assert not Contact.objects.exists()
 
 
@@ -511,9 +506,9 @@ def test_choosing_someone_else_keeps_the_coach_until_another_is_saved(participan
     page = step(participant, "restart").content.decode()
 
     assert screen(page) == "intro"
-    assert [(coach.name, coach.email) for coach in Contact.objects.all()] == [("Sam", "sam@example.com")]
-    choose(participant, name="Priya", email="priya@example.com")
-    assert [(coach.name, coach.email) for coach in Contact.objects.all()] == [("Priya", "priya@example.com")]
+    assert [coach.name for coach in Contact.objects.all()] == ["Sam"]
+    choose(participant, name="Priya")
+    assert [coach.name for coach in Contact.objects.all()] == ["Priya"]
 
 
 @pytest.mark.django_db
@@ -536,7 +531,7 @@ def test_keeping_the_coach_goes_back_to_them_as_kept(participant):
     assert kept.status_code == 200
     assert screen(kept.content.decode()) == "chosen"
     assert "You've chosen Sam" in text(kept)
-    assert [(coach.name, coach.email) for coach in Contact.objects.all()] == [("Sam", "sam@example.com")]
+    assert [coach.name for coach in Contact.objects.all()] == ["Sam"]
 
 
 @pytest.mark.django_db
@@ -588,8 +583,8 @@ def test_the_coach_is_shown_as_typed_never_as_markup(participant):
 def test_the_coachs_details_are_never_logged(participant, caplog):
     caplog.set_level(logging.DEBUG)
 
-    choose(participant, name="Zebedee", email="zebedee@example.com")
-    choose(participant, name="Zebedee", email="zebedee@", confirmed=False)  # ✨ and a refused one
+    choose(participant, name="Zebedee")
+    choose(participant, name="Zebedee", confirmed=False)  # ✨ and a refused one
 
     assert "zebedee" not in caplog.text.lower()
 

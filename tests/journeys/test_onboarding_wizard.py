@@ -8,18 +8,23 @@ it is once-only too (ticket 69), so once complete it is never seen again; the te
 read the document without that."""
 
 import json
+import re
+from html import unescape
 from pathlib import Path
 
 import pytest
 from django.utils import timezone
 
+from access.models import name_shown_for
 from engine.models import Contact, Publication, Response
+from tests.journeys.test_access import require_the_code, sign_up
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_navigation import sidebar_of
 
 DOCUMENT = Path(__file__).resolve().parents[2] / "pathways" / "whatever-you-do.json"
 WIZARD = "/sections/onboarding/"
 RATINGS_PAGE = "/sections/onboarding/pages/2/"
+WELCOME = "/sections/onboarding/welcome/"
 RATINGS = ("bl-bible", "bl-gifts", "bl-call", "bl-plan", "bl-peace")
 
 
@@ -72,18 +77,103 @@ def test_a_participant_who_has_not_completed_it_is_taken_to_its_wizard_in_place_
     assert 'id="answer-bl-bible-1"' not in page  # ✨ the ratings are its second page
     assert 'class="pathway-nav"' not in page
     assert 'href="/hub/"' not in page
-    assert 'src="/photos/onboarding/"' in page
-    assert participant.get("/photos/onboarding/").status_code == 200
+    assert 'class="ob-photo ob-photo-' in page  # ✨ its photo is the stylesheet's now (ticket 101)
 
 
 @pytest.mark.django_db
-def test_completing_the_two_pages_lands_on_the_hub_with_it_complete_and_never_sends_them_back(
+def test_its_reason_is_a_card_for_each_option_the_one_saved_chosen(participant):
+    """✨ v3's cards, not a drop-down (sprint-3c-r3-fix-4): one radio for each option, the saved one checked."""
+    answer(participant, "reason", "job-change")
+
+    page = participant.get(WIZARD).content.decode()
+
+    assert "<select" not in page
+    assert re.findall(r'<input type="radio" name="value" value="([^"]+)" checked>', page) == ["job-change"]
+    assert len(re.findall(r'<label class="opt">', page)) == 7
+
+
+def before_we_begin():
+    """✨ Before we begin as *Whatever You Do*'s document has it, so the wording a test looks for is the document's."""
+    return json.loads(DOCUMENT.read_text(encoding="utf-8"))["content"]["sections"][0]
+
+
+def shown(response):
+    return unescape(response.content.decode())
+
+
+@pytest.mark.django_db
+def test_each_of_its_pages_shows_its_own_steps_verse_label_and_heading(participant):
+    """✨ sprint-3c-r3-fix-7: a verse and a word beneath it on the photo for each step, as v3's, and the step's own
+    heading where the document gives one, else the section's title. Its first step is the entry page's."""
+    section = before_we_begin()
+    through_the_first_page(participant)
+
+    for step, url in zip(section["wizard_steps"][1:], (WIZARD, RATINGS_PAGE), strict=True):
+        page = shown(participant.get(url))
+        assert f"“{step['verse']}”" in page
+        assert f'<cite class="label">{step["reference"]}</cite>' in page
+        assert f'<span class="sc">{step["label"]}</span>' in page
+        assert f"<h1>{step.get('heading', section['title'])}</h1>" in page
+
+
+@pytest.mark.django_db
+def test_the_entry_page_shows_the_first_steps_verse_and_label(client, settings, load_pathway):
+    require_the_code(settings)
+    load_pathway(json.loads(DOCUMENT.read_text(encoding="utf-8")))
+    sign_up(client)
+    first = before_we_begin()["wizard_steps"][0]
+
+    page = shown(client.get("/about-you/"))
+
+    assert f"“{first['verse']}”" in page
+    assert f'<span class="sc">{first["label"]}</span>' in page
+
+
+@pytest.mark.django_db
+def test_completing_it_leads_to_its_welcome_greeting_the_participant_by_name_and_on_to_the_hub(
+    participant, django_user_model
+):
+    """✨ sprint-3c-r3-fix-7: v3's "Welcome, [name]" step, after the last, its way on the hub."""
+    welcome = before_we_begin()["welcome"]
+
+    completed = through_the_wizard(participant)
+    page = shown(participant.get(WELCOME))
+
+    assert (completed.status_code, completed.url) == (303, WELCOME)
+    assert welcome["heading"].replace("{name}", name_shown_for(django_user_model.objects.get())) in page
+    assert welcome["sentence"] in page
+    assert f'<span class="sc">{welcome["label"]}</span>' in page
+    assert re.search(rf'<a class="pill" href="/hub/">{re.escape(welcome["button"])}</a>', page)
+
+
+@pytest.mark.django_db
+def test_its_welcome_before_it_is_complete_leads_to_the_page_they_have_reached(participant):
+    through_the_first_page(participant)
+
+    early = participant.get(WELCOME)
+
+    assert (early.status_code, early.url) == (302, RATINGS_PAGE)
+
+
+@pytest.mark.django_db
+def test_its_pages_still_link_to_the_credits_and_the_privacy_page(participant):
+    """✨ The wizard has no page footer (sprint-3c-r3-fix-4), so the two links sit inside its box."""
+    page = participant.get(WIZARD).content.decode()
+
+    assert 'class="site-footer"' not in page
+    assert 'href="/credits/"' in page
+    assert 'href="/privacy/"' in page
+
+
+@pytest.mark.django_db
+def test_completing_the_two_pages_lands_on_its_welcome_with_it_complete_and_the_hub_never_sends_them_back(
     wizard_listed_once_complete,
 ):
+    """✨ Its welcome, then the hub (sprint-3c-r3-fix-7): the hub before it."""
     participant = wizard_listed_once_complete
     completed = through_the_wizard(participant)
 
-    assert (completed.status_code, completed.url) == (303, "/hub/")
+    assert (completed.status_code, completed.url) == (303, WELCOME)
     assert "onboarding" in Response.objects.get().completed_sections
     for _ in range(2):
         hub = participant.get("/hub/")
@@ -198,8 +288,9 @@ def test_once_complete_it_is_gone_from_the_hub_the_sidebar_and_the_count(partici
 
     assert "/sections/onboarding/" not in hub
     assert "Before we begin" not in sidebar
-    # ✨ Nothing else is complete yet, and Before we begin is no longer one of the sections counted.
-    assert f"0 of {len(sections) - 1} sections complete" in hub
+    # ✨ Nothing else is complete yet, and Before we begin is not one of the sections counted, which are the numbered
+    # ones alone (ticket 87).
+    assert f"0 of {sum('number' in section for section in sections)} sections complete" in hub
 
 
 def without_once_only(document):

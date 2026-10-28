@@ -9,7 +9,7 @@
 {% block head_title %}Before you look{% endblock head_title %}
 
 {% block content %}
-  <p class="back-to-hub"><a href="{% url 'results' block_id %}">← Back to results</a></p>
+  {% include "engine/back_button.html" %}
   <h1>Before you look</h1>
   <div class="hint-box">
     {% if everyone %}

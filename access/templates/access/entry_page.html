@@ -1,0 +1,18 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/wizard.html" %}
+{% comment %}
+  ✨ The entry page (ADR 0021), the engine's own and in the wizard's layout: the first name, "I am 18 or over"
+  and the consent tick, with "What this means" opening to the consent text, without JavaScript too. Each refusal sits
+  under what it refuses and shows only after Continue is pressed. Its photo is the wizard's first, the stylesheet's, so
+  it waits for nothing.
+{% endcomment %}
+{% block page_title %}About you{% endblock page_title %}
+
+{% block step %}
+  <h1>About you</h1>
+  {% include "access/entry_page_form.html" %}
+
+  {# ✨ The hub needs consent and admins' pages don't, so an admin who has not consented finds the way here, as on the consent page. #}
+  {% if user.organisation_permissions.exists %}<p class="hub-consent"><a href="{% url 'your_organisations' %}">Your organisations</a></p>{% endif %}
+{% endblock step %}

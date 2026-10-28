@@ -1,0 +1,50 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ The entry page's form, on its page and on its own as htmx's answer to a refused "Continue →" (fix-2): with
+  JavaScript the press goes in the background and the form comes back in its own place, refusals and all, so the page
+  neither reloads nor moves, and the button, by its id, keeps the focus. Without, the page comes back opened at the
+  form, which only this page has: the page a passed press leads to keeps the address's fragment, and opens at its top.
+{% endcomment %}
+<form id="about-you" method="post" action="{% url 'entry_page' %}#about-you" class="first-page" novalidate
+      hx-post="{% url 'entry_page' %}" hx-target="this" hx-swap="outerHTML">
+  {% csrf_token %}
+  <input type="hidden" name="version" value="{{ version }}">
+  {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+
+  <div class="first-page-field">
+    <label for="{{ form.display_name.id_for_label }}">{{ form.display_name.label }}</label>
+    <input type="text" name="{{ form.display_name.html_name }}" id="{{ form.display_name.id_for_label }}"
+           value="{{ form.display_name.value|default_if_none:'' }}" maxlength="{{ form.display_name.field.max_length }}"
+           autocomplete="given-name"{% if form.display_name.errors %} aria-invalid="true"{% endif %}>
+    {% for error in form.display_name.errors %}<p class="first-page-refusal" role="alert">{{ error }}</p>{% endfor %}
+  </div>
+
+  <div>
+    <label class="first-page-check">
+      <input type="checkbox" name="{{ form.is_adult.html_name }}"{% if form.is_adult.value %} checked{% endif %}{% if form.is_adult.errors %} aria-invalid="true"{% endif %}>
+      <span>{{ form.is_adult.label }}</span>
+    </label>
+    {% for error in form.is_adult.errors %}<p class="first-page-refusal" role="alert">{{ error }}</p>{% endfor %}
+  </div>
+
+  <div>
+    <label class="first-page-check">
+      <input type="checkbox" name="{{ form.consents.html_name }}"{% if form.consents.value %} checked{% endif %}{% if form.consents.errors %} aria-invalid="true"{% endif %}>
+      <span>{{ form.consents.label }}</span>
+    </label>
+    {% for error in form.consents.errors %}<p class="first-page-refusal" role="alert">{{ error }}</p>{% endfor %}
+    <details class="first-page-details">
+      <summary>What this means</summary>
+      {% include "access/consent_text.html" %}
+      <p>Version {{ version }} of this text.</p>
+    </details>
+  </div>
+
+  {% if text_changed %}
+    <p class="consent-changed" role="alert">The text has changed since you opened this page. Please read it again.</p>
+  {% endif %}
+  <div class="way-on">
+    <button type="submit" id="about-you-continue" class="pill full">Continue →</button>
+  </div>
+</form>

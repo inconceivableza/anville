@@ -15,7 +15,9 @@ from datetime import timedelta
 
 import pytest
 import time_machine
+from django.utils import timezone
 
+from engine.hub import COACH_ANSWER_LABELS, LABELS, NOT_STARTED
 from engine.models import Contact, Invitation, ObserverResponse, Response
 from tests.documents import pathway_document
 from tests.journeys.test_answers import shown
@@ -52,10 +54,11 @@ def participant(signed_in_client, load_pathway):  # noqa: F811
 
 
 def coach_link_action(client, action, section=ONBOARDING):
-    """✨ Where the coach page posts to issue or revoke the coach's link, from a button within the checklist's form."""
-    found = re.search(rf'formaction="(/invitations/\d+/{action}/)"', shown(client, section))
-    assert found, f"no way to {action} the coach's link on the coach page"
-    return found.group(1)
+    """✨ Where the coach page posts to issue or revoke the coach's link. Only issuing has a button there (fix-9: a new
+    link, choosing someone else and removing already stop the old one); the revoke address is the same contact's."""
+    found = re.search(r'formaction="(/invitations/\d+/)issue/"', shown(client, section))
+    assert found, "no way to issue the coach's link on the coach page"
+    return f"{found.group(1)}{action}/"
 
 
 def issue_coach_link(client):
@@ -92,28 +95,26 @@ def link_shown(page):
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("htmx", [True, False], ids=["htmx", "no javascript"])
-@pytest.mark.parametrize("email", ["sam@example.com", ""], ids=["with an email", "without one"])
-def test_saving_the_coach_makes_their_link_in_the_same_act_and_shows_it_the_email_optional(
-    signed_in_client, load_pathway, observer, htmx, email  # noqa: F811
+def test_saving_the_coach_makes_their_link_in_the_same_act_and_shows_it(
+    signed_in_client, load_pathway, observer, htmx  # noqa: F811
 ):
     """✨ Ticket 51b: nobody misses the step of making the link."""
     load_pathway(with_a_coach_and_contacts())
 
-    saved = choose(signed_in_client, email=email, htmx=htmx)
+    saved = choose(signed_in_client, htmx=htmx)
 
     page = saved.content.decode() if htmx else shown(signed_in_client, ONBOARDING)
     link = link_shown(page)
     assert link, "the coach's link is not shown on saving"
     assert observer.get(link).status_code == 200
-    assert Contact.objects.get().email == email
     assert link_shown(shown(signed_in_client, ONBOARDING)) is None  # ✨ shown once: only its hash is kept
 
 
 @pytest.mark.django_db
 def test_a_coach_kept_without_an_email_address_is_a_valid_contact(signed_in_client, load_pathway):  # noqa: F811
-    """✨ The coach's email is optional (ticket 51b), so the model's own validation must allow it blank (fix-2)."""
+    """✨ A coach is a name alone (ADR 0022), so the model's own validation must allow their email blank (fix-2)."""
     load_pathway(with_a_coach_and_contacts())
-    choose(signed_in_client, email="")
+    choose(signed_in_client)
 
     Contact.objects.get(role=Contact.Role.COACH).full_clean()
 
@@ -187,6 +188,42 @@ def test_once_the_coachs_link_is_revoked_the_card_shows_what_it_did_before_any_l
 
     assert coach_card_tag(signed_in_client) != "Complete"
     assert coach_card_tag(signed_in_client) == before
+
+
+@pytest.mark.django_db
+def test_the_waiting_coach_card_offers_a_new_link_and_no_revoke_button(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    """✨ Fix-9: "Revoke link" had no job beside "Make a new link"; the card says what a new link does instead."""
+    load_pathway(with_a_coach_card())
+    signed_in_client.post(f"/sections/{ONBOARDING}/complete/")
+    choose(signed_in_client)
+
+    page = shown(signed_in_client, "walk-with-a-coach")
+
+    assert "Make a new link" in page
+    assert "Lost the link? Make a new one; the old one stops working." in page
+    assert "Revoke link" not in page
+
+
+@pytest.mark.django_db
+def test_the_chosen_coach_card_has_one_button_row_and_no_back_to_the_hub(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    """✨ Fix-13: the page's top button leads to the hub, so the lower row holds the link's button beside "Choose
+    someone else" and "Remove", with "Lost the link?" beneath it."""
+    load_pathway(with_a_coach_card())
+    signed_in_client.post(f"/sections/{ONBOARDING}/complete/")
+    choose(signed_in_client)
+
+    page = shown(signed_in_client, "walk-with-a-coach")
+    row = re.search(r'<div class="coach-buttons">(?:(?!</div>).)*?Make a new link(?:(?!</div>).)*?</div>', page, re.S)
+
+    assert row, "the link's button is not in a button row"
+    assert "Choose someone else" in row.group(0)
+    assert "Remove" in row.group(0)
+    assert "Back to the hub" not in row.group(0)
+    assert page.index("Lost the link?") > page.index(row.group(0))
 
 
 @pytest.mark.django_db
@@ -301,7 +338,7 @@ def test_saving_another_coach_or_removing_this_one_stops_the_coachs_link(partici
     link = issue_coach_link(participant)
 
     if change == "another coach saved":
-        assert choose(participant, name="Alex", email="alex@example.com").status_code == 200
+        assert choose(participant, name="Alex").status_code == 200
     else:
         assert step(participant, "remove").status_code == 200
 
@@ -337,6 +374,109 @@ def test_the_participant_is_told_the_answer_and_nothing_of_the_boxes(participant
     assert told(participant) == outcome
     assert not re.search(r"\b(5|five) of (6|six)\b", text(page), re.I)
     assert re.search(r'<button[^>]*name="step" value="restart"', page)
+
+
+# Withdrawing an acceptance (ADR 0024)
+
+
+def withdraw_as_coach(client, link):
+    """✨ The coach pressing "Withdraw my data" on their link's withdrawal page."""
+    return client.post(f"{link}withdraw/")
+
+
+@pytest.mark.django_db
+def test_withdrawing_an_acceptance_deletes_the_coach_at_once_leaving_only_that_they_withdrew(participant, observer):
+    """✨ The acceptance implies the coach's faith, kept on their consent: withdrawn, nothing of the coach stays, name,
+    answer, link or sharing; the participant's response keeps only that their coach withdrew (ADR 0024)."""
+    link = issue_coach_link(participant)
+    answer_as_coach(observer, link, "accept")
+    Invitation.objects.update(results_shared_at=timezone.now())  # ✨ as the participant's tick leaves it
+    refused_as_wrong = observer.get(f"/coaching/{A_WRONG_TOKEN}/").content.decode()
+
+    assert withdraw_as_coach(observer, link).status_code == 200
+
+    assert not Contact.objects.filter(role=Contact.Role.COACH).exists()
+    assert not Invitation.objects.exists()
+    assert Response.objects.get().coach_withdrew
+    refused = observer.get(link)
+    assert refused.status_code == 404
+    assert refused.content.decode() == refused_as_wrong
+    assert answer_as_coach(observer, link, "accept").status_code == 404
+    assert withdraw_as_coach(observer, link).status_code == 404
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("answer", ["unanswered", "declined", "accepted then expired"])
+def test_only_an_acceptance_on_a_working_link_can_be_withdrawn(participant, observer, answer):
+    with time_machine.travel(ISSUED_AT, tick=False):
+        link = issue_coach_link(participant)
+        if answer != "unanswered":
+            answer_as_coach(observer, link, "decline" if answer == "declined" else "accept")
+    before = told(participant)
+
+    with time_machine.travel(ISSUED_AT + timedelta(days=31 if "expired" in answer else 1), tick=False):
+        assert observer.get(f"{link}withdraw/").status_code == 404
+        assert withdraw_as_coach(observer, link).status_code == 404
+
+    assert told(participant) == before
+
+
+@pytest.mark.django_db
+def test_the_coach_can_withdraw_while_the_participant_has_withdrawn_their_own_consent(participant, observer):
+    """✨ Closing the coach's link never stops them taking back their consent, as it never stops an observer."""
+    link = issue_coach_link(participant)
+    answer_as_coach(observer, link, "accept")
+    withdraw_consent(participant)
+
+    assert withdraw_as_coach(observer, link).status_code == 200
+
+    assert not Invitation.objects.exists()
+
+
+def a_coach_who_withdrew(client, observer):  # noqa: F811
+    """✨ The coach card's pathway, with Sam chosen, accepting on their link, then withdrawing."""
+    client.post(f"/sections/{ONBOARDING}/complete/")
+    link = link_shown(choose(client).content.decode())
+    answer_as_coach(observer, link, "accept")
+    assert withdraw_as_coach(observer, link).status_code == 200
+
+
+def coach_checklist_shown(client):
+    """✨ The coach checklist as the Walk with a coach page opens it."""
+    return re.search(r'<form id="block-coach".*?</form>', shown(client, "walk-with-a-coach"), re.S).group(0)
+
+
+@pytest.mark.django_db
+def test_once_the_coach_withdraws_the_participant_is_told_on_every_visit_naming_nobody(
+    signed_in_client, load_pathway, observer  # noqa: F811
+):
+    """✨ As after a decline: the coach page says the coach has withdrawn and leads with choosing someone else, and the
+    hub's card tags it, however often they are opened; nothing names the coach, of whom nothing is kept (ADR 0024)."""
+    load_pathway(with_a_coach_card())
+
+    a_coach_who_withdrew(signed_in_client, observer)
+
+    for _ in range(2):
+        assert coach_card_tag(signed_in_client) == COACH_ANSWER_LABELS["withdrawn"]
+        checklist = coach_checklist_shown(signed_in_client)
+        assert 'data-coach-answer="withdrawn"' in checklist
+        assert re.search(r'<button[^>]*name="step" value="restart" class="pill"', checklist)
+        assert "Sam" not in checklist
+
+
+@pytest.mark.django_db
+def test_choosing_a_coach_after_a_withdrawal_ends_the_telling(signed_in_client, load_pathway, observer):  # noqa: F811
+    """✨ The withdrawal is kept only until another coach is chosen: removing that one says nothing of it again."""
+    load_pathway(with_a_coach_card())
+    a_coach_who_withdrew(signed_in_client, observer)
+
+    choose(signed_in_client, name="Jo")
+
+    assert coach_card_tag(signed_in_client) == COACH_ANSWER_LABELS["waiting"]
+    assert 'data-coach-answer="waiting"' in coach_checklist_shown(signed_in_client)
+    signed_in_client.post("/coach/coach/", {"step": "remove"})
+    assert "data-coach-answer" not in coach_checklist_shown(signed_in_client)
+    assert coach_card_tag(signed_in_client) == LABELS[NOT_STARTED]
 
 
 # Whose link

@@ -9,16 +9,14 @@
   },
   "translation": "ESV",
   "photos": {
-    "onboarding": {
-      "file": "facing-sun.jpg",
-      "credit": { "kind": "courtesy", "text": "Photograph of a figure facing the sun from Unsplash." }
-    },
     "designed": {
       "file": "grass.jpg",
       "credit": { "kind": "courtesy", "text": "Photograph of grass from Unsplash." }
     }
   },
   "show_courtesy_credits": true,
+  "messages_after_a_press": true,
+  "ratings_save_quietly": true,
   "content": {
     "sections": [
       {
@@ -28,6 +26,32 @@
         "once_only": true,
         "estimate": "About 10 minutes",
         "complete_label": "Continue →",
+        "wizard_steps": [
+          {
+            "verse": "For we are his workmanship, created in Christ Jesus for good works, which God prepared beforehand, that we should walk in them.",
+            "reference": "Ephesians 2:10",
+            "label": "Begin"
+          },
+          {
+            "verse": "Commit your work to the LORD, and your plans will be established.",
+            "reference": "Proverbs 16:3",
+            "label": "Choose"
+          },
+          {
+            "verse": "Having gifts that differ according to the grace given to us, let us use them",
+            "reference": "Romans 12:6",
+            "label": "Reflect",
+            "heading": "Where are you coming from?"
+          }
+        ],
+        "welcome": {
+          "heading": "Welcome, {name}",
+          "sentence": "You’re all set. Section 1 starts with the ten-minute strengths evaluation.",
+          "button": "Continue →",
+          "verse": "Whatever you do, work heartily, as for the Lord and not for men",
+          "reference": "Colossians 3:23",
+          "label": "Welcome"
+        },
         "blocks": [
           {
             "id": "reason",
@@ -107,15 +131,14 @@
       },
       {
         "id": "designed",
-        "title": "How you've been designed",
+        "title": "How you've been designed – your strengths",
         "number": "01",
         "requires": ["onboarding"],
         "to_finish": "completed {section}",
         "complete_label": "I've finished Section 1",
         "next_step": {
           "heading": "Start with your gifts.",
-          "sentence": "Take the ten-minute strengths assessment and read three short passages on gifts.",
-          "waiting": "{section}'s reflection opens once at least {minimum} of the people you invited have answered and you've seen how others see you."
+          "sentence": "Start with the ten-minute strengths evaluation."
         },
         "blocks": [
           {
@@ -127,8 +150,8 @@
           },
           {
             "id": "gifts-reading",
-            "type": "scripture_reading",
-            "heading": "Read these passages before continuing",
+            "type": "scripture_passages",
+            "heading": "Scripture on gifts",
             "passages": [
               {
                 "reference": "Romans 12:6–8",
@@ -143,41 +166,23 @@
                 "text": "Show hospitality to one another without grumbling. As each has received a gift, use it to serve one another, as good stewards of God's varied grace: whoever speaks, as one who speaks oracles of God; whoever serves, as one who serves by the strength that God supplies—in order that in everything God may be glorified through Jesus Christ. To him belong glory and dominion for ever and ever. Amen."
               }
             ],
-            "note": "As you read, reflect: what gifts do you see in yourself? Which do others affirm in you? Which are notably absent – and what might that tell you about how God has designed you?",
-            "confirm_label": "I've read these passages and I'm ready to continue"
+            "note": "As you read, reflect: what gifts do you see in yourself? Which do others affirm in you? Which are notably absent – and what might that tell you about how God has designed you?"
           },
           {
             "id": "gifts-activity",
             "type": "rich_text",
             "label": "Your activity",
-            "body": "This section uses the Strengths Assessment – a tool where you sort and rate your strengths across 36 areas. You can also invite people you trust to do the same for you."
+            "body": "This section uses the strengths evaluation, where you sort and rate your strengths across 36 areas. You can also invite people you trust to do the same for you."
           },
           {
             "id": "strengths-link",
             "type": "section_signpost",
             "section": "strengths",
-            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 3 trusted people to assess you too.",
-            "button_label": "Open Strengths Assessment →",
+            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 3 trusted people to evaluate you too.",
+            "button_label": "Open the strengths evaluation →",
             "finished": {
-              "body": "You've completed the assessment. You can review your results any time.",
+              "body": "You've completed the strengths evaluation. You can review your results any time.",
               "button_label": "View my results →"
-            },
-            "holds_what_follows": true
-          },
-          {
-            "id": "how-others-see-you",
-            "type": "comparison_signpost",
-            "sort": "strengths-sort",
-            "title": "How others see you"
-          },
-          {
-            "id": "gifts-summary",
-            "type": "long_text",
-            "prompt": "Having completed the assessment and read the passages above, summarise: what gifts and talents has God given you? And what has He not given you?",
-            "placeholder": "Draw on the scripture, your assessment results, and what others have told you...",
-            "after_comparison": {
-              "sort": "strengths-sort",
-              "message": "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer."
             }
           }
         ],
@@ -186,22 +191,16 @@
             {
               "type": "has_answer",
               "block": "strengths-sort",
-              "message": "Complete the Strengths Assessment to continue."
-            },
-            {
-              "type": "has_answer",
-              "block": "gifts-summary",
-              "message": "Complete the gifts reflections to continue."
+              "message": "Complete the strengths evaluation to continue."
             }
           ]
         }
       },
       {
         "id": "strengths",
-        "title": "Strengths assessment",
+        "title": "Strengths evaluation",
         "estimate": "About 10 minutes",
         "requires": ["onboarding"],
-        "to_finish": "done the {title}",
         "part_of": "designed",
         "blocks": [
           {
@@ -209,7 +208,7 @@
             "type": "sort_assessment",
             "coach_brief": {
               "title": "Session 1 – Their gifts",
-              "purpose": "Help them believe what the assessment is telling them, and notice where they discount themselves.",
+              "purpose": "Help them believe what the strengths evaluation is telling them, and notice where they discount themselves.",
               "length": "45–60 minutes",
               "questions": [
                 { "text": "Which of these results surprised you, and which felt obvious?" },
@@ -221,7 +220,7 @@
                 { "text": "People routinely dismiss their strongest gift as \"nothing special\". If they wave something away, slow down and ask about it." },
                 { "text": "A low score is not a failing. Help them read the whole profile, not just hunt for weaknesses." }
               ],
-              "avoid": "Do not treat the assessment as a verdict. It is a conversation starter, not a diagnosis."
+              "avoid": "Do not treat the strengths evaluation as a verdict. It is a conversation starter, not a diagnosis."
             }
           }
         ],
@@ -230,7 +229,45 @@
             {
               "type": "has_answer",
               "block": "strengths-sort",
-              "message": "Complete the Strengths Assessment to continue."
+              "message": "Complete the strengths evaluation to continue."
+            }
+          ]
+        }
+      },
+      {
+        "id": "others",
+        "title": "Your gifts, seen together",
+        "number": "02",
+        "requires": ["designed"],
+        "to_finish": "completed {section}",
+        "complete_label": "I've finished Section 2",
+        "next_step": {
+          "waiting": "{section}'s reflection opens once at least {minimum} of the people you invited have answered and you've seen how others see you."
+        },
+        "blocks": [
+          {
+            "id": "how-others-see-you",
+            "type": "comparison_signpost",
+            "sort": "strengths-sort",
+            "title": "How others see you"
+          },
+          {
+            "id": "gifts-summary",
+            "type": "long_text",
+            "prompt": "Having completed the strengths evaluation, read the passages on gifts and seen how others see you, summarise: what gifts and talents has God given you? And what has He not given you?",
+            "placeholder": "Draw on the scripture, your strengths evaluation results, and what others have told you...",
+            "after_comparison": {
+              "sort": "strengths-sort",
+              "message": "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer."
+            }
+          }
+        ],
+        "gate": {
+          "clauses": [
+            {
+              "type": "has_answer",
+              "block": "gifts-summary",
+              "message": "Complete the gifts reflections to continue."
             }
           ]
         }
@@ -238,27 +275,27 @@
       {
         "id": "shape",
         "title": "The shape of your life",
-        "number": "02",
+        "number": "03",
         "estimate": "About 30–40 minutes",
-        "requires": ["strengths", "walk-with-a-coach", "trusted-voices"],
+        "requires": ["designed", "walk-with-a-coach", "trusted-voices"],
         "to_finish": "completed {section}",
-        "complete_label": "I've finished Section 2",
+        "complete_label": "I've finished Section 3",
         "blocks": [
           {
             "id": "shape-pdf",
             "type": "download",
             "file": "whatever-you-do-workbook-section-2.pdf",
-            "body": "Section two, to work through on paper: mapping your story, and what has happened in each season of it.\n\nSections two to four make up the middle of the course, which works better on paper, so each is a booklet of its own. When you've finished this one, come back here to say so.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their assessments of you – don’t let that stop you making progress on the workbook.",
-            "button_label": "Download Section 2 (PDF)"
+            "body": "Section three, to work through on paper: mapping your story, and what has happened in each season of it.\n\nSections three to five make up the middle of the course, which works better on paper, so each is a booklet of its own. When you've finished this one, come back here to say so.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their evaluations of you – don’t let that stop you making progress on your journey.",
+            "button_label": "Download Section 3 (PDF)"
           }
         ]
       },
       {
         "id": "calling",
         "title": "Putting your calling into words",
-        "number": "03",
+        "number": "04",
         "estimate": "About 30–40 minutes",
-        "requires": ["designed", "shape"],
+        "requires": ["designed", "others", "shape"],
         "opens_when": {
           "clauses": [
             {
@@ -270,46 +307,46 @@
           "with_sections": "Opens once you've {sections}, and your coach has accepted."
         },
         "to_finish": "completed {section}",
-        "complete_label": "I've finished Section 3",
+        "complete_label": "I've finished Section 4",
         "blocks": [
           {
             "id": "calling-pdf",
             "type": "download",
             "file": "whatever-you-do-workbook-section-3.pdf",
-            "body": "Section three, to work through on paper: narrowing your calling to a sentence, then opening it back up.\n\nWhen you've finished it, come back here to say so, and Section 4 opens.",
-            "button_label": "Download Section 3 (PDF)"
+            "body": "Section four, to work through on paper: narrowing your calling to a sentence, then opening it back up.\n\nWhen you've finished it, come back here to say so, and Section 5 opens.",
+            "button_label": "Download Section 4 (PDF)"
           }
         ]
       },
       {
         "id": "growth",
         "title": "Growth plan",
-        "number": "04",
+        "number": "05",
         "estimate": "About 30–40 minutes",
         "requires": ["calling"],
         "to_finish": "completed {section}",
-        "complete_label": "I've finished Section 4",
+        "complete_label": "I've finished Section 5",
         "blocks": [
           {
             "id": "growth-pdf",
             "type": "download",
             "file": "whatever-you-do-workbook-section-4.pdf",
-            "body": "Section four, to work through on paper: turning all of it into something you will actually do.\n\nWhen you've finished it, come back here to say so, and Section 5, a letter to your future self, opens.",
-            "button_label": "Download Section 4 (PDF)"
+            "body": "Section five, to work through on paper: turning all of it into something you will actually do.\n\nWhen you've finished it, come back here to say so, and Section 6, a letter to your future self, opens.",
+            "button_label": "Download Section 5 (PDF)"
           }
         ]
       },
       {
         "id": "letter",
         "title": "A letter to your future self",
-        "number": "05",
+        "number": "06",
         "estimate": "About 15 minutes",
         "requires": ["growth"],
+        "complete_label": "I've finished Section 6",
         "blocks": [
           {
             "id": "lt-task",
             "type": "rich_text",
-            "estimate": "About 10 minutes",
             "variant": "hint",
             "label": "The task",
             "body": "Write to yourself as you will be in twelve months' time. You have just done a lot of thinking, and most of it fades faster than you would expect. Put it down now, while it is still warm, and let it find you again when you need it."
@@ -323,7 +360,6 @@
           {
             "id": "pl-intro",
             "type": "rich_text",
-            "estimate": "About 5 minutes",
             "body": "You answered these same questions at the start. Let's see where you are now.\n\nTo what extent would you agree with the following statements?"
           },
           {
@@ -389,7 +425,8 @@
         "requires": ["onboarding"],
         "to_finish": "sent a coach their link in {title}",
         "side_card": {
-          "sentence": "When you're ready, ask someone to walk this with you."
+          "lead": "A coach helps you test what you're discovering with someone who knows you and your faith.",
+          "sentence": "You'll need one before the later sections open."
         },
         "blocks": [
           {
@@ -483,7 +520,7 @@
         "requires": ["onboarding"],
         "to_finish": "added at least {min} people in {title}",
         "side_card": {
-          "sentence": "Invite people who know you well. Their answers sit beside your own in Section 1, combined so you never see whose is whose."
+          "sentence": "Invite people who know you well. Their answers sit beside your own strengths evaluation, combined so you never see whose is whose."
         },
         "blocks": [
           {
@@ -714,14 +751,14 @@
       "sort_heading": { "participant": "Sort your strengths", "observer": "Sort {name}'s strengths" },
       "sort_instruction": { "participant": "Choose the bucket that fits best", "observer": "Choose the bucket that fits {name} best" },
       "all_sorted": "All {count} sorted!",
-      "send_or_fine_tune": "You can send your assessment now, or fine-tune how strong each one is in {name} first.",
+      "send_or_fine_tune": "You can send your evaluation now, or fine-tune how strong each one is in {name} first.",
       "fine_tune_label": "Continue to fine-tuning →",
       "send_now_label": "Skip fine-tuning and send →",
       "fine_tune_heading": { "participant": "How strong is each one?", "observer": "How strong is each one in {name}?" },
       "fine_tune_intro": "Grouped by how you sorted them. Adjust the sliders to fine-tune.",
       "slider_min": { "participant": "Not me", "observer": "Not {name}" },
       "slider_max": "Real strength",
-      "submit_label": { "participant": "See my results →", "observer": "Send my assessment →" }
+      "submit_label": { "participant": "See my results →", "observer": "Send my evaluation →" }
     }
   }
 }

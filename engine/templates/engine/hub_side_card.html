@@ -1,10 +1,11 @@
 {# Copyright (C) New Community Church SE London 2026. #}
 {# For licensing information see ../../../LICENSE.md #}
 {% load section_pages %}
-{# ✨ A section the pathway document marks as a hub side card (ticket 49a): its title, its authored sentence and its #}
-{# status, the hub's own. Nothing on it is written here. A locked one is named but not linked, as in the list. #}
-{# ✨ The coach's card adds, from `coach_card`, the engine's line while a section waits on the coach and a small #}
-{# "Manage" to the coach page once unlocked, as Five trusted voices has (ticket 65). #}
+{# ✨ A section the pathway document marks as a hub side card (ticket 49a): its title, its authored lead and sentence #}
+{# and its status, the hub's own. Nothing on it is written here. A locked one is named but not linked, as in the list, #}
+{# its note the description of its "Locked" button, as a row's is (ticket 97). #}
+{# ✨ The coach's card adds, from `coach_card`, a small button to the coach page once unlocked, as Five trusted voices #}
+{# has (ticket 65), saying whether a coach is chosen (ticket 95). #}
 <section class="card hub-side-card{% if section.is_locked %} locked{% endif %}">
   <div class="row">
     {% if section.is_locked %}
@@ -12,13 +13,13 @@
     {% else %}
       <h3><a href="{% page_url section.id section.page %}">{{ section.title }}</a></h3>
     {% endif %}
-    <span class="tag{% if section.is_next %} up-next{% endif %}">{{ section.label }}</span>
+    {% include "engine/lock_status.html" with pill="tag" note_id="lock-note-"|add:section.id up_next=True %}
   </div>
-  {% if section.id == coach_card.section and coach_card.line %}<p class="hub-side-line">{{ coach_card.line }}</p>{% endif %}
+  {% if section.side_card_lead %}<p class="hub-side-line">{{ section.side_card_lead }}</p>{% endif %}
   <p>{{ section.side_card }}</p>
-  {% if section.id == coach_card.section and coach_card.manage %}
+  {% if section.id == coach_card.section and coach_card.page %}
     <div class="hub-side-actions">
-      <a class="pill ghost small" data-magnetic href="{{ coach_card.manage }}">Manage <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span></a>
+      <a class="pill ghost small" data-magnetic href="{{ coach_card.page }}">{% if coach_card.chosen %}See your coach{% else %}Choose your coach{% endif %} <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span></a>
     </div>
   {% endif %}
 </section>

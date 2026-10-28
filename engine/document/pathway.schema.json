@@ -68,6 +68,16 @@
       "type": "boolean",
       "default": false
     },
+    "messages_after_a_press": {
+      "description": "Whether a gate's messages wait for a press: on, each page's way on is never disabled, and its gate's unmet messages show only once pressing it has been refused, never on arrival nor ticked off as met. Off, every requirement is listed beneath the way on from the start, ticked once met, and the way on is disabled while any is unmet.",
+      "type": "boolean",
+      "default": false
+    },
+    "ratings_save_quietly": {
+      "description": "Whether a 1–10 rating (an `agreement_scale` block) saves without saying \"Saved\" beneath it, as a wizard's answers always do; a refused rating still says why. Off, every rating says \"Saved\" as other answers do.",
+      "type": "boolean",
+      "default": false
+    },
     "content": {
       "type": "object",
       "additionalProperties": false,
@@ -492,11 +502,15 @@
           "pattern": "^[0-9]+(–[0-9]+)?$"
         },
         "side_card": {
-          "description": "Draw this section as a card beside the hub's list of sections, below it on a phone, rather than in the list, as Walk with a coach is. The card shows the section's title, this sentence and its status.",
+          "description": "Draw this section as a card beside the hub's list of sections, below it on a phone, rather than in the list, as Walk with a coach is. The card shows the section's title, its lead if it has one, this sentence and its status.",
           "type": "object",
           "additionalProperties": false,
           "required": ["sentence"],
           "properties": {
+            "lead": {
+              "description": "A line in bold above the sentence, such as Walk with a coach's on what a coach is for.",
+              "$ref": "#/$defs/text"
+            },
             "sentence": { "$ref": "#/$defs/text" }
           }
         },
@@ -508,11 +522,41 @@
           "description": "Once the participant has completed this section, never show it again: it leaves the hub, the sidebar and the count of sections, and its pages, its answers and its completion lead to the hub, so its answers can be neither seen nor changed, as Before we begin's are in Whatever You Do. Only a wizard may be once-only.",
           "const": true
         },
-        "next_step": {
-          "description": "What the hub's next step says while this section is the next step, in place of the section's title and time estimate, such as 'Start with your gifts.' and a sentence on what it asks.",
+        "wizard_steps": {
+          "description": "For a wizard, what the photo and the heading say on each step it counts, in order: a verse, its reference and a word beneath them, as v3's 'Begin', and the page's heading in place of the section's title. The track's first wizard counts the entry page as its first step, which keeps its own heading. Without these, every step shows the engine's verse, with no word and the section's title.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["verse", "reference", "label"],
+            "properties": {
+              "verse": {"type": "string", "minLength": 1},
+              "reference": {"type": "string", "minLength": 1},
+              "label": {"type": "string", "minLength": 1},
+              "heading": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "welcome": {
+          "description": "For a wizard, a page shown once it is completed, before the hub, as v3's 'Welcome, Alex': its heading, where {name} is the participant's first name, a sentence, the button on to the hub, and the photo's verse, reference and word. Without one, completing the wizard leads straight to the hub.",
           "type": "object",
           "additionalProperties": false,
-          "required": ["heading", "sentence"],
+          "required": ["heading", "sentence", "button", "verse", "reference", "label"],
+          "properties": {
+            "heading": {"type": "string", "minLength": 1},
+            "sentence": {"type": "string", "minLength": 1},
+            "button": {"type": "string", "minLength": 1},
+            "verse": {"type": "string", "minLength": 1},
+            "reference": {"type": "string", "minLength": 1},
+            "label": {"type": "string", "minLength": 1}
+          }
+        },
+        "next_step": {
+          "description": "What the hub's next step says while this section is the next step, in place of the section's title and time estimate, such as 'Start with your gifts.' and a sentence on what it asks. A section may carry only 'waiting', its next step then saying its title and estimate.",
+          "type": "object",
+          "additionalProperties": false,
+          "dependentRequired": { "heading": ["sentence"], "sentence": ["heading"] },
+          "minProperties": 1,
           "properties": {
             "heading": { "$ref": "#/$defs/text" },
             "sentence": { "$ref": "#/$defs/text" },
@@ -539,11 +583,12 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "comparison_signpost", "section_signpost", "download", "page_break"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "scripture_passages", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "comparison_signpost", "section_signpost", "download", "page_break"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
         { "if": { "properties": { "type": { "const": "scripture_reading" } } }, "then": { "$ref": "#/$defs/scripture_reading" } },
+        { "if": { "properties": { "type": { "const": "scripture_passages" } } }, "then": { "$ref": "#/$defs/scripture_passages" } },
         { "if": { "properties": { "type": { "const": "long_text" } } }, "then": { "$ref": "#/$defs/long_text" } },
         { "if": { "properties": { "type": { "const": "agreement_scale" } } }, "then": { "$ref": "#/$defs/agreement_scale" } },
         { "if": { "properties": { "type": { "const": "single_select" } } }, "then": { "$ref": "#/$defs/single_select" } },
@@ -631,6 +676,20 @@
           "description": "The wording of the confirm control. Defaults to \"I have read these\".",
           "$ref": "#/$defs/text"
         }
+      }
+    },
+    "scripture_passages": {
+      "description": "Passages to read, as a scripture reading has them, with nothing to confirm: what follows them is open at once.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "passages"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "scripture_passages" },
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "heading": { "$ref": "#/$defs/text" },
+        "passages": { "$ref": "#/$defs/scripture_reading/properties/passages" },
+        "note": { "$ref": "#/$defs/scripture_reading/properties/note" }
       }
     },
     "agreement_scale": {
@@ -1071,7 +1130,7 @@
       }
     },
     "coach_accepted": {
-      "description": "The coach chosen through this coach checklist has accepted on their current link, even if that link has since expired. A decline, no link, a revoked or reissued link, or another coach chosen since, does not count.",
+      "description": "The coach chosen through this coach checklist has accepted on their current link, even if that link has since expired. A decline, an acceptance the coach has withdrawn, no link, a revoked or reissued link, or another coach chosen since, does not count.",
       "type": "object",
       "additionalProperties": false,
       "required": ["type", "block", "message"],

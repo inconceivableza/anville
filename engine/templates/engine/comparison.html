@@ -8,7 +8,8 @@
 {% block head_title %}How others experience you{% endblock head_title %}
 
 {% block content %}
-  <p class="back-to-hub"><a href="{% url 'results' block_id %}">← Back to results</a></p>
+  {# ✨ To the section holding its signpost (ticket 96), in place of "← Back to results" here and "← Return to …" at its foot. #}
+  {% include "engine/back_button.html" %}
   <h1>How others experience you</h1>
 
   {# ✨ First, so the participant meets the choice before reading on. A tick refused without JavaScript says why above it, whether or not the box is still offered (fix-2). #}
@@ -17,7 +18,18 @@
 
   {% include "engine/comparison_body.html" %}
 
-  {# ✨ The prototype's "Return to workbook →", naming the section it returns to, since the workbook is now the PDFs of Sections 2–4, #}
-  {# ✨ and with a back arrow, as every way back has. #}
-  <p class="comparison-return"><a class="pill" href="{{ back.href }}">← Return to {{ back.title }}</a></p>
+  {% comment %}
+    ✨ Once the comparison shows, its end leads on (fix-18), as the end of the strengths evaluation does: a green
+    primary button to Section 2's reflection, in `onward`, marking nothing complete. The comparison is never shown while
+    that section is locked (fix-19); where no section holds a signpost to it, as in the faithful port, or the one
+    holding it has no field waiting on it, there is no `onward`, so the top button's own `back` is offered again, one
+    target and label computed once. The second exception to ticket 96's one way back per page.
+  {% endcomment %}
+  {% if comparison.frameworks is not None %}
+    {% if onward %}
+      <p class="results-next"><a class="pill" href="{{ onward.href }}">{{ onward.label }}</a></p>
+    {% else %}
+      {% include "engine/back_button.html" %}
+    {% endif %}
+  {% endif %}
 {% endblock content %}

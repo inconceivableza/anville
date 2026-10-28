@@ -4,7 +4,7 @@ from typing import NamedTuple
 from django.db.models import Count, Exists, OuterRef, Q
 
 from access.consent import current_consents
-from engine.hub import complete_sections, listed_sections, track_sections
+from engine.hub import complete_sections, counted_sections, track_sections
 from engine.models import Response
 from organisations.models import Group, Membership, Organisation, Permission
 
@@ -91,7 +91,7 @@ def _progress(membership, response):
         return MemberProgress(name, consented=True)
     track = track_sections(response.version.document)
     done = complete_sections(track, response.answers_with_contacts_and_visits(), response.completed_sections)
-    sections = listed_sections(track, done)
+    sections = counted_sections(track, done)
     return MemberProgress(
         name,
         consented=True,

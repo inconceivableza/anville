@@ -9,6 +9,9 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import Http404
 
+from access.enrolment import asks_for_the_code
+from access.models import DISPLAY_NAME_MAX_LENGTH, Account
+
 # ✨ The email is the username (ticket 37), so it can be no longer than the username column. allauth would otherwise cut
 # a longer one short to fit, leaving a username that is not the email, and that a second long email could clash with.
 USERNAME_MAX_LENGTH = get_user_model()._meta.get_field("username").max_length
@@ -53,6 +56,27 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         if code == "email_taken":
             args = ()
         return super().validation_error(code, *args)
+
+    def is_auto_signup_allowed(self, request, sociallogin):
+        """✨ A Google sign-up makes the account at once, with no form (ADR 0021), except where the enrolment code is
+        asked for, when the form asks for the code alone. An address too long to be a username goes to the form too,
+        to be refused there as on the email-and-password form. allauth's own answer, SOCIALACCOUNT_AUTO_SIGNUP, still
+        decides first, and after this allauth sends an address that already has an account to the form as well, to be
+        refused (ticket 77)."""
+        email = user_email(sociallogin.user) or ""
+        allowed = super().is_auto_signup_allowed(request, sociallogin)
+        return allowed and not asks_for_the_code(request) and len(email) <= USERNAME_MAX_LENGTH
+
+    def save_user(self, request, sociallogin, form=None):
+        """✨ Names the new account from Google (ADR 0021): its given name, else its full name, else the part of the
+        email before the @, the fallback the spec already uses for an account without a name. The participant can
+        change it on the entry page."""
+        user = super().save_user(request, sociallogin, form=form)
+        claims = sociallogin.account.extra_data
+        name = (claims.get("given_name") or "").strip() or (claims.get("name") or "").strip()
+        name = name or user.email.partition("@")[0]
+        Account.objects.create(participant=user, display_name=name[:DISPLAY_NAME_MAX_LENGTH])
+        return user
 
     def list_apps(self, request, provider=None, client_id=None):
         """✨ Google's client comes only from the environment's pair (ticket 28b), read on each request, and never

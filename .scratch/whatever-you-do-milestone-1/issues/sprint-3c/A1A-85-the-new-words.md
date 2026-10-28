@@ -4,14 +4,14 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 3c (ends Fri 30 Oct)
 
 **Spec:** Sprint 3c: the content owner's feedback
 
-- [ ] No page a participant, observer or coach sees, and nothing on the homepage, says "assessment", "self-assessment" or "workbook" for the course; "workbook" stays only for a section's printable PDF
-- [ ] The wording sheet's rows under "Results and comparison" (the comparison's description), "Walk with a coach" (the coach brief and the coach's link page), "Observers", "Section 3" (its last paragraph) and "Demo only" read exactly as written there
-- [ ] "Strengths evaluation" is lower case mid-sentence, and capitalised only at the start of a line or as a title
-- [ ] Code names, block ids and the faithful port are unchanged, and pathway versions already loaded, with the answers stored against them, keep working
-- [ ] Tests that check this wording check the new wording
+- [x] No page a participant, observer or coach sees, and nothing on the homepage, says "assessment", "self-assessment" or "workbook" for the course; "workbook" stays only for a section's printable PDF
+- [x] The wording sheet's rows under "Results and comparison" (the comparison's description), "Walk with a coach" (the coach brief and the coach's link page), "Observers", "Section 3" (its last paragraph) and "Demo only" read exactly as written there
+- [x] "Strengths evaluation" is lower case mid-sentence, and capitalised only at the start of a line or as a title
+- [x] Code names, block ids and the faithful port are unchanged, and pathway versions already loaded, with the answers stored against them, keep working
+- [x] Tests that check this wording check the new wording

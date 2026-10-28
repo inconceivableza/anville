@@ -4,17 +4,17 @@
 
 **Blocked by:** 98 (The homepage's top half), F1
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 3c (ends Fri 30 Oct)
 
 **Spec:** Sprint 3c: the content owner's feedback
 
-- [ ] "The difference it makes", with its three figures, sits before "For churches", which has the new heading, lede, three points and a "Join the waitlist" button, its photo's foot level with its text's
-- [ ] The articles section is gone, and the testimonial is labelled "Impact", its quote at one size, the hackathon prototype's
-- [ ] The five callings in the green footer each show their photo (the hackathon prototype's choices) with their caption and line, with JavaScript off and under reduced motion too; the carousel only adds movement
-- [ ] The black footer has the logo with the Colossians 3:23 quote on the left and one column of links on the right (How it works, Impact, For churches), with the "Note" column, "The assessment" and "Writing" gone, and "© 2026 Whatever You Do" and "Credits" kept
-- [ ] At phone width it all reads in order
+- [x] "The difference it makes", with its three figures, sits before "For churches", which has the new heading, lede, three points and a "Join the waitlist" button, its photo's foot level with its text's
+- [x] The articles section is gone, and the testimonial is labelled "Impact", its quote at one size, the hackathon prototype's
+- [x] The five callings in the green footer each show their photo (the hackathon prototype's choices) with their caption and line, with JavaScript off and under reduced motion too; the carousel only adds movement
+- [x] The black footer has the logo with the Colossians 3:23 quote on the left and one column of links on the right (How it works, Impact, For churches), with the "Note" column, "The assessment" and "Writing" gone, and "© 2026 Whatever You Do" and "Credits" kept
+- [x] At phone width it all reads in order
 
 **Context**
 

@@ -1,0 +1,33 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/base.html" %}
+{% comment %}
+  ✨ The coach withdrawing their acceptance (ADR 0024), as the observer's withdrawal page does it: opening the page only
+  asks, and its button deletes everything kept of the coach, their acceptance, the name they were given and their link.
+  Then word that it is done, and nothing else, since the link no longer works. The participant is told only that their
+  coach withdrew, naming nobody.
+{% endcomment %}
+{% block head_title %}Withdraw your data{% endblock head_title %}
+
+{% block demo_notice %}{% endblock demo_notice %}
+
+{% block content %}
+  {% include "access/demo_notice.html" %}
+  <div class="section-header">
+    <h2>Withdraw your data</h2>
+  </div>
+  {% if withdrawn %}
+    <div class="question-card">
+      <h3>Your data has been withdrawn</h3>
+      <p>We've deleted your acceptance and the name {{ name }} gave us for you, and your link no longer works. {{ name }} is told only that their coach has withdrawn.</p>
+    </div>
+  {% else %}
+    <div class="question-card">
+      <p>Withdrawing deletes your acceptance and the name {{ name }} gave us for you, and your link will stop working. {{ name }} is told only that their coach has withdrawn, so they can ask someone else. This can't be undone.</p>
+      <form method="post" action="{{ action }}">
+        {% csrf_token %}
+        <button type="submit" class="pill full">Withdraw my data</button>
+      </form>
+    </div>
+  {% endif %}
+{% endblock content %}

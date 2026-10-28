@@ -13,6 +13,7 @@ from django.contrib.humanize.templatetags.humanize import apnumber
 from django.db import IntegrityError, transaction
 from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -36,6 +37,7 @@ from engine.document import (
 )
 from engine.document.blocks import (
     CONTACTS,
+    PASSAGE_BLOCK_TYPES,
     blocks_of,
     coach_brief,
     comparison_status,
@@ -43,6 +45,7 @@ from engine.document.blocks import (
     page_count,
     page_of,
     pages_of,
+    section_ended_by,
     section_of,
     signpost_shown,
     translation_shown,
@@ -53,7 +56,7 @@ from engine.document.coach import (
     checklist_answers_from_form,
     checklist_outcome,
     coach_answer_from_form,
-    coach_details_as_typed,
+    coach_confirmed,
     coach_from_form,
     commitments,
 )
@@ -78,6 +81,8 @@ from engine.document.gates import (
 )
 from engine.document.scoring import score
 from engine.hub import (
+    COACH_WITHDREW,
+    COMPARISON_READY_SENTENCE,
     COMPLETE,
     block_ids_fixed_on_completion,
     complete_sections,
@@ -89,6 +94,8 @@ from engine.hub import (
     section_by_id,
     track_sections,
     with_coach_answer,
+    WizardStep,
+    wizard_step,
 )
 from engine.document.observers import (
     link_lifetime,
@@ -108,7 +115,7 @@ from engine.models import (
     Response,
     Result,
 )
-from engine import reminders, scenario_loading
+from engine import reminders, scenario_loading, stay_in_touch
 from engine.document.tie_break import pair_plan, reweigh
 from engine.results import comparison_page, pair_page, results_page
 
@@ -149,11 +156,65 @@ class ParticipantState(NamedTuple):
         return Response.objects.get_or_create(participant=user, version=self.version)[0]
 
 
+class Invite(NamedTuple):
+    """✨ The way to invite people, beside the press on to the comparison on the comparison signpost (ticket 88, fix-3,
+    reversed by fix-8: it is offered before and after the minimum, and below it the press is greyed rather than
+    replaced; fix-10 took it off the results page): the address of the Five trusted voices card's page, the phrase
+    beside it (empty from the minimum), and whether the comparison is still waiting on answers."""
+
+    href: str
+    phrase: str
+    waiting: bool = False
+
+
+class Finish(NamedTuple):
+    """✨ The finish a part's end offers when the part is the last thing in its section (ticket 88): that section's
+    identifier, its finish button's label, and whether it is complete already. (Fix-10: the results page no longer
+    carries the way to invite people beside it; that is the comparison signpost's.)"""
+
+    section_id: str
+    label: str
+    done: bool
+
+
 def home(request):
     """✨ The public homepage (ticket 32a), the same for everyone; "Begin" leads to sign-up, or to the hub once
-    signed in."""
+    signed in.
+
+    Its "Stay in touch" form posts here (ticket 74): with htmx the section alone comes back to take the form's place,
+    thanks or refusal, so there is no new page; without, the homepage comes back opened at the section, by the
+    fragment in the form's action."""
+    stay = stay_in_touch.subscribe(request.POST) if request.method == "POST" else stay_in_touch.StayInTouch()
+    status = 400 if stay.refusal else 200
+    if request.method == "POST" and _is_htmx(request):
+        return render(request, "engine/stay_in_touch.html", {"stay": stay}, status=status)
     begin = reverse("hub") if request.user.is_authenticated else reverse("account_signup")
-    return render(request, "engine/home.html", {"begin": begin})
+    return render(request, "engine/home.html", {"begin": begin, "stay": stay}, status=status)
+
+
+# ✨ The photographs the stylesheet draws on the homepage, in the wizard and behind the hub's next step, each a courtesy
+# credit (ticket 101). The credits page lists them after the pathway's own, leaving out one the pathway lists too,
+# and with them the video's, while the document's setting for courtesy credits is on.
+SITE_PHOTO_CREDITS = [
+    "Photograph of a church gathering with Bibles open, by Sincerely Media on Unsplash.",
+    "Photograph of a figure facing the sun from Unsplash.",
+    "Photograph of grass from Unsplash.",
+    "Photograph of a woman walking through a field of wheat from Unsplash.",
+    "Photograph of a notebook, a pen and a cup of coffee from Unsplash.",
+    "Photograph of a woman walking in a field at sunset from Unsplash.",
+    "Photograph of misty hills at sunrise from Unsplash.",
+    "Photograph of a row of friends sitting together from Unsplash.",
+    "Photograph of two friends talking beside a lake from Unsplash.",
+    "Photograph of hands shaping clay from Unsplash.",
+    "Photograph of a carpenter planing wood from Unsplash.",
+    "Photograph of an open Bible on a jetty at sunrise from Unsplash.",
+    "Photograph of a woman in a summer dress looking out over a field of wheat from Unsplash.",
+    "Photograph of a woman in a sunhat walking through a field at sunset from Unsplash.",
+    "Photograph of a teacher standing before a classroom of pupils from Unsplash.",
+    "Photograph of a mother holding her sleeping baby from Unsplash.",
+    "Photograph of a pastor speaking with a microphone from Unsplash.",
+    "Photograph of a student with headphones studying in a library from Unsplash.",
+]
 
 
 def credits_page(request):
@@ -163,9 +224,19 @@ def credits_page(request):
     version = Publication.current_version()
     translations = version.document.get("translations", {}) if version else {}
     photo_credits = credits_listed(version.document) if version else []
-    return render(
-        request, "engine/credits.html", {"translations": translations.values(), "photo_credits": photo_credits}
-    )
+    shown = {
+        "translations": translations.values(),
+        "photo_credits": photo_credits,
+        "site_photo_credits": [credit for credit in SITE_PHOTO_CREDITS if credit not in photo_credits],
+        "site_credits_shown": bool(version and version.document.get("show_courtesy_credits", False)),
+    }
+    return render(request, "engine/credits.html", shown)
+
+
+def privacy(request):
+    """✨ The privacy notice (ticket 100), open to anyone: visitors, observers and coaches have no account, and a
+    participant reads it before consenting."""
+    return render(request, "engine/privacy.html")
 
 
 @login_required
@@ -186,6 +257,10 @@ def hub(request):
     coach_page = _coach_page_of(state.version.document, hub)
     minimum = minimum_observers(state.version.document)
     waiting = hub.waiting_on_answers
+    voices = _hub_voices(state, hub)
+    side_cards = _side_cards(state, hub, voices)
+    coach_wait = _coach_wait_panel(hub, state.response, coach, coach_page)
+    comparison = _hub_comparison(state)
     return render(
         request,
         "engine/hub.html",
@@ -193,31 +268,62 @@ def hub(request):
             "title": text_for(state.version.document["title"], "participant"),
             "hub": hub,
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
-            "coach_wait": _coach_wait_panel(hub, coach, coach_page),
-            "side_cards": _side_cards(hub, coach, coach_section),
-            "coach_card": _coach_card(hub, coach, coach_section, coach_page),
-            "voices": _hub_voices(state, hub),
-            "comparison": _hub_comparison(state),
+            "coach_wait": coach_wait,
+            "next_look": next_look(hub, coach_wait),
+            "side_cards": side_cards,
+            "coach_card": _coach_card(coach, coach_section, coach_page),
+            "voices": voices,
+            "comparison": comparison,
+            "comparison_next": _comparison_next(hub, comparison),
             "waiting_sentence": waiting.waiting_sentence(minimum) if waiting is not None else None,
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
 
 
+def _comparison_next(hub, comparison):
+    """✨ The comparison as the hub's next step leads to it in place of "Waiting on answers" (sprint-3c-r3-fix-14): once
+    the section waiting on answers, the one holding the comparison signpost, has the document's minimum in and the
+    comparison is not yet viewed (its status "ready", as `comparison_status` has it, the minimum the comparison page's
+    own), with the engine's sentence naming that section. None below the minimum, where the wait stands, never leading
+    to an empty comparison; and wherever nothing waits on answers, or the comparison is shut with its section."""
+    waiting = hub.waiting_on_answers
+    if waiting is None or comparison is None or comparison["section"] != waiting.id:
+        return None
+    if comparison["status"] != "ready" or comparison["locked"]:
+        return None
+    return {**comparison, "sentence": COMPARISON_READY_SENTENCE.replace("{section}", waiting.called)}
+
+
+def next_look(hub, coach_wait):
+    """✨ The class the hub's next-step panel takes, so the stylesheet can give each state its own photo (fix-8): the
+    section's own while one is next, then one each for waiting on answers (trusted voices'), the coach's wait and
+    nothing waiting. The panels' order is the template's."""
+    if hub.next_step is not None:
+        return f"look-section-{hub.next_step.id}"
+    if hub.waiting_on_answers is not None:
+        return "look-answers"
+    return "look-coach" if coach_wait else "look-rest"
+
+
 def _hub_comparison(state):
-    """✨ The document's comparison signpost as the hub shows it, in a row and beside Manage on the Five trusted voices
-    card (ticket 67b): its status and press as its section's card has them (`_comparison_signpost_shown`), with its
-    title, the section it is in and the part of that section holding its sort, after which its row is listed. None
+    """✨ The document's comparison signpost as the hub shows it, in a row and beside "Invite people" on the Five trusted
+    voices card (ticket 67b): its status and press as its section's card has them (`_comparison_signpost_shown`), with
+    its title, the section it is in and the part of that section holding its sort, after which its row is listed, or
+    None where its sort is not in a part of that section, as in *Whatever You Do*'s Section 2, which lists it first
+    (ticket 87), and whether the comparison is `locked`, shut with its section (fix-19), when nothing leads to it. None
     before there is a result, and for a pathway without one."""
     document = state.version.document
     for block in blocks_of(document):
         shown = _comparison_signpost_shown(state, block)
         if shown is not None:
+            section, holding = section_of(document, block["id"]), section_of(document, block["sort"])
             return {
                 **shown,
                 "title": authored_text(block, "participant")["title"],
-                "section": section_of(document, block["id"])["id"],
-                "after": section_of(document, block["sort"])["id"],
+                "section": section["id"],
+                "after": holding["id"] if holding.get("part_of") == section["id"] else None,
+                "locked": _comparison_locked(state, block["sort"]),
             }
     return None
 
@@ -228,40 +334,48 @@ def _coach_section_of(document):
     return section_of(document, checklists[0])["id"] if checklists else None
 
 
-def _side_cards(hub, coach, coach_section):
-    """✨ The hub's side cards, the coach's section's (`coach_section`) tagged with where the `coach` stands (ticket
-    51b)."""
-    return [
-        with_coach_answer(card, _answer_of(coach)) if card.id == coach_section else card for card in hub.side_cards()
-    ]
+def _side_cards(state, hub, voices):
+    """✨ The hub's side cards, each with the status its card shows, for the hub and the sidebar alike, so the two never
+    disagree (ticket 95): the coach's tagged with where the coach stands (ticket 51b), and Five trusted voices, as
+    `_hub_voices` gives it, with its own tag while it is unlocked (ticket 51a)."""
+    coach_section = _coach_section_of(state.version.document)
+    # ✨ The coach is read only where a side card is theirs, so a page without that card never depends on the coach.
+    on_a_card = any(card.id == coach_section for card in hub.side_cards())
+    answer = _coach_standing(state.response, _coach_of(state.response, state.answers)) if on_a_card else None
+    cards = []
+    for card in hub.side_cards():
+        if card.id == coach_section:
+            card = with_coach_answer(card, answer)
+        elif voices is not None and card.id == voices["section"]:
+            card = card._replace(label=voices["tag"], tone=voices["tone"])
+        cards.append(card)
+    return cards
 
 
-def _coach_card(hub, coach, coach_section, coach_page):
-    """✨ What the Walk with a coach card adds to a side card's own (ticket 65): {"section", "manage", "line"}, its
-    "Manage" leading to the `coach_page`, None while the card is locked, and its line while a section waits on the
-    `coach` at all, None otherwise."""
-    wait = hub.coach_wait
-    return {
-        "section": coach_section,
-        "manage": coach_page,
-        "line": wait.line(_answer_of(coach)) if wait is not None else None,
-    }
+def _coach_card(coach, coach_section, coach_page):
+    """✨ What the Walk with a coach card adds to a side card's own (ticket 65): {"section", "page", "chosen"}, its
+    button leading to the `coach_page`, None while the card is locked, and whether a `coach` is chosen, which its
+    button's words say (ticket 95)."""
+    return {"section": coach_section, "page": coach_page, "chosen": coach is not None}
 
 
-def _coach_wait_panel(hub, coach, coach_page):
+def _coach_wait_panel(hub, response, coach, coach_page):
     """✨ What the hub's next-step panel says in place of "Nothing is waiting for you right now" while nothing is next
     and a section waits on nothing but the coach's acceptance (ticket 65): {"heading", "sentence", "coach_page"}, by
-    the `coach`'s answer, or None otherwise, or with no `coach_page` to lead to."""
+    where the `coach` stands (`_coach_standing`), or None otherwise, or with no `coach_page` to lead to."""
     wait = hub.coach_wait
     if hub.next_step is not None or wait is None or not wait.only or coach_page is None:
         return None
-    wording = wait.panel(_answer_of(coach), coach["name"] if coach else "")
+    wording = wait.panel(_coach_standing(response, coach), coach["name"] if coach else "")
     return {**wording._asdict(), "coach_page": coach_page}
 
 
-def _answer_of(coach):
-    """✨ The coach's answer, as `_coach_of` gives it, or None with no coach."""
-    return coach["answer"] if coach else None
+def _coach_standing(response, coach):
+    """✨ The coach's answer, as `_coach_of` gives it; with no coach, `COACH_WITHDREW` while the response keeps that the
+    last one withdrew their acceptance, saying nothing of who (ADR 0024), and otherwise None."""
+    if coach is not None:
+        return coach["answer"]
+    return COACH_WITHDREW if response is not None and response.coach_withdrew else None
 
 
 def _photo_of(document, section_id):
@@ -292,8 +406,8 @@ def _shows_as_wizard(state, section):
 def _section_shown(request, state, section, shown, status=200):
     """✨ A page of a section as `_section_page` gives it, drawn as its wizard while it is one."""
     if _shows_as_wizard(state, section):
-        steps = range(1, shown["page"]["count"] + 1)
-        shown = {**shown, "photo": _photo_of(state.version.document, section["id"]), "steps": steps}
+        step = wizard_step(state.sections, section, shown["page"]["number"])
+        shown = {**shown, "step": step, "steps": step.numbers}
         return render(request, "engine/wizard.html", shown, status=status)
     return render(request, "engine/section.html", shown, status=status)
 
@@ -312,9 +426,14 @@ def _coach_page_of(document, hub):
 
 
 def _block_address(document, block_id):
-    """✨ The address of the page a block is on, at the block."""
+    """✨ The address of the page a block is on, at the block. A coach checklist that opens its page is reached at the
+    page's top, with no anchor, which would scroll past the page's title (ticket 82)."""
     section = section_of(document, block_id)
-    return f"{page_url(section['id'], page_of(section, block_id))}#block-{block_id}"
+    number = page_of(section, block_id)
+    opening_block = pages_of(section)[number - 1][0]
+    if opening_block["id"] == block_id and opening_block["type"] == "coach_checklist":
+        return page_url(section["id"], number)
+    return f"{page_url(section['id'], number)}#block-{block_id}"
 
 
 def participant_nav(request):
@@ -324,7 +443,8 @@ def participant_nav(request):
     their statuses and locks are the hub's; a locked section carries no address, and neither does a page within it,
     such as the coach page. Below them are links, kept beside the entries as quick ways in (developer's call, 23 Oct):
     results and the comparison once there is a result, since before then they lead only back to the sort, the
-    invitations, and the coach page. `current` is the section whose page this is, if any."""
+    comparison only while it is open too (fix-19), the invitations, and the coach page. `current` is the section whose
+    page this is, if any."""
     state = _participant(request.user)
     if state.version is None:
         return {"title": None, "sidebar": None}
@@ -336,10 +456,9 @@ def participant_nav(request):
     links = []
     scored = _scored_block(document)
     if scored and Result.objects.filter(response=state.response, block_id=scored["id"]).exists():
-        links += [
-            ("Your results", reverse("results", args=[scored["id"]])),
-            ("How others experience you", reverse("comparison", args=[scored["id"]])),
-        ]
+        links.append(("Your results", reverse("results", args=[scored["id"]])))
+        if not _comparison_locked(state, scored["id"]):
+            links.append(("How others experience you", reverse("comparison", args=[scored["id"]])))
     links.append(("Invite others to assess you", reverse("invitations")))
     coach_page = _coach_page_of(document, hub)
     if coach_page:
@@ -349,25 +468,11 @@ def participant_nav(request):
         "sidebar": {
             "outline": hub.outline(),
             "comparison": _hub_comparison(state),
-            "side_cards": _sidebar_side_cards(state, hub),
+            "side_cards": _side_cards(state, hub, _hub_voices(state, hub)),
             "current": _current_section(request, document),
             "links": [{"label": label, "href": href, "is_current": href == request.path} for label, href in links],
         },
     }
-
-
-def _sidebar_side_cards(state, hub):
-    """✨ The hub's side cards as the sidebar lists them (ticket 80), each with the status its card shows: the coach's
-    by where the coach stands, and Five trusted voices by its own tag while it is unlocked."""
-    document = state.version.document
-    coach_section = _coach_section_of(document)
-    # ✨ The coach is read only where a side card is theirs, so a page without that card never depends on the coach.
-    on_a_card = any(card.id == coach_section for card in hub.side_cards())
-    cards = _side_cards(hub, _coach_of(state.response, state.answers) if on_a_card else None, coach_section)
-    voices = _hub_voices(state, hub)
-    if voices is None:
-        return cards
-    return [card._replace(label=voices["tag"]) if card.id == voices["section"] else card for card in cards]
 
 
 def _current_section(request, document):
@@ -455,17 +560,17 @@ def move_past_page(request, section_id, page):
     section = _section_or_404(state.version, section_id)
     reached = state.reached(section)
     if reached is None:
-        return redirect("hub")
+        return _to_the_hub_when_locked(request)
     if _page_or_404(section, page) == page_count(section):
         raise Http404("The last page of a section is moved past by completing it.")
     if page > reached:
-        return _see_other(page_url(section_id, reached))
+        return _go_to(request, page_url(section_id, reached))
     shown = _section_page(state, section, page)
     if not shown["offers_way_on"] or shown["unmet"]:
-        return _section_shown(request, state, section, {**shown, "refused": True}, status=400)
+        return _way_on_refused(request, state, section, shown)
 
     state.stored_response(request.user).move_past_page(section_id, page)
-    return _see_other(page_url(section_id, page + 1))
+    return _go_to(request, page_url(section_id, page + 1))
 
 
 @login_required
@@ -481,18 +586,62 @@ def complete_section(request, section_id):
         raise Http404("This section is complete once its gate passes, with no completion of its own.")
     reached = state.reached(section)
     if reached is None:
-        return redirect("hub")
+        return _to_the_hub_when_locked(request)
     last = page_count(section)
     if reached < last:
-        return _see_other(page_url(section_id, reached))
+        return _go_to(request, page_url(section_id, reached))
     if unmet(section, state.answers):
-        shown = _section_page(state, section, last)
-        return _section_shown(request, state, section, {**shown, "refused": True}, status=400)
+        return _way_on_refused(request, state, section, _section_page(state, section, last))
 
     fixed_block_ids = block_ids_fixed_on_completion(section, state.answers)
     state.stored_response(request.user).complete_section(section_id, fixed_block_ids=fixed_block_ids)
-    # ✨ Back to the hub, which points at the next step, as the prototype's `completePillar` goes (ticket 41b).
-    return _see_other("hub")
+    # ✨ Back to the hub, which points at the next step, as the prototype's `completePillar` goes (ticket 41b); a wizard
+    # ✨ with a welcome by way of it first (sprint-3c-r3-fix-7).
+    if section.get("wizard") and "welcome" in section:
+        return _go_to(request, reverse("wizard_welcome", args=[section_id]))
+    return _go_to(request, reverse("hub"))
+
+
+@login_required
+@consent_required
+def wizard_welcome(request, section_id):
+    """✨ A wizard's welcome, as v3's "Welcome, Alex" (sprint-3c-r3-fix-7): once it is complete, its last step, all of
+    its counter marked, leading on to the hub. Before then it leads to the wizard's page reached, and a wizard without
+    a welcome, or a section that is not one, to the hub."""
+    state = _participant(request.user)
+    section = _section_or_404(state.version, section_id)
+    if not section.get("wizard") or "welcome" not in section:
+        return redirect("hub")
+    if section_id not in state.completed:
+        reached = state.reached(section)
+        return redirect(page_url(section_id, reached) if reached is not None else "hub")
+    welcome = section["welcome"]
+    # ✨ The step after the last, so every mark of the counter is on and its photo is the next one, as v3's.
+    last = wizard_step(state.sections, section, page_count(section))
+    after = WizardStep(last.count + 1, last.count, welcome)
+    shown = {
+        "section": section,
+        "welcome": welcome,
+        "heading": welcome["heading"].replace("{name}", name_shown_for(request.user)),
+        "step": after,
+        "steps": after.numbers,
+    }
+    return render(request, "engine/wizard_welcome.html", shown)
+
+
+def _to_the_hub_when_locked(request):
+    """✨ A press on a section that is locked, or outside the track: to the hub, with htmx told to go there rather than
+    draw the hub beneath the button (fix-2)."""
+    return _go_to(request, reverse("hub")) if _is_htmx(request) else redirect("hub")
+
+
+def _way_on_refused(request, state, section, shown):
+    """✨ A refused "Continue →" or completion, nothing stored: with htmx, only what sits beneath the button, for the
+    page's `#gate-refusal`, so the page neither reloads nor moves (fix-2); without, the page again."""
+    shown = {**shown, "refused": True}
+    if _is_htmx(request):
+        return render(request, "engine/gate_refusal.html", shown, status=400)
+    return _section_shown(request, state, section, shown, status=400)
 
 
 @login_required
@@ -597,7 +746,7 @@ def coach_checklist(request, block_id):
     form, screen to screen, and the outcome is worked out again from what was posted, never taken from the button
     pressed. The answers are opinions about another person, including their faith (special category data under
     GDPR), and no later step reads them; `sensitive_post_parameters` keeps them out of error reports too. Saving
-    keeps only the chosen coach's name and email address, as a contact, and only once the outcome allows it.
+    keeps only the chosen coach's name, as a contact (ADR 0022), and only once the outcome allows it.
     """
     state = _participant(request.user)
     block = _block_of_type(state.version, block_id, "coach_checklist")
@@ -633,7 +782,7 @@ def coach_checklist(request, block_id):
         # the link just made, as issuing it leads back.
         if coach is not None:
             return _back_with_issued(request, coach, screen["issued"]["link"])
-        return _see_other(f"{page_url(section['id'], page)}#block-{block_id}")
+        return _see_other(_block_address(state.version.document, block_id))
     shown = _section_page(state.with_answers(kept), section, page)
     checklist_block = next(on_page for on_page in shown["section"]["blocks"] if on_page["id"] == block_id)
     checklist_block["checklist"] = _checklist_screen(checklist_block["text"], **screen)
@@ -691,7 +840,7 @@ def _checklist_step(block, to, posted, coach_kept=None):
     try:
         return {"screen": "chosen", "coach": coach_from_form(posted)}
     except AnswerRefused as refused:
-        return {**going_ahead, **coach_details_as_typed(posted), "refusal": str(refused), "invalid": refused.field}
+        return {**going_ahead, "confirmed": coach_confirmed(posted), "refusal": str(refused), "invalid": refused.field}
 
 
 def _checklist_screen(
@@ -703,15 +852,14 @@ def _checklist_screen(
     refusal=None,
     confident=False,
     coach=None,
-    email="",
     confirmed=False,
     invalid=None,
     kept=None,
     issued=None,
 ):
     """✨ One screen of the coach checklist as its template needs it: the questions with any answers given, and on
-    a second thought or a stop, each answer that was not Yes with why that question matters. On going ahead, the
-    coach's details as typed, and which of them a refusal is about; once chosen, the coach kept, with their link
+    a second thought or a stop, each answer that was not Yes with why that question matters. On going ahead, whether
+    the box was ticked, and which field a refusal is about; once chosen, the coach kept, with their link
     (`issued` is a link just issued, shown this once). On the intro while choosing again, `kept` is the coach who
     stays until another is saved."""
     answers = answers or {}
@@ -728,7 +876,6 @@ def _checklist_screen(
         "confident": confident,
         "refusal": refusal,
         "coach": coach,
-        "email": email,
         "confirmed": confirmed,
         "invalid": invalid,
         "kept": kept,
@@ -744,8 +891,10 @@ def _coach_kept(answers, block_id):
 
 def _coach_link_state(contact_id, issued=None):
     """✨ The coach's link as the coach page shows it: the contact it is for, its invitation while it works, the coach's
-    answer ("waiting" while a working link is unanswered, None with no link at all), and the link itself if it was
-    just issued. An answer outlasts the link's expiry, but not its revoking: it belongs to the link it came through."""
+    answer ("waiting" while a working link is unanswered, None with no link at all), whether the coach has said no by
+    declining, and the link itself if it was just issued. An answer outlasts the link's expiry, but not its revoking:
+    it belongs to the link it came through. A coach who withdraws their acceptance has no link to show: they are
+    deleted as they withdraw (ADR 0024)."""
     invitation = Invitation.objects.filter(contact_id=contact_id).first()
     live = invitation if invitation is not None and invitation.works() else None
     answer = invitation.coach_answer if invitation is not None else None
@@ -753,6 +902,7 @@ def _coach_link_state(contact_id, issued=None):
         "contact_id": contact_id,
         "invitation": live,
         "answer": answer or ("waiting" if live else None),
+        "said_no": answer == Invitation.CoachAnswer.DECLINED,
         "issued": issued["link"] if issued and issued["contact"] == contact_id else None,
     }
 
@@ -762,12 +912,21 @@ def _saved(request, state, section, block_id):
 
     A block that opens what follows (a reading) lands at its confirmation, with what it opened beneath, rather than
     back at its top above what was just read (ticket 41e).
+
+    With htmx, the status goes where the participant is looking, and the section's gate is brought up to date beside
+    it, out of band: without the second part the button would stay as it was rendered, and someone who had just written
+    enough to finish the section would have to reload before the engine would let them say so. htmx swaps everything
+    but the gate into the status, so the templates' line breaks are trimmed: a quiet save's status must stay empty, or
+    the row beneath a wizard's rating shows and moves the next statement down (fix-11).
     """
     page = page_of(section, block_id)
+    block = next(block for block in section["blocks"] if block["id"] == block_id)
     if request.headers.get("HX-Request") == "true":
         shown = _section_page(state, section, page)
-        return render(request, "engine/save_result.html", shown)
-    block = next(block for block in section["blocks"] if block["id"] == block_id)
+        quietly = _saves_quietly(state.version.document, section, block)
+        status = render_to_string("engine/save_status.html", {**shown, "saves_quietly": quietly}, request).strip()
+        gate = render_to_string("engine/completion.html", {**shown, "out_of_band": True}, request).strip()
+        return HttpResponse(status + gate)
     return _see_other(f"{page_url(section['id'], page)}#{landing_of(block)}")
 
 
@@ -786,8 +945,44 @@ def results(request, block_id):
     if _pairs_left(state.version.document, result):
         return redirect("tie_break", block_id)
     drawn = _results_drawn(state, result, block_id)
-    context = {"drawn": drawn, "results": drawn["results"], "section": section, "retake": _demo_tools_on()}
+    context = {
+        "drawn": drawn,
+        "results": drawn["results"],
+        "section": section,
+        "retake": _demo_tools_on(),
+        "finish": _results_finish(state, block_id),
+        # ✨ How a refused finish comes back, as on a section's page (fix-2).
+        "messages_after_a_press": state.version.document.get("messages_after_a_press", False),
+    }
     return render(request, "engine/results.html", context)
+
+
+def _results_finish(state, block_id):
+    """✨ What the results page offers in place of "Compare with how others see you →", when its sort is the last
+    thing in a part that is the last thing in its section, so the results are that section's end (ticket 88): the
+    section's finish alone, as `_finish_of` gives it (fix-10: the comparison and the invitation are the comparison
+    signpost's, in the section after). None otherwise, when the page is as before."""
+    document = state.version.document
+    part = section_of(document, block_id)
+    return _finish_of(state, part) if part["blocks"][-1]["id"] == block_id else None
+
+
+def _invite(state):
+    """✨ The way to invite people offered beside the press on to the comparison, wherever that press is offered
+    (ticket 88, fix-3, fix-8), and on the comparison's own page while it waits (fix-16): Five trusted voices' page.
+    Below the minimum it is `waiting` and its phrase says how many more its card needs, or else how many of the minimum
+    have answered; the press is greyed then. From the minimum the
+    phrase is empty. None for a pathway without that card or while it is locked, where the press is offered alone, as
+    before."""
+    answered, minimum = _answered(state.response), minimum_observers(state.version.document)
+    hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    voices = _hub_voices(state, hub)
+    if voices is None:
+        return None
+    if answered >= minimum:
+        return Invite(page_url(voices["section"]), "")
+    phrase = voices["more_needed"] or comparison_status(answered, minimum, viewed=False)[1]
+    return Invite(page_url(voices["section"]), phrase, waiting=True)
 
 
 def _results_drawn(state, result, block_id):
@@ -861,28 +1056,36 @@ def _scores_shown_storing_reweighted(document, result):
 @login_required
 @consent_required
 def comparison(request, block_id):
-    """✨ The participant's self-result beside the observer average (ADR 0005), reached from the results page and, like
-    it, open to anyone with a result, whatever sections they have done. Below the minimum it shows how many have
+    """✨ The participant's self-result beside the observer average (ADR 0005), open to anyone with a result, whatever
+    sections they have done, save where a section holds a comparison signpost to the sort: the comparison is then that
+    section's, refused while it is locked, as its pages are (fix-19). Below the minimum it shows how many have
     answered and no numbers; it never shows which person has answered, and single observers' percents only in the
     distribution strip, in ascending order."""
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
+    if _comparison_locked(state, block_id):
+        return redirect("hub")
     return _comparison_shown(request, state, result, section, block_id)
 
 
 def _comparison_shown(request, state, result, section, block_id, status=200, share_refusal=None):
     """✨ The comparison page, from `_own_result`'s state, result and section, with `share_refusal`, a refused tick of the
-    coach's box sent without JavaScript, said above the box (fix-2)."""
+    coach's box sent without JavaScript, said above the box (fix-2). Below the minimum, where the pathway has a Five
+    trusted voices card, `invite` is the way to it, and the page waits on answers with it in place of its refusal
+    (fix-16); otherwise None, and the refusal stands, as in the faithful port."""
     scores = _scores_shown_storing_reweighted(state.version.document, result)
     shown = _comparison_of(state.response, scores, state.answers[block_id])
     sort = next(block for block in blocks_of(state.response.version.document) if block["id"] == block_id)
+    invite = _invite(state) if shown["frameworks"] is None else None
     context = {
         "comparison": shown,
+        "invite": invite if invite and invite.waiting else None,
         "block_id": block_id,
         "coach": _coach_sharing(state.response, block_id),
         "brief": coach_brief(sort),
-        "back": section["back"],
+        "back": _section_holding_comparison_signpost(state, block_id) or section["back"],
+        "onward": _reflection_after_comparison(state, block_id),
         "share_refusal": share_refusal,
     }
     return render(request, "engine/comparison.html", context, status=status)
@@ -930,7 +1133,8 @@ def _coach_sharing(response, block_id):
     """✨ The participant's coach as the comparison's consent needs them, or None when there is nothing to say: with
     `offer` "tick" once they accepted through a working link and the comparison was visited by its button; "expired"
     when they accepted but the link no longer works; "awaiting" while they have not answered or have no link yet. A
-    coach who declined is offered nothing here: the coach page already says so."""
+    coach who declined is offered nothing here: the coach page already says so. One who withdrew their acceptance is no
+    coach at all, deleted as they withdrew (ADR 0024)."""
     coach = _coach_of(response)
     if coach is None:
         return None
@@ -949,7 +1153,7 @@ def _coach_of(response, answers=None):
     """✨ The coach kept, as the hub and the comparison read them, or None: their name, the coach page, their answer as
     the coach page tells it, whether they can be shown the results (accepted through a working link) and whether they
     are. The answer is read from the `answers` the gate reads (the response's own, if not given), as a `coach_accepted`
-    clause reads it, so the hub's wording and Section 3's lock never disagree (fix-2)."""
+    clause reads it, so the hub's wording and Section 4's lock never disagree (fix-2; Section 3's until ticket 87)."""
     coach = response.contacts.filter(role=Contact.Role.COACH).first() if response is not None else None
     if coach is None:
         return None
@@ -1007,13 +1211,22 @@ def visit_comparison(request, block_id):
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return _see_other(page_url(section["id"], section["page"]))
+    if _comparison_locked(state, block_id):
+        return _to_the_hub_when_locked(request)  # ✨ nothing recorded or frozen, as on the page itself (fix-19)
     response = state.response
     answered = _answered(response)
     viewed = answered >= minimum_observers(state.version.document)
     if response.collection_frozen_at is None and viewed:
         if request.POST.get("confirmed") != "yes":
             invited = response.contacts.filter(role=Contact.Role.CONTACT).count()
-            context = {"block_id": block_id, "answered": answered, "invited": invited, "everyone": answered >= invited}
+            context = {
+                "block_id": block_id,
+                "answered": answered,
+                "invited": invited,
+                "everyone": answered >= invited,
+            }
+            # ✨ No `back`: the button leads to the hub, as a section's does, since the page is reached from the hub's
+            # cards and the sidebar as well as from the results page (fix-21).
             return render(request, "engine/comparison_confirm.html", context)
         # ✨ Counted again under the freeze's lock: a withdrawal since may have left fewer than the minimum.
         viewed = response.freeze_collection()
@@ -1032,9 +1245,9 @@ def _demo_tools_on():
 @consent_required
 @require_http_methods(["GET", "POST"])
 def retake(request, block_id):
-    """✨ Demo only (fix-19): the results page's quiet "Retake the assessment (demo only)" asks first, saying what will
-    be cleared; only its button clears the participant's own sort and everything worked out from it, then opens the
-    sort afresh. Off a development or demo system it is a 404.
+    """✨ Demo only (fix-19): the results page's quiet "Retake the strengths evaluation (demo only)" asks first, saying
+    what will be cleared; only its button clears the participant's own sort and everything worked out from it, then
+    opens the sort afresh. Off a development or demo system it is a 404.
 
     It also offers a demo profile (fix-21): one of `seed_tie_break`'s starting profiles, and how to answer its pairs,
     chosen apart (fix-25), as a combination that holds on this pathway. Once the old sort is cleared, the sort opens
@@ -1046,7 +1259,7 @@ def retake(request, block_id):
     A section completed whose gate needed the sort is no longer complete, so the hub never shows it complete beside an
     assessment not started; the participant's other answers in it stay, and completing it again needs the new sort."""
     if not _demo_tools_on():
-        raise Http404("Retaking the assessment is offered only on a development or demo system.")
+        raise Http404("Retaking the strengths evaluation is offered only on a development or demo system.")
     state, result, section = _own_result(request.user, block_id)
     sort_page = page_url(section["id"], section["page"])
     document = state.version.document
@@ -1071,6 +1284,11 @@ def retake(request, block_id):
         context = {
             "block_id": block_id,
             "clearing": result is not None,
+            "back": (
+                {"title": "results", "href": reverse("results", args=[block_id])}
+                if result is not None
+                else {"title": "the sort", "href": sort_page}
+            ),
             "sort_page": sort_page,
             "offer": offer,
             "myself": MYSELF,
@@ -1438,7 +1656,8 @@ def contact_removal(request, block_id, contact_id):
     if not confirmed and is_htmx:
         return _rows_sent_back(request, state, block, [_listed_row(state, block, person.pk, confirming=True)])
     if not confirmed:
-        context = {"person": person, "back": _listed_at(person), "has_live_link": person.live_invitation() is not None}
+        back = {"title": "your list", "href": _listed_at(person)}
+        context = {"person": person, "back": back, "has_live_link": person.live_invitation() is not None}
         return render(request, "engine/contact_removal.html", context)
     number = _listed_row(state, block, person.pk)["number"] if is_htmx else None
     person.delete()  # ✨ their invitation goes with them
@@ -1875,6 +2094,31 @@ def answer_coaching(request, token):
     return _see_other("coaching", token)
 
 
+@require_http_methods(["GET", "POST"])
+def coach_withdrawal(request, token):
+    """✨ The coach withdrawing their acceptance (ADR 0024), as an observer withdraws (ticket 15b): opening the page only
+    asks, and its button deletes the coach, acceptance, name and link, leaving the participant told only that their
+    coach withdrew. Only a working link that accepted can, whether or not the participant's consent stands; any other
+    gets the one refusal, naming nobody.
+
+    Before the acceptance goes, whatever it opened is recorded as opened, as the participant's next page would have
+    recorded it, so a section it opened stays open (ADR 0019) however soon the coach withdraws."""
+    invitation = Invitation.withdrawable_by_coach(token)
+    if invitation is None:
+        return _refuse_link(request)
+    _, name = _asked_by(invitation)
+    if request.method == "POST":
+        _store_completions_and_openings(invitation.contact.response)
+        if not Invitation.withdraw_as_coach(token):
+            return _refuse_link(request)
+        shown = render(request, "engine/coach_withdrawal.html", {"name": name, "withdrawn": True})
+    else:
+        action = reverse("coach_withdrawal", args=[token])
+        shown = render(request, "engine/coach_withdrawal.html", {"name": name, "action": action})
+    shown["Cache-Control"] = "no-store"
+    return shown
+
+
 ANSWERED_ALREADY = "You've already answered."
 
 # ✨ Marks the page a coach's answer leads to, so its thanks is said once and not on every later visit (ticket 25a).
@@ -1989,7 +2233,7 @@ def send_assessment(request, token=None):
     try:
         sent = ObserverResponse.send(invitation.contact.response, secret, assessment, relationship=relationship)
     except IntegrityError:
-        refusal = "Your assessment has already been sent."
+        refusal = "Your evaluation has already been sent."
         return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
     except CollectionFrozen:
         return render(request, "engine/save_status.html", {"refusal": NO_MORE_ANSWERS}, status=409)
@@ -2160,6 +2404,22 @@ def _participant(user, first_version=Publication.current_version):
         version = first_version()
         sections = track_sections(version.document) if version else []
         return ParticipantState(None, version, sections, {}, complete_sections(sections, {}, ()), {}, set())
+    sections, answers, completed, moved_past = _store_completions_and_openings(participant_response)
+    return ParticipantState(
+        response=participant_response,
+        version=participant_response.version,
+        sections=sections,
+        answers=answers,
+        completed=completed,
+        moved_past=moved_past,
+        fixed=set(participant_response.fixed_answers),
+    )
+
+
+def _store_completions_and_openings(participant_response):
+    """✨ Store each hub side card's completion and each opened section's opening the first time either is seen, and
+    return the response's track sections, the answers the gate reads, the sections complete and the pages moved past,
+    those included."""
     sections = track_sections(participant_response.version.document)
     answers = participant_response.answers_with_contacts_and_visits()
     # ✨ A part of a section, or a hub side card, is complete once its gate passes, so locks and the hub count it without
@@ -2182,15 +2442,7 @@ def _participant(user, first_version=Publication.current_version):
         ):
             participant_response.open_section(section["id"])
             answers[opened_key(section["id"])] = True
-    return ParticipantState(
-        response=participant_response,
-        version=participant_response.version,
-        sections=sections,
-        answers=answers,
-        completed=completed,
-        moved_past=moved_past,
-        fixed=set(participant_response.fixed_answers),
-    )
+    return sections, answers, completed, moved_past
 
 
 def _is_open(state, section, block):
@@ -2248,8 +2500,6 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
     links = _requirement_links(state, section)
     gate_checklist = [(message, met, links.get(message)) for message, met in checklist(section, answers, page=page)]
     states = {other.id: other for other in hub.sections}
-    # ✨ A section the hub does not list, a once-only section once complete (ticket 69), has no state, so no estimate.
-    shown_state = states.get(section["id"])
     return {
         # ✨ Where "← Back" at the top leads: the section this is a part of, or else the hub.
         "back": _section_this_is_part_of(state, section),
@@ -2266,9 +2516,10 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
         "section": {
             "id": section["id"],
             "title": text_for(section["title"], "participant"),
-            "estimate": shown_state.estimate if shown_state is not None else None,
-            "complete_label": text_for(section.get("complete_label", "Mark complete"), "participant"),
+            "complete_label": _complete_label(section),
             "is_part": "part_of" in section,
+            # ✨ On a part's last page, the finish of the section it is the last thing in, if it is (ticket 88).
+            "finish": _finish_of(state, section) if is_last else None,
             "is_side_card": "side_card" in section,
             "reopens": _reopens(section),
             "blocks": [
@@ -2284,6 +2535,8 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
                     demo=demo,
                     comparison=_comparison_signpost_shown(state, block),
                     rows_back=rows_back.get(block["id"]),
+                    coach_withdrew=state.response is not None and state.response.coach_withdrew,
+                    saves_quietly=_saves_quietly(version.document, section, block),
                 )
                 for block in blocks
             ],
@@ -2298,7 +2551,18 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
         # ✨ What the checklist marks unmet: on the last page, where completing checks it, the whole gate.
         "unmet": [message for message, met, _ in gate_checklist if not met],
         "checklist": gate_checklist,
+        # ✨ Where the document asks for it (ticket 83), the checklist only once a press is refused, and unmet alone.
+        "messages_after_a_press": version.document.get("messages_after_a_press", False),
     }
+
+
+def _saves_quietly(document, section, block):
+    """✨ Whether a block's answer saves without saying "Saved": every answer on a wizard's pages (ticket 83), and a 1–10
+    rating where the document asks for it (`ratings_save_quietly`, sprint-3c-r3-fix-15), as *Whatever You Do*'s letter
+    does. A refusal still says why."""
+    return bool(section.get("wizard")) or (
+        document.get("ratings_save_quietly", False) and block["type"] == "agreement_scale"
+    )
 
 
 def _completes_itself(section):
@@ -2321,6 +2585,79 @@ def _section_this_is_part_of(state, section):
     if reached is None:
         return None
     return {"title": text_for(parent_section["title"], "participant"), "href": page_url(parent_section["id"], reached)}
+
+
+def _section_holding_comparison_signpost(state, sort_id):
+    """✨ Where the comparison of a sort leads back to (ticket 96): the open section in the track holding a comparison
+    signpost to it, as its ways back name it, {"title", "href"}, at the page reached. None where no section holds one,
+    as in the faithful port, when the comparison leads back as its results do; the comparison is never shown while the
+    section holding one is locked (fix-19)."""
+    held = _open_section_holding_comparison_signpost(state, sort_id)
+    if held is None:
+        return None
+    section, reached = held
+    return {"title": text_for(section["title"], "participant"), "href": page_url(section["id"], reached)}
+
+
+def _sections_holding_comparison_signpost(state, sort_id):
+    """✨ The sections in the track holding a comparison signpost to the sort."""
+    return [
+        section
+        for section in state.sections
+        if any(block["type"] == "comparison_signpost" and block["sort"] == sort_id for block in section["blocks"])
+    ]
+
+
+def _open_section_holding_comparison_signpost(state, sort_id):
+    """✨ The open section holding a comparison signpost to the sort, and the page reached, or None."""
+    for section in _sections_holding_comparison_signpost(state, sort_id):
+        reached = state.reached(section)
+        if reached is not None:
+            return section, reached
+    return None
+
+
+def _comparison_locked(state, sort_id):
+    """✨ Whether the comparison of a sort is shut (fix-19): a section in the track holds a comparison signpost to it, as
+    *Whatever You Do*'s Section 2 does, making the comparison that section's, and none of them is open. Never where no
+    section holds one, as in the faithful port, whose comparison is open to anyone with a result."""
+    holding = _sections_holding_comparison_signpost(state, sort_id)
+    return bool(holding) and _open_section_holding_comparison_signpost(state, sort_id) is None
+
+
+def _reflection_after_comparison(state, sort_id):
+    """✨ Where the comparison's last button leads (fix-18): the section holding its signpost, at the field that waits on
+    the comparison (the block carrying `after_comparison` for the sort), as {"label", "href"}, the address anchored at
+    that field. None where no section holds one, as in the faithful port, or where it has no such field, when the
+    page's top back button is offered again in its place."""
+    held = _open_section_holding_comparison_signpost(state, sort_id)
+    if held is None:
+        return None
+    section = held[0]
+    for block in section["blocks"]:
+        if block.get("after_comparison", {}).get("sort") == sort_id and page_of(section, block["id"]) is not None:
+            return {
+                "label": "On to your reflection →",
+                "href": f"{page_url(section['id'], page_of(section, block['id']))}#{landing_of(block)}",
+            }
+    return None
+
+
+def _finish_of(state, part):
+    """✨ The finish a part's end offers when the part is the last thing in its section (ticket 88), as a `Finish`;
+    once its section is complete, the end offers nothing in its place, the way back at the
+    page's top being the only one (ticket 96). None for a part that ends nothing, or whose section the participant
+    has not reached. Pressing it is that section's own completion, so its gate refuses it exactly as it refuses the
+    section's own button."""
+    ended = section_ended_by(state.version.document, part)
+    if ended is None or state.reached(ended) is None:
+        return None
+    return Finish(ended["id"], _complete_label(ended), ended["id"] in state.completed)
+
+
+def _complete_label(section):
+    """✨ The wording of the button that completes the section: its own, or else "Mark complete"."""
+    return text_for(section.get("complete_label", "Mark complete"), "participant")
 
 
 def _requirement_links(state, section):
@@ -2361,7 +2698,9 @@ def _sort_results_drawn(state, block):
 
 def _comparison_signpost_shown(state, block):
     """✨ For a `comparison_signpost` block, its sort and where the way to that sort's comparison stands, as
-    `comparison_status` words it, once there is a result; None before, and for any other block (ticket 67a)."""
+    `comparison_status` words it, once there is a result; None before, and for any other block (ticket 67a). Below the
+    minimum, where `_invite` marks the way to invite people `waiting`, the status says its phrase (fix-3), and the press
+    is greyed (fix-8)."""
     if block["type"] != "comparison_signpost":
         return None
     sort = block["sort"]
@@ -2370,7 +2709,9 @@ def _comparison_signpost_shown(state, block):
     answered = _answered(state.response)
     viewed = comparison_viewed(state.answers, sort)
     status, label = comparison_status(answered, minimum_observers(state.version.document), viewed)
-    return {"sort": sort, "status": status, "label": label}
+    invite = _invite(state)
+    shown = invite.phrase if invite and invite.waiting else label
+    return {"sort": sort, "status": status, "label": shown, "invite": invite}
 
 
 def _block_for_participant(
@@ -2385,6 +2726,8 @@ def _block_for_participant(
     demo=None,
     comparison=None,
     rows_back=None,
+    coach_withdrew=False,
+    saves_quietly=False,
 ):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
     identifier; a signpost to a section outside the participant's track has no state and shows nothing. `issued` is a
@@ -2393,7 +2736,8 @@ def _block_for_participant(
     rows come back from a press without JavaScript as `rows_back` gives them (fix-1). `drawn` is a `sort_results`
     block's results, from `_sort_results_drawn`, and `comparison` a `comparison_signpost`'s status, from
     `_comparison_signpost_shown`. A sort not yet in starts from `demo`, a demo profile, with its guide beside it
-    (fix-23)."""
+    (fix-23). A coach checklist opens saying the coach withdrew while the response keeps that they did
+    (`coach_withdrew`, ADR 0024). One that `saves_quietly` says nothing on a save (`_saves_quietly`)."""
     rows = _contact_rows(block, answers, issued, **(rows_back or {})) if block["type"] == "contact_list" else None
     widget = BLOCK_TYPES[block["type"]].widget
     shown_widget = widget(document, "participant", "") if widget else None  # ✨ the participant's wording names no one
@@ -2403,7 +2747,7 @@ def _block_for_participant(
     else:
         demo = None
     text = authored_text(block, "participant")
-    if block["type"] == "scripture_reading":
+    if block["type"] in PASSAGE_BLOCK_TYPES:
         for passage, shown in zip(block["passages"], text["passages"]):
             shown["translation"] = translation_shown(document, passage)
     is_checklist = block["type"] == "coach_checklist"
@@ -2418,7 +2762,11 @@ def _block_for_participant(
         "rows_shown": len(rows) if rows is not None else None,
         "adds_rows": rows is not None and not frozen and can_add_row(len(rows)),
         "press": _press_of(block, rows) if rows is not None else None,
-        "checklist": _opening_checklist(text, _coach_kept(answers, block["id"]), issued) if is_checklist else None,
+        "checklist": (
+            _opening_checklist(text, _coach_kept(answers, block["id"]), issued, coach_withdrew)
+            if is_checklist
+            else None
+        ),
         "id": block["id"],
         "landing": landing_of(block),  # ✨ where saving it without JavaScript comes back to
         "type": block["type"],
@@ -2436,14 +2784,18 @@ def _block_for_participant(
         "comparison": comparison,
         # ✨ While it waits on the comparison, its authored message, and it is drawn disabled (ticket 68).
         "waiting": comparison_wait_message(block, answers),
+        "saves_quietly": saves_quietly,
     }
 
 
-def _opening_checklist(text, kept, issued=None):
-    """✨ A coach checklist as a page opens it: the coach kept, if one was chosen, with their link, and otherwise its
-    intro, empty, since nothing from an earlier visit to the checklist itself was kept."""
+def _opening_checklist(text, kept, issued=None, coach_withdrew=False):
+    """✨ A coach checklist as a page opens it: the coach kept, if one was chosen, with their link; with none, that the
+    last coach withdrew, while the response keeps it (ADR 0024); and otherwise its intro, empty, since nothing from an
+    earlier visit to the checklist itself was kept."""
     if kept:
         return _checklist_screen(text, screen="chosen", coach=kept, issued=issued)
+    if coach_withdrew:
+        return _checklist_screen(text, screen="withdrawn")
     return _checklist_screen(text)
 
 

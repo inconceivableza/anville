@@ -10,7 +10,8 @@ DISPLAY_NAME_MAX_LENGTH = 150  # ✨ as long as a contact's name, the other name
 
 
 class Account(models.Model):
-    """✨ What Anville keeps about a participant beyond Django's own user: the name they gave at sign-up (ticket 37).
+    """✨ What Anville keeps about a participant beyond Django's own user: the name they gave at sign-up (ticket 37), and
+    when they said they are 18 or over.
 
     It names them to their observers and coach and on their own results. It need not be unique, and nothing finds a
     participant by it. Accounts made before display names existed have none, and are named from their email.
@@ -18,6 +19,9 @@ class Account(models.Model):
 
     participant = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="account")
     display_name = models.CharField(max_length=DISPLAY_NAME_MAX_LENGTH)
+    # ✨ When "I am 18 or over" was ticked on the entry page (ADR 0021), never a date of birth. Empty for an
+    # account made before sprint 3c, which ticked it at sign-up, where it was not kept.
+    adult_confirmed_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.display_name

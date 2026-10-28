@@ -13,15 +13,22 @@ import re
 from html.parser import HTMLParser
 
 import pytest
+from django.test import Client
 
 from engine.document.blocks import COMPARISON_STATUSES
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.test_answers import answer
 from tests.journeys.test_coach_checklist import choose, the_coach_checklist
-from tests.journeys.test_coach_link import issue_coach_link, with_a_coach_and_contacts, with_a_coach_card
+from tests.journeys.test_coach_link import (
+    answer_as_coach,
+    coach_link_action,
+    issue_coach_link,
+    with_a_coach_and_contacts,
+    with_a_coach_card,
+)
 from tests.journeys.test_comparison_on_the_hub import ACTION, hub_row, with_the_card_on_the_hub
 from tests.journeys.test_contact_list import JO, PRIYA, save_contacts
-from tests.journeys.test_hub import PEOPLE, add_people_with_links, answer_through
+from tests.journeys.test_hub import CALLING_NOTE, PEOPLE, add_people_with_links, answer_through, lock_button
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_invitations import issue_link
 from tests.journeys.test_observer_assessment import press_compare
@@ -114,6 +121,16 @@ def test_a_locked_section_is_listed_but_its_address_is_nowhere_in_the_sidebar(pa
 
 
 @pytest.mark.django_db
+def test_a_locked_entrys_status_in_the_sidebar_is_a_button_described_by_the_hubs_lock_note(participant):
+    """✨ On the hub's own page too, so neither the hub's note nor the sidebar's is the other's (ticket 97)."""
+    page = participant.get("/hub/").content.decode()
+
+    calling = section_in(sidebar_of(page), "Putting your calling into words")
+    assert lock_button(page, calling) == ("Locked", CALLING_NOTE)
+    assert "aria-describedby" not in section_in(sidebar_of(page), "Before we begin")
+
+
+@pytest.mark.django_db
 def test_after_onboarding_the_sidebar_shows_statuses_marks_the_current_section_and_leads_everywhere_open(under_way):
     sidebar = sidebar_of(under_way.get(f"/sections/{CALLING}/").content.decode())
 
@@ -142,9 +159,36 @@ def test_every_participant_page_carries_the_header_with_sign_out_and_the_sidebar
     page = under_way.get(address).content.decode()
 
     header = the_header(page)
-    assert re.search(r'<a [^>]*href="/hub/"[^>]*>\s*Test Pathway\s*</a>', header)
+    # ✨ The pathway's name is the logo link's accessible name now, the logo replacing the written name (ticket 91)
+    logo_link = r'<a [^>]*href="/hub/"[^>]*aria-label="Test Pathway"[^>]*>\s*<svg [^>]*>\s*<use href="#logo"'
+    assert re.search(logo_link, header)
     assert re.search(r'<form [^>]*method="post"[^>]*action="/accounts/logout/"', header)
     assert sidebar_of(page) is not None
+
+
+@pytest.mark.django_db
+def test_the_demo_strip_and_the_header_share_one_top_bar_so_they_stay_in_view_together(under_way, settings):
+    """✨ Ticket 91: the bar that stays at the top holds the demo notice where there is one, with the header."""
+    settings.ANVILLE_DEMO_NOTICE = "A demo."
+
+    page = under_way.get(f"/sections/{CALLING}/").content.decode()
+
+    bar = re.search(r'<div class="top-bar">(.*?)</header>', page, re.S)
+    assert bar is not None, "no top bar on the page"
+    assert 'class="demo-strip"' in bar.group(1)
+    assert '<header class="site-header"' in bar.group(1)
+
+
+@pytest.mark.django_db
+def test_the_account_pages_carry_the_top_bar_and_logo_signed_in_only(under_way, client):
+    """✨ Fix-5: the sign-out page, which does not extend the engine's base, draws the logo and the same bar."""
+    signed_in = under_way.get("/accounts/logout/").content.decode()
+    assert '<div class="top-bar">' in signed_in
+    assert '<symbol id="logo"' in signed_in
+    assert '<use href="#logo"' in signed_in
+
+    signed_out = client.get("/accounts/login/").content.decode()
+    assert 'class="top-bar"' not in signed_out
 
 
 @pytest.mark.django_db
@@ -294,6 +338,14 @@ def test_the_sidebar_lists_what_the_hub_lists_in_its_order_with_its_statuses_and
     assert sidebar == hub
     assert "How others see you" in [title for title, _, _ in hub]
 
+    # ✨ The coach's card tagged by their answer, and Five trusted voices by its own tag (ticket 95).
+    reissued = listing.post(coach_link_action(listing, "issue", section="walk-with-a-coach"), follow=True)
+    link = re.search(r"http://testserver(/coaching/[A-Za-z0-9_-]+/)", reissued.content.decode()).group(1)
+    answer_as_coach(Client(), link, "decline")
+    hub, sidebar = both()
+    assert sidebar == hub
+    assert ("Walk with a coach", "Declined", False) in hub
+
     answer_through(*listing.links)
     press_compare(listing)
     hub, sidebar = both()
@@ -307,6 +359,7 @@ def test_how_others_see_you_is_listed_within_section_1_after_the_assessment_as_t
     assert "How others see you" not in sidebar_of(listing.get("/hub/").content.decode())
 
     started(listing)
+    answer_through(*listing.links)  # ✨ the press from the minimum; below it, both lead to Five trusted voices (fix-3)
     sidebar = sidebar_of(listing.get(f"/sections/{CALLING}/").content.decode())
     parts = re.search(r'<ol class="pathway-nav-parts">.*?</ol>', sidebar, re.S).group(0)
 

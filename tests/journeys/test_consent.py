@@ -5,23 +5,31 @@
 records the version of the text agreed to. Declining stores nothing beyond the account.
 """
 
+import re
+
 import pytest
 from django.contrib.auth import get_user_model
+from django.template.loader import render_to_string
 from django.utils import dateformat, timezone
 
 from access.consent import current_text_version
 from access.models import Consent
 from engine.models import Publication, Response
 from tests.documents import pathway_document
-from tests.journeys.pages import text_of, version_on
+from tests.journeys.pages import version_on
 from tests.journeys.test_access import require_the_code, sign_up
+from tests.journeys.test_entry_page import ENTRY_PAGE, pass_the_entry_page
 
 CONSENT = "/consent/"
 
 
 def give_consent(client):
-    """✨ Agree to the consent text, sending the version of the text the page showed, as the browser does."""
-    version = version_on(client.get(CONSENT).content.decode())
+    """✨ Agree to the consent text, sending the version of the text the page showed, as the browser does: on the
+    entry page, which the consent page sends to until it is passed (ADR 0021), or else on the consent page."""
+    page = client.get(CONSENT)
+    if page.status_code == 303 and page.url.startswith(ENTRY_PAGE):
+        return pass_the_entry_page(client)
+    version = version_on(page.content.decode())
     return client.post(CONSENT, {"decision": "agree", **({"version": version} if version else {})})
 
 
@@ -51,7 +59,7 @@ def test_enrolment_alone_never_counts_as_consent(signed_up):
     hub = signed_up.get("/hub/")
 
     assert hub.status_code == 302
-    assert hub.url == CONSENT
+    assert hub.url == ENTRY_PAGE
     answer(signed_up, "baseline-bible", "7")
     assert not Response.objects.exists()
 
@@ -69,16 +77,25 @@ def test_enrolment_alone_never_counts_as_consent(signed_up):
     ],
 )
 def test_every_page_of_the_pathway_waits_for_consent(signed_up, method, address):
+    """✨ Asked first on the entry page (ADR 0021)."""
     refused = getattr(signed_up, method)(address, {"value": "7", "version": Publication.current_version().pk})
 
     assert refused.status_code == 302
-    assert refused.url == CONSENT
+    assert refused.url == ENTRY_PAGE
     assert not Response.objects.exists()
 
 
+@pytest.fixture
+def withdrawn(signed_up):
+    """✨ A participant who passed the entry page and has since withdrawn, so the consent page asks them."""
+    give_consent(signed_up)
+    withdraw_consent(signed_up)
+    return signed_up
+
+
 @pytest.mark.django_db
-def test_the_consent_page_offers_agreeing_and_declining_as_separate_choices(signed_up):
-    page = signed_up.get(CONSENT).content.decode()
+def test_the_consent_page_offers_agreeing_and_declining_as_separate_choices(withdrawn):
+    page = withdrawn.get(CONSENT).content.decode()
 
     assert 'name="decision" value="agree"' in page
     assert 'name="decision" value="decline"' in page
@@ -86,23 +103,23 @@ def test_the_consent_page_offers_agreeing_and_declining_as_separate_choices(sign
 
 
 @pytest.mark.django_db
-def test_the_consent_text_says_what_a_groups_admins_see_and_that_leaving_ends_it(signed_up):
-    page = text_of(signed_up.get(CONSENT).content.decode())
-
-    for promise in [
-        "your first name",
-        "how far through you are",
-        "when you were last active",
-        "the self-assessment results of the whole group averaged",
-        "never yours on their own",
-        "If you leave the group, they no longer see anything about you",
-    ]:
-        assert promise in page
+def test_the_consent_text_is_still_marked_as_a_draft_here_and_on_the_entry_page(signed_up):
+    assert "Draft wording" in signed_up.get(ENTRY_PAGE).content.decode()
+    give_consent(signed_up)
+    assert "Draft wording" in signed_up.get(CONSENT).content.decode()
 
 
 @pytest.mark.django_db
-def test_the_consent_text_is_still_marked_as_a_draft(signed_up):
-    assert "Draft wording" in signed_up.get(CONSENT).content.decode()
+def test_the_withdrawal_sentence_is_the_same_here_and_on_the_entry_page_and_the_text_stays_version_3(signed_up):
+    """✨ It names where to withdraw, true on either page (fix-3). Version 3 was never deployed, so its rewording asks
+    nobody again."""
+    shared = render_to_string("access/consent_text.html")
+    sentence = re.search(r"You can withdraw[^.]*\.", " ".join(shared.split())).group(0)
+
+    assert sentence in " ".join(signed_up.get(ENTRY_PAGE).content.decode().split())
+    give_consent(signed_up)
+    assert sentence in " ".join(signed_up.get(CONSENT).content.decode().split())
+    assert current_text_version() == 3
 
 
 @pytest.mark.django_db
@@ -117,7 +134,7 @@ def test_agreeing_opens_the_pathway(signed_up):
 
 @pytest.mark.django_db
 def test_consent_is_recorded_with_the_version_of_the_text_and_when_it_was_given(signed_up):
-    version = version_on(signed_up.get(CONSENT).content.decode())
+    version = version_on(signed_up.get(ENTRY_PAGE).content.decode())
 
     give_consent(signed_up)
 
@@ -126,34 +143,34 @@ def test_consent_is_recorded_with_the_version_of_the_text_and_when_it_was_given(
 
 
 @pytest.mark.django_db
-def test_agreeing_to_a_version_of_the_text_that_is_no_longer_current_is_refused(signed_up):
-    refused = signed_up.post(CONSENT, {"decision": "agree", "version": "0"})
+def test_agreeing_to_a_version_of_the_text_that_is_no_longer_current_is_refused(withdrawn):
+    refused = withdrawn.post(CONSENT, {"decision": "agree", "version": "0"})
 
     assert refused.status_code == 400
     assert "The text has changed since you opened this page. Please read it again." in refused.content.decode()
-    assert signed_up.get("/hub/").url == CONSENT
+    assert withdrawn.get("/hub/").url == CONSENT
 
 
 @pytest.mark.django_db
-def test_declining_stores_nothing_and_answering_stays_shut(signed_up):
-    declined = decline_consent(signed_up)
+def test_declining_stores_nothing_and_answering_stays_shut(withdrawn):
+    declined = decline_consent(withdrawn)
 
     assert declined.status_code == 200
     assert "You have not given your consent, so nothing you write here will be stored." in declined.content.decode()
-    answer(signed_up, "baseline-bible", "7")
-    signed_up.post("/sections/onboarding/complete/")
+    answer(withdrawn, "baseline-bible", "7")
+    withdrawn.post("/sections/onboarding/complete/")
     assert not Response.objects.exists()
-    assert not Consent.objects.exists(), "not even the decision to decline is recorded"
-    assert signed_up.get("/hub/").url == CONSENT
+    assert Consent.objects.count() == 1, "not even the decision to decline is recorded, beside the withdrawn consent"
+    assert withdrawn.get("/hub/").url == CONSENT
 
 
 @pytest.mark.django_db
-def test_a_participant_who_declined_can_still_agree_later(signed_up):
-    decline_consent(signed_up)
+def test_a_participant_who_declined_can_still_agree_later(withdrawn):
+    decline_consent(withdrawn)
 
-    give_consent(signed_up)
+    give_consent(withdrawn)
 
-    assert "Test Pathway" in signed_up.get("/hub/").content.decode()
+    assert "Test Pathway" in withdrawn.get("/hub/").content.decode()
 
 
 @pytest.fixture
@@ -202,12 +219,12 @@ def test_the_hub_leads_to_the_consent_page(consented):
 
 
 @pytest.mark.django_db
-def test_withdrawing_is_offered_only_once_consent_has_been_given(signed_up):
-    assert 'value="withdraw"' not in signed_up.get(CONSENT).content.decode()
+def test_withdrawing_is_offered_only_once_consent_has_been_given(withdrawn):
+    assert 'value="withdraw"' not in withdrawn.get(CONSENT).content.decode()
 
-    give_consent(signed_up)
+    give_consent(withdrawn)
 
-    assert 'name="decision" value="withdraw"' in signed_up.get(CONSENT).content.decode()
+    assert 'name="decision" value="withdraw"' in withdrawn.get(CONSENT).content.decode()
 
 
 @pytest.mark.django_db

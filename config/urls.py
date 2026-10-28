@@ -20,12 +20,13 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import include, path
-from access.views import consent
+from access.views import consent, entry_page
 from config.health import healthz
 from engine.views import (
     another_row,
     answer_coaching,
     coach_checklist,
+    coach_withdrawal,
     coaching,
     comparison,
     complete_section,
@@ -43,6 +44,7 @@ from engine.views import (
     observe,
     observer,
     photo,
+    privacy,
     reopen_section,
     results,
     retake,
@@ -57,6 +59,7 @@ from engine.views import (
     tie_break,
     visit_comparison,
     withdrawal,
+    wizard_welcome,
 )
 
 urlpatterns = [
@@ -64,6 +67,7 @@ urlpatterns = [
     path("healthz", healthz, name="healthz"),
     path("accounts/", include("allauth.urls")),
     path("consent/", consent, name="consent"),
+    path("about-you/", entry_page, name="entry_page"),
     path("start/", start, name="start"),
     path("answers/<slug:block_id>/", save_answer, name="save_answer"),
     path("coach/<slug:block_id>/", coach_checklist, name="coach_checklist"),
@@ -100,13 +104,16 @@ urlpatterns = [
     # ✨ The coach's link (ticket 13c), apart from the observers', so neither kind of link works at the other's address.
     path("coaching/<str:token>/", coaching, name="coaching"),
     path("coaching/<str:token>/answer/", answer_coaching, name="answer_coaching"),
+    path("coaching/<str:token>/withdraw/", coach_withdrawal, name="coach_withdrawal"),
     path("sections/<slug:section_id>/", section, name="section"),
     path("sections/<slug:section_id>/pages/<int:page>/", section, name="section_page"),
     path("sections/<slug:section_id>/pages/<int:page>/continue/", move_past_page, name="move_past_page"),
     path("sections/<slug:section_id>/complete/", complete_section, name="complete_section"),
     path("sections/<slug:section_id>/reopen/", reopen_section, name="reopen_section"),
+    path("sections/<slug:section_id>/welcome/", wizard_welcome, name="wizard_welcome"),
     path("hub/", hub, name="hub"),
     path("credits/", credits_page, name="credits"),
+    path("privacy/", privacy, name="privacy"),
     # ✨ Joining by link, a participant's groups and admins' pages; each adds its routes in organisations/urls.py.
     path("", include("organisations.urls")),
     path("", home, name="home"),

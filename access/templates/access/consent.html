@@ -2,61 +2,16 @@
 {# For licensing information see ../../../LICENSE.md #}
 {% extends "allauth/layouts/base.html" %}
 {% comment %}
-  ✨ The consent text and the participant's decision (ADR 0004). Owned by the engine, not the pathway: every
-  pathway on this deployment is covered by it.
-
-  DRAFT. This wording was written with AI assistance for fake-data demos and has had no legal review. It must
-  be rewritten before any real participant uses Anville (spec, "Legalities are parked"): it names no
-  controller and no retention period, and what withdrawing does to stored answers is still undecided.
-  Raise CONSENT_TEXT_VERSION in access/consent.py whenever a change alters what is agreed to.
+  ✨ The consent text (access/consent_text.html, the draft) and the participant's decision (ADR 0004): reviewing,
+  withdrawing, and agreeing again after a withdrawal or a change to the text. Consent is first given on the entry page
+  (ADR 0021), which shows the same text.
 {% endcomment %}
 {% block head_title %}Your consent{% endblock head_title %}
 
 {% block content %}
   <h1>Before you begin</h1>
 
-  <div class="hint-box">
-    <strong>Draft wording</strong>
-    This text is a draft for trying Anville out with made-up answers. Please do not write anything real
-    about yourself yet.
-  </div>
-
-  <h2>What is stored</h2>
-  <p>
-    Everything you write or choose in the pathway is saved to your account, so you can come back to it. Some
-    of it may be personal: your faith, your work, your health, or hard times you have been through. Because
-    it can be this sensitive, nothing is stored until you agree.
-  </p>
-
-  <h2>Who sees what</h2>
-  <p><strong>You</strong> see everything you write.</p>
-  <p>
-    <strong>People you ask to rate you</strong> see your first name. They never see your answers.
-  </p>
-  <p>
-    <strong>A coach</strong>, if you ask someone to be yours, sees your first name. If you then choose to share
-    your self-assessment results with them, they also see those results and how the people you asked rate you on
-    the same things, until you stop sharing or change coach. They never see the rest of your answers.
-  </p>
-  <p>
-    <strong>A group's admins</strong>, and its organisation's admins, if you choose to join a group, see your
-    first name, how far through you are and when you were last active, and the self-assessment results of the
-    whole group averaged, once at least three members have them, never yours on their own. They never see your
-    answers. If you leave the group, they no longer see anything about you through it.
-  </p>
-  <p>
-    <strong>The people who run this service</strong> can reach everything stored, in order to keep it working.
-  </p>
-
-  <h2>Your choice</h2>
-  <p>
-    Agreeing is up to you, and your enrolment code, if you were given one, does not agree for you. If you do
-    not agree, nothing you write in the pathway is stored, only your account: your first name and email
-    address, your password (stored scrambled, so nobody can read it), and when you signed up and last signed
-    in. You can agree later. You can withdraw your consent at
-    any time from this page. If you do, you stay in any groups you have joined, but their admins see only your
-    first name and that you have not consented.
-  </p>
+  {% include "access/consent_text.html" %}
 
   <p>Version {{ version }} of this text.</p>
 

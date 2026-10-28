@@ -5,23 +5,23 @@
   ✨ One section. Only the blocks the server decided to send are here: an activity behind a scripture reading
   the participant has not confirmed is absent from the page, not hidden in it, and will not take an answer.
 
-  The complete button is disabled while the gate has anything to say. The server re-checks the gate when it
-  is pressed, so a participant who re-enables the button in their browser gets this page back unchanged.
+  The complete button is disabled while the gate has anything to say, unless the document wants messages only after a
+  press (ticket 83). The server re-checks the gate when it is pressed, so a participant who re-enables the button in
+  their browser, or presses it where it is never disabled, gets this page back with what is missing.
 {% endcomment %}
 {% block head_title %}{{ section.title }}{% endblock head_title %}
 
 {% block content %}
-  {% if back %}
-    <p class="back-to-hub"><a href="{{ back.href }}">← Back to {{ back.title }}</a></p>
-  {% else %}
-    <p class="back-to-hub"><a href="{% url 'hub' %}">← Back to the hub</a></p>
-  {% endif %}
+  {# ✨ To the section this is a part of, or else the hub (ticket 96). #}
+  {% include "engine/back_button.html" %}
   {# ✨ On a demo system the title is where a press-and-hold reveals the sort's demo-profile link, on a phone (fix-21). #}
   <h1{% if demo_profile %} data-demo-reveal-hold{% endif %}>{{ section.title }}</h1>
   {# ✨ Only for a section split into pages, so the participant knows where they are in it (ticket 41e). #}
   {% if page.count > 1 %}<p class="page-count">Page {{ page.number }} of {{ page.count }}</p>{% endif %}
-  {# ✨ The lead-ins are the engine's wording, so the section's figure and an activity's just beneath it read apart. #}
-  {% if section.estimate %}<p class="time-estimate">Whole section: {{ section.estimate }}</p>{% endif %}
+  {% comment %}
+    ✨ No "Whole section: …" here (fix-16): the section's estimate is the hub's alone, since Sections 1 and 2 have none
+    and a figure under some headings and not others read as missing. An activity's own still shows below.
+  {% endcomment %}
 
   {% for block in section.blocks %}
     {# ✨ Where a section has several activities, the block that starts each one says how long it takes. #}

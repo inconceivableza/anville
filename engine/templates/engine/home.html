@@ -3,7 +3,7 @@
 {% extends "engine/base.html" %}
 {% load static %}
 {# ✨ The public homepage, copied from the original prototype's, with the content owner's newer "How it works" (ticket 32a). Static until ticket 32b generates it from content. #}
-{# ✨ v3's heading and pillars where the hackathon's earlier copy differed; no newsletter, donations or contact address, which do not exist yet (ticket 53c). #}
+{# ✨ v3's heading and pillars where the hackathon's earlier copy differed; no donations or contact address, which do not exist yet (ticket 53c). The newsletter, contact and churches' waitlist are the one "Stay in touch" form (ticket 74). #}
 
 {% block head_title %}Whatever You Do{% endblock head_title %}
 
@@ -12,21 +12,21 @@
 
     <!-- =================== HERO =================== -->
     <header class="panel hero" id="top">
-      <video id="heroVid" autoplay muted loop playsinline preload="auto" poster="{% static 'hero-poster.jpg' %}" aria-hidden="true" data-plays-unless-reduced-motion>
-        <source src="{% static 'hero.mp4' %}" type="video/mp4">
+      <video id="heroVid" autoplay muted loop playsinline preload="auto" poster="{% static 'hero-landscape-poster.jpg' %}" aria-hidden="true" data-plays-unless-reduced-motion>
+        <source src="{% static 'hero-landscape.mp4' %}" type="video/mp4">
       </video>
       <nav class="nav" aria-label="Main">
-        <div class="nav-left"><a href="#top">Home</a><a href="#how">How it works</a><a href="#journey">The assessment</a></div>
-        <a class="brand" href="#top" aria-label="Whatever You Do home"><svg class="mark"><use href="#mark"/></svg><span>Whatever You Do</span></a>
-        <div class="nav-right"><a href="#impact">Impact</a><a href="#coach">Coaches</a><a href="{{ begin }}">Begin</a></div>
+        {# ✨ The new logo where the old one sat, at the top of the hero and scrolling away with it (ticket 91, fix-5) #}
+        <a class="brand" href="#top" aria-label="Whatever You Do home">{% include "engine/logo.html" %}</a>
       </nav>
       <div class="hero-copy">
-        <h1>Everyone has a purpose. Do you know yours?</h1>
-        <p class="hero-summary">A guided workbook for discerning your calling through scripture, a strengths assessment, feedback from people you trust, and a coach. For adults aged 18 and over.</p>
+        <h1><span class="ln">Everyone has a purpose.</span> <span class="ln">Do you know yours?</span></h1>
+        <p class="hero-summary">A guided journey for discerning your calling through scripture, a strengths evaluation, feedback from people you trust, and a coach. For adults aged 18 and over.</p>
         <div class="hero-cta">
           <a class="pill" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
-          <a class="pill ghost" data-magnetic href="#coach">For coaches</a>
         </div>
+        {# ✨ Ticket 98: an invitation to scroll, to the overview below #}
+        <a class="learn-more" href="#mission">Learn more <svg aria-hidden="true"><use href="#arrow"/></svg></a>
         {% include "access/demo_notice.html" %}
       </div>
       <div class="logos" aria-label="Churches and organisations using Whatever You Do">
@@ -38,23 +38,33 @@
     <section class="panel mission" id="mission">
       <div class="in">
         <p class="reveal" id="reveal">Whatever You Do is a pathway for discerning your purpose.</p>
-        <ul class="pillars" aria-label="What it draws on"><li>Scripture</li><li>Strengths assessment</li><li>Peer feedback</li><li>Coach oversight</li><li>Workbook</li></ul>
-        <div class="sign"><svg><use href="#mark"/></svg><span>A calling workbook for every season of life</span></div>
+        <ul class="pillars" aria-label="What it draws on"><li>Scripture</li><li>Strengths evaluation</li><li>Peer feedback</li><li>Coach oversight</li><li>Journey</li></ul>
+        {# ✨ "Along the way" belongs to the sign-off above it, in its type (fix-3, 28 Oct). #}
+        <div class="sign">{% include "engine/logo.html" %}<span>A calling journey for every season of life</span>
+          <p class="mission-more">Along the way, you’ll come to understand your God-given gifts, talents and limitations, explore what the Bible teaches about work and calling, and find practical next steps. At the start and the end, you answer the same questions, so you can see what has changed.</p></div>
+        <a class="pill" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
       </div>
     </section>
 
-    <!-- =================== ASSESSMENT TABS =================== -->
-    <section class="panel atabs" id="how" aria-label="How the assessment works">
+    <!-- =================== EVALUATION TABS =================== -->
+    <section class="panel atabs" id="how" aria-label="How it works">
       <div class="in">
         <span class="anchor" id="journey"></span>
         <div class="top">
           <div>
             <span class="label">A guided journey</span>
             <h2>How it works</h2>
-            <p>Five steps to help you reflect on your gifts, hear from people who know you, and explore what comes next.</p>
           </div>
           <a class="pill ghost" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <svg aria-hidden="true"><use href="#arrow"/></svg></a>
         </div>
+        {# ✨ Ticket 98: the five steps are in the page, so they read without JavaScript; with it, main.js shows them one at a time as tabs. #}
+        <ol class="steps" id="aSteps">
+          <li class="step step-1"><span class="tp-step">STEP 01</span><h3>Discover your gifts and talents</h3><p>Reflect on your strengths through a guided evaluation and scripture: sort 36 statements about yourself, and explore the gifts described in Romans 12 and 1 Corinthians 12.</p></li>
+          <li class="step step-2"><span class="tp-step">STEP 02</span><h3>Hear from people who know you</h3><p>Invite at least three people you trust to share their perspective, then compare it with your own and notice where your views align or differ.</p></li>
+          <li class="step step-3"><span class="tp-step">STEP 03</span><h3>Make sense of your story</h3><p>Work through guided prompts on your life, your work and the moments that have shaped you, at your own pace, and notice the themes that run through them.</p></li>
+          <li class="step step-4"><span class="tp-step">STEP 04</span><h3>Explore a sense of calling</h3><p>Draw together your gifts, experience and reflections, put your sense of calling into words, and identify practical next steps.</p></li>
+          <li class="step step-5"><span class="tp-step">STEP 05</span><h3>Return to what you discovered</h3><p>Write a letter to your future self, capturing what matters to you now and the steps you want to take, to revisit later.</p></li>
+        </ol>
         <div class="tabrow">
           <div class="tabbar" role="tablist" id="aTabs"></div>
           <div class="tabnav"><button type="button" id="aPrev" aria-label="Previous section">←</button><button type="button" id="aNext" aria-label="Next section">→</button></div>
@@ -70,66 +80,60 @@
       </div>
     </section>
 
-    <!-- =================== IMPACT =================== -->
-    <section class="panel impact" id="impact">
-      <div class="impact-bg" aria-hidden="true"></div>
+    <!-- =================== THE DIFFERENCE IT MAKES =================== -->
+    {# ✨ Ticket 99: v3's three figures, unconfirmed by the content owner and to come out before release if they stay so (spec). #}
+    <section class="panel difference" aria-labelledby="differenceTitle">
       <div class="in">
-        <div class="imp-head">
-          <h2>Space to reflect on what matters</h2>
-          <p>At the beginning and end of the course, participants are asked the same questions about their gifts, work and calling.</p>
-        </div>
+        <h2 id="differenceTitle">The difference it makes</h2>
         <div class="stats">
-          <article class="stat"><h3>Understand your gifts</h3><p>Reflect on your God-given gifts, talents and limitations.</p></article>
-          <article class="stat"><h3>Explore work and calling</h3><p>Consider what the Bible teaches about work and calling.</p></article>
-          <article class="stat"><h3>Find a practical direction</h3><p>Think about practical next steps for pursuing your sense of purpose.</p></article>
+          {# ✨ The figures are written out in full, so they show without JavaScript or with reduced motion; main.js counts them up from 0 as they scroll into view, reading data-v (fix-3). #}
+          <div class="stat" data-v="71"><span class="num"><b>71</b>%</span><span class="bar"><i></i></span><p>had a more detailed understanding of their God-given gifts, talents and limitations</p></div>
+          <div class="stat" data-v="86"><span class="num"><b>86</b>%</span><span class="bar"><i></i></span><p>had a more detailed understanding of what the Bible teaches about work and calling</p></div>
+          <div class="stat" data-v="100"><span class="num"><b>100</b>%</span><span class="bar"><i></i></span><p>had a clearer practical plan for how to pursue God’s purpose for their life</p></div>
         </div>
       </div>
     </section>
 
     <section class="panel churches" id="churches" aria-labelledby="churchesTitle">
-      <div class="ch-img" role="img" aria-label="Friends sharing a conversation"></div>
+      <div class="ch-img" role="img" aria-label="People with Bibles and notebooks open at a church gathering"></div>
       <div class="ch-copy">
         <span class="tagline">For churches</span>
-        <h2 id="churchesTitle">Equip people to see their everyday work as part of their calling.</h2>
-        <p>Whatever You Do can be used by individuals and by churches supporting people as they reflect on gifts, work and purpose.</p>
+        <h2 id="churchesTitle">Releasing and equipping your members to do whatever they do for the glory of God.</h2>
+        <p>Most church members spend <b>95%</b> of their week outside the church building. Whatever You Do equips them to see that everyday work as ministry.</p>
         <ul class="ch-points">
-          <li><b>Use it together</b><span>Bring the guided workbook into conversations with your congregation or group.</span></li>
-          <li><b>Invite trusted voices</b><span>Participants can ask people who know them well to share their perspective.</span></li>
-          <li><b>Walk alongside someone</b><span>Coaches can support reflection at a participant’s pace.</span></li>
+          <li><b>Run it together</b><span>Take your congregation, small group or staff team through it as a course.</span></li>
+          {# ✨ Reworded by the developer (fix-6, 28 Oct); on the wording sheet. #}
+          <li><b>Invite trusted voices</b><span>Participants can ask people who know them well to share their perspective, drawing the church community into walking alongside them.</span></li>
+          <li><b>Raise up coaches</b><span>Equip wise people in your church to walk alongside others, with a short briefing pack.</span></li>
+          <li><b>Free for participants</b><span>No cost to the people you send through it.</span></li>
         </ul>
+        {# ✨ Leads to the "Stay in touch" form below (ticket 74), the churches' waitlist being its list. #}
+        <div class="ch-cta"><a class="pill" data-magnetic href="#stay-in-touch">Join the waitlist <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a></div>
       </div>
     </section>
 
-    <!-- =================== CONNECT =================== -->
-    <section class="panel connect" id="connect">
-      <div class="cn-head">
-        <h2>Ideas to explore</h2>
-      </div>
-      <div class="posts">
-        <article class="post"><div class="post-art post-art-1" aria-hidden="true"></div><h3>Why “follow your passion” is terrible career advice</h3><p>The modern obsession with passion overlooks something ancient wisdom understood well: mastery precedes meaning.</p></article>
-        <article class="post"><div class="post-art post-art-2" aria-hidden="true"></div><h3>The gap between how you see yourself and how others see you</h3><p>Most people overestimate some gifts and underestimate others. The comparison is where the real insight lives.</p></article>
-        <article class="post"><div class="post-art post-art-3" aria-hidden="true"></div><h3>What the early church actually believed about work</h3><p>The sacred-secular divide is a modern invention. The first Christians had a radically different view.</p></article>
-      </div>
-    </section>
-
-    <section class="panel story-sec" aria-label="A participant’s story">
+    <section class="panel story-sec" id="impact" aria-label="A participant’s story">
       <div class="story-bg" aria-hidden="true"></div>
       <figure class="story-copy">
-        <span class="label">A story from a parent</span>
+        <span class="label">Impact</span>
         <blockquote data-reveal>“My son got saved just a couple of years ago in his late teens, and was really struggling to know what work direction to take. His grades from school weren’t great, and he had lots of different interests – the choices weren’t obvious at all. We spent a weekend together and each mealtime I took him through some of the Whatever You Do questions. Now, he’s gearing up to be part of a team going church planting, and is really enjoying his electrician’s apprenticeship – he traces the decision to do the latter right back to the calling conversations we had together that weekend.”</blockquote>
         <figcaption>Parent of a participant, 2025</figcaption>
       </figure>
     </section>
 
+    <!-- =================== STAY IN TOUCH =================== -->
+    {% include "engine/stay_in_touch.html" %}
+
     <!-- =================== MEET =================== -->
     <section class="panel meet" id="about">
       <h2>Everyone has a purpose. Do you know yours?</h2>
+      {# ✨ Each card's class names its photo (drawn in the stylesheet), so the photos show without JavaScript or under reduced motion. #}
       <div class="meet-cards">
-        <div class="mc"><span class="mc-ic"><svg><use href="#mark"/></svg></span><h3>Teacher</h3><p>Seeing the classroom as a place of formation.</p></div>
-        <div class="mc"><span class="mc-ic"><svg><use href="#leaf"/></svg></span><h3>Electrician</h3><p>Finding meaning in the work of your hands.</p></div>
-        <div class="mc"><span class="mc-ic"><svg><use href="#tick"/></svg></span><h3>Parent</h3><p>Passing on a sense of purpose to the next generation.</p></div>
-        <div class="mc"><span class="mc-ic"><svg><use href="#mark"/></svg></span><h3>Church planter</h3><p>Building a community that sees work as ministry.</p></div>
-        <div class="mc"><span class="mc-ic"><svg><use href="#leaf"/></svg></span><h3>Student</h3><p>Discerning direction before the decisions are made.</p></div>
+        <div class="mc mc-teacher"><h3>Teacher</h3><p>Seeing the classroom as a place of formation.</p></div>
+        <div class="mc mc-carpenter"><h3>Electrician</h3><p>Finding meaning in the work of your hands.</p></div>
+        <div class="mc mc-parent"><h3>Parent</h3><p>Passing on a sense of purpose to the next generation.</p></div>
+        <div class="mc mc-pastor"><h3>Church planter</h3><p>Building a community that sees work as ministry.</p></div>
+        <div class="mc mc-student"><h3>Student</h3><p>Discerning direction before the decisions are made.</p></div>
       </div>
       <a class="pill" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
     </section>
@@ -137,10 +141,8 @@
     <!-- =================== FOOTER =================== -->
     <footer class="panel hp-footer">
       <div class="cols">
-        <div><b>Whatever You Do</b><span>A guided calling workbook</span></div>
-        <div><b>Explore</b><a href="#how">How it works</a><a href="#journey">The assessment</a><a href="#impact">Impact</a><a href="#connect">Writing</a></div>
-        <div><b>For churches</b><a href="#churches">Run it in a group</a><a href="#coach">For coaches</a></div>
-        <div><b>Note</b><span>“Whatever you do, work at it with all your heart, as working for the Lord.”<br>Colossians 3:23 (NIV)</span></div>
+        <div><a class="brand" href="#top" aria-label="Whatever You Do home">{% include "engine/logo.html" %}</a><span>“Whatever you do, work at it with all your heart, as working for the Lord.” Colossians 3:23 (NIV)</span></div>
+        <nav class="foot-links" aria-label="Footer"><a href="#how">How it works</a><a href="#impact">Impact</a><a href="#churches">For churches</a><a href="#stay-in-touch">Contact us</a><a href="{% url 'privacy' %}">Privacy</a></nav>
       </div>
       <div class="hp-footer-links">
         <span>© 2026 Whatever You Do</span>

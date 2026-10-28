@@ -8,8 +8,8 @@ Runs only on a document that has already passed the schema, so it relies on the 
 
 import re
 
-from engine.document.blocks import BLOCK_TYPES, block_types_by_id
-from engine.document.gates import CLAUSE_ANSWER_KINDS, CLAUSE_BLOCK_TYPES, clauses_of
+from engine.document.blocks import BLOCK_TYPES, PASSAGE_BLOCK_TYPES, block_types_by_id
+from engine.document.gates import CLAUSE_ANSWER_KINDS, CLAUSE_BLOCK_TYPES, clauses_of, people_minimum
 from engine.document.problem import Problem
 from engine.document.tie_break import PLACEHOLDERS
 
@@ -34,6 +34,7 @@ def lint(document):
         *_impossible_parts(document, section_ids),
         *_unshowable_side_cards_and_numbers(document),
         *_unseen_once_only_sections(document),
+        *_miscounted_wizard_steps(document),
         *_photos_of_missing_sections(document, section_ids),
         *_unknown_linked_sections(document, section_ids),
         *_signposts_holding_their_own_section(document),
@@ -42,6 +43,7 @@ def lint(document):
         *_empty_pages(document),
         *_unreadable_clauses(document),
         *_minimums_written_twice(document),
+        *_unknown_phrase_placeholders(document),
         *_unreadable_opening_conditions(document),
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
@@ -171,6 +173,27 @@ def _unseen_once_only_sections(document):
             )
 
 
+def _miscounted_wizard_steps(document):
+    """✨ A wizard's steps are read by step number (sprint-3c-r3-fix-7), so it needs one for each step it counts: one
+    for each of its pages, and the entry page's before them in the track's first wizard."""
+    first = True
+    for s, section in enumerate(document["content"]["sections"]):
+        if not section.get("wizard"):
+            continue
+        before = 1 if first else 0
+        first = False
+        if "wizard_steps" not in section:
+            continue
+        pages = 1 + sum(block["type"] == "page_break" for block in section["blocks"])
+        count, given = pages + before, len(section["wizard_steps"])
+        if given != count:
+            entry = ", the entry page's first," if before else ","
+            yield Problem(
+                f"/content/sections/{s}/wizard_steps",
+                f"This wizard counts {count} steps{entry} so it needs {count} wizard steps, not {given}.",
+            )
+
+
 def _photos_of_missing_sections(document, section_ids):
     """✨ A photo is named by the section it is shown with, so one named for no section is shown nowhere (ticket 49b)."""
     for section_id in document.get("photos", {}):
@@ -286,14 +309,16 @@ def _minimums_written_twice(document):
     its section's `to_finish` say it by {min}, so a different number written in either is refused, and a {min} in the
     `to_finish` of a section without exactly one such clause, which would reach the participant as written."""
     for s, section in enumerate(document["content"]["sections"]):
-        issued = [(c, clause) for c, clause in enumerate(clauses_of(section)) if clause["type"] == "links_issued"]
-        for c, clause in issued:
-            yield from _other_numbers(clause["message"], clause["min"], f"/content/sections/{s}/gate/clauses/{c}/message")
+        for c, clause in enumerate(clauses_of(section)):
+            minimum = people_minimum([clause])
+            if minimum is not None:
+                yield from _other_numbers(clause["message"], minimum, f"/content/sections/{s}/gate/clauses/{c}/message")
         if "to_finish" not in section:
             continue
         path = f"/content/sections/{s}/to_finish"
-        if len(issued) == 1:
-            yield from _other_numbers(section["to_finish"], issued[0][1]["min"], path)
+        minimum = people_minimum(clauses_of(section))
+        if minimum is not None:
+            yield from _other_numbers(section["to_finish"], minimum, path)
         elif any("{min}" in said for _, said in _by_role(section["to_finish"])):
             yield Problem(
                 path,
@@ -303,13 +328,32 @@ def _minimums_written_twice(document):
 
 
 def _other_numbers(text, minimum, path):
+    """✨ A problem for each number in `text` other than the `links_issued` clause's `minimum`, at `path` (or its role's
+    path within it), since a stale number left after the minimum changes is what this exists to catch. An author
+    writes {min} for the minimum and spells any other number in words (sprint 3b code review)."""
     for role, said in _by_role(text):
         for number in sorted({int(found) for found in re.findall(r"\d+", said)} - {minimum}):
             yield Problem(
                 path + (f"/{role}" if role else ""),
                 f"This says {number} where the section's 'links_issued' clause asks for {minimum}; write {{min}} for "
-                "its minimum.",
+                "its minimum and any other number in words.",
             )
+
+
+# ✨ The placeholders a section's `to_finish` may hold (ticket 79): the hub fills each, and no other.
+TO_FINISH_PLACEHOLDERS = {"title", "section", "min"}
+
+
+def _unknown_phrase_placeholders(document):
+    """✨ A placeholder in a section's `to_finish` that the hub does not fill, such as a typo for {title}, which would
+    reach the participant as written (sprint 3b code review)."""
+    for s, section in enumerate(document["content"]["sections"]):
+        for role, said in _by_role(section.get("to_finish", {})):
+            for name in sorted(set(re.findall(r"\{(\w+)\}", said)) - TO_FINISH_PLACEHOLDERS):
+                yield Problem(
+                    f"/content/sections/{s}/to_finish" + (f"/{role}" if role else ""),
+                    f"The engine fills no {{{name}}} here: a phrase may say {{title}}, {{section}} or {{min}}.",
+                )
 
 
 def _by_role(text):
@@ -467,7 +511,7 @@ def _undeclared_translations(document):
         named.append(("/translation", document["translation"]))
     for s, section in enumerate(document["content"]["sections"]):
         for b, block in enumerate(section["blocks"]):
-            for p, passage in enumerate(block.get("passages", []) if block["type"] == "scripture_reading" else []):
+            for p, passage in enumerate(block.get("passages", []) if block["type"] in PASSAGE_BLOCK_TYPES else []):
                 path = f"/content/sections/{s}/blocks/{b}/passages/{p}"
                 if "translation" in passage:
                     named.append((f"{path}/translation", passage["translation"]))

@@ -13,6 +13,23 @@
 
   {% include "engine/results_body.html" with results=drawn.results own_page=True %}
 
-  {% comment %}✨ A form, not a link: pressing it is the visit Section 1 waits on, and a browser never loads a POST ahead of time.{% endcomment %}
-  {% include "engine/comparison_press.html" with press_sort=drawn.block_id press_class="pill" press_form_class="results-next" %}
+  {% if finish %}
+    {% comment %}
+      ✨ The results are the end of their section (ticket 88), so the main button finishes it, a form posting to the
+      section's own completion, which its gate may refuse; once it is complete, the way back at the page's top is the
+      only one (ticket 96). It stands alone (fix-10): the press on to the comparison and the invitation that fix-8 set
+      beside it are the comparison signpost's, in the section after, so the page offers one thing to do. It works
+      without JavaScript.
+    {% endcomment %}
+    <div class="results-next results-finish">
+      {% if not finish.done %}
+        {% include "engine/finish_form.html" with button_class="pill" %}
+      {% endif %}
+    </div>
+    {# ✨ Where a refused finish shows, with JavaScript, beneath it (fix-2). #}
+    {% if not finish.done %}<div id="gate-refusal"></div>{% endif %}
+  {% else %}
+    {% comment %}✨ A form, not a link: pressing it is the visit Section 1 waits on, and a browser never loads a POST ahead of time.{% endcomment %}
+    {% include "engine/comparison_press.html" with press_sort=drawn.block_id press_class="pill" press_form_class="results-next" press_magnetic=True %}
+  {% endif %}
 </div>

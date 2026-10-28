@@ -1,32 +1,28 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../LICENSE.md
 
-from allauth.account.forms import LoginForm
 from allauth.core import context as allauth_context
 from django import forms
 from django.conf import settings
+from django.urls import reverse_lazy
+from django.utils.functional import lazy
+from django.utils.html import format_html
+from django.utils.safestring import SafeString
 
-from access.enrolment import is_valid_enrolment_code
+from access.enrolment import asks_for_the_code, is_valid_enrolment_code
 from access.models import DISPLAY_NAME_MAX_LENGTH, Account
-from organisations.joining import holds_a_working_join_link
 
+format_html_lazy = lazy(format_html, SafeString)
 
-class SignInForm(LoginForm):
-    """✨ allauth's sign-in form, with "Remember me" in sentence case like the rest of Anville's wording, and
-    read as a statement beside its box, so without a colon."""
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if "remember" in self.fields:  # ✨ allauth drops it when ACCOUNT_SESSION_REMEMBER is set
-            self.fields["remember"].label = "Remember me"
-            self.fields["remember"].label_suffix = ""
+# ✨ No form of allauth's own is imported here (they are in access/allauth_forms.py): allauth builds them on the sign-up
+# form class below, so importing one would import this module in a circle.
 
 
 class EnrolmentCodeSignupForm(forms.Form):
     # ✨ allauth puts added fields straight after the email, but the name comes first, as on the prototype's account
-    # form, and the age confirmation belongs just above the button. A field left off this list would land after it,
-    # so a new one must be listed here.
-    field_order = ["display_name", "email", "enrolment_code", "password1", "password2", "is_adult"]
+    # form. A field left off this list would land after the passwords, so a new one must be listed here. "I am 18 or
+    # over" is asked on the entry page instead, after the account is made (ADR 0021).
+    field_order = ["display_name", "email", "enrolment_code", "password1", "password2"]
 
     # ✨ The prototype's wording for the name its account form asks for first. Kept as the display name (ticket 37).
     display_name = forms.CharField(
@@ -39,22 +35,11 @@ class EnrolmentCodeSignupForm(forms.Form):
         label="Enrolment code",
         error_messages={"required": "Enter the enrolment code you were given."},
     )
-    # ✨ Adults only (ADR 0004). A threshold, so it is asked as one: no date of birth, and nothing kept.
-    is_adult = forms.BooleanField(
-        label="I am 18 or over",
-        label_suffix="",  # ✨ a statement beside its box, not a heading above a field, so no colon
-        error_messages={"required": "You need to be 18 or over to take part."},
-    )
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # ✨ Not asked for at all when turned off from the environment, or while the visitor holds a group's join link,
-        # which admits them in its place (organisations-and-groups spec). allauth hands this form no request, so it is
-        # read from the one allauth's middleware is handling.
-        request = allauth_context.request
-        if not settings.ANVILLE_ENROLMENT_REQUIRED or (
-            request is not None and holds_a_working_join_link(request.session)
-        ):
+        # ✨ Not asked for at all when turned off from the environment, or while the visitor holds a group's join link.
+        # allauth hands this form no request, so it is read from the one allauth's middleware is handling.
+        if not asks_for_the_code(allauth_context.request):
             del self.fields["enrolment_code"]
 
     def clean_enrolment_code(self):
@@ -65,5 +50,36 @@ class EnrolmentCodeSignupForm(forms.Form):
 
     def signup(self, request, user):
         # ✨ Called by allauth once the user is saved (the ACCOUNT_SIGNUP_FORM_CLASS contract). The enrolment code
-        # grants access only, and the age confirmation admits an adult; neither is stored. The display name is.
+        # grants access only, and is not stored. The display name is.
         Account.objects.create(participant=user, display_name=self.cleaned_data["display_name"])
+
+
+class EntryPageForm(forms.Form):
+    """✨ The entry page (ADR 0021): the first name, changeable, "I am 18 or over" and the consent tick, each required.
+    Adults only (ADR 0004): a threshold, so it is asked as one, with no date of birth. The consent text's version is
+    checked by the view, as the consent page checks it."""
+
+    # ✨ Required by the server alone, so a refusal shows only once Continue is pressed (ticket 83's way), and never by
+    # the browser beforehand.
+    use_required_attribute = False
+
+    display_name = forms.CharField(
+        label="First name",
+        max_length=DISPLAY_NAME_MAX_LENGTH,
+        error_messages={"required": "Add your first name."},
+    )
+    is_adult = forms.BooleanField(
+        label="I am 18 or over",
+        error_messages={"required": "You need to be 18 or over to take part."},
+    )
+    # ✨ "privacy notice" links to the privacy page (ticket 100); lazy, since the URLs are not loaded at import. Its
+    # ✨ wording names health as the participant's choice to share (sprint-3c-r3-fix-7), a change of wording that is
+    # ✨ not one of meaning, so the consent text's version stays (ADR 0004's note of 28 Oct).
+    consents = forms.BooleanField(
+        label=format_html_lazy(
+            "I agree to Whatever You Do storing my answers, including personal things I choose to share, such as my "
+            'faith or my health, as set out in the <a href="{}">privacy notice</a>.',
+            reverse_lazy("privacy"),
+        ),
+        error_messages={"required": "You need to agree to take part."},
+    )

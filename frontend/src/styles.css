@@ -95,6 +95,7 @@
   /* ✨ The homepage, as the prototypes colour it: the hero behind the video, and the mockups' tones in the newer "How
      it works". Its menu, coach panel and footer are --brown. */
   --hero-bg: #2a1d17;
+  --on-dark-refused: #e39a7c; /* ✨ v3's refused address, readable on --brown (ticket 74) */
   --hero-shade: rgba(0, 0, 0, 0.35);
   --menu-shade: rgba(0, 0, 0, 0.3);
   --on-dark: #f2ece2;
@@ -167,6 +168,7 @@
   --warm-pale-08: rgba(255, 245, 230, 0.08);
   --track-on-dark: rgba(255, 240, 220, 0.15);
   --green-45: rgba(166, 207, 114, 0.45);
+  --green-15: rgba(166, 207, 114, 0.15);
   --green-deep-10: rgba(47, 90, 43, 0.1);
   --green-deep-12: rgba(47, 90, 43, 0.12);
   --green-forest: #27432a;
@@ -240,6 +242,38 @@ body {
   position: relative;
 }
 
+/* ✨ The top bar (ticket 91): the demo strip, where there is one, and the header, held in view as the page scrolls so
+   "Your pathway" and "Sign out" are always to hand. Its height is kept in --top-bar-height by main.js (the fallback
+   stands without JavaScript), and the page's scroll padding adds it, so a jump to a place on the page lands below the
+   bar. The open sidebar hangs from the header inside it, so it is held in view too. */
+html:has(.top-bar) {
+  scroll-padding-top: calc(var(--top-bar-height, 3.5rem) + var(--space-md));
+}
+
+/* ✨ The bar is --cream-2, a shade off the page's --cream, so a heading half hidden under it reads as passing beneath
+   a bar and not as a broken element (fix-5). */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--cream-2);
+}
+
+/* ✨ The logo: the "/whateveryoudo" wordmark, in the colour of the text it sits in. Its height is set here and the
+   width follows, 22px on a phone, where the bar still keeps to one row. */
+.brand-logo {
+  display: block;
+  flex: none;
+  width: auto;
+  height: 26px;
+}
+
+@media (max-width: 760px) {
+  .brand-logo {
+    height: 22px;
+  }
+}
+
 /* ✨ The leaf icon's vein, set here so no template holds a raw colour */
 .leaf-vein {
   stroke: var(--brown);
@@ -310,8 +344,10 @@ body {
   border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
 }
 
-/* ✨ The status as the hub's tag reads, smaller: grey, and green for the next step, as the hub's is (ticket 80) */
-.pathway-nav-row > .status-chip {
+/* ✨ The status as the hub's tag reads, smaller: grey, and green for the next step, as the hub's is (ticket 80). A
+   locked entry's is within its "Locked" button (ticket 97). */
+.pathway-nav-row .status-chip {
+  display: inline-block;
   font-family: var(--font-mono);
   font-size: 10.5px;
   letter-spacing: 0.1em;
@@ -322,9 +358,60 @@ body {
   color: var(--muted);
 }
 
-.pathway-nav-section.is-next > .pathway-nav-row > .status-chip {
+.pathway-nav-section.is-next > .pathway-nav-row .status-chip {
   background: var(--green);
   color: var(--green-ink);
+}
+
+/* ✨ Each state is plain at a glance on the sidebar's chips and the hub's tags alike (ticket 89, corrected by fix-6):
+   not started is the grey with a black outline, even as the next step, never green; complete is lime (--green with
+   its ink), not the deep green, which read as a different state; the others keep the grey (or the next step's
+   green). The outline is drawn inside the pill so it stays the size of the rest. */
+.pathway-nav-row .status-chip.status-not-started,
+.pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-not-started,
+.pathway-nav-row .status-chip.status-ready,
+.pathway-nav-row .status-chip.status-in-progress,
+.pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-in-progress {
+  background: var(--cream-2);
+  box-shadow: inset 0 0 0 1px var(--ink);
+  color: var(--ink);
+}
+
+/* ✨ Locked is the same grey fill with grey text and a grey outline (fix-12), against not started's black, so the two
+   read apart at a glance; the outline is drawn inside, as above. */
+.pathway-nav-row .status-chip.status-locked,
+.pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-locked,
+.pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-waiting,
+.pathway-nav-row .status-chip.status-waiting {
+  background: var(--cream-2);
+  box-shadow: inset 0 0 0 1px var(--muted);
+  color: var(--muted);
+}
+
+/* ✨ The comparison row's "Viewed" is lime like "Complete" (fix-13); while the count phrase shows after a withdrawal,
+   the row carries `status-waiting` instead and stays grey (fix-12). */
+.pathway-nav-row .status-chip.status-complete,
+.pathway-nav-row .status-chip.status-viewed,
+.pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-complete,
+.pathway-nav-section.is-next > .pathway-nav-row .status-chip.status-viewed {
+  background: var(--green);
+  color: var(--green-ink);
+}
+
+/* ✨ In the sidebar a lock note floats as the hub's does (fix-7), though the panel scrolls and its side cards clip
+   whatever runs past them (ticket 97): fixed to the window, it is clipped by neither, and with no offsets of its own it
+   stays where it would sit in the row, just below "Locked", moving nothing else; so it needs no JavaScript. It keeps its
+   bridge over the gap, so the pointer can move into it. Its width leaves room for the entry's indent on a phone. */
+.pathway-nav-row > .lock {
+  display: block;
+}
+
+.pathway-nav-row .lock-note {
+  position: fixed;
+  top: auto;
+  right: auto;
+  margin-top: var(--space-xs);
+  max-width: min(18rem, calc(100vw - 7rem));
 }
 
 /* ✨ The comparison signpost's entry: its title is a button, the hub row's press, drawn as the other titles are */
@@ -433,16 +520,39 @@ a.pathway-nav-title:hover,
 }
 
 /* ---------- ONBOARDING ---------- */
-main.container:has(> .ob) {
-  max-width: 1440px;
+/* ✨ The wizard fills the window beneath the demo strip, edge to edge, with no page footer (sprint-3c-r3-fix-4): its
+   <main> takes the rest of the window and scrolls a long page (the ratings) itself, so nothing shows below the box and
+   the photo, sticky inside it, can be sized to it (`cqh`). Under 900px, where the photo stacks above, the page scrolls
+   as any other. */
+body.wizard {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--brown);
+}
+
+body.wizard > .top-bar {
+  flex: none;
+}
+
+body.wizard > main.container {
+  flex: 1;
+  min-height: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  container-type: size;
+  display: flex;
+  flex-direction: column;
 }
 
 .ob {
   display: grid;
+  flex: 1 0 auto;
   grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   gap: var(--space-2xs);
-  min-height: 100vh;
-  margin: calc(-1 * var(--space-xl)) calc(-1 * var(--space-2xl)) 0;
   padding: var(--space-2xs);
   background: var(--brown);
 }
@@ -457,12 +567,12 @@ main.container:has(> .ob) {
 /* ✨ As tall as the window, as v3's photo fills the viewport: a longer page (the ratings) scrolls past it while it stays
    in view, rather than stretching with the page and zooming its photo (the hackathon review's fix-2). Its old 760px
    cap left a bare dark strip beneath it on a taller window, and stretching it with the page instead brought the zoom
-   back, so neither (fix-10, 20 Oct). */
+   back, so neither (fix-10, 20 Oct). The window less the demo strip now, the height of the <main> it scrolls in. */
 .ob-photo {
   position: sticky;
   top: var(--space-2xs);
   align-self: start;
-  height: calc(100vh - 2 * var(--space-2xs));
+  height: calc(100cqh - 2 * var(--space-2xs));
   display: grid;
   align-content: space-between;
   min-height: 420px;
@@ -484,29 +594,26 @@ main.container:has(> .ob) {
   z-index: 1;
 }
 
-/* ✨ The wizard's section photo fills the panel beneath its shade, as the prototype's does (ticket 50). */
-.ob-photo > img {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+/* ✨ A different photo for each page of a wizard, the hackathon prototype's five in its order (ticket 101); the shade
+   above keeps the verse readable on any of them, and the photo is drawn without JavaScript or a sign-in. */
+.ob-photo-1 {
+  background: var(--hero-bg) url("../img/facing-sun.jpg") center / cover;
 }
 
-.ob-photo-art {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: var(--green);
-  opacity: 0.28;
+.ob-photo-2 {
+  background: var(--hero-bg) url("../img/grass.jpg") center / cover;
 }
 
-.ob-photo-art svg {
-  width: min(70%, 280px);
-  height: auto;
-  aspect-ratio: 1;
+.ob-photo-3 {
+  background: var(--hero-bg) url("../img/field-woman.jpg") center / cover;
+}
+
+.ob-photo-4 {
+  background: var(--hero-bg) url("../img/notebook.jpg") center / cover;
+}
+
+.ob-photo-5 {
+  background: var(--hero-bg) url("../img/hero.jpg") center / cover;
 }
 
 .ob-photo .q {
@@ -534,10 +641,22 @@ main.container:has(> .ob) {
 
 .ob-form {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto 1fr auto;
   min-width: 0;
-  min-height: inherit;
   background: var(--cream);
+}
+
+/* ✨ The credits and privacy links, inside the box at its foot, the page having no footer (sprint-3c-r3-fix-4). */
+.ob-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  padding: 0 clamp(20px, 4vw, 48px) var(--space-md);
+  font-size: var(--text-xs);
+}
+
+.ob-foot a {
+  color: var(--muted);
 }
 
 .ob-top {
@@ -550,11 +669,8 @@ main.container:has(> .ob) {
 
 .ob-top .linkbtn {
   text-decoration: none;
-}
-
-.ob-mark {
-  width: 28px;
-  height: 28px;
+  font-family: var(--font-body); /* ✨ a button since "Log out" signs out (ticket 83), which takes no font of its own */
+  cursor: pointer;
 }
 
 .prog {
@@ -591,7 +707,156 @@ main.container:has(> .ob) {
 .ob-main .step {
   display: grid;
   gap: var(--space-xl);
+  max-width: 600px;
   animation: onboarding-enter 0.35s ease both;
+}
+
+/* ✨ v3's choices (sprint-3c-r3-fix-4): two columns of cards, each a radio, the chosen one brown, as v3's pressed. */
+.choice-q fieldset {
+  border: 0;
+  min-width: 0;
+}
+
+.choice-prompt {
+  margin-bottom: var(--space-md);
+  font-size: var(--text-md);
+  color: var(--muted);
+}
+
+.opts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.opt {
+  position: relative;
+  display: grid;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--cream-2);
+  cursor: pointer;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+
+.opt input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.opt b {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.opt:hover {
+  box-shadow: inset 0 0 0 1px var(--rate-hover-edge);
+}
+
+.opt:has(input:checked) {
+  background: var(--brown);
+  box-shadow: none;
+  color: var(--on-dark);
+}
+
+.opt:has(input:focus-visible) {
+  outline: 2px solid var(--green-deep);
+  outline-offset: 2px;
+}
+
+@media (max-width: 560px) {
+  .opts {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ✨ v3's ratings page (sprint-3c-r3-fix-4): its statements spaced by the page's gap rather than their own margin. */
+.ob-main .step:has(.baseline-q) {
+  gap: 18px;
+}
+
+.ob-main .baseline-q {
+  margin: 0;
+}
+
+/* ✨ Closer together, as v3's compact ratings (sprint-3c-r3-fix-7): its smaller heading, and no empty row under each
+   rating, the wizard saving without saying "Saved"; the row comes back to say why a rating was refused, and stays
+   without JavaScript for its Save button. The letter's ratings in Whatever You Do save quietly too
+   (sprint-3c-r3-fix-15), so the rule follows the rating's own mark rather than the wizard. */
+.ob-main .step:has(.baseline-q) h1 {
+  font-size: clamp(32px, 3.6vw, 46px);
+}
+
+html[data-javascript="loaded"] .baseline-q.saves-quietly .save-row:has(.save-status:empty) {
+  display: none;
+}
+
+/* ✨ A wizard's welcome, as v3's "Welcome, Alex" (sprint-3c-r3-fix-7): centred, its greeting large. */
+.ob-main .step:has(.welcome) {
+  justify-self: center;
+}
+
+.ob-main .welcome {
+  display: grid;
+  gap: var(--space-lg);
+  justify-items: center;
+  text-align: center;
+}
+
+.ob-main .welcome h1 {
+  font-size: clamp(48px, 6.4vw, 96px);
+  line-height: 1;
+  color: var(--brown);
+}
+
+.ob-main .welcome .why {
+  max-width: 50ch;
+  color: var(--muted);
+  font-size: var(--text-md);
+}
+
+/* ✨ v3's foot: no line above it, "← Previous page" a plain link on the left as v3's "Back", the way on to the right. */
+.ob-main .completion {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.ob-main .way-on {
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ✨ Not "← Previous page", itself a .pill, which the auto margin drew to the middle (sprint-3c-r3-fix-7). */
+.ob-main .way-on > form,
+.ob-main .way-on > .pill:not(.page-back) {
+  flex: 0 1 auto;
+  margin-left: auto;
+}
+
+.ob-main .way-on .pill.full {
+  width: auto;
+}
+
+.ob-main .way-on .page-back {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--muted);
+  font-size: 13.5px;
+  font-weight: 400;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ob-main .way-on .page-back:hover {
+  color: var(--ink);
 }
 
 @keyframes onboarding-enter {
@@ -605,10 +870,108 @@ main.container:has(> .ob) {
   font-weight: 300;
 }
 
+/* ✨ The entry page (ADR 0021), its classes still named first-page: v3's field and its tick boxes, each refusal under what it refuses */
+.first-page {
+  display: grid;
+  gap: var(--space-lg);
+  max-width: 560px;
+}
+
+.first-page-field {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.first-page-field label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.first-page-field input {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.first-page-field input:focus {
+  outline: none;
+  border-color: var(--green-deep);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.first-page-field input[aria-invalid="true"] {
+  border-color: var(--red-soft);
+  box-shadow: 0 0 0 3px var(--error-ring);
+}
+
+.first-page-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  font-size: var(--text-md);
+  cursor: pointer;
+}
+
+.first-page-check input {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  accent-color: var(--green-deep);
+}
+
+.first-page-check input[aria-invalid="true"] {
+  outline: 2px solid var(--red-soft);
+  outline-offset: 2px;
+}
+
+.first-page-refusal {
+  margin: var(--space-xs) 0 0;
+  color: var(--red-text);
+  font-size: var(--text-sm);
+}
+
+/* ✨ "What this means": the consent text, closed until asked for, its words under the tick's rather than its box */
+.first-page-details {
+  margin: var(--space-sm) 0 0 calc(18px + var(--space-sm));
+  font-size: var(--text-sm);
+  color: var(--ink-light);
+}
+
+.first-page-details > summary {
+  cursor: pointer;
+  color: var(--green-deep);
+  font-weight: 600;
+}
+
+.first-page-details h2 {
+  font-size: var(--text-md);
+  margin: var(--space-md) 0 var(--space-xs);
+}
+
+.first-page-details .hint-box {
+  margin: var(--space-sm) 0 0;
+}
+
 @media (max-width: 900px) {
+  body.wizard {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  body.wizard > main.container {
+    overflow-y: visible;
+    container-type: normal;
+  }
+
   .ob {
     grid-template-columns: 1fr;
-    min-height: auto;
   }
 
   .ob-photo {
@@ -624,16 +987,6 @@ main.container:has(> .ob) {
 }
 
 @media (max-width: 560px) {
-  main.container:has(> .ob) {
-    padding: var(--space-md);
-  }
-
-  .ob {
-    margin-right: 0;
-    margin-left: 0;
-    border-radius: 0;
-  }
-
   .ob-photo {
     min-height: 180px;
   }
@@ -661,11 +1014,6 @@ main.container:has(> .ob) {
     font-size: 10px;
   }
 
-  .ob-mark {
-    width: 24px;
-    height: 24px;
-  }
-
   .ob-main {
     padding: var(--space-lg) var(--space-md) var(--space-xl);
   }
@@ -688,10 +1036,56 @@ main.container:has(> .ob) {
 }
 
 .credits-notice,
-.credits-photo {
+.credits-photo,
+.credits-site {
   font-size: var(--text-sm);
   color: var(--ink-light);
   margin-bottom: 16px;
+}
+
+/* ✨ The privacy page (ticket 100): a long read, so its headings set it into parts and its lists breathe. */
+.privacy h2 {
+  margin-top: var(--space-xl);
+}
+
+.privacy h3 {
+  font-size: var(--text-md);
+  margin-top: var(--space-lg);
+}
+
+.privacy p,
+.privacy ul {
+  margin-bottom: 14px;
+}
+
+.privacy ul {
+  padding-left: 1.2em;
+}
+
+.privacy li {
+  margin-bottom: 8px;
+}
+
+/* ✨ What the content owner has still to answer, marked so nobody takes it for the final wording. */
+.privacy mark.placeholder {
+  background: var(--warn-pale);
+  color: var(--warn-text);
+  border: 1px dashed var(--warn);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+
+.privacy mark.placeholder::before {
+  content: "[";
+}
+
+.privacy mark.placeholder::after {
+  content: "]";
+}
+
+/* ✨ The footer's links, Credits and Privacy, side by side. */
+.site-footer a + a {
+  margin-left: var(--space-md);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -745,6 +1139,38 @@ body:not(.framed) > main.container > .section-header > h2,
   text-wrap: balance;
 }
 
+/* ✨ Even line lengths across the site (ticket 90): headings, ledes and short centred copy balance their lines, so
+   "Sort your strengths" does not break into one long line and a short one; paragraphs and list items avoid a lone word
+   on their last line. A browser that cannot do either ignores the declaration and wraps as it always did. */
+h1,
+h2,
+h3,
+h4,
+.section-header p,
+.hero p,
+.coach-sub,
+.coach-brief-sub,
+.coach-option span,
+.signpost,
+.pair-count,
+.pair-question,
+.demo-strip,
+.results-next,
+.comparison-waiting,
+.sort-card,
+.sort-done,
+.mission .in,
+.meet {
+  text-wrap: balance;
+}
+
+p,
+li,
+dd,
+blockquote {
+  text-wrap: pretty;
+}
+
 .section {
   margin-bottom: 40px;
 }
@@ -777,16 +1203,16 @@ body.framed {
   padding: 10px;
 }
 
-body.framed > .demo-strip {
+body.framed > .top-bar > .demo-strip {
   border-radius: var(--radius-panel) var(--radius-panel) 0 0;
 }
 
-body.framed > .site-header {
-  background: var(--cream);
+body.framed > .top-bar > .site-header {
+  background: var(--cream-2);
   border-radius: var(--radius-panel) var(--radius-panel) 0 0;
 }
 
-body.framed > .demo-strip + .site-header {
+body.framed > .top-bar > .demo-strip + .site-header {
   border-radius: 0;
 }
 
@@ -892,6 +1318,8 @@ main > .hub ~ .hub-consent {
   }
 }
 
+/* ✨ A photo behind the next step in every state (ticket 101, fix-5), the stylesheet's so it needs no file or sign-in; the
+   shade below keeps the light text readable on it, and a section's own photo, where the document names one, covers it. */
 .next {
   min-height: 200px;
   color: var(--on-dark);
@@ -899,7 +1327,53 @@ main > .hub ~ .hub-consent {
   align-content: end;
   padding: clamp(22px, 4vw, 36px);
   border-radius: var(--radius-md);
-  background: var(--hero-bg);
+  background: var(--hero-bg) url("../img/hills.jpg") center / cover;
+}
+
+/* ✨ One photo per subject (fix-8, fix-12): the coach, as the next step or in its wait, takes the coach card's old photo,
+   and the trusted voices, as the next step or waiting on answers, the churches photo; a step its own; hills, above,
+   stands for nothing waiting and for a pathway's section this list does not name. The classes come from the view's
+   `next_look`. */
+.next.look-coach,
+.next.look-section-walk-with-a-coach {
+  background-image: url("../img/mentor.jpg");
+}
+
+.next.look-answers,
+.next.look-section-trusted-voices {
+  background-image: url("../img/churches.jpg");
+}
+
+.next.look-rest {
+  background-image: url("../img/hills.jpg");
+}
+
+.next.look-section-designed {
+  background-image: url("../img/potter.jpg");
+}
+
+.next.look-section-strengths {
+  background-image: url("../img/bible.jpg");
+}
+
+.next.look-section-others {
+  background-image: url("../img/wind.jpg");
+}
+
+.next.look-section-shape {
+  background-image: url("../img/field-walk.jpg");
+}
+
+.next.look-section-calling {
+  background-image: url("../img/carpenter.jpg");
+}
+
+.next.look-section-growth {
+  background-image: url("../img/facing-sun.jpg");
+}
+
+.next.look-section-letter {
+  background-image: url("../img/notebook.jpg");
 }
 
 .next::after {
@@ -912,6 +1386,12 @@ main > .hub ~ .hub-consent {
 /* ✨ The section's photo, where the document names one, under the same shade; taller, as the prototype's (ticket 49b). */
 .next:has(> img) {
   min-height: 360px;
+}
+
+/* ✨ A card with its own photo draws none of the stylesheet's under it (fix-12), else the first one flashes before the
+   second loads over it; the plain dark ground stays. Doubled class: it must outrank every `.next.look-*` above. */
+.next.next:has(> img) {
+  background-image: none;
 }
 
 .next > img {
@@ -948,7 +1428,7 @@ main > .hub ~ .hub-consent {
 
 .srow {
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
+  grid-template-columns: 40px minmax(0, 1fr) var(--hub-pill-column, 7.5rem) var(--hub-arrow-column, 1rem);
   gap: var(--space-md);
   align-items: start;
   padding: var(--space-lg) var(--space-2xs);
@@ -967,7 +1447,8 @@ main > .hub ~ .hub-consent {
   min-width: 0;
 }
 
-.slist > .srow > .tag {
+.slist > .srow > .tag,
+.slist > .srow > .lock {
   grid-column: 3;
 }
 
@@ -1006,23 +1487,26 @@ main > .hub ~ .hub-consent {
   color: var(--muted);
 }
 
-.srow-note {
-  margin-top: var(--space-2xs);
-}
-
 /* ✨ A part of a section (the Strengths assessment within Section 1), on a line of its own within that section's entry,
    indented and quieter than a section of its own (ticket 41b) */
 .hub-parts {
   list-style: none;
   margin-top: var(--space-sm);
   padding-left: var(--space-lg);
+  /* ✨ Out to the section's right edge, so a part's pill ends where its section's does (fix-6); the part row's own
+     right padding is drawn out too, so its pill and arrow line up with the section row's (sprint-3c-r3-fix-1) */
+  margin-right: calc(-1 * (var(--hub-pill-column) + var(--hub-arrow-column) + 2 * var(--space-md) + var(--space-2xs)));
 }
 
 .hub-parts .srow {
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--space-sm);
+  grid-template-columns: minmax(0, 1fr) var(--hub-pill-column) var(--hub-arrow-column);
+  gap: var(--space-sm) var(--space-md);
   padding: var(--space-md) var(--space-2xs);
   border-top: 1px solid var(--cream-2);
+}
+
+.hub-parts .srow > .srow-arrow {
+  grid-column: 3;
 }
 
 .hub-parts .hub-part:first-child {
@@ -1039,7 +1523,8 @@ main > .hub ~ .hub-consent {
   text-transform: uppercase;
 }
 
-.hub-part .tag {
+.hub-part .tag,
+.hub-part > .lock {
   align-self: start;
 }
 
@@ -1062,6 +1547,180 @@ main > .hub ~ .hub-consent {
 .tag.up-next {
   background: var(--green);
   color: var(--green-ink);
+}
+
+/* ✨ Not started keeps the grey with 89's black outline, even as the next step (this rule comes after `.up-next`'s and
+   is as specific, so it wins); on the dark card its light equivalent. Complete is lime (fix-6). In progress is the same
+   black (fix-15), next step or not: lime means done, grey text and outline locked or waiting, black open. */
+.tag.status-not-started,
+.tag.status-ready,
+.tag.status-in-progress {
+  background: var(--cream-2);
+  box-shadow: inset 0 0 0 1px var(--ink);
+  color: var(--ink);
+}
+
+.card.dark .tag.status-not-started,
+.card.dark .tag.status-ready,
+.card.dark .tag.status-in-progress {
+  background: var(--on-dark-12);
+  box-shadow: inset 0 0 0 1px var(--on-dark);
+  color: var(--on-dark);
+}
+
+/* ✨ Locked: grey text and a grey outline on the same pale grey (fix-12), against not started's black; on the dark card
+   its light equivalent, dimmer than not started's. It sits inside ticket 97's "Locked" button, which draws nothing. */
+.tag.status-locked,
+.tag.status-waiting {
+  background: var(--cream-2);
+  box-shadow: inset 0 0 0 1px var(--muted);
+  color: var(--muted);
+}
+
+.card.dark .tag.status-locked,
+.card.dark .tag.status-waiting {
+  background: var(--on-dark-12);
+  box-shadow: inset 0 0 0 1px var(--on-dark-55);
+  color: var(--on-dark-70);
+}
+
+/* ✨ The comparison row's "Viewed" is lime like "Complete" (fix-13). */
+.tag.status-complete,
+.tag.status-viewed {
+  background: var(--green);
+  color: var(--green-ink);
+}
+
+/* ✨ Every row's pill ends at the same right edge (ticket 89, fix-6). A row's pill column is one fixed width, so a
+   part's row, which sits within its section's body, is drawn out to the section's right edge by `.hub-parts`'s negative
+   margin (the pill's column, the arrow's, and their two gaps) and its pill ends where its section's does. The arrow's
+   column is kept on a locked row too, where it is empty, so a locked pill ends there as well. */
+.slist {
+  --hub-pill-column: 7.5rem;
+  --hub-arrow-column: 1rem;
+}
+
+.srow > .tag,
+.srow > .lock {
+  justify-self: end;
+}
+
+/* ✨ An open row is one link (fix-6): its title's link is stretched over the row, so the whole row is clickable, with
+   a hover state and a small arrow at its right. The title stays the only link (the arrow is decoration), and a locked
+   row has none, holding the "Locked" button instead. A part's row is above its section's stretched link, so its own
+   link is what its area reaches. */
+.srow {
+  position: relative;
+}
+
+.hub-parts {
+  position: relative;
+}
+
+/* ✨ The comparison's row (fix-23) is the same, its title being the press: a form's button, stretched as the link is
+   (the form, the heading and the button are not positioned, so the stretch reaches the row), and the link below the
+   minimum. While its section is locked its title is neither, so it has no stretch, wash or arrow. */
+.srow h3 a.hub-section-title::after,
+.srow h3 button.hub-section-title::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.srow:has(> .srow-body :is(h3 > a, h3 > button).hub-section-title):hover:not(:has(.hub-parts:hover)) {
+  /* ✨ A faint warm neutral, not the green wash (fix-12): the arrow below darkens and nudges right. */
+  background: var(--cream-2);
+}
+
+.srow-arrow {
+  grid-column: 4;
+  align-self: start;
+  justify-self: end;
+  font-size: var(--text-md);
+  line-height: 1.2;
+  color: var(--muted);
+  transition:
+    transform 0.15s ease,
+    color 0.15s ease;
+}
+
+.srow:has(> .srow-body :is(h3 > a, h3 > button).hub-section-title):hover:not(:has(.hub-parts:hover)) > .srow-arrow {
+  color: var(--ink);
+  transform: translateX(4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .srow-arrow {
+    transition: none;
+  }
+
+  .srow:has(> .srow-body :is(h3 > a, h3 > button).hub-section-title):hover:not(:has(.hub-parts:hover)) > .srow-arrow {
+    transform: none;
+  }
+}
+
+/* ✨ A locked section's "Locked" is a small button holding its pill, drawn as the pill alone, whose lock note shows
+   on hovering or focusing it, a tap focusing it, and goes once the pointer or the focus moves away (ticket 97). On the
+   hub the note floats below the pill, from the right edge where the pill sits, no wider than the screen less its
+   gutters; the bridge above it keeps it open while the pointer crosses the gap. Escape adds `is-dismissed`, until the
+   pointer and the focus have left. */
+.lock {
+  position: relative;
+  display: inline-block;
+}
+
+.lock-button {
+  display: inline-block;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill-shape);
+  background: none;
+  font: inherit;
+  line-height: inherit;
+  cursor: help;
+}
+
+.lock-button:focus-visible {
+  outline: 2px solid var(--green-deep);
+  outline-offset: 2px;
+}
+
+.lock-note {
+  display: none;
+  position: absolute;
+  top: calc(100% + var(--space-xs));
+  right: 0;
+  z-index: 5;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 2 * var(--space-md)));
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  box-shadow: 0 8px 24px var(--shadow);
+  color: var(--ink);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+}
+
+.lock-note::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  left: 0;
+  height: var(--space-xs);
+}
+
+.lock:hover > .lock-note,
+.lock:focus-within > .lock-note {
+  display: block;
+}
+
+.lock.is-dismissed > .lock-note {
+  display: none;
 }
 
 .side {
@@ -1129,14 +1788,20 @@ main > .hub ~ .hub-consent {
   color: var(--muted);
 }
 
-/* ✨ What a section waits on the coach for, under the coach card's tag (ticket 65): darker than the sentence below it. */
+/* ✨ A side card's authored lead, under its tag, as Walk with a coach's says what a coach is for (ticket 95; ticket 65's
+   line of what a section waited on the coach for before it): bold and darker than the sentence below it, or on a dark
+   card lighter. */
 .card p.hub-side-line {
   color: var(--ink);
   font-weight: 600;
 }
 
+.card.dark p.hub-side-line {
+  color: var(--on-dark);
+}
+
 /* ✨ A side card's buttons (ticket 65): small pills in a row at their own width, not stretched across the card, so
-   the card grows as little as possible and another button can sit beside Manage, wrapping on a narrow phone. */
+   the card grows as little as possible and another button can sit beside the card's own, wrapping on a narrow phone. */
 .hub-side-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1149,8 +1814,14 @@ main > .hub ~ .hub-consent {
   height: 18px;
 }
 
-/* ✨ The comparison's press beside Manage on the dark Five trusted voices card (ticket 67b): its ring in the card's
-   light text, no fill, so Manage stays the one to press first. */
+/* ✨ The dark Five trusted voices card's "Invite people": the coach card's light pill, but white, not green (ticket 95). */
+.card.dark .hub-side-actions .pill.light {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* ✨ The comparison's press beside "Invite people" on the dark Five trusted voices card (ticket 67b): its ring in the
+   card's light text, no fill, so "Invite people" stays the one to press first. */
 .card.dark .hub-side-actions .pill.ghost {
   background: none;
   color: var(--on-dark);
@@ -1220,11 +1891,16 @@ main > .hub ~ .hub-consent {
   position: relative;
   color: var(--ink);
   display: flex;
+  flex-wrap: nowrap;
   justify-content: space-between;
+  padding-block: var(--space-sm);
 }
 
-.nav.light .mark {
-  color: var(--ink);
+/* ✨ At phone width the logo, "Your pathway" and "Sign out" keep to one row (ticket 91) */
+@media (max-width: 520px) {
+  .nav.light .nav-right {
+    gap: var(--space-xs);
+  }
 }
 
 .linkbtn {
@@ -1243,6 +1919,18 @@ main > .hub ~ .hub-consent {
 
 /* A section page: the way back, and the completion the participant chooses */
 
+/* ✨ A participant page's one way back, at its top, drawn as a button (ticket 96). A long section title wraps inside it
+   at phone width rather than pushing the page sideways. */
+.way-back {
+  margin-bottom: var(--space-md);
+}
+
+.way-back .pill {
+  max-width: 100%;
+  text-align: left;
+}
+
+/* ✨ The quiet demo-only links (fix-19, fix-21), which kept the look the way back had before ticket 96. */
 .back-to-hub {
   font-size: var(--text-sm);
   margin-bottom: 16px;
@@ -1264,10 +1952,12 @@ main > .hub ~ .hub-consent {
   -webkit-touch-callout: none;
 }
 
+/* ✨ More room above a section's finish, so Section 1's "I've finished Section 1" stands clear of the strengths
+   evaluation's card above it (ticket 95). */
 .completion {
   border-top: 1px solid var(--border);
   padding-top: 24px;
-  margin-top: 32px;
+  margin-top: var(--space-2xl);
 }
 
 /* ✨ "Page 2 of 3", under a paged section's heading */
@@ -1421,6 +2111,15 @@ form + .way-on,
 
 /* ✨ On the cream, its pale fill, as the ghost button had before ticket 53a (fix-2); on a dark panel, none. */
 .pill.ghost {
+  background: var(--paper);
+  color: inherit;
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+/* ✨ A contact list's "Get link" is an outline until its row has a name, then green (ticket 83). Only where JavaScript
+   has run, so without it, where nothing else would change, it is always green. Never disabled: pressed empty, the
+   server says what is missing. */
+[data-javascript="loaded"] .contact-row:has(.contact-name input:placeholder-shown) [data-gets-link] {
   background: var(--paper);
   color: inherit;
   box-shadow: inset 0 0 0 1px currentColor;
@@ -1707,8 +2406,13 @@ body:not(.framed) .question-card > p + form {
   line-height: 1.5;
 }
 
-.coach-why p {
+/* ✨ The checklist's body copy, one size on every screen: the intro's, each outcome's and the coach's link's (ticket 94).
+   Only paragraphs with no class of their own, so a note or a refusal keeps its own size. */
+.coach-why p,
+.coach-outcome p:not([class]) {
+  font-size: var(--text-md);
   line-height: 1.6;
+  margin: 0 0 var(--space-sm);
 }
 
 .coach-distinction {
@@ -1738,15 +2442,15 @@ body:not(.framed) .question-card > p + form {
   color: var(--green-deep);
 }
 
+/* ✨ The checklist's small notes share one size and colour (ticket 94): these, .coach-hint, .coach-note and .coach-kept p. */
 .coach-footnote,
 .coach-sub {
   font-size: var(--text-sm);
-  color: var(--muted);
+  color: var(--ink-light);
   margin: 0 0 var(--space-md);
 }
 
-.coach-checklist input[type="text"],
-.coach-checklist input[type="email"] {
+.coach-checklist input[type="text"] {
   width: 100%;
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--border);
@@ -1757,8 +2461,7 @@ body:not(.framed) .question-card > p + form {
   background: var(--paper);
 }
 
-.coach-checklist input[type="text"]:focus,
-.coach-checklist input[type="email"]:focus {
+.coach-checklist input[type="text"]:focus {
   outline: none;
   border-color: var(--green-deep);
   box-shadow: 0 0 0 3px var(--focus-ring);
@@ -1884,6 +2587,10 @@ body:not(.framed) .question-card > p + form {
   margin-top: 18px;
 }
 
+.coach-buttons + .invitation-status {
+  margin-top: var(--space-sm);
+}
+
 .coach-grow {
   flex: 1;
   justify-content: center;
@@ -1897,12 +2604,6 @@ body:not(.framed) .question-card > p + form {
 .coach-outcome {
   border-radius: var(--radius-lg);
   padding: var(--space-lg) var(--space-lg);
-}
-
-.coach-outcome p {
-  font-size: var(--text-sm);
-  line-height: 1.65;
-  margin: 0 0 var(--space-sm);
 }
 
 .coach-go {
@@ -2104,14 +2805,9 @@ body:not(.framed) .question-card > p + form {
   margin-top: 8px;
 }
 
-/* ✨ The coach's details beneath going ahead, as the original prototype's mentor screen asks for them */
-.coach-details {
-  margin-top: 20px;
-}
-
-.coach-details input[type="text"],
-.coach-details input[type="email"] {
-  margin-bottom: 16px;
+/* ✨ The tick on the verdict card, between its words and its buttons (ticket 94) */
+.coach-outcome .coach-confirm {
+  margin: var(--space-md) 0 var(--space-sm);
 }
 
 .question-card .coach-confirm,
@@ -2153,7 +2849,7 @@ body:not(.framed) .question-card > p + form {
 
 .coach-kept p {
   font-size: var(--text-sm);
-  color: var(--muted);
+  color: var(--ink-light);
   margin: 0 0 var(--space-sm);
 }
 
@@ -2201,6 +2897,12 @@ body:not(.framed) .question-card > p + form {
   color: var(--ink-light);
 }
 
+/* ✨ The signpost's sentence sits in a paragraph of its own, which the site-wide `p { text-wrap: pretty }` styles
+   directly, so the balance set on `.signpost` (ticket 90) was inherited only to be overridden (fix-7). */
+.signpost p {
+  text-wrap: balance;
+}
+
 .signpost-title {
   font-family: var(--font-heading);
   font-size: var(--text-lg);
@@ -2209,19 +2911,49 @@ body:not(.framed) .question-card > p + form {
   margin-bottom: 8px;
 }
 
-/* ✨ The linked section's status, drawn as the hub's tag draws it (ticket 53b). */
-.signpost .status-chip {
-  display: inline-block;
-  margin-top: 8px;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: var(--space-2xs) var(--space-sm);
-  border-radius: var(--radius-pill-shape);
-  background: var(--cream-2);
+/* ✨ A signpost carries no status pill (ticket 89): a complete section's card is marked lime (fix-6: the pill's lime,
+   its edge and a light tint of it, not the deep green), a locked one is quiet, and the comparison's status is a plain
+   line. */
+.signpost.is-complete {
+  background: var(--green-15);
+  border-color: var(--green);
+}
+
+.signpost.is-locked {
   color: var(--muted);
-  white-space: nowrap;
+}
+
+/* ✨ The comparison's card is plain until it has been viewed (fix-10): the base signpost's pale fill is itself a light
+   lime, which read as the lime mark of a complete card before anything was done, so this one starts on the paper's
+   white and takes the lime only through .is-complete above. */
+.comparison-signpost:not(.is-complete) {
+  background: var(--paper);
+  border-color: var(--border);
+}
+
+.signpost-line {
+  margin-top: 8px;
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+/* ✨ Room between a signpost's words and its green button, which sat tight beneath them (ticket 95). */
+.signpost > p:has(> .pill) {
+  margin-top: var(--space-md);
+}
+
+/* ✨ A file to download, as Section 3's workbook: its paragraphs apart, as a rich text's are, then its button, set
+   apart from them, so the words, the PDF and the section's finish beneath read in that order (ticket 95). */
+.download {
+  margin-bottom: var(--space-lg);
+}
+
+.download p + p {
+  margin-top: var(--space-sm);
+}
+
+.download > p:has(> .pill) {
+  margin-top: var(--space-lg);
 }
 
 /* ✨ Demo only (fix-24): a demo profile's guide, quiet and closed, below the sort and each pair, so they keep their
@@ -2458,12 +3190,12 @@ body:not(.framed) .question-card > p + form {
 
 /* The 1–10 agreement scale. Each point is a radio button drawn as a button. */
 
+/* ✨ As v3's ratings page (sprint-3c-r3-fix-4), wherever a rating is (fix-11): each statement a row under a fine line,
+   in the heading face, not a card. */
 .baseline-q {
-  background: var(--paper);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-lg) var(--space-lg);
-  margin-bottom: 16px;
+  margin: 0 0 18px;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--cream-2);
 }
 
 .baseline-q fieldset {
@@ -2472,11 +3204,12 @@ body:not(.framed) .question-card > p + form {
 }
 
 .baseline-label {
-  font-size: var(--text-md);
+  margin-bottom: 8px;
+  font-family: var(--font-heading);
+  font-size: clamp(18px, 1.5vw, 21px);
+  font-weight: 400;
+  line-height: 1.25;
   color: var(--ink);
-  line-height: 1.5;
-  margin-bottom: 12px;
-  font-weight: 500;
 }
 
 .baseline-scale {
@@ -2597,12 +3330,16 @@ body:not(.framed) .question-card > p + form {
   margin-top: 8px;
 }
 
-/* ✨ A block waiting on the comparison (ticket 68): shown, its controls disabled by the fieldset, and why above it. */
+/* ✨ A block waiting on the comparison (ticket 68): shown, its controls disabled by the fieldset, and why above it.
+   The fieldset is the field's box and the message its header band inside (fix-10), so it reads as part of the field it
+   locks rather than a paragraph between two cards. */
 .waits-on-comparison {
-  border: 0;
-  margin: 0;
-  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 0 0 var(--space-lg);
+  padding: 0 var(--space-lg) var(--space-lg);
   min-width: 0;
+  overflow: hidden;
 }
 
 .waits-on-comparison > :not(.waiting-note) {
@@ -2618,7 +3355,10 @@ body:not(.framed) .question-card > p + form {
 .waiting-note {
   font-size: var(--text-sm);
   color: var(--muted);
-  margin-bottom: 8px;
+  background: var(--gold-pale);
+  margin: 0 calc(-1 * var(--space-lg)) var(--space-md);
+  padding: var(--space-sm) var(--space-lg);
+  border-bottom: 1px solid var(--border);
 }
 
 /* Form panel: the prototype's .name-section, used by the account pages' forms. The fields inside are
@@ -3036,6 +3776,36 @@ html[data-javascript="loaded"] .invitation-copy {
 .results-next {
   text-align: center;
   margin: var(--space-xl) 0 var(--space-lg);
+}
+
+/* ✨ The results as the end of their section (ticket 88): its finish, alone (fix-10 took the comparison's press and
+   the invitation off the page). */
+.results-finish {
+  display: flex;
+  justify-content: center;
+}
+
+/* ✨ The press on to a comparison while too few have answered (fix-8): grey as a disabled button is, but a span, not a
+   button, so it carries no link and no form. Its specificity beats .pill.ghost's fill and ring. */
+.pill.is-waiting {
+  background: var(--border);
+  color: var(--muted);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.pill.is-waiting:hover {
+  filter: none;
+}
+
+/* ✨ The comparison signpost's two buttons (fix-8): the press, then the quieter invitation, side by side, wrapping one
+   under the other at phone width. */
+.signpost-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  margin-top: var(--space-md);
 }
 
 /* ✨ The comparison: per construct, a "You" bar above an "Others" bar in --blue-soft, as the prototype's comparison
@@ -3665,8 +4435,7 @@ html[data-javascript="loaded"] .save-fallback {
     padding: var(--space-lg) var(--space-md) var(--space-3xl);
   }
 
-  .question-card,
-  .baseline-q {
+  .question-card {
     padding: var(--space-lg) var(--space-md);
   }
 
@@ -3869,29 +4638,23 @@ body > svg[aria-hidden="true"] {
   opacity: 1;
 }
 
-.nav .mark {
-  width: 30px;
-  height: 30px;
-  color: var(--on-dark);
-}
-
-/* ✨ The homepage's nav only: the participant's header (.nav.light) keeps its pathway's links on a phone (ticket 53b). */
-@media (max-width: 760px) {
-  .nav:not(.light) .nav-left a:not(:first-child),
-  .nav:not(.light) .nav-right a {
-    display: none;
-  }
+/* ✨ The homepage's nav (ticket 91, fix-5): the new logo alone, centred where the old mark and name sat, over the
+   hero's video and scrolling away with it. It is not fixed; only the signed-in pages' top bar is. */
+.hero > .nav {
+  display: flex;
+  justify-content: center;
 }
 
 /* ---------- HERO ---------- */
 .hero {
-  min-height: calc(100vh - 20px);
-  min-height: calc(100svh - 20px);
+  /* ✨ The page's padding above and below it, so the hero leaves v3's margin at the window's foot (hand check, 28 Oct). */
+  min-height: calc(100vh - 2 * var(--space-sm));
+  min-height: calc(100svh - 2 * var(--space-sm));
   display: grid;
   place-items: center;
   text-align: center;
   color: var(--on-dark);
-  background: var(--hero-bg) url("../img/hero-poster.jpg") center 60% / cover;
+  background: var(--hero-bg) url("../img/hero-landscape-poster.jpg") center 60% / cover;
 }
 
 .hero > video {
@@ -3915,35 +4678,53 @@ body > svg[aria-hidden="true"] {
   position: relative;
   z-index: 2;
   display: grid;
-  gap: 30px;
+  /* ✨ The hero fits the window as v3's does: its padding and gaps shrink with the window's height, the demo notice
+     and "Learn more" being more than v3's hero holds (hand check, 28 Oct). */
+  gap: clamp(16px, 2.8svh, 30px);
   justify-items: center;
-  padding: 140px 20px 140px;
+  padding: clamp(64px, 9svh, 140px) 20px clamp(20px, 4svh, 140px);
   max-width: 1240px;
 }
 
+/* ✨ A window under about 740px high (a laptop's) held more content than the hero, which grew past the window and left
+   no margin below it (sprint-3c-r3-fix-10): the notice sits tighter, as the heading does, by the window's height. */
+.hero-copy .demo-notice {
+  margin-top: 0;
+  padding: clamp(8px, 1.6svh, var(--space-md)) var(--space-lg);
+}
+
+/* ✨ v3's two lines, "Everyone has a purpose." and "Do you know yours?", each kept whole from 700px up. */
 .hero h1 {
-  font-size: clamp(40px, 6.2vw, 96px);
+  font-size: clamp(40px, min(6.2vw, 10.5svh), 96px);
   font-weight: 300;
   line-height: 1.04;
-  max-width: 18ch;
   text-wrap: balance;
+}
+
+.hero h1 .ln {
+  display: block;
+}
+
+@media (min-width: 700px) {
+  .hero h1 .ln {
+    white-space: nowrap;
+  }
 }
 
 
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
   color: inherit;
   text-decoration: none;
-  font-family: var(--font-heading);
-  font-size: 21px;
-  white-space: nowrap;
 }
 
-.brand .mark {
-  width: 30px;
-  height: 30px;
+.nav .brand {
+  opacity: 1;
+}
+
+.hp-footer .brand {
+  color: var(--on-dark);
 }
 
 .hero .logos:has(.logo-row:empty) {
@@ -4068,12 +4849,6 @@ body > svg[aria-hidden="true"] {
   }
 }
 
-@media (max-width: 600px) {
-  .hero-copy {
-    padding-block: 120px;
-  }
-}
-
 /* ---------- MISSION ---------- */
 .mission {
   background: var(--paper);
@@ -4158,9 +4933,7 @@ body > svg[aria-hidden="true"] {
   font-size: 13.5px;
 }
 
-.mission .sign svg {
-  width: 30px;
-  height: 30px;
+.mission .sign .brand-logo {
   color: var(--ink);
 }
 
@@ -4474,75 +5247,117 @@ body > svg[aria-hidden="true"] {
   }
 }
 
-/* ---------- IMPACT ---------- */
-.impact {
-  background: var(--brown);
+/* ---------- STEPS WITHOUT JAVASCRIPT ---------- */
+/* ✨ Ticket 98: the five steps sit in the page as a list; main.js adds .tabs-on and shows them as tabs instead. Each
+   rule is held to `.steps`: the wizard's page is a `.step` too, and took this dark panel and its pale text, its
+   "← Previous page" pale on its own paper (sprint-3c-r3-fix-4). */
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.steps > .step {
+  background: var(--brown-3);
   color: var(--on-dark);
-  padding: clamp(72px, 10vw, 128px) clamp(20px, 5vw, 72px);
+  border-radius: var(--radius-md);
+  padding: clamp(20px, 3vw, 32px);
+  display: grid;
+  gap: 8px;
 }
 
-.impact-bg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.16;
-  filter: blur(6px);
-  background: radial-gradient(120% 100% at 50% 0%, var(--brown-3) 0%, var(--hero-bg) 55%, var(--brown) 100%);
+.steps > .step .tp-step {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--green);
 }
 
-.impact .in {
+.steps > .step h3 {
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 300;
+}
+
+.steps > .step p {
+  color: var(--on-dark-2);
+  max-width: 60ch;
+  line-height: 1.45;
+}
+
+/* ✨ Each step carries its tab photo, as the meet cards carry theirs, so the list without JavaScript shows them too (fix-3). */
+.steps .step {
   position: relative;
-  max-width: 1180px;
-  margin-inline: auto;
-  display: grid;
-  gap: clamp(40px, 6vw, 72px);
+  overflow: hidden;
+  padding-top: 190px;
 }
 
-.imp-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: end;
-  gap: 20px;
+.steps .step::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 160px;
+  content: "";
+  background-position: center;
+  background-size: cover;
+  -webkit-mask-image: linear-gradient(var(--mask-solid) 76%, transparent);
+  mask-image: linear-gradient(var(--mask-solid) 76%, transparent);
 }
 
-.imp-head h2 {
-  font-size: clamp(38px, 5vw, 66px);
-  font-weight: 300;
-  max-width: 12ch;
+.steps .step-1::before {
+  background-image: url("../img/notebook.jpg");
 }
 
-.imp-head p {
-  color: var(--on-dark-2);
-  font-size: 17px;
-  max-width: 34ch;
+.steps .step-2::before {
+  background-image: url("../img/friends.jpg");
 }
 
-.stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(20px, 3vw, 40px);
+.steps .step-3::before {
+  background-image: url("../img/field-walk.jpg");
 }
 
-.stat {
-  display: grid;
-  gap: 16px;
-  align-content: start;
+.steps .step-4::before {
+  background-image: url("../img/potter.jpg");
 }
 
-.stat h3 {
-  font-family: var(--font-heading);
-  font-weight: 300;
-  font-size: clamp(28px, 3.5vw, 44px);
-  line-height: 1.05;
+.steps .step-5::before {
+  background-image: url("../img/hills.jpg");
 }
 
-.stat p {
-  color: var(--on-dark-2);
-  font-size: 16px;
-  max-width: 30ch;
+.atabs.tabs-on .steps,
+.atabs:not(.tabs-on) .tabrow,
+.atabs:not(.tabs-on) .tabpanel {
+  display: none;
+}
+
+/* ✨ Inside the sign-off, so in its type: its size and colour are the sign's (fix-3). */
+.mission-more {
+  max-width: 62ch;
+  line-height: 1.55;
+  margin: 0;
+  text-wrap: pretty;
+}
+
+/* ✨ Ticket 98: "Learn more" under the hero's buttons, with an arrow that nudges down. */
+.learn-more {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--on-dark);
+  font-size: 15px;
+  text-decoration: none;
+  text-shadow: 0 1px 8px var(--black-45);
+}
+
+.learn-more svg {
+  width: 20px;
+  height: 20px;
+  transform: rotate(90deg);
+}
+
+.learn-more:hover svg {
+  transform: rotate(90deg) translateX(3px);
 }
 
 .imp-quote {
@@ -4619,10 +5434,6 @@ body > svg[aria-hidden="true"] {
 }
 
 @media (max-width: 860px) {
-  .stats {
-    grid-template-columns: 1fr;
-  }
-
   .churches {
     grid-template-columns: 1fr;
     gap: 0;
@@ -4643,85 +5454,6 @@ body > svg[aria-hidden="true"] {
   }
 }
 
-/* ---------- CONNECT ---------- */
-.connect {
-  background: var(--cream);
-  padding: clamp(64px, 9vw, 112px) clamp(20px, 5vw, 72px);
-  display: grid;
-  gap: clamp(32px, 4vw, 48px);
-}
-
-.connect > * {
-  max-width: 1180px;
-  width: 100%;
-  margin-inline: auto;
-}
-
-.cn-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: end;
-  gap: 16px;
-}
-
-.cn-head h2 {
-  font-size: clamp(38px, 5vw, 66px);
-  font-weight: 300;
-}
-
-.cn-head .pill.ghost {
-  color: var(--ink);
-}
-
-.posts {
-  margin-bottom: clamp(24px, 4vw, 56px);
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(14px, 2vw, 24px);
-}
-
-.post {
-  display: grid;
-  align-content: start;
-  gap: var(--space-sm);
-  color: var(--ink);
-  text-decoration: none;
-}
-
-.post-art {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  border-radius: var(--radius-md);
-  margin-bottom: 6px;
-  transition: transform 0.5s;
-}
-
-.post-art-1 {
-  background: linear-gradient(135deg, var(--green-deep), var(--green));
-}
-
-.post-art-2 {
-  background: linear-gradient(135deg, var(--brown-3), var(--brown-2));
-}
-
-.post-art-3 {
-  background: linear-gradient(135deg, var(--cream-2), var(--paper));
-}
-
-.post h3 {
-  font-size: clamp(25px, 2.4vw, 34px);
-  line-height: 1.1;
-  margin: 6px 0 8px;
-}
-
-.post p {
-  color: var(--muted);
-  font-size: 14.5px;
-  margin: 0;
-}
-
 .sr {
   position: absolute;
   width: 1px;
@@ -4729,12 +5461,6 @@ body > svg[aria-hidden="true"] {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
-}
-
-@media (max-width: 760px) {
-  .posts {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* ---------- MEET ---------- */
@@ -4896,15 +5622,19 @@ body > svg[aria-hidden="true"] {
   font-size: 13.5px;
 }
 
-.hp-footer .cols div {
+.hp-footer .cols div,
+.hp-footer .foot-links {
   display: grid;
   gap: 8px;
   align-content: start;
 }
 
-.hp-footer .cols b {
-  color: var(--on-dark);
-  font-weight: 500;
+.hp-footer .foot-links a {
+  color: inherit;
+}
+
+.hp-footer .cols span {
+  max-width: 36ch;
 }
 
 .hp-footer-links {
@@ -4947,6 +5677,21 @@ body > svg[aria-hidden="true"] {
 
 .atabs .top h2 {
   color: var(--on-dark);
+}
+
+/* ✨ The button is centred on the label and heading beside it, rather than hanging from their bottom edge; once they
+   no longer fit side by side it goes under them, at the left, with the same gap (fix-3, 28 Oct). */
+.atabs .top {
+  align-items: center;
+  column-gap: var(--space-lg);
+  row-gap: var(--space-md);
+}
+
+@media (max-width: 700px) {
+  .atabs .top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .atabs .top p {
@@ -5048,19 +5793,27 @@ body > svg[aria-hidden="true"] {
   font-weight: 600;
 }
 
+/* ✨ The photo and the text both fill the row, so the photo's foot is level with the text's (ticket 99). */
+.churches > .ch-img,
+.churches > .ch-copy {
+  align-self: stretch;
+}
+
+/* ✨ Tightened towards v3's "For churches" (fix-6, 28 Oct): a shorter photo, smaller padding and heading, the points
+   closer together. */
 .churches .ch-img {
-  min-height: 520px;
+  min-height: 0;
   padding: 0;
   background:
     linear-gradient(180deg, var(--brown-05), var(--brown-18)),
-    url("../img/friends.jpg") center / cover;
+    url("../img/churches.jpg") center / cover;
 }
 
 .churches .ch-copy {
   display: grid;
   align-content: center;
-  gap: var(--space-md);
-  padding: clamp(28px, 5vw, 68px);
+  gap: var(--space-sm);
+  padding: clamp(24px, 3.4vw, 44px);
 }
 
 .churches .tagline {
@@ -5073,7 +5826,7 @@ body > svg[aria-hidden="true"] {
 
 .churches h2 {
   max-width: 19ch;
-  font-size: clamp(32px, 4vw, 54px);
+  font-size: clamp(30px, 3.2vw, 46px);
   font-weight: 400;
   line-height: 1.08;
 }
@@ -5090,8 +5843,8 @@ body > svg[aria-hidden="true"] {
 
 .churches .ch-points {
   display: grid;
-  gap: var(--space-md);
-  margin: var(--space-sm) 0;
+  gap: 0;
+  margin: 4px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -5099,8 +5852,12 @@ body > svg[aria-hidden="true"] {
 .churches .ch-points li {
   display: grid;
   gap: 3px;
-  padding-top: var(--space-sm);
+  padding: 10px 0;
   border-top: 1px solid var(--cream-2);
+}
+
+.churches .ch-points li:last-child {
+  border-bottom: 1px solid var(--cream-2);
 }
 
 .churches .ch-points b {
@@ -5111,28 +5868,101 @@ body > svg[aria-hidden="true"] {
   padding: 0;
 }
 
-.connect .post-art {
-  background-position: center;
-  background-size: cover;
+.churches .ch-cta .pill {
+  margin: 0;
 }
 
-.connect .post-art-1 {
-  background-image: url("../img/wind.jpg");
+/* ---------- THE DIFFERENCE IT MAKES ---------- */
+/* ✨ v3's three figures, drawn at their values; the bars are the figures' own widths (ticket 99). main.js counts them up
+   as they scroll into view (fix-3); without it they stand at these values. */
+.difference {
+  background: var(--cream);
+  color: var(--ink);
+  padding: clamp(56px, 8vw, 112px) clamp(20px, 5vw, 72px);
 }
 
-.connect .post-art-2 {
-  background-image: url("../img/friends.jpg");
-}
-
-.connect .post-art-3 {
-  background-image: url("../img/bible.jpg");
-}
-
-.story-sec {
-  min-height: clamp(520px, 62vw, 760px);
+.difference .in {
+  max-width: 1180px;
+  margin-inline: auto;
   display: grid;
-  place-items: center;
-  padding: clamp(56px, 9vw, 112px) clamp(20px, 5vw, 72px);
+  gap: clamp(32px, 5vw, 64px);
+}
+
+.difference h2 {
+  text-align: center;
+  font-size: clamp(34px, 5vw, 66px);
+  font-weight: 300;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 3vw, 40px);
+}
+
+.stat {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.stat .num {
+  font-family: var(--font-heading);
+  font-weight: 300;
+  font-size: clamp(64px, 8vw, 120px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat .num b {
+  font-weight: 300;
+}
+
+.stat .bar {
+  height: 4px;
+  border-radius: 3px;
+  background: var(--cream-2);
+  overflow: hidden;
+}
+
+.stat .bar i {
+  display: block;
+  height: 100%;
+  background: var(--green);
+  /* ✨ main.js sets the width inline as the figure scrolls into view; these widths are what shows without it. */
+  transition: width 1.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.stat:nth-child(1) .bar i {
+  width: 71%;
+}
+
+.stat:nth-child(2) .bar i {
+  width: 86%;
+}
+
+.stat:nth-child(3) .bar i {
+  width: 100%;
+}
+
+.stat p {
+  color: var(--muted);
+  font-size: 16px;
+  max-width: 30ch;
+}
+
+@media (max-width: 860px) {
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ✨ The Impact card follows v3's "A story from a parent": the quote centred in a column of 980px, v3's padding, gap
+   and type, the words coming up from 0.28 (fix-3, 28 Oct). The photo's own treatment is unchanged. */
+.story-sec {
+  display: grid;
+  padding: clamp(80px, 11vw, 150px) clamp(20px, 6vw, 96px);
   color: var(--on-dark);
   background: var(--brown);
 }
@@ -5148,33 +5978,170 @@ body > svg[aria-hidden="true"] {
 
 .story-copy {
   position: relative;
+  z-index: 2;
   display: grid;
-  gap: var(--space-lg);
+  gap: 24px;
+  justify-items: center;
   width: min(980px, 100%);
+  margin: 0 auto;
+  text-align: center;
 }
 
 .story-copy blockquote {
-  max-width: 28ch;
+  margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(26px, 4vw, 52px);
+  font-size: clamp(22px, 2.4vw, 34px);
   font-weight: 300;
-  line-height: 1.24;
+  line-height: 1.35;
+  color: var(--on-dark);
+  text-wrap: pretty;
+}
+
+.story-sec [data-reveal] .w {
+  opacity: 0.28;
+}
+
+.story-sec [data-reveal] .w.on {
+  opacity: 1;
 }
 
 .story-copy figcaption {
+  font-size: 14px;
   color: var(--on-dark-2);
 }
 
-/* ✨ No position here: the ring's position: absolute above places each card on the ring and anchors its photo.
-   A position: relative here stacked the cards below the stage, so only the first ever showed (fix-14). */
-.ring-stage .mc {
+/* ✨ "Stay in touch" (ticket 74): v3's newsletter card, its copy beside the form, one above the other when narrow. */
+/* ✨ The section is the card: as wide as the other panels, its content in their 1180px column and side padding
+   (fix-3, 28 Oct; it was a narrower card inside a pale panel). */
+.stay {
+  background: var(--brown);
+  color: var(--on-dark);
+  padding: clamp(48px, 6vw, 80px) clamp(20px, 5vw, 72px);
+}
+
+.stay-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
+  align-items: center;
+  column-gap: clamp(20px, 4vw, 56px);
+  row-gap: var(--space-sm);
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.stay-copy {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  grid-row: span 3;
+}
+
+.stay-copy h2 {
+  margin: 0;
+  font-size: clamp(24px, 2.2vw, 30px);
+}
+
+.stay-copy p {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--on-dark-2);
+  text-wrap: pretty;
+}
+
+.stay form {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0;
+}
+
+.stay input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--on-dark-22);
+  border-radius: var(--radius-pill-shape);
+  padding: 12px 18px;
+  background: var(--on-dark-07);
+  color: var(--on-dark);
+  font: inherit;
+  font-size: 14px;
+}
+
+.stay input::placeholder {
+  color: var(--on-dark-2);
+}
+
+.stay input:focus {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+}
+
+.stay input[aria-invalid="true"] {
+  border-color: var(--on-dark-refused);
+}
+
+/* ✨ The field no person fills, off the page for everyone; a bot that fills it is turned away. */
+.stay .stay-trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.stay-refusal,
+.stay-thanks {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.stay-refusal {
+  color: var(--on-dark-refused);
+}
+
+.stay-thanks {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.stay small {
+  color: var(--on-dark-2);
+  font-size: 12.5px;
+}
+
+.stay small a {
+  color: inherit;
+}
+
+@media (max-width: 760px) {
+  .stay-card {
+    grid-template-columns: 1fr;
+  }
+
+  .stay-copy {
+    grid-row: auto;
+  }
+
+  .stay form {
+    flex-wrap: wrap;
+  }
+}
+
+/* ✨ The calling cards carry their photos in the plain grid as well as on the ring, so they show without JavaScript and
+   under reduced motion (ticket 99). Only a card off the ring is made position: relative, to anchor its photo: on the ring
+   the position: absolute above places it, and a position: relative there stacked the cards below the stage (fix-14). */
+.meet-cards:not(.ring) .mc {
+  position: relative;
+}
+
+.meet-cards .mc {
   overflow: hidden;
   padding-top: 170px;
   background: var(--brown-78);
   box-shadow: inset 0 0 0 1px var(--warm-20);
 }
 
-.ring-stage .mc::before {
+.meet-cards .mc::before {
   position: absolute;
   inset: 0 0 auto;
   height: 156px;
@@ -5185,23 +6152,23 @@ body > svg[aria-hidden="true"] {
   mask-image: linear-gradient(var(--mask-solid) 76%, transparent);
 }
 
-.ring-stage .mc:nth-child(1)::before {
+.mc-teacher::before {
   background-image: url("../img/callings/teacher.jpg");
 }
 
-.ring-stage .mc:nth-child(2)::before {
+.mc-carpenter::before {
   background-image: url("../img/carpenter.jpg");
 }
 
-.ring-stage .mc:nth-child(3)::before {
+.mc-parent::before {
   background-image: url("../img/callings/parent.jpg");
 }
 
-.ring-stage .mc:nth-child(4)::before {
+.mc-pastor::before {
   background-image: url("../img/callings/pastor.jpg");
 }
 
-.ring-stage .mc:nth-child(5)::before {
+.mc-student::before {
   background-image: url("../img/callings/student.jpg");
 }
 
@@ -5231,7 +6198,4 @@ body > svg[aria-hidden="true"] {
     gap: var(--space-sm);
   }
 
-  .story-copy blockquote {
-    font-size: clamp(24px, 7vw, 36px);
-  }
 }

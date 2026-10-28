@@ -18,12 +18,14 @@ from engine.document.blocks import BLOCK_TYPES, page_count, page_of, pages_of
 from engine.document.gates import (
     clause_passes,
     clauses_of,
+    comparison_viewed,
     gate_passes,
     has_content,
     opened_key,
     unmet,
     unmet_clauses,
     waits_on_comparison,
+    with_people_minimum,
 )
 from engine.document.text import text_for
 
@@ -41,64 +43,76 @@ LABELS = {
 }
 
 
+# ✨ Where the coach stands once they have withdrawn their acceptance (ADR 0024): no answer of theirs, since they are
+# deleted as they withdraw, but what the participant's response keeps in their place until another coach is chosen.
+COACH_WITHDREW = "withdrawn"
+
 # ✨ The coach's answer as the coach's side card tags it (ticket 51b): "waiting" while a working link is unanswered.
 COACH_ANSWER_LABELS = {
     "waiting": "Link issued",
     "accepted": "Accepted",
     "declined": "Declined",
+    COACH_WITHDREW: "Withdrawn",
 }
 
 
 class CoachWaitWording(NamedTuple):
     """✨ What the engine says of a section waiting on the coach's acceptance, for one answer of the coach's: the
-    next-step panel's `heading` and `sentence`, while nothing else is open, and the coach card's `line` under its tag,
-    while the section waits on the coach at all (ticket 65)."""
+    next-step panel's `heading` and `sentence`, while nothing else is open."""
 
     heading: str
     sentence: str
-    line: str
 
 
-# ✨ The coach card's line while no coach has said no, whether a link awaits their answer or there is none.
-_OPENS_ONCE_YOUR_COACH_ACCEPTS = "{section} opens once your coach accepts"
+# ✨ The sentence after a coach has declined.
+CHOOSE_SOMEONE_ELSE = "Choose someone else to walk with you. {section} opens once they accept."
 
 # ✨ Engine wording for a section waiting on the coach's acceptance (ADR 0019), by the coach's answer as the coach page
-# tells it: "waiting" while a working link is unanswered, "declined", or None with no working link (none made, expired
-# unanswered, or revoked).
+# tells it: "waiting" while a working link is unanswered, "declined", `COACH_WITHDREW` once a coach has taken back their
+# acceptance (ADR 0024), naming nobody, since nothing of that coach is kept, or None with no working link (none made,
+# expired unanswered, or revoked).
 COACH_WAIT_WORDING = {
-    "waiting": CoachWaitWording(
-        "Waiting on your coach to respond",
-        "{section} opens once {coach} has accepted.",
-        _OPENS_ONCE_YOUR_COACH_ACCEPTS,
+    "waiting": CoachWaitWording("Waiting on your coach to respond", "{section} opens once {coach} has accepted."),
+    "declined": CoachWaitWording("{coach} has said no", CHOOSE_SOMEONE_ELSE),
+    COACH_WITHDREW: CoachWaitWording(
+        "Your coach has withdrawn",
+        "They've withdrawn their agreement, so they're no longer your coach. Choose someone else to walk with you. "
+        "{section} opens once your new coach accepts.",
     ),
-    "declined": CoachWaitWording(
-        "{coach} has said no",
-        "Choose someone else to walk with you. {section} opens once they accept.",
-        "Choose another coach to open {section}",
-    ),
-    None: CoachWaitWording(
-        "Choose a coach",
-        "{section} opens once your coach has accepted.",
-        _OPENS_ONCE_YOUR_COACH_ACCEPTS,
-    ),
+    None: CoachWaitWording("Choose a coach", "{section} opens once your coach has accepted."),
 }
 
 
 def with_coach_answer(state, answer):
     """✨ The coach's section as its side card shows it: "Locked" while locked, the coach's answer while there is one or
     a working link awaits it (ticket 51b), and otherwise, with no coach, or their link revoked or expired unanswered,
-    what it showed before any link was made, though the section stays complete (fix-2)."""
+    what it showed before any link was made, though the section stays complete (fix-2). "Declined" and "Withdrawn"
+    take the locked and waiting look through `tone` (fix-18), as a count of people still needed does (fix-12); so does
+    "Link issued", a link the coach has not answered (fix-20), while "Accepted" takes the lime of done, next step or
+    not. Anything else keeps the look of its status."""
     if state.is_locked:
         return state
-    return state._replace(label=COACH_ANSWER_LABELS.get(answer, LABELS[NOT_STARTED]))
+    state = state._replace(label=COACH_ANSWER_LABELS.get(answer, LABELS[NOT_STARTED]))
+    if answer in ("waiting", "declined", COACH_WITHDREW):
+        return state._replace(tone="waiting")
+    return state._replace(tone="complete") if answer == "accepted" else state
+
+
+# ✨ Engine wording for the hub's next step once a section waiting on answers has the minimum in (sprint-3c-r3-fix-14):
+# its heading is the comparison signpost's own title, its button the comparison's press, and this the sentence between,
+# with what the engine's wording calls the section at {section}.
+COMPARISON_READY_SENTENCE = (
+    "Enough of the people you invited have answered. See how they see you, then carry on with {section}."
+)
 
 
 class NextStepWording(NamedTuple):
     """✨ What the hub's next step says for a section that carries its own wording for it (ticket 49b), and `waiting`, what
-    it says while the section's only open work waits on others' answers (ticket 68), with its placeholders, or None."""
+    it says while the section's only open work waits on others' answers (ticket 68), with its placeholders, or None. A
+    section may carry `waiting` alone, its heading and sentence then None (ticket 87)."""
 
-    heading: str
-    sentence: str
+    heading: str | None
+    sentence: str | None
     waiting: str | None = None
 
 
@@ -108,7 +122,8 @@ class SectionState(NamedTuple):
     the participant has reached, or the first once it is complete, which is where the hub leads. `part_of` is the
     section it is a part of, if any. `lock_note` says, while it is locked, what opens it. `number` is the authored number
     the hub shows beside it, if any, and `side_card` the authored sentence of a section the hub draws as a side card, or
-    None for one it lists (ticket 49a). `next_step` is the authored heading and sentence the hub's next step shows while
+    None for one it lists (ticket 49a), with `side_card_lead` the bold line above it, if it has one (ticket 95).
+    `next_step` is the authored heading and sentence the hub's next step shows while
     this section is the next step, or None for a section without them (ticket 49b)."""
 
     id: str
@@ -122,17 +137,25 @@ class SectionState(NamedTuple):
     lock_note: str | None = None
     number: str | None = None
     side_card: str | None = None
+    side_card_lead: str | None = None
     next_step: NextStepWording | None = None
+    tone: str | None = None
 
     @property
     def is_locked(self):
         return self.status == LOCKED
 
     @property
+    def look(self):
+        """✨ The state a pill's colours follow (fix-12): the card's `tone` where its tag says something other than its
+        status ("waiting", for a count of people still needed), otherwise its status."""
+        return self.tone or self.status
+
+    @property
     def called(self):
         """✨ What the engine's wording calls the section: "Section 3" for one numbered "03", as the pathway's own
         sentences call it, or its title for one without a number (tickets 65 and 68)."""
-        return _called(self.number, self.title)
+        return _called([(self.number, self.title)])
 
     def waiting_sentence(self, minimum):
         """✨ The sentence the hub's next step says while this section's only open work waits on others' answers (ticket
@@ -145,9 +168,16 @@ class SectionState(NamedTuple):
         return wording.replace("{section}", self.called).replace("{minimum}", str(minimum))
 
 
-def _called(number, title):
-    """✨ What the engine's wording calls a section with this `number` and `title`, as `SectionState.called` says."""
-    return f"Section {int(number)}" if number and number.isdigit() else title
+def _called(numbered):
+    """✨ What the engine's wording calls the sections given as (number, title): "Section 1" for one numbered "01",
+    "Sections 1 and 2" for several all numbered, or else each by that or by its title for one without a number, joined
+    ("Section 1 and Walk with a coach"). The one rule for both the hub's {section} and a lock note's (ticket 86)."""
+    numbers = [number for number, _ in numbered if number and number.isdigit()]
+    if len(numbered) > 1 and len(numbers) == len(numbered):
+        return "Sections " + _joined_text([str(int(number)) for number in numbers])
+    return _joined_text(
+        [f"Section {int(number)}" if number and number.isdigit() else title for number, title in numbered]
+    )
 
 
 class OutlineEntry(NamedTuple):
@@ -172,10 +202,6 @@ class CoachWait(NamedTuple):
             wording.heading.format(coach=coach), wording.sentence.format(section=self.section.called, coach=coach)
         )
 
-    def line(self, answer):
-        """✨ The coach card's line under its tag, by the coach's `answer` as the coach page tells it."""
-        return _coach_wait_wording(answer).line.format(section=self.section.called)
-
 
 def _coach_wait_wording(answer):
     """✨ The engine's wording for the coach's `answer`, as `COACH_WAIT_WORDING` has it; an answer it lacks is said as
@@ -184,10 +210,10 @@ def _coach_wait_wording(answer):
 
 
 class Hub(NamedTuple):
-    """✨ A participant's whole hub: their track's sections, the one to do next, how many of the sections are
-    complete, out of `total`, and the first section waiting on the coach, as a `CoachWait`, if any. With no next step,
-    `waiting_on_answers` is the first section passed over because its only open work waits on the comparison, and so on
-    other people's answers (ticket 68), or None."""
+    """✨ A participant's whole hub: their track's sections, the one to do next, how many of the sections it
+    counts (`counted_sections`) are complete, out of `total`, and the first section waiting on the coach, as a
+    `CoachWait`, if any. With no next step, `waiting_on_answers` is the first section passed over because its only open
+    work waits on the comparison, and so on other people's answers (ticket 68), or None."""
 
     sections: tuple
     next_step: SectionState | None
@@ -219,6 +245,49 @@ def track_sections(document):
     counts sections or blocks goes through here, so choosing a track later changes this function alone.
     """
     return document["content"]["sections"]
+
+
+class WizardStep(NamedTuple):
+    """✨ Where a wizard's page stands in its "Step N of M" counter: its `number`, out of `count`; and what the document
+    has the step say, its verse, reference, word and heading (sprint-3c-r3-fix-7), or None."""
+
+    number: int
+    count: int
+    authored: dict | None = None
+    PHOTOS = 5  # ✨ the photos the stylesheet draws, the hackathon prototype's five (ticket 101)
+
+    @property
+    def photo(self):
+        """✨ Which of the wizard's photos this step is drawn beside, counted from 1: each page differs from the one
+        before, and a wizard longer than the photos there are begins them again."""
+        return (self.number - 1) % self.PHOTOS + 1
+
+    @property
+    def numbers(self):
+        """✨ Every step's number, in order, as the counter's bar draws one mark for each."""
+        return range(1, self.count + 1)
+
+
+def wizard_step(sections, section, number):
+    """✨ The step a wizard's page `number` is. The entry page (ADR 0021) comes before the first wizard of the track, as
+    its step 1, so that wizard's pages are counted from 2; any later wizard counts its own pages alone."""
+    first = _first_wizard(sections)
+    before = 1 if first is not None and first["id"] == section["id"] else 0
+    step = number + before
+    authored = section.get("wizard_steps", [])
+    return WizardStep(step, page_count(section) + before, authored[step - 1] if step <= len(authored) else None)
+
+
+def entry_page_step(sections):
+    """✨ The entry page's step: the one before the track's first wizard's page 1, or a step on its own for a track
+    without a wizard."""
+    first = _first_wizard(sections)
+    return wizard_step(sections, first, 0) if first is not None else WizardStep(1, 1)
+
+
+def _first_wizard(sections):
+    """✨ The first section of these that the document marks as a wizard, or None."""
+    return next((section for section in sections if section.get("wizard")), None)
 
 
 def section_by_id(document, section_id):
@@ -350,23 +419,46 @@ def _waiting_on(part, completed, answers, sections, moved_past):
     return WaitingOn(parent, None if all_open else blocks[-1])
 
 
+class Piece(NamedTuple):
+    """✨ A stretch of a lock note's text, and whether a page draws it in italics, as it does each section title."""
+
+    text: str
+    italic: bool = False
+
+
+def plain(text):
+    """✨ A piece of a lock note drawn as it is."""
+    return Piece(text)
+
+
+def italic(text):
+    """✨ A piece of a lock note drawn in italics: a section title it names (developer's call, 23 Oct)."""
+    return Piece(text, italic=True)
+
+
 class LockNote(str):
-    """✨ A note naming the sections a locked section still waits for (ticket 79): plain text as a string, and, as a
-    page draws it, each section title it names in italics. Built from `pieces`, each (text, in italics)."""
+    """✨ What the hub says of a locked section (ticket 79), on its "Locked" (ticket 97), always built from `pieces`,
+    each a `Piece` (ticket 86): plain text as a string, and, as a page draws it, each italic piece in italics."""
 
     def __new__(cls, pieces):
-        note = super().__new__(cls, "".join(text for text, _ in pieces))
+        note = super().__new__(cls, "".join(piece.text for piece in pieces))
         note.pieces = tuple(pieces)
         return note
 
     def __html__(self):
         return mark_safe(
-            "".join(format_html("<em>{}</em>", text) if italic else escape(text) for text, italic in self.pieces)
+            "".join(
+                format_html("<em>{}</em>", piece.text) if piece.italic else escape(piece.text) for piece in self.pieces
+            )
         )
 
 
+# ✨ The engine's general lock note, for a section locked by what comes before it with nothing more to name.
+GENERAL_LOCK_NOTE = "Complete what comes before this to open it."
+
+
 def _lock_note(section, completed, answers, sections, moved_past, role):
-    """✨ What the hub says under a locked section: the sections it requires still unfinished, and with them its
+    """✨ What the hub says of a locked section: the sections it requires still unfinished, and with them its
     opening conditions in the sentence it carries for that; once those sections are done, the message of each failing
     opening condition (ADR 0019); for a part waiting on its section, where it opens from and, while a reading there is
     unconfirmed, what opens it; otherwise the engine's general note."""
@@ -377,40 +469,43 @@ def _lock_note(section, completed, answers, sections, moved_past, role):
         if named and notes and with_sections:
             return LockNote(_filled(text_for(with_sections, role), "{sections}", named))
         if not named:
-            return "Complete what comes before this to open it."
-        return LockNote([("Opens once you've ", False), *named, (".", False)])
+            return LockNote([plain(GENERAL_LOCK_NOTE)])
+        return LockNote([plain("Opens once you've "), *named, plain(".")])
     if notes:
-        return " ".join(notes)
+        return LockNote([plain(" ".join(notes))])
     waiting = _waiting_on(section, completed, answers, sections, moved_past)
     if waiting is None:
-        return "Complete what comes before this to open it."
-    title = (text_for(waiting.section["title"], role), True)
+        return LockNote([plain(GENERAL_LOCK_NOTE)])
+    title = italic(text_for(waiting.section["title"], role))
     if waiting.holding is not None and BLOCK_TYPES[waiting.holding["type"]].opens_what_follows:
-        return LockNote([("Opens from ", False), title, (", once you've read the passages.", False)])
-    return LockNote([("Opens from ", False), title, (".", False)])
+        return LockNote([plain("Opens from "), title, plain(", once you've read the passages.")])
+    return LockNote([plain("Opens from "), title, plain(".")])
 
 
 def _unfinished_named(section, completed, sections, role):
     """✨ What is left in the sections a section requires that are not yet complete, as the lock note's pieces, or None.
     Each is named by its authored phrase for what finishing it takes (ticket 79), or else as "finished {title}", as the
-    faithful port names its sections (ticket 52); those sharing a phrase together, all joined in document order. A
-    phrase's {min} is its section's own `links_issued` minimum, filled before they are grouped (ticket 81). A required
-    section outside the track is not named."""
-    by_phrase = {}
-    for other in sections:
-        if other["id"] in section.get("requires", []) and other["id"] not in completed:
-            phrase = _with_min(text_for(other["to_finish"], role), other) if "to_finish" in other else "finished {title}"
-            by_phrase.setdefault(phrase, []).append(other)
-    if not by_phrase:
+    faithful port names its sections (ticket 52), in the order of its requirements; those next to each other sharing a
+    phrase together, so none is moved ahead of a section between them (sprint 3b code review). A phrase's {min} is its
+    section's own `links_issued` minimum, filled before they are grouped (ticket 81). A required section outside the
+    track is not named."""
+    by_id = {other["id"]: other for other in sections}
+    runs = []
+    for required in section.get("requires", []):
+        other = by_id.get(required)
+        if other is None or required in completed:
+            continue
+        if "to_finish" in other:
+            phrase = with_people_minimum(text_for(other["to_finish"], role), clauses_of(other))
+        else:
+            phrase = "finished {title}"
+        if runs and runs[-1][0] == phrase:
+            runs[-1][1].append(other)
+        else:
+            runs.append((phrase, [other]))
+    if not runs:
         return None
-    return _joined([_named_by(phrase, group, role) for phrase, group in by_phrase.items()])
-
-
-def _with_min(phrase, section):
-    """✨ A section's phrase with its `links_issued` clause's minimum wherever it says {min}. The linter refuses a {min}
-    in a section without exactly one such clause."""
-    issued = [clause for clause in clauses_of(section) if clause["type"] == "links_issued"]
-    return phrase.replace("{min}", str(issued[0]["min"])) if len(issued) == 1 else phrase
+    return _joined([_named_by(phrase, group, role) for phrase, group in runs])
 
 
 def _named_by(phrase, group, role):
@@ -418,12 +513,8 @@ def _named_by(phrase, group, role):
     them ("Sections 1 and 2"), and {title} their titles, in italics, as a section's title is wherever a note names it
     (developer's call, 23 Oct)."""
     titles = [text_for(other["title"], role) for other in group]
-    numbers = [other.get("number") or "" for other in group]
-    if len(group) > 1 and all(number.isdigit() for number in numbers):
-        called = "Sections " + _joined_text([str(int(number)) for number in numbers])
-    else:
-        called = _joined_text([_called(other.get("number"), title) for other, title in zip(group, titles)])
-    return _filled(phrase.replace("{section}", called), "{title}", _joined([[(title, True)] for title in titles]))
+    called = _called([(other.get("number"), title) for other, title in zip(group, titles)])
+    return _filled(phrase.replace("{section}", called), "{title}", _joined([[italic(title)] for title in titles]))
 
 
 def _filled(text, placeholder, pieces):
@@ -433,7 +524,7 @@ def _filled(text, placeholder, pieces):
     for index, part in enumerate(text.split(placeholder)):
         if index:
             filled.extend(pieces)
-        filled.append((part, False))
+        filled.append(plain(part))
     return filled
 
 
@@ -442,14 +533,14 @@ def _joined(items):
     joined = []
     for index, item in enumerate(items):
         if index:
-            joined.append((" and " if index == len(items) - 1 else ", ", False))
+            joined.append(plain(" and " if index == len(items) - 1 else ", "))
         joined.extend(item)
     return joined
 
 
 def _joined_text(words):
     """✨ `words` joined as `_joined` joins pieces, as plain text."""
-    return "".join(text for text, _ in _joined([[(word, False)] for word in words]))
+    return "".join(piece.text for piece in _joined([[plain(word)] for word in words]))
 
 
 def complete_sections(sections, answers, completed):
@@ -478,9 +569,18 @@ def is_once_only_and_complete(section, completed):
 
 
 def listed_sections(sections, completed):
-    """✨ The sections the hub lists and counts, given those complete as `complete_sections` works them out: all but a
-    once-only section once complete. Progress, on the hub and as an organisation's admins see it, counts these alone."""
+    """✨ The sections the hub lists, given those complete as `complete_sections` works them out: all but a once-only
+    section once complete. Progress counts these alone, or some of them (`counted_sections`)."""
     return [section for section in sections if not is_once_only_and_complete(section, completed)]
+
+
+def counted_sections(sections, completed):
+    """✨ The sections progress counts, on the hub and as an organisation's admins see it: of those listed, only the
+    numbered ones in a pathway that numbers any, leaving out its parts, its side cards and its wizard (sprint 3c, ticket
+    87); every one listed in a pathway that numbers none, as the faithful port."""
+    listed = listed_sections(sections, completed)
+    numbered = [section for section in listed if section.get("number")]
+    return numbered or listed
 
 
 def hub_for(sections, answers, completed, role="participant", moved_past=None):
@@ -510,11 +610,12 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None):
         ),
         None,
     )
+    counted = {section["id"] for section in counted_sections(sections, completed)}
     return Hub(
         sections=tuple(states),
         next_step=next((state for state in states if state.is_next), None),
-        complete=sum(1 for state in states if state.status == COMPLETE),
-        total=len(states),
+        complete=sum(1 for state in states if state.id in counted and state.status == COMPLETE),
+        total=len(counted),
         coach_wait=coach_wait,
         waiting_on_answers=None if next_step is not None else waiting_on_answers,
     )
@@ -522,8 +623,8 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None):
 
 def _waits_only_on_comparison(section, answers, blocks):
     """✨ Whether a section's only open work waits on other people: every clause of its gate still unmet names a block
-    waiting on the comparison (ticket 68), as Section 1's reflection does in *Whatever You Do*. The hub's next step passes
-    over it (ADR 0019)."""
+    waiting on the comparison (ticket 68), as Section 2's reflection does in *Whatever You Do* (ticket 87). The hub's
+    next step passes over it (ADR 0019)."""
     clauses = unmet_clauses(section, answers)
     return bool(clauses) and all(waits_on_comparison(blocks.get(clause["block"], {}), answers) for clause in clauses)
 
@@ -550,17 +651,18 @@ def _state(section, answers, completed, role, moved_past, sections):
         lock_note=_lock_note(section, completed, answers, sections, moved_past, role) if status == LOCKED else None,
         number=section.get("number"),
         side_card=text_for(section["side_card"]["sentence"], role) if "side_card" in section else None,
+        side_card_lead=text_for(section["side_card"]["lead"], role) if "lead" in section.get("side_card", {}) else None,
         next_step=_next_step_wording(section, role),
     )
 
 
 def _next_step_wording(section, role):
-    """✨ The heading and sentence the section carries for when it is the next step, or None."""
+    """✨ The heading and sentence the section carries for when it is the next step, each None for a section carrying
+    only its `waiting` sentence (ticket 87), or None."""
     if "next_step" not in section:
         return None
-    wording = section["next_step"]
-    waiting = text_for(wording["waiting"], role) if "waiting" in wording else None
-    return NextStepWording(text_for(wording["heading"], role), text_for(wording["sentence"], role), waiting)
+    wording = {field: text_for(text, role) for field, text in section["next_step"].items()}
+    return NextStepWording(wording.get("heading"), wording.get("sentence"), wording.get("waiting"))
 
 
 def _estimate(section, status, role):
@@ -575,11 +677,17 @@ def _status(section, answers, completed, sections, moved_past):
         return COMPLETE  # ✨ completing is the participant's own act, so it outlasts any later change
     if is_locked(section, completed, answers, sections, moved_past):
         return LOCKED
-    if any(has_content(answers.get(block["id"])) for block in _interactive_blocks(section)):
+    # ✨ A section's own blocks and its parts' count, so a section whose own blocks take no answer is in progress once
+    # its part is begun (ticket 87), and so does a comparison signpost once it reads "Viewed" (fix-24).
+    parts = [other for other in sections if other.get("part_of") == section["id"]]
+    if any(has_content(answers.get(block["id"])) for other in (section, *parts) for block in _interactive_blocks(other)):
+        return IN_PROGRESS
+    blocks = [block for other in (section, *parts) for block in other["blocks"]]
+    if any(comparison_viewed(answers, block["sort"]) for block in blocks if block["type"] == "comparison_signpost"):
         return IN_PROGRESS
     return NOT_STARTED
 
 
 def _interactive_blocks(section):
-    """✨ The blocks the participant does something with. Progress counts these and no others."""
+    """✨ The section's own blocks the participant does something with. Progress counts these and no others."""
     return [block for block in section["blocks"] if BLOCK_TYPES[block["type"]].is_interactive]

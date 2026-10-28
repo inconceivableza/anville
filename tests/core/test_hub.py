@@ -10,7 +10,7 @@ to open is enforced separately, over HTTP, in tests/journeys/test_sections.py.
 import pytest
 from django.utils.html import conditional_escape
 
-from engine.hub import COMPLETE, IN_PROGRESS, LOCKED, NOT_STARTED, hub_for, is_locked, open_blocks
+from engine.hub import COMPLETE, IN_PROGRESS, LOCKED, NOT_STARTED, Piece, hub_for, is_locked, open_blocks
 
 
 def section(id, requires=(), blocks=()):
@@ -128,6 +128,21 @@ def test_progress_counts_the_sections_complete_not_the_answers():
     hub = hub_for(A_CHAIN, {"a": "Written", "b": "Written", "c": "Written"}, completed=["first"])
 
     assert (hub.complete, hub.total) == (1, 3)
+
+
+def test_a_pathway_that_numbers_its_sections_counts_only_those_it_numbers():
+    """✨ Leaving out a part and a side card, as *Whatever You Do*'s hub does since sprint 3c; a pathway numbering none,
+    as the faithful port, counts every section it lists, as above."""
+    numbered = [
+        {**section("first"), "number": "01"},
+        {**STRENGTHS, "part_of": "first"},
+        {**section("second", requires=["first"]), "number": "02"},
+        side_card("card"),
+    ]
+
+    hub = hub_for(numbered, {"sort": "Sorted"}, completed=["first"])
+
+    assert (hub.complete, hub.total) == (1, 2)
 
 
 @pytest.mark.parametrize("answer", ["", "   ", None])
@@ -261,6 +276,48 @@ def test_a_part_is_locked_until_the_participant_reaches_its_sections_signpost_to
     assert statuses([gifts, part], answers={"read": True})[1] == NOT_STARTED
 
 
+def test_passages_with_nothing_to_confirm_open_the_part_beneath_them_with_the_section():
+    """✨ *Whatever You Do*'s Section 1 since sprint 3c: its passages, then the strengths evaluation, open at once."""
+    part = {**STRENGTHS, "part_of": "gifts"}
+    passages = {**reading("read"), "type": "scripture_passages"}
+    gifts = section("gifts", blocks=[passages, signpost("to-strengths", "strengths")])
+
+    assert statuses([gifts, part]) == [NOT_STARTED, NOT_STARTED]
+
+
+def test_a_section_is_in_progress_once_a_part_of_it_is_begun():
+    """✨ A section whose own blocks take no answer, as *Whatever You Do*'s Section 1 since sprint 3c, is in progress
+    while the participant works on its part, and stays so once the part is complete, until the section is finished."""
+    part = {**STRENGTHS, "part_of": "gifts"}
+    gifts = section("gifts", blocks=[signpost("to-strengths", "strengths")])
+
+    assert statuses([gifts, part], answers={"sort": "Sorted"}) == [IN_PROGRESS, COMPLETE]
+
+
+# A comparison signpost
+
+
+def comparison_section():
+    """✨ As *Whatever You Do*'s Section 2: a comparison signpost, then a reflection."""
+    signpost_block = {"id": "how-others", "type": "comparison_signpost", "sort": "sort", "title": "How others see you"}
+    return section("others", blocks=[signpost_block, long_text("summary")])
+
+
+def test_a_section_whose_comparison_signpost_reads_viewed_is_in_progress():
+    """✨ Viewing the comparison is the participant's first act in *Whatever You Do*'s Section 2 (fix-24)."""
+    assert statuses([comparison_section()], answers={"sort/viewed": "2026-10-27T10:00:00Z"}) == [IN_PROGRESS]
+
+
+def test_a_visit_to_the_comparison_that_was_not_viewing_it_does_not_start_the_section():
+    """✨ A visit below the minimum, or a press that only showed "Before you look", is stored as a visit alone."""
+    assert statuses([comparison_section()], answers={"sort/comparison": "2026-10-27T10:00:00Z"}) == [NOT_STARTED]
+
+
+def test_a_complete_section_whose_comparison_was_viewed_stays_complete():
+    answers = {"sort/viewed": "2026-10-27T10:00:00Z", "summary": "Written"}
+    assert statuses([comparison_section()], answers=answers, completed=["others"]) == [COMPLETE]
+
+
 # A hub side card
 
 
@@ -323,17 +380,28 @@ def phrased(id, phrase, number=None):
 
 def test_a_locked_section_names_what_is_left_in_each_section_by_its_phrase_or_else_by_its_title():
     """✨ As Section 2 names the Strengths assessment and both side cards (ticket 79). Sections without a phrase are
-    named together, as the faithful port's are."""
+    named together, as the faithful port's are, but never moved ahead of a section between them (sprint 3b code
+    review)."""
     sections = [
         phrased("a", "done the {title}"),
         section("b"),
-        phrased("c", "added at least 3 people in {title}"),
-        section("d"),
-        section("last", requires=["a", "b", "c", "d"]),
+        section("c"),
+        phrased("d", "added at least 3 people in {title}"),
+        section("e"),
+        section("last", requires=["a", "b", "c", "d", "e"]),
     ]
 
-    assert lock_note(sections) == "Opens once you've done the A, finished B and D and added at least 3 people in C."
-    assert lock_note(sections, completed=["a", "b"]) == "Opens once you've added at least 3 people in C and finished D."
+    assert lock_note(sections) == (
+        "Opens once you've done the A, finished B and C, added at least 3 people in D and finished E."
+    )
+    assert lock_note(sections, completed=["a", "d"]) == "Opens once you've finished B, C and E."
+
+
+def test_a_locked_section_names_what_is_left_in_the_order_of_its_requirements():
+    """✨ Not in the document's order (sprint 3b code review)."""
+    sections = [section("a"), phrased("b", "done the {title}"), section("last", requires=["b", "a"])]
+
+    assert lock_note(sections) == "Opens once you've done the B and finished A."
 
 
 def test_a_phrase_says_its_sections_links_issued_minimum_where_it_writes_min():
@@ -354,6 +422,17 @@ def test_sections_sharing_a_phrase_are_named_together_and_only_those_left():
 
     assert lock_note(sections) == "Opens once you've completed Sections 1 and 2."
     assert lock_note(sections, completed=["a"]) == "Opens once you've completed Section 2."
+
+
+def test_every_lock_note_is_built_from_named_pieces_even_with_no_title_to_name():
+    """✨ The engine's general note and an opening condition's message are notes as any other is (ticket 86)."""
+    waits_on_outside = section("last", requires=["elsewhere"])
+    conditioned = section("conditioned")
+    conditioned["opens_when"] = {"clauses": [{"type": "coach_accepted", "block": "coach", "message": "Wait <here>."}]}
+
+    for note in [lock_note([waits_on_outside]), lock_note([conditioned], title_of="conditioned")]:
+        assert note.pieces and all(isinstance(piece, Piece) and not piece.italic for piece in note.pieces)
+    assert conditional_escape(lock_note([conditioned], title_of="conditioned")) == "Wait &lt;here&gt;."
 
 
 def test_every_title_a_note_names_is_in_italics_and_escaped():

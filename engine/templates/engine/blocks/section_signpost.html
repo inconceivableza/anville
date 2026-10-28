@@ -5,11 +5,12 @@
   but not linked, as on the hub. A section outside the participant's track has no state, so nothing is shown.
   With an authored button label the button is the way there, as in the prototype, and the title is plain. Once the
   section is complete, a signpost with finished wording shows it, and its button leads to the results of the section's
-  sort, if it has one, rather than back to its start (ticket 61).
+  sort, if it has one, rather than back to its start (ticket 61). It carries no status pill (ticket 89): a complete
+  section marks the card green, and its wording and button say where it stands.
 {% endcomment %}
 {% load section_pages %}
 {% if block.link %}
-  <div id="block-{{ block.id }}" class="signpost">
+  <div id="block-{{ block.id }}" class="signpost{% if block.link.status == 'complete' %} is-complete{% endif %}{% if block.link.is_locked %} is-locked{% endif %}">
     <p class="signpost-title">
       {% if block.link.is_locked or block.text.button_label %}
         {{ block.link.title }}
@@ -21,6 +22,5 @@
     {% if block.text.button_label and not block.link.is_locked %}
       <p><a class="pill" href="{% if block.results %}{{ block.results }}{% else %}{% page_url block.link.id block.link.page %}{% endif %}">{{ block.text.button_label }}</a></p>
     {% endif %}
-    <span class="status-chip status-{{ block.link.status }}">{{ block.link.label }}</span>
   </div>
 {% endif %}
