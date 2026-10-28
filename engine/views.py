@@ -903,12 +903,13 @@ def _saved(request, state, section, block_id):
     the row beneath a wizard's rating shows and moves the next statement down (fix-11).
     """
     page = page_of(section, block_id)
+    block = next(block for block in section["blocks"] if block["id"] == block_id)
     if request.headers.get("HX-Request") == "true":
         shown = _section_page(state, section, page)
-        status = render_to_string("engine/save_status.html", shown, request).strip()
+        quietly = _saves_quietly(state.version.document, section, block)
+        status = render_to_string("engine/save_status.html", {**shown, "saves_quietly": quietly}, request).strip()
         gate = render_to_string("engine/completion.html", {**shown, "out_of_band": True}, request).strip()
         return HttpResponse(status + gate)
-    block = next(block for block in section["blocks"] if block["id"] == block_id)
     return _see_other(f"{page_url(section['id'], page)}#{landing_of(block)}")
 
 
@@ -2521,6 +2522,7 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
                     comparison=_comparison_signpost_shown(state, block),
                     rows_back=rows_back.get(block["id"]),
                     coach_withdrew=state.response is not None and state.response.coach_withdrew,
+                    saves_quietly=_saves_quietly(version.document, section, block),
                 )
                 for block in blocks
             ],
@@ -2537,9 +2539,16 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
         "checklist": gate_checklist,
         # ✨ Where the document asks for it (ticket 83), the checklist only once a press is refused, and unmet alone.
         "messages_after_a_press": version.document.get("messages_after_a_press", False),
-        # ✨ A wizard's answers save without saying "Saved" (ticket 83); a refusal still says why.
-        "saves_quietly": bool(section.get("wizard")),
     }
+
+
+def _saves_quietly(document, section, block):
+    """✨ Whether a block's answer saves without saying "Saved": every answer on a wizard's pages (ticket 83), and a 1–10
+    rating where the document asks for it (`ratings_save_quietly`, sprint-3c-r3-fix-15), as *Whatever You Do*'s letter
+    does. A refusal still says why."""
+    return bool(section.get("wizard")) or (
+        document.get("ratings_save_quietly", False) and block["type"] == "agreement_scale"
+    )
 
 
 def _completes_itself(section):
@@ -2704,6 +2713,7 @@ def _block_for_participant(
     comparison=None,
     rows_back=None,
     coach_withdrew=False,
+    saves_quietly=False,
 ):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
     identifier; a signpost to a section outside the participant's track has no state and shows nothing. `issued` is a
@@ -2713,7 +2723,7 @@ def _block_for_participant(
     block's results, from `_sort_results_drawn`, and `comparison` a `comparison_signpost`'s status, from
     `_comparison_signpost_shown`. A sort not yet in starts from `demo`, a demo profile, with its guide beside it
     (fix-23). A coach checklist opens saying the coach withdrew while the response keeps that they did
-    (`coach_withdrew`, ADR 0024)."""
+    (`coach_withdrew`, ADR 0024). One that `saves_quietly` says nothing on a save (`_saves_quietly`)."""
     rows = _contact_rows(block, answers, issued, **(rows_back or {})) if block["type"] == "contact_list" else None
     widget = BLOCK_TYPES[block["type"]].widget
     shown_widget = widget(document, "participant", "") if widget else None  # ✨ the participant's wording names no one
@@ -2760,6 +2770,7 @@ def _block_for_participant(
         "comparison": comparison,
         # ✨ While it waits on the comparison, its authored message, and it is drawn disabled (ticket 68).
         "waiting": comparison_wait_message(block, answers),
+        "saves_quietly": saves_quietly,
     }
 
 

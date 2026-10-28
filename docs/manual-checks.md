@@ -342,9 +342,17 @@ The homepage (`/`):
 ### sprint-3c-r3-fix-11: the 1–10 ratings stay put, and the letter's match the wizard's (rebuild the frontend, load the pathway again, and use a participant started after that; wide screen and about 375px)
 
 - "Where are you coming from?": press a number on the first statement. Its number fills and shows top right; the next statement does not move. Change it to another number: nothing below jumps, not even for a moment. Do both on the last statement too, and once with the network slowed (DevTools, "Slow 3G"): "Saving…" may take a row then, as a slow save says so.
-- "A letter to your future self": the five closing ratings are rows under a fine line, the prompt in the heading face and the chosen number top right, the ten buttons as the wizard's, no card around them; pressing one fills the points below it. Each still says "Saved" under it, in a row kept for it, so nothing moves when it appears.
+- "A letter to your future self": the five closing ratings are rows under a fine line, the prompt in the heading face and the chosen number top right, the ten buttons as the wizard's, no card around them; pressing one fills the points below it. Since sprint-3c-r3-fix-15 they say nothing on a save (below).
 - The letter has no "This part: …" above its task or above the closing ratings' introduction.
 - The faithful port's ratings (its onboarding and letter) take the same rows, and still say "Saved".
+
+### sprint-3c-r3-fix-15: the letter's ratings save quietly (rebuild the frontend, load the pathway again, and use a participant started after that; wide screen and about 375px)
+
+- "A letter to your future self": press a number on each of two closing ratings. No "Saved" shows under either, no empty row sits under them, and nothing below moves, as on "Where are you coming from?". Reload: both numbers are kept.
+- Writing the letter itself still shows "Saved" under it.
+- With the network off (DevTools, Offline), press a number: "Not saved." with its reason shows under that rating.
+- Without JavaScript: each rating keeps its Save button, and saving comes back with the number chosen.
+- The faithful port's letter ratings still say "Saved".
 
 ## The hub's next step and its photo (load the pathway again first; ticket 49b)
 

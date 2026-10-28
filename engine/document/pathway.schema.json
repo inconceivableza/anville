@@ -73,6 +73,11 @@
       "type": "boolean",
       "default": false
     },
+    "ratings_save_quietly": {
+      "description": "Whether a 1–10 rating (an `agreement_scale` block) saves without saying \"Saved\" beneath it, as a wizard's answers always do; a refused rating still says why. Off, every rating says \"Saved\" as other answers do.",
+      "type": "boolean",
+      "default": false
+    },
     "content": {
       "type": "object",
       "additionalProperties": false,
