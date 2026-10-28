@@ -20,11 +20,22 @@
 {% block content %}
   <div class="ob">
     {# ✨ The photo is the stylesheet's, a different one for each page (ticket 101), so it needs no pathway file or sign-in. #}
+    {# ✨ The step's own verse and the word beneath it, as v3's, where the document gives them (sprint-3c-r3-fix-7); #}
+    {# ✨ else the engine's verse, in the ESV's words, as the credits page's notice says the quotations are. #}
     <aside class="ob-photo ob-photo-{{ step.photo }}" aria-label="A scripture reflection">
-      <blockquote class="q">
-        “For we are his workmanship, created in Christ Jesus unto good works.”
-        <cite class="label">Ephesians 2:10</cite>
-      </blockquote>
+      {% if step.authored %}
+        <blockquote class="q">
+          “{{ step.authored.verse }}”
+          <cite class="label">{{ step.authored.reference }}</cite>
+        </blockquote>
+        <span class="sc">{{ step.authored.label }}</span>
+      {% else %}
+        <blockquote class="q">
+          “For we are his workmanship, created in Christ Jesus for good works, which God prepared beforehand, that we
+          should walk in them.”
+          <cite class="label">Ephesians 2:10</cite>
+        </blockquote>
+      {% endif %}
     </aside>
     <section class="ob-form">
       <header class="ob-top">
@@ -35,7 +46,7 @@
           <button type="submit" class="linkbtn">Log out</button>
         </form>
         <div class="prog" aria-live="polite">
-          <span class="label">Step {{ step.number }} of {{ step.count }}</span>
+          <span class="label">{% block progress %}Step {{ step.number }} of {{ step.count }}{% endblock progress %}</span>
           <span class="bar" aria-hidden="true">{% for each in steps %}<i{% if each <= step.number %} class="on"{% endif %}></i>{% endfor %}</span>
         </div>
         {% include "engine/logo.html" %}
@@ -44,7 +55,7 @@
       <div class="ob-main">
         <div class="step">
           {% block step %}
-            <h1>{{ section.title }}</h1>
+            <h1>{{ step.authored.heading|default:section.title }}</h1>
             {# ✨ A choice is v3's cards here, not the section page's drop-down (sprint-3c-r3-fix-4). #}
             {% for block in section.blocks %}
               {% include "engine/block_drawn.html" with choices_as_cards=True %}

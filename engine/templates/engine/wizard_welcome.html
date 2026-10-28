@@ -1,0 +1,18 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/wizard.html" %}
+{% comment %}
+  ✨ A wizard's welcome (sprint-3c-r3-fix-7), as v3's "Welcome, Alex": once the wizard is complete, the step after its
+  last, in its layout, every mark of the counter on. Its wording is the document's; its one way on is the hub.
+{% endcomment %}
+{% block head_title %}{{ heading }}{% endblock head_title %}
+
+{% block progress %}All set{% endblock progress %}
+
+{% block step %}
+  <div class="welcome">
+    <h1>{{ heading }}</h1>
+    <p class="why">{{ welcome.sentence }}</p>
+    <a class="pill" href="{% url 'hub' %}">{{ welcome.button }}</a>
+  </div>
+{% endblock step %}

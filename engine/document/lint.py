@@ -34,6 +34,7 @@ def lint(document):
         *_impossible_parts(document, section_ids),
         *_unshowable_side_cards_and_numbers(document),
         *_unseen_once_only_sections(document),
+        *_miscounted_wizard_steps(document),
         *_photos_of_missing_sections(document, section_ids),
         *_unknown_linked_sections(document, section_ids),
         *_signposts_holding_their_own_section(document),
@@ -169,6 +170,27 @@ def _unseen_once_only_sections(document):
             yield Problem(
                 f"/content/sections/{s}/once_only",
                 "A once-only section must be a wizard, or a participant might never see it at all.",
+            )
+
+
+def _miscounted_wizard_steps(document):
+    """✨ A wizard's steps are read by step number (sprint-3c-r3-fix-7), so it needs one for each step it counts: one
+    for each of its pages, and the entry page's before them in the track's first wizard."""
+    first = True
+    for s, section in enumerate(document["content"]["sections"]):
+        if not section.get("wizard"):
+            continue
+        before = 1 if first else 0
+        first = False
+        if "wizard_steps" not in section:
+            continue
+        pages = 1 + sum(block["type"] == "page_break" for block in section["blocks"])
+        count, given = pages + before, len(section["wizard_steps"])
+        if given != count:
+            entry = ", the entry page's first," if before else ","
+            yield Problem(
+                f"/content/sections/{s}/wizard_steps",
+                f"This wizard counts {count} steps{entry} so it needs {count} wizard steps, not {given}.",
             )
 
 

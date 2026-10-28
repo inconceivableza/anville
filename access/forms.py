@@ -72,11 +72,13 @@ class EntryPageForm(forms.Form):
         label="I am 18 or over",
         error_messages={"required": "You need to be 18 or over to take part."},
     )
-    # ✨ "privacy notice" links to the privacy page (ticket 100); lazy, since the URLs are not loaded at import.
+    # ✨ "privacy notice" links to the privacy page (ticket 100); lazy, since the URLs are not loaded at import. Its
+    # ✨ wording names health as the participant's choice to share (sprint-3c-r3-fix-7), a change of wording that is
+    # ✨ not one of meaning, so the consent text's version stays (ADR 0004's note of 28 Oct).
     consents = forms.BooleanField(
         label=format_html_lazy(
-            "I agree to Whatever You Do storing my answers, including anything about my faith, work or health, as "
-            'set out in the <a href="{}">privacy notice</a>.',
+            "I agree to Whatever You Do storing my answers, including personal things I choose to share, such as my "
+            'faith or my health, as set out in the <a href="{}">privacy notice</a>.',
             reverse_lazy("privacy"),
         ),
         error_messages={"required": "You need to agree to take part."},

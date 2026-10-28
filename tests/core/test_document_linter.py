@@ -397,6 +397,34 @@ def test_a_once_only_section_that_is_not_a_wizard_is_refused():
     ]
 
 
+def a_wizard_step():
+    return {"verse": "Commit your work to the LORD.", "reference": "Proverbs 16:3", "label": "Choose"}
+
+
+@pytest.mark.parametrize("given", [1, 3])
+def test_a_wizard_with_a_step_too_few_or_too_many_is_refused(given):
+    """✨ sprint-3c-r3-fix-7: a single-page first wizard counts two steps, the entry page's first, each needing its
+    own."""
+    document = pathway_document()
+    document["content"]["sections"][0]["wizard"] = True
+    document["content"]["sections"][0]["wizard_steps"] = [a_wizard_step() for _ in range(given)]
+
+    assert validate(document) == [
+        Problem(
+            path="/content/sections/0/wizard_steps",
+            message=f"This wizard counts 2 steps, the entry page's first, so it needs 2 wizard steps, not {given}.",
+        )
+    ]
+
+
+def test_a_wizard_with_a_step_for_each_it_counts_is_accepted():
+    document = pathway_document()
+    document["content"]["sections"][0]["wizard"] = True
+    document["content"]["sections"][0]["wizard_steps"] = [a_wizard_step(), a_wizard_step()]
+
+    assert validate(document) == []
+
+
 # ✨ Photos and their credits (ticket 49b)
 
 

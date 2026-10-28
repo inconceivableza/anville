@@ -292,7 +292,7 @@ The homepage (`/`):
 ## Before we begin as a wizard (ticket 50; load the pathway again first, then sign up as someone new)
 
 - After the entry page, Before we begin opens as the wizard, beside a photo (the stylesheet's, a different one on each page: ticket 101): no header, no "Your pathway", no link to the hub; "Step 2 of 3" with three bars at the top, two of them filled, the entry page being step 1 (ticket 92). Page 1 is the reason alone; "Continue →" leads to page 2, the five ratings, with "← Previous page" beside the way on.
-- Going to `/hub/` part-way lands on the page reached. The last "Continue →" lands on the hub, Before we begin listed as complete, and the hub never sends you back. Its entry opens it as an ordinary section page, header and sidebar included, the ratings fixed.
+- Going to `/hub/` part-way lands on the page reached. The last "Continue →" lands on "Welcome, [name]" (sprint-3c-r3-fix-7), whose "Continue →" leads to the hub, Before we begin listed as complete, and the hub never sends you back. Its entry opens it as an ordinary section page, header and sidebar included, the ratings fixed.
 - `/credits/` lists "Photograph of a figure facing the sun from Unsplash." among the site's photographs (ticket 101).
 - Phone width: the photo sits above the page, the ratings fit without scrolling sideways.
 - The photo is as tall as the window on both pages, at a wide screen and at a tall one (over 900px high): no bare dark strip beneath it, whether at the top of the ratings or scrolled to their end, and the photo the same size and crop on page 2 as on page 1, never zoomed. At about 375px it sits above the page as before (fix-10).
@@ -312,7 +312,7 @@ The homepage (`/`):
 ### Ticket 92: The entry page: first name, 18 or over, and consent (after `migrate`, rebuild the frontend and sign up as someone new; no need to load the pathway again)
 
 - Signing up by email lands on "About you" in the wizard's layout: "Log out" top left, "Step 1 of 3" with one of three bars filled, the figure facing the sun as its photo, the Ephesians 2:10 quote on it. The sign-up form had "First name" and no "I am 18 or over".
-- "First name" shows the name given at sign-up and can be changed; below it "I am 18 or over", then "I agree to Whatever You Do storing my answers, including anything about my faith, work or health, as set out in the privacy notice.", each beside its box, "privacy notice" a link to the privacy page (ticket 100), and under it "What this means", closed.
+- "First name" shows the name given at sign-up and can be changed; below it "I am 18 or over", then "I agree to Whatever You Do storing my answers, including personal things I choose to share, such as my faith or my health, as set out in the privacy notice." (sprint-3c-r3-fix-7), each beside its box, "privacy notice" a link to the privacy page (ticket 100), and under it "What this means", closed.
 - "What this means" opens to the consent text, with "Draft wording" at its top, no paragraph on a group's admins, "Agreeing is up to you." with nothing about an enrolment code, nothing about staying in groups after withdrawing, its paragraph ending "You can withdraw at any time from “Your consent”, linked at the foot of your hub." (never "from this page"; the consent page reads the same, fix-3), and "Version 3 of this text." at its end. It opens and closes with JavaScript off too, and by keyboard (Tab to it, Enter).
 - On arrival no refusal shows. Press "Continue →" with the name cleared and both boxes unticked: "Add your first name.", "You need to be 18 or over to take part." and "You need to agree to take part." each under what it refuses, the field and boxes outlined in red, and what was typed or ticked kept. `/hub/` still comes back to this page. With JavaScript the page neither reloads nor moves, and the focus stays on "Continue →"; without, the page comes back opened at the form, not at the top (fix-2).
 - With all three given, "Continue →" opens Before we begin at "Step 2 of 3". After finishing it, the hub greets you by the name given on the entry page, and "Your consent" at its foot shows "You agreed to version 3 of this text".
@@ -328,6 +328,16 @@ The homepage (`/`):
 - At about 375px: the photo sits above the page, the cards in one column, and the page scrolls as any other, the demo strip held at the top, ending at the box with nothing below it.
 - The homepage's five steps, with JavaScript off, are still dark panels with light text.
 - The faithful port's onboarding (a section page, not a wizard) still asks the reason in a drop-down, with the page footer below.
+
+### sprint-3c-r3-fix-7: the onboarding wizard's verses, labels, welcome and consent tick (rebuild the frontend, load the pathway again, and sign up as someone new; beside v3's onboarding)
+
+- "About you": on the photo, "For we are his workmanship, created in Christ Jesus for good works, which God prepared beforehand, that we should walk in them." with "Ephesians 2:10" under it, and "Begin" large at the photo's foot. The tick reads "I agree to Whatever You Do storing my answers, including personal things I choose to share, such as my faith or my health, as set out in the privacy notice."
+- Page 1 (the reason): "Commit your work to the LORD, and your plans will be established.", "Proverbs 16:3" and "Choose"; the heading still "Before we begin".
+- Page 2: "Having gifts that differ according to the grace given to us, let us use them", "Romans 12:6" and "Reflect"; headed "Where are you coming from?", a little smaller than page 1's heading. The five ratings sit closer together, with no empty gap under each; a refused rating still says why under it. "← Previous page" is at the far left of the foot, "Continue →" at the far right.
+- The last "Continue →" opens "Welcome, [the first name given]", large and centred, "You’re all set. Section 1 starts with the ten-minute strengths evaluation." and "Continue →", which opens the hub. "All set" beside the counter, all three marks on; on the photo (the notebook), "Whatever you do, work heartily, as for the Lord and not for men", "Colossians 3:23" and "Welcome". `/sections/onboarding/welcome/` before the wizard is done leads to the page reached.
+- At about 375px: each of these reads, the photo above the page, its large word hidden as before.
+- A participant who agreed before this change is not asked again: the consent page still shows "You agreed to version 3 of this text".
+- The faithful port (no wizard): "About you" shows the Ephesians 2:10 verse in full, with no word under it.
 
 ## The hub's next step and its photo (load the pathway again first; ticket 49b)
 

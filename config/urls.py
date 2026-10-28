@@ -59,6 +59,7 @@ from engine.views import (
     tie_break,
     visit_comparison,
     withdrawal,
+    wizard_welcome,
 )
 
 urlpatterns = [
@@ -109,6 +110,7 @@ urlpatterns = [
     path("sections/<slug:section_id>/pages/<int:page>/continue/", move_past_page, name="move_past_page"),
     path("sections/<slug:section_id>/complete/", complete_section, name="complete_section"),
     path("sections/<slug:section_id>/reopen/", reopen_section, name="reopen_section"),
+    path("sections/<slug:section_id>/welcome/", wizard_welcome, name="wizard_welcome"),
     path("hub/", hub, name="hub"),
     path("credits/", credits_page, name="credits"),
     path("privacy/", privacy, name="privacy"),

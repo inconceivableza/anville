@@ -25,6 +25,32 @@
         "once_only": true,
         "estimate": "About 10 minutes",
         "complete_label": "Continue →",
+        "wizard_steps": [
+          {
+            "verse": "For we are his workmanship, created in Christ Jesus for good works, which God prepared beforehand, that we should walk in them.",
+            "reference": "Ephesians 2:10",
+            "label": "Begin"
+          },
+          {
+            "verse": "Commit your work to the LORD, and your plans will be established.",
+            "reference": "Proverbs 16:3",
+            "label": "Choose"
+          },
+          {
+            "verse": "Having gifts that differ according to the grace given to us, let us use them",
+            "reference": "Romans 12:6",
+            "label": "Reflect",
+            "heading": "Where are you coming from?"
+          }
+        ],
+        "welcome": {
+          "heading": "Welcome, {name}",
+          "sentence": "You’re all set. Section 1 starts with the ten-minute strengths evaluation.",
+          "button": "Continue →",
+          "verse": "Whatever you do, work heartily, as for the Lord and not for men",
+          "reference": "Colossians 3:23",
+          "label": "Welcome"
+        },
         "blocks": [
           {
             "id": "reason",

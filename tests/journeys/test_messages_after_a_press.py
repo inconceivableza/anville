@@ -15,7 +15,7 @@ import pytest
 from engine.models import Publication
 from tests.journeys.pages import gate_checklist
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
-from tests.journeys.test_onboarding_wizard import RATINGS, RATINGS_PAGE, WIZARD, answer, through_the_wizard
+from tests.journeys.test_onboarding_wizard import RATINGS, RATINGS_PAGE, WELCOME, WIZARD, answer, through_the_wizard
 
 DOCUMENT = Path(__file__).resolve().parents[2] / "pathways" / "whatever-you-do.json"
 
@@ -74,7 +74,8 @@ def test_with_javascript_a_refused_continue_sends_back_only_what_is_missing_and_
 
 
 @pytest.mark.django_db
-def test_with_javascript_an_accepted_press_goes_on_to_the_next_page_and_completing_to_the_hub(participant):
+def test_with_javascript_an_accepted_press_goes_on_to_the_next_page_and_completing_to_its_welcome(participant):
+    """✨ To the wizard's welcome, which leads to the hub (sprint-3c-r3-fix-7)."""
     answer(participant, "reason", "exploring")
     moved_on = participant.post("/sections/onboarding/pages/1/continue/", headers=HTMX)
     for rating in RATINGS:
@@ -82,7 +83,7 @@ def test_with_javascript_an_accepted_press_goes_on_to_the_next_page_and_completi
     completed = participant.post("/sections/onboarding/complete/", headers=HTMX)
 
     assert moved_on.headers["HX-Redirect"] == RATINGS_PAGE
-    assert completed.headers["HX-Redirect"] == "/hub/"
+    assert completed.headers["HX-Redirect"] == WELCOME
 
 
 @pytest.mark.django_db
