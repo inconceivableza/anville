@@ -1140,8 +1140,8 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 - Walk with a coach and Five trusted voices show no photo: the coach's card is light, locked or not, and Five trusted voices is the plain dark card.
 - `/credits/` lists "Photograph of misty hills at sunrise from Unsplash." among the site's photographs, and no longer the one of two friends beside a lake.
 
-### sprint-3c-r3-fix-9: the coach card's link buttons (rebuild not needed; wide screen and about 375px; no pathway reload needed)
+### sprint-3c-r3-fix-9: the coach card's link buttons (rebuild needed; wide screen and about 375px; no pathway reload needed)
 
-- On Walk with a coach's waiting card (and the coach page in onboarding), the buttons are "Make a new link" only, with no "Revoke link"; beneath them, "Lost the link? Make a new one; the old one stops working." in small grey type. Before any link is made, the button reads "Get a link for Sam" and the line is absent.
+- On Walk with a coach's waiting card (and the coach page in onboarding), the buttons are "Make a new link" only, with no "Revoke link"; beneath them, "Lost the link? Make a new one; the old one stops working." in small grey type. Before any link is made, the button reads "Get a link for Sam" and the line is absent, and once Sam has accepted or declined it is absent too.
 - "Make a new link" shows a new link once, and the old one, opened in a private window, is refused.
 - Five trusted voices' rows still show "Revoke link" (the only way to stop a link while keeping the person listed).

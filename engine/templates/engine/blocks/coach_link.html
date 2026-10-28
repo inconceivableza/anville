@@ -42,7 +42,8 @@
       {% if link.invitation %}Make a new link{% else %}Get a link for {{ coach.name }}{% endif %}
     </button>
   </div>
-  {% if link.invitation %}
+  {# ✨ While waiting only: after an answer a new link takes that answer with it, so it isn't offered as a fix. #}
+  {% if link.answer == "waiting" %}
     <p class="invitation-status">Lost the link? Make a new one; the old one stops working.</p>
   {% endif %}
 </div>
