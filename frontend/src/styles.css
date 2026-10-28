@@ -4422,18 +4422,34 @@ body > svg[aria-hidden="true"] {
   position: relative;
   z-index: 2;
   display: grid;
-  gap: 30px;
+  /* ✨ The hero fits the window as v3's does: its padding and gaps shrink with the window's height, the demo notice
+     and "Learn more" being more than v3's hero holds (hand check, 28 Oct). */
+  gap: clamp(16px, 2.8svh, 30px);
   justify-items: center;
-  padding: 140px 20px 140px;
+  padding: clamp(64px, 9svh, 140px) 20px;
   max-width: 1240px;
 }
 
+.hero-copy .demo-notice {
+  margin-top: 0;
+}
+
+/* ✨ v3's two lines, "Everyone has a purpose." and "Do you know yours?", each kept whole from 700px up. */
 .hero h1 {
   font-size: clamp(40px, 6.2vw, 96px);
   font-weight: 300;
   line-height: 1.04;
-  max-width: 18ch;
   text-wrap: balance;
+}
+
+.hero h1 .ln {
+  display: block;
+}
+
+@media (min-width: 700px) {
+  .hero h1 .ln {
+    white-space: nowrap;
+  }
 }
 
 
@@ -4571,12 +4587,6 @@ body > svg[aria-hidden="true"] {
 @media (max-width: 480px) {
   .logo-row .lg:nth-child(n+3) {
     display: none;
-  }
-}
-
-@media (max-width: 600px) {
-  .hero-copy {
-    padding-block: 120px;
   }
 }
 
@@ -5015,18 +5025,56 @@ body > svg[aria-hidden="true"] {
   line-height: 1.45;
 }
 
+/* ✨ Each step carries its tab photo, as the meet cards carry theirs, so the list without JavaScript shows them too (fix-3). */
+.steps .step {
+  position: relative;
+  overflow: hidden;
+  padding-top: 190px;
+}
+
+.steps .step::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 160px;
+  content: "";
+  background-position: center;
+  background-size: cover;
+  -webkit-mask-image: linear-gradient(var(--mask-solid) 76%, transparent);
+  mask-image: linear-gradient(var(--mask-solid) 76%, transparent);
+}
+
+.steps .step-1::before {
+  background-image: url("../img/notebook.jpg");
+}
+
+.steps .step-2::before {
+  background-image: url("../img/friends.jpg");
+}
+
+.steps .step-3::before {
+  background-image: url("../img/field-walk.jpg");
+}
+
+.steps .step-4::before {
+  background-image: url("../img/potter.jpg");
+}
+
+.steps .step-5::before {
+  background-image: url("../img/hills.jpg");
+}
+
 .atabs.tabs-on .steps,
 .atabs:not(.tabs-on) .tabrow,
 .atabs:not(.tabs-on) .tabpanel {
   display: none;
 }
 
+/* ✨ Inside the sign-off, so in its type: its size and colour are the sign's (fix-3). */
 .mission-more {
   max-width: 62ch;
-  color: var(--ink);
-  font-size: clamp(16px, 1.4vw, 19px);
   line-height: 1.55;
   margin: 0;
+  text-wrap: pretty;
 }
 
 /* ✨ Ticket 98: "Learn more" under the hero's buttons, with an arrow that nudges down. */
@@ -5370,6 +5418,21 @@ body > svg[aria-hidden="true"] {
   color: var(--on-dark);
 }
 
+/* ✨ The button is centred on the label and heading beside it, rather than hanging from their bottom edge; once they
+   no longer fit side by side it goes under them, at the left, with the same gap (fix-3, 28 Oct). */
+.atabs .top {
+  align-items: center;
+  column-gap: var(--space-lg);
+  row-gap: var(--space-md);
+}
+
+@media (max-width: 700px) {
+  .atabs .top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 .atabs .top p {
   max-width: 54ch;
   color: var(--on-dark-2);
@@ -5543,7 +5606,8 @@ body > svg[aria-hidden="true"] {
 }
 
 /* ---------- THE DIFFERENCE IT MAKES ---------- */
-/* ✨ v3's three figures, drawn at their values without the count-up; the bars are the figures' own widths (ticket 99). */
+/* ✨ v3's three figures, drawn at their values; the bars are the figures' own widths (ticket 99). main.js counts them up
+   as they scroll into view (fix-3); without it they stand at these values. */
 .difference {
   background: var(--cream);
   color: var(--ink);
@@ -5581,6 +5645,7 @@ body > svg[aria-hidden="true"] {
   font-size: clamp(64px, 8vw, 120px);
   line-height: 0.9;
   letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat .num b {
@@ -5598,6 +5663,8 @@ body > svg[aria-hidden="true"] {
   display: block;
   height: 100%;
   background: var(--green);
+  /* ✨ main.js sets the width inline as the figure scrolls into view; these widths are what shows without it. */
+  transition: width 1.6s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .stat:nth-child(1) .bar i {
@@ -5624,11 +5691,11 @@ body > svg[aria-hidden="true"] {
   }
 }
 
+/* ✨ The Impact card follows v3's "A story from a parent": the quote centred in a column of 980px, v3's padding, gap
+   and type, the words coming up from 0.28 (fix-3, 28 Oct). The photo's own treatment is unchanged. */
 .story-sec {
-  min-height: clamp(520px, 62vw, 760px);
   display: grid;
-  place-items: center;
-  padding: clamp(56px, 9vw, 112px) clamp(20px, 5vw, 72px);
+  padding: clamp(80px, 11vw, 150px) clamp(20px, 6vw, 96px);
   color: var(--on-dark);
   background: var(--brown);
 }
@@ -5644,28 +5711,45 @@ body > svg[aria-hidden="true"] {
 
 .story-copy {
   position: relative;
+  z-index: 2;
   display: grid;
-  gap: var(--space-lg);
+  gap: 24px;
+  justify-items: center;
   width: min(980px, 100%);
+  margin: 0 auto;
+  text-align: center;
 }
 
 .story-copy blockquote {
-  /* ✨ v3's size, at one size throughout (ticket 99). */
-  max-width: 40ch;
+  margin: 0;
   font-family: var(--font-heading);
   font-size: clamp(22px, 2.4vw, 34px);
   font-weight: 300;
   line-height: 1.35;
+  color: var(--on-dark);
+  text-wrap: pretty;
+}
+
+.story-sec [data-reveal] .w {
+  opacity: 0.28;
+}
+
+.story-sec [data-reveal] .w.on {
+  opacity: 1;
 }
 
 .story-copy figcaption {
+  font-size: 14px;
   color: var(--on-dark-2);
 }
 
 /* ✨ "Stay in touch" (ticket 74): v3's newsletter card, its copy beside the form, one above the other when narrow. */
+/* ✨ The section is the card: as wide as the other panels, its content in their 1180px column and side padding
+   (fix-3, 28 Oct; it was a narrower card inside a pale panel). */
 .stay {
-  background: var(--paper);
-  padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 72px);
+  background: var(--brown);
+  color: var(--on-dark);
+  padding: clamp(48px, 6vw, 80px) clamp(20px, 5vw, 72px);
 }
 
 .stay-card {
@@ -5676,10 +5760,6 @@ body > svg[aria-hidden="true"] {
   row-gap: var(--space-sm);
   width: min(1180px, 100%);
   margin: 0 auto;
-  padding: clamp(20px, 2.4vw, 28px) clamp(22px, 3vw, 40px);
-  border-radius: 16px;
-  background: var(--brown);
-  color: var(--on-dark);
 }
 
 .stay-copy {

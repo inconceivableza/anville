@@ -353,6 +353,36 @@ if (document.querySelector("main.page") && !reducedMotion) {
   });
 }
 
+// --- "The difference it makes": each figure and its bar count up from 0 as it scrolls into view, as v3's do ---
+// ✨ The page holds the final figures, so with JavaScript off, with reduced motion, or in a browser without
+// IntersectionObserver nothing here runs and they show at once.
+(() => {
+  const stats = [...document.querySelectorAll(".stat[data-v]")];
+  if (!stats.length || reducedMotion || !("IntersectionObserver" in window)) return;
+  const COUNT_MS = 1600;
+  stats.forEach((stat) => {
+    stat.querySelector("b").textContent = "0";
+    stat.querySelector(".bar i").style.width = "0";
+  });
+  const seen = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      seen.unobserve(entry.target);
+      const value = Number(entry.target.dataset.v);
+      const figure = entry.target.querySelector("b");
+      entry.target.querySelector(".bar i").style.width = `${value}%`;
+      const began = performance.now();
+      const step = (now) => {
+        const done = Math.min(1, (now - began) / COUNT_MS);
+        figure.textContent = Math.round(value * (1 - Math.pow(1 - done, 3)));
+        if (done < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }, { threshold: 0.4 });
+  stats.forEach((stat) => seen.observe(stat));
+})();
+
 // --- Evaluation tabs: auto-advancing, pausable, keyboard-navigable ---
 (() => {
   const bar = document.getElementById("aTabs");
