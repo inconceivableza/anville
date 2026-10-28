@@ -392,10 +392,10 @@ The homepage (`/`):
 
 ## The coach's link (ticket 13c)
 
-- Saving Sam (ticket 51b) leads straight to "You've chosen Sam", saying the next step is to ask them properly, with the link shown once beneath, "Copy", "Waiting for Sam to answer. The link works until …", "Make a new link" and "Revoke link", without reloading the page; the link box has focus. "Copy" says "Copied". A reload shows no link, only the status. After "Revoke link" the button reads "Get a link for Sam", which shows a new link the same way.
+- Saving Sam (ticket 51b) leads straight to "You've chosen Sam", saying the next step is to ask them properly, with the link shown once beneath, "Copy", "Waiting for Sam to answer. The link works until …", "Make a new link" and, beneath, "Lost the link? Make a new one; the old one stops working." (no "Revoke link"), without reloading the page; the link box has focus. "Copy" says "Copied". A reload shows no link, only the status. After "Choose someone else" and saving, the button reads "Get a link for Sam", which shows a new link the same way.
 - With Before we begin complete (and later, Section 1 too), saving a coach and "Make a new link" still work.
 - Enter in the link box does nothing: the link stays the same and still works (with and without JavaScript).
-- Without JavaScript: saving Sam, "Get a link for Sam", "Make a new link" and "Revoke link" each come back to the coach page at the checklist, the link shown once after issuing.
+- Without JavaScript: saving Sam, "Get a link for Sam" and "Make a new link" each come back to the coach page at the checklist, the link shown once after issuing.
 - In a private window, the link shows "participant has asked you to be their coach" (the participant's display name), the two authored paragraphs, "What you'd be agreeing to" and the six promises, each with its note in smaller type and a box to its left; the box or its words tick it. The line on what is kept sits above "Accept →" and "I can't commit to all of this".
 - "Accept →" with a box unticked says "Tick all six to accept…" with the boxes as they were. All six ticked: "Thank you — participant will be told" and the authored line; a reload says "You're participant's coach" in its place (ticket 25a), and never shows the boxes again.
 - "I can't commit to all of this" (any boxes ticked): "That's a good answer" and the two authored paragraphs.
@@ -1139,3 +1139,9 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 - Where the pathway names a photo for the next section, that photo covers the hills, as before.
 - Walk with a coach and Five trusted voices show no photo: the coach's card is light, locked or not, and Five trusted voices is the plain dark card.
 - `/credits/` lists "Photograph of misty hills at sunrise from Unsplash." among the site's photographs, and no longer the one of two friends beside a lake.
+
+### sprint-3c-r3-fix-9: the coach card's link buttons (rebuild not needed; wide screen and about 375px; no pathway reload needed)
+
+- On Walk with a coach's waiting card (and the coach page in onboarding), the buttons are "Make a new link" only, with no "Revoke link"; beneath them, "Lost the link? Make a new one; the old one stops working." in small grey type. Before any link is made, the button reads "Get a link for Sam" and the line is absent.
+- "Make a new link" shows a new link once, and the old one, opened in a private window, is refused.
+- Five trusted voices' rows still show "Revoke link" (the only way to stop a link while keeping the person listed).
