@@ -29,7 +29,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 ## The homepage (`/`, signed out and signed in; beside v3's, `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`)
 
-- Top to bottom: the forest video under a top bar, with "Everyone has a purpose. Do you know yours?"; "Whatever You Do is a pathway for discerning your purpose." with its five pillars; "How it works" with its five steps and the coach's line; For churches; "Ideas to explore"; a parent's story; the callings carousel; the footer. Nothing offers a newsletter, donations or a contact address.
+- Top to bottom: the forest video under a top bar, with "Everyone has a purpose. Do you know yours?"; "Whatever You Do is a pathway for discerning your purpose." with its five pillars; "How it works" with its five steps and the coach's line; "The difference it makes"; For churches; the Impact story from a parent; the callings carousel; the footer. Nothing offers a newsletter, donations or a contact address.
 - The top of the hero holds the "/whateveryoudo" logo alone, centred where the old mark and name sat (ticket 91, fix-5): no link or button but the logo, which scrolls to the top of the page. It is not fixed: it scrolls away with the hero.
 - The forest video plays muted and loops, with no sound and no controls. With the video blocked (DevTools, Network, right-click `hero.mp4`, "Block request URL", then reload), the still frame shows in its place.
 - Reduced motion, and without JavaScript: the still frame shows from the start and the forest never moves, not even for a moment.
@@ -38,7 +38,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Keyboard only: Tab reaches the top bar's logo with a visible focus ring, and Enter follows it.
 - DevTools, Network, reload: every request goes to this site (no Google Fonts, nothing else).
 - With `ANVILLE_DEMO_NOTICE` set in `.env` (as every staging environment has it), the amber "Demo" notice sits under "Begin your journey" over the video, easy to read at phone width and on a wide screen, and at the top of the sign-up and sign-in pages. With it unset, neither shows.
-- The footer's Explore and For churches links scroll to their parts, and Credits opens `/credits/`.
+- The footer's How it works, Impact and For churches links scroll to their parts, and Credits opens `/credits/`.
 - Phone width: the headline and the top bar's logo fit without sideways scrolling, and the Begin buttons are easy to tap.
 - Signed out, Begin and every "Begin your journey" button open sign-up; signed in, they open the hub. Signing in, and agreeing to consent, both land on the hub, not the homepage.
 
@@ -131,6 +131,14 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 - Overview: the heading, the five pillars, the logo and "A calling journey for every season of life", the paragraph beginning "Along the way, you'll come to understand…", then its own "Begin your journey" button, which opens sign-up (signed in, the hub).
 - "How it works" has no "Five steps…" line; each of the five steps shows its title and summary, with no bullets and no box beneath. The step photos still change with the tabs. With JavaScript blocked, the five steps show one under another with the same words.
 - No "Space to reflect on what matters" section and no "Impact" link in the footer.
+- At about 375px, all of it reads in order, nothing cut off or scrolling sideways.
+
+### Ticket 99: The homepage's lower half and footer (rebuild the frontend first; wide screen and about 375px; no pathway reload or new participant needed)
+
+- After "How it works": "The difference it makes" with 71%, 86% and 100%, each over a green bar of that length (these figures are unconfirmed; they come out before release unless the content owner confirms them), then "For churches" with the heading "Releasing and equipping your members to do whatever they do for the glory of God.", the lede with "95%" in bold, three points (Run it together, Raise up coaches, Free for participants) and "Join the waitlist". The photo's foot is level with the text's foot. "Join the waitlist" scrolls down to just above the callings; it reaches the "Stay in touch" form once ticket 74 is in.
+- No "Ideas to explore" and no articles. The story is labelled "Impact", its quote at one smaller size throughout (no larger first lines), words unchanged.
+- The five callings (Teacher, Electrician, Parent, Church planter, Student) each show a photo above their caption and line. Block JavaScript (DevTools, Command menu, "Disable JavaScript") and reload: the five still show their photos, one under another at phone width. Turn on reduced motion (DevTools, Rendering) and reload: the same, with no carousel. With both off, the carousel turns and its arrows and pause button work as before.
+- Black footer: the logo with "Whatever you do, work at it with all your heart, as working for the Lord." Colossians 3:23 (NIV) on the left, one column on the right: How it works, Impact, For churches, each scrolling to its part. No "Note" column, "The evaluation" or "Writing". "© 2026 Whatever You Do" and "Credits" remain.
 - At about 375px, all of it reads in order, nothing cut off or scrolling sideways.
 
 ### Fix-5: The homepage's logo back in place, a calmer top bar, and the logo everywhere (rebuild the frontend first; wide screen and about 375px; no pathway reload needed)
@@ -252,7 +260,7 @@ The homepage (`/`):
 - The headline is "Everyone has a purpose. Do you know yours?", as v3's is; so is the heading of the callings carousel near the foot.
 - Beneath the hero, "Whatever You Do is a pathway for discerning your purpose." then a row of small cream pills: Scripture, Strengths evaluation, Peer feedback, Coach oversight, Journey. At phone width they wrap onto two or three centred lines.
 - Nothing offers what does not exist yet: no newsletter card, no "Get in touch" card or email address, no "Support our work" section or donation, and no "Ask us about coaching", "Talk to us" or "Ask about supporting the work". The coach band in "How it works" is its icon and sentence alone, and the churches section ends with its three points.
-- "Ideas to explore" keeps its three pieces of writing, and the story from a parent follows it.
+- There is no "Ideas to explore" section; the story from a parent, labelled "Impact", follows the churches section (ticket 99).
 
 ## Before we begin as a wizard (ticket 50; load the pathway again first, then sign up as someone new)
 
