@@ -161,6 +161,10 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 - Keyboard: Tab to a "Locked" in the sidebar, with a focus ring: the note shows. Escape closes the note and leaves the sidebar open; a second Escape closes the sidebar. A tap on a phone shows the note, and a tap elsewhere closes it. Phone width (about 375px): the note stays within the screen, wrapping, on a part's indented entry too, with nothing scrolling sideways.
 - Section 1 in *Whatever You Do*, the Strengths evaluation card: "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 3 trusted people to evaluate you too" breaks into lines of about the same length, at a wide screen and at phone width, with no long line over a short one.
 
+### sprint-3c-r3-fix-1: Part rows' pills and arrows line up with their section's (rebuild the frontend)
+
+- On the hub at a wide screen (about 1280px), after Section 1: the Strengths evaluation's "Complete" pill and arrow end at the same right edge as Section 1's, and "How others see you"'s as Section 2's, not a few pixels left of them.
+
 ## The participant's pages in the hub's look (ticket 53b; each page signed in, at a wide screen and at about 375px)
 
 On every page below, check:

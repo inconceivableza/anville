@@ -1211,8 +1211,9 @@ main > .hub ~ .hub-consent {
   list-style: none;
   margin-top: var(--space-sm);
   padding-left: var(--space-lg);
-  /* ✨ Out to the section's right edge, so a part's pill ends where its section's does (fix-6) */
-  margin-right: calc(-1 * (var(--hub-pill-column) + var(--hub-arrow-column) + 2 * var(--space-md)));
+  /* ✨ Out to the section's right edge, so a part's pill ends where its section's does (fix-6); the part row's own
+     right padding is drawn out too, so its pill and arrow line up with the section row's (sprint-3c-r3-fix-1) */
+  margin-right: calc(-1 * (var(--hub-pill-column) + var(--hub-arrow-column) + 2 * var(--space-md) + var(--space-2xs)));
 }
 
 .hub-parts .srow {
