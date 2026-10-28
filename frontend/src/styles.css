@@ -95,6 +95,7 @@
   /* ✨ The homepage, as the prototypes colour it: the hero behind the video, and the mockups' tones in the newer "How
      it works". Its menu, coach panel and footer are --brown. */
   --hero-bg: #2a1d17;
+  --on-dark-refused: #e39a7c; /* ✨ v3's refused address, readable on --brown (ticket 74) */
   --hero-shade: rgba(0, 0, 0, 0.35);
   --menu-shade: rgba(0, 0, 0, 0.3);
   --on-dark: #f2ece2;
@@ -5659,6 +5660,124 @@ body > svg[aria-hidden="true"] {
 
 .story-copy figcaption {
   color: var(--on-dark-2);
+}
+
+/* ✨ "Stay in touch" (ticket 74): v3's newsletter card, its copy beside the form, one above the other when narrow. */
+.stay {
+  background: var(--paper);
+  padding: clamp(48px, 7vw, 88px) clamp(20px, 5vw, 72px);
+}
+
+.stay-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 460px);
+  align-items: center;
+  column-gap: clamp(20px, 4vw, 56px);
+  row-gap: var(--space-sm);
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: clamp(20px, 2.4vw, 28px) clamp(22px, 3vw, 40px);
+  border-radius: 16px;
+  background: var(--brown);
+  color: var(--on-dark);
+}
+
+.stay-copy {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  grid-row: span 3;
+}
+
+.stay-copy h2 {
+  margin: 0;
+  font-size: clamp(24px, 2.2vw, 30px);
+}
+
+.stay-copy p {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--on-dark-2);
+  text-wrap: pretty;
+}
+
+.stay form {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0;
+}
+
+.stay input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--on-dark-22);
+  border-radius: var(--radius-pill-shape);
+  padding: 12px 18px;
+  background: var(--on-dark-07);
+  color: var(--on-dark);
+  font: inherit;
+  font-size: 14px;
+}
+
+.stay input::placeholder {
+  color: var(--on-dark-2);
+}
+
+.stay input:focus {
+  outline: 2px solid var(--green);
+  outline-offset: 1px;
+}
+
+.stay input[aria-invalid="true"] {
+  border-color: var(--on-dark-refused);
+}
+
+/* ✨ The field no person fills, off the page for everyone; a bot that fills it is turned away. */
+.stay .stay-trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.stay-refusal,
+.stay-thanks {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.stay-refusal {
+  color: var(--on-dark-refused);
+}
+
+.stay-thanks {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.stay small {
+  color: var(--on-dark-2);
+  font-size: 12.5px;
+}
+
+.stay small a {
+  color: inherit;
+}
+
+@media (max-width: 760px) {
+  .stay-card {
+    grid-template-columns: 1fr;
+  }
+
+  .stay-copy {
+    grid-row: auto;
+  }
+
+  .stay form {
+    flex-wrap: wrap;
+  }
 }
 
 /* ✨ The calling cards carry their photos in the plain grid as well as on the ring, so they show without JavaScript and

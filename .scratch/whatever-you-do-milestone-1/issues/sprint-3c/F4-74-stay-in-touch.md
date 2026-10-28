@@ -4,13 +4,13 @@
 
 **Blocked by:** 100 (A privacy page, with placeholders for what the content owner has to answer), F3
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 3c (ends Fri 30 Oct)
 
 **Spec:** Sprint 3c: the content owner's feedback; Legalities are parked, not forgotten
 
-- [ ] The homepage has "Stay in touch" as the wording sheet gives it: its heading and line, an email field labelled for screen readers, "Subscribe", and the line under the form linking to the privacy page
+- [x] The homepage has "Stay in touch" as the wording sheet gives it: its heading and line, an email field labelled for screen readers, "Subscribe", and the line under the form linking to the privacy page
 - [x] Subscribing stores the address, the time and the version of the wording, and shows the thanks in place of the form, with no new page, with or without JavaScript; a repeat address gets the same thanks and stores nothing new
 - [x] A hidden field turns away bots, and an address that is not one is refused only after the press
 - [x] The admin lists the sign-ups and exports them as CSV
@@ -18,7 +18,7 @@
 
 **Carried from 100**
 
-- [ ] The privacy page's "If you leave your email address on the homepage" and its withdrawal line describe this list ahead of it: check both against what is built, and correct them if they differ
+- [x] The privacy page's "If you leave your email address on the homepage" and its withdrawal line describe this list ahead of it: check both against what is built, and correct them if they differ
 
 **Context**
 
