@@ -1,0 +1,37 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ The homepage's "Stay in touch" (ticket 74, ADR 0023), in the page and on its own as htmx's answer to "Subscribe":
+  with JavaScript the press goes in the background and this section comes back in its own place, thanks or refusal, so
+  the page neither reloads nor moves; without, the homepage comes back opened here, by the action's fragment.
+  "Join the waitlist" and the footer's "Contact us" lead here by its id. A change to what the sentence signs a visitor
+  up to raises WORDING_VERSION in engine/stay_in_touch.py, and is checked against the privacy page.
+  novalidate leaves the address to the server, whose refusal shows only after the press. The trap field is hidden
+  from everyone: a person leaves it empty, and a bot filling every field is thanked with nothing stored.
+{% endcomment %}
+<section class="panel stay" id="stay-in-touch" aria-labelledby="stayTitle">
+  <div class="stay-card">
+    <div class="stay-copy">
+      <h2 id="stayTitle">Stay in touch</h2>
+      <p>Thoughtful writing on vocation, faith and work, and news of Whatever You Do for churches, delivered occasionally.</p>
+    </div>
+    {% if stay.subscribed %}
+      <p class="stay-thanks" role="status">Thanks, you’re subscribed. Look out for our next note.</p>
+    {% else %}
+      <form method="post" action="{% url 'home' %}#stay-in-touch" novalidate
+            hx-post="{% url 'home' %}" hx-target="closest section" hx-swap="outerHTML">
+        {% csrf_token %}
+        <label class="sr" for="stayEmail">Email address</label>
+        <input id="stayEmail" type="email" name="email" placeholder="Your email" autocomplete="email"
+               value="{{ stay.typed }}"{% if stay.refusal %} aria-invalid="true" aria-describedby="stayRefusal"{% endif %}>
+        <div class="stay-trap" aria-hidden="true">
+          <label for="stayWebsite">Leave this empty</label>
+          <input id="stayWebsite" type="text" name="website" tabindex="-1" autocomplete="off">
+        </div>
+        <button class="pill" type="submit" id="staySubscribe">Subscribe</button>
+      </form>
+      {% if stay.refusal %}<p class="stay-refusal" id="stayRefusal" role="alert">{{ stay.refusal }}</p>{% endif %}
+    {% endif %}
+    <small>We’ll only use your email to send these updates, and you can unsubscribe at any time. See our <a href="{% url 'privacy' %}">privacy notice</a>.</small>
+  </div>
+</section>

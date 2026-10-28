@@ -136,11 +136,12 @@ def test_space_to_reflect_is_gone(client):
 
 @pytest.mark.django_db
 def test_nothing_on_the_homepage_points_at_a_placeholder(client):
-    """✨ No link to nowhere, no anchor without its section, and no form with nothing behind it."""
+    """✨ No link to nowhere, no anchor without its section, and no form with nothing behind it: the one form is "Stay in
+    touch", which posts to the homepage itself (ticket 74)."""
     page = client.get("/").content.decode()
 
     assert 'href="#"' not in page
-    assert "<form" not in page
+    assert re.findall(r'<form\b[^>]*\baction="([^"]*)"', page) == ["/#stay-in-touch"]
     fragments = set(re.findall(r'href="#([^"]*)"', page))
     targets = set(re.findall(r'\bid="([^"]+)"', page))
     assert fragments <= targets
@@ -212,6 +213,7 @@ def test_the_black_footer_has_the_quote_and_one_column_of_links(client):
         ("#how", "How it works"),
         ("#impact", "Impact"),
         ("#churches", "For churches"),
+        ("#stay-in-touch", "Contact us"),
         ("/privacy/", "Privacy"),
         ("/credits/", "Credits"),
     ]
