@@ -32,7 +32,8 @@
       <main class="container">
         {% block content %}{% endblock content %}
       </main>
-      <footer class="site-footer"><a href="{% url 'credits' %}">Credits</a><a href="{% url 'privacy' %}">Privacy</a></footer>
+      {# ✨ The wizard empties this, carrying the two links inside its box (sprint-3c-r3-fix-4). #}
+      {% block site_footer %}<footer class="site-footer"><a href="{% url 'credits' %}">Credits</a><a href="{% url 'privacy' %}">Privacy</a></footer>{% endblock site_footer %}
     {% endblock body %}
   </body>
 </html>

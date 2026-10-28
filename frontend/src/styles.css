@@ -520,16 +520,39 @@ a.pathway-nav-title:hover,
 }
 
 /* ---------- ONBOARDING ---------- */
-main.container:has(> .ob) {
-  max-width: 1440px;
+/* ✨ The wizard fills the window beneath the demo strip, edge to edge, with no page footer (sprint-3c-r3-fix-4): its
+   <main> takes the rest of the window and scrolls a long page (the ratings) itself, so nothing shows below the box and
+   the photo, sticky inside it, can be sized to it (`cqh`). Under 900px, where the photo stacks above, the page scrolls
+   as any other. */
+body.wizard {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--brown);
+}
+
+body.wizard > .top-bar {
+  flex: none;
+}
+
+body.wizard > main.container {
+  flex: 1;
+  min-height: 0;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  container-type: size;
+  display: flex;
+  flex-direction: column;
 }
 
 .ob {
   display: grid;
+  flex: 1 0 auto;
   grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   gap: var(--space-2xs);
-  min-height: 100vh;
-  margin: calc(-1 * var(--space-xl)) calc(-1 * var(--space-2xl)) 0;
   padding: var(--space-2xs);
   background: var(--brown);
 }
@@ -544,12 +567,12 @@ main.container:has(> .ob) {
 /* ✨ As tall as the window, as v3's photo fills the viewport: a longer page (the ratings) scrolls past it while it stays
    in view, rather than stretching with the page and zooming its photo (the hackathon review's fix-2). Its old 760px
    cap left a bare dark strip beneath it on a taller window, and stretching it with the page instead brought the zoom
-   back, so neither (fix-10, 20 Oct). */
+   back, so neither (fix-10, 20 Oct). The window less the demo strip now, the height of the <main> it scrolls in. */
 .ob-photo {
   position: sticky;
   top: var(--space-2xs);
   align-self: start;
-  height: calc(100vh - 2 * var(--space-2xs));
+  height: calc(100cqh - 2 * var(--space-2xs));
   display: grid;
   align-content: space-between;
   min-height: 420px;
@@ -618,10 +641,22 @@ main.container:has(> .ob) {
 
 .ob-form {
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto 1fr auto;
   min-width: 0;
-  min-height: inherit;
   background: var(--cream);
+}
+
+/* ✨ The credits and privacy links, inside the box at its foot, the page having no footer (sprint-3c-r3-fix-4). */
+.ob-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  padding: 0 clamp(20px, 4vw, 48px) var(--space-md);
+  font-size: var(--text-xs);
+}
+
+.ob-foot a {
+  color: var(--muted);
 }
 
 .ob-top {
@@ -672,7 +707,131 @@ main.container:has(> .ob) {
 .ob-main .step {
   display: grid;
   gap: var(--space-xl);
+  max-width: 600px;
   animation: onboarding-enter 0.35s ease both;
+}
+
+/* ✨ v3's choices (sprint-3c-r3-fix-4): two columns of cards, each a radio, the chosen one brown, as v3's pressed. */
+.choice-q fieldset {
+  border: 0;
+  min-width: 0;
+}
+
+.choice-prompt {
+  margin-bottom: var(--space-md);
+  font-size: var(--text-md);
+  color: var(--muted);
+}
+
+.opts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.opt {
+  position: relative;
+  display: grid;
+  padding: 16px 18px;
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1px var(--cream-2);
+  cursor: pointer;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+
+.opt input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.opt b {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.opt:hover {
+  box-shadow: inset 0 0 0 1px var(--rate-hover-edge);
+}
+
+.opt:has(input:checked) {
+  background: var(--brown);
+  box-shadow: none;
+  color: var(--on-dark);
+}
+
+.opt:has(input:focus-visible) {
+  outline: 2px solid var(--green-deep);
+  outline-offset: 2px;
+}
+
+@media (max-width: 560px) {
+  .opts {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ✨ v3's ratings page (sprint-3c-r3-fix-4): each statement a row under a fine line, in the heading face, not a card. */
+.ob-main .step:has(.baseline-q) {
+  gap: 18px;
+}
+
+.ob-main .baseline-q {
+  margin: 0;
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid var(--cream-2);
+  border-radius: 0;
+  background: none;
+}
+
+.ob-main .baseline-label {
+  font-family: var(--font-heading);
+  font-size: clamp(18px, 1.5vw, 21px);
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+/* ✨ v3's foot: no line above it, "← Previous page" a plain link on the left as v3's "Back", the way on to the right. */
+.ob-main .completion {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.ob-main .way-on {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ob-main .way-on > form,
+.ob-main .way-on > .pill {
+  flex: 0 1 auto;
+  margin-left: auto;
+}
+
+.ob-main .way-on .pill.full {
+  width: auto;
+}
+
+.ob-main .way-on .page-back {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--muted);
+  font-size: 13.5px;
+  font-weight: 400;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ob-main .way-on .page-back:hover {
+  color: var(--ink);
 }
 
 @keyframes onboarding-enter {
@@ -775,9 +934,19 @@ main.container:has(> .ob) {
 }
 
 @media (max-width: 900px) {
+  body.wizard {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  body.wizard > main.container {
+    overflow-y: visible;
+    container-type: normal;
+  }
+
   .ob {
     grid-template-columns: 1fr;
-    min-height: auto;
   }
 
   .ob-photo {
@@ -793,16 +962,6 @@ main.container:has(> .ob) {
 }
 
 @media (max-width: 560px) {
-  main.container:has(> .ob) {
-    padding: var(--space-md);
-  }
-
-  .ob {
-    margin-right: 0;
-    margin-left: 0;
-    border-radius: 0;
-  }
-
   .ob-photo {
     min-height: 180px;
   }
@@ -4989,7 +5148,9 @@ body > svg[aria-hidden="true"] {
 }
 
 /* ---------- STEPS WITHOUT JAVASCRIPT ---------- */
-/* ✨ Ticket 98: the five steps sit in the page as a list; main.js adds .tabs-on and shows them as tabs instead. */
+/* ✨ Ticket 98: the five steps sit in the page as a list; main.js adds .tabs-on and shows them as tabs instead. Each
+   rule is held to `.steps`: the wizard's page is a `.step` too, and took this dark panel and its pale text, its
+   "← Previous page" pale on its own paper (sprint-3c-r3-fix-4). */
 .steps {
   list-style: none;
   margin: 0;
@@ -4998,7 +5159,7 @@ body > svg[aria-hidden="true"] {
   gap: 12px;
 }
 
-.step {
+.steps > .step {
   background: var(--brown-3);
   color: var(--on-dark);
   border-radius: var(--radius-md);
@@ -5007,19 +5168,19 @@ body > svg[aria-hidden="true"] {
   gap: 8px;
 }
 
-.step .tp-step {
+.steps > .step .tp-step {
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.12em;
   color: var(--green);
 }
 
-.step h3 {
+.steps > .step h3 {
   font-size: clamp(22px, 2.4vw, 30px);
   font-weight: 300;
 }
 
-.step p {
+.steps > .step p {
   color: var(--on-dark-2);
   max-width: 60ch;
   line-height: 1.45;

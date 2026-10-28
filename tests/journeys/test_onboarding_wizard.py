@@ -8,6 +8,7 @@ it is once-only too (ticket 69), so once complete it is never seen again; the te
 read the document without that."""
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -73,6 +74,28 @@ def test_a_participant_who_has_not_completed_it_is_taken_to_its_wizard_in_place_
     assert 'class="pathway-nav"' not in page
     assert 'href="/hub/"' not in page
     assert 'class="ob-photo ob-photo-' in page  # ✨ its photo is the stylesheet's now (ticket 101)
+
+
+@pytest.mark.django_db
+def test_its_reason_is_a_card_for_each_option_the_one_saved_chosen(participant):
+    """✨ v3's cards, not a drop-down (sprint-3c-r3-fix-4): one radio for each option, the saved one checked."""
+    answer(participant, "reason", "job-change")
+
+    page = participant.get(WIZARD).content.decode()
+
+    assert "<select" not in page
+    assert re.findall(r'<input type="radio" name="value" value="([^"]+)" checked>', page) == ["job-change"]
+    assert len(re.findall(r'<label class="opt">', page)) == 7
+
+
+@pytest.mark.django_db
+def test_its_pages_still_link_to_the_credits_and_the_privacy_page(participant):
+    """✨ The wizard has no page footer (sprint-3c-r3-fix-4), so the two links sit inside its box."""
+    page = participant.get(WIZARD).content.decode()
+
+    assert 'class="site-footer"' not in page
+    assert 'href="/credits/"' in page
+    assert 'href="/privacy/"' in page
 
 
 @pytest.mark.django_db

@@ -7,8 +7,15 @@
   Completing it leads to the hub, and from then on it is reread as any other section. The entry page, the engine's
   own (ADR 0021), takes this layout too, filling `step` with its own form; it is the first of the steps
   counted, so `step` is the step this page is of them all, not its page within the section.
+
+  It fills the window, as v3's does, with nothing below it: the credits and privacy links sit inside its box rather
+  than in the page's footer, and a page too long for the window scrolls within it (sprint-3c-r3-fix-4).
 {% endcomment %}
 {% block head_title %}{% block page_title %}{{ section.title }}{% endblock page_title %} | {{ step.number }} of {{ step.count }}{% endblock head_title %}
+
+{% block body_class %} class="wizard"{% endblock body_class %}
+
+{% block site_footer %}{% endblock site_footer %}
 
 {% block content %}
   <div class="ob">
@@ -38,13 +45,15 @@
         <div class="step">
           {% block step %}
             <h1>{{ section.title }}</h1>
+            {# ✨ A choice is v3's cards here, not the section page's drop-down (sprint-3c-r3-fix-4). #}
             {% for block in section.blocks %}
-              {% include "engine/block_drawn.html" %}
+              {% include "engine/block_drawn.html" with choices_as_cards=True %}
             {% endfor %}
             {% include "engine/completion.html" %}
           {% endblock step %}
         </div>
       </div>
+      <footer class="ob-foot"><a href="{% url 'credits' %}">Credits</a><a href="{% url 'privacy' %}">Privacy</a></footer>
     </section>
   </div>
 {% endblock content %}
