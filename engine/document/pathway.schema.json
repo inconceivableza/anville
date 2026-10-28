@@ -517,6 +517,35 @@
           "description": "Once the participant has completed this section, never show it again: it leaves the hub, the sidebar and the count of sections, and its pages, its answers and its completion lead to the hub, so its answers can be neither seen nor changed, as Before we begin's are in Whatever You Do. Only a wizard may be once-only.",
           "const": true
         },
+        "wizard_steps": {
+          "description": "For a wizard, what the photo and the heading say on each step it counts, in order: a verse, its reference and a word beneath them, as v3's 'Begin', and the page's heading in place of the section's title. The track's first wizard counts the entry page as its first step, which keeps its own heading. Without these, every step shows the engine's verse, with no word and the section's title.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["verse", "reference", "label"],
+            "properties": {
+              "verse": {"type": "string", "minLength": 1},
+              "reference": {"type": "string", "minLength": 1},
+              "label": {"type": "string", "minLength": 1},
+              "heading": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "welcome": {
+          "description": "For a wizard, a page shown once it is completed, before the hub, as v3's 'Welcome, Alex': its heading, where {name} is the participant's first name, a sentence, the button on to the hub, and the photo's verse, reference and word. Without one, completing the wizard leads straight to the hub.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["heading", "sentence", "button", "verse", "reference", "label"],
+          "properties": {
+            "heading": {"type": "string", "minLength": 1},
+            "sentence": {"type": "string", "minLength": 1},
+            "button": {"type": "string", "minLength": 1},
+            "verse": {"type": "string", "minLength": 1},
+            "reference": {"type": "string", "minLength": 1},
+            "label": {"type": "string", "minLength": 1}
+          }
+        },
         "next_step": {
           "description": "What the hub's next step says while this section is the next step, in place of the section's title and time estimate, such as 'Start with your gifts.' and a sentence on what it asks. A section may carry only 'waiting', its next step then saying its title and estimate.",
           "type": "object",

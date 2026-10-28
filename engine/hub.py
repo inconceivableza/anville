@@ -240,10 +240,12 @@ def track_sections(document):
 
 
 class WizardStep(NamedTuple):
-    """✨ Where a wizard's page stands in its "Step N of M" counter: its `number`, out of `count`."""
+    """✨ Where a wizard's page stands in its "Step N of M" counter: its `number`, out of `count`; and what the document
+    has the step say, its verse, reference, word and heading (sprint-3c-r3-fix-7), or None."""
 
     number: int
     count: int
+    authored: dict | None = None
     PHOTOS = 5  # ✨ the photos the stylesheet draws, the hackathon prototype's five (ticket 101)
 
     @property
@@ -263,7 +265,9 @@ def wizard_step(sections, section, number):
     its step 1, so that wizard's pages are counted from 2; any later wizard counts its own pages alone."""
     first = _first_wizard(sections)
     before = 1 if first is not None and first["id"] == section["id"] else 0
-    return WizardStep(number + before, page_count(section) + before)
+    step = number + before
+    authored = section.get("wizard_steps", [])
+    return WizardStep(step, page_count(section) + before, authored[step - 1] if step <= len(authored) else None)
 
 
 def entry_page_step(sections):

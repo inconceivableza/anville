@@ -791,10 +791,46 @@ body.wizard > main.container {
 }
 
 .ob-main .baseline-label {
+  margin-bottom: 8px;
   font-family: var(--font-heading);
   font-size: clamp(18px, 1.5vw, 21px);
   font-weight: 400;
   line-height: 1.25;
+}
+
+/* ✨ Closer together, as v3's compact ratings (sprint-3c-r3-fix-7): its smaller heading, and no empty row under each
+   rating, the wizard saving without saying "Saved"; the row comes back to say why a rating was refused, and stays
+   without JavaScript for its Save button. */
+.ob-main .step:has(.baseline-q) h1 {
+  font-size: clamp(32px, 3.6vw, 46px);
+}
+
+html[data-javascript="loaded"] .ob-main .baseline-q .save-row:has(.save-status:empty) {
+  display: none;
+}
+
+/* ✨ A wizard's welcome, as v3's "Welcome, Alex" (sprint-3c-r3-fix-7): centred, its greeting large. */
+.ob-main .step:has(.welcome) {
+  justify-self: center;
+}
+
+.ob-main .welcome {
+  display: grid;
+  gap: var(--space-lg);
+  justify-items: center;
+  text-align: center;
+}
+
+.ob-main .welcome h1 {
+  font-size: clamp(48px, 6.4vw, 96px);
+  line-height: 1;
+  color: var(--brown);
+}
+
+.ob-main .welcome .why {
+  max-width: 50ch;
+  color: var(--muted);
+  font-size: var(--text-md);
 }
 
 /* ✨ v3's foot: no line above it, "← Previous page" a plain link on the left as v3's "Back", the way on to the right. */
@@ -809,8 +845,9 @@ body.wizard > main.container {
   align-items: center;
 }
 
+/* ✨ Not "← Previous page", itself a .pill, which the auto margin drew to the middle (sprint-3c-r3-fix-7). */
 .ob-main .way-on > form,
-.ob-main .way-on > .pill {
+.ob-main .way-on > .pill:not(.page-back) {
   flex: 0 1 auto;
   margin-left: auto;
 }

@@ -92,6 +92,7 @@ from engine.hub import (
     section_by_id,
     track_sections,
     with_coach_answer,
+    WizardStep,
     wizard_step,
 )
 from engine.document.observers import (
@@ -554,8 +555,38 @@ def complete_section(request, section_id):
 
     fixed_block_ids = block_ids_fixed_on_completion(section, state.answers)
     state.stored_response(request.user).complete_section(section_id, fixed_block_ids=fixed_block_ids)
-    # ✨ Back to the hub, which points at the next step, as the prototype's `completePillar` goes (ticket 41b).
+    # ✨ Back to the hub, which points at the next step, as the prototype's `completePillar` goes (ticket 41b); a wizard
+    # ✨ with a welcome by way of it first (sprint-3c-r3-fix-7).
+    if section.get("wizard") and "welcome" in section:
+        return _go_to(request, reverse("wizard_welcome", args=[section_id]))
     return _go_to(request, reverse("hub"))
+
+
+@login_required
+@consent_required
+def wizard_welcome(request, section_id):
+    """✨ A wizard's welcome, as v3's "Welcome, Alex" (sprint-3c-r3-fix-7): once it is complete, its last step, all of
+    its counter marked, leading on to the hub. Before then it leads to the wizard's page reached, and a wizard without
+    a welcome, or a section that is not one, to the hub."""
+    state = _participant(request.user)
+    section = _section_or_404(state.version, section_id)
+    if not section.get("wizard") or "welcome" not in section:
+        return redirect("hub")
+    if section_id not in state.completed:
+        reached = state.reached(section)
+        return redirect(page_url(section_id, reached) if reached is not None else "hub")
+    welcome = section["welcome"]
+    # ✨ The step after the last, so every mark of the counter is on and its photo is the next one, as v3's.
+    last = wizard_step(state.sections, section, page_count(section))
+    after = WizardStep(last.count + 1, last.count, welcome)
+    shown = {
+        "section": section,
+        "welcome": welcome,
+        "heading": welcome["heading"].replace("{name}", name_shown_for(request.user)),
+        "step": after,
+        "steps": after.numbers,
+    }
+    return render(request, "engine/wizard_welcome.html", shown)
 
 
 def _to_the_hub_when_locked(request):
