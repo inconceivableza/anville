@@ -333,6 +333,7 @@ The homepage (`/`):
 
 - Once Section 1 is next: "Start with your gifts." and "Start with the ten-minute strengths evaluation." (ticket 95), over the grass photo, shaded so the words read clearly, the panel taller, as the prototype's. "Begin" leads into Section 1.
 - `/credits/` lists "Photograph of grass from Unsplash." under "Photographs", after the scripture notices.
+- Without a photo of its own from the pathway, a step is drawn over the stylesheet's photo for it (sprint-3c-r3-fix-8).
 - Phone width: the photo fills the panel without stretching, and the words stay readable.
 
 ## Back to the hub and Section 1 (ticket 41b)
@@ -1135,10 +1136,15 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 
 ### sprint-3c-r3-fix-5: the hub's next-step photo (rebuild the frontend first; wide screen and about 375px; no pathway reload needed)
 
-- The hub's "Your next step" card has a photo behind it (misty hills at sunrise) in every state: a section next, a section carried on, "Waiting on answers", the coach's wait and "Nothing is waiting for you right now."; its label, heading, sentence and button stay light and readable over it. With JavaScript off too.
+- The hub's "Your next step" card has a photo behind it in every state (each state's own photo is listed under sprint-3c-r3-fix-8 below): a section next, a section carried on, "Waiting on answers", the coach's wait and "Nothing is waiting for you right now."; its label, heading, sentence and button stay light and readable over it. With JavaScript off too.
 - Where the pathway names a photo for the next section, that photo covers the hills, as before.
 - Walk with a coach and Five trusted voices show no photo: the coach's card is light, locked or not, and Five trusted voices is the plain dark card.
-- `/credits/` lists "Photograph of misty hills at sunrise from Unsplash." among the site's photographs, and no longer the one of two friends beside a lake.
+- `/credits/` lists "Photograph of misty hills at sunrise from Unsplash." among the site's photographs.
+
+### sprint-3c-r3-fix-8: the hub's next-step photos (rebuild the frontend first; wide screen and about 375px; no pathway reload needed)
+
+- Each state of the hub's "Your next step" card has its own photo, and none appears on two of them: Section 1 ("How you've been designed") keeps the pathway's grass photo, over the potter's hands; Section 2 the woman looking out over wheat; "The shape of your life" the woman walking at sunset; "Putting your calling into words" the carpenter; "Growth plan" the figure facing the sun; "A letter to your future self" the notebook and coffee; "Waiting on answers" the row of friends (the Five trusted voices card's old photo); the coach's wait the two friends beside a lake (the coach card's old photo); "Nothing is waiting for you right now." the misty hills. Walk through as many as you can reach; the words stay light and readable on each, the carpenter's portrait too.
+- `/credits/` lists a line for each of these photos, among "Video and photographs on the site", including "Photograph of two friends talking beside a lake from Unsplash.", "Photograph of hands shaping clay from Unsplash.", "Photograph of a carpenter planing wood from Unsplash.", "Photograph of an open Bible on a jetty at sunrise from Unsplash." and "Photograph of a woman in a summer dress looking out over a field of wheat from Unsplash."; and one each for the homepage hero's photo ("…a woman in a sunhat walking through a field at sunset…") and the four calling photos (teacher, mother and baby, pastor, student). The developer confirms the sources.
 
 ### sprint-3c-r3-fix-9: the coach card's link buttons (rebuild needed; wide screen and about 375px; no pathway reload needed)
 
