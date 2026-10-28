@@ -201,6 +201,11 @@ SITE_PHOTO_CREDITS = [
     "Photograph of a woman walking in a field at sunset from Unsplash.",
     "Photograph of misty hills at sunrise from Unsplash.",
     "Photograph of a row of friends sitting together from Unsplash.",
+    "Photograph of two friends talking beside a lake from Unsplash.",
+    "Photograph of hands shaping clay from Unsplash.",
+    "Photograph of a carpenter planing wood from Unsplash.",
+    "Photograph of an open Bible on a jetty at sunrise from Unsplash.",
+    "Photograph of a woman in a summer dress looking out over a field of wheat from Unsplash.",
 ]
 
 
@@ -255,6 +260,7 @@ def hub(request):
             "hub": hub,
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
             "coach_wait": coach_wait,
+            "next_look": next_look(hub, coach_wait),
             "side_cards": side_cards,
             "coach_card": _coach_card(coach, coach_section, coach_page),
             "voices": voices,
@@ -263,6 +269,17 @@ def hub(request):
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
+
+
+def next_look(hub, coach_wait):
+    """✨ The class the hub's next-step panel takes, so the stylesheet can give each state its own photo (fix-8): the
+    section's own while one is next, then one each for waiting on answers (trusted voices'), the coach's wait and
+    nothing waiting. The panels' order is the template's."""
+    if hub.next_step is not None:
+        return f"look-section-{hub.next_step.id}"
+    if hub.waiting_on_answers is not None:
+        return "look-answers"
+    return "look-coach" if coach_wait else "look-rest"
 
 
 def _hub_comparison(state):

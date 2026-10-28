@@ -62,7 +62,7 @@ def test_the_hub_next_step_has_the_stylesheets_photo_and_the_side_cards_none(
 
     # ✨ The next step's photo is the stylesheet's behind `.next` (fix-5), so it holds in every state; the side cards
     # have none.
-    assert re.search(r'<(section|div) class="panel next"', page)
+    assert re.search(r'<(section|div) class="panel next[ "]', page)
     assert "side-photo" not in page
 
 

@@ -1344,7 +1344,7 @@ COACH_CARD = "Walk with a coach"
 def next_step_panel(client):
     """✨ The hub's next-step panel, whichever it is."""
     page = client.get("/hub/").content.decode()
-    return re.search(r'<(section|div) class="panel next">.*?</\1>', page, re.S).group()
+    return re.search(r'<(section|div) class="panel next [^"]*">.*?</\1>', page, re.S).group()
 
 
 def button_to(html, label):

@@ -1305,6 +1305,49 @@ main > .hub ~ .hub-consent {
   background: var(--hero-bg) url("../img/hills.jpg") center / cover;
 }
 
+/* ✨ Each state its own photo, none used twice (fix-8): the coach's wait takes the coach card's old photo, waiting on
+   answers (the trusted voices') that card's, and a step its own; hills, above, stands for nothing waiting and for a
+   pathway's section this list does not name. The classes come from the view's `next_look`. */
+.next.look-coach {
+  background-image: url("../img/mentor.jpg");
+}
+
+.next.look-answers {
+  background-image: url("../img/friends.jpg");
+}
+
+.next.look-rest {
+  background-image: url("../img/hills.jpg");
+}
+
+.next.look-section-designed {
+  background-image: url("../img/potter.jpg");
+}
+
+.next.look-section-strengths {
+  background-image: url("../img/bible.jpg");
+}
+
+.next.look-section-others {
+  background-image: url("../img/wind.jpg");
+}
+
+.next.look-section-shape {
+  background-image: url("../img/field-walk.jpg");
+}
+
+.next.look-section-calling {
+  background-image: url("../img/carpenter.jpg");
+}
+
+.next.look-section-growth {
+  background-image: url("../img/facing-sun.jpg");
+}
+
+.next.look-section-letter {
+  background-image: url("../img/notebook.jpg");
+}
+
 .next::after {
   content: "";
   position: absolute;
