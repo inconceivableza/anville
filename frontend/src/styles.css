@@ -2495,6 +2495,10 @@ body:not(.framed) .question-card > p + form {
   margin-top: 18px;
 }
 
+.coach-buttons + .invitation-status {
+  margin-top: var(--space-sm);
+}
+
 .coach-grow {
   flex: 1;
   justify-content: center;
