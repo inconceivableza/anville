@@ -212,6 +212,7 @@ def test_the_black_footer_has_the_quote_and_one_column_of_links(client):
         ("#how", "How it works"),
         ("#impact", "Impact"),
         ("#churches", "For churches"),
+        ("/privacy/", "Privacy"),
         ("/credits/", "Credits"),
     ]
     assert "Whatever you do, work at it with all your heart, as working for the Lord." in footer

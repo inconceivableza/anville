@@ -4,9 +4,15 @@
 from allauth.core import context as allauth_context
 from django import forms
 from django.conf import settings
+from django.urls import reverse_lazy
+from django.utils.functional import lazy
+from django.utils.html import format_html
+from django.utils.safestring import SafeString
 
 from access.enrolment import asks_for_the_code, is_valid_enrolment_code
 from access.models import DISPLAY_NAME_MAX_LENGTH, Account
+
+format_html_lazy = lazy(format_html, SafeString)
 
 # ✨ No form of allauth's own is imported here (they are in access/allauth_forms.py): allauth builds them on the sign-up
 # form class below, so importing one would import this module in a circle.
@@ -66,8 +72,12 @@ class EntryPageForm(forms.Form):
         label="I am 18 or over",
         error_messages={"required": "You need to be 18 or over to take part."},
     )
+    # ✨ "privacy notice" links to the privacy page (ticket 100); lazy, since the URLs are not loaded at import.
     consents = forms.BooleanField(
-        label="I agree to Whatever You Do storing my answers, including anything about my faith, work or health, as "
-        "set out in the privacy notice.",
+        label=format_html_lazy(
+            "I agree to Whatever You Do storing my answers, including anything about my faith, work or health, as "
+            'set out in the <a href="{}">privacy notice</a>.',
+            reverse_lazy("privacy"),
+        ),
         error_messages={"required": "You need to agree to take part."},
     )

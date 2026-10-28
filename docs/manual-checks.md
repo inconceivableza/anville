@@ -38,7 +38,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - Keyboard only: Tab reaches the top bar's logo with a visible focus ring, and Enter follows it.
 - DevTools, Network, reload: every request goes to this site (no Google Fonts, nothing else).
 - With `ANVILLE_DEMO_NOTICE` set in `.env` (as every staging environment has it), the amber "Demo" notice sits under "Begin your journey" over the video, easy to read at phone width and on a wide screen, and at the top of the sign-up and sign-in pages. With it unset, neither shows.
-- The footer's How it works, Impact and For churches links scroll to their parts, and Credits opens `/credits/`.
+- The footer's How it works, Impact and For churches links scroll to their parts, Privacy opens `/privacy/`, and Credits opens `/credits/`.
 - Phone width: the headline and the top bar's logo fit without sideways scrolling, and the Begin buttons are easy to tap.
 - Signed out, Begin and every "Begin your journey" button open sign-up; signed in, they open the hub. Signing in, and agreeing to consent, both land on the hub, not the homepage.
 
@@ -138,7 +138,7 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 - After "How it works": "The difference it makes" with 71%, 86% and 100%, each over a green bar of that length (these figures are unconfirmed; they come out before release unless the content owner confirms them), then "For churches" with the heading "Releasing and equipping your members to do whatever they do for the glory of God.", the lede with "95%" in bold, three points (Run it together, Raise up coaches, Free for participants) and "Join the waitlist". The photo's foot is level with the text's foot. "Join the waitlist" scrolls down to just above the callings; it reaches the "Stay in touch" form once ticket 74 is in.
 - No "Ideas to explore" and no articles. The story is labelled "Impact", its quote at one smaller size throughout (no larger first lines), words unchanged.
 - The five callings (Teacher, Electrician, Parent, Church planter, Student) each show a photo above their caption and line. Block JavaScript (DevTools, Command menu, "Disable JavaScript") and reload: the five still show their photos, one under another at phone width. Turn on reduced motion (DevTools, Rendering) and reload: the same, with no carousel. With both off, the carousel turns and its arrows and pause button work as before.
-- Black footer: the logo with "Whatever you do, work at it with all your heart, as working for the Lord." Colossians 3:23 (NIV) on the left, one column on the right: How it works, Impact, For churches, each scrolling to its part. No "Note" column, "The evaluation" or "Writing". "© 2026 Whatever You Do" and "Credits" remain.
+- Black footer: the logo with "Whatever you do, work at it with all your heart, as working for the Lord." Colossians 3:23 (NIV) on the left, one column on the right: How it works, Impact, For churches, each scrolling to its part, then Privacy (ticket 100). No "Note" column, "The evaluation" or "Writing". "© 2026 Whatever You Do" and "Credits" remain.
 - At about 375px, all of it reads in order, nothing cut off or scrolling sideways.
 
 ### Fix-5: The homepage's logo back in place, a calmer top bar, and the logo everywhere (rebuild the frontend first; wide screen and about 375px; no pathway reload needed)
@@ -285,7 +285,7 @@ The homepage (`/`):
 ### Ticket 92: The entry page: first name, 18 or over, and consent (after `migrate`, rebuild the frontend and sign up as someone new; no need to load the pathway again)
 
 - Signing up by email lands on "About you" in the wizard's layout: "Log out" top left, "Step 1 of 3" with one of three bars filled, the leaf on green in place of a photo, the Ephesians 2:10 quote beside it. The sign-up form had "First name" and no "I am 18 or over".
-- "First name" shows the name given at sign-up and can be changed; below it "I am 18 or over", then "I agree to Whatever You Do storing my answers, including anything about my faith, work or health, as set out in the privacy notice.", each beside its box, and under it "What this means", closed.
+- "First name" shows the name given at sign-up and can be changed; below it "I am 18 or over", then "I agree to Whatever You Do storing my answers, including anything about my faith, work or health, as set out in the privacy notice.", each beside its box, "privacy notice" a link to the privacy page (ticket 100), and under it "What this means", closed.
 - "What this means" opens to the consent text, with "Draft wording" at its top, no paragraph on a group's admins, "Agreeing is up to you." with nothing about an enrolment code, nothing about staying in groups after withdrawing, its paragraph ending "You can withdraw at any time from “Your consent”, linked at the foot of your hub." (never "from this page"; the consent page reads the same, fix-3), and "Version 3 of this text." at its end. It opens and closes with JavaScript off too, and by keyboard (Tab to it, Enter).
 - On arrival no refusal shows. Press "Continue →" with the name cleared and both boxes unticked: "Add your first name.", "You need to be 18 or over to take part." and "You need to agree to take part." each under what it refuses, the field and boxes outlined in red, and what was typed or ticked kept. `/hub/` still comes back to this page. With JavaScript the page neither reloads nor moves, and the focus stays on "Continue →"; without, the page comes back opened at the form, not at the top (fix-2).
 - With all three given, "Continue →" opens Before we begin at "Step 2 of 3". After finishing it, the hub greets you by the name given on the entry page, and "Your consent" at its foot shows "You agreed to version 3 of this text".
@@ -497,6 +497,18 @@ The homepage (`/`):
 - "Credits" sits at the foot of every page, the homepage's among its footer links, and leads to the credits page, signed in or not. It shows the ESV notice beginning "Unless otherwise indicated", then the NIV notice "marked NIV", each under its translation's name and word for word, with "®", "©" and "&" intact. Signed in, "← Back to the hub" is at its top; signed out, it is not.
 - Whenever a passage is added or changed, compare its text with the publisher's word for word (for example the ESVUK or NIVUK on Bible Gateway): any cut is marked "…" or by its reference ("7a").
 - Phone width: the notices wrap, and the footer link stays clear of the page's last block.
+
+## The privacy page (`/privacy/`)
+
+### Ticket 100: A privacy page (rebuild the frontend first; wide screen and about 375px; no pathway reload or new participant needed)
+
+- "Privacy" sits beside "Credits" at the foot of every page, and among the homepage's footer links, and opens the privacy page, signed in or not. On the entry page, the consent tick's "privacy notice" opens it too.
+- Signed out: plain cream, no header. Signed in: framed with the header and "← Back to the hub" at its top, as the credits page is.
+- "Privacy notice", then the "Draft wording" box, then its parts in order: Who we are, If you take the journey (What is kept, Who sees it), If someone asks you to rate them, If someone asks you to be their coach, If you leave your email address on the homepage, What we send by email, Who else handles it, How long it is kept, How to withdraw, How to complain.
+- Four placeholders, each beginning "To be confirmed" in square brackets on a pale amber ground with a dashed outline: the controller, the ICO registration number, the hosting company and email service, and how long things are kept.
+- Read it against the app: each sentence should still be true. A change to what is kept or who sees it changes this page too.
+- The ICO link opens ico.org.uk's complaint page.
+- At about 375px, it reads in order, the lists indented, nothing cut off or scrolling sideways.
 
 ## The sort
 
