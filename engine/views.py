@@ -189,7 +189,7 @@ def home(request):
     return render(request, "engine/home.html", {"begin": begin, "stay": stay}, status=status)
 
 
-# ✨ The photographs the stylesheet draws on the homepage, in the wizard and on the hub's side cards, each a courtesy
+# ✨ The photographs the stylesheet draws on the homepage, in the wizard and behind the hub's next step, each a courtesy
 # credit (ticket 101). The credits page lists them after the pathway's own, leaving out one the pathway lists too,
 # and with them the video's, while the document's setting for courtesy credits is on.
 SITE_PHOTO_CREDITS = [
@@ -199,7 +199,7 @@ SITE_PHOTO_CREDITS = [
     "Photograph of a woman walking through a field of wheat from Unsplash.",
     "Photograph of a notebook, a pen and a cup of coffee from Unsplash.",
     "Photograph of a woman walking in a field at sunset from Unsplash.",
-    "Photograph of two friends talking beside a lake from Unsplash.",
+    "Photograph of misty hills at sunrise from Unsplash.",
     "Photograph of a row of friends sitting together from Unsplash.",
 ]
 

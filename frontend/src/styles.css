@@ -1293,6 +1293,8 @@ main > .hub ~ .hub-consent {
   }
 }
 
+/* ✨ A photo behind the next step in every state (ticket 101, fix-5), the stylesheet's so it needs no file or sign-in; the
+   shade below keeps the light text readable on it, and a section's own photo, where the document names one, covers it. */
 .next {
   min-height: 200px;
   color: var(--on-dark);
@@ -1300,7 +1302,7 @@ main > .hub ~ .hub-consent {
   align-content: end;
   padding: clamp(22px, 4vw, 36px);
   border-radius: var(--radius-md);
-  background: var(--hero-bg);
+  background: var(--hero-bg) url("../img/hills.jpg") center / cover;
 }
 
 .next::after {
@@ -1692,24 +1694,6 @@ main > .hub ~ .hub-consent {
 
 .hub-side-card.locked h3 {
   color: var(--muted);
-}
-
-/* ✨ A photo behind each side card (ticket 101), mentor and friends in turn: the dark card's light text, over a heavy
-   brown shade so it stays readable on either photo. Drawn without JavaScript. */
-.hub-side-card.side-photo {
-  background:
-    linear-gradient(var(--brown-78), var(--brown-86)),
-    url("../img/mentor.jpg") center / cover;
-}
-
-.side > .side-photo:nth-child(even) {
-  background:
-    linear-gradient(var(--brown-78), var(--brown-86)),
-    url("../img/friends.jpg") center / cover;
-}
-
-.card.dark.hub-side-card.locked h3 {
-  color: var(--on-dark-70);
 }
 
 /* ✨ A side card's authored lead, under its tag, as Walk with a coach's says what a coach is for (ticket 95; ticket 65's

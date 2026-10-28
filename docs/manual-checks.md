@@ -1113,5 +1113,12 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 - The homepage's hero plays the new landscape video, a field of wheat with a woman walking through it, muted and looping. Block `hero-landscape.mp4` (DevTools, Network, "Block request URL") and reload: its poster shows in its place, as it does before it plays. Switch JavaScript off: the poster shows.
 - "For churches" shows the photo of people sitting with Bibles and notebooks open, its foot level with the text's. At phone width it sits above the text.
 - A new participant's wizard shows a different photo on each page: the figure facing the sun on "About you", the grass on the reason, the woman in the wheat on the ratings. Each fills the panel with no bare strip beneath it, the verse readable on it. At phone width the photo sits above the form.
-- The hub's two side cards each have a photo behind them, two friends by a lake behind Walk with a coach and a row of friends behind Five trusted voices, their words, tags and buttons light and readable, locked or not, with JavaScript off too.
+- The hub's side cards, Walk with a coach and Five trusted voices, have no photo: Walk with a coach is a light card as before, Five trusted voices the plain dark one (fix-5 took ticket 101's photos off them).
 - `/credits/` (the pathway loaded has courtesy credits on, as *Whatever You Do* does) lists, after "Photographs", "Video and photographs on the site": "Video by Marian Croitoru from Pexels", "Pexels" linking to the video's page, then the churches photo's credit and one line for each other photo; "Photograph of grass from Unsplash." shows once, not twice.
+
+### sprint-3c-r3-fix-5: the hub's next-step photo (rebuild the frontend first; wide screen and about 375px; no pathway reload needed)
+
+- The hub's "Your next step" card has a photo behind it (misty hills at sunrise) in every state: a section next, a section carried on, "Waiting on answers", the coach's wait and "Nothing is waiting for you right now."; its label, heading, sentence and button stay light and readable over it. With JavaScript off too.
+- Where the pathway names a photo for the next section, that photo covers the hills, as before.
+- Walk with a coach and Five trusted voices show no photo: the coach's card is light, locked or not, and Five trusted voices is the plain dark card.
+- `/credits/` lists "Photograph of misty hills at sunrise from Unsplash." among the site's photographs, and no longer the one of two friends beside a lake.

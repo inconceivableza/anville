@@ -12,7 +12,7 @@
 
 - [x] The homepage's hero plays the new video, with a poster from it shown until it plays and in its place where video does not play
 - [x] "For churches" shows the new photo if one has been put in place; otherwise the photo it has now
-- [x] Each wizard page shows a different photo and fills the screen with no strip below it, and each hub side card has a photo behind it, following the hackathon prototype where it chose one; their text stays readable on them
+- [x] Each wizard page shows a different photo and fills the screen with no strip below it, and the hub's next-step card has a photo behind it in every state (the side cards have none: fix-5); their text stays readable on them
 - [x] The credits page lists the video and each new photo as a courtesy
 - [x] The same with JavaScript off and at phone width
 
