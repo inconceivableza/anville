@@ -25,4 +25,10 @@
     <h2 class="credits-name">Photographs</h2>
     {% for credit in photo_credits %}<p class="credits-photo">{{ credit }}</p>{% endfor %}
   {% endif %}
+  {# ✨ The site's own video and photographs, each a courtesy (ticket 101), shown with the pathway's courtesy credits and without repeating one the pathway lists. #}
+  {% if site_credits_shown %}
+    <h2 class="credits-name">Video and photographs on the site</h2>
+    <p class="credits-site">Video by Marian Croitoru from <a href="https://www.pexels.com/video/healthy-light-landscape-nature-4524595/">Pexels</a></p>
+    {% for credit in site_photo_credits %}<p class="credits-site">{{ credit }}</p>{% endfor %}
+  {% endif %}
 {% endblock content %}

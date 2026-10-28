@@ -29,9 +29,9 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 
 ## The homepage (`/`, signed out and signed in; beside v3's, `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`)
 
-- Top to bottom: the forest video under a top bar, with "Everyone has a purpose. Do you know yours?"; "Whatever You Do is a pathway for discerning your purpose." with its five pillars; "How it works" with its five steps and the coach's line; "The difference it makes"; For churches; the Impact story from a parent; the callings carousel; the footer. Nothing offers a newsletter, donations or a contact address.
+- Top to bottom: the landscape video under a top bar, with "Everyone has a purpose. Do you know yours?"; "Whatever You Do is a pathway for discerning your purpose." with its five pillars; "How it works" with its five steps and the coach's line; "The difference it makes"; For churches; the Impact story from a parent; the callings carousel; the footer. Nothing offers a newsletter, donations or a contact address.
 - The top of the hero holds the "/whateveryoudo" logo alone, centred where the old mark and name sat (ticket 91, fix-5): no link or button but the logo, which scrolls to the top of the page. It is not fixed: it scrolls away with the hero.
-- The forest video plays muted and loops, with no sound and no controls. With the video blocked (DevTools, Network, right-click `hero.mp4`, "Block request URL", then reload), the still frame shows in its place.
+- The landscape video (a field of wheat, ticket 101) plays muted and loops, with no sound and no controls. With the video blocked (DevTools, Network, right-click `hero-landscape.mp4`, "Block request URL", then reload), the still frame shows in its place.
 - Reduced motion, and without JavaScript: the still frame shows from the start and the forest never moves, not even for a moment.
 - "How it works": STEP 01 to STEP 05, each with its title and summary alone (no bullets, no "In your journey" box); the tabs and ← → move between them. Without JavaScript, the five steps show one under another, each with its title and summary. The tabs and the carousel are checked in detail under fix-14 and fix-17 below.
 - Without JavaScript, the footer's links still scroll to their parts.
@@ -264,9 +264,9 @@ The homepage (`/`):
 
 ## Before we begin as a wizard (ticket 50; load the pathway again first, then sign up as someone new)
 
-- After the entry page, Before we begin opens as the wizard, beside the photo of the figure facing the sun (as the prototype's onboarding view): no header, no "Your pathway", no link to the hub; "Step 2 of 3" with three bars at the top, two of them filled, the entry page being step 1 (ticket 92). Page 1 is the reason alone; "Continue →" leads to page 2, the five ratings, with "← Previous page" beside the way on.
+- After the entry page, Before we begin opens as the wizard, beside a photo (the stylesheet's, a different one on each page: ticket 101): no header, no "Your pathway", no link to the hub; "Step 2 of 3" with three bars at the top, two of them filled, the entry page being step 1 (ticket 92). Page 1 is the reason alone; "Continue →" leads to page 2, the five ratings, with "← Previous page" beside the way on.
 - Going to `/hub/` part-way lands on the page reached. The last "Continue →" lands on the hub, Before we begin listed as complete, and the hub never sends you back. Its entry opens it as an ordinary section page, header and sidebar included, the ratings fixed.
-- `/credits/` lists "Photograph of a figure facing the sun from Unsplash.".
+- `/credits/` lists "Photograph of a figure facing the sun from Unsplash." among the site's photographs (ticket 101).
 - Phone width: the photo sits above the page, the ratings fit without scrolling sideways.
 - The photo is as tall as the window on both pages, at a wide screen and at a tall one (over 900px high): no bare dark strip beneath it, whether at the top of the ratings or scrolled to their end, and the photo the same size and crop on page 2 as on page 1, never zoomed. At about 375px it sits above the page as before (fix-10).
 - Pressing Enter in an answer (with a rating's point focused, chosen or not, or in the reason drop-down) does nothing: the page stays as it was, never "Not saved. No answer was sent." on a page of its own (fix-7).
@@ -284,7 +284,7 @@ The homepage (`/`):
 
 ### Ticket 92: The entry page: first name, 18 or over, and consent (after `migrate`, rebuild the frontend and sign up as someone new; no need to load the pathway again)
 
-- Signing up by email lands on "About you" in the wizard's layout: "Log out" top left, "Step 1 of 3" with one of three bars filled, the leaf on green in place of a photo, the Ephesians 2:10 quote beside it. The sign-up form had "First name" and no "I am 18 or over".
+- Signing up by email lands on "About you" in the wizard's layout: "Log out" top left, "Step 1 of 3" with one of three bars filled, the figure facing the sun as its photo, the Ephesians 2:10 quote on it. The sign-up form had "First name" and no "I am 18 or over".
 - "First name" shows the name given at sign-up and can be changed; below it "I am 18 or over", then "I agree to Whatever You Do storing my answers, including anything about my faith, work or health, as set out in the privacy notice.", each beside its box, and under it "What this means", closed.
 - "What this means" opens to the consent text, with "Draft wording" at its top, no paragraph on a group's admins, "Agreeing is up to you." with nothing about an enrolment code, nothing about staying in groups after withdrawing, its paragraph ending "You can withdraw at any time from “Your consent”, linked at the foot of your hub." (never "from this page"; the consent page reads the same, fix-3), and "Version 3 of this text." at its end. It opens and closes with JavaScript off too, and by keyboard (Tab to it, Enter).
 - On arrival no refusal shows. Press "Continue →" with the name cleared and both boxes unticked: "Add your first name.", "You need to be 18 or over to take part." and "You need to agree to take part." each under what it refuses, the field and boxes outlined in red, and what was typed or ticked kept. `/hub/` still comes back to this page. With JavaScript the page neither reloads nor moves, and the focus stays on "Continue →"; without, the page comes back opened at the form, not at the top (fix-2).
@@ -781,7 +781,7 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - Observer's landing (fix 7; load the pathway again, open a new link in a private window): the notice ends "This link is yours alone, so you answer only once and can stop the reminders or withdraw. Sam sees your answers among everyone else's, never with your name on them."
 - Back from the green wipe (fix 8): on the homepage press "Begin your journey", let the green wipe finish, then Back: the homepage shows, not a green page, and the button works again.
 - Hub (fixes 9, 12): the Five trusted voices title reads in light text on the brown card and turns lime when hovered. Section titles ("Before we begin") and side card titles ("Walk with a coach") are in the serif heading face, as v3's hub.
-- Wizard page 2 (fix 10; someone new, wide window): the sun photo is the same size and crop as on page 1, and stays in view while the ratings scroll. Phone width: the photo sits above the form as before.
+- Wizard page 2 (fix 10; someone new, wide window): the photo (page 1's is the grass, page 2's the woman in the wheat) is the same size and crop as page 1's, and stays in view while the ratings scroll. Phone width: the photo sits above the form as before.
 - Ghost buttons (fix 11): "Your pathway" and "Sign out" in the header have a pale fill on the cream, as do "Back" and "Keep Jo"; the homepage's "Begin your journey" ghost in "How it works" and "Ask us about coaching" stay clear on their dark panels.
 - Five trusted voices' page (fix 13): "Needed" and "Optional" are small quiet labels, as v3's tags.
 - Observer's evaluation (fix 14): the relationship drop-down has the same border, corners, padding and font as the page's text inputs, its caret at the right, and the focus ring when focused.
@@ -1075,3 +1075,11 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 - With Section 1 done and both side cards complete, the next step is "The shape of your life" with one button, "Begin", which opens Section 3. There, its three paragraphs read apart from one another, then "Download Section 3 (PDF) (opens in a new tab)" set below them, then "I've finished Section 3" beneath the line.
 - Open "Your pathway": each side card's status there matches its card's tag on the hub, after choosing a coach, after the coach declines, and with one, three and then fewer people with links.
 - Phone width: both cards' buttons stay small, on one line, with no sideways scroll; Section 3's paragraphs, PDF button and finish read in order.
+
+### Ticket 101: Photos and the new video (rebuild the frontend first; wide screen and about 375px; no pathway reload needed, but start a participant afterwards for the wizard)
+
+- The homepage's hero plays the new landscape video, a field of wheat with a woman walking through it, muted and looping. Block `hero-landscape.mp4` (DevTools, Network, "Block request URL") and reload: its poster shows in its place, as it does before it plays. Switch JavaScript off: the poster shows.
+- "For churches" shows the photo of people sitting with Bibles and notebooks open, its foot level with the text's. At phone width it sits above the text.
+- A new participant's wizard shows a different photo on each page: the figure facing the sun on "About you", the grass on the reason, the woman in the wheat on the ratings. Each fills the panel with no bare strip beneath it, the verse readable on it. At phone width the photo sits above the form.
+- The hub's two side cards each have a photo behind them, two friends by a lake behind Walk with a coach and a row of friends behind Five trusted voices, their words, tags and buttons light and readable, locked or not, with JavaScript off too.
+- `/credits/` (the pathway loaded has courtesy credits on, as *Whatever You Do* does) lists, after "Photographs", "Video and photographs on the site": "Video by Marian Croitoru from Pexels", "Pexels" linking to the video's page, then the churches photo's credit and one line for each other photo; "Photograph of grass from Unsplash." shows once, not twice.

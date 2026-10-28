@@ -244,6 +244,13 @@ class WizardStep(NamedTuple):
 
     number: int
     count: int
+    PHOTOS = 5  # ✨ the photos the stylesheet draws, the hackathon prototype's five (ticket 101)
+
+    @property
+    def photo(self):
+        """✨ Which of the wizard's photos this step is drawn beside, counted from 1: each page differs from the one
+        before, and a wizard longer than the photos there are begins them again."""
+        return (self.number - 1) % self.PHOTOS + 1
 
     @property
     def numbers(self):
