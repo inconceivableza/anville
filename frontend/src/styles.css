@@ -2538,6 +2538,10 @@ body:not(.framed) .question-card > p + form {
   margin-top: 18px;
 }
 
+.coach-buttons + .invitation-status {
+  margin-top: var(--space-sm);
+}
+
 .coach-grow {
   flex: 1;
   justify-content: center;
@@ -4594,8 +4598,9 @@ body > svg[aria-hidden="true"] {
 
 /* ---------- HERO ---------- */
 .hero {
-  min-height: calc(100vh - 20px);
-  min-height: calc(100svh - 20px);
+  /* ✨ The page's padding above and below it, so the hero leaves v3's margin at the window's foot (hand check, 28 Oct). */
+  min-height: calc(100vh - 2 * var(--space-sm));
+  min-height: calc(100svh - 2 * var(--space-sm));
   display: grid;
   place-items: center;
   text-align: center;
@@ -5742,8 +5747,10 @@ body > svg[aria-hidden="true"] {
   align-self: stretch;
 }
 
+/* ✨ Tightened towards v3's "For churches" (fix-6, 28 Oct): a shorter photo, smaller padding and heading, the points
+   closer together. */
 .churches .ch-img {
-  min-height: 520px;
+  min-height: 0;
   padding: 0;
   background:
     linear-gradient(180deg, var(--brown-05), var(--brown-18)),
@@ -5753,8 +5760,8 @@ body > svg[aria-hidden="true"] {
 .churches .ch-copy {
   display: grid;
   align-content: center;
-  gap: var(--space-md);
-  padding: clamp(28px, 5vw, 68px);
+  gap: var(--space-sm);
+  padding: clamp(24px, 3.4vw, 44px);
 }
 
 .churches .tagline {
@@ -5767,7 +5774,7 @@ body > svg[aria-hidden="true"] {
 
 .churches h2 {
   max-width: 19ch;
-  font-size: clamp(32px, 4vw, 54px);
+  font-size: clamp(30px, 3.2vw, 46px);
   font-weight: 400;
   line-height: 1.08;
 }
@@ -5784,8 +5791,8 @@ body > svg[aria-hidden="true"] {
 
 .churches .ch-points {
   display: grid;
-  gap: var(--space-md);
-  margin: var(--space-sm) 0;
+  gap: 0;
+  margin: 4px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -5793,8 +5800,12 @@ body > svg[aria-hidden="true"] {
 .churches .ch-points li {
   display: grid;
   gap: 3px;
-  padding-top: var(--space-sm);
+  padding: 10px 0;
   border-top: 1px solid var(--cream-2);
+}
+
+.churches .ch-points li:last-child {
+  border-bottom: 1px solid var(--cream-2);
 }
 
 .churches .ch-points b {

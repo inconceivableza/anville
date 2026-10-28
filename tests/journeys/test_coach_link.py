@@ -54,10 +54,11 @@ def participant(signed_in_client, load_pathway):  # noqa: F811
 
 
 def coach_link_action(client, action, section=ONBOARDING):
-    """✨ Where the coach page posts to issue or revoke the coach's link, from a button within the checklist's form."""
-    found = re.search(rf'formaction="(/invitations/\d+/{action}/)"', shown(client, section))
-    assert found, f"no way to {action} the coach's link on the coach page"
-    return found.group(1)
+    """✨ Where the coach page posts to issue or revoke the coach's link. Only issuing has a button there (fix-9: a new
+    link, choosing someone else and removing already stop the old one); the revoke address is the same contact's."""
+    found = re.search(r'formaction="(/invitations/\d+/)issue/"', shown(client, section))
+    assert found, "no way to issue the coach's link on the coach page"
+    return f"{found.group(1)}{action}/"
 
 
 def issue_coach_link(client):
@@ -187,6 +188,22 @@ def test_once_the_coachs_link_is_revoked_the_card_shows_what_it_did_before_any_l
 
     assert coach_card_tag(signed_in_client) != "Complete"
     assert coach_card_tag(signed_in_client) == before
+
+
+@pytest.mark.django_db
+def test_the_waiting_coach_card_offers_a_new_link_and_no_revoke_button(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    """✨ Fix-9: "Revoke link" had no job beside "Make a new link"; the card says what a new link does instead."""
+    load_pathway(with_a_coach_card())
+    signed_in_client.post(f"/sections/{ONBOARDING}/complete/")
+    choose(signed_in_client)
+
+    page = shown(signed_in_client, "walk-with-a-coach")
+
+    assert "Make a new link" in page
+    assert "Lost the link? Make a new one; the old one stops working." in page
+    assert "Revoke link" not in page
 
 
 @pytest.mark.django_db
