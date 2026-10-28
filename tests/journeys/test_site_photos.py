@@ -75,4 +75,4 @@ def test_the_credits_page_lists_the_video_and_the_churches_photo_as_courtesies(c
     assert "Video by Marian Croitoru from" in page
     assert 'href="https://www.pexels.com/video/healthy-light-landscape-nature-4524595/"' in page
     assert "Photograph of a church gathering with Bibles open, by Sincerely Media on Unsplash." in page
-    assert page.count("Photograph of grass from Unsplash.") == 1
+    assert page.count("Photograph of grass, by Oliver Pacas on Unsplash.") == 1

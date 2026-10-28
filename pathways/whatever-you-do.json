@@ -11,7 +11,7 @@
   "photos": {
     "designed": {
       "file": "grass.jpg",
-      "credit": { "kind": "courtesy", "text": "Photograph of grass from Unsplash." }
+      "credit": { "kind": "courtesy", "text": "Photograph of grass, by Oliver Pacas on Unsplash." }
     }
   },
   "show_courtesy_credits": true,

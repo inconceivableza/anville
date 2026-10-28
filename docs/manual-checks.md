@@ -293,7 +293,7 @@ The homepage (`/`):
 
 - After the entry page, Before we begin opens as the wizard, beside a photo (the stylesheet's, a different one on each page: ticket 101): no header, no "Your pathway", no link to the hub; "Step 2 of 3" with three bars at the top, two of them filled, the entry page being step 1 (ticket 92). Page 1 is the reason alone; "Continue →" leads to page 2, the five ratings, with "← Previous page" beside the way on.
 - Going to `/hub/` part-way lands on the page reached. The last "Continue →" lands on "Welcome, [name]" (sprint-3c-r3-fix-7), whose "Continue →" leads to the hub, Before we begin listed as complete, and the hub never sends you back. Its entry opens it as an ordinary section page, header and sidebar included, the ratings fixed.
-- `/credits/` lists "Photograph of a figure facing the sun from Unsplash." among the site's photographs (ticket 101).
+- `/credits/` lists "Photograph of a figure facing the sun, by Andreas Rasmussen on Unsplash." among the site's photographs (ticket 101).
 - Phone width: the photo sits above the page, the ratings fit without scrolling sideways.
 - The photo is as tall as the window on both pages, at a wide screen and at a tall one (over 900px high): no bare dark strip beneath it, whether at the top of the ratings or scrolled to their end, and the photo the same size and crop on page 2 as on page 1, never zoomed. At about 375px it sits above the page as before (fix-10).
 - Pressing Enter in an answer (with a rating's point focused, chosen or not, or a reason's card) does nothing: the page stays as it was, never "Not saved. No answer was sent." on a page of its own (fix-7).
@@ -357,7 +357,7 @@ The homepage (`/`):
 ## The hub's next step and its photo (load the pathway again first; ticket 49b)
 
 - Once Section 1 is next: "Start with your gifts." and "Start with the ten-minute strengths evaluation." (ticket 95), over the grass photo, shaded so the words read clearly, the panel taller, as the prototype's. "Begin" leads into Section 1.
-- `/credits/` lists "Photograph of grass from Unsplash." under "Photographs", after the scripture notices.
+- `/credits/` lists "Photograph of grass, by Oliver Pacas on Unsplash." under "Photographs", after the scripture notices.
 - Without a photo of its own from the pathway, a step is drawn over the stylesheet's photo for it (sprint-3c-r3-fix-8).
 - Phone width: the photo fills the panel without stretching, and the words stay readable.
 
@@ -1156,19 +1156,19 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 - "For churches" shows the photo of people sitting with Bibles and notebooks open, its foot level with the text's. At phone width it sits above the text.
 - A new participant's wizard shows a different photo on each page: the figure facing the sun on "About you", the grass on the reason, the woman in the wheat on the ratings. Each fills the panel with no bare strip beneath it, the verse readable on it. At phone width the photo sits above the form.
 - The hub's side cards, Walk with a coach and Five trusted voices, have no photo: Walk with a coach is a light card as before, Five trusted voices the plain dark one (fix-5 took ticket 101's photos off them).
-- `/credits/` (the pathway loaded has courtesy credits on, as *Whatever You Do* does) lists, after "Photographs", "Video and photographs on the site": "Video by Marian Croitoru from Pexels", "Pexels" linking to the video's page, then the churches photo's credit and one line for each other photo; "Photograph of grass from Unsplash." shows once, not twice.
+- `/credits/` (the pathway loaded has courtesy credits on, as *Whatever You Do* does) lists, after "Photographs", "Video and photographs on the site": "Video by Marian Croitoru from Pexels", "Pexels" linking to the video's page, then the churches photo's credit and one line for each other photo; "Photograph of grass, by Oliver Pacas on Unsplash." shows once, not twice.
 
 ### sprint-3c-r3-fix-5: the hub's next-step photo (rebuild the frontend first; wide screen and about 375px; no pathway reload needed)
 
 - The hub's "Your next step" card has a photo behind it in every state (each state's own photo is listed under sprint-3c-r3-fix-8 below): a section next, a section carried on, "Waiting on answers", the coach's wait and "Nothing is waiting for you right now."; its label, heading, sentence and button stay light and readable over it. With JavaScript off too.
 - Where the pathway names a photo for the next section, that photo covers the hills, as before.
 - Walk with a coach and Five trusted voices show their photos as the next step too (see sprint-3c-r3-fix-12 below).
-- `/credits/` lists "Photograph of misty hills at sunrise from Unsplash." among the site's photographs.
+- `/credits/` lists "Photograph of misty hills at sunrise, by Alexander Philipp on Unsplash." among the site's photographs.
 
 ### sprint-3c-r3-fix-8: the hub's next-step photos (rebuild the frontend first; wide screen and about 375px; no pathway reload needed)
 
 - Each state of the hub's "Your next step" card has its own photo, and none appears on two of them: Section 1 ("How you've been designed") keeps the pathway's grass photo, over the potter's hands; Section 2 the woman looking out over wheat; "The shape of your life" the woman walking at sunset; "Putting your calling into words" the carpenter; "Growth plan" the figure facing the sun; "A letter to your future self" the notebook and coffee; "Waiting on answers" and Five trusted voices as the next step the church gathering with Bibles open (fix-12; it was the row of friends); the coach's wait and Walk with a coach as the next step the two friends beside a lake (the coach card's old photo); "Nothing is waiting for you right now." the misty hills. Photos are one per subject, so the two pairs match and no other two differ. Walk through as many as you can reach; the words stay light and readable on each, the carpenter's portrait too.
-- `/credits/` lists a line for each of these photos, among "Video and photographs on the site", including "Photograph of two friends talking beside a lake from Unsplash.", "Photograph of hands shaping clay from Unsplash.", "Photograph of a carpenter planing wood from Unsplash.", "Photograph of an open Bible on a jetty at sunrise from Unsplash." and "Photograph of a woman in a summer dress looking out over a field of wheat from Unsplash."; and one each for the homepage hero's photo ("…a woman in a sunhat walking through a field at sunset…") and the four calling photos (teacher, mother and baby, pastor, student). The developer confirms the sources.
+- `/credits/` lists a line for each of these photos, among "Video and photographs on the site", including "Photograph of two friends talking beside a lake, by Aarón Blanco Tejedor on Unsplash.", "Photograph of hands shaping clay, by Alex Jones on Unsplash.", "Photograph of a carpenter planing wood, by Minh Đức on Unsplash.", "Photograph of an open Bible on a jetty at sunrise, by Aaron Burden on Unsplash." and "Photograph of a woman in a summer dress looking out over a field of wheat, by Klara Kulikova on Unsplash."; and one each for the homepage hero's photo ("…a woman in a sunhat walking through a field at sunset…") and the four calling photos (teacher, mother and baby, pastor, student). The developer confirms the sources.
 
 ### sprint-3c-r3-fix-12: the hub's row hover, subject photos and first card (rebuild the frontend first; wide screen and about 375px; load the pathway again, then start a new participant)
 
