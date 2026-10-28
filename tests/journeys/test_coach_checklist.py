@@ -416,13 +416,14 @@ def test_saving_keeps_the_coachs_name_alone_and_nothing_from_the_checklist(parti
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("htmx", [True, False], ids=["htmx", "no javascript"])
-def test_saving_shows_the_coach_chosen_with_a_way_back_to_the_hub(participant, htmx):
-    """✨ Ticket 94: the chosen screen follows the verdict card on the same page, and leads on."""
+def test_saving_shows_the_coach_chosen_with_no_second_way_back_to_the_hub(participant, htmx):
+    """✨ Ticket 94: the chosen screen follows the verdict card on the same page. Fix-13: its lower row no longer holds
+    "Back to the hub" (it asserted that link), since the page's top button leads there."""
     saved = choose(participant, htmx=htmx)
 
     page = saved.content.decode() if htmx else shown(participant, ONBOARDING)
     assert screen(page) == "chosen"
-    assert 'href="/hub/"' in checklist_of(page)
+    assert 'href="/hub/"' not in checklist_of(page)
 
 
 @pytest.mark.django_db
