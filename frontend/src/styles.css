@@ -570,29 +570,26 @@ main.container:has(> .ob) {
   z-index: 1;
 }
 
-/* ✨ The wizard's section photo fills the panel beneath its shade, as the prototype's does (ticket 50). */
-.ob-photo > img {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+/* ✨ A different photo for each page of a wizard, the hackathon prototype's five in its order (ticket 101); the shade
+   above keeps the verse readable on any of them, and the photo is drawn without JavaScript or a sign-in. */
+.ob-photo-1 {
+  background: var(--hero-bg) url("../img/facing-sun.jpg") center / cover;
 }
 
-.ob-photo-art {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: var(--green);
-  opacity: 0.28;
+.ob-photo-2 {
+  background: var(--hero-bg) url("../img/grass.jpg") center / cover;
 }
 
-.ob-photo-art svg {
-  width: min(70%, 280px);
-  height: auto;
-  aspect-ratio: 1;
+.ob-photo-3 {
+  background: var(--hero-bg) url("../img/field-woman.jpg") center / cover;
+}
+
+.ob-photo-4 {
+  background: var(--hero-bg) url("../img/notebook.jpg") center / cover;
+}
+
+.ob-photo-5 {
+  background: var(--hero-bg) url("../img/hero.jpg") center / cover;
 }
 
 .ob-photo .q {
@@ -854,7 +851,8 @@ main.container:has(> .ob) {
 }
 
 .credits-notice,
-.credits-photo {
+.credits-photo,
+.credits-site {
   font-size: var(--text-sm);
   color: var(--ink-light);
   margin-bottom: 16px;
@@ -1534,6 +1532,24 @@ main > .hub ~ .hub-consent {
 
 .hub-side-card.locked h3 {
   color: var(--muted);
+}
+
+/* ✨ A photo behind each side card (ticket 101), mentor and friends in turn: the dark card's light text, over a heavy
+   brown shade so it stays readable on either photo. Drawn without JavaScript. */
+.hub-side-card.side-photo {
+  background:
+    linear-gradient(var(--brown-78), var(--brown-86)),
+    url("../img/mentor.jpg") center / cover;
+}
+
+.side > .side-photo:nth-child(even) {
+  background:
+    linear-gradient(var(--brown-78), var(--brown-86)),
+    url("../img/friends.jpg") center / cover;
+}
+
+.card.dark.hub-side-card.locked h3 {
+  color: var(--on-dark-70);
 }
 
 /* ✨ A side card's authored lead, under its tag, as Walk with a coach's says what a coach is for (ticket 95; ticket 65's
@@ -4397,7 +4413,7 @@ body > svg[aria-hidden="true"] {
   place-items: center;
   text-align: center;
   color: var(--on-dark);
-  background: var(--hero-bg) url("../img/hero-poster.jpg") center 60% / cover;
+  background: var(--hero-bg) url("../img/hero-landscape-poster.jpg") center 60% / cover;
 }
 
 .hero > video {
@@ -5479,7 +5495,7 @@ body > svg[aria-hidden="true"] {
   padding: 0;
   background:
     linear-gradient(180deg, var(--brown-05), var(--brown-18)),
-    url("../img/friends.jpg") center / cover;
+    url("../img/churches.jpg") center / cover;
 }
 
 .churches .ch-copy {

@@ -9,10 +9,6 @@
   },
   "translation": "ESV",
   "photos": {
-    "onboarding": {
-      "file": "facing-sun.jpg",
-      "credit": { "kind": "courtesy", "text": "Photograph of a figure facing the sun from Unsplash." }
-    },
     "designed": {
       "file": "grass.jpg",
       "credit": { "kind": "courtesy", "text": "Photograph of grass from Unsplash." }

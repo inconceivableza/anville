@@ -181,6 +181,21 @@ def home(request):
     return render(request, "engine/home.html", {"begin": begin})
 
 
+# ✨ The photographs the stylesheet draws on the homepage, in the wizard and on the hub's side cards, each a courtesy
+# credit (ticket 101). The credits page lists them after the pathway's own, leaving out one the pathway lists too,
+# and with them the video's, while the document's setting for courtesy credits is on.
+SITE_PHOTO_CREDITS = [
+    "Photograph of a church gathering with Bibles open, by Sincerely Media on Unsplash.",
+    "Photograph of a figure facing the sun from Unsplash.",
+    "Photograph of grass from Unsplash.",
+    "Photograph of a woman walking through a field of wheat from Unsplash.",
+    "Photograph of a notebook, a pen and a cup of coffee from Unsplash.",
+    "Photograph of a woman walking in a field at sunset from Unsplash.",
+    "Photograph of two friends talking beside a lake from Unsplash.",
+    "Photograph of a row of friends sitting together from Unsplash.",
+]
+
+
 def credits_page(request):
     """✨ The copyright notice of each translation the published pathway quotes, open to anyone, since the public
     homepage quotes scripture too. The publishers ask for their notices on the work's copyright page (ticket 39). After
@@ -188,9 +203,13 @@ def credits_page(request):
     version = Publication.current_version()
     translations = version.document.get("translations", {}) if version else {}
     photo_credits = credits_listed(version.document) if version else []
-    return render(
-        request, "engine/credits.html", {"translations": translations.values(), "photo_credits": photo_credits}
-    )
+    shown = {
+        "translations": translations.values(),
+        "photo_credits": photo_credits,
+        "site_photo_credits": [credit for credit in SITE_PHOTO_CREDITS if credit not in photo_credits],
+        "site_credits_shown": bool(version and version.document.get("show_courtesy_credits", False)),
+    }
+    return render(request, "engine/credits.html", shown)
 
 
 def privacy(request):
@@ -339,8 +358,7 @@ def _section_shown(request, state, section, shown, status=200):
     """✨ A page of a section as `_section_page` gives it, drawn as its wizard while it is one."""
     if _shows_as_wizard(state, section):
         step = wizard_step(state.sections, section, shown["page"]["number"])
-        photo = _photo_of(state.version.document, section["id"])
-        shown = {**shown, "photo": photo, "step": step, "steps": step.numbers}
+        shown = {**shown, "step": step, "steps": step.numbers}
         return render(request, "engine/wizard.html", shown, status=status)
     return render(request, "engine/section.html", shown, status=status)
 

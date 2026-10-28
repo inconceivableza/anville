@@ -3,7 +3,7 @@
 {% extends "engine/base.html" %}
 {% comment %}
   ✨ A section the pathway document marks as a wizard (ticket 50), while it is not yet complete: one page of it, its
-  blocks and its way on as on any section page, beside the section's photo, without the hub's links or the sidebar.
+  blocks and its way on as on any section page, beside a photo that differs on each page, without the hub's links or the sidebar.
   Completing it leads to the hub, and from then on it is reread as any other section. The entry page, the engine's
   own (ADR 0021), takes this layout too, filling `step` with its own form; it is the first of the steps
   counted, so `step` is the step this page is of them all, not its page within the section.
@@ -12,12 +12,8 @@
 
 {% block content %}
   <div class="ob">
-    <aside class="ob-photo" aria-label="A scripture reflection">
-      {% if photo %}
-        <img src="{{ photo }}" alt="">
-      {% else %}
-        <div class="ob-photo-art" aria-hidden="true"><svg><use href="#leaf"/></svg></div>
-      {% endif %}
+    {# ✨ The photo is the stylesheet's, a different one for each page (ticket 101), so it needs no pathway file or sign-in. #}
+    <aside class="ob-photo ob-photo-{{ step.photo }}" aria-label="A scripture reflection">
       <blockquote class="q">
         “For we are his workmanship, created in Christ Jesus unto good works.”
         <cite class="label">Ephesians 2:10</cite>
