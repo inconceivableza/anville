@@ -531,11 +531,12 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
 
 def without_what_finishing_takes(document):
     """✨ What finishing each section takes, as its lock notes name it, is this pathway's alone (ticket 79), and so is
-    Section 1's "I've finished Section 1": the faithful port's notes name the sections by title, and its Section 1 has
-    the engine's own button."""
+    Section 1's "I've finished Section 1" and the letter's "I've finished Section 6": the faithful port's notes name the
+    sections by title, and its Section 1 and letter have the engine's own button."""
     for section in document["content"]["sections"]:
         section.pop("to_finish", None)
-    next(section for section in document["content"]["sections"] if section["id"] == "designed").pop("complete_label")
+        if section["id"] in ("designed", "letter"):
+            section.pop("complete_label")
     return document
 
 
