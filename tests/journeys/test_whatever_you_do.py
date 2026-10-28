@@ -556,11 +556,13 @@ def without_the_wizard(document):
     pages became the hub side cards Walk with a coach and Five trusted voices (ticket 50). The faithful port keeps the
     original prototype's one section, so the contacts and their gate clause go back into it on a page of their own,
     and the coach goes, as without the coach step. Nor is it once-only there, so it stays listed once complete (ticket
-    69)."""
+    69). Nor has it the wizard's verses, words and welcome (sprint-3c-r3-fix-7)."""
     sections = document["content"]["sections"]
     onboarding = sections[0]
     del onboarding["wizard"]
     del onboarding["once_only"]
+    del onboarding["wizard_steps"]
+    del onboarding["welcome"]
     onboarding["blocks"] = [block for block in onboarding["blocks"] if block["id"] != "to-ratings"]
     voices = next(section for section in sections if section["id"] == "trusted-voices")
     onboarding["blocks"] += [{"id": "to-contacts", "type": "page_break"}, *voices["blocks"]]
