@@ -170,6 +170,12 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 - "For churches" lists four points: Run it together, Invite trusted voices, Raise up coaches, Free for participants.
 - With JavaScript blocked, "How it works" shows its five steps one under another, each with its tab's photo above its words (a notebook, friends, a field, a potter, hills).
 
+### sprint-3c-r3-fix-6: the homepage's hero margin and "For churches" (rebuild the frontend first; wide screen and about 375px; no pathway reload or new participant needed)
+
+- Scroll to the very top at a window about 800px high: the hero ends about 12px above the window's foot, as v3's does at the same size, not touching it.
+- "For churches" is shorter than before, nearer v3's: a smaller heading, less padding, the four points closer together with a line above each and one under the last. Nothing is cut off, and at about 375px it still stacks photo above text.
+- "Invite trusted voices" reads: "Participants can ask people who know them well to share their perspective, drawing the church community into walking alongside them."
+
 ## The hub's layout (the hub, beside the prototype's: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html#hub`)
 
 - The page is deep brown, and the hub, header included, is cream with rounded corners, inset a thin brown border from every edge. "Credits" sits below it on the brown, easy to read.
@@ -337,6 +343,7 @@ The homepage (`/`):
 
 - Once Section 1 is next: "Start with your gifts." and "Start with the ten-minute strengths evaluation." (ticket 95), over the grass photo, shaded so the words read clearly, the panel taller, as the prototype's. "Begin" leads into Section 1.
 - `/credits/` lists "Photograph of grass from Unsplash." under "Photographs", after the scripture notices.
+- Without a photo of its own from the pathway, a step is drawn over the stylesheet's photo for it (sprint-3c-r3-fix-8).
 - Phone width: the photo fills the panel without stretching, and the words stay readable.
 
 ## Back to the hub and Section 1 (ticket 41b)
@@ -396,10 +403,10 @@ The homepage (`/`):
 
 ## The coach's link (ticket 13c)
 
-- Saving Sam (ticket 51b) leads straight to "You've chosen Sam", saying the next step is to ask them properly, with the link shown once beneath, "Copy", "Waiting for Sam to answer. The link works until …", "Make a new link" and "Revoke link", without reloading the page; the link box has focus. "Copy" says "Copied". A reload shows no link, only the status. After "Revoke link" the button reads "Get a link for Sam", which shows a new link the same way.
+- Saving Sam (ticket 51b) leads straight to "You've chosen Sam", saying the next step is to ask them properly, with the link shown once beneath, "Copy", "Waiting for Sam to answer. The link works until …", "Make a new link" and, beneath, "Lost the link? Make a new one; the old one stops working." (no "Revoke link"), without reloading the page; the link box has focus. "Copy" says "Copied". A reload shows no link, only the status. After "Choose someone else" and saving, the button reads "Get a link for Sam", which shows a new link the same way.
 - With Before we begin complete (and later, Section 1 too), saving a coach and "Make a new link" still work.
 - Enter in the link box does nothing: the link stays the same and still works (with and without JavaScript).
-- Without JavaScript: saving Sam, "Get a link for Sam", "Make a new link" and "Revoke link" each come back to the coach page at the checklist, the link shown once after issuing.
+- Without JavaScript: saving Sam, "Get a link for Sam" and "Make a new link" each come back to the coach page at the checklist, the link shown once after issuing.
 - In a private window, the link shows "participant has asked you to be their coach" (the participant's display name), the two authored paragraphs, "What you'd be agreeing to" and the six promises, each with its note in smaller type and a box to its left; the box or its words tick it. The line on what is kept sits above "Accept →" and "I can't commit to all of this".
 - "Accept →" with a box unticked says "Tick all six to accept…" with the boxes as they were. All six ticked: "Thank you — participant will be told" and the authored line; a reload says "You're participant's coach" in its place (ticket 25a), and never shows the boxes again.
 - "I can't commit to all of this" (any boxes ticked): "That's a good answer" and the two authored paragraphs.
@@ -1139,7 +1146,18 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 
 ### sprint-3c-r3-fix-5: the hub's next-step photo (rebuild the frontend first; wide screen and about 375px; no pathway reload needed)
 
-- The hub's "Your next step" card has a photo behind it (misty hills at sunrise) in every state: a section next, a section carried on, "Waiting on answers", the coach's wait and "Nothing is waiting for you right now."; its label, heading, sentence and button stay light and readable over it. With JavaScript off too.
+- The hub's "Your next step" card has a photo behind it in every state (each state's own photo is listed under sprint-3c-r3-fix-8 below): a section next, a section carried on, "Waiting on answers", the coach's wait and "Nothing is waiting for you right now."; its label, heading, sentence and button stay light and readable over it. With JavaScript off too.
 - Where the pathway names a photo for the next section, that photo covers the hills, as before.
 - Walk with a coach and Five trusted voices show no photo: the coach's card is light, locked or not, and Five trusted voices is the plain dark card.
-- `/credits/` lists "Photograph of misty hills at sunrise from Unsplash." among the site's photographs, and no longer the one of two friends beside a lake.
+- `/credits/` lists "Photograph of misty hills at sunrise from Unsplash." among the site's photographs.
+
+### sprint-3c-r3-fix-8: the hub's next-step photos (rebuild the frontend first; wide screen and about 375px; no pathway reload needed)
+
+- Each state of the hub's "Your next step" card has its own photo, and none appears on two of them: Section 1 ("How you've been designed") keeps the pathway's grass photo, over the potter's hands; Section 2 the woman looking out over wheat; "The shape of your life" the woman walking at sunset; "Putting your calling into words" the carpenter; "Growth plan" the figure facing the sun; "A letter to your future self" the notebook and coffee; "Waiting on answers" the row of friends (the Five trusted voices card's old photo); the coach's wait the two friends beside a lake (the coach card's old photo); "Nothing is waiting for you right now." the misty hills. Walk through as many as you can reach; the words stay light and readable on each, the carpenter's portrait too.
+- `/credits/` lists a line for each of these photos, among "Video and photographs on the site", including "Photograph of two friends talking beside a lake from Unsplash.", "Photograph of hands shaping clay from Unsplash.", "Photograph of a carpenter planing wood from Unsplash.", "Photograph of an open Bible on a jetty at sunrise from Unsplash." and "Photograph of a woman in a summer dress looking out over a field of wheat from Unsplash."; and one each for the homepage hero's photo ("…a woman in a sunhat walking through a field at sunset…") and the four calling photos (teacher, mother and baby, pastor, student). The developer confirms the sources.
+
+### sprint-3c-r3-fix-9: the coach card's link buttons (rebuild needed; wide screen and about 375px; no pathway reload needed)
+
+- On Walk with a coach's waiting card (and the coach page in onboarding), the buttons are "Make a new link" only, with no "Revoke link"; beneath them, "Lost the link? Make a new one; the old one stops working." in small grey type. Before any link is made, the button reads "Get a link for Sam" and the line is absent, and once Sam has accepted or declined it is absent too.
+- "Make a new link" shows a new link once, and the old one, opened in a private window, is refused.
+- Five trusted voices' rows still show "Revoke link" (the only way to stop a link while keeping the person listed).

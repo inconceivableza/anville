@@ -30,8 +30,10 @@
     <p class="invitation-status">Waiting for {{ coach.name }} to answer. The link works until {{ link.invitation.expires_at|date:"j F Y" }}.</p>
   {% endif %}
   {% comment %}
-    ✨ Offered after an answer too: reissuing asks again, and revoking stops the link, taking the answer with it, since
-    it belongs to the link it came through.
+    ✨ Offered after an answer too: reissuing asks again, and stops the old link, taking the answer with it, since it
+    belongs to the link it came through. There is no "Revoke link" here (fix-9): a new link, choosing someone else and
+    removing the coach all stop the old one already, so it had no job of its own; the trusted-voices rows keep theirs,
+    the only way to stop a link while keeping the person listed. The address `revoke_invitation` stays for them.
   {% endcomment %}
   <div class="coach-buttons">
     {% url 'issue_invitation' link.contact_id as issue %}
@@ -39,10 +41,9 @@
             hx-select="#block-{{ block.id }}" hx-swap="outerHTML" class="pill ghost">
       {% if link.invitation %}Make a new link{% else %}Get a link for {{ coach.name }}{% endif %}
     </button>
-    {% if link.invitation %}
-      {% url 'revoke_invitation' link.contact_id as revoke %}
-      <button type="submit" formaction="{{ revoke }}" hx-post="{{ revoke }}" hx-target="#block-{{ block.id }}"
-              hx-select="#block-{{ block.id }}" hx-swap="outerHTML" class="pill ghost">Revoke link</button>
-    {% endif %}
   </div>
+  {# ✨ While waiting only: after an answer a new link takes that answer with it, so it isn't offered as a fix. #}
+  {% if link.answer == "waiting" %}
+    <p class="invitation-status">Lost the link? Make a new one; the old one stops working.</p>
+  {% endif %}
 </div>

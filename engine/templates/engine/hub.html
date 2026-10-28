@@ -24,7 +24,7 @@
           {% if hub.next_step %}
             {# ✨ What it says is the document's: the section's own heading and sentence, or its title and estimate (ticket 49b). #}
             {% with step=hub.next_step %}
-              <section class="panel next">
+              <section class="panel next {{ next_look }}">
                 {% if photo %}<img src="{{ photo }}" alt="">{% endif %}
                 <p class="label">Your next step</p>
                 {% if step.next_step.heading %}
@@ -43,7 +43,7 @@
           {% elif hub.waiting_on_answers %}
             {# ✨ Nothing is next, but a section's only open work waits on others' answers (ticket 68): the engine's heading, and the sentence the section carries for it (fix-2). #}
             {% with waiting=hub.waiting_on_answers %}
-              <section class="panel next">
+              <section class="panel next {{ next_look }}">
                 <p class="label">Your next step</p>
                 <h2>Waiting on answers</h2>
                 {% if waiting_sentence %}<p>{{ waiting_sentence }}</p>{% endif %}
@@ -55,7 +55,7 @@
             {% endwith %}
           {% elif coach_wait %}
             {# ✨ Nothing is next, and a section waits on the coach alone: the engine's wording for the wait, by the coach's answer (ticket 65). #}
-            <section class="panel next">
+            <section class="panel next {{ next_look }}">
               <h2>{{ coach_wait.heading }}</h2>
               <p>{{ coach_wait.sentence }}</p>
               <a class="pill" data-magnetic href="{{ coach_wait.coach_page }}">
@@ -64,7 +64,7 @@
               </a>
             </section>
           {% else %}
-            <div class="panel next">
+            <div class="panel next {{ next_look }}">
               <h2>Nothing is waiting for you right now.</h2>
               <p>You've completed everything that's open. Check back soon.</p>
             </div>
