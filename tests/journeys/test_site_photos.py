@@ -2,7 +2,7 @@
 # For licensing information see ../../LICENSE.md
 
 """✨ Photos and the new video (ticket 101): the hero's video and poster, the wizard's photo for each page, the hub's
-side cards' photos and the courtesy credits for them. How each looks is a hand check (docs/manual-checks.md)."""
+next step's photo and the courtesy credits for them. How each looks is a hand check (docs/manual-checks.md)."""
 
 import json
 import re
@@ -52,14 +52,18 @@ def test_the_steps_photos_differ_one_after_another_and_wrap_within_the_photos_th
 
 
 @pytest.mark.django_db
-def test_the_hub_side_cards_each_carry_a_photo(signed_in_client, load_pathway):  # noqa: F811
+def test_the_hub_next_step_has_the_stylesheets_photo_and_the_side_cards_none(
+    signed_in_client, load_pathway  # noqa: F811
+):
     load_pathway(json.loads(DOCUMENT.read_text(encoding="utf-8")))
     through_the_wizard(signed_in_client)
 
     page = signed_in_client.get("/hub/").content.decode()
 
-    cards = re.findall(r'<section class="card[^"]*hub-side-card[^"]*side-photo[^"]*"', page)
-    assert len(cards) == 2
+    # ✨ The next step's photo is the stylesheet's behind `.next` (fix-5), so it holds in every state; the side cards
+    # have none.
+    assert re.search(r'<(section|div) class="panel next"', page)
+    assert "side-photo" not in page
 
 
 @pytest.mark.django_db
