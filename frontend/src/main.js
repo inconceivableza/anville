@@ -522,7 +522,7 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   update();
 }
 
-// --- Calling ring: v3's, from the Meet cards in the page ---
+// --- Calling band: v3's, from the Meet cards in the page (its classes keep the name "ring") ---
 (() => {
   let stage = document.getElementById("ringStage");
   const ring = document.getElementById("ring") ?? document.querySelector(".meet-cards");
@@ -546,14 +546,23 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
     stage.append(controls);
   }
 
-  const angle = 360 / cards.length;
-  const speed = (0.035 * 60) / 1000; // ✨ v3's 0.035° a frame, at 60 frames a second, in degrees a millisecond
-  let radius = 0;
-  let rotation = 0;
+  // ✨ A flat band moving sideways, as v3 looks (the developer's 29 Oct hand check), rather than a ring seen in
+  // perspective. The cards are copied once, hidden from screen readers, so the band runs on without a gap: moved by
+  // the width of one set, it looks as it began.
+  cards.forEach((card) => {
+    const copy = card.cloneNode(true);
+    copy.setAttribute("aria-hidden", "true");
+    copy.querySelectorAll("img").forEach((img) => { img.alt = ""; });
+    ring.append(copy);
+  });
+  const speed = 0.045; // ✨ about v3's pace, in pixels a millisecond
+  let loop = 0;
+  let step = 0;
+  let offset = 0;
   let drag;
   // ✨ Only the pause button between the arrows stops the ring (fix-17): hovering or focusing it no longer does, so it
-  // never stops or starts unasked. The button's name says what pressing it will do. Under reduced motion the ring
-  // starts paused and the arrows turn it without easing (29 Oct); it turns on its own only if the play button is pressed.
+  // never stops or starts unasked. The button's name says what pressing it will do. Under reduced motion the band
+  // starts paused and the arrows move it without easing (29 Oct); it moves on its own only if play is pressed.
   let paused = reducedMotion;
   const toggle = stage.querySelector("[data-ring-toggle]");
   const pauseIcon = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><rect x="3" y="2" width="3.5" height="12" rx="1" fill="currentColor"/><rect x="9.5" y="2" width="3.5" height="12" rx="1" fill="currentColor"/></svg>';
@@ -566,41 +575,33 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   let lastFrame;
   let transitionUntil = 0;
   let transitionTimer;
-  // ✨ v3's sizes (29 Oct): the cards stand on the inside of the ring, the viewer a little in from its centre.
   const layout = () => {
-    const width = stage.clientWidth;
-    const cardWidth = Math.max(180, Math.min(430, width * 0.27));
-    const cardHeight = cardWidth * 1.25;
-    radius = (cardWidth + Math.max(12, width * 0.016)) * cards.length / (2 * Math.PI);
-    const controlsSpace = parseFloat(getComputedStyle(stage).getPropertyValue("--ring-controls-space")) || 0;
-    stage.style.height = `${cardHeight * 0.9 + controlsSpace}px`;
-    stage.style.perspective = `${radius * 0.62}px`;
-    cards.forEach((card, index) => {
-      card.style.width = `${cardWidth}px`;
-      card.style.height = `${cardHeight}px`;
-      card.style.transform = `translate(-50%, -50%) rotateY(${index * angle}deg) translateZ(${-radius}px)`;
-    });
+    const gap = parseFloat(getComputedStyle(ring).columnGap) || 0;
+    step = cards[0].getBoundingClientRect().width + gap;
+    loop = step * cards.length;
   };
+  // ✨ Kept within one set's width, so the band never runs out.
   const draw = () => {
-    ring.style.transform = `translateZ(${radius * 0.62}px) rotateY(${rotation}deg)`;
+    if (loop) offset = ((offset % loop) + loop) % loop;
+    ring.style.transform = `translateX(${-offset}px)`;
   };
   const tick = (now) => {
     const elapsed = lastFrame === undefined ? 0 : Math.min(now - lastFrame, 64);
     lastFrame = now;
     if (!paused && !drag && now >= transitionUntil) {
-      rotation -= speed * elapsed;
+      offset += speed * elapsed;
       draw();
     }
     requestAnimationFrame(tick);
   };
   stage.addEventListener("pointerdown", (event) => {
     if (event.target.closest("button")) return;
-    drag = { x: event.clientX, rotation };
+    drag = { x: event.clientX, offset };
     stage.setPointerCapture(event.pointerId);
   });
   stage.addEventListener("pointermove", (event) => {
     if (!drag) return;
-    rotation = drag.rotation + (event.clientX - drag.x) * 0.08;
+    offset = drag.offset - (event.clientX - drag.x);
     draw();
   });
   const stopDrag = () => { drag = undefined; };
@@ -613,16 +614,22 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   showToggle();
   stage.querySelectorAll("[data-ring-step]").forEach((button) => {
     button.addEventListener("click", () => {
-      rotation += Number(button.dataset.ringStep) * angle;
+      // ✨ Eased from where it is, without wrapping on the way, so the band never jumps mid-move; it wraps after.
+      const target = offset + Number(button.dataset.ringStep) * step;
       if (reducedMotion) {
+        offset = target;
         draw();
         return;
       }
       transitionUntil = performance.now() + 700;
       ring.style.transition = "transform 700ms cubic-bezier(.2,.7,.2,1)";
-      draw();
+      ring.style.transform = `translateX(${-target}px)`;
+      offset = target;
       clearTimeout(transitionTimer);
-      transitionTimer = window.setTimeout(() => { ring.style.transition = "none"; }, 750);
+      transitionTimer = window.setTimeout(() => {
+        ring.style.transition = "none";
+        draw();
+      }, 750);
     });
   });
   window.addEventListener("resize", layout);

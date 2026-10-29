@@ -5792,15 +5792,14 @@ body > svg[aria-hidden="true"] {
   scroll-snap-align: center;
 }
 
-/* ✨ v3's ring (29 Oct): the cards stand round the viewer, who sees the inside of the ring. main.js sets the card
-   size, the stage's height and its perspective from the stage's width, as v3 does. */
+/* ✨ v3's band (29 Oct): with JavaScript, the row becomes a flat band that main.js moves sideways, its arrows below. */
 .ring-stage {
   --ring-controls-space: 64px;
   position: relative;
   width: 100%;
-  margin: clamp(8px, 1.5vw, 20px) auto 0;
+  margin: 40px auto 0;
+  padding-bottom: var(--ring-controls-space);
   overflow: hidden;
-  perspective-origin: 50% 50%;
   cursor: grab;
   touch-action: pan-y;
 }
@@ -5809,24 +5808,17 @@ body > svg[aria-hidden="true"] {
   cursor: grabbing;
 }
 
-/* ✨ The ring stops short of the stage's foot, which main.js makes taller by as much, so the arrows sit below the cards (fix-14). */
 .meet-cards.ring {
-  position: absolute;
-  inset: 0 0 var(--ring-controls-space);
-  display: block;
+  width: max-content;
   margin: 0;
   padding: 0;
   overflow: visible;
-  transform-style: preserve-3d;
+  scroll-snap-type: none;
+  will-change: transform;
 }
 
 .ring-stage .mc {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  aspect-ratio: auto;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+  flex-basis: clamp(180px, 20vw, 320px);
 }
 
 .ring-controls {
