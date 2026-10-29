@@ -987,8 +987,8 @@ def _results_finish(state, block_id):
 def _invite(state):
     """✨ The way to invite people offered beside the press on to the comparison, wherever that press is offered
     (ticket 88, fix-3, fix-8), and on the comparison's own page while it waits (fix-16): Five trusted voices' page.
-    Below the minimum it is `waiting` and its phrase says how many more its card needs, or else how many of the minimum
-    have answered; the press is greyed then. From the minimum the
+    Below the minimum it is `waiting` and its phrase says, while its card needs more links, how many answers are still
+    needed, or else how many of the minimum have answered; the press is greyed then. From the minimum the
     phrase is empty. None for a pathway without that card or while it is locked, where the press is offered alone, as
     before."""
     answered, minimum = _answered(state.response), minimum_observers(state.version.document)
@@ -998,7 +998,12 @@ def _invite(state):
         return None
     if answered >= minimum:
         return Invite(page_url(voices["section"]), "")
-    phrase = voices["more_needed"] or comparison_status(answered, minimum, viewed=False)[1]
+    if voices["more_needed"]:
+        # ✨ Answers still needed, not the voices card's links (29 Oct): one link out unanswered still needs three.
+        still = minimum - answered
+        phrase = f"Still need answers from {still} {'person who knows' if still == 1 else 'people who know'} you"
+    else:
+        phrase = comparison_status(answered, minimum, viewed=False)[1]
     return Invite(page_url(voices["section"]), phrase, waiting=True)
 
 

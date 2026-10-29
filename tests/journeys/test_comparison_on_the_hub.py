@@ -167,19 +167,33 @@ def test_opening_the_comparison_from_the_row_below_the_minimum_marks_nothing_vie
 
 
 @pytest.mark.django_db
-def test_below_the_minimum_with_too_few_links_each_says_how_many_more_are_needed_as_the_voices_card_does(
+def test_below_the_minimum_with_too_few_links_the_card_and_row_say_whose_answers_are_still_needed(
     signed_in_client, load_pathway  # noqa: F811
 ):
+    """✨ In words that say what is needed (29 Oct), where they said "1 more needed" as the voices card still does,
+    which counts links."""
     load_pathway(with_the_card_on_the_hub())
     signed_in_client.post("/sections/onboarding/complete/")
     answer_through(*add_people_with_links(signed_in_client, *PEOPLE[:2]))
     submit_sort(signed_in_client, complete_sort())
 
-    phrase = tag_of(voices_card(signed_in_client))
+    assert tag_of(voices_card(signed_in_client)) == "1 more needed"
+    assert "Still need answers from 1 person who knows you" in text(card(signed_in_client))
+    assert "Still need answers from 1 person who knows you" in text(hub_row(signed_in_client))
 
-    assert phrase == "1 more needed"
-    assert phrase in text(card(signed_in_client))
-    assert phrase in text(hub_row(signed_in_client))
+
+@pytest.mark.django_db
+def test_below_the_minimum_the_answers_still_needed_count_answers_not_links(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    """✨ One person with a link who has not answered: three answers are still needed, though two more links are."""
+    load_pathway(with_the_card_on_the_hub())
+    signed_in_client.post("/sections/onboarding/complete/")
+    add_people_with_links(signed_in_client, PEOPLE[0])
+    submit_sort(signed_in_client, complete_sort())
+
+    assert tag_of(voices_card(signed_in_client)) == "2 more needed"
+    assert "Still need answers from 3 people who know you" in text(card(signed_in_client))
 
 
 @pytest.mark.django_db

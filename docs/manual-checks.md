@@ -637,7 +637,7 @@ Changed by fix-8 (below): Section 2's card and the results page now show both bu
 
 Rebuild the frontend. No need to load the pathway again.
 
-- *Whatever You Do*, the sort in and Section 1 finished (before that the row is locked, fix-19), fewer than three answered: the hub's "How others see you" row and the sidebar's entry show the results page's phrase as their status ("3 more needed", or "2 of 3 answered" once three have links) and open the comparison's waiting page (fix-16). (Section 2's card: see fix-8.) The Five trusted voices card has "Invite people" alone, with no "How others see you →" beside it.
+- *Whatever You Do*, the sort in and Section 1 finished (before that the row is locked, fix-19), fewer than three answered: the hub's "How others see you" row and the sidebar's entry show the results page's phrase as their status ("Still need answers from 3 people who know you", or "2 of 3 answered" once three have links) and open the comparison's waiting page (fix-16). (Section 2's card: see fix-8.) The Five trusted voices card has "Invite people" alone, with no "How others see you →" beside it.
 - With three answered: the row and the sidebar's entry press on to "Before you look", and "How others see you →" is back beside "Invite people". Each reads "Ready to view", then "Viewed" once pressed through.
 - With JavaScript turned off, each works the same.
 - The faithful port: the results page keeps its single green "Compare with how others see you →", and Section 1 is finished from its own page.
@@ -648,7 +648,7 @@ Changed by fix-10 (below): the results page no longer has either button, and the
 
 Rebuild the frontend. No need to load the pathway again.
 
-- *Whatever You Do*, the sort in, Section 1 finished, fewer than three answered: Section 2's "How others see you" card shows an outlined "Invite people who know you →" on the left and a grey "Compare with how others see you →" on the right, with "3 more needed" (or "2 of 3 answered") as the status under them. Pressing the grey one does nothing, and Tab skips it; the other opens Five trusted voices.
+- *Whatever You Do*, the sort in, Section 1 finished, fewer than three answered: Section 2's "How others see you" card shows an outlined "Invite people who know you →" on the left and a grey "Compare with how others see you →" on the right, with "Still need answers from 3 people who know you" (or "2 of 3 answered") as the status under them. Pressing the grey one does nothing, and Tab skips it; the other opens Five trusted voices.
 - With three answered: "Compare with how others see you →" is no longer grey (green) and opens "Before you look" as before; "Invite people who know you →" is still there, quieter than it, with "Ready to view" as the status.
 - Phone width: the two buttons wrap one under the other with no sideways scroll. With JavaScript turned off, both work the same. A screen reader reads the grey one as a link that is dimmed.
 - The faithful port is unchanged: its results page keeps one green "Compare with how others see you →".
@@ -658,7 +658,7 @@ Rebuild the frontend. No need to load the pathway again.
 Rebuild the frontend. No need to load the pathway again.
 
 - *Whatever You Do*, the sort in, Section 1 not yet finished: the results page has only "I've finished Section 1" below the results, with no "Compare with how others see you →", no "Invite people who know you →" and no count phrase. The back button at the top is still there. Phone width too.
-- Section 2, fewer than three answered, the comparison not yet viewed: the "How others see you" card is on a plain cream fill with a grey edge, not lime. It shows "Invite people who know you →" on the left, the grey "Compare with how others see you →" on the right and "3 more needed" beneath.
+- Section 2, fewer than three answered, the comparison not yet viewed: the "How others see you" card is on a plain cream fill with a grey edge, not lime. It shows "Invite people who know you →" on the left, the grey "Compare with how others see you →" on the right and "Still need answers from 3 people who know you" beneath.
 - Have three answer, press "Compare with how others see you →" and confirm: back on Section 2 the card turns lime. Before the press, "Ready to view" leaves it plain.
 - Section 2's reflection, comparison not yet viewed: "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer." is a pale band at the top of the field's own bordered box, with the faded field beneath it inside the same box, not a loose line between the card above and the field below. Once the comparison is viewed, the box and band are gone and the field is as before. Phone width: the box fits with no sideways scroll.
 
@@ -667,7 +667,7 @@ Rebuild the frontend. No need to load the pathway again.
 No rebuild and no pathway reload needed.
 
 - *Whatever You Do*, the sort in, three people with links and two answered: the hub's "How others see you" row reads "2 of 3 answered"; its title opens "How others experience you", which shows "Not enough answers yet", "2 of 3 answered", "You'll see how others see you once 3 people have answered." and a green "Invite people who know you →", and nothing else: no "Comparing your strengths evaluation…" line, no "You need at least…", no dots, words or percents. The button opens Five trusted voices.
-- With fewer than three given links, the page says "1 more needed" (or however many) in place of "2 of 3 answered", as the row's tag does.
+- With fewer than three given links, the page says how many answers are still needed, counting answers, not links ("Still need answers from 3 people who know you" with one link out and nobody answered; "…from 1 person who knows you" with two answered), in place of "2 of 3 answered", as the row's tag does. Five trusted voices' own tag still counts links ("2 more needed").
 - The sidebar's "How others see you" entry opens the same page.
 - Back on the hub after opening it: the row still reads "2 of 3 answered", Section 2's card is still plain (not lime) with the same status, and Five trusted voices' card is unchanged. Have a third answer: the row reads "Ready to view", not "Viewed", and its title then opens "Before you look" as before.
 - The Five trusted voices card still has "Invite people" alone below three; Section 2's card still has both its buttons.
