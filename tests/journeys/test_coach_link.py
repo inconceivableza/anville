@@ -406,12 +406,12 @@ def test_withdrawing_an_acceptance_deletes_the_coach_at_once_leaving_only_that_t
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("answer", ["unanswered", "declined", "accepted then expired"])
-def test_only_an_acceptance_on_a_working_link_can_be_withdrawn(participant, observer, answer):
+@pytest.mark.parametrize("answer", ["unanswered", "declined", "declined then expired"])
+def test_only_an_acceptance_can_be_withdrawn(participant, observer, answer):
     with time_machine.travel(ISSUED_AT, tick=False):
         link = issue_coach_link(participant)
         if answer != "unanswered":
-            answer_as_coach(observer, link, "decline" if answer == "declined" else "accept")
+            answer_as_coach(observer, link, "decline")
     before = told(participant)
 
     with time_machine.travel(ISSUED_AT + timedelta(days=31 if "expired" in answer else 1), tick=False):
@@ -419,6 +419,43 @@ def test_only_an_acceptance_on_a_working_link_can_be_withdrawn(participant, obse
         assert withdraw_as_coach(observer, link).status_code == 404
 
     assert told(participant) == before
+
+
+# Once an accepting coach's link has expired (29 Oct): withdrawing is as easy as consenting was (GDPR Article 7(3))
+
+
+@pytest.mark.django_db
+def test_an_expired_link_that_accepted_says_so_and_offers_only_withdrawal(participant, observer):
+    with time_machine.travel(ISSUED_AT, tick=False):
+        link = issue_coach_link(participant)
+        answer_as_coach(observer, link, "accept")
+
+    with time_machine.travel(ISSUED_AT + timedelta(days=31), tick=False):
+        opened = observer.get(link)
+
+    page = opened.content.decode()
+    assert opened.status_code == 410
+    assert "This link has expired" in page
+    assert re.search(r'<form method="post" action="%swithdraw/"' % re.escape(link), page)
+    assert re.search(r"can.t be undone", page)
+    assert "Keep this link" in page
+    assert 'name="commitment"' not in page
+    for detail in ("Sam", "sam@example.com"):
+        assert detail not in page
+
+
+@pytest.mark.django_db
+def test_withdrawing_through_an_expired_link_deletes_the_coach_as_a_working_one_does(participant, observer):
+    with time_machine.travel(ISSUED_AT, tick=False):
+        link = issue_coach_link(participant)
+        answer_as_coach(observer, link, "accept")
+
+    with time_machine.travel(ISSUED_AT + timedelta(days=31), tick=False):
+        assert withdraw_as_coach(observer, link).status_code == 200
+        assert observer.get(link).status_code == 404
+
+    assert not Contact.objects.filter(role=Contact.Role.COACH).exists()
+    assert Response.objects.get().coach_withdrew
 
 
 @pytest.mark.django_db

@@ -26,9 +26,9 @@ DEFAULT_PRIVACY_NOTICE = (
     "\n\n"
     "{name} has asked you to answer some questions about them. Your answers are kept, and your name is never shown "
     "to {name} with them. Once {name} has looked at the combined results, no new answers are added. You can withdraw "
-    "at any time, and your answers will be removed: through this link while it works, and after that by asking the "
-    "people who run the service. If you haven't answered, we'll email you a reminder once a week until your link runs "
-    "out, and every reminder lets you stop them."
+    "at any time, and your answers will be removed: through the link of your own you're shown when you start, even "
+    "after it has expired, or by asking the people who run the service. If you haven't answered, we'll email you a "
+    "reminder once a week until your link runs out, and every reminder lets you stop them."
 )
 
 # ✨ The engine's stand-in for a document that has written no reminder email, marked as a draft as the notice is. It still

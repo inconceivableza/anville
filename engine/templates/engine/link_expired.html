@@ -1,0 +1,26 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% extends "engine/base.html" %}
+{% comment %}
+  ✨ An observer's own link, once they have sent answers, or a coach's that accepted, after it has expired (29 Oct).
+  Saying so comes first; withdrawing what they shared stays possible, as easily as it was given (GDPR Article 7(3)),
+  but quietly, below. Names nobody, since an old link may have been passed on. Then word that it is done.
+{% endcomment %}
+{% block head_title %}This link has expired{% endblock head_title %}
+
+{% block content %}
+  {% if withdrawn %}
+    <h1>Your data has been withdrawn</h1>
+    <p>What you shared has been deleted, and this link no longer works.</p>
+  {% else %}
+    <h1>This link has expired</h1>
+    <p>Thank you for taking part.</p>
+    <div class="expired-withdraw">
+      <p>If you'd like to withdraw what you shared, you can do it here. This can't be undone. Keep this link in case you want to do this later.</p>
+      <form method="post" action="{{ action }}">
+        {% csrf_token %}
+        <button type="submit" class="pill ghost small">Withdraw my data</button>
+      </form>
+    </div>
+  {% endif %}
+{% endblock content %}

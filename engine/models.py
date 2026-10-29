@@ -519,17 +519,24 @@ class Invitation(models.Model):
         since closing a link never stops its coach taking back their consent, as it never stops an observer."""
         return (
             cls._withdrawable_by_coach(token)
+            .filter(expires_at__gt=timezone.now())
             .select_related("contact__response__participant", "contact__response__version")
             .first()
         )
+
+    @classmethod
+    def expired_acceptance(cls, token):
+        """✨ The coach's link a token belongs to once it has expired, if it accepted, or None: the acceptance can still
+        be withdrawn through it, as easily as it was given (GDPR Article 7(3), 29 Oct)."""
+        return cls._withdrawable_by_coach(token).filter(expires_at__lte=timezone.now()).first()
 
     @classmethod
     def withdraw_as_coach(cls, token):
         """✨ Delete the coach whose link this is, name, link and acceptance, with the participant's consent to share
         with them that rests on it, and mark the participant's response with only that their coach withdrew (ADR 0024):
         anything kept of the coach would still say they once accepted, which implies their faith (ADR 0010). Together or
-        not at all, the link's row locked first, so of two withdrawals at once exactly one is made; False if it is not
-        `withdrawable_by_coach`."""
+        not at all, the link's row locked first, so of two withdrawals at once exactly one is made; False if the link
+        never accepted. Expired or not, since an expired link still withdraws (`expired_acceptance`)."""
         with transaction.atomic():
             invitation = cls._withdrawable_by_coach(token).select_for_update().first()
             if invitation is None:
@@ -543,7 +550,6 @@ class Invitation(models.Model):
     def _withdrawable_by_coach(cls, token):
         return cls.objects.filter(
             token_hash=_hash_of(token),
-            expires_at__gt=timezone.now(),
             contact__role=Contact.Role.COACH,
             coach_answer=cls.CoachAnswer.ACCEPTED,
         )
@@ -589,6 +595,18 @@ class Invitation(models.Model):
             .filter(secret_hash=_hash_of(secret), expires_at__gt=timezone.now())
             .first()
         )
+
+    @classmethod
+    def expired_claim(cls, secret):
+        """✨ The observer's link an own secret claimed once it has expired, if they sent answers through it, or None:
+        what they sent can still be withdrawn through it, as easily as it was given (GDPR Article 7(3), 29 Oct). With
+        nothing sent there is nothing of theirs to withdraw, so it is refused as any dead link is."""
+        if not secret:
+            return None
+        expired = cls.objects.filter(
+            secret_hash=_hash_of(secret), expires_at__lte=timezone.now(), contact__role=Contact.Role.CONTACT
+        ).first()
+        return expired if expired is not None and ObserverResponse.sent_with(secret) else None
 
 
 def _hash_of(token):
@@ -733,7 +751,8 @@ class ObserverResponse(models.Model):
     @classmethod
     def withdraw(cls, secret):
         """✨ Delete whatever the observer sent with their claimed secret, found by its hash alone, and end the claim, so
-        their own link stops working and asks nothing again; False, changing nothing, if the secret claims no live link.
+        their own link stops working and asks nothing again; False, changing nothing, if the secret claims no link.
+        Expired or not, since an expired link still withdraws (`Invitation.expired_claim`, 29 Oct).
 
         The participant's copy of the link stays used up, as it was, so nothing they can see changes. Ending the claim
         and deleting happen together or not at all. Withdrawing works while answer collection is frozen too, and if it
@@ -745,7 +764,7 @@ class ObserverResponse(models.Model):
             claimed = (
                 Invitation.objects.select_for_update(of=("self",))
                 .select_related("contact__response__version")
-                .filter(secret_hash=_hash_of(secret), expires_at__gt=timezone.now())
+                .filter(secret_hash=_hash_of(secret))
                 .first()
             )
             if claimed is None:

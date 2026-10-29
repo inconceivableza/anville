@@ -14,7 +14,7 @@ from django.test import Client
 from django.utils import timezone
 
 from access.consent import current_text_version
-from access.models import Consent
+from access.models import Consent, name_shown_for
 from engine.models import Contact, Invitation, ObserverAssessments, ObserverResponse, Response
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.test_coach_checklist import choose
@@ -267,26 +267,65 @@ def test_a_send_that_reaches_the_store_after_a_withdrawal_on_the_same_link_store
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("by", ["unclaimed copy", "claimed copy", "revoked own link", "expired own link"])
-def test_neither_the_participants_copy_nor_a_link_that_stopped_working_can_withdraw(
-    participant, observer, by  # noqa: F811
-):
+@pytest.mark.parametrize("by", ["unclaimed copy", "claimed copy", "revoked own link", "expired copy"])
+def test_neither_the_participants_copy_nor_a_revoked_link_can_withdraw(participant, observer, by):  # noqa: F811
+    """✨ An expired own link can (below): the participant's copy, expired or not, never can."""
     copy = issue_link(participant, "Jo")
     if by == "unclaimed copy":
         link, sent = copy, None
     else:
         own_link = claim(observer, copy)
         send(observer, complete_sort())
-        link, sent = (copy if by == "claimed copy" else own_link), [complete_sort()]
+        link, sent = (own_link if by == "revoked own link" else copy), [complete_sort()]
     if by == "revoked own link":
         participant.post(invitation_action(participant, "Jo", "revoke"))
-    if by == "expired own link":
+    if by == "expired copy":
         Invitation.objects.update(expires_at=timezone.now())
 
     refused = withdraw(participant, link)
 
     assert refused.status_code == 404
     assert observer_assessments().assessments == (sent or [])
+
+
+# Once the observer's own link has expired (29 Oct): withdrawing is as easy as consenting was (GDPR Article 7(3))
+
+
+def expire_every_link():
+    Invitation.objects.update(expires_at=timezone.now())
+
+
+@pytest.mark.django_db
+def test_an_expired_own_link_whose_observer_sent_says_so_and_offers_only_withdrawing(
+    participant, observer  # noqa: F811
+):
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+    expire_every_link()
+
+    opened = Client().get(own_link)
+
+    page = opened.content.decode()
+    assert opened.status_code == 410
+    assert "This link has expired" in page
+    assert re.search(r'<form method="post" action="%swithdraw/"' % re.escape(own_link), page)
+    assert re.search(r"can.t be undone", page)
+    assert "Keep this link" in page
+    assert widget_data(page) is None
+    assert name_shown_for(Response.objects.get().participant) not in page
+
+
+@pytest.mark.django_db
+def test_withdrawing_through_an_expired_own_link_deletes_what_that_observer_sent(participant, observer):  # noqa: F811
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    send(observer, complete_sort())
+    expire_every_link()
+
+    withdrawn = withdraw(Client(), own_link)
+
+    assert withdrawn.status_code == 200
+    assert observer_assessments().assessments == []
+    assert Client().get(own_link).status_code == 404
 
 
 @pytest.mark.django_db
