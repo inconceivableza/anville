@@ -58,12 +58,55 @@
           <a class="pill ghost" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <svg aria-hidden="true"><use href="#arrow"/></svg></a>
         </div>
         {# ✨ Ticket 98: the five steps are in the page, so they read without JavaScript; with it, main.js shows them one at a time as tabs. #}
+        {# ✨ Each step carries a drawn screen of the tool in place of a photo, as v3 has them (checklist, 29 Oct), in the tool's own words: decoration, as the step's words say what it does. main.js shows the current one in the panel. #}
         <ol class="steps" id="aSteps">
-          <li class="step step-1"><span class="tp-step">STEP 01</span><h3>Discover your gifts and talents</h3><p>Reflect on your strengths through a guided evaluation and scripture: sort short statements about yourself in about 7 minutes, and explore the gifts described in Romans 12 and 1 Corinthians 12.</p></li>
-          <li class="step step-2"><span class="tp-step">STEP 02</span><h3>Hear from people who know you</h3><p>Invite at least three people you trust to share their perspective, then compare it with your own and notice where your views align or differ.</p></li>
-          <li class="step step-3"><span class="tp-step">STEP 03</span><h3>Make sense of your story</h3><p>Work through guided prompts on your life, your work and the moments that have shaped you, at your own pace, and notice the themes that run through them.</p></li>
-          <li class="step step-4"><span class="tp-step">STEP 04</span><h3>Explore a sense of calling</h3><p>Draw together your gifts, experience and reflections, put your sense of calling into words, and identify practical next steps.</p></li>
-          <li class="step step-5"><span class="tp-step">STEP 05</span><h3>Return to what you discovered</h3><p>Write a letter to your future self, capturing what matters to you now and the steps you want to take, to revisit later.</p></li>
+          <li class="step step-1"><span class="tp-step">STEP 01</span><h3>Discover your gifts and talents</h3><p>Reflect on your strengths through a guided evaluation and scripture: sort short statements about yourself in about 7 minutes, and explore the gifts described in Romans 12 and 1 Corinthians 12.</p>
+            {# ✨ The sort as it deals a card onto its buckets, in the sort page's own classes, so it looks like it (the developer, 29 Oct). #}
+            <figure class="shot" aria-hidden="true"><div class="shot-bar"><i></i><i></i><i></i><span>Strengths evaluation</span></div><div class="screen s-sort">
+              <div><span class="step-badge">Round 1 of 2 · What you’re good at</span><p class="s-h">Sort your strengths</p></div>
+              <span class="s-progress"><i></i></span>
+              <div class="card-area">
+                <p class="sort-topline"><span class="card-counter"><strong>7</strong> of 36</span><span class="sort-instruction">Choose the bucket that fits best</span></p>
+                <div class="sort-deck"><p class="sort-card">Casting a compelling vision that gets people on board</p></div>
+                <div class="bucket-buttons">
+                  <span class="bucket-btn grade-0"><span>Definitely not me</span></span>
+                  <span class="bucket-btn grade-1"><span>Not me</span></span>
+                  <span class="bucket-btn grade-2"><span>Not really me</span></span>
+                  <span class="bucket-btn grade-3"><span>In between / not sure</span></span>
+                  <span class="bucket-btn grade-4"><span>Somewhat me</span></span>
+                  <span class="bucket-btn grade-5"><span>Good at this</span></span>
+                  <span class="bucket-btn grade-6"><span>Real strength</span></span>
+                </div>
+                <p class="scale-ends"><span>← Less like me</span><span>More like me →</span></p>
+              </div>
+            </div></figure></li>
+          <li class="step step-2"><span class="tp-step">STEP 02</span><h3>Hear from people who know you</h3><p>Invite at least three people you trust to share their perspective, then compare it with your own and notice where your views align or differ.</p>
+            <figure class="shot" aria-hidden="true"><div class="shot-bar"><i></i><i></i><i></i><span>Five trusted voices</span></div><div class="screen">
+              <div class="s-card dark">
+                <p class="s-h">Five trusted voices</p>
+                <div class="s-meter"><div><span>Invited</span><span>3 / 5</span></div><b><i class="s-at-60"></i></b></div>
+                <div class="s-meter"><div><span>Answered</span><span>2 / 5</span></div><b><i class="s-at-40"></i></b></div>
+              </div>
+              <div class="s-card"><p class="s-h">How others see you</p><p class="s-muted">Still need answers from 1 person who knows you</p></div>
+            </div></figure></li>
+          <li class="step step-3"><span class="tp-step">STEP 03</span><h3>Make sense of your story</h3><p>Work through guided prompts on your life, your work and the moments that have shaped you, at your own pace, and notice the themes that run through them.</p>
+            <figure class="shot" aria-hidden="true"><div class="shot-bar"><i></i><i></i><i></i><span>The shape of your life</span></div><div class="screen">
+              <p class="s-h">The shape of your life</p>
+              <p class="s-muted">Workbook 2, to work through on paper: mapping your story, and what has happened in each season of it.</p>
+              <span class="s-btn">Download Workbook 2 (PDF)</span>
+            </div></figure></li>
+          <li class="step step-4"><span class="tp-step">STEP 04</span><h3>Explore a sense of calling</h3><p>Draw together your gifts, experience and reflections, put your sense of calling into words, and identify practical next steps.</p>
+            <figure class="shot" aria-hidden="true"><div class="shot-bar"><i></i><i></i><i></i><span>Putting your calling into words</span></div><div class="screen">
+              <p class="s-h">Putting your calling into words</p>
+              <p class="s-muted">Workbook 3, to work through on paper: narrowing your calling to a sentence, then opening it back up.</p>
+              <span class="s-btn">Download Workbook 3 (PDF)</span>
+            </div></figure></li>
+          <li class="step step-5"><span class="tp-step">STEP 05</span><h3>Return to what you discovered</h3><p>Write a letter to your future self, capturing what matters to you now and the steps you want to take, to revisit later.</p>
+            <figure class="shot" aria-hidden="true"><div class="shot-bar"><i></i><i></i><i></i><span>A letter to your future self</span></div><div class="screen">
+              <p class="s-h">A letter to your future self</p>
+              <span class="s-small">Your letter</span>
+              <div class="s-box"><span class="s-placeholder">Dear me,</span><span class="s-caret"></span></div>
+            </div></figure></li>
         </ol>
         <div class="tabrow">
           <div class="tabbar" role="tablist" id="aTabs"></div>
@@ -71,7 +114,7 @@
         </div>
         <div class="tabpanel" id="aPanel">
           <div class="tp-text" id="aText" role="tabpanel"></div>
-          <div class="tp-img" id="aImgs" aria-hidden="true"></div>
+          <div class="tp-shot" id="aShot" aria-hidden="true"></div>
         </div>
         <div class="journey-coach" id="coach">
           <svg aria-hidden="true"><use href="#mark"/></svg>

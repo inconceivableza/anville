@@ -204,7 +204,6 @@ SITE_PHOTO_CREDITS = [
     "Photograph of a notebook, a pen and a cup of coffee, by Andres Molina on Unsplash.",
     "Photograph of a woman walking in a field at sunset, by Sasha Freemind on Unsplash.",
     "Photograph of misty hills at sunrise, by Alexander Philipp on Unsplash.",
-    "Photograph of a row of friends sitting together from Unsplash.",
     "Photograph of two friends talking beside a lake, by Aarón Blanco Tejedor on Unsplash.",
     "Photograph of hands shaping clay, by Alex Jones on Unsplash.",
     "Photograph of a carpenter planing wood, by Minh Đức on Unsplash.",

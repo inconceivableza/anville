@@ -387,20 +387,22 @@ if (document.querySelector("main.page") && !reducedMotion) {
 (() => {
   const bar = document.getElementById("aTabs");
   const text = document.getElementById("aText");
-  const imgs = document.getElementById("aImgs");
+  const shot = document.getElementById("aShot");
   const section = document.getElementById("how");
   const list = document.getElementById("aSteps");
   if (!bar || !text || !list) return;
-  // ✨ The steps are written once, in the page (ticket 98); the tabs show them one at a time.
-  const steps = [...list.children].map((li) => ({ title: li.querySelector("h3").textContent, summary: li.querySelector("p").textContent }));
+  // ✨ The steps are written once, in the page (ticket 98); the tabs show them one at a time, each with its drawn screen.
+  const steps = [...list.children].map((li) => ({
+    title: li.querySelector("h3").textContent,
+    summary: li.querySelector("p").textContent,
+    screen: li.querySelector(".shot"),
+  }));
   section?.classList.add("tabs-on");
   const STEP_MS = 7000; // ✨ how long each step shows before the next
   let i = 0, timer, start, remain = STEP_MS;
   const pauseReasons = new Set();
   bar.innerHTML = steps.map((step, j) => `<button class="tab" role="tab" id="atab${j}" aria-controls="aText" aria-selected="${j === 0}"><span class="tab-number">0${j + 1}</span><b>${step.title}</b><span class="bar"><i></i></span></button>`).join("");
-  if (imgs) imgs.innerHTML = steps.map((_, j) => `<div class="tp-anim" data-i="${j}"></div>`).join("");
   const tabs = [...bar.children];
-  const pics = imgs ? [...imgs.children] : [];
   bar.style.setProperty("--dur", STEP_MS + "ms");
   const render = () => {
     const step = steps[i];
@@ -421,7 +423,11 @@ if (document.querySelector("main.page") && !reducedMotion) {
         fill.style.animation = "";
       }
     });
-    pics.forEach((pic, j) => pic.classList.toggle("on", j === i));
+    if (shot && step.screen) {
+      const screen = step.screen.cloneNode(true);
+      screen.classList.add("tp-anim");
+      shot.replaceChildren(screen);
+    }
     if (bar.scrollWidth > bar.clientWidth) {
       bar.scrollTo({
         left: Math.max(0, tabs[i].offsetLeft - bar.offsetLeft - 16),

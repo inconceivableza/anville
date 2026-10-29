@@ -176,7 +176,6 @@
   --snow: #ffffff;
   --black-45: rgba(0, 0, 0, 0.45);
   --black-55: rgba(0, 0, 0, 0.55);
-  --mask-solid: #000000;
 
   /* Spacing scale (base 4px). */
   --space-2xs: 0.25rem;   /* 4px */
@@ -1091,7 +1090,7 @@ html[data-javascript="loaded"] .baseline-q.saves-quietly .save-row:has(.save-sta
 @media (prefers-reduced-motion: reduce) {
   .tab .bar i,
   .tp-anim,
-  #aImgs .tp-anim,
+  .s-caret,
   .reveal .w,
   [data-reveal] .w,
   .lg,
@@ -5523,68 +5522,195 @@ body > svg[aria-hidden="true"] {
   margin-top: 2px;
 }
 
-.tp-img {
-  position: relative;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--cream-2);
-}
-
 .tp-anim {
   animation: tpin 0.55s ease both;
 }
 
-/* ✨ No tpin animation on the photos: its fill held every one at full opacity, so the last covered the step's own (fix-14). */
-#aImgs .tp-anim {
-  position: absolute;
-  inset: 0;
-  animation: none;
-  opacity: 0;
-  transition: opacity 0.5s ease;
+/* ✨ A drawn screen of the tool for each step, in a browser window, in place of the photos (checklist, 29 Oct), as v3
+   has them. The panel shows the current step's; the list without JavaScript shows each in its step. */
+.tp-shot {
+  display: grid;
+  align-content: center;
 }
 
-#aImgs .tp-anim.on {
-  opacity: 1;
+.shot {
+  margin: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  text-align: left;
+  box-shadow: 0 24px 48px -24px var(--black-55), 0 0 0 1px var(--warm-14);
 }
 
-#aImgs .tp-anim[data-i="0"] {
-  background-image:
-    linear-gradient(120deg, var(--green-deep-12), var(--brown-30)),
-    url("../img/notebook.jpg");
-  background-position: center;
-  background-size: cover;
+.shot-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 12px;
+  background: var(--cream-2);
 }
 
-#aImgs .tp-anim[data-i="1"] {
-  background-image:
-    linear-gradient(120deg, var(--green-deep-10), var(--brown-30)),
-    url("../img/friends.jpg");
-  background-position: center;
-  background-size: cover;
+.shot-bar i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--cream);
 }
 
-#aImgs .tp-anim[data-i="2"] {
-  background-image:
-    linear-gradient(120deg, var(--green-deep-10), var(--brown-35)),
-    url("../img/field-walk.jpg");
-  background-position: center;
-  background-size: cover;
+.shot-bar span {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
-#aImgs .tp-anim[data-i="3"] {
-  background-image:
-    linear-gradient(120deg, var(--green-deep-10), var(--brown-28)),
-    url("../img/potter.jpg");
-  background-position: center;
-  background-size: cover;
+.screen {
+  display: grid;
+  gap: 14px;
+  padding: clamp(18px, 2.4vw, 28px);
+  font-size: 14px;
 }
 
-#aImgs .tp-anim[data-i="4"] {
-  background-image:
-    linear-gradient(120deg, var(--green-deep-10), var(--brown-28)),
-    url("../img/hills.jpg");
-  background-position: center;
-  background-size: cover;
+.screen p {
+  margin: 0;
+}
+
+.screen .s-h {
+  font-family: var(--font-heading);
+  font-size: clamp(20px, 2vw, 26px);
+  line-height: 1.1;
+}
+
+/* ✨ The sort's screen takes the sort page's own rules (its card, deck, buckets and scale); a picture of them, so
+   nothing in it answers the pointer. Its bar stands for the page's progress bar, shown on the sort page only. */
+.shot {
+  pointer-events: none;
+}
+
+.s-sort .step-badge {
+  margin-bottom: 2px;
+}
+
+.s-sort .bucket-btn {
+  min-height: 72px;
+  padding-inline: 2px;
+  font-size: 10.5px;
+}
+
+.s-progress {
+  display: block;
+  height: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--border);
+  overflow: hidden;
+}
+
+.s-progress i {
+  display: block;
+  width: 19%;
+  height: 100%;
+  background: var(--green-deep);
+}
+
+.s-card {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 0 0 1px var(--cream-2);
+}
+
+.s-card.dark {
+  background: var(--brown);
+  color: var(--on-dark);
+  box-shadow: none;
+}
+
+.s-muted {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.s-meter {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.s-meter div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.s-meter b {
+  display: block;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--warm-14);
+  overflow: hidden;
+}
+
+.s-meter i {
+  display: block;
+  height: 100%;
+  background: var(--green);
+}
+
+.s-meter i.s-at-60 {
+  width: 60%;
+}
+
+.s-meter i.s-at-40 {
+  width: 40%;
+}
+
+.s-btn {
+  justify-self: start;
+  padding: 9px 15px;
+  border-radius: 999px;
+  background: var(--green);
+  color: var(--green-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.s-small {
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.s-box {
+  min-height: 120px;
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  background: var(--snow);
+  box-shadow: inset 0 0 0 1px var(--cream-2);
+  font-family: var(--font-heading);
+  font-size: 18px;
+}
+
+.s-placeholder {
+  color: var(--muted);
+}
+
+.s-caret {
+  display: inline-block;
+  width: 2px;
+  height: 19px;
+  margin-left: 2px;
+  vertical-align: -3px;
+  background: var(--brown);
+  animation: blink 1s steps(1) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
 }
 
 @keyframes tpin {
@@ -5609,8 +5735,7 @@ body > svg[aria-hidden="true"] {
     grid-template-columns: 1fr;
   }
 
-  .tp-img {
-    min-height: 260px;
+  .tp-shot {
     order: -1;
   }
 }
@@ -5648,48 +5773,18 @@ body > svg[aria-hidden="true"] {
   font-weight: 300;
 }
 
-.steps > .step p {
+/* ✨ The step's own words only, not its screen's, which keep the screen's colours. */
+.steps > .step > p {
   color: var(--on-dark-2);
   max-width: 60ch;
   line-height: 1.45;
 }
 
-/* ✨ Each step carries its tab photo, as the meet cards carry theirs, so the list without JavaScript shows them too (fix-3). */
-.steps .step {
-  position: relative;
-  overflow: hidden;
-  padding-top: 190px;
-}
-
-.steps .step::before {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 160px;
-  content: "";
-  background-position: center;
-  background-size: cover;
-  -webkit-mask-image: linear-gradient(var(--mask-solid) 76%, transparent);
-  mask-image: linear-gradient(var(--mask-solid) 76%, transparent);
-}
-
-.steps .step-1::before {
-  background-image: url("../img/notebook.jpg");
-}
-
-.steps .step-2::before {
-  background-image: url("../img/friends.jpg");
-}
-
-.steps .step-3::before {
-  background-image: url("../img/field-walk.jpg");
-}
-
-.steps .step-4::before {
-  background-image: url("../img/potter.jpg");
-}
-
-.steps .step-5::before {
-  background-image: url("../img/hills.jpg");
+/* ✨ Each step carries its drawn screen below its words, so the list without JavaScript shows them too, as it showed
+   the photos (fix-3) these replace (checklist, 29 Oct). */
+.steps > .step .shot {
+  max-width: 520px;
+  margin-top: var(--space-sm);
 }
 
 .atabs.tabs-on .steps,
@@ -6083,10 +6178,8 @@ body > svg[aria-hidden="true"] {
   font-size: clamp(16px, 1.3vw, 19px);
 }
 
-.atabs .tp-img {
-  min-height: 300px;
+.atabs .tp-shot .shot {
   border-radius: var(--radius-lg);
-  box-shadow: 0 24px 48px -24px var(--black-55);
 }
 
 .journey-coach {
@@ -6452,11 +6545,6 @@ body > svg[aria-hidden="true"] {
 @media (max-width: 860px) {
   .atabs .tabpanel {
     grid-template-columns: 1fr;
-  }
-
-  .atabs .tp-img {
-    min-height: 260px;
-    order: -1;
   }
 
   .churches {

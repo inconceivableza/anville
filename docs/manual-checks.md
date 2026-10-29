@@ -129,7 +129,7 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 
 - Hero: the summary, then "Begin your journey" alone (no "For coaches"), then "Learn more" with a down arrow below it; pressing it scrolls to the overview.
 - Overview: the heading, the five pillars, the logo and "A calling journey for every season of life", the paragraph beginning "Along the way, you'll come to understand…", then its own "Begin your journey" button, which opens sign-up (signed in, the hub).
-- "How it works" has no "Five steps…" line; each of the five steps shows its title and summary, with no bullets and no box beneath. The step photos still change with the tabs. With JavaScript blocked, the five steps show one under another with the same words, each with its photo (fix-3).
+- "How it works" has no "Five steps…" line; each of the five steps shows its title and summary, with no bullets and no box beneath. Each step's drawn screen of the site changes with the tabs. With JavaScript blocked, the five steps show one under another with the same words, each with its screen (fix-3; screens since 29 Oct).
 - No "Space to reflect on what matters" section and no "Impact" link in the footer.
 - At about 375px, all of it reads in order, nothing cut off or scrolling sideways.
 
@@ -168,7 +168,7 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 - Impact: as v3's "A story from a parent": the label and the quote centred in one column, the words coming up as you scroll, the caption under it. The label still says "Impact".
 - "Stay in touch" is as wide as the other panels, its text and form in the same column and side margins as theirs; at 375px the copy, the form and the small print stack.
 - "For churches" lists four points: Run it together, Invite trusted voices, Raise up coaches, Free for participants.
-- With JavaScript blocked, "How it works" shows its five steps one under another, each with its tab's photo above its words (a notebook, friends, a field, a potter, hills).
+- With JavaScript blocked, "How it works" shows its five steps one under another, each with its tab's drawn screen below its words (29 Oct; they were photos).
 
 ### sprint-3c-r3-fix-6: the homepage's hero margin and "For churches" (rebuild the frontend first; wide screen and about 375px; no pathway reload or new participant needed)
 
@@ -1196,3 +1196,12 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 - On "You've chosen Sam", "Sam is your coach" and "Sam isn't able to be your coach", the buttons are one row: "Make a new link", "Choose someone else" and "Remove" (after a decline "Choose someone else" leads), and none reads "Back to the hub". "Lost the link? Make a new one; the old one stops working." sits under the row, on the waiting card only.
 - "Your coach has withdrawn" has "Choose someone else" alone, no "Back to the hub".
 - "Make a new link" still shows a new link once, with and without JavaScript.
+
+### Screens in "How it works" (rebuild the frontend first; wide screen and about 375px; no pathway reload needed)
+
+- Each tab shows, beside its words, a small browser window titled with the page it shows (Strengths evaluation, Five trusted voices, The shape of your life, Putting your calling into words, A letter to your future self), in place of a photo, and it changes with the tab, fading in.
+- The Strengths evaluation screen looks like the sort page itself: "Round 1 of 2 · What you're good at", "Sort your strengths", a progress bar, "7 of 36" with "Choose the bucket that fits best", one card on its stacked deck, the seven buckets graded red to green with their dots, and "← Less like me" / "More like me →". The bucket labels fit inside their boxes without spilling.
+- Five trusted voices: the dark card with its Invited 3 / 5 and Answered 2 / 5 bars, and "How others see you" with "Still need answers from 1 person who knows you". The two workbook screens each show their line and a green "Download Workbook… (PDF)"; the letter shows "Your letter" and a box with a grey "Dear me," and a blinking caret (still, with reduced motion on).
+- Nothing in a screen reacts to the mouse: no hover tint on the buckets, no pointer.
+- At about 375px the screen sits above the step's words and nothing runs off its side. With JavaScript blocked, each step in the list shows its screen below its words.
+- `/credits/` no longer lists the row of friends.

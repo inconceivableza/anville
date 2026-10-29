@@ -3,9 +3,15 @@
 
 """✨ The public homepage at the site's root, copied from the prototype (ticket 32a)."""
 
+import json
 import re
+from pathlib import Path
 
 import pytest
+
+from engine.document.blocks import SORT_WORDING
+from engine.views import SITE_PHOTO_CREDITS
+from tests.journeys.test_coach_checklist import text
 
 
 def begin_links(page):
@@ -195,11 +201,81 @@ def test_each_figure_carries_its_value_for_the_count_up_and_already_shows_it(cli
 
 
 @pytest.mark.django_db
-def test_every_step_is_in_the_page_with_its_own_photo_class_for_the_no_javascript_list(client):
+def test_every_step_is_in_the_page_with_its_own_class_for_the_no_javascript_list(client):
     page = client.get("/").content.decode()
     steps = re.findall(r'<li class="step (step-\d)"><span class="tp-step">STEP 0\d</span>', page)
 
     assert steps == ["step-1", "step-2", "step-3", "step-4", "step-5"]
+
+
+def shown_to(label):
+    """✨ A label as the participant reads it, where it has a participant's and an observer's wording."""
+    return label["participant"] if isinstance(label, dict) else label
+
+
+def screens(page):
+    """✨ Each How it works step's drawn screen, by the title on its window, in the steps' order."""
+    how = section(page, r'<section class="panel atabs"')
+    steps = re.findall(r'<li class="step step-\d">(.*?)</li>', how, re.S)
+    shown = {}
+    for step in steps:
+        found = re.search(r'<figure class="shot" aria-hidden="true">.*?<span>([^<]+)</span>(.*?)</figure>', step, re.S)
+        assert found, "a step with no screen"
+        shown[found.group(1)] = text(found.group(2))
+    return shown
+
+
+@pytest.mark.django_db
+def test_each_step_shows_a_screen_of_the_tool_titled_with_the_page_it_shows(client):
+    """✨ Drawn screens of the tool in place of photos (checklist, 29 Oct), as v3 has them, one in each step, so the
+    list without JavaScript shows them too. Decoration, as each step's own words say what it does."""
+    assert list(screens(client.get("/").content.decode())) == [
+        "Strengths evaluation",
+        "Five trusted voices",
+        "The shape of your life",
+        "Putting your calling into words",
+        "A letter to your future self",
+    ]
+
+
+@pytest.mark.django_db
+def test_the_screens_carry_the_tools_own_words_and_none_of_v3s_that_are_not_true_of_it(client):
+    """✨ v3 draws a slider sort, five anonymous friends, an action plan and a letter sent back at a chosen time; the
+    tool has none of these, so the screens show its own pages, in its own words: the sort as it deals a card onto its
+    buckets (the developer, 29 Oct)."""
+    pathway = json.loads((Path(__file__).resolve().parents[2] / "pathways" / "whatever-you-do.json").read_text())
+    blocks = {block["id"]: block for part in pathway["content"]["sections"] for block in part["blocks"]}
+    page = client.get("/").content.decode()
+    shown = screens(page)
+
+    sorting = [
+        SORT_WORDING[key]["participant"] for key in ("sort_heading", "sort_instruction", "scale_less", "scale_more")
+    ]
+    sorting += [shown_to(bucket["label"]) for bucket in pathway["instrument"]["buckets"]]
+    for words in sorting:
+        assert words in shown["Strengths evaluation"]
+    assert "Still need answers from" in shown["Five trusted voices"]
+    assert blocks["shape-pdf"]["button_label"] in shown["The shape of your life"]
+    assert blocks["calling-pdf"]["button_label"] in shown["Putting your calling into words"]
+    for words in (blocks["lt-message"]["prompt"], blocks["lt-message"]["placeholder"]):
+        assert words in shown["A letter to your future self"]
+    how = text(section(page, r'<section class="panel atabs"'))
+    for untrue in ("Five friends", "anonymous", "Send it back to me in", "Action plan", "Statement 7 of 36"):
+        assert untrue not in how
+
+
+@pytest.mark.django_db
+def test_how_it_works_shows_no_photos_with_javascript_or_without(client):
+    """✨ The row of friends was shown nowhere else, so its credit goes with it."""
+    page = client.get("/").content.decode()
+    assert "row of friends" not in " ".join(SITE_PHOTO_CREDITS)
+    stylesheet = (Path(__file__).resolve().parents[2] / "frontend" / "src" / "styles.css").read_text()
+
+    assert 'id="aImgs"' not in page
+    assert "tp-img" not in page
+    assert "#aImgs" not in stylesheet
+    assert ".tp-img" not in stylesheet
+    assert not re.search(r"\.steps \.step-\d::before", stylesheet)
 
 
 @pytest.mark.django_db

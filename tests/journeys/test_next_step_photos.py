@@ -84,7 +84,7 @@ def test_every_photo_the_next_step_can_show_has_a_credit_line():
     # ✨ By a word of each credit's subject, as the lines are the content owner's to reword.
     credits = " ".join(SITE_PHOTO_CREDITS)
 
-    for subject in ("clay", "carpenter", "Bible", "two friends talking", "row of friends", "misty hills", "notebook"):
+    for subject in ("clay", "carpenter", "Bible", "two friends talking", "misty hills", "notebook"):
         assert subject in credits, subject
 
 
