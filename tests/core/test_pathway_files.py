@@ -54,11 +54,13 @@ def _words_a_reader_sees(node, key=None):
 
 @pytest.mark.parametrize("path", OWN_WORDING, ids=lambda path: path.name)
 def test_no_wording_a_reader_sees_calls_the_strengths_evaluation_an_assessment_or_the_course_a_workbook(path):
-    """✨ Sprint 3c's new words: "strengths evaluation" and "journey". "Workbook" stays only in a section's PDF file
-    name, which is not read here."""
+    """✨ Sprint 3c's new words: "strengths evaluation" and "journey". "Workbook" stays in a section's PDF file name,
+    which is not read here, and as the name of one of the content owner's four PDFs, "Workbook 1" to "Workbook 4",
+    as each calls itself (sent 29 Oct)."""
     document = json.loads(path.read_text(encoding="utf-8"))
 
-    old = [text for text in _words_a_reader_sees(document) if re.search(r"assessments?\b|workbook", text, re.IGNORECASE)]
+    old_words = r"assessments?\b|workbook(?! [1-4]\b)"
+    old = [text for text in _words_a_reader_sees(document) if re.search(old_words, text, re.IGNORECASE)]
     assert old == []
 
 

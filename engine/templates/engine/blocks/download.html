@@ -4,9 +4,12 @@
   ✨ A file to download, such as the workbook. The block is only rendered once the participant has reached it, and
   the file is served on the same condition, so the button never leads to a refusal. It opens in a new tab so the app
   stays on the section (ticket 84); "noopener" keeps the PDF's tab from reaching this one, and the note in the link's
-  text tells the eye and a screen reader alike.
+  text tells the eye and a screen reader alike. While it waits on the comparison it has no link at all, since a disabled
+  fieldset cannot disable one; the waiting note above it says why, and the file is refused all the same.
 {% endcomment %}
 <div id="block-{{ block.id }}" class="download">
   {{ block.text.body|linebreaks }}
-  <p><a class="pill" href="{% url 'download' block.id %}" target="_blank" rel="noopener">{{ block.text.button_label }} (opens in a new tab)</a></p>
+  {% if not block.waiting %}
+    <p><a class="pill" href="{% url 'download' block.id %}" target="_blank" rel="noopener">{{ block.text.button_label }} (opens in a new tab)</a></p>
+  {% endif %}
 </div>

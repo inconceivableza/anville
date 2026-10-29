@@ -10,7 +10,7 @@ before a section may be completed, and each failing clause contributes its own a
 import pytest
 
 from engine.document import checklist, gate_passes, unmet
-from engine.document.gates import coach_answer_key, comparison_visit_key, links_issued_key
+from engine.document.gates import coach_answer_key, comparison_viewed_key, comparison_visit_key, links_issued_key
 
 
 def section_gated_by(*clauses):
@@ -177,6 +177,34 @@ def test_comparison_visited_passes_only_once_the_comparison_has_been_visited_not
 
     assert unmet(section, sorted_only) == ["View the comparison."]
     assert unmet(section, visited) == []
+
+
+# A block waiting on the comparison
+
+
+def test_a_section_with_no_gate_may_not_be_completed_while_one_of_its_blocks_waits_on_the_comparison():
+    """✨ As *Whatever You Do*'s Section 2 and its first workbook: what holds it is the block's own message."""
+    waits = {"sort": "strengths-sort", "message": "This opens once you've seen how others see you."}
+    workbook = {"id": "workbook", "type": "download", "file": "workbook.pdf", "button_label": "Download"}
+    workbook["after_comparison"] = waits
+    section = {"id": "others", "title": "Others", "blocks": [workbook]}
+
+    assert not gate_passes(section, {})
+    assert unmet(section, {}) == [waits["message"]]
+    assert gate_passes(section, {comparison_viewed_key("strengths-sort"): "2026-10-29T10:00:00+00:00"})
+
+
+def test_the_checklist_lists_a_block_waiting_on_the_comparison_unmet_until_it_is_viewed():
+    """✨ What a refused press shows beneath the button: without it, a section with no gate refused with nothing said."""
+    waits = {"sort": "strengths-sort", "message": "This opens once you've seen how others see you."}
+    workbook = {"id": "workbook", "type": "download", "file": "workbook.pdf", "button_label": "Download"}
+    workbook["after_comparison"] = waits
+    section = {"id": "others", "title": "Others", "blocks": [workbook]}
+    viewed = {comparison_viewed_key("strengths-sort"): "2026-10-29T10:00:00+00:00"}
+
+    for page in (None, 1):
+        assert checklist(section, {}, page=page) == [(waits["message"], False)]
+        assert checklist(section, viewed, page=page) == [(waits["message"], True)]
 
 
 # links_issued

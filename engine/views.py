@@ -1377,6 +1377,10 @@ def download(request, block_id):
     block = _block_of_type(state.version, block_id, "download")
     if not _is_open(state, section_of(state.version.document, block_id), block):
         return HttpResponseForbidden("This file opens once you reach it.")
+    waiting = comparison_wait_message(block, state.answers)
+    if waiting is not None:
+        # ✨ Refused here, not only left off the page, as a reflection's save is (ADR 0019).
+        return HttpResponseForbidden(waiting)
     path = settings.PATHWAY_FILES_DIR / block["file"]
     if not path.is_file():
         raise Http404("This pathway's file is not here.")
@@ -2685,8 +2689,9 @@ def _comparison_locked(state, sort_id):
 def _reflection_after_comparison(state, sort_id):
     """✨ Where the comparison's last button leads (fix-18): the section holding its signpost, at the field that waits on
     the comparison (the block carrying `after_comparison` for the sort), as {"label", "href"}, the address anchored at
-    that field. None where no section holds one, as in the faithful port, or where it has no such field, when the
-    page's top back button is offered again in its place."""
+    that field, and on to the workbook where that field is a download, as *Whatever You Do*'s first workbook is. None
+    where no section holds one, as in the faithful port, or where it has no such field, when the page's top back button
+    is offered again in its place."""
     held = _open_section_holding_comparison_signpost(state, sort_id)
     if held is None:
         return None
@@ -2694,7 +2699,7 @@ def _reflection_after_comparison(state, sort_id):
     for block in section["blocks"]:
         if block.get("after_comparison", {}).get("sort") == sort_id and page_of(section, block["id"]) is not None:
             return {
-                "label": "On to your reflection →",
+                "label": "On to your workbook →" if block["type"] == "download" else "On to your reflection →",
                 "href": f"{page_url(section['id'], page_of(section, block['id']))}#{landing_of(block)}",
             }
     return None

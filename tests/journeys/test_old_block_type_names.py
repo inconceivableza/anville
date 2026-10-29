@@ -18,13 +18,13 @@ from engine.models import PathwayVersion, Publication
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_whatever_you_do import (
     people_answer,
+    WORKBOOK_1,
     press_compare,
-    reflection_stored,
-    save_the_reflection,
     section_1,
     section_2,
+    serves_workbook_1,
     the_pathway,
-    to_the_reflection,
+    to_section_2,
 )
 
 OLD_NAMES = {"section_signpost": "section_link", "comparison_signpost": "comparison_link"}
@@ -87,21 +87,20 @@ def test_a_version_stored_under_the_old_names_reads_with_the_new_ones_and_its_ro
 
 @pytest.mark.django_db
 def test_a_participant_on_a_version_stored_under_the_old_names_finds_both_signposts_as_before(participant):
-    client = to_the_reflection(participant)
+    client = to_section_2(participant)
 
     assert "View my results →" in section_1(client)
     # ✨ the comparison signpost is Section 2's (ticket 87); what it says below the minimum is fix-3's, tested there
     assert 'id="block-how-others-see-you"' in section_2(client)
     assert VIEWED not in client.get("/hub/").content.decode()
-    assert save_the_reflection(client).status_code == 403
+    assert client.get(WORKBOOK_1).status_code == 403
 
     people_answer(client)
     assert press_compare(client).status_code == 303
 
     assert VIEWED in section_2(client)
     assert VIEWED in client.get("/hub/").content.decode()
-    assert save_the_reflection(client).status_code < 400
-    assert reflection_stored()
+    assert serves_workbook_1(client)
 
 
 @pytest.mark.django_db

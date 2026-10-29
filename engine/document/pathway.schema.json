@@ -505,7 +505,7 @@
       "$ref": "#/$defs/text"
     },
     "after_comparison": {
-      "description": "Allowed only on a capture block answered on its page (a scripture reading, a long text, an agreement scale or a single select). Holds the block until the participant has pressed 'Compare with how others see you →' for this sort with at least the minimum number of observer assessments in: until then it is shown but cannot be answered, with the message beside it. Once pressed it stays answerable, even if withdrawals later unfreeze answer collection.",
+      "description": "Allowed only on a capture block answered on its page (a scripture reading, a long text, an agreement scale or a single select), or on a download. Holds the block until the participant has pressed 'Compare with how others see you →' for this sort with at least the minimum number of observer assessments in: until then it is shown but cannot be answered, or a download offers no file, with the message beside it, and its section cannot be finished. Once pressed it stays open, even if withdrawals later unfreeze answer collection.",
       "type": "object",
       "additionalProperties": false,
       "required": ["sort", "message"],
@@ -987,8 +987,9 @@
         "id": { "$ref": "#/$defs/identifier" },
         "type": { "const": "download" },
         "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
         "file": {
-          "description": "The PDF's name in the pathways/files folder, such as 'whatever-you-do-workbook-section-2.pdf'.",
+          "description": "The PDF's name in the pathways/files folder, such as 'whatever-you-do-workbook-1.pdf'.",
           "type": "string",
           "pattern": "^[a-z0-9][a-z0-9-]*\\.pdf$"
         },

@@ -40,7 +40,6 @@ from tests.journeys.test_observer_landing import claim
 from tests.prototype import js_string
 from tests.journeys.test_whatever_you_do_faithful_port import (
     A_LETTER,
-    A_REFLECTION,
     ADD_FIVE,
     ANSWER_ALL_FOUR,
     BASELINE_STATEMENTS,
@@ -477,9 +476,8 @@ NEW_WORDS = [
     ("your assessment results", "your strengths evaluation results"),
     ("send your assessment now", "send your evaluation now"),
     ("Send my assessment", "Send my evaluation"),
-    # ✨ Sprint 3c (ticket 87): Section 1's passages, and its reflection, now in Section 2.
+    # ✨ Sprint 3c (ticket 87): Section 1's passages.
     ("Read these passages before continuing", "Scripture on gifts"),
-    (" and read the passages above,", ", read the passages on gifts and seen how others see you,"),
 ]
 
 
@@ -563,9 +561,9 @@ def without_what_finishing_takes(document):
 
 
 def without_the_comparison_signpost(document):
-    """✨ The way to the comparison, in Section 2 (ticket 87), is this pathway's alone (ticket 67a): the
-    faithful port reaches the comparison from the results page only, as the original prototype does. Nor does the faithful
-    port's reflection wait on the comparison (ticket 68)."""
+    """✨ The way to the comparison, in Section 2 (ticket 87), is this pathway's alone (ticket 67a): the faithful port
+    reaches the comparison from the results page only, as the original prototype does. Nor does anything in the
+    faithful port wait on the comparison (ticket 68), as this pathway's first workbook does."""
     for section in document["content"]["sections"]:
         section["blocks"] = [block for block in section["blocks"] if block["type"] != "comparison_signpost"]
         for block in section["blocks"]:
@@ -641,8 +639,9 @@ def a_download_in_place_of_each_of_sections_2_to_4(document):
 def in_six_sections(document):
     """✨ Section 1 splits in two here (ticket 87): its passages, with nothing to confirm, so the strengths evaluation
     opens with it, and the evaluation, which is all it needs to be finished; then Section 2, "Your gifts, seen
-    together", with the faithful port's reflection. Section 2 is new, with nothing in the faithful port to compare it
-    with but the reflection, so the rest of it is taken as it is."""
+    together". Section 2 is new, with nothing in the faithful port to compare it with, so it is taken as it is, less
+    its way to the comparison, as without the comparison signpost. The faithful port's reflection goes: Section 2
+    offers the first workbook in its place."""
     sections = document["content"]["sections"]
     designed = next(section for section in sections if section["id"] == "designed")
     designed["title"] += " – your strengths"
@@ -655,7 +654,7 @@ def in_six_sections(document):
     designed["gate"]["clauses"] = [clause for clause in designed["gate"]["clauses"] if clause["block"] != "gifts-summary"]
     ours = next(section for section in the_pathway()["content"]["sections"] if section["id"] == "others")
     others = {key: value for key, value in ours.items() if key not in ("next_step", "to_finish")}
-    others["blocks"] = [blocks["gifts-summary"]]
+    without_the_comparison_signpost({"content": {"sections": [others]}})
     sections.insert(sections.index(designed) + 2, others)  # ✨ after Section 1's part, the strengths evaluation
 
 
@@ -702,6 +701,11 @@ TITLES = {
 }
 NUMBERS = {"designed": "01", "others": "02", "shape": "03", "calling": "04", "growth": "05", "letter": "06"}
 PDFS = {section_id: f"/downloads/{section_id}-pdf/" for section_id in ON_PAPER}
+# ✨ The content owner's four workbooks, sent 29 Oct: the first is Section 2's, in place of its reflection, and the
+# others Sections 3–5's, by number.
+WORKBOOKS = {"others": 1, "shape": 2, "calling": 3, "growth": 4}
+SENT = DOCUMENT.parents[1] / "Prototypes for reference" / "Workbook files" / "Workbooks sent 29 Oct"
+WORKBOOK_1 = "/downloads/others-pdf/"
 SECTION_2 = "/sections/others/"
 SECTION_3 = "/sections/shape/"
 SECTION_4 = "/sections/calling/"
@@ -722,11 +726,10 @@ def through_section_2(client):
 
 
 def finish_section_2(client):
-    """✨ All Section 2 asks: three people's answers and the comparison seen, which opens the reflection (ADR 0019),
-    then the reflection, and Section 2 finished."""
+    """✨ All Section 2 asks: three people's answers and the comparison seen, which opens the first workbook (ADR
+    0019), and Section 2 finished."""
     people_answer(client)
     assert press_compare(client).status_code == 303
-    assert answer(client, "gifts-summary", A_REFLECTION).status_code == 303
     assert complete(client, "others").status_code == 303
     return client
 
@@ -784,15 +787,17 @@ def test_once_the_evaluation_is_done_section_1_shows_no_results_and_section_2_th
     participant,
 ):
     """✨ "View my results →" is the way to them, as in the faithful port (fix-5, reversing ticket 57). The way to the
-    comparison (ticket 67a) and the reflection are Section 2's (ticket 87), on the hub too."""
+    comparison (ticket 67a) and the first workbook are Section 2's (ticket 87), on the hub too."""
     client = through_section_1(participant)
 
     page = section_1(client)
     assert "own-results" not in page
-    assert 'id="block-how-others-see-you"' not in page
-    assert 'id="block-gifts-summary"' not in page
+    in_section_2 = ("how-others-see-you", "others-pdf")
+    for block_id in in_section_2:
+        assert f'id="block-{block_id}"' not in page
     page = section_2(client)
-    assert page.index('id="block-how-others-see-you"') < page.index('id="block-gifts-summary"')
+    in_order = [page.index(f'id="block-{block_id}"') for block_id in in_section_2]
+    assert in_order == sorted(in_order)
     assert "hub-comparison" in hub_entry(client.get("/hub/").content.decode(), TITLES["others"])
 
 
@@ -863,7 +868,7 @@ def section_2(client):
 
 @pytest.mark.django_db
 def test_section_2_stays_locked_until_section_1_is_finished(participant):
-    """✨ Section 2's comparison and reflection follow Section 1 (ticket 87)."""
+    """✨ Section 2's comparison and first workbook follow Section 1 (ticket 87)."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
     submit_the_sort(participant)
@@ -899,8 +904,8 @@ def do_the_sort(client):
     complete(client, "designed")
 
 
-# ✨ What Section 3 requires (ticket 87): Section 1 and both side cards, but not Section 2, whose reflection waits on
-# other people's answers (ADR 0019).
+# ✨ What Section 3 requires (ticket 87): Section 1 and both side cards, but not Section 2, whose first workbook waits
+# on other people's answers (ADR 0019).
 SECTION_3_NEEDS = {"Section 1": do_the_sort, "a coach": choose, "three people": lambda client: add_people(client, 3)}
 
 
@@ -927,7 +932,6 @@ def test_section_4_is_refused_until_sections_1_2_and_3_are_complete(participant,
     client = through_section_1(participant)
     people_answer(client)
     press_compare(client)
-    answer(client, "gifts-summary", A_REFLECTION)
     invite_everyone(client)
     coach_accepts(client)  # ✨ which Section 4 also waits on (ticket 64)
     for finished in {"others", "shape"} - {unfinished}:
@@ -1025,7 +1029,8 @@ def test_a_participant_turned_away_from_section_3_for_want_of_the_side_cards_is_
 @pytest.mark.django_db
 def test_everything_that_opens_section_3_is_done_with_no_observer_answers_at_all(participant):
     """✨ Nothing a participant must do to reach Section 3 waits on an observer (ticket 52): it requires Section 1, which
-    is finished on the strengths evaluation alone, and not Section 2, whose reflection does (ADR 0019; ticket 87)."""
+    is finished on the strengths evaluation alone, and not Section 2, whose first workbook does (ADR 0019;
+    ticket 87)."""
     client = through_section_1(participant)
     invite_everyone(client)
 
@@ -1046,6 +1051,35 @@ def test_the_hub_lists_six_numbered_sections_and_counts_only_them(participant):
     assert "0 of 6 sections complete" in page
     assert "The Workbook" not in page
     assert participant.get("/sections/workbook/").status_code == 404
+
+
+def pathway_section(section_id):
+    return next(section for section in the_pathway()["content"]["sections"] if section["id"] == section_id)
+
+
+@pytest.mark.parametrize("section_id", WORKBOOKS)
+def test_sections_2_to_5_each_offer_their_workbook_exactly_as_the_content_owner_sent_it(section_id):
+    """✨ Copied unchanged into the pathway's files, so the participant downloads the content owner's PDF itself."""
+    number = WORKBOOKS[section_id]
+    files = [block["file"] for block in pathway_section(section_id)["blocks"] if block["type"] == "download"]
+
+    assert files == [f"whatever-you-do-workbook-{number}.pdf"]
+    sent = SENT / f"Whatever You Do workbook - Nov ‘26 - {number}.pdf"
+    assert (DOCUMENT.parent / "files" / files[0]).read_bytes() == sent.read_bytes()
+
+
+def test_section_2_is_the_comparison_then_the_first_workbook_waiting_on_it_with_no_reflection_and_no_gate():
+    """✨ Section 2's reflection goes (content owner's feedback), the first workbook in its place. Nothing is answered
+    in Section 2 any more, so it has no gate: the participant finishes it with its own button, once the workbook
+    opens."""
+    others = pathway_section("others")
+
+    assert [(block["id"], block["type"]) for block in others["blocks"]] == [
+        ("how-others-see-you", "comparison_signpost"),
+        ("others-pdf", "download"),
+    ]
+    assert others["blocks"][1]["after_comparison"]["sort"] == "strengths-sort"
+    assert "gate" not in others
 
 
 @pytest.mark.django_db
@@ -1247,7 +1281,7 @@ def test_section_4s_lock_note_names_the_unfinished_sections_and_the_coach_then_t
     assert escape(coach_only) in hub_entry(client.get("/hub/").content.decode(), TITLES["calling"])
 
 
-# Section 2's reflection waits for the comparison (ADR 0019; ticket 87)
+# Section 2's first workbook waits for the comparison (ADR 0019; ticket 87)
 
 
 def people_answer(client, count=3):
@@ -1267,65 +1301,96 @@ def press_compare(client):
     return client.post("/results/strengths-sort/comparison/visit/", {"confirmed": "yes"})
 
 
-def to_the_reflection(client):
-    """✨ Onboarding done, the sort sent and Section 1 finished, so Section 2's reflection is shown."""
+def to_section_2(client):
+    """✨ Onboarding done, the sort sent and Section 1 finished, so Section 2 is open."""
     answer_onboarding(client)
     complete(client, "onboarding")
     do_the_sort(client)
     return client
 
 
-def save_the_reflection(client, htmx=False):
-    return client.post(
-        "/answers/gifts-summary/", {"value": A_REFLECTION}, headers={"HX-Request": "true"} if htmx else {}
-    )
+def workbook_1_wait():
+    """✨ What Section 2 says in place of the first workbook while it waits, as the document words it."""
+    workbook = next(block for block in pathway_section("others")["blocks"] if block["id"] == "others-pdf")
+    return workbook["after_comparison"]["message"]
 
 
-def reflection_stored():
-    return "gifts-summary" in Response.objects.get().answers
+def serves_workbook_1(client):
+    served = client.get(WORKBOOK_1)
+    return served.status_code == 200 and b"".join(served.streaming_content).startswith(b"%PDF")
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("htmx", [False, True], ids=["without JavaScript", "with htmx"])
-def test_until_the_comparison_is_viewed_a_save_to_the_reflection_is_refused_and_nothing_is_stored(participant, htmx):
-    client = to_the_reflection(participant)
+def test_until_the_comparison_is_viewed_section_2_says_why_in_place_of_the_first_workbook_and_refuses_it(participant):
+    """✨ Refused at its address too, not only left off the page, as a section's content is until it is reached."""
+    client = to_section_2(participant)
     people_answer(client)
 
-    refused = save_the_reflection(client, htmx)
+    page = section_2(client)
 
-    assert refused.status_code == 403
-    assert not reflection_stored()
-    if not htmx:
-        assert refused.templates[0].name == "engine/section.html"
+    assert escape(workbook_1_wait()) in page
+    assert f'href="{WORKBOOK_1}"' not in page
+    assert client.get(WORKBOOK_1).status_code == 403
 
 
 @pytest.mark.django_db
-def test_once_viewed_the_reflection_saves_and_still_does_after_withdrawals_unfreeze_collection(participant):
-    client = to_the_reflection(participant)
+def test_once_viewed_the_first_workbook_is_offered_and_served_and_still_is_after_withdrawals_unfreeze_collection(
+    participant,
+):
+    client = to_section_2(participant)
     browsers = people_answer(client)
     assert press_compare(client).status_code == 303
-    assert save_the_reflection(client).status_code < 400
-    assert reflection_stored()
+
+    assert f'href="{WORKBOOK_1}"' in section_2(client)
+    assert escape(workbook_1_wait()) not in section_2(client)
+    assert serves_workbook_1(client)
 
     withdraw(browsers[0])
     assert Response.objects.get().collection_frozen_at is None
 
-    assert save_the_reflection(client).status_code < 400
+    assert serves_workbook_1(client)
 
 
 @pytest.mark.django_db
-def test_a_press_below_the_minimum_does_not_open_the_reflection(participant):
-    client = to_the_reflection(participant)
+def test_a_press_below_the_minimum_does_not_open_the_first_workbook(participant):
+    client = to_section_2(participant)
     people_answer(client, count=2)
     press_compare(client)
 
-    assert save_the_reflection(client).status_code == 403
-    assert not reflection_stored()
+    assert client.get(WORKBOOK_1).status_code == 403
+
+
+@pytest.mark.django_db
+def test_section_2_is_finished_by_its_own_button_once_the_comparison_is_viewed_and_not_before(participant):
+    """✨ With no gate, the wait is all that holds it (developer's call, 29 Oct), so Section 4, which requires Section
+    2, still waits on the minimum of people answering (ADR 0019)."""
+    client = to_section_2(participant)
+    people_answer(client)
+
+    complete(client, "others")
+    assert "others" not in Response.objects.get().completed_sections
+
+    press_compare(client)
+
+    assert complete(client, "others").status_code == 303
+    assert "others" in Response.objects.get().completed_sections
+
+
+@pytest.mark.django_db
+def test_a_press_of_section_2s_own_button_refused_with_javascript_says_why_beneath_it(participant):
+    """✨ With htmx, only what sits beneath the button comes back (fix-2), so it must name the wait."""
+    client = to_section_2(participant)
+    people_answer(client)
+
+    refused = client.post("/sections/others/complete/", headers={"HX-Request": "true"})
+
+    assert refused.status_code == 400
+    assert escape(workbook_1_wait()) in refused.content.decode()
 
 
 @pytest.mark.django_db
 def test_while_section_2_waits_only_on_the_comparison_the_hubs_next_step_is_the_next_open_section(participant):
-    client = to_the_reflection(participant)
+    client = to_section_2(participant)
     invite_everyone(client)
 
     panel = next_step(client.get("/hub/").content.decode())
@@ -1335,7 +1400,7 @@ def test_while_section_2_waits_only_on_the_comparison_the_hubs_next_step_is_the_
 
 @pytest.mark.django_db
 def test_with_nothing_else_open_the_next_step_waits_on_answers_with_a_button_to_section_2(participant):
-    client = to_the_reflection(participant)
+    client = to_section_2(participant)
     invite_everyone(client)
     complete(client, "shape")
 
@@ -1352,7 +1417,7 @@ def test_with_nothing_else_open_the_next_step_waits_on_answers_with_a_button_to_
 @pytest.mark.django_db
 def test_once_the_comparison_is_viewed_section_2_is_the_next_step_by_its_title(participant):
     """✨ Section 2 carries only its waiting sentence, so as the next step it says its title (ticket 87)."""
-    client = to_the_reflection(participant)
+    client = to_section_2(participant)
     people_answer(client)
     press_compare(client)
 
@@ -1364,7 +1429,7 @@ def test_once_the_comparison_is_viewed_section_2_is_the_next_step_by_its_title(p
 
 def nothing_else_open(client, answered):
     """✨ Section 2 waiting only on the comparison, with nothing else open, and `answered` people's sorts in."""
-    to_the_reflection(client)
+    to_section_2(client)
     invite_everyone(client)
     complete(client, "shape")
     people_answer(client, count=answered)
@@ -1394,7 +1459,7 @@ def test_below_the_minimum_the_next_step_still_waits_on_answers_and_offers_no_co
 @pytest.mark.django_db
 def test_with_the_minimum_in_another_open_section_is_still_the_next_step(participant):
     """✨ Only the wait's panel leads to the comparison; the comparison's own row and the voices card offer it beside."""
-    client = to_the_reflection(participant)
+    client = to_section_2(participant)
     invite_everyone(client)
     people_answer(client)
 

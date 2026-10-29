@@ -364,6 +364,20 @@ def test_with_a_once_only_section_complete_and_left_out_the_waits_on_answers_and
     assert hub.coach_wait.section.id == "calling"
 
 
+def test_a_section_with_no_gate_whose_download_waits_on_the_comparison_is_passed_over_as_waiting_on_answers():
+    """✨ As *Whatever You Do*'s Section 2 once its reflection became the first workbook: the next step is the next
+    section open, or with none, the wait on answers."""
+    waits = {"sort": "sort", "message": "This opens once you've seen how others see you."}
+    workbook = {"id": "workbook", "type": "download", "file": "workbook.pdf", "button_label": "Download"}
+    workbook["after_comparison"] = waits
+    others = section("others", blocks=[workbook])
+
+    assert hub_for([others, section("shape")], {}, completed=()).next_step.id == "shape"
+    alone = hub_for([others], {}, completed=())
+    assert alone.next_step is None
+    assert alone.waiting_on_answers.id == "others"
+
+
 def test_a_locked_section_names_the_sections_it_still_waits_for():
     """✨ As Section 2 names Walk with a coach and Five trusted voices once Section 1 is complete (ticket 52)."""
     sections = [section("a"), section("b"), section("c"), section("last", requires=["a", "b", "c"])]

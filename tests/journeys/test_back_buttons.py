@@ -98,16 +98,16 @@ def test_the_results_pages_one_way_back_leads_to_the_section_holding_its_signpos
 
 
 @pytest.mark.django_db
-def test_a_comparison_that_shows_ends_on_to_the_reflection_with_the_top_button_kept(participant):  # noqa: F811
-    """✨ Fix-18: the second exception to one way back per page. Section 2 open, the end leads on to its reflection, at
-    the field's anchor, and the top back button stays."""
+def test_a_comparison_that_shows_ends_on_to_the_workbook_with_the_top_button_kept(participant):  # noqa: F811
+    """✨ Fix-18: the second exception to one way back per page. Section 2 open, the end leads on to its first workbook,
+    which waits on the comparison, at the download's anchor, and the top back button stays."""
     client = through_section_1(participant)
     people_answer(client)
 
     page = client.get(COMPARISON).content.decode()
 
     assert the_way_back(client, COMPARISON)[0] == "/sections/others/"
-    assert '<a class="pill" href="/sections/others/#block-gifts-summary">On to your reflection →</a>' in page
+    assert '<a class="pill" href="/sections/others/#block-others-pdf">On to your workbook →</a>' in page
 
 
 # ✨ Each page by its address, with where its way back leads and the words that must name it.

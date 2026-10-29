@@ -102,9 +102,20 @@ def unmet(section, answers, role="participant"):
     Clauses that share a message say it once. An author asking for four ratings writes four clauses and one
     sentence ("Answer all four to continue"), and the participant should read that sentence, not four of it.
     What going on from one page needs is what that page's `checklist` marks unmet.
+
+    After them, the message of each of the section's own blocks still waiting on the comparison: such a block holds its
+    section, gate or none, as *Whatever You Do*'s first workbook holds Section 2.
     """
-    messages = (clause_message(clause, role) for clause in unmet_clauses(section, answers))
+    messages = [clause_message(clause, role) for clause in unmet_clauses(section, answers)]
+    messages += waiting_messages(section, answers, role)
     return list(dict.fromkeys(messages))
+
+
+def waiting_messages(section, answers, role="participant"):
+    """✨ The `comparison_wait_message` of each of the section's own blocks still waiting on the comparison, in order."""
+    # ✨ `get`, as the hub asks the same of a section's opening conditions alone, with no blocks.
+    messages = (comparison_wait_message(block, answers, role) for block in section.get("blocks", ()))
+    return [message for message in messages if message is not None]
 
 
 def clause_message(clause, role="participant"):
@@ -151,6 +162,14 @@ def checklist(section, answers, role="participant", page=None):
     for clause in clauses:
         message = clause_message(clause, role)
         met[message] = met.get(message, True) and clause_passes(clause, answers)
+    # ✨ Then each block waiting on the comparison, which holds the section as a clause does (`unmet`): the page's own,
+    # or on the last page or the whole section, every one of them, met once the comparison is viewed.
+    for block in section.get("blocks", ()):
+        waits = block.get("after_comparison")
+        if waits is None or (page not in (None, page_count(section)) and page_of(section, block["id"]) != page):
+            continue
+        message = text_for(waits["message"], role)
+        met[message] = met.get(message, True) and not waits_on_comparison(block, answers)
     return list(met.items())
 
 

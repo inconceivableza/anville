@@ -26,3 +26,7 @@ Until now a participant was never held back waiting on someone else: Section 2 n
 - A participant whose people never answer cannot finish Section 1, and so never opens Section 3. A participant whose coach never answers cannot open Section 3. The hub says what each is waiting on, rather than "Nothing is waiting for you right now", and passes over a section whose only open work waits on other people.
 - The press that unlocks the reflection is the one that freezes answer collection (ADR 0017), so finishing Section 1 now means closing collection. People invited who have not answered by then are not counted, after the warning that already says so. The reflection stays unlocked if withdrawals later unfreeze collection.
 - The participant holds a copy of the coach's link and could accept in the coach's place (spec, Coach), so the rule is only as strong as that.
+
+## Amendment (29 October 2026)
+
+The reflection, by then in *Whatever You Do*'s Section 2, gives way to the first of the content owner's four workbooks, a download that waits on the comparison the same way: offered with no file until the press, and refused at its address. Section 2 has no gate; a block of a section still waiting on the comparison holds the section, so it cannot be finished before the press, and Section 4, which requires it, still waits on the minimum of observers. The hub passes over it while it waits, as before.

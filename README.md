@@ -133,15 +133,15 @@ offers as a PDF, and Section 6 is the letter.
 Section 3 opens once Section 1 is finished and the side cards Walk with a coach and Five trusted voices are
 complete (a coach has a link, and three people have links), without waiting for Section 2. Section 4 opens once
 Sections 1–3 are finished and the coach has accepted; Section 5, and then the letter, each open once the
-participant says they have finished the section before. Section 2's reflection waits until the participant has seen
-how others see them, which needs at least three people's answers.
+participant says they have finished the section before. Section 2's workbook, and finishing Section 2, wait until the
+participant has seen how others see them, which needs at least three people's answers.
 `pathways/example.json` is a smaller file for trying the loader out.
 
-The sections' PDFs are `pathways/files/whatever-you-do-workbook-section-2.pdf`, `-section-3.pdf` and
-`-section-4.pdf`, for Sections 3, 4 and 5, each served only to a participant who has reached its section, and each
-opened from its button in a new tab. They are
-saved from the content owner's Word files in `Prototypes for reference/`, which still number them 2 to 4; replace each,
-under the same name, when a new version arrives.
+The sections' PDFs are `pathways/files/whatever-you-do-workbook-1.pdf` to `-4.pdf`, for Sections 2 to 5, each served
+only to a participant who has reached its section (the first once they have also seen how others see them), and each
+opened from its button in a new tab. They are copied unchanged from the content owner's files in
+`Prototypes for reference/Workbook files/Workbooks sent 29 Oct/`; replace each, under the same name, when a new version
+arrives.
 
 `pathways/whatever-you-do-faithful-port.json` is the faithful port: the same pathway as the original
 prototype has it, without the content owner's later changes (so far, the fifth baseline rating, the coach page, a

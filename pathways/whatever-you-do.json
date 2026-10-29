@@ -243,7 +243,7 @@
         "to_finish": "completed {section}",
         "complete_label": "I've finished Section 2",
         "next_step": {
-          "waiting": "{section}'s reflection opens once at least {minimum} of the people you invited have answered and you've seen how others see you."
+          "waiting": "{section}'s Workbook 1 opens once at least {minimum} of the people you invited have answered and you've seen how others see you."
         },
         "blocks": [
           {
@@ -253,25 +253,17 @@
             "title": "How others see you"
           },
           {
-            "id": "gifts-summary",
-            "type": "long_text",
-            "prompt": "Having completed the strengths evaluation, read the passages on gifts and seen how others see you, summarise: what gifts and talents has God given you? And what has He not given you?",
-            "placeholder": "Draw on the scripture, your strengths evaluation results, and what others have told you...",
+            "id": "others-pdf",
+            "type": "download",
+            "file": "whatever-you-do-workbook-1.pdf",
+            "body": "Workbook 1, to work through on paper: two readings on how you've been designed, then a conversation with your coach about your results, your own answers and the answers others gave.\n\nIt is the first of four for the middle of the course, one for each of Sections 2 to 5. When you've finished this one, come back here to say so.",
+            "button_label": "Download Workbook 1 (PDF)",
             "after_comparison": {
               "sort": "strengths-sort",
               "message": "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer."
             }
           }
-        ],
-        "gate": {
-          "clauses": [
-            {
-              "type": "has_answer",
-              "block": "gifts-summary",
-              "message": "Complete the gifts reflections to continue."
-            }
-          ]
-        }
+        ]
       },
       {
         "id": "shape",
@@ -285,9 +277,9 @@
           {
             "id": "shape-pdf",
             "type": "download",
-            "file": "whatever-you-do-workbook-section-2.pdf",
-            "body": "Section three, to work through on paper: mapping your story, and what has happened in each season of it.\n\nSections three to five make up the middle of the course, which works better on paper, so each is a booklet of its own. When you've finished this one, come back here to say so.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their evaluations of you – don’t let that stop you making progress on your journey.",
-            "button_label": "Download Section 3 (PDF)"
+            "file": "whatever-you-do-workbook-2.pdf",
+            "body": "Workbook 2, to work through on paper: mapping your story, and what has happened in each season of it.\n\nWhen you've finished it, come back here to say so.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their evaluations of you – don’t let that stop you making progress on your journey.",
+            "button_label": "Download Workbook 2 (PDF)"
           }
         ]
       },
@@ -313,9 +305,9 @@
           {
             "id": "calling-pdf",
             "type": "download",
-            "file": "whatever-you-do-workbook-section-3.pdf",
-            "body": "Section four, to work through on paper: narrowing your calling to a sentence, then opening it back up.\n\nWhen you've finished it, come back here to say so, and Section 5 opens.",
-            "button_label": "Download Section 4 (PDF)"
+            "file": "whatever-you-do-workbook-3.pdf",
+            "body": "Workbook 3, to work through on paper: narrowing your calling to a sentence, then opening it back up.\n\nWhen you've finished it, come back here to say so, and Section 5 opens.",
+            "button_label": "Download Workbook 3 (PDF)"
           }
         ]
       },
@@ -331,9 +323,9 @@
           {
             "id": "growth-pdf",
             "type": "download",
-            "file": "whatever-you-do-workbook-section-4.pdf",
-            "body": "Section five, to work through on paper: turning all of it into something you will actually do.\n\nWhen you've finished it, come back here to say so, and Section 6, a letter to your future self, opens.",
-            "button_label": "Download Section 5 (PDF)"
+            "file": "whatever-you-do-workbook-4.pdf",
+            "body": "Workbook 4, to work through on paper: turning all of it into something you will actually do.\n\nWhen you've finished it, come back here to say so, and Section 6, a letter to your future self, opens.",
+            "button_label": "Download Workbook 4 (PDF)"
           }
         ]
       },
