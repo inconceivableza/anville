@@ -40,6 +40,7 @@ def test_whatever_you_do_has_the_two_round_prototypes_72_cards_word_for_word():
 
 
 def test_the_seven_buckets_are_the_prototypes_spread_evenly_from_0_to_100():
+    """✨ But for the middle one, which says it is for not being sure too (the developer, 29 Oct)."""
     buckets = whatever_you_do()["instrument"]["buckets"]
     assert [
         (bucket["id"], text_for(bucket["label"], "participant"), text_for(bucket["label"], "observer"), bucket["seed"])
@@ -48,7 +49,7 @@ def test_the_seven_buckets_are_the_prototypes_spread_evenly_from_0_to_100():
         ("definitely-not-me", "Definitely not me", "Definitely not {name}", 0),
         ("not-me", "Not me", "Not {name}", 17),
         ("not-really-me", "Not really me", "Not really {name}", 33),
-        ("in-between", "In between", "In between", 50),
+        ("in-between", "In between / not sure", "In between / not sure", 50),
         ("somewhat-me", "Somewhat me", "Somewhat {name}", 67),
         ("good-at-this", "Good at this", "Good at this", 83),
         ("real-strength", "Real strength", "Real strength", 100),
@@ -57,3 +58,7 @@ def test_the_seven_buckets_are_the_prototypes_spread_evenly_from_0_to_100():
 
 def test_whatever_you_do_sorts_without_fine_tuning():
     assert whatever_you_do()["sorts_skip_fine_tuning"] is True
+
+
+def test_whatever_you_do_tie_break_skip_says_neither_is_more_true():
+    assert whatever_you_do()["presentation"]["tie_break"]["skip"] == "Neither is more true of me"

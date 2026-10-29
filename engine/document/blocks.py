@@ -189,6 +189,34 @@ SORT_WORDING = {
     "slider_min": {"participant": "Not me", "observer": "Not {name}"},
     "slider_max": "Real strength",
     "submit_label": {"participant": "See my results →", "observer": "Send my evaluation →"},
+    # ✨ The two-round prototype's, used only where some items are reworded (see `twin`): round 1 the originals, round 2
+    # the rewordings, with a look at how the buckets were used between them.
+    "round_1_title": {"participant": "What you’re good at", "observer": "What {name} is good at"},
+    "round_2_title": {"participant": "What you find yourself doing", "observer": "What you’d see {name} doing"},
+    "scale_less": {"participant": "← Less like me", "observer": "← Less like {name}"},
+    "scale_more": {"participant": "More like me →", "observer": "More like {name} →"},
+    "halfway_heading": "Round 1 done",
+    "halfway_intro": {
+        "participant": "Round 2 covers the same ground from a different angle: things you’d find yourself doing. Don’t "
+        "try to match your earlier answers. Answer for the words in front of you.",
+        "observer": "Round 2 covers the same ground from a different angle: things you’d see {name} doing. Don’t try "
+        "to match your earlier answers. Answer for the words in front of you.",
+    },
+    "buckets_used_heading": "How you used the buckets",
+    # ✨ Well spread is 5 or more of 7 buckets used, none holding more than a third of the cards. The widget fills in
+    # `{used}`, `{buckets}` and, where one bucket holds too many, `{crowded}` with `buckets_crowded`, as it does
+    # `{count}`.
+    "buckets_spread_well": "You used {used} of the {buckets} buckets. That’s a good spread, and it makes your results "
+    "clearer. Keep doing the same in round 2.",
+    "buckets_spread_more": "You used {used} of the {buckets} buckets{crowded}. Spreading your answers out makes the "
+    "results clearer, so in round 2 try using the whole range where it fits.",
+    "buckets_crowded": ", and {count} of your {cards} cards are in “{bucket}”",
+    "start_round_2_label": "Start round 2",
+    "undo_last_card_label": "Undo last card",
+    # ✨ The quick check, participants' only (see `quick_check`). `{pairs}` is "One pair" or "3 pairs".
+    "check_heading": "{pairs} pulled in opposite directions",
+    "check_intro": "Each pair describes the same strength in different words, but you put them on opposite sides. "
+    "Change either answer if it doesn’t look right. If both are true, leave them as they are.",
 }
 
 
@@ -197,7 +225,9 @@ def _sort_widget(document, role, name=""):
     own wording, each field the document's or else the engine's. `{name}` becomes the participant's name, as plain
     text, never through `format()`. An observer is offered sending as soon as every card is placed; a participant
     always fine-tunes, unless the document skips fine-tuning for everyone. Each item names its twin, either way round,
-    so the widget never deals the two one after the other."""
+    and, where any is reworded, its round: the second for a rewording, the first for the rest. Where fine-tuning is
+    skipped, a participant gets a quick check of twins answered far apart instead; an observer never does, as several
+    observers' contradictions average out."""
     instrument = document["instrument"]
     authored = document.get("presentation", {}).get("sort_wording", {})
     twins = {}
@@ -214,6 +244,7 @@ def _sort_widget(document, role, name=""):
                 "id": item["id"],
                 "text": shown(item["text"]),
                 **({"twin": twins[item["id"]]} if item["id"] in twins else {}),
+                **({"round": 2 if "twin" in item else 1} if twins else {}),
             }
             for item in instrument["items"]
         ],
@@ -224,6 +255,7 @@ def _sort_widget(document, role, name=""):
         "wording": {field: shown(authored.get(field, default)) for field, default in SORT_WORDING.items()},
         "fine_tunes": not skips_fine_tuning(document),
         "sends_before_fine_tuning": role == "observer",
+        "quick_check": role == "participant" and skips_fine_tuning(document),
     }
 
 

@@ -551,7 +551,7 @@
       { "id": "definitely-not-me", "label": { "participant": "Definitely not me", "observer": "Definitely not {name}" }, "seed": 0 },
       { "id": "not-me", "label": { "participant": "Not me", "observer": "Not {name}" }, "seed": 17 },
       { "id": "not-really-me", "label": { "participant": "Not really me", "observer": "Not really {name}" }, "seed": 33 },
-      { "id": "in-between", "label": "In between", "seed": 50 },
+      { "id": "in-between", "label": "In between / not sure", "seed": 50 },
       { "id": "somewhat-me", "label": { "participant": "Somewhat me", "observer": "Somewhat {name}" }, "seed": 67 },
       { "id": "good-at-this", "label": "Good at this", "seed": 83 },
       { "id": "real-strength", "label": "Real strength", "seed": 100 }
@@ -725,7 +725,7 @@
     },
     "tie_break": {
       "question": "Which is more true of you?",
-      "skip": "Neither fits — skip",
+      "skip": "Neither is more true of me",
       "frameworks": { "apest": "Your role among people", "pep": "How you work" },
       "separated": {
         "heading": "Separated",

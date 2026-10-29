@@ -430,7 +430,39 @@
             "fine_tune_intro": { "$ref": "#/$defs/text" },
             "slider_min": { "$ref": "#/$defs/text" },
             "slider_max": { "$ref": "#/$defs/text" },
-            "submit_label": { "$ref": "#/$defs/text" }
+            "submit_label": { "$ref": "#/$defs/text" },
+            "round_1_title": {
+              "description": "Used only where some items are reworded (twin): the first round's, of the originals.",
+              "$ref": "#/$defs/text"
+            },
+            "round_2_title": {
+              "description": "Used only where some items are reworded (twin): the second round's, of the rewordings.",
+              "$ref": "#/$defs/text"
+            },
+            "scale_less": { "$ref": "#/$defs/text" },
+            "scale_more": { "$ref": "#/$defs/text" },
+            "halfway_heading": { "$ref": "#/$defs/text" },
+            "halfway_intro": { "$ref": "#/$defs/text" },
+            "buckets_used_heading": { "$ref": "#/$defs/text" },
+            "buckets_spread_well": {
+              "description": "After round 1, where 5 or more of 7 buckets were used and none holds more than a third of the cards. {used} is replaced with the number of buckets used, {buckets} with how many there are.",
+              "$ref": "#/$defs/text"
+            },
+            "buckets_spread_more": {
+              "description": "After round 1, otherwise. {used} and {buckets} as for buckets_spread_well; {crowded} with buckets_crowded where one bucket holds more than a third of the cards, or nothing.",
+              "$ref": "#/$defs/text"
+            },
+            "buckets_crowded": {
+              "description": "{count} is replaced with the cards in the fullest bucket, {cards} with round 1's cards, {bucket} with the bucket.",
+              "$ref": "#/$defs/text"
+            },
+            "start_round_2_label": { "$ref": "#/$defs/text" },
+            "undo_last_card_label": { "$ref": "#/$defs/text" },
+            "check_heading": {
+              "description": "The quick check's, participants' only where sorts skip fine-tuning. {pairs} is replaced with \"One pair\" or \"3 pairs\".",
+              "$ref": "#/$defs/text"
+            },
+            "check_intro": { "$ref": "#/$defs/text" }
           }
         }
       }
