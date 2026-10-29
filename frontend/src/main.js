@@ -522,6 +522,26 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   update();
 }
 
+// --- The callings marquee's pause button (WCAG 2.2.2, 29 Oct): its name says what pressing it will do ---
+(() => {
+  const toggle = document.querySelector(".mq-toggle");
+  const marquee = document.querySelector(".marquee");
+  if (!toggle || !marquee || reducedMotion) return; // ✨ under reduced motion the band never moves
+  const pauseIcon = '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false"><rect x="3" y="2" width="3.5" height="12" rx="1" fill="currentColor"/><rect x="9.5" y="2" width="3.5" height="12" rx="1" fill="currentColor"/></svg>';
+  const playIcon = '<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" focusable="false"><path d="M4 2.2v11.6a.8.8 0 0 0 1.2.7l9-5.8a.8.8 0 0 0 0-1.4l-9-5.8A.8.8 0 0 0 4 2.2z" fill="currentColor"/></svg>';
+  const show = () => {
+    const paused = marquee.classList.contains("paused");
+    toggle.innerHTML = paused ? playIcon : pauseIcon;
+    toggle.setAttribute("aria-label", paused ? "Play the photos" : "Pause the photos");
+  };
+  toggle.addEventListener("click", () => {
+    marquee.classList.toggle("paused");
+    show();
+  });
+  show();
+  toggle.hidden = false;
+})();
+
 // --- Real partner marks only; omit the carousel when no partners are supplied ---
 (() => {
   const row = document.getElementById("logoRow");

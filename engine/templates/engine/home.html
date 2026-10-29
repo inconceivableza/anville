@@ -147,6 +147,8 @@
         <img src="{% static 'callings/gardener.jpg' %}" alt="" loading="lazy">
         <img src="{% static 'callings/entrepreneur.jpg' %}" alt="" loading="lazy">
       {% endfor %}</div></div>
+      {# ✨ A subtle way to stop the band (WCAG 2.2.2; the developer, 29 Oct), shown by main.js, as it needs it. #}
+      <button type="button" class="mq-toggle" aria-label="Pause the photos" hidden></button>
     </section>
 
     <!-- =================== FOOTER =================== -->

@@ -5808,8 +5808,39 @@ body > svg[aria-hidden="true"] {
   animation: mq 70s linear infinite;
 }
 
-.marquee:hover .mq-track {
+.marquee:hover .mq-track,
+.marquee.paused .mq-track {
   animation-play-state: paused;
+}
+
+/* ✨ The band's pause button (29 Oct): small and quiet below its right end, as large as a tap needs. */
+.mq-toggle {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: 12px clamp(16px, 4vw, 48px) 0 auto;
+  padding: 0;
+  border: 1px solid var(--on-dark-35);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--on-dark);
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.mq-toggle[hidden] {
+  display: none;
+}
+
+.mq-toggle:hover,
+.mq-toggle:focus-visible {
+  opacity: 1;
+}
+
+.mq-toggle:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
 }
 
 .mq-track img {

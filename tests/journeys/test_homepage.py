@@ -276,6 +276,18 @@ def test_the_callings_are_v3s_marquee_of_photos_in_its_order(client):
 
 
 @pytest.mark.django_db
+def test_the_marquee_has_a_pause_button_of_its_own_outside_what_screen_readers_skip(client):
+    """✨ Anything moving for over five seconds needs a way to stop it (WCAG 2.2.2), and v3's pauses only under the
+    pointer: the developer's call (29 Oct) is a subtle button. main.js shows it, as it does nothing without
+    JavaScript."""
+    meet = section(client.get("/").content.decode(), r'<section class="panel meet"')
+
+    toggle = re.search(r'<button type="button" class="mq-toggle" aria-label="Pause the photos" hidden>', meet)
+    assert toggle, "no pause button"
+    assert meet.index("</div></div>") < toggle.start()
+
+
+@pytest.mark.django_db
 def test_the_black_footer_has_the_quote_and_one_column_of_links(client):
     page = client.get("/").content.decode()
     footer = re.search(r"<footer.*?</footer>", page, re.S).group(0)
