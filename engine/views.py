@@ -68,6 +68,7 @@ from engine.document.contacts import (
     needed,
     rows_of,
     voices_card,
+    withdrawn_sentence,
 )
 from engine.document.aggregation import aggregate
 from engine.document.gates import (
@@ -1196,7 +1197,9 @@ def _hub_voices(state, hub):
             continue
         invited = state.answers.get(links_issued_key(block["id"]), 0)
         answered = _answered(state.response) if state.response else 0
-        shown = voices_card(block, card, invited, answered, minimum_observers(document), frozen=_frozen(state.response))
+        withdrew = state.response.observers_withdrew if state.response else 0
+        minimum = minimum_observers(document)
+        shown = voices_card(block, card, invited, answered, minimum, frozen=_frozen(state.response), withdrew=withdrew)
         return {"section": section_id, **shown}
     return None
 
@@ -2593,6 +2596,7 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
                     comparison=_comparison_signpost_shown(state, block),
                     rows_back=rows_back.get(block["id"]),
                     coach_withdrew=state.response is not None and state.response.coach_withdrew,
+                    observers_withdrew=state.response.observers_withdrew if state.response is not None else 0,
                     saves_quietly=_saves_quietly(version.document, section, block),
                 )
                 for block in blocks
@@ -2784,6 +2788,7 @@ def _block_for_participant(
     comparison=None,
     rows_back=None,
     coach_withdrew=False,
+    observers_withdrew=0,
     saves_quietly=False,
 ):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
@@ -2794,7 +2799,8 @@ def _block_for_participant(
     block's results, from `_sort_results_drawn`, and `comparison` a `comparison_signpost`'s status, from
     `_comparison_signpost_shown`. A sort not yet in starts from `demo`, a demo profile, with its guide beside it
     (fix-23). A coach checklist opens saying the coach withdrew while the response keeps that they did
-    (`coach_withdrew`, ADR 0024). One that `saves_quietly` says nothing on a save (`_saves_quietly`)."""
+    (`coach_withdrew`, ADR 0024). A contact list says how many observers withdrew, naming nobody
+    (`observers_withdrew`). One that `saves_quietly` says nothing on a save (`_saves_quietly`)."""
     rows = _contact_rows(block, answers, issued, **(rows_back or {})) if block["type"] == "contact_list" else None
     widget = BLOCK_TYPES[block["type"]].widget
     shown_widget = widget(document, "participant", "") if widget else None  # ✨ the participant's wording names no one
@@ -2837,6 +2843,7 @@ def _block_for_participant(
         "link": link,
         "results": results,  # ✨ where a section signpost's button leads instead, once its section is done (ticket 61)
         "frozen": RESULTS_SEEN if frozen and block["type"] == "contact_list" else None,
+        "withdrawn": withdrawn_sentence(observers_withdrew) if block["type"] == "contact_list" else None,
         "drawn": drawn,
         "comparison": comparison,
         # ✨ While it waits on the comparison, its authored message, and it is drawn disabled (ticket 68).

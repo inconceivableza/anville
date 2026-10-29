@@ -65,7 +65,17 @@ def can_add_row(shown):
     return shown < MAX_CONTACTS
 
 
-def voices_card(block, card, invited, answered, minimum, frozen=False):
+def withdrawn_sentence(withdrew):
+    """✨ How many observers withdrew their answers (29 Oct), as the list's page says it, naming nobody; None if none
+    has. Engine wording."""
+    if not withdrew:
+        return None
+    if withdrew == 1:
+        return "1 person has withdrawn their answers."
+    return f"{withdrew} people have withdrawn their answers."
+
+
+def voices_card(block, card, invited, answered, minimum, frozen=False, withdrew=0):
     """✨ The side card holding a contact list, as the Five trusted voices card shows it (ticket 51a): a tag, a line under
     it or None, and its meters, how many people have a working link (`invited`) and how many observer assessments have
     been sent (`answered`), each out of the rows the list asks to be filled. Engine wording, as the section statuses
@@ -92,6 +102,8 @@ def voices_card(block, card, invited, answered, minimum, frozen=False):
         "more_needed": more_needed(needed(block), invited),
         "invited": invited,
         "answered": answered,
+        # ✨ How many observers withdrew, said beside the Answered count so the card grows no taller (29 Oct).
+        "withdrew": withdrew,
         "out_of": max(rows_to_fill(block), invited, answered, 1),
     }
 

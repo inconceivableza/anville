@@ -30,5 +30,7 @@
     {% for row in block.rows %}{% include "engine/contact_row.html" %}{% endfor %}
   </ol>
   {% if block.adds_rows and block.text.more_note %}<p class="contact-more-note">{{ block.text.more_note }}</p>{% endif %}
+  {# ✨ How many withdrew their answers, naming nobody, as the participant never sees who answered (29 Oct). #}
+  {% if block.withdrawn %}<p class="contact-withdrawn">{{ block.withdrawn }}</p>{% endif %}
   {% include "engine/contact_more.html" %}
 </div>

@@ -100,6 +100,9 @@ class Response(models.Model):
     # ✨ That the participant's coach withdrew their acceptance (ADR 0024), and nothing about that coach: they are
     # deleted as they withdraw. Kept so the participant is told, until they choose a coach again.
     coach_withdrew = models.BooleanField(default=False)
+    # ✨ How many observers withdrew what they sent, and nothing about which (29 Oct): the participant never sees who
+    # answered, so is told only a count, which says why fewer answers are in.
+    observers_withdrew = models.PositiveIntegerField(default=0)
     is_test_data = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -770,7 +773,11 @@ class ObserverResponse(models.Model):
             if claimed is None:
                 return False
             Invitation.objects.filter(pk=claimed.pk).update(secret_hash=None)
-            cls.objects.filter(sent_by=_sent_by(secret)).delete()
+            deleted, _ = cls.objects.filter(sent_by=_sent_by(secret)).delete()
+            if deleted:
+                Response.objects.filter(pk=claimed.contact.response_id).update(
+                    observers_withdrew=F("observers_withdrew") + 1
+                )
             claimed.contact.response.unfreeze_below_minimum()
         return True
 

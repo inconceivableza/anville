@@ -2282,6 +2282,19 @@ body:not(.framed) .question-card > p + form {
   color: var(--muted);
 }
 
+/* ✨ How many withdrew (29 Oct): quiet, below the list. */
+.contact-withdrawn {
+  margin: var(--space-sm) 0 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ✨ Beside the voices card's Answered count, so the card grows no taller. */
+.meter-note {
+  font-size: inherit;
+  opacity: 0.7;
+}
+
 .contact-more {
   margin: var(--space-xs) 0 0;
 }

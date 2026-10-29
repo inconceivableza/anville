@@ -408,6 +408,65 @@ def answer_through(*links):
         assert send(observer, complete_sort()).status_code in (200, 302, 303)
 
 
+def withdraw_through(link):
+    """✨ The link's observer claiming it, sending an observer assessment, and then withdrawing it."""
+    from tests.journeys.test_observer_assessment import send, withdraw  # ✨ as above
+    from tests.journeys.test_observer_landing import claim
+
+    observer = Client()
+    own_link = claim(observer, link)
+    send(observer, complete_sort())
+    assert withdraw(observer, own_link).status_code == 200
+
+
+def voices_page(client):
+    """✨ Five trusted voices' own page, with its list."""
+    from tests.journeys.test_contact_list import VOICES  # ✨ as above
+
+    return client.get(f"/sections/{VOICES}/").content.decode()
+
+
+# How many withdrew, told quietly and naming nobody (the developer, 29 Oct): the participant never sees who answered,
+# so nor who took their answers back.
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "withdrawing, said", [(1, "1 person has withdrawn their answers."), (2, "2 people have withdrawn their answers.")]
+)
+def test_how_many_withdrew_is_said_on_the_list_page_and_beside_the_cards_answered_count(
+    trusted_voices, withdrawing, said
+):
+    links = add_people_with_links(trusted_voices, *PEOPLE)
+    answer_through(links[2])
+    assert "withdrew" not in voices_card(trusted_voices)
+    assert "contact-withdrawn" not in voices_page(trusted_voices)
+
+    for link in links[:withdrawing]:
+        withdraw_through(link)
+
+    card = voices_card(trusted_voices)
+    assert re.search(r'<span>1 / \d+<small class="meter-note"> · %d withdrew</small></span>' % withdrawing, card)
+    assert meters(card) == {"Invited": 3, "Answered": 1}
+    assert f'<p class="contact-withdrawn">{said}</p>' in voices_page(trusted_voices)
+
+
+@pytest.mark.django_db
+def test_the_row_of_someone_who_withdrew_looks_as_the_row_of_someone_who_sent(trusted_voices):
+    links = add_people_with_links(trusted_voices, *PEOPLE[:2])
+    answer_through(links[1])
+    withdraw_through(links[0])
+
+    rows = re.findall(r'<li class="contact-row" id="person-.*?</li>', voices_page(trusted_voices), re.S)
+
+    jo, priya = (
+        re.sub(r'\d+|name="drawn" value="[^"]*"', "#", row.replace(name, "NAME").replace(email, "EMAIL"))
+        for row, (name, email) in zip(rows, PEOPLE)
+    )
+    assert "Link works until" in jo
+    assert jo == priya
+
+
 @pytest.mark.django_db
 def test_the_voices_card_says_how_many_more_people_need_links_while_fewer_than_three_have_them(trusted_voices):
     add_people_with_links(trusted_voices, *PEOPLE[:2])

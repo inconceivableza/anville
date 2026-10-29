@@ -16,7 +16,7 @@
   {% if section.side_card_lead %}<p class="hub-side-line">{{ section.side_card_lead }}</p>{% endif %}
   <p>{{ section.side_card }}</p>
   <div class="meter"><div class="meter-label"><span>Invited</span><span>{{ voices.invited }} / {{ voices.out_of }}</span></div><progress class="track" max="{{ voices.out_of }}" value="{{ voices.invited }}" aria-hidden="true"></progress></div>
-  <div class="meter"><div class="meter-label"><span>Answered</span><span>{{ voices.answered }} / {{ voices.out_of }}</span></div><progress class="track" max="{{ voices.out_of }}" value="{{ voices.answered }}" aria-hidden="true"></progress></div>
+  <div class="meter"><div class="meter-label"><span>Answered</span><span>{{ voices.answered }} / {{ voices.out_of }}{% if voices.withdrew %}<small class="meter-note"> · {{ voices.withdrew }} withdrew</small>{% endif %}</span></div><progress class="track" max="{{ voices.out_of }}" value="{{ voices.answered }}" aria-hidden="true"></progress></div>
   {# ✨ The small pill, as the coach's card has, so the card grows as little as possible (ticket 65), its shape the coach #}
   {# card's, in the paper's colour rather than green (ticket 95). #}
   {# ✨ Beside it, once there is a result, the comparison signpost's press, as its section's card has it: a form posting #}
