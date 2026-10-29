@@ -9,7 +9,7 @@ only finds the block and holds it to its answer kind.
 
 from jsonschema import Draft202012Validator
 
-from engine.document.blocks import BLOCK_TYPES
+from engine.document.blocks import BLOCK_TYPES, skips_fine_tuning
 
 class UnknownBlock(Exception):
     """✨ The pathway version has no block by that identifier that takes an answer."""
@@ -40,13 +40,14 @@ def answer_from_form(document, block, submitted, role="participant"):
     """✨ The answer a submitted form value stands for, or AnswerRefused. Text is kept exactly as written.
 
     The document is the block's own pathway version, since what a valid answer is can depend on it. An observer's
-    answer may leave out what its kind fills in for observers (an observer's sort, its slider values).
+    answer may leave out what its kind fills in for observers (an observer's sort, its slider values), as may a
+    participant's where the document skips fine-tuning.
     """
     if submitted is None:
         raise AnswerRefused("No answer was sent.")
     kind = BLOCK_TYPES[block["type"]].captures
     value = kind.from_form(submitted)
-    if role == "observer" and kind.observer_defaults is not None:
+    if (role == "observer" or skips_fine_tuning(document)) and kind.observer_defaults is not None:
         value = kind.observer_defaults(document, value)
     if not Draft202012Validator(kind.schema_for(document, block)).is_valid(value):
         raise AnswerRefused(kind.refusal)

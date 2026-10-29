@@ -45,13 +45,11 @@ from tests.journeys.test_whatever_you_do_faithful_port import (
     ANSWER_ALL_FOUR,
     BASELINE_STATEMENTS,
     VIEW_THE_COMPARISON,
-    a_whole_sort,
     add_people,
     answer,
     complete,
     move_past,
     onboarding_pages,
-    submit_the_sort,
 )
 from tests.journeys.test_whatever_you_do_faithful_port import SLOTS as PROTOTYPE_SLOTS
 from tests.journeys.test_whatever_you_do_faithful_port import the_pathway as the_faithful_port
@@ -81,6 +79,16 @@ RATINGS_PAGE = "/sections/onboarding/pages/2/"
 
 def the_pathway():
     return json.loads(DOCUMENT.read_text(encoding="utf-8"))
+
+
+def a_whole_sort():
+    """✨ Every card placed in "Good at this", sent as the widget sends a sort that skips fine-tuning: buckets
+    alone."""
+    return {item["id"]: {"bucket": "good-at-this"} for item in the_pathway()["instrument"]["items"]}
+
+
+def submit_the_sort(client):
+    return answer(client, "strengths-sort", json.dumps(a_whole_sort()))
 
 
 @pytest.fixture
@@ -496,7 +504,7 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     its gate clause, or a message still saying four). The minimum-length messages are reworded the same way,
     the time estimates, checked above, the hub's section numbers, next-step wording and photos and Section 1's results
     are set aside, and so are the downloads in place of Sections 3–5's own blocks, Section 1's split in two (ticket
-    87) and Section 2's way to the comparison."""
+    87), Section 2's way to the comparison and the two-round prototype's cards."""
     expected = the_faithful_port()
     for section in expected["content"]["sections"]:
         for clause in section.get("gate", {}).get("clauses", []):
@@ -516,17 +524,31 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     a_download_in_place_of_each_of_sections_2_to_4(expected)
     in_six_sections(expected)
     no_relationship_question(expected)
-    expected = in_the_new_words(expected)
+    expected = in_the_new_words(without_the_cards(expected))
 
     assert without_what_finishing_takes(
         without_the_comparison_signpost(
             without_the_next_step_and_photos(
                 without_numbers(
-                    without_the_tie_break(without_the_coach_step(without_estimates(without_the_wizard(the_pathway()))))
+                    without_the_tie_break(
+                        without_the_coach_step(without_estimates(without_the_wizard(without_the_cards(the_pathway()))))
+                    )
                 )
             )
         )
     ) == (without_numbers(expected))
+
+
+def without_the_cards(document):
+    """✨ The cards, buckets and sort without fine-tuning are the two-round prototype's (held to it in
+    `tests/core/test_two_round_cards.py`), and so is Section 1's activity saying what sorting them takes."""
+    document.pop("instrument")
+    document.pop("sorts_skip_fine_tuning", None)
+    for section in document["content"]["sections"]:
+        for block in section["blocks"]:
+            if block["id"] == "gifts-activity":
+                block.pop("body")
+    return document
 
 
 def without_what_finishing_takes(document):

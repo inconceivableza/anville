@@ -78,6 +78,11 @@
       "type": "boolean",
       "default": false
     },
+    "sorts_skip_fine_tuning": {
+      "description": "Whether a sort is sent once every card is placed, by participants and observers alike, each card at its bucket's seed, with no sliders. Off, a participant always fine-tunes and an observer may choose to.",
+      "type": "boolean",
+      "default": false
+    },
     "content": {
       "type": "object",
       "additionalProperties": false,
@@ -1167,6 +1172,10 @@
           "type": "array",
           "items": { "$ref": "#/$defs/identifier" },
           "minItems": 1
+        },
+        "twin": {
+          "description": "The item this one rewords, by its id: the sort never deals the two one straight after the other.",
+          "$ref": "#/$defs/identifier"
         }
       }
     },

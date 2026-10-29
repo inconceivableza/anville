@@ -15,7 +15,6 @@ longer holds, such as on a pathway whose bands or threshold changed, stops with 
 misleading. Nothing here touches the database or a request.
 """
 
-from collections import defaultdict
 from dataclasses import dataclass, field
 
 from engine.document.scoring import score
@@ -42,8 +41,9 @@ EACH_WAY = "each-way"
 SKIP = "skip"
 COMES_OUT = {LEADER: SAME_TOP, BEHIND: TOP_CHANGED, EACH_WAY: LEVEL, SKIP: SKIPPED}
 
-# ✨ Each sort's totals are out of 1800 on each framework, 36 items at an average of 50, so a construct's share is its
-# total ÷ 18: 375 is 20.83%, the edge of "Leading", 315 is 17.5%, of "Strong", and 255 is 14.17%, of "Present".
+# ✨ Each profile's totals are out of 1800 on each framework, as for 36 items at an average of 50 (a larger sort's are
+# scaled to it), so a construct's share is its total ÷ 18: 375 is 20.83%, the edge of "Leading", 315 is 17.5%, of
+# "Strong", and 255 is 14.17%, of "Present".
 TIED_ON_BOTH = {
     # ✨ Deacon 22.0% and Evangelist 21.2% tied; Teacher "Less used", so not flat.
     "deacon": 396, "evangelist": 382, "prophet": 324, "shepherd": 297, "apostle": 234, "teacher": 167,
@@ -252,13 +252,14 @@ def _chosen(way, pair, cluster):
 
 
 def sort_with_totals(document, totals):
-    """✨ A sort whose constructs add up to exactly `totals`, every item at a whole value from 0 to 100 in the bucket
-    whose seed is nearest it, as if the slider were moved there.
+    """✨ A sort whose constructs add up as near to `totals` as cards placed in buckets can, every item at its bucket's
+    seed, as a participant who never fine-tunes leaves it. The totals are shares: they are scaled to the sort's own
+    size, so a profile made for 36 items holds for 72.
 
     Each item loads one construct of each of two frameworks, so the items are the edges between two sets of
     constructs. Every item starts at the value that best fits both its constructs' totals (alternating least squares),
-    rounded; what rounding left over is then moved along a spanning tree of the items, leaves first, so every total
-    comes out exact."""
+    in the bucket whose seed is nearest it; items are then moved a bucket at a time while that brings the totals
+    nearer. Whether the sort still ties what the profile promises is for the caller to check."""
     frameworks = [[c["id"] for c in framework["constructs"]] for framework in document["measurement"]["frameworks"]]
     if len(frameworks) != 2 or set(totals) != {c for constructs in frameworks for c in constructs}:
         raise ScenarioDoesNotHold("The profiles are made for two frameworks with Whatever You Do's constructs.")
@@ -270,49 +271,46 @@ def sort_with_totals(document, totals):
         if None in ends:
             raise ScenarioDoesNotHold(f"Item {item['id']} does not load onto both frameworks.")
         edges[item["id"]] = tuple(ends)
+    # ✨ Every item at an average of 50.
+    scale = 50 * len(edges) / sum(totals[c] for c in frameworks[0])
+    wanted = {construct: total * scale for construct, total in totals.items()}
 
-    best = {construct: 0.0 for construct in totals}
+    best = {construct: 0.0 for construct in wanted}
     for _ in range(200):
         for side in (0, 1):
             for construct in frameworks[side]:
                 own = [ends for ends in edges.values() if ends[side] == construct]
-                best[construct] = (totals[construct] - sum(best[ends[1 - side]] for ends in own)) / len(own)
-    values = {item: round(best[a] + best[p]) for item, (a, p) in edges.items()}
+                best[construct] = (wanted[construct] - sum(best[ends[1 - side]] for ends in own)) / len(own)
 
-    left = dict(totals)
-    for item, (a, p) in edges.items():
-        left[a] -= values[item]
-        left[p] -= values[item]
-    for item, construct, towards in _spanning_tree_leaves_first(edges):
-        values[item] += left[construct]
-        left[towards] -= left[construct]
-        left[construct] = 0
-    if any(left.values()) or not all(0 <= value <= 100 for value in values.values()):
-        raise ScenarioDoesNotHold("No sort of whole values from 0 to 100 adds up to the profile's totals.")
-
-    buckets = document["instrument"]["buckets"]
-    return {
-        item: {"bucket": min(buckets, key=lambda bucket: abs(bucket["seed"] - value))["id"], "value": value}
-        for item, value in values.items()
+    seeds = sorted(bucket["seed"] for bucket in document["instrument"]["buckets"])
+    position = {
+        item: min(range(len(seeds)), key=lambda at: abs(seeds[at] - best[a] - best[p]))
+        for item, (a, p) in edges.items()
     }
+    reached = {construct: 0 for construct in wanted}
+    for item, ends in edges.items():
+        for construct in ends:
+            reached[construct] += seeds[position[item]]
 
+    def gain(item, step):
+        """✨ How much nearer the totals moving the item `step` buckets brings them, squared error saved."""
+        change = seeds[position[item] + step] - seeds[position[item]]
+        return sum((reached[c] - wanted[c]) ** 2 - (reached[c] + change - wanted[c]) ** 2 for c in edges[item])
 
-def _spanning_tree_leaves_first(edges):
-    """✨ `(item, construct, towards)` for each item of a spanning tree over the constructs, from the leaves in: the
-    item joins `construct` to `towards`, the next construct on the way to the tree's root."""
-    neighbours = defaultdict(list)
-    for item, (a, p) in edges.items():
-        neighbours[a].append((item, p))
-        neighbours[p].append((item, a))
-    root = next(iter(neighbours))
-    reached, joined = {root}, []
-    queue = [root]
-    for construct in queue:
-        for item, other in neighbours[construct]:
-            if other not in reached:
-                reached.add(other)
-                joined.append((item, other, construct))
-                queue.append(other)
-    if reached != set(neighbours):
-        raise ScenarioDoesNotHold("The items do not join every construct, so the totals cannot all be met.")
-    return reversed(joined)
+    while True:
+        moves = [
+            (gain(item, step), item, step)
+            for item in edges
+            for step in (-1, 1)
+            if 0 <= position[item] + step < len(seeds)
+        ]
+        saved, item, step = max(moves)
+        if saved <= 0:
+            break
+        change = seeds[position[item] + step] - seeds[position[item]]
+        position[item] += step
+        for construct in edges[item]:
+            reached[construct] += change
+
+    bucket_of = {bucket["seed"]: bucket["id"] for bucket in document["instrument"]["buckets"]}
+    return {item: {"bucket": bucket_of[seeds[at]], "value": seeds[at]} for item, at in position.items()}

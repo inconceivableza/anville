@@ -48,6 +48,17 @@ def test_each_offered_combination_holds_its_sort_detected_as_the_profile_promise
     assert (set(detected["tied"]), detected["outcome"]) == (TIED[profile], outcome)
 
 
+@pytest.mark.parametrize("profile, answers", OFFERED)
+def test_each_offered_sort_is_one_a_participant_could_make_by_choosing_buckets_alone(profile, answers):
+    """✨ With no fine-tuning, every card is at its bucket's seed."""
+    document = whatever_you_do()
+    seeds = {bucket["id"]: bucket["seed"] for bucket in document["instrument"]["buckets"]}
+
+    sort = seeding(document, profile, answers).sort
+
+    assert [item for item, placed in sort.items() if placed["value"] != seeds[placed["bucket"]]] == []
+
+
 @pytest.mark.parametrize("profile, answers", REFUSED)
 def test_each_other_combination_is_refused(profile, answers):
     with pytest.raises(DoesNotFit):

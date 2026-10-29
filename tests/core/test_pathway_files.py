@@ -65,18 +65,30 @@ def test_no_wording_a_reader_sees_calls_the_strengths_evaluation_an_assessment_o
 WITH_AN_INSTRUMENT =[path for path in PATHWAY_FILES if "instrument" in json.loads(path.read_text(encoding="utf-8"))]
 
 
+# ✨ The items that say "you" or "yours", so get observer wording: the faithful port's four, and the two-round cards'
+# fifteen.
+REWORDED_FOR_OBSERVERS = {
+    "whatever-you-do-faithful-port.json": ["a5", "e1", "e3", "t1"],
+    "whatever-you-do.json": [
+        "a5", "p2", "e1", "t1", "a1b", "p2b", "p6b", "e1b", "e2b", "s7b", "t1b", "t7b", "t5b", "d7b", "d5b"
+    ],
+}  # fmt: skip
+
+
 @pytest.mark.parametrize("path", WITH_AN_INSTRUMENT, ids=lambda path: path.name)
-def test_an_observer_sorts_the_participants_items_about_them_with_four_in_wording_of_their_own(path):
-    """✨ Thirty-two items are shared verbatim; the four that say "you" or "yours" get observer wording, and no item or
-    bucket an observer sorts with speaks as the participant or to them (spec, Observers)."""
+def test_an_observer_sorts_the_participants_items_about_them_with_those_saying_you_in_wording_of_their_own(path):
+    """✨ The other items are shared verbatim, and no item or bucket an observer sorts with speaks as the participant
+    or to them (spec, Observers)."""
     document = json.loads(path.read_text(encoding="utf-8"))
     sort_widget = BLOCK_TYPES["sort_assessment"].widget
     participants, observers = sort_widget(document, "participant", "Sam"), sort_widget(document, "observer", "Sam")
 
     reworded = [mine["id"] for mine, theirs in zip(participants["items"], observers["items"]) if mine != theirs]
-    assert reworded == ["a5", "e1", "e3", "t1"]
+    assert reworded == REWORDED_FOR_OBSERVERS[path.name]
     shown = [item["text"] for item in observers["items"]] + [bucket["label"] for bucket in observers["buckets"]]
-    assert [text for text in shown if re.search(r"\b(you|your|yours|me|my)\b", text, re.IGNORECASE)] == []
+    # ✨ Leaving out what is quoted: “count me in” is someone else speaking.
+    unquoted = [re.sub(r"“[^”]*”", "", text) for text in shown]
+    assert [text for text in unquoted if re.search(r"\b(you|your|yours|me|my)\b", text, re.IGNORECASE)] == []
 
 
 @pytest.mark.parametrize("path", OWN_WORDING, ids=lambda path: path.name)

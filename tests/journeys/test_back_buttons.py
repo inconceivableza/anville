@@ -21,7 +21,8 @@ from tests.journeys.test_whatever_you_do import (
     people_answer,
     through_section_1,
 )
-from tests.journeys.test_whatever_you_do_faithful_port import complete, submit_the_sort
+from tests.journeys.test_whatever_you_do import submit_the_sort
+from tests.journeys.test_whatever_you_do_faithful_port import complete
 
 RESULTS = "/results/strengths-sort/"
 COMPARISON = f"{RESULTS}comparison/"

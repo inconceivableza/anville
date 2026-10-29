@@ -2,10 +2,12 @@
 // For licensing information see ../../LICENSE.md
 
 // ✨ The sort assessment: every item sorted into a bucket one card at a time, then fine-tuned with a slider
-// seeded by its bucket. An observer may send before fine-tuning. The server hands over the items and the buckets (weakest first) as JSON beside the
+// seeded by its bucket. An observer may send before fine-tuning, and a document may skip fine-tuning for everyone,
+// each card then sent at its bucket's seed. The server hands over the items and the buckets (weakest first) as JSON beside the
 // form. The widget's only output is the form's hidden `value`, the whole sort as JSON; the server never
 // trusts it, and checks and scores it on submit. Nothing is kept before then, so a reload starts the sort
-// again, as in the prototype. Card order is shuffled per visit and not recorded (see the spec's open items).
+// again, as in the prototype. Card order is shuffled per visit and not recorded (see the spec's open items), and a card
+// is never dealt straight after its twin, the same card reworded.
 //
 // The widget's own wording ("Sort your strengths", "Not me", …) comes with the items, in the reader's wording: an
 // observer's is about the participant, in the third person.
@@ -23,14 +25,15 @@ function mountSort(form) {
   // ✨ `placed` comes only with a demo profile, on a development or demo system (fix-23): each item's bucket and value,
   // so the sort opens with every card already placed and fine-tuning's sliders already set. The participant still
   // sends it themselves. Everyone else gets none and starts from a full deck.
-  const { items, buckets, wording, sends_before_fine_tuning, placed = {} } = JSON.parse(
+  const { items, buckets, wording, fine_tunes, sends_before_fine_tuning, placed = {} } = JSON.parse(
     document.getElementById(form.dataset.sort).textContent,
   );
   const stage = form.querySelector(".sort-stage");
   const announcer = form.querySelector("[data-sort-announcer]");
   const progress = form.querySelector(".sort-progress");
   const bucketOf = (item) => buckets.find((bucket) => bucket.id === placed[item.id]?.bucket);
-  const deck = shuffled(items.filter((item) => !bucketOf(item))); // ✨ Still to sort; the first is the card on show.
+  const deck = dealt(items.filter((item) => !bucketOf(item))); // ✨ Still to sort; the first is the card on show.
+  const sortedPercent = fine_tunes ? SORTED_PERCENT : 100;
   // ✨ Every placement, { item, bucket }, in the order made, so undo can go all the way back.
   const history = items.filter(bucketOf).map((item) => ({ item, bucket: bucketOf(item) }));
   let flying = false;
@@ -59,7 +62,7 @@ function mountSort(form) {
     const focused = document.activeElement?.dataset?.focus;
     stage.replaceChildren(...screen());
     progress.value =
-      screen === fineTuning ? SORTED_PERCENT : Math.round((history.length / items.length) * SORTED_PERCENT);
+      screen === fineTuning ? sortedPercent : Math.round((history.length / items.length) * sortedPercent);
     if (!hadFocus) return;
     const same = stage.querySelector(`[data-focus="${focused}"]:not(:disabled)`);
     (same ?? stage.querySelector("[data-focus-start]")).focus();
@@ -70,7 +73,7 @@ function mountSort(form) {
     const done = items.length - deck.length;
     announcer.textContent = `Card ${done + 1} of ${items.length}: ${deck[0].text}`;
     return [
-      stepHeader(1, "Sort", wording.sort_heading),
+      stepHeader(fine_tunes && 1, "Sort", wording.sort_heading),
       el(
         "div",
         { class: "card-area" },
@@ -135,7 +138,7 @@ function mountSort(form) {
   function allSorted() {
     announcer.textContent = `All ${items.length} sorted.`;
     return [
-      stepHeader(1, "Sort", wording.sort_heading),
+      stepHeader(fine_tunes && 1, "Sort", wording.sort_heading),
       el(
         "div",
         { class: "sort-done" },
@@ -153,27 +156,29 @@ function mountSort(form) {
             ),
           ),
         ),
-        ...(sends_before_fine_tuning ? [el("p", { class: "sort-done-choice" }, wording.send_or_fine_tune)] : []),
+        ...(fine_tunes && sends_before_fine_tuning
+          ? [el("p", { class: "sort-done-choice" }, wording.send_or_fine_tune)]
+          : []),
         el(
           "div",
           { class: "sort-done-actions" },
-          on(
-            el(
-              "button",
-              { type: "button", class: "pill", "data-focus": "continue" },
-              wording.fine_tune_label,
-            ),
-            "click",
-            () => {
-              render(fineTuning);
-              writeAnswer();
-            },
-          ),
-          ...(sends_before_fine_tuning ? [sendNowButton()] : []),
+          ...(fine_tunes ? [fineTuneButton()] : [sendButton()]),
+          ...(fine_tunes && sends_before_fine_tuning ? [sendNowButton()] : []),
         ),
         undoButton(),
       ),
     ];
+  }
+
+  function fineTuneButton() {
+    return on(
+      el("button", { type: "button", class: "pill", "data-focus": "continue" }, wording.fine_tune_label),
+      "click",
+      () => {
+        render(fineTuning);
+        writeAnswer();
+      },
+    );
   }
 
   // ✨ An observer may send as soon as every card is placed. Only the buckets are sent: the server gives each item its
@@ -183,11 +188,22 @@ function mountSort(form) {
     return on(
       el("button", { type: "submit", class: "sort-skip sort-submit", "data-focus": "send" }, wording.send_now_label),
       "click",
-      () => {
-        const sort = Object.fromEntries(history.map(({ item, bucket }) => [item.id, { bucket: bucket.id }]));
-        form.querySelector('input[name="value"]').value = JSON.stringify(sort);
-      },
+      writeBuckets,
     );
+  }
+
+  // ✨ Where the document skips fine-tuning, the one way on: sending the buckets, for everyone.
+  function sendButton() {
+    return on(
+      el("button", { type: "submit", class: "pill sort-submit", "data-focus": "send" }, wording.submit_label),
+      "click",
+      writeBuckets,
+    );
+  }
+
+  function writeBuckets() {
+    const sort = Object.fromEntries(history.map(({ item, bucket }) => [item.id, { bucket: bucket.id }]));
+    form.querySelector('input[name="value"]').value = JSON.stringify(sort);
   }
 
   function fineTuning() {
@@ -251,14 +267,25 @@ function mountSort(form) {
   render(sorting);
 }
 
+// ✨ With no step (a sort that skips fine-tuning has only the one), no step badge.
 function stepHeader(step, name, title, intro) {
   return el(
     "header",
     { class: "section-header" },
-    el("p", { class: "step-badge" }, `Step ${step} of 2 — ${name}`),
+    ...(step ? [el("p", { class: "step-badge" }, `Step ${step} of 2 — ${name}`)] : []),
     el("h2", { tabindex: -1, "data-focus-start": true }, title),
     ...(intro ? [el("p", {}, intro)] : []),
   );
+}
+
+// ✨ Shuffled again until no card is straight after its twin. Most shuffles of 72 cards in 36 twins have at least one
+// pair side by side, but about one in three has none, so a few tries do; a deck that cannot be dealt so (two cards,
+// twins) is dealt as last shuffled.
+function dealt(items) {
+  const apart = (deck) => deck.every((item, i) => i === 0 || deck[i - 1].twin !== item.id);
+  let deck = shuffled(items);
+  for (let tries = 1; tries < 1000 && !apart(deck); tries++) deck = shuffled(items);
+  return deck;
 }
 
 // ✨ Fisher–Yates over a copy, unseeded, as the prototype's was.

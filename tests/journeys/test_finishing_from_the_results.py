@@ -20,8 +20,14 @@ from tests.journeys.test_invitations import issue_link
 from tests.journeys.test_observer_assessment import send
 from tests.journeys.test_observer_landing import claim
 from tests.journeys.test_results import STRENGTHS, submit_sort
-from tests.journeys.test_whatever_you_do import answer_onboarding, people_answer, the_pathway
-from tests.journeys.test_whatever_you_do_faithful_port import a_whole_sort, complete, submit_the_sort
+from tests.journeys.test_whatever_you_do import (
+    a_whole_sort,
+    answer_onboarding,
+    people_answer,
+    submit_the_sort,
+    the_pathway,
+)
+from tests.journeys.test_whatever_you_do_faithful_port import complete
 
 RESULTS = "/results/strengths-sort/"
 FINISH_SECTION_1 = 'action="/sections/designed/complete/'  # ✨ its refusal's place after it (fix-2)

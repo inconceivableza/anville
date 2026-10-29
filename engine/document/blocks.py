@@ -196,22 +196,41 @@ def _sort_widget(document, role, name=""):
     """✨ What the sort widget shows: every item in the reader's wording, the buckets weakest first, and the widget's
     own wording, each field the document's or else the engine's. `{name}` becomes the participant's name, as plain
     text, never through `format()`. An observer is offered sending as soon as every card is placed; a participant
-    always fine-tunes."""
+    always fine-tunes, unless the document skips fine-tuning for everyone. Each item names its twin, either way round,
+    so the widget never deals the two one after the other."""
     instrument = document["instrument"]
     authored = document.get("presentation", {}).get("sort_wording", {})
+    twins = {}
+    for item in instrument["items"]:
+        if "twin" in item:
+            twins[item["id"]], twins[item["twin"]] = item["twin"], item["id"]
 
     def shown(text):
         return text_for(text, role).replace("{name}", name)
 
     return {
-        "items": [{"id": item["id"], "text": shown(item["text"])} for item in instrument["items"]],
+        "items": [
+            {
+                "id": item["id"],
+                "text": shown(item["text"]),
+                **({"twin": twins[item["id"]]} if item["id"] in twins else {}),
+            }
+            for item in instrument["items"]
+        ],
         "buckets": [
             {"id": bucket["id"], "label": shown(bucket["label"]), "seed": bucket["seed"]}
             for bucket in instrument["buckets"]
         ],
         "wording": {field: shown(authored.get(field, default)) for field, default in SORT_WORDING.items()},
+        "fine_tunes": not skips_fine_tuning(document),
         "sends_before_fine_tuning": role == "observer",
     }
+
+
+def skips_fine_tuning(document):
+    """✨ Whether the document's sorts are sent once every card is placed, by everyone, each card at its bucket's
+    seed."""
+    return document.get("sorts_skip_fine_tuning", False)
 
 
 class BlockType(NamedTuple):
