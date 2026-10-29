@@ -400,6 +400,7 @@ def test_the_own_link_always_offers_itself_to_copy(participant, observer, sent):
 
     assert copy_box(page) == own_link
     assert "The one you were sent no longer works" in page
+    assert "withdraw your answers later" in page  # ✨ the other reason to keep it (the developer, 29 Oct)
     assert "only this once" not in page
 
 
