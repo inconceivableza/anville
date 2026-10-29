@@ -2529,7 +2529,8 @@ body:not(.framed) .question-card > p + form {
   border: none;
   border-top: 1px solid var(--border);
   margin: 0;
-  padding: var(--space-md) 0;
+  /* ✨ A little more below the buttons than above the question, so each answer sits with its own question (29 Oct). */
+  padding: var(--space-md) 0 var(--space-lg);
 }
 
 .coach-question:first-of-type {
@@ -2537,21 +2538,23 @@ body:not(.framed) .question-card > p + form {
   padding-top: 4px;
 }
 
+/* ✨ Each question one sentence in one style, its note below in the checklist's small grey (29 Oct). Floated, so the
+   browser no longer sets the legend into the fieldset's top border: the padding then sits above the question, not
+   between it and its note, and the rule stays a whole line above it. */
 .coach-question legend {
+  float: left;
+  width: 100%;
   font-family: var(--font-heading);
   font-size: var(--text-lg);
-  line-height: 1.45;
-  margin-bottom: 4px;
+  font-weight: 500;
+  line-height: 1.35;
+  margin-bottom: var(--space-2xs);
   padding: 0;
+  text-wrap: pretty;
 }
 
-.coach-ask {
-  display: block;
-}
-
-.coach-q {
-  display: block;
-  font-weight: 600;
+.coach-question legend + * {
+  clear: both;
 }
 
 .coach-note {

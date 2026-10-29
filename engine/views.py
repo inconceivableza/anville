@@ -873,7 +873,15 @@ def _checklist_screen(
     (`issued` is a link just issued, shown this once). On the intro while choosing again, `kept` is the coach who
     stays until another is saved."""
     answers = answers or {}
-    questions = [{**question, "answer": answers.get(question["id"])} for question in text["questions"]]
+    # ✨ `asked` completes "Do you think <name>…" in one sentence, its first letter lowered; the flags keep the question.
+    questions = [
+        {
+            **question,
+            "answer": answers.get(question["id"]),
+            "asked": question["question"][:1].lower() + question["question"][1:],
+        }
+        for question in text["questions"]
+    ]
     flagged = set(outcome.flagged) if outcome else set()
     return {
         "screen": screen,

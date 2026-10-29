@@ -52,7 +52,8 @@
     <p class="coach-sub">There are no right answers here — an honest "not sure" is far more useful than an optimistic yes.</p>
     {% for question in checklist.questions %}
       <fieldset class="coach-question">
-        <legend><span class="coach-ask">Do you think {{ checklist.name }}…</span> <span class="coach-q">{{ question.question }}?</span></legend>
+        {# ✨ One sentence in one style, with its note below, in place of the mock-up's three (29 Oct). #}
+        <legend>Do you think {{ checklist.name }} {{ question.asked }}?</legend>
         {% if question.note %}<p class="coach-note">{{ question.note }}</p>{% endif %}
         <div class="coach-options">
           <label class="coach-option coach-yes"><input type="radio" name="answer-{{ question.id }}" value="yes"{% if question.answer == "yes" %} checked{% endif %}> <span>Yes</span></label>

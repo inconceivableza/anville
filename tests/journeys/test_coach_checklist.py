@@ -128,8 +128,10 @@ def test_continuing_asks_the_six_questions_about_the_candidate_by_name(participa
     assert screen(page) == "questions"
     assert "About Sam" in text(page)
     assert "There are no right answers here — an honest \"not sure\" is far more useful than an optimistic yes." in text(page)
-    assert text(page).count("Do you think Sam…") == 6
-    assert "Can ask questions rather than hand out answers?" in text(page)
+    # ✨ Each question one sentence in one style, its first letter lowered after the name (29 Oct, image20's tidy).
+    assert "<legend>Do you think Sam can ask questions rather than hand out answers?</legend>" in page
+    assert text(page).count("Do you think Sam ") == 6
+    assert "Do you think Sam…" not in text(page)
     assert "Some people genuinely can't resist solving it for you. Be realistic about this one." in text(page)
     assert hidden(page, "name") == "Sam"
 
