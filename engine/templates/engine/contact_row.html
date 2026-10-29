@@ -51,7 +51,8 @@
     </label>
     <label class="contact-field contact-email">
       <span class="visually-hidden">Person {{ row.number }}, email address</span>
-      <input type="email" name="email" placeholder="Email address" value="{{ row.email }}" maxlength="254" autocomplete="off" form="list-{{ block.id }}"{% if row.contact_id %} id="person-{{ row.contact_id }}-email"{% endif %}{% if row.invalid == "email" %} aria-invalid="true"{% endif %}>
+      {# ✨ The pattern asks what the server does, a dot and two letters after it, which the browser's own check does not (29 Oct), so "Get link" goes green only for an address the server will take. #}
+      <input type="email" name="email" placeholder="Email address" value="{{ row.email }}" maxlength="254" pattern="[^@\s]+@[^@\s]+\.[A-Za-z]{2,}" autocomplete="off" form="list-{{ block.id }}"{% if row.contact_id %} id="person-{{ row.contact_id }}-email"{% endif %}{% if row.invalid == "email" %} aria-invalid="true"{% endif %}>
     </label>
     {% if row.contact_id %}
       <button type="submit" class="pill ghost small save-fallback" form="list-{{ block.id }}" name="row" value="{{ row.number }}"

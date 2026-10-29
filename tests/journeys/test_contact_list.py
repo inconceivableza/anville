@@ -12,6 +12,8 @@ never touches anyone else (ticket 51a).
 import re
 
 import pytest
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.test import Client
 
 from engine.models import Contact, Invitation, Response
@@ -282,6 +284,26 @@ def test_each_row_asks_for_a_first_name_and_an_email_address_as_the_prototype_do
 
     assert re.search(r'<input[^>]*type="text"[^>]*name="name"[^>]*placeholder="First name"', page)
     assert re.search(r'<input[^>]*type="email"[^>]*name="email"[^>]*placeholder="Email address"', page)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "typed", ["example@e", "example@example", "example@example.c", "example@example.co", "jo.bloggs@mail.example.org"]
+)
+def test_the_email_box_takes_as_an_email_only_what_the_server_will(participant, typed):
+    """✨ A browser reads "example@e" as an email, as the standard allows a domain without a dot, so "Get link" went
+    green for it; the server needs a dot and two letters after it (29 Oct). A pattern on the box makes the browser
+    agree."""
+    box = re.search(r'<input[^>]*type="email"[^>]*>', shown(participant, ONBOARDING)).group(0)
+    pattern = re.search(r'pattern="([^"]+)"', box)
+    try:
+        validate_email(typed)
+        server_takes_it = True
+    except ValidationError:
+        server_takes_it = False
+
+    assert pattern, "no pattern on the email box"
+    assert bool(re.fullmatch(pattern.group(1), typed)) is server_takes_it
 
 
 @pytest.mark.django_db
