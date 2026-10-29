@@ -4,7 +4,9 @@
 {% comment %}
   ✨ An observer's own link, once they have sent answers, or a coach's that accepted, after it has expired (29 Oct).
   Saying so comes first; withdrawing what they shared stays possible, as easily as it was given (GDPR Article 7(3)),
-  but quietly, below. Names nobody, since an old link may have been passed on. Then word that it is done.
+  but quietly, below. It names the participant, as the link did while it worked, and gives the page's own address to
+  come back to. "withdraw my data" sits in the sentence as a link would, but is the form's button, since mail filters
+  open every link. Then word that it is done.
 {% endcomment %}
 {% block head_title %}This link has expired{% endblock head_title %}
 
@@ -15,12 +17,9 @@
   {% else %}
     <h1>This link has expired</h1>
     <p>Thank you for taking part.</p>
-    <div class="expired-withdraw">
-      <p>If you'd like to withdraw what you shared, you can do it here. This can't be undone. Keep this link in case you want to do this later.</p>
-      <form method="post" action="{{ action }}">
-        {% csrf_token %}
-        <button type="submit" class="pill ghost small">Withdraw my data</button>
-      </form>
-    </div>
+    <div class="expired-withdraw"><form method="post" action="{{ action }}">
+      {% csrf_token %}
+      <p>If you'd like to withdraw the data you've shared with us, including {% if coach %}your agreement to be {{ name }}'s coach{% else %}your evaluation of {{ name }}{% endif %}, you can do it from this page ({{ here }}). To withdraw everything linked to you: <button type="submit" class="link-button">withdraw my data</button>. This can't be undone, so only do it if you want your {% if coach %}acceptance{% else %}answers{% endif %} removed.</p>
+    </form></div>
   {% endif %}
 {% endblock content %}

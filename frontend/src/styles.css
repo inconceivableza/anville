@@ -2131,7 +2131,26 @@ form + .way-on,
 .expired-withdraw {
   margin-top: var(--space-xl);
   color: var(--muted);
-  font-size: 14px;
+  font-size: 12px;
+}
+
+/* ✨ A form's button that reads as a link in its sentence (29 Oct), for an action a plain link must not take, since
+   mail filters open every link. */
+.link-button {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.link-button:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
 }
 
 .pill.full {

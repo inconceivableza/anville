@@ -17,6 +17,7 @@ import pytest
 import time_machine
 from django.utils import timezone
 
+from access.models import name_shown_for
 from engine.hub import COACH_ANSWER_LABELS, LABELS, NOT_STARTED
 from engine.models import Contact, Invitation, ObserverResponse, Response
 from tests.documents import pathway_document
@@ -424,8 +425,18 @@ def test_only_an_acceptance_can_be_withdrawn(participant, observer, answer):
 # Once an accepting coach's link has expired (29 Oct): withdrawing is as easy as consenting was (GDPR Article 7(3))
 
 
+def withdraw_in_the_sentence(link):
+    """✨ The expired page's paragraph inside the form that withdraws through `link`, with its button in a sentence."""
+    return (
+        r'<form method="post" action="%swithdraw/">.*?<p>[^<]*To withdraw everything linked to you: '
+        r'<button type="submit" class="link-button">withdraw my data</button>' % re.escape(link)
+    )
+
+
 @pytest.mark.django_db
-def test_an_expired_link_that_accepted_says_so_and_offers_only_withdrawal(participant, observer):
+def test_an_expired_link_that_accepted_says_so_and_offers_only_withdrawal_from_that_page(participant, observer):
+    """✨ As the observer's expired page does (the developer's 29 Oct hand check), naming the participant the coach
+    agreed to coach, and giving the page's own address."""
     with time_machine.travel(ISSUED_AT, tick=False):
         link = issue_coach_link(participant)
         answer_as_coach(observer, link, "accept")
@@ -436,12 +447,13 @@ def test_an_expired_link_that_accepted_says_so_and_offers_only_withdrawal(partic
     page = opened.content.decode()
     assert opened.status_code == 410
     assert "This link has expired" in page
-    assert re.search(r'<form method="post" action="%swithdraw/"' % re.escape(link), page)
-    assert re.search(r"can.t be undone", page)
-    assert "Keep this link" in page
+    assert f"including your agreement to be {name_shown_for(Response.objects.get().participant)}'s coach," in page
+    assert f"from this page (http://testserver{link})" in page
+    assert re.search(withdraw_in_the_sentence(link), page, re.S)
+    assert re.search(r"can.t be undone, so only do it if you want your acceptance removed", page)
+    assert "Withdraw my data" not in page
     assert 'name="commitment"' not in page
-    for detail in ("Sam", "sam@example.com"):
-        assert detail not in page
+    assert "sam@example.com" not in page
 
 
 @pytest.mark.django_db

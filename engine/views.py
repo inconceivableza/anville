@@ -1985,8 +1985,9 @@ def observe(request, token):
     """
     invitation = Invitation.live(token)
     if invitation is None:
-        if Invitation.expired_claim(token) is not None:
-            return _expired_link(request, reverse("withdrawal_by_link", args=[token]))
+        expired = Invitation.expired_claim(token)
+        if expired is not None:
+            return _expired_link(request, expired, reverse("withdrawal_by_link", args=[token]))
         return _observers_page(request, token, came_by_link=True)  # ✨ an observer's own link, or the refusal
     if invitation.claimed_at is not None:
         return render(request, "engine/link_used.html", status=410)
@@ -2082,8 +2083,9 @@ def coaching(request, token):
     """
     invitation = Invitation.live(token, role=Contact.Role.COACH)
     if invitation is None:
-        if Invitation.expired_acceptance(token) is not None:
-            return _expired_link(request, reverse("coach_withdrawal", args=[token]))
+        expired = Invitation.expired_acceptance(token)
+        if expired is not None:
+            return _expired_link(request, expired, reverse("coach_withdrawal", args=[token]))
         return _refuse_link(request)
     return _coach_page(request, invitation, token)
 
@@ -2125,14 +2127,14 @@ def coach_withdrawal(request, token):
     Before the acceptance goes, whatever it opened is recorded as opened, as the participant's next page would have
     recorded it, so a section it opened stays open (ADR 0019) however soon the coach withdraws.
 
-    An expired link that accepted still withdraws (29 Oct), on the expired link's page, which names nobody."""
+    An expired link that accepted still withdraws (29 Oct), on the expired link's page (`_expired_link`)."""
     invitation = Invitation.withdrawable_by_coach(token)
     if invitation is None:
         expired = Invitation.expired_acceptance(token)
         if expired is None:
             return _refuse_link(request)
         if request.method == "GET":
-            return _expired_link(request, reverse("coach_withdrawal", args=[token]))
+            return _expired_link(request, expired, reverse("coach_withdrawal", args=[token]))
         _store_completions_and_openings(expired.contact.response)
         if not Invitation.withdraw_as_coach(token):
             return _refuse_link(request)
@@ -2283,16 +2285,17 @@ def withdrawal(request, token=None):
     the observer to ask the people who run the service. A participant's withdrawn consent closes every other page of
     the observer's, never this one (ticket 45).
 
-    An own link that has expired, once its observer sent answers, still withdraws (29 Oct), on the expired link's page,
-    which names nobody.
+    An own link that has expired, once its observer sent answers, still withdraws (29 Oct), on the expired link's page
+    (`_expired_link`).
     """
     secret = request.COOKIES.get(OBSERVER_COOKIE) if token is None else token
     invitation = Invitation.claimed_by(secret, for_withdrawal=True)
     if invitation is None:
-        if token is None or Invitation.expired_claim(token) is None:
+        expired = Invitation.expired_claim(token) if token is not None else None
+        if expired is None:
             return _refuse_link(request)
         if request.method == "GET":
-            return _expired_link(request, reverse("withdrawal_by_link", args=[token]))
+            return _expired_link(request, expired, reverse("withdrawal_by_link", args=[token]))
         ObserverResponse.withdraw(token)
         return _expired_link(request, withdrawn=True)
     _, name = _asked_by(invitation)
@@ -2387,11 +2390,16 @@ def _refuse_link(request):
     return render(request, "engine/link_refused.html", status=404)
 
 
-def _expired_link(request, action=None, *, withdrawn=False):
+def _expired_link(request, expired=None, action=None, *, withdrawn=False):
     """✨ An observer's own link or an accepting coach's once it has expired (29 Oct): saying so, with a quiet way to
-    withdraw what they shared, posting to `action`; or, `withdrawn`, word that it is done. Names nobody, since an old
-    link may have been passed on. Never cached, since it is reached by a secret."""
-    context = {"action": action, "withdrawn": withdrawn}
+    withdraw what they shared, posting to `action`; or, `withdrawn`, word that it is done. It names the participant
+    the `expired` invitation was for, as the link did while it worked, so whoever holds it learns nothing new, and gives
+    its own address to come back to (the developer's 29 Oct hand check). Never cached, since it is reached by a
+    secret."""
+    context = {"action": action, "withdrawn": withdrawn, "here": request.build_absolute_uri()}
+    if expired is not None:
+        context["name"] = _asked_by(expired)[1]
+        context["coach"] = expired.contact.role == Contact.Role.COACH
     shown = render(request, "engine/link_expired.html", context, status=200 if withdrawn else 410)
     shown["Cache-Control"] = "no-store"
     return shown

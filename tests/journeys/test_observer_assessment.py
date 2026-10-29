@@ -8,6 +8,7 @@ An observer reaches it only through the link they claimed, sends it once, and ne
 
 import json
 import re
+from pathlib import Path
 
 import pytest
 from django.test import Client
@@ -18,7 +19,7 @@ from access.models import Consent, name_shown_for
 from engine.models import Contact, Invitation, ObserverAssessments, ObserverResponse, Response
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.test_coach_checklist import choose
-from tests.journeys.test_coach_link import issue_coach_link, with_a_coach_and_contacts
+from tests.journeys.test_coach_link import issue_coach_link, with_a_coach_and_contacts, withdraw_in_the_sentence
 from tests.journeys.test_consent import give_consent, withdraw_consent
 from tests.journeys.test_contact_list import CHRIS, JO, PRIYA, save_contacts, take_off_the_list
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
@@ -296,9 +297,12 @@ def expire_every_link():
 
 
 @pytest.mark.django_db
-def test_an_expired_own_link_whose_observer_sent_says_so_and_offers_only_withdrawing(
+def test_an_expired_own_link_whose_observer_sent_says_so_and_offers_only_withdrawing_from_that_page(
     participant, observer  # noqa: F811
 ):
+    """✨ The developer's 29 Oct hand check: it names the participant, as the link did while it worked, so naming them
+    tells whoever holds it nothing new, and gives the page's own address to come back to. "withdraw my data" sits in
+    the sentence as a link would, but posts, since mail filters open every link."""
     own_link = claim(observer, issue_link(participant, "Jo"))
     send(observer, complete_sort())
     expire_every_link()
@@ -306,13 +310,22 @@ def test_an_expired_own_link_whose_observer_sent_says_so_and_offers_only_withdra
     opened = Client().get(own_link)
 
     page = opened.content.decode()
+    name = name_shown_for(Response.objects.get().participant)
     assert opened.status_code == 410
     assert "This link has expired" in page
-    assert re.search(r'<form method="post" action="%swithdraw/"' % re.escape(own_link), page)
-    assert re.search(r"can.t be undone", page)
-    assert "Keep this link" in page
+    assert f"including your evaluation of {name}," in page
+    assert f"from this page (http://testserver{own_link})" in page
+    assert re.search(withdraw_in_the_sentence(own_link), page, re.S)
+    assert re.search(r"can.t be undone, so only do it if you want your answers removed", page)
+    assert "Withdraw my data" not in page
     assert widget_data(page) is None
-    assert name_shown_for(Response.objects.get().participant) not in page
+
+
+def test_the_expired_pages_withdraw_paragraph_is_small_and_its_button_reads_as_a_link():
+    stylesheet = (Path(__file__).resolve().parents[2] / "frontend/src/styles.css").read_text(encoding="utf-8")
+
+    assert re.search(r"\.expired-withdraw \{[^}]*font-size: 12px;", stylesheet)
+    assert re.search(r"\.link-button \{[^}]*text-decoration: underline;", stylesheet)
 
 
 @pytest.mark.django_db
