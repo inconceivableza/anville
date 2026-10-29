@@ -214,6 +214,19 @@ SITE_PHOTO_CREDITS = [
     "Photograph of a mother holding her sleeping baby, by Kelly Sikkema on Unsplash.",
     "Photograph of a pastor speaking with a microphone, by AMONWAT DUMKRUT on Unsplash.",
     "Photograph of a student with headphones studying in a library, by Zoshua Colah on Unsplash.",
+    "Photograph of a woman working in a rice paddy, by Nandhu Kumar on Pexels.",
+    "Photograph of a chef chopping vegetables in a restaurant kitchen, by Pylyp Sukhenko on Unsplash.",
+    "Photograph of a man and a child looking at a plant, by OPPO Find X5 Pro on Unsplash.",
+    "Photograph of a mechanic working on a machine in a garage, by Kato Blackmore on Unsplash.",
+    "Photograph of a doctor in blue scrubs, by Bruno Rodrigues on Unsplash.",
+    "Photograph of a builder in a hard hat on a building frame, by Josh Olalde on Unsplash.",
+    "Photograph of a grandmother peeling potatoes with her grandson, by CDC on Unsplash.",
+    "Photograph of an artist holding a paint palette, by Vitaly Gariev on Unsplash.",
+    "Photograph of a woman working at a laptop by a window, by Andrew Neel on Unsplash.",
+    "Photograph of a scientist in a white coat, by National Cancer Institute on Unsplash.",
+    "Photograph of a fisherman holding a cormorant on a raft, by Willian Justen de Vasconcellos on Unsplash.",
+    "Photograph of a carer helping an elderly couple with colouring, by Age Cymru on Unsplash.",
+    "Photograph of a graduate in a cap and gown, by Albert Vincent Wu on Unsplash.",
 ]
 
 

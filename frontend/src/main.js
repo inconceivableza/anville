@@ -522,9 +522,8 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   update();
 }
 
-// --- Calling ring: adapt the existing Meet cards without adding sample people or images ---
+// --- Calling ring: v3's, from the Meet cards in the page ---
 (() => {
-  if (reducedMotion) return;
   let stage = document.getElementById("ringStage");
   const ring = document.getElementById("ring") ?? document.querySelector(".meet-cards");
   if (!ring) return;
@@ -548,14 +547,14 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   }
 
   const angle = 360 / cards.length;
-  const cardInterval = 7000;
+  const speed = (0.035 * 60) / 1000; // ✨ v3's 0.035° a frame, at 60 frames a second, in degrees a millisecond
   let radius = 0;
   let rotation = 0;
   let drag;
   // ✨ Only the pause button between the arrows stops the ring (fix-17): hovering or focusing it no longer does, so it
-  // never stops or starts unasked. The button's name says what pressing it will do. Reduced motion keeps the plain
-  // cards, returning above before any button is made.
-  let paused = false;
+  // never stops or starts unasked. The button's name says what pressing it will do. Under reduced motion the ring
+  // starts paused and the arrows turn it without easing (29 Oct); it turns on its own only if the play button is pressed.
+  let paused = reducedMotion;
   const toggle = stage.querySelector("[data-ring-toggle]");
   const pauseIcon = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><rect x="3" y="2" width="3.5" height="12" rx="1" fill="currentColor"/><rect x="9.5" y="2" width="3.5" height="12" rx="1" fill="currentColor"/></svg>';
   const playIcon = '<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path d="M4 2.2v11.6a.8.8 0 0 0 1.2.7l9-5.8a.8.8 0 0 0 0-1.4l-9-5.8A.8.8 0 0 0 4 2.2z" fill="currentColor"/></svg>';
@@ -567,25 +566,29 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   let lastFrame;
   let transitionUntil = 0;
   let transitionTimer;
+  // ✨ v3's sizes (29 Oct): the cards stand on the inside of the ring, the viewer a little in from its centre.
   const layout = () => {
     const width = stage.clientWidth;
-    const cardWidth = Math.min(280, Math.max(220, width * 0.55));
-    radius = (cardWidth + Math.max(16, width * 0.025)) * cards.length / (2 * Math.PI);
+    const cardWidth = Math.max(180, Math.min(430, width * 0.27));
+    const cardHeight = cardWidth * 1.25;
+    radius = (cardWidth + Math.max(12, width * 0.016)) * cards.length / (2 * Math.PI);
     const controlsSpace = parseFloat(getComputedStyle(stage).getPropertyValue("--ring-controls-space")) || 0;
-    stage.style.height = `${Math.max(360, Math.min(500, cardWidth * 1.35)) + controlsSpace}px`;
+    stage.style.height = `${cardHeight * 0.9 + controlsSpace}px`;
+    stage.style.perspective = `${radius * 0.62}px`;
     cards.forEach((card, index) => {
       card.style.width = `${cardWidth}px`;
-      card.style.transform = `translate(-50%, -50%) rotateY(${index * angle}deg) translateZ(${radius}px)`;
+      card.style.height = `${cardHeight}px`;
+      card.style.transform = `translate(-50%, -50%) rotateY(${index * angle}deg) translateZ(${-radius}px)`;
     });
   };
   const draw = () => {
-    ring.style.transform = `rotateY(${rotation}deg)`;
+    ring.style.transform = `translateZ(${radius * 0.62}px) rotateY(${rotation}deg)`;
   };
   const tick = (now) => {
     const elapsed = lastFrame === undefined ? 0 : Math.min(now - lastFrame, 64);
     lastFrame = now;
     if (!paused && !drag && now >= transitionUntil) {
-      rotation -= angle * elapsed / cardInterval;
+      rotation -= speed * elapsed;
       draw();
     }
     requestAnimationFrame(tick);
@@ -611,6 +614,10 @@ for (const el of document.querySelectorAll("#reveal, [data-reveal]")) {
   stage.querySelectorAll("[data-ring-step]").forEach((button) => {
     button.addEventListener("click", () => {
       rotation += Number(button.dataset.ringStep) * angle;
+      if (reducedMotion) {
+        draw();
+        return;
+      }
       transitionUntil = performance.now() + 700;
       ring.style.transition = "transform 700ms cubic-bezier(.2,.7,.2,1)";
       draw();

@@ -128,14 +128,25 @@
     <!-- =================== MEET =================== -->
     <section class="panel meet" id="about">
       <h2>Everyone has a purpose. Do you know yours?</h2>
-      {# ✨ Each card's class names its photo (drawn in the stylesheet), so the photos show without JavaScript or under reduced motion. #}
-      {# ✨ Photos alone, as v3's people are, with no captions (the content owner, 28 Oct); each names its calling to a screen reader. #}
+      {# ✨ v3's people, in its order, as photos alone (29 Oct); main.js turns the row into v3's ring. Its nurse, musician and barista are left out, as their photos are not free to use. #}
       <div class="meet-cards">
-        <div class="mc mc-teacher" role="img" aria-label="Teacher"></div>
-        <div class="mc mc-carpenter" role="img" aria-label="Electrician"></div>
-        <div class="mc mc-parent" role="img" aria-label="Parent"></div>
-        <div class="mc mc-pastor" role="img" aria-label="Church planter"></div>
-        <div class="mc mc-student" role="img" aria-label="Student"></div>
+        <figure class="mc"><img src="{% static 'callings/teacher.jpg' %}" alt="Teacher" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/farmer.jpg' %}" alt="Farmer" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/student.jpg' %}" alt="Student" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/chef.jpg' %}" alt="Chef" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/gardener.jpg' %}" alt="Gardener" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/mechanic.jpg' %}" alt="Mechanic" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/parent.jpg' %}" alt="Parent" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/doctor.jpg' %}" alt="Doctor" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/builder.jpg' %}" alt="Builder" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/baker.jpg' %}" alt="Grandmother" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/artist.jpg' %}" alt="Artist" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/entrepreneur.jpg' %}" alt="Founder" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/scientist.jpg' %}" alt="Scientist" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/fisherman.jpg' %}" alt="Fisherman" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/pastor.jpg' %}" alt="Pastor" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/carer.jpg' %}" alt="Carer" loading="lazy"></figure>
+        <figure class="mc"><img src="{% static 'callings/graduate.jpg' %}" alt="Graduate" loading="lazy"></figure>
       </div>
       <a class="pill" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
     </section>

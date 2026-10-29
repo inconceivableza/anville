@@ -239,23 +239,40 @@ def test_the_testimonial_is_the_one_quote_alone(client):
     assert len(re.findall(r"<blockquote", story)) == 1
 
 
-@pytest.mark.django_db
-def test_the_five_callings_are_photos_alone_each_naming_its_calling(client):
-    """✨ Ticket 99: the photos belong to the cards themselves, so they show with JavaScript off. The content owner's 28
-    Oct tweak dropped the captions, as v3's people are photos alone; each card still names its calling to a screen
-    reader."""
-    page = client.get("/").content.decode()
-    meet = section(page, r'<section class="panel meet"')
+# ✨ v3's ring of people, in its order: each photo's file under img/callings/, and the calling it names. Its nurse,
+# musician and barista are left out, as their photos are not free to use (photo sources, 29 Oct).
+V3_CALLINGS = [
+    ("teacher", "Teacher"),
+    ("farmer", "Farmer"),
+    ("student", "Student"),
+    ("chef", "Chef"),
+    ("gardener", "Gardener"),
+    ("mechanic", "Mechanic"),
+    ("parent", "Parent"),
+    ("doctor", "Doctor"),
+    ("builder", "Builder"),
+    ("baker", "Grandmother"),
+    ("artist", "Artist"),
+    ("entrepreneur", "Founder"),
+    ("scientist", "Scientist"),
+    ("fisherman", "Fisherman"),
+    ("pastor", "Pastor"),
+    ("carer", "Carer"),
+    ("graduate", "Graduate"),
+]
 
-    cards = re.findall(r'<div class="mc mc-([a-z]+)" role="img" aria-label="([^"]+)"></div>', meet)
-    assert cards == [
-        ("teacher", "Teacher"),
-        ("carpenter", "Electrician"),
-        ("parent", "Parent"),
-        ("pastor", "Church planter"),
-        ("student", "Student"),
-    ]
-    assert "Seeing the classroom" not in meet
+
+@pytest.mark.django_db
+def test_the_callings_are_v3s_photos_in_its_order_each_naming_its_calling(client):
+    """✨ The developer's 29 Oct hand check: the callings look as v3's ring does, with its people as photos alone. Each
+    is an image in the page itself, so it shows with JavaScript off, and its description names its calling."""
+    meet = section(client.get("/").content.decode(), r'<section class="panel meet"')
+
+    photos = re.findall(
+        r'<figure class="mc"><img src="/static/callings/([a-z]+)(?:\.[0-9a-f]+)?\.jpg" alt="([^"]+)"', meet
+    )
+    assert photos == V3_CALLINGS
+    assert "figcaption" not in meet
     assert "donat" not in meet.casefold()
 
 

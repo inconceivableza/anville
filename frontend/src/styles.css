@@ -5757,22 +5757,37 @@ body > svg[aria-hidden="true"] {
   margin: 0 auto;
 }
 
+/* ✨ Without the ring (JavaScript off), v3's people are a row to scroll through. */
 .meet-cards {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  display: flex;
   gap: 12px;
   margin-top: 40px;
   padding-inline: clamp(16px, 4vw, 48px);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
 }
 
+.meet-cards .mc {
+  flex: 0 0 clamp(160px, 22vw, 260px);
+  aspect-ratio: 4 / 5;
+  scroll-snap-align: center;
+}
+
+/* ✨ v3's ring (29 Oct): the cards stand round the viewer, who sees the inside of the ring. main.js sets the card
+   size, the stage's height and its perspective from the stage's width, as v3 does. */
 .ring-stage {
   --ring-controls-space: 64px;
   position: relative;
   width: 100%;
-  margin: 28px auto 0;
+  margin: clamp(8px, 1.5vw, 20px) auto 0;
   overflow: hidden;
-  perspective: 1100px;
+  perspective-origin: 50% 50%;
+  cursor: grab;
   touch-action: pan-y;
+}
+
+.ring-stage:active {
+  cursor: grabbing;
 }
 
 /* ✨ The ring stops short of the stage's foot, which main.js makes taller by as much, so the arrows sit below the cards (fix-14). */
@@ -5782,6 +5797,7 @@ body > svg[aria-hidden="true"] {
   display: block;
   margin: 0;
   padding: 0;
+  overflow: visible;
   transform-style: preserve-3d;
 }
 
@@ -5789,9 +5805,9 @@ body > svg[aria-hidden="true"] {
   position: absolute;
   top: 50%;
   left: 50%;
-  min-height: 200px;
+  aspect-ratio: auto;
   backface-visibility: hidden;
-  text-align: center;
+  -webkit-backface-visibility: hidden;
 }
 
 .ring-controls {
@@ -5830,58 +5846,26 @@ body > svg[aria-hidden="true"] {
   outline-offset: 3px;
 }
 
+/* ✨ Photos alone, as v3's people are, with no captions (the content owner, 28 Oct). */
 .mc {
-  background: var(--warm-pale-08);
-  box-shadow: inset 0 0 0 1px var(--warm-16);
-  border-radius: var(--radius-sm);
-  padding: 22px 16px 20px;
-  display: grid;
-  gap: 10px;
-  justify-items: center;
-  align-content: start;
+  margin: 0;
+  overflow: hidden;
+  background: var(--brown-78);
 }
 
-.mc-ic {
-  width: 22px;
-  height: 22px;
-  color: var(--cream);
-}
-
-.mc-ic svg {
+.mc img {
+  display: block;
   width: 100%;
   height: 100%;
-  display: block;
-}
-
-.mc h3 {
-  font-size: 19px;
-  line-height: 1.15;
-}
-
-.mc p {
-  font-size: 12.5px;
-  color: var(--on-dark-2);
-  line-height: 1.5;
+  object-fit: cover;
+  filter: sepia(0.12) saturate(0.95);
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
 }
 
 .meet .pill {
   margin-top: 40px;
-}
-
-@media (max-width: 980px) {
-  .meet-cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .meet-cards .mc:last-child {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 520px) {
-  .meet-cards {
-    grid-template-columns: 1fr;
-  }
 }
 
 /* ---------- FOOTER ---------- */
@@ -6404,50 +6388,6 @@ body > svg[aria-hidden="true"] {
   .stay form {
     flex-wrap: wrap;
   }
-}
-
-/* ✨ The calling cards carry their photos in the plain grid as well as on the ring, so they show without JavaScript and
-   under reduced motion (ticket 99). Only a card off the ring is made position: relative, to anchor its photo: on the ring
-   the position: absolute above places it, and a position: relative there stacked the cards below the stage (fix-14). */
-.meet-cards:not(.ring) .mc {
-  position: relative;
-}
-
-/* ✨ Photos alone, as v3's people are, with no captions under them (the content owner, 28 Oct). */
-.meet-cards .mc {
-  overflow: hidden;
-  padding: 0;
-  aspect-ratio: 4 / 5;
-  background: var(--brown-78);
-  box-shadow: inset 0 0 0 1px var(--warm-20);
-}
-
-.meet-cards .mc::before {
-  position: absolute;
-  inset: 0;
-  content: "";
-  background-position: center;
-  background-size: cover;
-}
-
-.mc-teacher::before {
-  background-image: url("../img/callings/teacher.jpg");
-}
-
-.mc-carpenter::before {
-  background-image: url("../img/carpenter.jpg");
-}
-
-.mc-parent::before {
-  background-image: url("../img/callings/parent.jpg");
-}
-
-.mc-pastor::before {
-  background-image: url("../img/callings/pastor.jpg");
-}
-
-.mc-student::before {
-  background-image: url("../img/callings/student.jpg");
 }
 
 @media (max-width: 860px) {

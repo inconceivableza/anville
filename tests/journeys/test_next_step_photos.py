@@ -94,3 +94,26 @@ def test_every_photo_the_stylesheet_shows_has_a_credit_line():
 
     for subject in ("sunhat", "teacher", "baby", "pastor", "headphones"):
         assert subject in credits, subject
+
+
+def test_every_calling_on_the_homepages_ring_has_a_credit_line():
+    """✨ v3's callings (29 Oct), by a word of each credit's subject and its photographer, as traced in the photo
+    sources."""
+    credits = " ".join(SITE_PHOTO_CREDITS)
+
+    for subject, by in (
+        ("rice paddy", "Nandhu Kumar on Pexels"),
+        ("chef", "Pylyp Sukhenko"),
+        ("plant", "OPPO Find X5 Pro"),
+        ("mechanic", "Kato Blackmore"),
+        ("doctor", "Bruno Rodrigues"),
+        ("builder", "Josh Olalde"),
+        ("grandmother", "CDC"),
+        ("artist", "Vitaly Gariev"),
+        ("laptop", "Andrew Neel"),
+        ("scientist", "National Cancer Institute"),
+        ("fisherman", "Willian Justen de Vasconcellos"),
+        ("carer", "Age Cymru"),
+        ("graduate", "Albert Vincent Wu"),
+    ):
+        assert re.search(rf"Photograph of [^.]*\b{subject}\b[^.]*, by {by}", credits), subject
