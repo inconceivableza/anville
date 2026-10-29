@@ -21,7 +21,7 @@
       </nav>
       <div class="hero-copy">
         <h1><span class="ln">Everyone has a purpose.</span> <span class="ln">Do you know yours?</span></h1>
-        <p class="hero-summary">A guided journey for discerning your calling through scripture, a strengths evaluation, feedback from people you trust, and a coach. For adults aged 18 and over.</p>
+        <p class="hero-summary">A guided journey for discerning your calling through scripture, a strengths evaluation, feedback from people you trust, and a coach.</p>
         <div class="hero-cta">
           <a class="pill" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
         </div>
@@ -39,10 +39,10 @@
       <div class="in">
         <p class="reveal" id="reveal">Whatever You Do is a pathway for discerning your purpose.</p>
         <ul class="pillars" aria-label="What it draws on"><li>Scripture</li><li>Strengths evaluation</li><li>Peer feedback</li><li>Coach oversight</li><li>Journey</li></ul>
-        {# ✨ "Along the way" belongs to the sign-off above it, in its type (fix-3, 28 Oct). #}
-        <div class="sign">{% include "engine/logo.html" %}<span>A calling journey for every season of life</span>
-          <p class="mission-more">Along the way, you’ll come to understand your God-given gifts, talents and limitations, explore what the Bible teaches about work and calling, and find practical next steps. At the start and the end, you answer the same questions, so you can see what has changed.</p></div>
+        <p class="mission-more">Along the way, you’ll come to understand your God-given gifts, talents and limitations, explore what the Bible teaches about work and calling, and find practical next steps. At the start and the end, you answer the same questions, so you can see what has changed.</p>
         <a class="pill" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
+        {# ✨ The sign-off below the button, so the space above it is less crowded (the content owner, 28 Oct). #}
+        <div class="sign">{% include "engine/logo.html" %}<span>A calling journey for every season of life</span></div>
       </div>
     </section>
 
@@ -80,20 +80,6 @@
       </div>
     </section>
 
-    <!-- =================== THE DIFFERENCE IT MAKES =================== -->
-    {# ✨ Ticket 99: v3's three figures, unconfirmed by the content owner and to come out before release if they stay so (spec). #}
-    <section class="panel difference" aria-labelledby="differenceTitle">
-      <div class="in">
-        <h2 id="differenceTitle">The difference it makes</h2>
-        <div class="stats">
-          {# ✨ The figures are written out in full, so they show without JavaScript or with reduced motion; main.js counts them up from 0 as they scroll into view, reading data-v (fix-3). #}
-          <div class="stat" data-v="71"><span class="num"><b>71</b>%</span><span class="bar"><i></i></span><p>had a more detailed understanding of their God-given gifts, talents and limitations</p></div>
-          <div class="stat" data-v="86"><span class="num"><b>86</b>%</span><span class="bar"><i></i></span><p>had a more detailed understanding of what the Bible teaches about work and calling</p></div>
-          <div class="stat" data-v="100"><span class="num"><b>100</b>%</span><span class="bar"><i></i></span><p>had a clearer practical plan for how to pursue God’s purpose for their life</p></div>
-        </div>
-      </div>
-    </section>
-
     <section class="panel churches" id="churches" aria-labelledby="churchesTitle">
       <div class="ch-img" role="img" aria-label="People with Bibles and notebooks open at a church gathering"></div>
       <div class="ch-copy">
@@ -116,9 +102,26 @@
       <div class="story-bg" aria-hidden="true"></div>
       <figure class="story-copy">
         <span class="label">Impact</span>
+        {# ✨ A short line from the quote, set large, so the whole quote below can be smaller (the content owner, 23 Oct). #}
+        <p class="story-pull" aria-hidden="true">“…he’s gearing up to be part of a team going church planting, and is really enjoying his electrician’s apprenticeship”</p>
         <blockquote data-reveal>“My son got saved just a couple of years ago in his late teens, and was really struggling to know what work direction to take. His grades from school weren’t great, and he had lots of different interests – the choices weren’t obvious at all. We spent a weekend together and each mealtime I took him through some of the Whatever You Do questions. Now, he’s gearing up to be part of a team going church planting, and is really enjoying his electrician’s apprenticeship – he traces the decision to do the latter right back to the calling conversations we had together that weekend.”</blockquote>
         <figcaption>Parent of a participant, 2025</figcaption>
       </figure>
+    </section>
+
+    <!-- =================== THE DIFFERENCE IT MAKES =================== -->
+    {# ✨ Ticket 99: v3's three figures, unconfirmed by the content owner and to come out before release if they stay so (spec). #}
+    {# ✨ Below the dark testimonial, so it and "For churches", both light, no longer sit together (the content owner, 28 Oct). #}
+    <section class="panel difference" aria-labelledby="differenceTitle">
+      <div class="in">
+        <h2 id="differenceTitle">The difference it makes</h2>
+        <div class="stats">
+          {# ✨ The figures are written out in full, so they show without JavaScript or with reduced motion; main.js counts them up from 0 as they scroll into view, reading data-v (fix-3). #}
+          <div class="stat" data-v="71"><span class="num"><b>71</b>%</span><span class="bar"><i></i></span><p>had a more detailed understanding of their God-given gifts, talents and limitations</p></div>
+          <div class="stat" data-v="86"><span class="num"><b>86</b>%</span><span class="bar"><i></i></span><p>had a more detailed understanding of what the Bible teaches about work and calling</p></div>
+          <div class="stat" data-v="100"><span class="num"><b>100</b>%</span><span class="bar"><i></i></span><p>had a clearer practical plan for how to pursue God’s purpose for their life</p></div>
+        </div>
+      </div>
     </section>
 
     <!-- =================== STAY IN TOUCH =================== -->
@@ -128,12 +131,13 @@
     <section class="panel meet" id="about">
       <h2>Everyone has a purpose. Do you know yours?</h2>
       {# ✨ Each card's class names its photo (drawn in the stylesheet), so the photos show without JavaScript or under reduced motion. #}
+      {# ✨ Photos alone, as v3's people are, with no captions (the content owner, 28 Oct); each names its calling to a screen reader. #}
       <div class="meet-cards">
-        <div class="mc mc-teacher"><h3>Teacher</h3><p>Seeing the classroom as a place of formation.</p></div>
-        <div class="mc mc-carpenter"><h3>Electrician</h3><p>Finding meaning in the work of your hands.</p></div>
-        <div class="mc mc-parent"><h3>Parent</h3><p>Passing on a sense of purpose to the next generation.</p></div>
-        <div class="mc mc-pastor"><h3>Church planter</h3><p>Building a community that sees work as ministry.</p></div>
-        <div class="mc mc-student"><h3>Student</h3><p>Discerning direction before the decisions are made.</p></div>
+        <div class="mc mc-teacher" role="img" aria-label="Teacher"></div>
+        <div class="mc mc-carpenter" role="img" aria-label="Electrician"></div>
+        <div class="mc mc-parent" role="img" aria-label="Parent"></div>
+        <div class="mc mc-pastor" role="img" aria-label="Church planter"></div>
+        <div class="mc mc-student" role="img" aria-label="Student"></div>
       </div>
       <a class="pill" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
     </section>

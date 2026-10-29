@@ -77,8 +77,12 @@ def test_the_homepage_has_no_fixed_bar_and_the_new_logo_shows_in_the_overview_se
     assert not re.search(r'<symbol id="[^"]*"[a-zA-Z]', page), "an attribute runs into the one before it"
 
 
+@pytest.mark.django_db
+def test_the_hero_no_longer_says_who_it_is_for(client):
+    """✨ The content owner's feedback (23 Oct): the "For adults aged 18" line goes; the wizard still asks (ADR 0021)."""
+    page = client.get("/").content.decode()
 
-    assert "For adults aged 18 and over." in client.get("/").content.decode()
+    assert "aged 18" not in page
 
 
 def section(page, opening):
@@ -127,6 +131,19 @@ def test_the_overview_has_the_sign_line_the_paragraph_and_its_own_begin_button(c
 
 
 @pytest.mark.django_db
+def test_the_logo_and_its_line_sit_below_the_overviews_button(client):
+    """✨ The content owner's 28 Oct tweak: the overview was crowded above its button, so the logo and "A calling
+    journey" move below it, and "Along the way" stays above it, on its own."""
+    overview = section(client.get("/").content.decode(), r'<section class="panel mission"')
+    sign = re.search(r'<div class="sign">.*?</div>', overview, re.S).group(0)
+
+    assert '<use href="#logo"' in sign
+    assert "A calling journey for every season of life" in sign
+    assert "Along the way" not in sign
+    assert overview.index("Begin your journey") < overview.index('<div class="sign">')
+
+
+@pytest.mark.django_db
 def test_space_to_reflect_is_gone(client):
     page = client.get("/").content.decode()
 
@@ -148,14 +165,21 @@ def test_nothing_on_the_homepage_points_at_a_placeholder(client):
 
 
 @pytest.mark.django_db
-def test_the_difference_it_makes_comes_before_for_churches_with_its_three_figures(client):
-    """✨ Ticket 99: the figures are the spec's unconfirmed ones; this test names them so they are easy to find."""
+def test_the_difference_it_makes_follows_the_testimonial_with_its_three_figures(client):
+    """✨ Ticket 99: the figures are the spec's unconfirmed ones; this test names them so they are easy to find. The
+    content owner's 28 Oct tweak moved the light section below the dark testimonial, so the two light sections, it and
+    "For churches", no longer sit together."""
     page = client.get("/").content.decode()
     difference = section(page, r'<section class="panel difference"')
 
     assert re.search(r"<h2[^>]*>The difference it makes</h2>", difference)
     assert re.findall(r"<b>(\d+)</b>%", difference) == ["71", "86", "100"]
-    assert page.index('class="panel difference"') < page.index('class="panel churches"')
+    assert (
+        page.index('class="panel churches"')
+        < page.index('class="panel story-sec"')
+        < page.index('class="panel difference"')
+        < page.index('id="stay-in-touch"')
+    )
 
 
 @pytest.mark.django_db
@@ -176,15 +200,6 @@ def test_every_step_is_in_the_page_with_its_own_photo_class_for_the_no_javascrip
     steps = re.findall(r'<li class="step (step-\d)"><span class="tp-step">STEP 0\d</span>', page)
 
     assert steps == ["step-1", "step-2", "step-3", "step-4", "step-5"]
-
-
-@pytest.mark.django_db
-def test_along_the_way_sits_inside_the_calling_journey_sign_off(client):
-    page = client.get("/").content.decode()
-    sign = re.search(r'<div class="sign">.*?</p></div>', page, re.S).group(0)
-
-    assert "A calling journey for every season of life" in sign
-    assert "Along the way, you’ll come to understand" in sign
 
 
 @pytest.mark.django_db
@@ -215,20 +230,35 @@ def test_the_testimonial_is_labelled_impact_and_keeps_its_words(client):
 
 
 @pytest.mark.django_db
-def test_the_five_callings_are_in_the_served_page_each_naming_its_photo(client):
-    """✨ Ticket 99: the photos belong to the cards themselves, so they show with JavaScript off."""
+def test_the_testimonial_leads_with_a_short_large_line_taken_from_the_quote(client):
+    """✨ The content owner's feedback (23 Oct): the quote was too long and too large to read, so mix large and small. A
+    short line from it is set large; the whole quote follows, smaller, its words unchanged."""
+    story = section(client.get("/").content.decode(), r'<section class="panel story-sec"')
+    pull = re.search(r'<p class="story-pull"[^>]*>“…?([^<]+?)”</p>', story)
+    quote = re.search(r"<blockquote[^>]*>([^<]+)</blockquote>", story).group(1)
+
+    assert pull, "no large line"
+    assert pull.group(1) in quote
+    assert story.index("story-pull") < story.index("<blockquote")
+
+
+@pytest.mark.django_db
+def test_the_five_callings_are_photos_alone_each_naming_its_calling(client):
+    """✨ Ticket 99: the photos belong to the cards themselves, so they show with JavaScript off. The content owner's 28
+    Oct tweak dropped the captions, as v3's people are photos alone; each card still names its calling to a screen
+    reader."""
     page = client.get("/").content.decode()
     meet = section(page, r'<section class="panel meet"')
 
-    cards = re.findall(r'<div class="mc mc-([a-z]+)">.*?<h3>([^<]+)</h3><p>([^<]+)</p>', meet, re.S)
-    assert [(photo, title) for photo, title, _ in cards] == [
+    cards = re.findall(r'<div class="mc mc-([a-z]+)" role="img" aria-label="([^"]+)"></div>', meet)
+    assert cards == [
         ("teacher", "Teacher"),
         ("carpenter", "Electrician"),
         ("parent", "Parent"),
         ("pastor", "Church planter"),
         ("student", "Student"),
     ]
-    assert all(line for _, _, line in cards)
+    assert "Seeing the classroom" not in meet
     assert "donat" not in meet.casefold()
 
 

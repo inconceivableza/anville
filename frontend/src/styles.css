@@ -2116,10 +2116,12 @@ form + .way-on,
   box-shadow: inset 0 0 0 1px currentColor;
 }
 
-/* ✨ A contact list's "Get link" is an outline until its row has a name, then green (ticket 83). Only where JavaScript
-   has run, so without it, where nothing else would change, it is always green. Never disabled: pressed empty, the
-   server says what is missing. */
-[data-javascript="loaded"] .contact-row:has(.contact-name input:placeholder-shown) [data-gets-link] {
+/* ✨ A contact list's "Get link" is an outline until its row has a name (ticket 83) and an email the browser reads as
+   one (29 Oct), then green. Only where JavaScript has run, so without it, where nothing else would change, it is always
+   green. Never disabled: pressed early, the server says what is missing. */
+[data-javascript="loaded"] .contact-row:has(.contact-name input:placeholder-shown) [data-gets-link],
+[data-javascript="loaded"] .contact-row:has(.contact-email input:placeholder-shown) [data-gets-link],
+[data-javascript="loaded"] .contact-row:has(.contact-email input:invalid) [data-gets-link] {
   background: var(--paper);
   color: inherit;
   box-shadow: inset 0 0 0 1px currentColor;
@@ -5330,8 +5332,10 @@ body > svg[aria-hidden="true"] {
   display: none;
 }
 
-/* ✨ Inside the sign-off, so in its type: its size and colour are the sign's (fix-3). */
+/* ✨ In the sign-off's type (fix-3), though above the button now and the sign-off below it (28 Oct). */
 .mission-more {
+  color: var(--muted);
+  font-size: 13.5px;
   max-width: 62ch;
   line-height: 1.55;
   margin: 0;
@@ -5987,10 +5991,22 @@ body > svg[aria-hidden="true"] {
   text-align: center;
 }
 
-.story-copy blockquote {
+/* ✨ A short line from the quote, large; the whole quote below it smaller, so it reads (the content owner, 23 Oct). */
+.story-pull {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(22px, 2.4vw, 34px);
+  font-size: clamp(26px, 3.2vw, 44px);
+  font-weight: 300;
+  line-height: 1.2;
+  color: var(--on-dark);
+  text-wrap: balance;
+}
+
+.story-copy blockquote {
+  max-width: 68ch;
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(16px, 1.3vw, 19px);
   font-weight: 300;
   line-height: 1.35;
   color: var(--on-dark);
@@ -6134,22 +6150,21 @@ body > svg[aria-hidden="true"] {
   position: relative;
 }
 
+/* ✨ Photos alone, as v3's people are, with no captions under them (the content owner, 28 Oct). */
 .meet-cards .mc {
   overflow: hidden;
-  padding-top: 170px;
+  padding: 0;
+  aspect-ratio: 4 / 5;
   background: var(--brown-78);
   box-shadow: inset 0 0 0 1px var(--warm-20);
 }
 
 .meet-cards .mc::before {
   position: absolute;
-  inset: 0 0 auto;
-  height: 156px;
+  inset: 0;
   content: "";
   background-position: center;
   background-size: cover;
-  -webkit-mask-image: linear-gradient(var(--mask-solid) 76%, transparent);
-  mask-image: linear-gradient(var(--mask-solid) 76%, transparent);
 }
 
 .mc-teacher::before {
