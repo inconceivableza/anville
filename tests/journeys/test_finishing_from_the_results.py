@@ -171,5 +171,6 @@ def test_the_section_2_signpost_puts_the_invitation_left_of_the_press_before_and
 
     above = main_of(participant.get("/sections/others/").content.decode())
     assert sections_and_comparison(above) == (True, True)
-    assert 'aria-disabled="true"' not in above
+    # ✨ The press alone: Workbook 1's button stays greyed until the comparison is seen (29 Oct).
+    assert 'aria-disabled="true">Compare with how others see you →' not in above
     assert above.index("/sections/trusted-voices/") < above.index('action="/results/strengths-sort/comparison/visit/"')

@@ -1330,6 +1330,8 @@ def test_until_the_comparison_is_viewed_section_2_says_why_in_place_of_the_first
 
     assert escape(workbook_1_wait()) in page
     assert f'href="{WORKBOOK_1}"' not in page
+    # ✨ Its button shown greyed, so what opens is in sight, as the comparison's greyed press is (29 Oct).
+    assert '<span class="pill is-waiting" role="link" aria-disabled="true">Download Workbook 1 (PDF)</span>' in page
     assert client.get(WORKBOOK_1).status_code == 403
 
 
