@@ -1,9 +1,9 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
-"""✨ Retaking the self-assessment, a demo-only tool (fix-19): on a development or demo system, a participant can
-clear their own sort and everything worked out from it, and sort the cards again from the start. Nothing else of
-theirs is touched, and nothing of anyone else's."""
+"""✨ Retaking the self-assessment on a demo system (fix-19), now everyone's (29 Oct; tests/journeys/test_retake.py): a
+participant can clear their own sort and everything worked out from it, and sort the cards again from the start.
+Nothing of anyone else's is touched. Then the demo-only tool that stays: loading a demo profile into an empty sort."""
 
 import json
 import re
@@ -13,7 +13,7 @@ import pytest
 from django.test import Client
 from django.utils.html import escape
 
-from engine.models import Contact, Invitation, ObserverResponse, Response, Result
+from engine.models import Contact, Invitation, Response, Result
 from engine.scenario_loading import prefill
 from engine.tie_break_scenarios import seeding, summary
 from tests.journeys.pages import version_on
@@ -64,24 +64,13 @@ def sorted_in(demo, client, participant, load_pathway):  # noqa: F811
 
 
 @pytest.mark.django_db
-def test_with_debug_off_and_no_demo_notice_there_is_no_retake_and_no_link_to_it(sorted_in, settings):
-    settings.DEBUG = False
-    settings.ANVILLE_DEMO_NOTICE = ""
-
-    assert sorted_in.get(RETAKE).status_code == 404
-    assert sorted_in.post(RETAKE).status_code == 404
-    assert RETAKE not in results(sorted_in).content.decode()
-    assert Result.objects.exists()
-
-
-@pytest.mark.django_db
-def test_on_a_demo_system_the_link_is_hidden_until_revealed(sorted_in):
-    """✨ fix-20: the link is in the page but `hidden` (not seen, not in the tab order, not read out) until the
-    participant holds Option/Alt or presses and holds the title; those reveals are hand checks."""
+def test_on_a_demo_system_too_the_results_link_to_the_retake_is_shown_as_anyone_s(sorted_in):
+    """✨ The retake is no longer demo only (29 Oct; tests/journeys/test_retake.py), so fix-20's hidden link and the
+    title's press-and-hold that revealed it are gone from the results page."""
     page = results(sorted_in).content.decode()
 
-    assert f'<p class="back-to-hub" data-demo-reveal hidden><a href="{RETAKE}">' in page
-    assert "<h1 data-demo-reveal-hold>" in page
+    assert f'<a href="{RETAKE}">Retake the strengths evaluation</a>' in page
+    assert "data-demo-reveal" not in page
 
 
 @pytest.mark.django_db
@@ -111,8 +100,7 @@ def test_retaking_clears_the_sort_its_result_and_its_tie_break_and_the_assessmen
     assert retaken.status_code == 303
     assert not Result.objects.exists()
     assert SORT not in response.answers
-    assert SORT not in response.comparisons_visited
-    assert "calling" not in response.completed_sections
+    assert "calling" in response.completed_sections  # ✨ finished sections stay finished (29 Oct)
     shown = sorted_in.get(f"/sections/{STRENGTHS}/")
     assert shown.status_code == 200
     assert f'data-sort="sort-{SORT}"' in shown.content.decode()
@@ -120,7 +108,8 @@ def test_retaking_clears_the_sort_its_result_and_its_tie_break_and_the_assessmen
 
 
 @pytest.mark.django_db
-def test_retaking_leaves_observers_assessments_the_coach_link_and_other_answers_alone(sorted_in):
+def test_retaking_leaves_the_coach_link_and_other_answers_alone(sorted_in):
+    """✨ What observers sent is deleted (29 Oct; tests/journeys/test_retake.py)."""
     answer(sorted_in, "statement", "To build things that last.")
     response = Response.objects.get()
     for sort in THREE_OBSERVERS:
@@ -135,9 +124,6 @@ def test_retaking_leaves_observers_assessments_the_coach_link_and_other_answers_
     response = Response.objects.get()
     assert response.answers["statement"] == "To build things that last."
     assert "onboarding" in response.completed_sections
-    assert sorted(ObserverResponse.objects.values_list("assessment", flat=True), key=str) == sorted(
-        THREE_OBSERVERS, key=str
-    )
     assert Invitation.objects.filter(contact__role=Contact.Role.COACH).exists()
     assert response.collection_frozen_at is None
 
@@ -171,8 +157,8 @@ def test_a_participant_can_clear_only_their_own_assessment(sorted_in, django_use
 
 
 # ✨ Demo profiles (fix-21): one of `seed_tie_break`'s starting profiles, with a way of answering its pairs (fix-25),
-# loaded into the participant's own sort, from the retake page or, before any sort, from the sort page. The profiles
-# are made for Whatever You Do.
+# loaded into the participant's own sort before any sort, from the sort page's hidden link, never from the retake
+# (29 Oct). The profiles are made for Whatever You Do.
 WYD_SORT = "strengths-sort"
 WYD_SORT_PAGE = "/sections/strengths/"
 WYD_RETAKE = f"/results/{WYD_SORT}/retake/"
@@ -232,15 +218,20 @@ def test_before_any_sort_a_demo_profile_leads_to_the_sort_with_its_cards_placed(
 
 
 @pytest.mark.django_db
-def test_choosing_a_demo_profile_on_retake_clears_the_sort_and_leads_to_the_sort_with_its_cards_placed(
+def test_on_a_demo_system_the_retake_offers_no_demo_profile_and_the_sort_it_empties_offers_one_again(
     on_whatever_you_do,
 ):
+    """✨ 29 Oct: the retake is everyone's, demo or not, so it never becomes the demo-profile page; a demo loads one from
+    the sort's hidden link, which is there again once the retake has emptied the sort."""
     send_as_shown(on_whatever_you_do, load_profile(on_whatever_you_do, "flat").content.decode())
-    assert Result.objects.exists()
+    asked = on_whatever_you_do.get(WYD_RETAKE).content.decode()
+    refused = on_whatever_you_do.post(WYD_RETAKE, {"profile": "tied-both", "answers": "skip"})
 
+    assert 'name="profile"' not in asked
+    assert "Demo only" not in asked
+    assert (refused.status_code, Result.objects.count()) == (400, 1)
+    assert on_whatever_you_do.post(WYD_RETAKE).status_code == 303
     shown = load_profile(on_whatever_you_do, "tied-both", "skip")
-
-    assert not Result.objects.exists()
     assert widget_of(shown.content.decode())["placed"] == prefill(wyd_pathway(), "tied-both", "skip").sort
 
 
@@ -256,8 +247,8 @@ def test_a_demo_profile_hands_the_sort_its_placements_and_values_its_guide_those
     expected = prefill(wyd_pathway(), "tied-pep", "behind")
     assert widget_of(page)["placed"] == expected.sort
     assert summary("tied-pep", "behind") in page
-    for framework, answer in expected.guide.pairs:
-        assert f"<li>{escape(framework)}: {escape(answer)}</li>" in page
+    for framework, given in expected.guide.pairs:
+        assert f"<li>{escape(framework)}: {escape(given)}</li>" in page
     assert not Result.objects.exists()
     assert WYD_SORT not in Response.objects.get().answers
 

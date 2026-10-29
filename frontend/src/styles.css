@@ -3558,6 +3558,52 @@ body:not(.framed) .question-card > p + form {
   color: var(--ink-light);
 }
 
+/* ✨ The retake's page asking first (29 Oct): a warning of what it deletes, then what it keeps under a small label,
+   with room between them and more above the buttons, which the reset at the top would otherwise take away. */
+.retake-card > * + * {
+  margin-top: var(--space-md);
+}
+
+/* ✨ What the retake deletes, as a warning in the coach checklist's stop colours (.coach-stop). */
+.retake-warning {
+  background: var(--stop-pale);
+  border-left: 4px solid var(--red-soft);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+}
+
+.retake-warning > * + * {
+  margin-top: var(--space-sm);
+}
+
+.retake-warning strong {
+  color: var(--red-text);
+}
+
+.retake-list-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-light);
+}
+
+.retake-card > .retake-list-label {
+  margin-top: var(--space-lg);
+}
+
+.retake-card .retake-list {
+  margin-top: var(--space-xs);
+  padding-left: 1.25em;
+  list-style: disc;
+}
+
+.retake-list li + li {
+  margin-top: var(--space-xs);
+}
+
+.retake-card > form {
+  margin-top: var(--space-xl);
+}
+
 /* Consent: agreeing and declining are equal choices, stacked with room between them */
 
 .consent-choices {

@@ -959,7 +959,6 @@ def results(request, block_id):
         "drawn": drawn,
         "results": drawn["results"],
         "section": section,
-        "retake": _demo_tools_on(),
         "finish": _results_finish(state, block_id),
         # ✨ How a refused finish comes back, as on a section's page (fix-2).
         "messages_after_a_press": state.version.document.get("messages_after_a_press", False),
@@ -1257,39 +1256,29 @@ def _demo_tools_on():
 @consent_required
 @require_http_methods(["GET", "POST"])
 def retake(request, block_id):
-    """✨ Demo only (fix-19): the results page's quiet "Retake the strengths evaluation (demo only)" asks first, saying
-    what will be cleared; only its button clears the participant's own sort and everything worked out from it, then
-    opens the sort afresh. Off a development or demo system it is a 404.
+    """✨ The results page's quiet "Retake the strengths evaluation" asks first, saying what will be cleared, and warning
+    that what the people invited sent will be deleted; only its button clears the participant's own sort and everything
+    worked out from it (`Response.clear_sort`), then opens the sort afresh (29 Oct; fix-19's, once demo only). The
+    sections they finished stay finished. It is the same on every system, and offers no demo profile.
 
-    It also offers a demo profile (fix-21): one of `seed_tie_break`'s starting profiles, and how to answer its pairs,
-    chosen apart (fix-25), as a combination that holds on this pathway. Once the old sort is cleared, the sort opens
-    with the profile's cards placed and its sliders set, beside its guide to those answers, and nothing is stored until
-    the participant sends it (fix-23). Before any sort, from the sort page's hidden link, the same choice clears
-    nothing, and only for a participant the sort is open to. A combination not offered is refused with its reason and
-    nothing cleared.
-
-    A section completed whose gate needed the sort is no longer complete, so the hub never shows it complete beside an
-    assessment not started; the participant's other answers in it stay, and completing it again needs the new sort."""
-    if not _demo_tools_on():
-        raise Http404("Retaking the strengths evaluation is offered only on a development or demo system.")
+    Before any sort, on a development or demo system alone, the same address is where the sort page's hidden link leads,
+    to load a demo profile (fix-21): one of `seed_tie_break`'s starting profiles, and how to answer its pairs, chosen
+    apart (fix-25), as a combination that holds on this pathway, only for a participant the sort is open to. The sort
+    then opens with the profile's cards placed and its sliders set, beside its guide to those answers, and nothing is
+    stored until the participant sends it (fix-23). Off a demo system there is nothing here before a sort, so it is a
+    404. A combination not offered, as none is with a sort in, is refused with its reason and nothing cleared."""
     state, result, section = _own_result(request.user, block_id)
+    demo_profiles = result is None
+    if demo_profiles and not _demo_tools_on():
+        raise Http404("There is no strengths evaluation to retake yet.")
     sort_page = page_url(section["id"], section["page"])
     document = state.version.document
     # ✨ Before any sort, only a participant the sort is open to may have one loaded for them (fix-21).
     if result is None and not _is_open(state, section_of(document, block_id), answerable_block(document, block_id)):
         return redirect(sort_page)
     # ✨ Worked out on every visit, so a combination that does not hold on this pathway is never offered (fix-21).
-    offer = scenario_loading.offered(document)
+    offer = scenario_loading.offered(document) if demo_profiles else scenario_loading.Offered([], [], (), [])
     response = state.response
-    reopened = []
-    if result is not None:
-        reopened = [
-            shown
-            for shown in state.sections
-            if shown["id"] in response.completed_sections
-            and _reopens(shown)
-            and any(clause["block"] == block_id for clause in clauses_of(shown))
-        ]
 
     def this_page(status=200, refusal=None):
         """✨ The page asking, with `refusal`, a choice refused without JavaScript, said above the choice (fix-2)."""
@@ -1303,10 +1292,9 @@ def retake(request, block_id):
             ),
             "sort_page": sort_page,
             "offer": offer,
-            "myself": MYSELF,
-            "reopened": [text_for(shown["title"], "participant") for shown in reopened],
+            # ✨ None or 0 when nobody has sent anything, which leaves nothing to warn of.
+            "answered": _answered(response) if result is not None else None,
             "tie_break": bool(result and result.tie_break_answers),
-            "frozen": result is not None and response.collection_frozen_at is not None,
             "coach_shown": result is not None and bool((_coach_of(response) or {}).get("shared")),
             "refusal": refusal,
         }
@@ -1320,7 +1308,7 @@ def retake(request, block_id):
             # ✨ Without JavaScript, this page again, saying why, with nothing cleared (fix-2).
             return _refused(request, refusal, status=400, page=lambda status: this_page(status, refusal))
         if result is not None:
-            response.clear_sort(block_id, reopened=[shown["id"] for shown in reopened])
+            response.clear_sort(block_id)
         if profile == MYSELF:
             return _see_other(sort_page)
         # ✨ Nothing stored: the sort starts from the profile, and the participant sends it themselves (fix-23).
@@ -1328,7 +1316,7 @@ def retake(request, block_id):
     return this_page()
 
 
-# ✨ The retake page's "Sort the cards myself", as its choice sends it (fix-21).
+# ✨ No demo profile: what the retake's button sends, as it carries no choice (fix-21; 29 Oct).
 MYSELF = "myself"
 
 def _demo_prefill(request, document):

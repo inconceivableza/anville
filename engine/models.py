@@ -137,8 +137,8 @@ class Response(models.Model):
     def submit_sort(self, block_id, sort, scores):
         """✨ Store a sort and the result scored from it together, or neither.
 
-        A second sort for the same block raises IntegrityError from the database and changes nothing,
-        since retake is not offered yet.
+        A second sort for the same block raises IntegrityError from the database and changes nothing: to
+        sort again, the participant retakes it (`clear_sort`) first.
         """
         with transaction.atomic():
             Result.objects.create(response=self, block_id=block_id, scores=scores)
@@ -221,24 +221,26 @@ class Response(models.Model):
             if _submitted_count(self) < minimum:
                 Response.objects.filter(pk=self.pk).update(collection_frozen_at=None)
 
-    def clear_sort(self, block_id, reopened=()):
-        """✨ Demo only (fix-19): take back the participant's sort for `block_id` and everything worked out from it, so
-        they can sort again from the start. Its answer and result go, and the tie-break's answers and re-weighted result
-        with it; so does the visit to its comparison and the view of it, and with them the freeze and the coach's sight
-        of the results, both of which rest on that visit. Each section in `reopened`, whose gate needed the sort, is no longer complete.
-        Observers' assessments, the coach's link and every other answer stay. Done together or not at all."""
+    def clear_sort(self, block_id):
+        """✨ The retake (29 Oct; fix-19's, once demo only): take back the participant's sort for `block_id` and all
+        worked out from it, so they can sort again from the start. Its answer and result go, and the tie-break's answers
+        and re-weighted result with it. What observers sent goes too, and collection opens again, so the people they
+        invited, whose links keep working, can send afresh and are reminded as before they sent (ADR 0016); nobody
+        withdrew, so the count of withdrawals starts again too. The coach no longer sees the results until the
+        participant chooses to show them again (ADR 0011).
+
+        The sections they finished stay finished, and the visit to the comparison and the view of it stay, so nothing
+        already opened locks again (ADR 0019). The coach's link and every other answer stay. Done together or not at
+        all."""
         with transaction.atomic():
             Result.objects.filter(response=self, block_id=block_id).delete()
-            completed = F("completed_sections")
-            for section_id in reopened:
-                completed = _WithoutKey(completed, Value(section_id))
+            ObserverResponse.objects.filter(response=self).delete()
+            self.contacts.filter(role=Contact.Role.CONTACT).update(sent_at=None)
             Response.objects.filter(pk=self.pk).update(
                 answers=_WithoutKey(F("answers"), Value(block_id)),
                 fixed_answers=_WithoutKey(F("fixed_answers"), Value(block_id)),
-                comparisons_visited=_WithoutKey(F("comparisons_visited"), Value(block_id)),
-                comparisons_viewed=_WithoutKey(F("comparisons_viewed"), Value(block_id)),
-                completed_sections=completed,
                 collection_frozen_at=None,
+                observers_withdrew=0,
                 updated_at=timezone.now(),
             )
             Invitation.objects.filter(contact__response=self, contact__role=Contact.Role.COACH).update(

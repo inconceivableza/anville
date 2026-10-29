@@ -210,8 +210,8 @@ document.addEventListener("change", (event) => {
   shown.classList.remove("unset");
 });
 
-// ✨ Demo only (fix-20): a demo-only element marked data-demo-reveal (the results page's "Retake the strengths evaluation (demo
-// only)") comes `hidden`, and only a demo system's markup carries one. Option/Alt held on its own for a second shows
+// ✨ Demo only (fix-20): a demo-only element marked data-demo-reveal (the sort page's "Load a demo profile (demo only)")
+// comes `hidden`, and only a demo system's markup carries one. Option/Alt held on its own for a second shows
 // it, or on a phone the element marked data-demo-reveal-hold (the page's title) pressed and held for a second; another
 // key, a click, letting go early or a scroll cancels. Once shown it stays until the page is left, so the participant
 // can let go and click it. On a page without one no listener is added.
@@ -277,8 +277,8 @@ document.addEventListener("change", (event) => {
 })();
 
 // ✨ Demo only (fix-25): the demo-profile choice's "How to answer the pairs" offers only the ways of answering that
-// hold with the starting profile chosen, the rest disabled, so a profile without pairs offers only "No pairs"; with
-// "Sort the cards myself" nothing is offered. A choice the change disables gives way to the first one left. Without
+// hold with the starting profile chosen, the rest disabled, so a profile without pairs offers only "No pairs". A
+// choice the change disables gives way to the first one left. Without
 // JavaScript every one is offered, and the server refuses one that does not fit, saying why.
 (() => {
   const profile = document.querySelector("[data-demo-profile]");
