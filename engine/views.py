@@ -212,9 +212,6 @@ SITE_PHOTO_CREDITS = [
     "Photograph of a woman in a summer dress looking out over a field of wheat, by Klara Kulikova on Unsplash.",
     "Still of a woman in a sunhat walking through a field at sunset, from the video by Marian Croitoru on Pexels.",
     "Photograph of a teacher standing before a classroom of pupils, by Quilia on Unsplash.",
-    "Photograph of a mother holding her sleeping baby, by Kelly Sikkema on Unsplash.",
-    "Photograph of a pastor speaking with a microphone, by AMONWAT DUMKRUT on Unsplash.",
-    "Photograph of a student with headphones studying in a library, by Zoshua Colah on Unsplash.",
     "Photograph of a woman working in a rice paddy, by Nandhu Kumar on Pexels.",
     "Photograph of a chef chopping vegetables in a restaurant kitchen, by Pylyp Sukhenko on Unsplash.",
     "Photograph of a man and a child looking at a plant, by OPPO Find X5 Pro on Unsplash.",
@@ -227,7 +224,6 @@ SITE_PHOTO_CREDITS = [
     "Photograph of a scientist in a white coat, by National Cancer Institute on Unsplash.",
     "Photograph of a fisherman holding a cormorant on a raft, by Willian Justen de Vasconcellos on Unsplash.",
     "Photograph of a carer helping an elderly couple with colouring, by Age Cymru on Unsplash.",
-    "Photograph of a graduate in a cap and gown, by Albert Vincent Wu on Unsplash.",
 ]
 
 

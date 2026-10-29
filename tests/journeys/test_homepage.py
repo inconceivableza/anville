@@ -239,40 +239,39 @@ def test_the_testimonial_is_the_one_quote_alone(client):
     assert len(re.findall(r"<blockquote", story)) == 1
 
 
-# ✨ v3's ring of people, in its order: each photo's file under img/callings/, and the calling it names. Its nurse,
-# musician and barista are left out, as their photos are not free to use (photo sources, 29 Oct).
-V3_CALLINGS = [
-    ("teacher", "Teacher"),
-    ("farmer", "Farmer"),
-    ("student", "Student"),
-    ("chef", "Chef"),
-    ("gardener", "Gardener"),
-    ("mechanic", "Mechanic"),
-    ("parent", "Parent"),
-    ("doctor", "Doctor"),
-    ("builder", "Builder"),
-    ("baker", "Grandmother"),
-    ("artist", "Artist"),
-    ("entrepreneur", "Founder"),
-    ("scientist", "Scientist"),
-    ("fisherman", "Fisherman"),
-    ("pastor", "Pastor"),
-    ("carer", "Carer"),
-    ("graduate", "Graduate"),
+# ✨ v3's marquee of people, in its order, each photo's file under img/. Its nurse, musician and barista are left out,
+# as their photos are not free to use (photo sources, 29 Oct).
+V3_MARQUEE = [
+    "carpenter",
+    "callings/teacher",
+    "callings/farmer",
+    "callings/chef",
+    "callings/mechanic",
+    "callings/doctor",
+    "potter",
+    "callings/builder",
+    "callings/baker",
+    "callings/artist",
+    "callings/scientist",
+    "callings/fisherman",
+    "callings/carer",
+    "callings/gardener",
+    "callings/entrepreneur",
 ]
 
 
 @pytest.mark.django_db
-def test_the_callings_are_v3s_photos_in_its_order_each_naming_its_calling(client):
-    """✨ The developer's 29 Oct hand check: the callings look as v3's ring does, with its people as photos alone. Each
-    is an image in the page itself, so it shows with JavaScript off, and its description names its calling."""
+def test_the_callings_are_v3s_marquee_of_photos_in_its_order(client):
+    """✨ The developer's 29 Oct hand check: the callings look as v3's do, a band of photos moving sideways. The band
+    is v3's marquee, its photos twice over so it runs on without a gap, moved by the stylesheet alone, so with
+    JavaScript off too. As in v3, it is decoration, hidden from screen readers."""
     meet = section(client.get("/").content.decode(), r'<section class="panel meet"')
 
-    photos = re.findall(
-        r'<figure class="mc"><img src="/static/callings/([a-z]+)(?:\.[0-9a-f]+)?\.jpg" alt="([^"]+)"', meet
-    )
-    assert photos == V3_CALLINGS
-    assert "figcaption" not in meet
+    marquee = re.search(r'<div class="marquee" aria-hidden="true"><div class="mq-track">(.*?)</div></div>', meet, re.S)
+    assert marquee, "no marquee"
+    photos = re.findall(r'<img src="/static/([a-z/]+?)(?:\.[0-9a-f]+)?\.jpg" alt="" loading="lazy">', marquee.group(1))
+    assert photos == V3_MARQUEE * 2
+    assert "ring" not in meet
     assert "donat" not in meet.casefold()
 
 

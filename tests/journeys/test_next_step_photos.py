@@ -89,16 +89,20 @@ def test_every_photo_the_next_step_can_show_has_a_credit_line():
 
 
 def test_every_photo_the_stylesheet_shows_has_a_credit_line():
-    """✨ The hero's photo and the four callings' too (fix-8), by a word of each credit's subject."""
+    """✨ The hero's photo, by a word of its credit's subject."""
     credits = " ".join(SITE_PHOTO_CREDITS)
 
-    for subject in ("sunhat", "teacher", "baby", "pastor", "headphones"):
-        assert subject in credits, subject
+    assert "sunhat" in credits
 
 
-def test_every_calling_on_the_homepages_ring_has_a_credit_line():
+def test_every_calling_in_the_homepages_marquee_has_a_credit_line_and_no_photo_it_dropped_does():
     """✨ v3's callings (29 Oct), by a word of each credit's subject and its photographer, as traced in the photo
-    sources."""
+    sources. The parent, pastor, student and graduate are in no band of v3's, so their photos are shown nowhere now."""
+    credits = " ".join(SITE_PHOTO_CREDITS)
+
+    assert "teacher" in credits
+    for dropped in ("baby", "pastor", "headphones", "graduate"):
+        assert dropped not in credits, dropped
     credits = " ".join(SITE_PHOTO_CREDITS)
 
     for subject, by in (
@@ -114,6 +118,5 @@ def test_every_calling_on_the_homepages_ring_has_a_credit_line():
         ("scientist", "National Cancer Institute"),
         ("fisherman", "Willian Justen de Vasconcellos"),
         ("carer", "Age Cymru"),
-        ("graduate", "Albert Vincent Wu"),
     ):
         assert re.search(rf"Photograph of [^.]*\b{subject}\b[^.]*, by {by}", credits), subject

@@ -128,27 +128,25 @@
     <!-- =================== MEET =================== -->
     <section class="panel meet" id="about">
       <h2>Everyone has a purpose. Do you know yours?</h2>
-      {# ✨ v3's people, in its order, as photos alone (29 Oct); main.js turns the row into v3's ring. Its nurse, musician and barista are left out, as their photos are not free to use. #}
-      <div class="meet-cards">
-        <figure class="mc"><img src="{% static 'callings/teacher.jpg' %}" alt="Teacher" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/farmer.jpg' %}" alt="Farmer" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/student.jpg' %}" alt="Student" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/chef.jpg' %}" alt="Chef" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/gardener.jpg' %}" alt="Gardener" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/mechanic.jpg' %}" alt="Mechanic" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/parent.jpg' %}" alt="Parent" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/doctor.jpg' %}" alt="Doctor" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/builder.jpg' %}" alt="Builder" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/baker.jpg' %}" alt="Grandmother" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/artist.jpg' %}" alt="Artist" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/entrepreneur.jpg' %}" alt="Founder" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/scientist.jpg' %}" alt="Scientist" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/fisherman.jpg' %}" alt="Fisherman" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/pastor.jpg' %}" alt="Pastor" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/carer.jpg' %}" alt="Carer" loading="lazy"></figure>
-        <figure class="mc"><img src="{% static 'callings/graduate.jpg' %}" alt="Graduate" loading="lazy"></figure>
-      </div>
       <a class="pill" data-magnetic href="{{ begin }}" data-page-wipe>Begin your journey <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
+      {# ✨ v3's marquee (29 Oct), below the button as v3 has it: its people, in its order, twice over so the band runs on without a gap, moved by the stylesheet alone. Decoration, as in v3. Its nurse, musician and barista are left out, as their photos are not free to use. #}
+      <div class="marquee" aria-hidden="true"><div class="mq-track">{% for copy in "ab" %}
+        <img src="{% static 'carpenter.jpg' %}" alt="" loading="lazy">
+        <img src="{% static 'callings/teacher.jpg' %}" alt="" loading="lazy">
+        <img src="{% static 'callings/farmer.jpg' %}" alt="" loading="lazy">
+        <img src="{% static 'callings/chef.jpg' %}" alt="" loading="lazy">
+        <img src="{% static 'callings/mechanic.jpg' %}" alt="" loading="lazy">
+        <img src="{% static 'callings/doctor.jpg' %}" alt="" loading="lazy">
+        <img src="{% static 'potter.jpg' %}" alt="" loading="lazy">
+        <img src="{% static 'callings/builder.jpg' %}" alt="" loading="lazy">
+        <img src="{% static 'callings/baker.jpg' %}" alt="" loading="lazy">
+        <img src="{% static 'callings/artist.jpg' %}" alt="" loading="lazy">
+        <img src="{% static 'callings/scientist.jpg' %}" alt="" loading="lazy">
+        <img src="{% static 'callings/fisherman.jpg' %}" alt="" loading="lazy">
+        <img src="{% static 'callings/carer.jpg' %}" alt="" loading="lazy">
+        <img src="{% static 'callings/gardener.jpg' %}" alt="" loading="lazy">
+        <img src="{% static 'callings/entrepreneur.jpg' %}" alt="" loading="lazy">
+      {% endfor %}</div></div>
     </section>
 
     <!-- =================== FOOTER =================== -->

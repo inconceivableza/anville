@@ -5789,103 +5789,48 @@ body > svg[aria-hidden="true"] {
   margin: 0 auto;
 }
 
-/* ✨ Without the ring (JavaScript off), v3's people are a row to scroll through. */
-.meet-cards {
+/* ✨ v3's marquee (29 Oct), as it has it: the photos twice over, moved by half the track and half a gap in 70
+   seconds, so the loop never shows its seam; faded at both ends, and paused while the pointer is over it. The section
+   has no side padding, so the band runs edge to edge without v3's negative margin. Under reduced motion it stands
+   still. */
+.marquee {
+  margin: clamp(40px, 5vw, 64px) 0 0;
+  overflow: hidden;
+  /* ✨ A mask reads only how opaque its colour is, so any opaque one does, as v3's #000. */
+  -webkit-mask-image: linear-gradient(90deg, transparent, var(--ink) 8%, var(--ink) 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, var(--ink) 8%, var(--ink) 92%, transparent);
+}
+
+.mq-track {
   display: flex;
   gap: 12px;
-  margin-top: 40px;
-  padding-inline: clamp(16px, 4vw, 48px);
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-}
-
-.meet-cards .mc {
-  flex: 0 0 clamp(160px, 22vw, 260px);
-  aspect-ratio: 4 / 5;
-  scroll-snap-align: center;
-}
-
-/* ✨ v3's band (29 Oct): with JavaScript, the row becomes a flat band that main.js moves sideways, its arrows below. */
-.ring-stage {
-  --ring-controls-space: 64px;
-  position: relative;
-  width: 100%;
-  margin: 40px auto 0;
-  padding-bottom: var(--ring-controls-space);
-  overflow: hidden;
-  cursor: grab;
-  touch-action: pan-y;
-}
-
-.ring-stage:active {
-  cursor: grabbing;
-}
-
-.meet-cards.ring {
   width: max-content;
-  margin: 0;
-  padding: 0;
-  overflow: visible;
-  scroll-snap-type: none;
-  will-change: transform;
+  animation: mq 70s linear infinite;
 }
 
-.ring-stage .mc {
-  flex-basis: clamp(180px, 20vw, 320px);
+.marquee:hover .mq-track {
+  animation-play-state: paused;
 }
 
-.ring-controls {
-  position: absolute;
-  z-index: 1;
-  right: 0;
-  /* ✨ Off the stage's foot, so a focused button's ring is not clipped by its overflow (fix-17). */
-  bottom: 8px;
-  left: 0;
-  display: flex;
-  justify-content: center;
-  gap: var(--space-sm);
-}
-
-.ring-control {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0 var(--space-md);
-  border: 1px solid var(--on-dark-35);
-  border-radius: var(--radius-pill-shape);
-  background: var(--brown);
-  color: var(--on-dark);
-  cursor: pointer;
-}
-
-/* ✨ The pause and play button between the arrows is round and as small as a tap allows (fix-17). */
-.ring-toggle {
-  padding: 0;
-}
-
-.ring-control:focus-visible {
-  outline: 2px solid var(--green);
-  outline-offset: 3px;
-}
-
-/* ✨ Photos alone, as v3's people are, with no captions (the content owner, 28 Oct). */
-.mc {
-  margin: 0;
-  overflow: hidden;
-  background: var(--brown-78);
-}
-
-.mc img {
-  display: block;
-  width: 100%;
-  height: 100%;
+.mq-track img {
+  width: clamp(150px, 16vw, 220px);
+  aspect-ratio: 4 / 5;
   object-fit: cover;
-  filter: sepia(0.12) saturate(0.95);
-  user-select: none;
-  -webkit-user-drag: none;
-  pointer-events: none;
+  border-radius: 12px;
+  flex: none;
+  filter: sepia(0.15) saturate(1.05) brightness(0.92);
+}
+
+@keyframes mq {
+  to {
+    transform: translateX(calc(-50% - 6px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mq-track {
+    animation: none;
+  }
 }
 
 .meet .pill {
