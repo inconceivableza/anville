@@ -230,16 +230,13 @@ def test_the_testimonial_is_labelled_impact_and_keeps_its_words(client):
 
 
 @pytest.mark.django_db
-def test_the_testimonial_leads_with_a_short_large_line_taken_from_the_quote(client):
-    """✨ The content owner's feedback (23 Oct): the quote was too long and too large to read, so mix large and small. A
-    short line from it is set large; the whole quote follows, smaller, its words unchanged."""
+def test_the_testimonial_is_the_one_quote_alone(client):
+    """✨ A large line from the quote above it, for the content owner's 23 Oct feedback, was tried and read no better
+    than the quote alone, so it went (29 Oct)."""
     story = section(client.get("/").content.decode(), r'<section class="panel story-sec"')
-    pull = re.search(r'<p class="story-pull"[^>]*>“…?([^<]+?)”</p>', story)
-    quote = re.search(r"<blockquote[^>]*>([^<]+)</blockquote>", story).group(1)
 
-    assert pull, "no large line"
-    assert pull.group(1) in quote
-    assert story.index("story-pull") < story.index("<blockquote")
+    assert "story-pull" not in story
+    assert len(re.findall(r"<blockquote", story)) == 1
 
 
 @pytest.mark.django_db

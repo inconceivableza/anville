@@ -5998,22 +5998,10 @@ body > svg[aria-hidden="true"] {
   text-align: center;
 }
 
-/* ✨ A short line from the quote, large; the whole quote below it smaller, so it reads (the content owner, 23 Oct). */
-.story-pull {
-  margin: 0;
-  font-family: var(--font-heading);
-  font-size: clamp(26px, 3.2vw, 44px);
-  font-weight: 300;
-  line-height: 1.2;
-  color: var(--on-dark);
-  text-wrap: balance;
-}
-
 .story-copy blockquote {
-  max-width: 68ch;
   margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(16px, 1.3vw, 19px);
+  font-size: clamp(22px, 2.4vw, 34px);
   font-weight: 300;
   line-height: 1.35;
   color: var(--on-dark);
