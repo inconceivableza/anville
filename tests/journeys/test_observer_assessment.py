@@ -352,9 +352,52 @@ def test_after_sending_the_claimed_link_offers_only_the_thanks_and_a_way_to_with
 
     page = (the_observers_page(observer) if through == "cookie" else Client().get(own_link)).content.decode()
 
-    withdraw_at = "/observe/withdraw/" if through == "cookie" else f"{own_link}withdraw/"
-    assert f'href="{withdraw_at}"' in page
+    assert f'href="{own_link}withdraw/"' in page  # ✨ by the cookie too, which leads on to the own link (29 Oct)
     assert "<form" not in page and "<select" not in page and "Not built yet" not in page
+
+
+# The observer's own link is the page they are on, from the moment they claim it (the developer's 29 Oct hand check)
+
+
+def copy_box(page):
+    """✨ The own link the page offers to copy, or None."""
+    found = re.search(r'<input type="text" id="own-link" value="http://testserver([^"]+)" readonly>', page)
+    return found and found.group(1)
+
+
+@pytest.mark.django_db
+def test_starting_takes_the_observer_to_their_own_link_and_leaves_the_cookie(participant, observer):  # noqa: F811
+    link = issue_link(participant, "Jo")
+
+    own_link = claim(observer, link)
+
+    assert re.fullmatch(r"/observe/[A-Za-z0-9_-]+/", own_link)
+    assert own_link != link
+    assert observer.cookies["observer"]["path"] == "/observe/"
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("sent", [False, True], ids=["before sending", "after sending"])
+def test_the_own_link_always_offers_itself_to_copy(participant, observer, sent):  # noqa: F811
+    own_link = claim(observer, issue_link(participant, "Jo"))
+    if sent:
+        assert send(Client(), complete_sort(), own_link).status_code == 303
+
+    page = Client().get(own_link).content.decode()
+
+    assert copy_box(page) == own_link
+    assert "The one you were sent no longer works" in page
+    assert "only this once" not in page
+
+
+@pytest.mark.django_db
+def test_the_observers_page_by_cookie_takes_them_to_their_own_link(participant, observer):  # noqa: F811
+    own_link = claim(observer, issue_link(participant, "Jo"))
+
+    opened = observer.get("/observe/")
+
+    assert opened.status_code == 302
+    assert opened["Location"] == own_link
 
 
 # While the participant's consent is withdrawn (ticket 45)

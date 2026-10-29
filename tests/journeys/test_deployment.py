@@ -111,7 +111,7 @@ def test_the_observers_cookie_is_marked_secure_behind_the_proxy(trusting_the_pro
 
     started = observer.post(f"{link}start/", headers=FROM_THE_PROXY_OVER_HTTPS)
 
-    assert started.status_code == 200
+    assert started.status_code == 302
     assert started.cookies["observer"]["secure"] is True
 
 
@@ -123,7 +123,7 @@ def test_a_forwarded_header_is_not_trusted_without_the_proxy(participant, observ
 
     started = observer.post(f"{link}start/", headers=FROM_THE_PROXY_OVER_HTTPS)
 
-    assert started.status_code == 200
+    assert started.status_code == 302
     assert not started.cookies["observer"]["secure"]
 
 

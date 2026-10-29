@@ -23,7 +23,7 @@ from tests.journeys.test_coach_link import issue_coach_link, with_a_coach_and_co
 from tests.journeys.test_contact_list import JO, PRIYA, save_contacts
 from tests.journeys.test_hub import a_fresh_participant
 from tests.journeys.test_invitations import issue_link
-from tests.journeys.test_observer_landing import claim
+from tests.journeys.test_observer_landing import claim, the_observers_page
 
 NOTICE = "This is a demo. Use made-up details, not your own: anything entered here may be wiped."
 FULL, SMALLER = 'class="demo-notice"', 'class="demo-strip"'
@@ -53,7 +53,7 @@ def pages_of_a_pathway(client, load_pathway):
         "hub": client.get("/hub/"),
         "section": client.get("/sections/onboarding/"),
         "observer landing": Client().get(issue_link(client, "Jo")),
-        "observer's own": observer.get("/observe/"),
+        "observer's own": the_observers_page(observer),
         "coach": Client().get(issue_coach_link(client)),
     }
     load_pathway(sort_pathway())

@@ -2009,10 +2009,9 @@ def _landing(request, invitation, action, frozen=None):
 
 @require_http_methods(["GET", "POST"])
 def start_observing(request, token):
-    """✨ The observer's "I'm answering for Sam": the claim. Their own link is shown this once, straight back rather
-    than by redirect so it never sits in the history, and kept in a cookie so they need not follow it; the
-    participant's copy is used up. A second claim is told the link has been used, so whoever claimed first is
-    noticed, not hidden.
+    """✨ The observer's "I'm answering for Sam": the claim. It takes them on to their own link, kept in a cookie too
+    (`_claimed`); the participant's copy is used up. A second claim is told the link has been used, so whoever claimed
+    first is noticed, not hidden.
 
     Only the claim sets the cookie, never a plain visit: this is a POST that carries a CSRF token, so no other site
     can put someone else's claim in an observer's browser by sending it to a link. Opening this address, by a reload
@@ -2048,10 +2047,12 @@ def fresh_link(request, signed):
 
 
 def _claimed(request, secret):
-    """✨ The observer's page for a link just claimed, showing their own link this once and leaving it in a cookie."""
+    """✨ On to the observer's own link, just claimed, leaving it in a cookie too. From the claim on it is the page they
+    are on, so it is there to bookmark, before they send and after (29 Oct). It sits in the browser's history, as any
+    page does: someone else at that browser could already reach the page by the cookie, and the page never shows what
+    was sent."""
     invitation = Invitation.claimed_by(secret)
-    own_link = request.build_absolute_uri(reverse("observe", args=[secret]))
-    shown = _observers_page(request, secret, own_link=own_link)
+    shown = redirect("observe", secret)
     if invitation is not None:
         shown.set_cookie(
             OBSERVER_COOKIE,
@@ -2066,8 +2067,11 @@ def _claimed(request, secret):
 
 
 def observer(request):
-    """✨ The observer's own page, reached by the cookie their claim left."""
-    return _observers_page(request, request.COOKIES.get(OBSERVER_COOKIE))
+    """✨ On to the observer's own link, by the cookie their claim left, so their page has the one address (29 Oct)."""
+    secret = request.COOKIES.get(OBSERVER_COOKIE)
+    if Invitation.claimed_by(secret) is not None:
+        return redirect("observe", secret)
+    return _observers_page(request, secret)
 
 
 def coaching(request, token):
@@ -2336,11 +2340,11 @@ NO_MORE_ANSWERS = "No more answers are being taken."
 OBSERVER_COOKIE = "observer"
 
 
-def _observers_page(request, secret, own_link=None, came_by_link=False):
+def _observers_page(request, secret, came_by_link=False):
     """✨ The observer's page for the invitation a secret claimed, or the refusal if there is none: the observer
     assessment until it is sent, then thanks. While answer collection is frozen, one who has not sent is told no more
-    answers are being taken, and offered no assessment (ticket 55). `own_link` is their link, shown only as they claim
-    it. An observer who `came_by_link` rather than by the cookie sends the assessment through that link. Never cached,
+    answers are being taken, and offered no assessment (ticket 55). An observer who `came_by_link` rather than by the
+    cookie is at their own link, which the page offers to copy, and sends the assessment through it. Never cached,
     since it is reached by a secret."""
     invitation = Invitation.claimed_by(secret)
     if invitation is None:
@@ -2360,7 +2364,7 @@ def _observers_page(request, secret, own_link=None, came_by_link=False):
     withdraw_at = reverse("withdrawal_by_link", args=[secret]) if came_by_link else reverse("withdrawal")
     context = {
         "name": name,
-        "own_link": own_link,
+        "own_link": request.build_absolute_uri(reverse("observe", args=[secret])) if came_by_link else None,
         "assessment": assessment,
         "sent": sent,
         "frozen": NO_MORE_ANSWERS if frozen else None,

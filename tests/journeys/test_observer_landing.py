@@ -52,15 +52,15 @@ def start(client, link):
 
 
 def claim(client, link):
-    """✨ Start from a link as the observer does, and return the link of their own that is shown to bookmark."""
+    """✨ Start from a link as the observer does, and return the link of their own it takes them on to."""
     started = start(client, link)
-    assert started.status_code == 200
-    return re.search(r"http://testserver(/observe/[A-Za-z0-9_-]+/)", started.content.decode()).group(1)
+    assert started.status_code == 302
+    return started["Location"]
 
 
 def the_observers_page(client):
-    """✨ The observer's own page, reached by the cookie claiming left, with no link."""
-    return client.get("/observe/")
+    """✨ The observer's own page, reached by the cookie claiming left, with no link: on to their own link, if any."""
+    return client.get("/observe/", follow=True)
 
 
 # Claiming
@@ -99,7 +99,7 @@ def test_opening_the_link_claims_nothing(participant, observer):
 
     assert participant.get(link).status_code == 200
 
-    assert start(observer, link).status_code == 200
+    assert start(observer, link).status_code == 302
 
 
 @pytest.mark.django_db
@@ -321,10 +321,10 @@ def answer_address():
 
 
 def press(client, address):
-    """✨ Press the button on the reminder's page, and return the observer's own link it shows to bookmark."""
+    """✨ Press the button on the reminder's page, and return the observer's own link it takes them on to."""
     pressed = client.post(address)
-    assert pressed.status_code == 200
-    return re.search(r"http://testserver(/observe/[A-Za-z0-9_-]+/)", pressed.content.decode()).group(1)
+    assert pressed.status_code == 302
+    return pressed["Location"]
 
 
 @pytest.mark.django_db
@@ -344,6 +344,16 @@ def test_opening_the_reminders_page_changes_nothing_and_pressing_it_gives_a_fres
     assert Client().get(own_link).status_code == 200
     assert assessment.send(observer, complete_sort()).status_code == 303  # ✨ by the cookie the press left
     assert assessment.send(Client(), complete_sort(), link=own_link).status_code == 409  # ✨ the same claim
+
+
+@pytest.mark.django_db
+def test_pressing_the_reminders_button_takes_the_observer_to_their_own_link(reminded, observer):
+    """✨ As starting from the landing does (the developer's 29 Oct hand check), so it is the page they are on."""
+    pressed = observer.post(answer_address())
+
+    assert pressed.status_code == 302
+    assert re.fullmatch(r"/observe/[A-Za-z0-9_-]+/", pressed["Location"])
+    assert Client().get(pressed["Location"]).status_code == 200
 
 
 def frozen(participant):
