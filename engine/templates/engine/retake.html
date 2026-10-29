@@ -69,9 +69,9 @@
         </select>
       {% endif %}
       {% if clearing %}
-        {# ✨ Keeping the results is the default, the green button and first; deleting them the plain one below. #}
+        {# ✨ Keeping the results is the default, the green button and first; deleting them the red one below. #}
         <a class="pill full" href="{% url 'results' block_id %}">Keep my results</a>
-        <button type="submit" class="pill ghost full">Delete and retake</button>
+        <button type="submit" class="pill danger full">Delete and retake</button>
       {% else %}
         {% if offer.profiles %}<button type="submit" class="pill full">Load this profile</button>{% endif %}
         <a class="pill ghost full" href="{{ sort_page }}">Sort the cards myself</a>

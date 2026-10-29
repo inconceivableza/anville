@@ -75,9 +75,9 @@ def test_off_a_demo_system_the_results_page_links_to_the_retake_which_asks_first
     assert asked.status_code == 200
     assert f'action="{RETAKE}"' in page
     assert "Retaking deletes your results. They can’t be brought back." in page
-    # ✨ Keeping them is the default: the green button, first; deleting them the plain one below.
+    # ✨ Keeping them is the default: the green button, first; deleting them the red one below.
     keep = page.index(f'<a class="pill full" href="{RESULTS}">Keep my results</a>')
-    assert keep < page.index('<button type="submit" class="pill ghost full">Delete and retake</button>')
+    assert keep < page.index('<button type="submit" class="pill danger full">Delete and retake</button>')
     assert "Demo only" not in page
     assert 'name="profile"' not in page
     assert Result.objects.exists()  # ✨ opening the page clears nothing

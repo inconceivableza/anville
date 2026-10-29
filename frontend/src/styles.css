@@ -2109,6 +2109,16 @@ form + .way-on,
   cursor: not-allowed;
 }
 
+/* ✨ A button that deletes what cannot be brought back, such as "Delete and retake" (29 Oct): the stop box's red. */
+.pill.danger {
+  background: var(--red-text);
+  color: var(--snow);
+}
+
+.pill.danger:focus-visible {
+  outline-color: var(--red-text);
+}
+
 /* ✨ On the cream, its pale fill, as the ghost button had before ticket 53a (fix-2); on a dark panel, none. */
 .pill.ghost {
   background: var(--paper);
