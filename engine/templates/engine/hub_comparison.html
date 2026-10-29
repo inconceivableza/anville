@@ -16,6 +16,9 @@
   <div class="srow-body">
     {% if holder.is_locked %}
       <h3 class="hub-section-title">{{ comparison.title }}</h3>
+    {% elif comparison.unsorted %}
+      {# ✨ Between a retake and the new sort, the row leads back to the sort (29 Oct). #}
+      <h3><a class="hub-section-title" href="{{ comparison.unsorted }}">{{ comparison.title }}</a></h3>
     {% elif comparison.invite.waiting %}
       <h3><a class="hub-section-title" href="{% url 'comparison' comparison.sort %}">{{ comparison.title }}</a></h3>
     {% else %}
@@ -25,7 +28,7 @@
   {% if holder.is_locked %}
     {% include "engine/lock_status.html" with section=holder pill="tag" note_id="lock-note-comparison" %}
   {% else %}
-    <span class="tag status-{% if comparison.invite.waiting %}waiting{% else %}{{ comparison.status }}{% endif %}">{{ comparison.label }}</span>
+    <span class="tag status-{% if comparison.invite.waiting or comparison.unsorted %}waiting{% else %}{{ comparison.status }}{% endif %}">{{ comparison.label }}</span>
   {% endif %}
   {% if not holder.is_locked %}<span class="srow-arrow" aria-hidden="true">&rarr;</span>{% endif %}
 </li>

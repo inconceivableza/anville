@@ -9,6 +9,8 @@ again. The coach sees the evaluation as not done until the participant chooses t
 
 Loading a demo profile stays demo-only (tests/journeys/test_demo_retake.py)."""
 
+import re
+
 import pytest
 from django.test import Client
 from django.utils.html import escape
@@ -24,9 +26,12 @@ from tests.journeys.test_whatever_you_do import (
     people_answer,
     press_compare,
     reissue_coach_link,
+    section_2,
     serves_workbook_1,
+    submit_the_sort,
     through_section_1,
 )
+from tests.journeys.pages import main_of, text_of
 from tests.journeys.test_whatever_you_do_faithful_port import complete
 
 SORT = "strengths-sort"
@@ -34,6 +39,8 @@ RESULTS = f"/results/{SORT}/"
 RETAKE = f"{RESULTS}retake/"
 SORT_PAGE = "/sections/strengths/"
 NOT_DONE = "finishes the strengths evaluation and sends it to you"
+UNSORTED = "Finish your strengths evaluation to compare."
+GREYED = '<span class="pill is-waiting" role="link" aria-disabled="true">Compare with how others see you →</span>'
 
 
 @pytest.fixture
@@ -149,3 +156,52 @@ def test_after_retaking_the_coach_sees_the_evaluation_as_not_done_until_the_new_
 
     assert escape(NOT_DONE) in coach.get(link).content.decode()
     assert Invitation.objects.get(contact__role=Contact.Role.COACH).results_shared_at is None
+
+
+# ✨ How others see you, between the retake and the new sort (29 Oct): Section 2 and the hub keep its card and row,
+# the press greyed, saying the sort comes first, where before they showed nothing at all.
+
+
+@pytest.mark.django_db
+def test_after_retaking_section_2_keeps_how_others_see_you_greyed_saying_to_finish_the_sort_first(
+    live, participant  # noqa: F811
+):
+    compared(participant)
+
+    participant.post(RETAKE)
+
+    page = section_2(participant)
+    assert "How others see you" in text_of(page)
+    assert "Invite people who know you →" in page
+    assert GREYED in page
+    assert UNSORTED in text_of(page)
+    assert re.search(rf'<a href="{SORT_PAGE}"[^>]*>Finish your strengths evaluation</a>', page)
+    assert "Viewed" not in text_of(page)
+    assert "comparison-signpost is-complete" not in page
+
+
+@pytest.mark.django_db
+def test_after_retaking_the_hub_keeps_the_how_others_see_you_row_saying_to_finish_the_sort_first(
+    live, participant  # noqa: F811
+):
+    compared(participant)
+
+    participant.post(RETAKE)
+
+    page = main_of(participant.get("/hub/").content.decode())
+    row = re.search(r'<li class="hub-section srow hub-part hub-comparison.*?</li>', page, re.S)
+    assert row, "the hub has no How others see you row"
+    assert f'<span class="tag status-waiting">{UNSORTED}</span>' in row.group(0)
+
+
+@pytest.mark.django_db
+def test_once_the_new_sort_is_in_how_others_see_you_counts_the_answers_again(live, participant):  # noqa: F811
+    compared(participant)
+    participant.post(RETAKE)
+
+    submit_the_sort(participant)
+
+    page = section_2(participant)
+    assert UNSORTED not in text_of(page)
+    assert GREYED in page  # ✨ the answers went with the retake, so too few are in again
+    assert "0 of 3 answered" in text_of(page)  # ✨ its three links still out, so none more to invite

@@ -20,8 +20,17 @@
       {% if block.comparison.invite %}
         <a class="pill ghost" href="{{ block.comparison.invite.href }}">Invite people who know you →</a>
       {% endif %}
-      {% include "engine/comparison_press.html" with press_sort=block.comparison.sort press_class="pill" press_waiting=block.comparison.invite.waiting press_magnetic=True %}
+      {% if block.comparison.unsorted %}
+        {% include "engine/comparison_press.html" with press_sort=block.comparison.sort press_class="pill" press_waiting=True %}
+      {% else %}
+        {% include "engine/comparison_press.html" with press_sort=block.comparison.sort press_class="pill" press_waiting=block.comparison.invite.waiting press_magnetic=True %}
+      {% endif %}
     </div>
-    <p class="signpost-line">{{ block.comparison.label }}</p>
+    {# ✨ Between a retake and the new sort, the line leads back to the sort (29 Oct). #}
+    {% if block.comparison.unsorted %}
+      <p class="signpost-line"><a href="{{ block.comparison.unsorted }}">Finish your strengths evaluation</a> to compare.</p>
+    {% else %}
+      <p class="signpost-line">{{ block.comparison.label }}</p>
+    {% endif %}
   </div>
 {% endif %}

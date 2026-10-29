@@ -2758,12 +2758,23 @@ def _comparison_signpost_shown(state, block):
     """✨ For a `comparison_signpost` block, its sort and where the way to that sort's comparison stands, as
     `comparison_status` words it, once there is a result; None before, and for any other block (ticket 67a). Below the
     minimum, where `_invite` marks the way to invite people `waiting`, the status says its phrase (fix-3), and the press
-    is greyed (fix-8)."""
+    is greyed (fix-8). Between a retake and the new sort, it is `unsorted`: the press greyed and its line leading back
+    to the sort (29 Oct), where before it showed nothing. That is while the sort's section, or the one it is part of,
+    stays finished, as a retake leaves it; before the first sort it cannot be."""
     if block["type"] != "comparison_signpost":
         return None
     sort = block["sort"]
     if not Result.objects.filter(response=state.response, block_id=sort).exists():
-        return None
+        section = section_of(state.version.document, sort)
+        if not {section["id"], section.get("part_of")} & set(state.completed):
+            return None
+        return {
+            "sort": sort,
+            "status": "waiting",
+            "label": "Finish your strengths evaluation to compare.",
+            "invite": _invite(state),
+            "unsorted": page_url(section["id"], page_of(section, sort)),
+        }
     answered = _answered(state.response)
     viewed = comparison_viewed(state.answers, sort)
     status, label = comparison_status(answered, minimum_observers(state.version.document), viewed)
