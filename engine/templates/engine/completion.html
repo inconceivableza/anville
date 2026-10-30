@@ -44,11 +44,12 @@
       <form method="post"{% if seal %} novalidate{% endif %}{% if messages_after_a_press %} action="{{ complete }}#refused" hx-post="{{ complete }}" hx-target="#gate-refusal"{% else %} action="{{ complete }}"{% endif %}>
         {% csrf_token %}
         {% if seal %}
-          {# ✨ The date the letter opens on, picked with the press that seals it (ticket 104), kept as picked when an #}
-          {# ✨ autosave redraws this out of band. #}
+          {# ✨ The date the letter opens on, picked with the press that seals it (ticket 104), with it in words beside #}
+          {# ✨ it, both kept as picked when an autosave redraws this out of band. #}
           <p class="seal-date">
             <label for="opens-on">{{ seal.date_label }}</label>
-            <input type="date" id="opens-on" hx-preserve name="opens_on" value="{{ seal.chosen }}" min="{{ seal.earliest }}" max="{{ seal.latest }}">
+            <input type="date" id="opens-on" hx-preserve name="opens_on" value="{{ seal.chosen }}" min="{{ seal.earliest }}" max="{{ seal.latest }}" data-opens-on>
+            <output id="opens-on-words" hx-preserve for="opens-on" class="seal-date-words" data-opens-on-words aria-live="polite">{{ seal.chosen_in_words }}</output>
           </p>
         {% endif %}
         <button type="submit" class="pill full"{% if unmet and not messages_after_a_press %} disabled{% endif %}>{{ section.complete_label }}</button>

@@ -618,6 +618,9 @@ def complete_section(request, section_id):
         participant_response.complete_section(section_id, fixed_block_ids=fixed_block_ids)
         if letter is not None:
             SealedLetter.seal(participant_response, letter["id"], opens_on)
+    if letter is not None:
+        # ✨ Back to the letter, so the participant sees it sealed and until when, rather than only a tick on the hub.
+        return _go_to(request, f"{page_url(section_id, page_of(section, letter['id']))}#{landing_of(letter)}")
     # ✨ Back to the hub, which points at the next step, as the prototype's `completePillar` goes (ticket 41b); a wizard
     # ✨ with a welcome by way of it first (sprint-3c-r3-fix-7).
     if section.get("wizard") and "welcome" in section:

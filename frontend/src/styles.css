@@ -3312,12 +3312,61 @@ body:not(.framed) .question-card > p + form {
   margin-bottom: var(--space-sm);
 }
 
+.seal-date-words,
+.letter-copy-note {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.letter-copy-note {
+  margin-top: var(--space-sm);
+}
+
+/* ✨ The date a letter opens on, as the site's other fields are drawn (a contact's, the coach's name): its label in the
+   heading face above it, the field on the paper with the same border, radius and focus ring, the browser's calendar
+   button in the green, and the date in words beside it. */
 .seal-date {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-sm);
+  gap: var(--space-xs) var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.seal-date label {
+  flex-basis: 100%;
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  color: var(--ink);
+}
+
+.seal-date input[type="date"] {
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
+  font-size: var(--text-md);
+  color: var(--ink);
+  background: var(--paper);
+  color-scheme: light;
+  accent-color: var(--green-deep);
+  min-height: 44px;
+  transition: border-color 0.2s;
+}
+
+.seal-date input[type="date"]:focus {
+  outline: none;
+  border-color: var(--green-deep);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.seal-date input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.seal-date input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 @media print {

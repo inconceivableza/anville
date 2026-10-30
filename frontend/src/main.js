@@ -210,6 +210,23 @@ document.addEventListener("click", (event) => {
 
 window.addEventListener("afterprint", () => document.body.classList.remove("printing-letter"));
 
+// ✨ The date a letter opens on, in words beside its field as the server first draws it ("Thursday 4 March 2027"),
+// kept up to date as it is changed; empty while the field holds no whole date.
+const OPENS_ON_IN_WORDS = new Intl.DateTimeFormat("en-GB", {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+document.addEventListener("input", (event) => {
+  if (!event.target.matches?.("[data-opens-on]")) return;
+  const words = event.target.closest("form").querySelector("[data-opens-on-words]");
+  const chosen = event.target.valueAsDate;
+  words.textContent = chosen ? OPENS_ON_IN_WORDS.format(chosen).replace(",", "") : "";
+});
+
 // ✨ A dialog in a contact list's row (a link just issued, or asking before someone is removed) shows open in the row
 // without JavaScript; once it has loaded, as a modal, on the page and in each row htmx sends back (fix-2).
 htmx.onLoad((content) => {

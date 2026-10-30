@@ -73,11 +73,19 @@ def seal_press(letter, today, chosen=None):
     opens on as the date field takes it, `chosen` where a refused press sent one back, else the default, with the
     earliest and latest accepted. What sealing takes is said under the letter itself (its `seal_note`)."""
     dates = seal_dates(letter, today)
+    chosen = chosen if chosen is not None else dates.default.isoformat()
+    try:
+        in_words = dateformat.format(date.fromisoformat(chosen), "l " + SHOWN_DATE)
+    except ValueError:
+        in_words = ""
     return {
         "label": text_for(letter["seal_label"], "participant"),
         "date_label": text_for(letter["date_label"], "participant"),
         **{field: day.isoformat() for field, day in dates._asdict().items()},
-        "chosen": chosen if chosen is not None else dates.default.isoformat(),
+        "chosen": chosen,
+        # ✨ The date chosen in words beside the field, "Thursday 4 March 2027", since a date field's own format varies
+        # by browser and place; the page keeps it up to date as the date is changed.
+        "chosen_in_words": in_words,
     }
 
 

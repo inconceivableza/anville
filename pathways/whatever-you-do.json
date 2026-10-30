@@ -342,7 +342,7 @@
             "type": "rich_text",
             "variant": "hint",
             "label": "The task",
-            "body": "Write to yourself as you will be on the day you choose for your letter to open, between three months and two years from now. You have just done a lot of thinking, and most of it fades faster than you would expect. Put it down now, while it is still warm. When you finish this section, your letter is sealed until that day, and then it opens here for you to read.",
+            "body": "Write to yourself as you will be on the day you choose for your letter to open, between three months and two years from now. You have just done a lot of thinking, and most of it fades faster than you would expect. Put it down now, while it is still warm. When you finish this section, your letter is sealed until that day, and then it opens here for you to read.\n\nYou did Workbooks 1–4 on paper, so keep them beside you as you write.",
             "list_label": "Things you might want to include",
             "items": [
               { "lead": "What has shifted in you", "text": "what you understand now that you did not when you started, about God, about work, about yourself." },
@@ -371,6 +371,7 @@
             "prompt": "Your letter",
             "placeholder": "Dear me,",
             "months": { "default": 12, "earliest": 3, "latest": 24 },
+            "copy_note": "Keep your own copy too: once it's sealed, you can't read it here until the day you pick.",
             "seal_label": "Save my answers and seal my letter",
             "seal_note": "Answer the five questions below, then pick the day your letter opens and seal it. Once it is sealed, it can't be changed, and it can't be read here until that day.",
             "date_label": "Open it on",

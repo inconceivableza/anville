@@ -33,6 +33,8 @@
       <button type="button" class="pill ghost small" data-print-letter>Print</button>
       <button type="button" class="pill ghost small" data-copy="answer-{{ block.id }}">Copy text</button>
     </div>
+    {# ✨ Shown with or without JavaScript: without, the letter can still be selected and copied by hand. #}
+    {% if block.text.copy_note %}<p class="letter-copy-note">{{ block.text.copy_note }}</p>{% endif %}
     {# ✨ Filled from the box as Print is pressed, and shown only on paper. #}
     <div class="letter-print" data-letter-print aria-hidden="true"></div>
   </form>

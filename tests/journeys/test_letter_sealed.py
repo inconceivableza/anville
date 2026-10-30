@@ -121,9 +121,11 @@ def test_a_date_outside_3_to_24_months_is_refused_and_nothing_is_finished_or_sea
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("opens_on", [date(2030, 6, 4), date(2032, 3, 4)], ids=["3 months", "24 months"])
-def test_a_date_from_3_to_24_months_on_seals_the_letter_until_then(participant, opens_on):
-    assert on(participant, SEALED_AT, seal, opens_on).status_code == 303
+def test_a_date_from_3_to_24_months_on_seals_the_letter_until_then_and_shows_it_sealed(participant, opens_on):
+    sealed = on(participant, SEALED_AT, seal, opens_on)
 
+    assert sealed.status_code == 303
+    assert sealed.url == f"{SECTION}#block-letter-box"  # ✨ back to the letter, to see it sealed, not the hub
     assert SealedLetter.objects.get().opens_on == opens_on
     assert "letter" in Response.objects.get().completed_sections
 

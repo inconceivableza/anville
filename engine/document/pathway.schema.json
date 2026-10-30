@@ -1066,6 +1066,10 @@
             "latest": { "type": "integer", "minimum": 1 }
           }
         },
+        "copy_note": {
+          "description": "An optional line beside Print and Copy text while the letter is written, such as asking the participant to keep their own copy before it is sealed.",
+          "$ref": "#/$defs/text"
+        },
         "seal_label": {
           "description": "The wording of the press that finishes the section and seals the letter, in place of the section's own while the letter is not sealed, such as 'Seal my letter and finish Section 6'.",
           "$ref": "#/$defs/text"

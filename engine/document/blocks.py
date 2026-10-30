@@ -315,7 +315,9 @@ BLOCK_TYPES = {
         BlockType("long_text", text_fields=("prompt", "placeholder"), captures=TEXT),
         # ✨ A long text sealed as its section is finished, until a date the participant picks (ticket 104).
         BlockType(
-            "letter", text_fields=("prompt", "placeholder", "seal_label", "seal_note", "date_label"), captures=TEXT
+            "letter",
+            text_fields=("prompt", "placeholder", "copy_note", "seal_label", "seal_note", "date_label"),
+            captures=TEXT,
         ),
         BlockType("agreement_scale", text_fields=("prompt", "min_label", "max_label"), captures=SCALE_POINT),
         BlockType(
