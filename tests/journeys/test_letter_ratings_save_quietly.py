@@ -28,7 +28,7 @@ def test_a_closing_rating_answered_says_nothing_and_sends_back_only_its_gate(par
     saved = autosave(through_to_the_letter(participant), "pl-peace", "8")
 
     assert saved.status_code == 200
-    assert saved.content.decode().startswith('<div id="completion"')
+    assert saved.content.decode().startswith('<div id="gate-refusal"')
 
 
 @pytest.mark.django_db

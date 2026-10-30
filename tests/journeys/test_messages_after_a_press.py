@@ -16,6 +16,7 @@ from engine.models import Publication
 from tests.journeys.pages import gate_checklist
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_onboarding_wizard import RATINGS, RATINGS_PAGE, WELCOME, WIZARD, answer, through_the_wizard
+from tests.journeys.test_whatever_you_do import through_to_the_letter
 
 DOCUMENT = Path(__file__).resolve().parents[2] / "pathways" / "whatever-you-do.json"
 
@@ -151,8 +152,26 @@ def test_an_opening_question_answered_sends_back_nothing_to_swap_in_but_its_gate
         headers={"HX-Request": "true"},
     ).content.decode()
 
-    assert saved.startswith('<div id="completion"')
+    assert saved.startswith('<div id="gate-refusal"')
     assert saved.endswith("</div>")
+
+
+@pytest.mark.django_db
+def test_an_autosave_redraws_only_what_is_beneath_the_button_so_a_press_on_it_is_never_lost(participant):
+    """✨ A text box saves as it loses the focus, which a press on the button beneath it takes: the way on redrawn by
+    that save was swapped out from under the pointer, and the press came to nothing (the letter needed sealing twice).
+    Here no button is held disabled, so the button never needs redrawing; only a refused press's list beneath it."""
+    through_to_the_letter(participant)
+
+    saved = participant.post(
+        "/answers/lt-message/",
+        {"value": "Dear future me, a letter.", "version": Publication.current_version().pk},
+        headers=HTMX,
+    ).content.decode()
+
+    assert '<div id="gate-refusal" hx-swap-oob="true">' in saved
+    assert 'id="completion"' not in saved
+    assert "<button" not in saved
 
 
 @pytest.mark.django_db
