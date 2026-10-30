@@ -39,6 +39,8 @@ COPY engine/ engine/
 COPY organisations/ organisations/
 COPY pathways/ pathways/
 COPY --from=frontend /build/frontend/dist/ frontend/dist/
+# ✨ Photos the templates name by {% static %} rather than through the stylesheet, such as the homepage's callings strip.
+COPY frontend/img/ frontend/img/
 
 # ✨ The settings will not load without these two, and collectstatic reads neither. They are set for this one
 # command and are not kept in the image.
