@@ -338,6 +338,23 @@
         "complete_label": "I've finished Section 6",
         "blocks": [
           {
+            "id": "lt-task",
+            "type": "rich_text",
+            "variant": "hint",
+            "label": "The task",
+            "body": "Write to yourself as you will be on the day you choose for your letter to open, between three months and two years from now. You have just done a lot of thinking, and most of it fades faster than you would expect. Put it down now, while it is still warm. When you finish this section, your letter is sealed until that day, and then it opens here for you to read.",
+            "list_label": "Things you might want to include",
+            "items": [
+              { "lead": "What has shifted in you", "text": "what you understand now that you did not when you started, about God, about work, about yourself." },
+              { "lead": "What you and others saw", "text": "the strengths you found in yourself, and what the people who know you saw in you." },
+              { "lead": "Your calling, in your own words", "text": "not the polished sentence, the version you would say to a friend across a table." },
+              { "lead": "The steps you are committing to", "text": "the steps from Workbook 4, written as promises rather than intentions." },
+              { "lead": "What might knock you off course", "text": "busyness, discouragement, someone else's opinion, an easier offer. Name it now." },
+              { "lead": "What you want to say to yourself when you open it", "text": "encouragement, a warning, a reminder of who you are." },
+              { "lead": "A verse or prayer to carry", "text": "something to hold onto when life gets loud." }
+            ]
+          },
+          {
             "id": "lt-stones",
             "type": "scripture_passages",
             "passages": [
@@ -349,37 +366,13 @@
             "note": "When Israel crossed the Jordan, God told them to carry twelve stones out of the riverbed and pile them on the bank – so that when their children asked “what do these stones mean?”, they would have something solid to point at. Memory needs help. This letter is your pile of stones."
           },
           {
-            "id": "lt-task",
-            "type": "rich_text",
-            "variant": "hint",
-            "label": "The task",
-            "body": "Write to yourself as you will be on the day you choose for your letter to open, between three months and two years from now. You have just done a lot of thinking, and most of it fades faster than you would expect. Put it down now, while it is still warm. When you finish this section, your letter is sealed until that day, and then it opens here for you to read."
-          },
-          {
-            "id": "lt-include",
-            "type": "rich_text",
-            "label": "Things you might want to include",
-            "body": "What has shifted in you – what you understand now that you did not when you started, about God, about work, about yourself.\n\nWhat you and others saw – the strengths you found in yourself, and what the people who know you saw in you.\n\nYour calling, in your own words – not the polished sentence, the version you would say to a friend across a table.\n\nThe steps you are committing to – the steps from Workbook 4, written as promises rather than intentions.\n\nWhat might knock you off course – busyness, discouragement, someone else's opinion, an easier offer. Name it now.\n\nWhat you want to say to yourself when you open it – encouragement, a warning, a reminder of who you are.\n\nA verse or prayer to carry – something to hold onto when life gets loud."
-          },
-          {
-            "id": "lt-recap",
-            "type": "recap",
-            "sort": "strengths-sort",
-            "heading": "Where you have got to",
-            "strengths_label": "Your top strengths",
-            "others_label": "How others see you",
-            "coach_label": "Your coach",
-            "empty": "Your top strengths, how others see you and your coach will show here once you have them.",
-            "body": "You did Workbooks 1–4 on paper, so keep them beside you as you write."
-          },
-          {
             "id": "lt-message",
             "type": "letter",
             "prompt": "Your letter",
             "placeholder": "Dear me,",
             "months": { "default": 12, "earliest": 3, "latest": 24 },
-            "seal_label": "Seal my letter and finish Section 6",
-            "seal_note": "Answer the five questions above before you seal your letter. Once it is sealed, it can't be changed, and it can't be read here until the day you pick.",
+            "seal_label": "Save my answers and seal my letter",
+            "seal_note": "Answer the five questions below, then pick the day your letter opens and seal it. Once it is sealed, it can't be changed, and it can't be read here until that day.",
             "date_label": "Open it on",
             "sealed": "Your letter is sealed until {date}. On that day it opens here for you to read.",
             "email": {
@@ -391,6 +384,7 @@
           {
             "id": "pl-intro",
             "type": "rich_text",
+            "heading": "Where are you now?",
             "body": "You answered these same questions at the start. Let's see where you are now.\n\nTo what extent would you agree with the following statements?"
           },
           {

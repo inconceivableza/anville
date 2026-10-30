@@ -1,9 +1,9 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
-"""✨ A letter to the participant's future self, and the recap beside it (ticket 104): the dates it may be sealed until,
-as its block authors them, the date a sealing press sends, and how the letter, the press and the recap are shown.
-Pure: no database, no request; the view gathers what they read."""
+"""✨ A letter to the participant's future self (ticket 104): the dates it may be sealed until, as its block authors
+them, the date a sealing press sends, and how the letter and the press that seals it are shown. Pure: no database, no
+request; the view gathers what they read."""
 
 import calendar
 from datetime import date
@@ -12,7 +12,6 @@ from typing import NamedTuple
 from django.utils import dateformat
 
 from engine.document.text import text_for
-from engine.document.tie_break import joined
 
 # ✨ How a date is said to a reader, here and in a reminder's day its link stops working: "4 March 2031".
 SHOWN_DATE = "j F Y"
@@ -70,13 +69,12 @@ def unsealed_letter(section, sealed_ids):
 
 
 def seal_press(letter, today, chosen=None):
-    """✨ What the press that finishes a section holding an unsealed `letter` offers: its label, the line above it, and
-    the date the letter opens on as the date field takes it, `chosen` where a refused press sent one back, else the
-    default, with the earliest and latest accepted."""
+    """✨ What the press that finishes a section holding an unsealed `letter` offers: its label, and the date the letter
+    opens on as the date field takes it, `chosen` where a refused press sent one back, else the default, with the
+    earliest and latest accepted. What sealing takes is said under the letter itself (its `seal_note`)."""
     dates = seal_dates(letter, today)
     return {
         "label": text_for(letter["seal_label"], "participant"),
-        "note": text_for(letter["seal_note"], "participant"),
         "date_label": text_for(letter["date_label"], "participant"),
         **{field: day.isoformat() for field, day in dates._asdict().items()},
         "chosen": chosen if chosen is not None else dates.default.isoformat(),
@@ -91,25 +89,6 @@ def letter_shown(block, opens_on, today):
     if today < opens_on:
         return {"state": "sealed", "sentence": sealed_sentence(block, opens_on)}
     return {"state": "open"}
-
-
-def recap_shown(document, own_frameworks, observed_frameworks, coach_name):
-    """✨ Where the participant has got to, as a `recap` block shows it beside their letter: the top construct of each
-    framework in their own result, as their results page draws it (`own_frameworks`, None before there is one); the
-    top of each as the people who answered see them (`observed_frameworks`, the observer average's, None below the
-    minimum), constructs level at the top named together; and their coach's name, if they chose one. `empty` when
-    there is none of it, for the block's own message."""
-    labels = {
-        construct["id"]: text_for(construct.get("text_label", construct["label"]), "participant")
-        for framework in document["measurement"]["frameworks"]
-        for construct in framework["constructs"]
-    }
-    yours = [framework["bars"][0]["text_label"] for framework in own_frameworks or () if framework["bars"]]
-    others = []
-    for framework in observed_frameworks or ():
-        top = max(construct["share"] for construct in framework["constructs"])
-        others.append(joined([labels[c["construct"]] for c in framework["constructs"] if c["share"] == top]))
-    return {"yours": yours, "others": others, "coach": coach_name, "empty": not (yours or others or coach_name)}
 
 
 def ready_email(block):

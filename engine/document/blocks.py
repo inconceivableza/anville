@@ -296,7 +296,11 @@ class BlockType(NamedTuple):
 BLOCK_TYPES = {
     block_type.name: block_type
     for block_type in [
-        BlockType("rich_text", text_fields=("label", "body")),
+        BlockType(
+            "rich_text",
+            text_fields=("heading", "label", "body", "list_label"),
+            text_lists=(("items", ("lead", "text")),),
+        ),
         BlockType(
             "scripture_reading",
             text_fields=("heading", "note", "confirm_label"),
@@ -313,9 +317,6 @@ BLOCK_TYPES = {
         BlockType(
             "letter", text_fields=("prompt", "placeholder", "seal_label", "seal_note", "date_label"), captures=TEXT
         ),
-        # ✨ Where the participant has got to, beside their letter: their top strengths, how others see them and their
-        # coach (ticket 104).
-        BlockType("recap", text_fields=("heading", "strengths_label", "others_label", "coach_label", "empty", "body")),
         BlockType("agreement_scale", text_fields=("prompt", "min_label", "max_label"), captures=SCALE_POINT),
         BlockType(
             "single_select",

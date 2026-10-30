@@ -620,11 +620,10 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "scripture_passages", "long_text", "letter", "recap", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "comparison_signpost", "section_signpost", "download", "page_break"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "scripture_passages", "long_text", "letter", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "comparison_signpost", "section_signpost", "download", "page_break"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "letter" } } }, "then": { "$ref": "#/$defs/letter" } },
-        { "if": { "properties": { "type": { "const": "recap" } } }, "then": { "$ref": "#/$defs/recap" } },
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
         { "if": { "properties": { "type": { "const": "scripture_reading" } } }, "then": { "$ref": "#/$defs/scripture_reading" } },
         { "if": { "properties": { "type": { "const": "scripture_passages" } } }, "then": { "$ref": "#/$defs/scripture_passages" } },
@@ -663,6 +662,10 @@
           "enum": ["plain", "hint"],
           "default": "plain"
         },
+        "heading": {
+          "description": "An optional heading above the text, starting a new part of the page, such as 'Where you are now'.",
+          "$ref": "#/$defs/text"
+        },
         "label": {
           "description": "An optional short lead-in shown above the body, such as 'The big question'.",
           "$ref": "#/$defs/text"
@@ -670,6 +673,23 @@
         "body": {
           "description": "Plain text. A blank line starts a new paragraph.",
           "$ref": "#/$defs/text"
+        },
+        "list_label": {
+          "description": "An optional lead-in above the list, such as 'Things you might want to include'.",
+          "$ref": "#/$defs/text"
+        },
+        "items": {
+          "description": "An optional list after the body, each item plain text with an optional lead in bold before a dash, as in 'What has shifted in you – what you understand now…'.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["text"],
+            "properties": {
+              "lead": { "$ref": "#/$defs/text" },
+              "text": { "$ref": "#/$defs/text" }
+            }
+          }
         }
       }
     },
@@ -1051,7 +1071,7 @@
           "$ref": "#/$defs/text"
         },
         "seal_note": {
-          "description": "A line above that press, while the letter is not sealed, saying what must be done before it can be.",
+          "description": "A line under the letter, while it is not sealed, saying what must be done before it can be and what sealing means.",
           "$ref": "#/$defs/text"
         },
         "date_label": {
@@ -1072,33 +1092,6 @@
             "body": { "$ref": "#/$defs/text" },
             "link_label": { "$ref": "#/$defs/text" }
           }
-        }
-      }
-    },
-    "recap": {
-      "description": "Where the participant has got to: the top construct of each framework in their own result of the sort, the top of each as the people who answered see them once at least the minimum have (constructs level at the top named together), and their coach's name, if they chose one, each under its label, with a closing line.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["id", "type", "sort", "heading", "strengths_label", "others_label", "coach_label", "empty"],
-      "properties": {
-        "id": { "$ref": "#/$defs/identifier" },
-        "type": { "const": "recap" },
-        "estimate": { "$ref": "#/$defs/estimate" },
-        "sort": {
-          "description": "The identifier of the sort whose results it recalls.",
-          "$ref": "#/$defs/identifier"
-        },
-        "heading": { "$ref": "#/$defs/text" },
-        "strengths_label": { "$ref": "#/$defs/text" },
-        "others_label": { "$ref": "#/$defs/text" },
-        "coach_label": { "$ref": "#/$defs/text" },
-        "empty": {
-          "description": "What it says in their place while there is none of the three to show yet.",
-          "$ref": "#/$defs/text"
-        },
-        "body": {
-          "description": "Plain text after the recap. A blank line starts a new paragraph.",
-          "$ref": "#/$defs/text"
         }
       }
     },

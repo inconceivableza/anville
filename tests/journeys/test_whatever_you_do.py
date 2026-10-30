@@ -23,13 +23,11 @@ from django.utils.html import escape
 
 from engine.document.observers import minimum_observers, relationship_question
 from engine.hub import COACH_WAIT_WORDING, COMPARISON_READY_SENTENCE, hub_for, track_sections
-from engine.document.aggregation import aggregate
-from engine.models import Contact, ObserverResponse, Response, Result
-from engine.results import results_page
+from engine.models import Contact, ObserverResponse, Response
 from tests.journeys.test_coach_checklist import choose, step
 from tests.journeys.test_coach_link import answer_as_coach, coach_link_action, link_shown
 from tests.journeys.test_navigation import section_in, sidebar_of
-from tests.journeys.pages import main_of, text_of
+from tests.journeys.pages import main_of
 from tests.journeys.test_hub import (  # noqa: F401  (signed_in_client is a fixture, used by name)
     hub_entry,
     next_step,
@@ -187,23 +185,6 @@ def seal(client):
     page = client.get("/sections/letter/").content.decode()
     opens_on = re.search(r'name="opens_on"[^>]*value="([\d-]+)"', page).group(1)
     return client.post("/sections/letter/complete/", {"opens_on": opens_on})
-
-
-@pytest.mark.django_db
-def test_where_you_have_got_to_shows_your_top_strengths_how_others_see_you_and_your_coach(participant):
-    """✨ Top in each framework, as the results page and the people who answered put them, beside the coach's name
-    (ticket 104)."""
-    page = through_to_the_letter(participant).get("/sections/letter/").content.decode()
-    recap = text_of(re.search(r'<aside id="block-lt-recap".*?</aside>', page, re.S).group(0))
-
-    response = Response.objects.get()
-    document = response.version.document
-    yours = results_page(document, Result.objects.get().shown, response.answers["strengths-sort"], "")["frameworks"]
-    labels = {bar["construct"]: bar["text_label"] for framework in yours for bar in framework["bars"]}
-    seen = aggregate(document, ObserverResponse.assessments_for(response).assessments)["frameworks"]
-    others = [labels[max(framework["constructs"], key=lambda c: c["share"])["construct"]] for framework in seen]
-    for label in [framework["bars"][0]["text_label"] for framework in yours] + others + ["Sam"]:
-        assert label in recap
 
 
 @pytest.mark.django_db
@@ -477,8 +458,8 @@ def without_the_coach_step(document):
 
 def without_the_sealed_letter(document):
     """✨ The letter sealed until a date the participant picks is this pathway's alone (ticket 104): its Joshua passage,
-    the prompts fitted to it, where they have got to and the task that says it is sealed. The faithful port keeps the
-    prototype's letter, so this pathway's is taken back to it: a long text with the prototype's task."""
+    the task that says it is sealed, with prompts fitted to it, and the heading over the closing ratings. The faithful
+    port keeps the prototype's letter, so this pathway's is taken back to it: a long text with the prototype's task."""
     letter = next(section for section in document["content"]["sections"] if section["id"] == "letter")
     faithful = next(section for section in the_faithful_port()["content"]["sections"] if section["id"] == "letter")
     letter["blocks"] = [
@@ -486,8 +467,9 @@ def without_the_sealed_letter(document):
         if block_id in ("lt-task", "lt-message")
         else block
         for block in letter["blocks"]
-        if (block_id := block["id"]) not in ("lt-stones", "lt-include", "lt-recap")
+        if (block_id := block["id"]) != "lt-stones"
     ]
+    next(block for block in letter["blocks"] if block["id"] == "pl-intro").pop("heading")
     return document
 
 

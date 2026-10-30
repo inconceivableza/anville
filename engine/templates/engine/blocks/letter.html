@@ -36,4 +36,6 @@
     {# ✨ Filled from the box as Print is pressed, and shown only on paper. #}
     <div class="letter-print" data-letter-print aria-hidden="true"></div>
   </form>
+  {# ✨ What sealing it takes, and what it means, under the letter while it can still be changed. #}
+  <p class="seal-note">{{ block.text.seal_note }}</p>
 {% endif %}

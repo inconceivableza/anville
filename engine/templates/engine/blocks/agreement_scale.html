@@ -9,7 +9,8 @@
   and a page left open from before that sends one anyway, without JavaScript, comes back saying so (fix-7).
 
   One that saves quietly (a wizard's, or where the document asks: sprint-3c-r3-fix-15) is marked `saves-quietly`, so
-  the empty row beneath it is hidden once JavaScript has loaded.
+  the empty row beneath it is hidden once JavaScript has loaded, and once fixed it carries no note of its own (ticket
+  104), the section's end saying so once.
 {% endcomment %}
 <form id="block-{{ block.id }}" class="baseline-q{% if block.saves_quietly %} saves-quietly{% endif %}" method="post" action="{% url 'save_answer' block.id %}">
   {% csrf_token %}
@@ -35,7 +36,8 @@
   {% if block.is_fixed %}
     {% if block.refusal %}
       <p class="fixed-note" role="alert"><span class="save-refused">Not saved. {{ block.refusal }}</span></p>
-    {% else %}
+    {% elif not block.saves_quietly %}
+      {# ✨ One that saves quietly says nothing under itself once fixed either: the section's end says it once for all. #}
       <p class="fixed-note">Fixed when you completed this section.</p>
     {% endif %}
   {% else %}

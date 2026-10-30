@@ -37,8 +37,6 @@
     {# ✨ A hub side card is complete once its gate passes, with nothing to press (ticket 52): only what it waits on. #}
     {% include "engine/gate_checklist.html" %}
   {% elif offers_way_on and not section.is_part and not section.is_side_card and not is_complete %}
-    {# ✨ A press that seals a letter says first what must be done before it can (ticket 104). #}
-    {% if seal %}<p class="seal-note">{{ seal.note }}</p>{% endif %}
     <div class="way-on"{% if refused %} id="refused"{% endif %}>
       {% include "engine/previous_page.html" %}
       {% url 'complete_section' section.id as complete %}

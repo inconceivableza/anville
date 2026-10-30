@@ -1,7 +1,20 @@
 {# Copyright (C) New Community Church SE London 2026. #}
 {# For licensing information see ../../../../LICENSE.md #}
-{# ✨ Authored text, escaped on output. A blank line in the body starts a new paragraph. #}
+{% comment %}
+  ✨ Authored text, escaped on output. A blank line in the body starts a new paragraph. A heading starts a new part of
+  the page above it; a list follows the body, each item's lead in bold before a dash, as the prototype's letter
+  prompts are (ticket 104).
+{% endcomment %}
+{% if block.text.heading %}<h2 class="rich-text-heading">{{ block.text.heading }}</h2>{% endif %}
 <div id="block-{{ block.id }}" class="rich-text{% if block.variant == 'hint' %} hint-box{% endif %}">
   {% if block.text.label %}<strong>{{ block.text.label }}</strong>{% endif %}
   {{ block.text.body|linebreaks }}
+  {% if block.text.items %}
+    {% if block.text.list_label %}<p class="rich-text-list-label">{{ block.text.list_label }}</p>{% endif %}
+    <ul class="rich-text-list">
+      {% for item in block.text.items %}
+        <li>{% if item.lead %}<b>{{ item.lead }}</b> – {% endif %}{{ item.text }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
 </div>

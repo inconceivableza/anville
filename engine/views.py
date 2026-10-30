@@ -105,7 +105,7 @@ from engine.document.observers import (
     relationship_from_form,
     relationship_question,
 )
-from engine.document.letter import letter_shown, opens_on_from_form, recap_shown, seal_press, unsealed_letter
+from engine.document.letter import letter_shown, opens_on_from_form, seal_press, unsealed_letter
 from engine.document.photos import credits_listed
 from engine.models import (
     CollectionFrozen,
@@ -2566,19 +2566,6 @@ def _letter_of(block, seals):
     return letter_shown(block, sealed.opens_on if sealed else None, timezone.localdate())
 
 
-def _recap_of(state, block):
-    """✨ For a `recap` block, what `recap_shown` reads, gathered here (ticket 104): the participant's own results of
-    its sort as their results page draws them, the observer average, and their coach. None for any other block."""
-    if block["type"] != "recap":
-        return None
-    document = state.version.document
-    result = Result.objects.filter(response=state.response, block_id=block["sort"]).first()
-    drawn = _results_drawn(state, result, block["sort"]) if result is not None else None
-    observed = aggregate(document, ObserverResponse.assessments_for(state.response).assessments)["frameworks"]
-    coach = _coach_of(state.response)
-    return recap_shown(document, drawn and drawn["results"]["frameworks"], observed, coach and coach["name"])
-
-
 def _block_of_type(version, block_id, block_type):
     """✨ The version's block by that identifier, provided it is of that type; otherwise a 404."""
     for block in blocks_of(version.document) if version else ():
@@ -2659,7 +2646,6 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
                     observers_withdrew=state.response.observers_withdrew if state.response is not None else 0,
                     saves_quietly=_saves_quietly(version.document, section, block),
                     letter=_letter_of(block, seals),
-                    recap=_recap_of(state, block),
                 )
                 for block in blocks
             ],
@@ -2867,7 +2853,6 @@ def _block_for_participant(
     observers_withdrew=0,
     saves_quietly=False,
     letter=None,
-    recap=None,
 ):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
     identifier; a signpost to a section outside the participant's track has no state and shows nothing. `issued` is a
@@ -2879,8 +2864,8 @@ def _block_for_participant(
     (fix-23). A coach checklist opens saying the coach withdrew while the response keeps that they did
     (`coach_withdrew`, ADR 0024). A contact list says how many observers withdrew, naming nobody
     (`observers_withdrew`). One that `saves_quietly` says nothing on a save (`_saves_quietly`). A letter stands as
-    `letter` says (`letter_shown`), and while it is sealed its answer is left out, so nothing on the page can carry it;
-    a `recap` draws `recap` (`recap_shown`) (ticket 104)."""
+    `letter` says (`letter_shown`), and while it is sealed its answer is left out, so nothing on the page can carry it
+    (ticket 104)."""
     rows = _contact_rows(block, answers, issued, **(rows_back or {})) if block["type"] == "contact_list" else None
     widget = BLOCK_TYPES[block["type"]].widget
     shown_widget = widget(document, "participant", "") if widget else None  # ✨ the participant's wording names no one
@@ -2930,7 +2915,6 @@ def _block_for_participant(
         "waiting": comparison_wait_message(block, answers),
         "saves_quietly": saves_quietly,
         "letter": letter,
-        "recap": recap,
     }
 
 

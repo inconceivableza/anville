@@ -3241,33 +3241,47 @@ body:not(.framed) .question-card > p + form {
   color: var(--green-deep);
 }
 
-/* ✨ The letter to your future self (ticket 104): where the participant has got to beside it, Print and Copy text under
-   it while it is written, the date it opens on beside the press that seals it, and, sealed or opened, the box in its
-   place. */
+/* ✨ Rich text's heading, starting a new part of a page, and its list, each item's lead in bold before a dash, as the
+   prototype's letter prompts are (ticket 104). Inside a hint box the list's lead-in reads as the box's own label does. */
 
-.recap {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-md) var(--space-lg);
-  margin-bottom: var(--space-md);
-}
-
-.recap h2 {
+.rich-text-heading {
   font-family: var(--font-heading);
-  font-size: var(--text-md);
-  font-weight: 600;
-  margin-bottom: var(--space-sm);
+  font-size: var(--text-xl);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
+  margin: var(--space-lg) 0 var(--space-sm);
 }
 
-.recap dt {
-  font-size: var(--text-sm);
+.rich-text-list-label {
+  margin-top: var(--space-md);
   font-weight: 600;
   color: var(--green-deep);
 }
 
-.recap dd {
-  margin: 0 0 var(--space-sm);
+.hint-box .rich-text-list-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
+
+.rich-text-list {
+  margin: var(--space-xs) 0 0;
+  padding-left: 1.2em;
+  list-style: disc;
+}
+
+.rich-text-list li + li {
+  margin-top: var(--space-xs);
+}
+
+.rich-text-list b {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ✨ The letter to your future self (ticket 104): Print and Copy text under it while it is written, what sealing means
+   beneath them, the date it opens on beside the press that seals it, and, sealed or opened, the box in its place. */
 
 .letter-tools {
   display: flex;
