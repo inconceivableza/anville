@@ -102,3 +102,10 @@ reminders:
   enabled: false
   # When the daily run goes, in UTC: morning in the UK, clear of the backup's and the session clearing's hours.
   schedule: "0 8 * * *"
+
+letters:
+  # Whether a participant is emailed, at their own address, that their sealed letter has reached its date and is ready
+  # (send_letter_emails, run daily). Needs a hostname and EMAIL_URL, as reminders do. Waits on ticket 62.
+  enabled: false
+  # When the daily run goes, in UTC: morning in the UK, after the reminders.
+  schedule: "15 8 * * *"

@@ -213,11 +213,11 @@ def _unknown_linked_sections(document, section_ids):
 
 def _results_of_no_sort(document):
     """✨ A `sort_results` block shows the results of the sort it names (ticket 57), and a `comparison_signpost` leads to
-    its comparison (ticket 67a), so each must name one."""
+    its comparison (ticket 67a), and a `recap` recalls its results (ticket 104), so each must name one."""
     types = block_types_by_id(document)
     for s, section in enumerate(document["content"]["sections"]):
         for b, block in enumerate(section["blocks"]):
-            if block["type"] in ("sort_results", "comparison_signpost"):
+            if block["type"] in ("sort_results", "comparison_signpost", "recap"):
                 yield from _no_such_sort(types, block["sort"], f"/content/sections/{s}/blocks/{b}/sort")
 
 

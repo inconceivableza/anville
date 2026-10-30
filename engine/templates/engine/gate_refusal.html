@@ -8,7 +8,10 @@
   section's last page the press was its completion; on any other, "Continue →".
 {% endcomment %}
 {% include "engine/gate_checklist.html" %}
-{% if refused and not messages_after_a_press %}
+{# ✨ A sealing press refused for its date, which says the dates it may be (ticket 104). #}
+{% if seal_refusal %}<p class="gate-refused" role="alert">{{ seal_refusal }}</p>{% endif %}
+{# ✨ Not after the date's own refusal, which says what is missing already (Refusals: once, not again beneath it). #}
+{% if refused and not messages_after_a_press and not seal_refusal %}
   {% if page.is_last %}
     <p class="gate-refused">This section was not marked complete: it is not finished yet.</p>
   {% else %}

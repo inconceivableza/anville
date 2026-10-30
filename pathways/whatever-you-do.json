@@ -338,17 +338,55 @@
         "complete_label": "I've finished Section 6",
         "blocks": [
           {
+            "id": "lt-stones",
+            "type": "scripture_passages",
+            "passages": [
+              {
+                "reference": "Joshua 4:6b–7",
+                "text": "“When your children ask in time to come, ‘What do those stones mean to you?’ then you shall tell them that the waters of the Jordan were cut off before the ark of the covenant of the LORD. When it passed over the Jordan, the waters of the Jordan were cut off. So these stones shall be to the people of Israel a memorial for ever.”"
+              }
+            ],
+            "note": "When Israel crossed the Jordan, God told them to carry twelve stones out of the riverbed and pile them on the bank – so that when their children asked “what do these stones mean?”, they would have something solid to point at. Memory needs help. This letter is your pile of stones."
+          },
+          {
             "id": "lt-task",
             "type": "rich_text",
             "variant": "hint",
             "label": "The task",
-            "body": "Write to yourself as you will be in twelve months' time. You have just done a lot of thinking, and most of it fades faster than you would expect. Put it down now, while it is still warm, and let it find you again when you need it."
+            "body": "Write to yourself as you will be on the day you choose for your letter to open, between three months and two years from now. You have just done a lot of thinking, and most of it fades faster than you would expect. Put it down now, while it is still warm. When you finish this section, your letter is sealed until that day, and then it opens here for you to read."
+          },
+          {
+            "id": "lt-include",
+            "type": "rich_text",
+            "label": "Things you might want to include",
+            "body": "What has shifted in you – what you understand now that you did not when you started, about God, about work, about yourself.\n\nWhat you and others saw – the strengths you found in yourself, and what the people who know you saw in you.\n\nYour calling, in your own words – not the polished sentence, the version you would say to a friend across a table.\n\nThe steps you are committing to – the steps from Workbook 4, written as promises rather than intentions.\n\nWhat might knock you off course – busyness, discouragement, someone else's opinion, an easier offer. Name it now.\n\nWhat you want to say to yourself when you open it – encouragement, a warning, a reminder of who you are.\n\nA verse or prayer to carry – something to hold onto when life gets loud."
+          },
+          {
+            "id": "lt-recap",
+            "type": "recap",
+            "sort": "strengths-sort",
+            "heading": "Where you have got to",
+            "strengths_label": "Your top strengths",
+            "others_label": "How others see you",
+            "coach_label": "Your coach",
+            "empty": "Your top strengths, how others see you and your coach will show here once you have them.",
+            "body": "You did Workbooks 1–4 on paper, so keep them beside you as you write."
           },
           {
             "id": "lt-message",
-            "type": "long_text",
+            "type": "letter",
             "prompt": "Your letter",
-            "placeholder": "Dear me,"
+            "placeholder": "Dear me,",
+            "months": { "default": 12, "earliest": 3, "latest": 24 },
+            "seal_label": "Seal my letter and finish Section 6",
+            "seal_note": "Answer the five questions above before you seal your letter. Once it is sealed, it can't be changed, and it can't be read here until the day you pick.",
+            "date_label": "Open it on",
+            "sealed": "Your letter is sealed until {date}. On that day it opens here for you to read.",
+            "email": {
+              "subject": "Your letter to your future self is ready",
+              "body": "The letter you wrote to yourself in Whatever You Do is ready to open. Sign in to read it.",
+              "link_label": "Read your letter"
+            }
           },
           {
             "id": "pl-intro",
@@ -402,7 +440,7 @@
               "type": "min_text_length",
               "block": "lt-message",
               "min": 10,
-              "message": "Write at least one part of your letter (10 characters or more) before sealing it."
+              "message": "Write your letter (10 characters or more) before sealing it."
             },
             { "type": "has_answer", "block": "pl-bible", "message": "Answer all five to continue" },
             { "type": "has_answer", "block": "pl-gifts", "message": "Answer all five to continue" },

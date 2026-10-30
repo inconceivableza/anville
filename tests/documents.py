@@ -183,6 +183,53 @@ def with_a_tie_break(document, **settings):
     return document
 
 
+def letter_pathway():
+    """✨ The test pathway with a letter to the participant's future self after onboarding, sealed as its section is
+    finished, beside a closing rating fixed then (ticket 104)."""
+    document = pathway_document()
+    document["content"]["sections"].append(
+        {
+            "id": "letter",
+            "title": "A letter to your future self",
+            "requires": ["onboarding"],
+            "complete_label": "I've finished",
+            "blocks": [
+                {
+                    "id": "letter-box",
+                    "type": "letter",
+                    "prompt": "Your letter",
+                    "placeholder": "Dear me,",
+                    "months": {"default": 12, "earliest": 3, "latest": 24},
+                    "seal_label": "Seal my letter and finish",
+                    "seal_note": "Answer the question above before your letter can be sealed.",
+                    "date_label": "Open it on",
+                    "sealed": "Your letter is sealed until {date}.",
+                    "email": {
+                        "subject": "Your letter is ready",
+                        "body": "The letter you wrote to yourself is ready to open.",
+                        "link_label": "Open your letter",
+                    },
+                },
+                {
+                    "id": "closing",
+                    "type": "agreement_scale",
+                    "prompt": "I am at peace with God's plan for my life",
+                    "min_label": "Strongly disagree",
+                    "max_label": "Strongly agree",
+                    "fixed_once_complete": True,
+                },
+            ],
+            "gate": {
+                "clauses": [
+                    {"type": "min_text_length", "block": "letter-box", "min": 10, "message": "Write your letter."},
+                    {"type": "has_answer", "block": "closing", "message": "Answer the question."},
+                ]
+            },
+        }
+    )
+    return document
+
+
 def complete_sort(**overrides):
     """✨ A sort of `sort_pathway()`'s two items, both placed and fine-tuned, with any item's entry replaced."""
     return {"a5": {"bucket": "strength", "value": 90}, "p1": {"bucket": "not-me", "value": 10}, **overrides}

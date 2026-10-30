@@ -1,0 +1,39 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../../LICENSE.md #}
+{% comment %}
+  ✨ A letter to the participant's future self (ticket 104). While it is being written, a long text that autosaves as
+  long_text.html does, with Print and Copy text, which need JavaScript and so show only once it has loaded. Sealed, the
+  box says only when it opens: the server leaves the letter out of the page altogether. From that date, the letter
+  itself, to read, never to change.
+{% endcomment %}
+{% if block.letter.state == "sealed" %}
+  <div id="block-{{ block.id }}" class="question-card letter-sealed">
+    <p class="letter-label">{{ block.text.prompt }}</p>
+    <p>{{ block.letter.sentence }}</p>
+    {% if block.refusal %}<p class="save-status" role="alert"><span class="save-refused">Not saved. {{ block.refusal }}</span></p>{% endif %}
+  </div>
+{% elif block.letter.state == "open" %}
+  <div id="block-{{ block.id }}" class="question-card letter-opened">
+    <p class="letter-label">{{ block.text.prompt }}</p>
+    <div class="letter-text">{{ block.answer|default_if_none:""|linebreaks }}</div>
+    {% if block.refusal %}<p class="save-status" role="alert"><span class="save-refused">Not saved. {{ block.refusal }}</span></p>{% endif %}
+  </div>
+{% else %}
+  <form id="block-{{ block.id }}" class="question-card letter" method="post" action="{% url 'save_answer' block.id %}">
+    {% csrf_token %}
+    <label for="answer-{{ block.id }}">{{ block.text.prompt }}</label>
+    <textarea id="answer-{{ block.id }}" name="value" rows="12" maxlength="{{ pathway.long_text_max_length }}"
+              aria-describedby="length-{{ block.id }}"{% if block.text.placeholder %} placeholder="{{ block.text.placeholder }}"{% endif %}
+              hx-post="{% url 'save_answer' block.id %}" hx-trigger="input changed delay:800ms, change"
+              hx-sync="this:queue last" hx-target="next .save-status" data-letter>
+{{ block.answer|default_if_none:"" }}</textarea>
+    <p class="length-left" id="length-{{ block.id }}" aria-live="polite" hidden></p>
+    {% include "engine/save_row.html" %}
+    <div class="letter-tools" data-letter-tools hidden>
+      <button type="button" class="pill ghost small" data-print-letter>Print</button>
+      <button type="button" class="pill ghost small" data-copy="answer-{{ block.id }}">Copy text</button>
+    </div>
+    {# ✨ Filled from the box as Print is pressed, and shown only on paper. #}
+    <div class="letter-print" data-letter-print aria-hidden="true"></div>
+  </form>
+{% endif %}

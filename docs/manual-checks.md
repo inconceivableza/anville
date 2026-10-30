@@ -1205,3 +1205,14 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 - Nothing in a screen reacts to the mouse: no hover tint on the buckets, no pointer.
 - At about 375px the screen sits above the step's words and nothing runs off its side. With JavaScript blocked, each step in the list shows its screen below its words.
 - `/credits/` no longer lists the row of friends.
+
+### Ticket 104: the letter is sealed until a chosen date (rebuild the frontend, `migrate`, load the pathway again; a participant through to Section 6; wide screen and about 375px)
+
+- Section 6 opens with Joshua 4:6b–7 and the twelve-stones line under it, then "The task", "Things you might want to include" as seven paragraphs, and "Where you have got to" with your top strengths, how others see you and your coach's name, then the Workbooks line. No "Add my…" buttons.
+- Under "Your letter": "Print" and "Copy text". Copy text puts the letter on the clipboard ("Copied"). Print shows a print preview of the letter alone, every line of it, however long. With JavaScript blocked, neither button shows.
+- Above the last button: the line about answering the five questions first, then "Open it on" with a date twelve months on; the picker goes no earlier than three months on and no later than two years. Pick a date, then answer a rating or type in the letter: the date stays as picked.
+- Type a date outside the range by hand and press "Seal my letter and finish Section 6": "Choose a date from … to …." shows beneath it, and nothing else on the page moves. With JavaScript blocked, the page comes back at the button with the same line.
+- Press it with a good date: the hub. Back on Section 6, the letter's box says only "Your letter is sealed until <date>. On that day it opens here for you to read."; no Print or Copy text; view the page source: the letter's words are nowhere in it. The last button is gone, with "You marked this section complete" and "Mark as not complete".
+- "Mark as not complete": the box still says sealed, with the same date; the last button reads "I've finished Section 6", with no date beside it.
+- To see it open: `python manage.py shell -c "from datetime import date; from engine.models import SealedLetter; SealedLetter.objects.update(opens_on=date.today())"`. Section 6 shows the letter, to read, not in a box to change. Then `python manage.py send_letter_emails` with the participant at an address not at an example domain: "Sent 1 letter email." and the printed email reads "Your letter to your future self is ready", with a sign-in link that leads to Section 6 and none of the letter's words. Run it again: "Sent 0 letter emails."
+- The faithful port's letter is unchanged: a plain box, its own task and "Mark complete", no date.

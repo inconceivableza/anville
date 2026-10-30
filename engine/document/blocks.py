@@ -309,6 +309,13 @@ BLOCK_TYPES = {
             "scripture_passages", text_fields=("heading", "note"), text_lists=(("passages", ("reference", "text")),)
         ),
         BlockType("long_text", text_fields=("prompt", "placeholder"), captures=TEXT),
+        # ✨ A long text sealed as its section is finished, until a date the participant picks (ticket 104).
+        BlockType(
+            "letter", text_fields=("prompt", "placeholder", "seal_label", "seal_note", "date_label"), captures=TEXT
+        ),
+        # ✨ Where the participant has got to, beside their letter: their top strengths, how others see them and their
+        # coach (ticket 104).
+        BlockType("recap", text_fields=("heading", "strengths_label", "others_label", "coach_label", "empty", "body")),
         BlockType("agreement_scale", text_fields=("prompt", "min_label", "max_label"), captures=SCALE_POINT),
         BlockType(
             "single_select",

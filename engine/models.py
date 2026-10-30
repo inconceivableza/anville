@@ -808,6 +808,42 @@ def _sent_by(secret):
     return _hash_of(f"observer-response:{secret}")
 
 
+class SealedLetter(models.Model):
+    """✨ That a participant's letter to their future self is sealed until a date they picked (ticket 104), when it was
+    first opened on or after it, and when the email saying it is ready went. The letter itself stays among the answers,
+    as written and not encrypted: sealed means only that the app holds it back until then.
+
+    Kept apart from completion, as a fixed answer is, so marking the section not complete leaves it sealed with the same
+    date and the same email; finishing again keeps the first."""
+
+    response = models.ForeignKey(Response, on_delete=models.CASCADE, related_name="sealed_letters")
+    block_id = models.CharField(max_length=64)
+    sealed_at = models.DateTimeField()
+    opens_on = models.DateField()
+    opened_at = models.DateTimeField(null=True, blank=True)
+    ready_email_sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["response", "block_id"], name="one_seal_per_letter"),
+        ]
+
+    @classmethod
+    def seal(cls, response, block_id, opens_on):
+        """✨ Seal the letter until `opens_on`, unless it is sealed already, when the first seal stands."""
+        cls.objects.get_or_create(
+            response=response, block_id=block_id, defaults={"sealed_at": timezone.now(), "opens_on": opens_on}
+        )
+
+    def is_open(self, today=None):
+        return (today or timezone.localdate()) >= self.opens_on
+
+    def open(self):
+        """✨ Record the first time the letter is opened on or after its date, in one UPDATE; a later one writes
+        nothing."""
+        SealedLetter.objects.filter(pk=self.pk, opened_at__isnull=True).update(opened_at=timezone.now())
+
+
 class SignUp(models.Model):
     """✨ An email address left under "Stay in touch" on the homepage (ticket 74, ADR 0023): one list for the
     newsletter, contact and the churches' waitlist, kept here for the operator to export from the admin, and nothing

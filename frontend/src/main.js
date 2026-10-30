@@ -192,6 +192,24 @@ document.addEventListener("click", async (event) => {
   }
 });
 
+// ✨ A letter being written offers Print and Copy text (ticket 104), which need JavaScript, so they show only once it has
+// loaded; Copy text is the Copy button above. Print prints the letter alone (see the print styles).
+htmx.onLoad((content) => {
+  content.querySelectorAll("[data-letter-tools]").forEach((tools) => (tools.hidden = false));
+});
+
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-print-letter]");
+  if (!button) return;
+  const form = button.closest("form");
+  // ✨ A text box prints cut off at its height, so the letter is printed from a copy of it as it stands now.
+  form.querySelector("[data-letter-print]").textContent = form.querySelector("[data-letter]").value;
+  document.body.classList.add("printing-letter");
+  window.print();
+});
+
+window.addEventListener("afterprint", () => document.body.classList.remove("printing-letter"));
+
 // ✨ A dialog in a contact list's row (a link just issued, or asking before someone is removed) shows open in the row
 // without JavaScript; once it has loaded, as a modal, on the page and in each row htmx sends back (fix-2).
 htmx.onLoad((content) => {

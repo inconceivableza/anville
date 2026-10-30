@@ -1,0 +1,17 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ The HTML part of the email saying a sealed letter is ready (ticket 104), beside its plain text: the document's
+  wording and the link to the letter's page through sign-in. Never the letter. Unstyled, as a reminder's is.
+{% endcomment %}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{ subject }}</title>
+  </head>
+  <body>
+    {{ body|linebreaks }}
+    <p><a href="{{ link }}">{{ link_label }}</a></p>
+  </body>
+</html>

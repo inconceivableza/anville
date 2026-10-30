@@ -105,6 +105,7 @@ from engine.document.observers import (
     relationship_from_form,
     relationship_question,
 )
+from engine.document.letter import letter_shown, opens_on_from_form, recap_shown, seal_press, unsealed_letter
 from engine.document.photos import credits_listed
 from engine.models import (
     CollectionFrozen,
@@ -115,6 +116,7 @@ from engine.models import (
     Publication,
     Response,
     Result,
+    SealedLetter,
 )
 from engine import reminders, scenario_loading, stay_in_touch
 from engine.document.tie_break import pair_plan, reweigh
@@ -532,6 +534,7 @@ def section(request, section_id, page=1):
     shows_links = any(block["type"] in LISTED_WITH_LINKS for block in pages_of(section)[page - 1])
     issued = _issued_link(request) if shows_links else None
     demo = _demo_prefill(request, state.version.document)
+    _open_letters_due(state, pages_of(section)[page - 1])
     shown = _section_shown(request, state, section, _section_page(state, section, page, issued=issued, demo=demo))
     if issued is not None:
         shown["Cache-Control"] = "no-store"
@@ -599,11 +602,22 @@ def complete_section(request, section_id):
     last = page_count(section)
     if reached < last:
         return _go_to(request, page_url(section_id, reached))
-    if unmet(section, state.answers):
-        return _way_on_refused(request, state, section, _section_page(state, section, last))
+    # ✨ The press that finishes a section holding a letter not yet sealed seals it too, until the date it chose (ticket
+    # 104); a letter sealed already keeps its first date, whatever is sent.
+    letter = unsealed_letter(section, _seals(state))
+    chosen = request.POST.get("opens_on")
+    opens_on, seal_refusal = opens_on_from_form(letter, chosen, timezone.localdate()) if letter else (None, None)
+    if unmet(section, state.answers) or seal_refusal:
+        # ✨ The date the press sent comes back as sent, so a page drawn again without JavaScript keeps it.
+        shown = _section_page(state, section, last, chosen=chosen)
+        return _way_on_refused(request, state, section, {**shown, "seal_refusal": seal_refusal})
 
     fixed_block_ids = block_ids_fixed_on_completion(section, state.answers)
-    state.stored_response(request.user).complete_section(section_id, fixed_block_ids=fixed_block_ids)
+    with transaction.atomic():
+        participant_response = state.stored_response(request.user)
+        participant_response.complete_section(section_id, fixed_block_ids=fixed_block_ids)
+        if letter is not None:
+            SealedLetter.seal(participant_response, letter["id"], opens_on)
     # ✨ Back to the hub, which points at the next step, as the prototype's `completePillar` goes (ticket 41b); a wizard
     # ✨ with a welcome by way of it first (sprint-3c-r3-fix-7).
     if section.get("wizard") and "welcome" in section:
@@ -696,6 +710,9 @@ def save_answer(request, block_id):
         return _go_to(request, reverse("hub"))
     if not _is_open(state, section, block):
         return _refused(request, NOT_OPEN, status=403)
+    if block_id in _seals(state):
+        # ✨ Sealed, it is never changed, and the refusal, like the page, never carries it (ticket 104).
+        return _answer_refused(request, state, section, block_id, SEALED_REFUSAL, status=409)
     if block_id in state.fixed:
         # ✨ Refused here, not only disabled on the page, so a page left open from before completing cannot change it.
         return _answer_refused(request, state, section, block_id, FIXED_REFUSAL, status=409)
@@ -2522,6 +2539,44 @@ def _page_or_404(section, page):
 
 
 FIXED_REFUSAL = "This answer was fixed when you completed this section."
+SEALED_REFUSAL = "Your letter was sealed when you finished this section, so it can no longer be changed."
+
+
+def _seals(state):
+    """✨ The participant's sealed letters, by block (ticket 104)."""
+    if state.response is None:
+        return {}
+    return {sealed.block_id: sealed for sealed in state.response.sealed_letters.all()}
+
+
+def _open_letters_due(state, page_blocks):
+    """✨ Record the first time a sealed letter on this page is opened on or after its date (ticket 104)."""
+    seals = _seals(state)
+    for block in page_blocks:
+        sealed = seals.get(block["id"])
+        if sealed is not None and sealed.opened_at is None and sealed.is_open():
+            sealed.open()
+
+
+def _letter_of(block, seals):
+    """✨ For a letter block, where it stands, as `letter_shown` gives it (ticket 104); None for any other block."""
+    if block["type"] != "letter":
+        return None
+    sealed = seals.get(block["id"])
+    return letter_shown(block, sealed.opens_on if sealed else None, timezone.localdate())
+
+
+def _recap_of(state, block):
+    """✨ For a `recap` block, what `recap_shown` reads, gathered here (ticket 104): the participant's own results of
+    its sort as their results page draws them, the observer average, and their coach. None for any other block."""
+    if block["type"] != "recap":
+        return None
+    document = state.version.document
+    result = Result.objects.filter(response=state.response, block_id=block["sort"]).first()
+    drawn = _results_drawn(state, result, block["sort"]) if result is not None else None
+    observed = aggregate(document, ObserverResponse.assessments_for(state.response).assessments)["frameworks"]
+    coach = _coach_of(state.response)
+    return recap_shown(document, drawn and drawn["results"]["frameworks"], observed, coach and coach["name"])
 
 
 def _block_of_type(version, block_id, block_type):
@@ -2539,13 +2594,14 @@ def _section_or_404(version, section_id):
     return section
 
 
-def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None):
+def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None, chosen=None):
     """✨ One page of a section as its template needs it. Every page but the last ends in "Continue →", held by that
     page's own clauses; the last ends in the section's completion, held by the whole gate. `issued` is a link just
     issued, a coach's or an observer's, which the page shows this once beside the person it is for. `demo` is a demo
     profile, from `_demo_prefill`, that a sort not yet in starts from (fix-23). `rows_back` is how a contact list's
     rows come back from a press without JavaScript, by its identifier, as `_contact_rows` takes it (ticket 70,
-    fix-1)."""
+    fix-1). `chosen` is the date a refused press to seal a letter sent, offered again in place of the default (ticket
+    104)."""
     rows_back = rows_back or {}
     version, answers, fixed = state.version, state.answers, state.fixed
     opened, activity_open = open_blocks(section, answers, state.sections, up_to_page=page)
@@ -2560,6 +2616,9 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
     links = _requirement_links(state, section)
     gate_checklist = [(message, met, links.get(message)) for message, met in checklist(section, answers, page=page)]
     states = {other.id: other for other in hub.sections}
+    seals = _seals(state)
+    letter = unsealed_letter(section, seals) if is_last else None
+    press = seal_press(letter, timezone.localdate(), chosen) if letter else None
     return {
         # ✨ Where "← Back" at the top leads: the section this is a part of, or else the hub.
         "back": _section_this_is_part_of(state, section),
@@ -2576,7 +2635,8 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
         "section": {
             "id": section["id"],
             "title": text_for(section["title"], "participant"),
-            "complete_label": _complete_label(section),
+            # ✨ While it holds a letter not yet sealed, the press that finishes it says it seals it (ticket 104).
+            "complete_label": press["label"] if press else _complete_label(section),
             "is_part": "part_of" in section,
             # ✨ On a part's last page, the finish of the section it is the last thing in, if it is (ticket 88).
             "finish": _finish_of(state, section) if is_last else None,
@@ -2598,10 +2658,14 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
                     coach_withdrew=state.response is not None and state.response.coach_withdrew,
                     observers_withdrew=state.response.observers_withdrew if state.response is not None else 0,
                     saves_quietly=_saves_quietly(version.document, section, block),
+                    letter=_letter_of(block, seals),
+                    recap=_recap_of(state, block),
                 )
                 for block in blocks
             ],
         },
+        # ✨ The date the press that finishes the section seals its letter until, while it holds one not yet sealed.
+        "seal": press,
         "is_complete": section["id"] in state.completed,
         # ✨ Demo only (fix-21): a sort not yet in offers a hidden "Load a demo profile (demo only)", where one holds.
         "demo_profile": sort_pending and _demo_tools_on() and bool(scenario_loading.offered(version.document).profiles),
@@ -2802,6 +2866,8 @@ def _block_for_participant(
     coach_withdrew=False,
     observers_withdrew=0,
     saves_quietly=False,
+    letter=None,
+    recap=None,
 ):
     """✨ One block as its template needs it. `states` are the track's sections as the hub sees them, keyed by
     identifier; a signpost to a section outside the participant's track has no state and shows nothing. `issued` is a
@@ -2812,7 +2878,9 @@ def _block_for_participant(
     `_comparison_signpost_shown`. A sort not yet in starts from `demo`, a demo profile, with its guide beside it
     (fix-23). A coach checklist opens saying the coach withdrew while the response keeps that they did
     (`coach_withdrew`, ADR 0024). A contact list says how many observers withdrew, naming nobody
-    (`observers_withdrew`). One that `saves_quietly` says nothing on a save (`_saves_quietly`)."""
+    (`observers_withdrew`). One that `saves_quietly` says nothing on a save (`_saves_quietly`). A letter stands as
+    `letter` says (`letter_shown`), and while it is sealed its answer is left out, so nothing on the page can carry it;
+    a `recap` draws `recap` (`recap_shown`) (ticket 104)."""
     rows = _contact_rows(block, answers, issued, **(rows_back or {})) if block["type"] == "contact_list" else None
     widget = BLOCK_TYPES[block["type"]].widget
     shown_widget = widget(document, "participant", "") if widget else None  # ✨ the participant's wording names no one
@@ -2848,7 +2916,7 @@ def _block_for_participant(
         "template": f"engine/blocks/{block['type']}.html",
         "variant": block.get("variant", "plain"),
         "text": text,
-        "answer": answers.get(block["id"]),
+        "answer": None if letter is not None and letter["state"] == "sealed" else answers.get(block["id"]),
         "is_fixed": block["id"] in fixed,
         "widget": shown_widget,
         "demo": demo,
@@ -2861,6 +2929,8 @@ def _block_for_participant(
         # ✨ While it waits on the comparison, its authored message, and it is drawn disabled (ticket 68).
         "waiting": comparison_wait_message(block, answers),
         "saves_quietly": saves_quietly,
+        "letter": letter,
+        "recap": recap,
     }
 
 

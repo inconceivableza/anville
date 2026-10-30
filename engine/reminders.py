@@ -18,6 +18,7 @@ from django.utils import dateformat, timezone
 
 from access.consent import withdrawn_participants
 from access.models import name_shown_for
+from engine.document.letter import SHOWN_DATE
 from engine.document.observers import reminder_email
 from engine.models import Contact, Invitation
 
@@ -60,7 +61,7 @@ def send_due_reminders():
     sent = 0
     for invitation in candidates:
         week = (now - invitation.issued_at) // WEEK
-        if week <= invitation.reminded_week or _at_example_domain(invitation.contact.email):
+        if week <= invitation.reminded_week or at_example_domain(invitation.contact.email):
             continue
         if not _claim(invitation, week):
             continue
@@ -92,7 +93,8 @@ def _release(invitation, week):
     Invitation.objects.filter(pk=invitation.pk, reminded_week=week).update(reminded_week=invitation.reminded_week)
 
 
-def _at_example_domain(address):
+def at_example_domain(address):
+    """✨ Whether an address is at a reserved example domain, which no mail is sent to (the letter's email too)."""
     domain = address.rpartition("@")[2].lower().rstrip(".")
     return (
         domain.rpartition(".")[2] in RESERVED_TOP_LEVEL
@@ -107,7 +109,7 @@ def _reminder(invitation):
     stop as a link and as `List-Unsubscribe` headers with one-click POST (RFC 8058)."""
     contact = invitation.contact
     participant_response = contact.response
-    until = dateformat.format(timezone.localtime(invitation.expires_at), "j F Y")
+    until = dateformat.format(timezone.localtime(invitation.expires_at), SHOWN_DATE)
     wording = reminder_email(
         participant_response.version.document, name_shown_for(participant_response.participant), contact.name, until
     )

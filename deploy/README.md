@@ -227,6 +227,8 @@ Remove the old key promptly, as Django's deployment checklist warns: while it is
 
 **Observer reminders.** Off unless `reminders.enabled` is true in the environment's `values.yaml`. Then a CronJob runs `send_reminders` each morning, at 08:00 UTC by default (`reminders.schedule`), and emails each observer who has not answered, once a week while their link works. Its links are made from `hostname`, so set that first, and without `EMAIL_URL` each reminder is only written to the log. Addresses at reserved example domains (`example.com` and the like) are skipped, so to see one on staging, add a person at an address you can read. To run it now: `k create job --from=cronjob/anville-reminders reminders-now`. Real observers need the production email provider and its processor agreement first.
 
+**Letter emails.** Off unless `letters.enabled` is true. Then a CronJob runs `send_letter_emails` each morning, at 08:15 UTC by default (`letters.schedule`), and emails each participant whose sealed letter has reached its date, at their account's address, that it is ready, once; the email links to the letter through sign-in and never carries it. A date that passed while it was off is caught up once it is on, unless the letter has been opened since. The same hostname, `EMAIL_URL` and example-domain rules as reminders apply. To run it now: `k create job --from=cronjob/anville-letters letters-now`. Waits on ticket 62, as reminders do.
+
 ## Backups
 
 With `backup.enabled`, a CronJob dumps the database each night, checks that the dump can be read back, and sends it over SFTP to `BACKUP_TARGET`, keeping the newest 30. To run one now:

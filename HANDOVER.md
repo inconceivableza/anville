@@ -19,7 +19,7 @@ Where *Whatever You Do* stands at the end of sprint 3c (30 Oct 2026), and what i
 ## Switched off or not yet built
 
 - **Observer reminders** are built (`send_reminders`, run daily by the chart) but off (`reminders.enabled: false`). Turning them on needs the email provider's processing agreement (ticket 62).
-- **The letter to your future self** is written and stored, and nothing more: nothing seals it until a date or brings it back. The quarterly check-in prototype (`Prototypes for reference/quarterly-checkin-prototype.html`) keeps it sealed in the app until the fourth check-in, about twelve months on. Its wording ("let it find you again") should say only what is true until that is built.
+- **The letter to your future self** is sealed as Section 6 is finished, until a date the participant picks, then opens on its page (ticket 104). The email saying it is ready is built (`send_letter_emails`, run daily by the chart) but off (`letters.enabled: false`), waiting on ticket 62 as reminders do; until then the page's wording promises no email. The letter is stored as written, not encrypted. The quarterly check-ins (`Prototypes for reference/quarterly-checkin-prototype.html`) are still not built.
 - **Evaluation autosave:** the sort keeps placed cards only in the browser until "Send", so leaving part-way loses them.
 
 ## Open tickets worth doing next

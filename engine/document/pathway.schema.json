@@ -620,9 +620,11 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "scripture_passages", "long_text", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "comparison_signpost", "section_signpost", "download", "page_break"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "scripture_passages", "long_text", "letter", "recap", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "comparison_signpost", "section_signpost", "download", "page_break"] }
       },
       "allOf": [
+        { "if": { "properties": { "type": { "const": "letter" } } }, "then": { "$ref": "#/$defs/letter" } },
+        { "if": { "properties": { "type": { "const": "recap" } } }, "then": { "$ref": "#/$defs/recap" } },
         { "if": { "properties": { "type": { "const": "rich_text" } } }, "then": { "$ref": "#/$defs/rich_text" } },
         { "if": { "properties": { "type": { "const": "scripture_reading" } } }, "then": { "$ref": "#/$defs/scripture_reading" } },
         { "if": { "properties": { "type": { "const": "scripture_passages" } } }, "then": { "$ref": "#/$defs/scripture_passages" } },
@@ -1015,6 +1017,87 @@
         "prompt": { "$ref": "#/$defs/text" },
         "placeholder": {
           "description": "Ghost text in the empty box, such as 'Dear me,'. A hint only: it is never saved as the answer.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "letter": {
+      "description": "A letter to the participant's future self, written as a long text and sealed by the press that finishes its section, until a date the participant picks with that press. Sealed, the box says only when it opens, and no page carries the letter; from that date it shows the letter, and a daily job emails the participant's own address that it is ready. Marking the section not complete leaves it sealed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "prompt", "months", "seal_label", "seal_note", "date_label", "sealed", "email"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "letter" },
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "prompt": { "$ref": "#/$defs/text" },
+        "placeholder": {
+          "description": "Ghost text in the empty box, such as 'Dear me,'. A hint only: it is never saved as the answer.",
+          "$ref": "#/$defs/text"
+        },
+        "months": {
+          "description": "How many months on from the day it is sealed the letter may open: the date offered, and the earliest and latest accepted.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["default", "earliest", "latest"],
+          "properties": {
+            "default": { "type": "integer", "minimum": 1 },
+            "earliest": { "type": "integer", "minimum": 1 },
+            "latest": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "seal_label": {
+          "description": "The wording of the press that finishes the section and seals the letter, in place of the section's own while the letter is not sealed, such as 'Seal my letter and finish Section 6'.",
+          "$ref": "#/$defs/text"
+        },
+        "seal_note": {
+          "description": "A line above that press, while the letter is not sealed, saying what must be done before it can be.",
+          "$ref": "#/$defs/text"
+        },
+        "date_label": {
+          "description": "The label of the date the letter opens on, beside that press, such as 'Open it on'.",
+          "$ref": "#/$defs/text"
+        },
+        "sealed": {
+          "description": "What the box says in the letter's place while it is sealed. {date} is the day it opens, such as '4 March 2031'.",
+          "$ref": "#/$defs/text"
+        },
+        "email": {
+          "description": "The email saying the letter is ready: its subject, its body and the label of its link to the letter's page, through sign-in. It never carries the letter.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["subject", "body", "link_label"],
+          "properties": {
+            "subject": { "$ref": "#/$defs/text" },
+            "body": { "$ref": "#/$defs/text" },
+            "link_label": { "$ref": "#/$defs/text" }
+          }
+        }
+      }
+    },
+    "recap": {
+      "description": "Where the participant has got to: the top construct of each framework in their own result of the sort, the top of each as the people who answered see them once at least the minimum have (constructs level at the top named together), and their coach's name, if they chose one, each under its label, with a closing line.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "sort", "heading", "strengths_label", "others_label", "coach_label", "empty"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "recap" },
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "sort": {
+          "description": "The identifier of the sort whose results it recalls.",
+          "$ref": "#/$defs/identifier"
+        },
+        "heading": { "$ref": "#/$defs/text" },
+        "strengths_label": { "$ref": "#/$defs/text" },
+        "others_label": { "$ref": "#/$defs/text" },
+        "coach_label": { "$ref": "#/$defs/text" },
+        "empty": {
+          "description": "What it says in their place while there is none of the three to show yet.",
+          "$ref": "#/$defs/text"
+        },
+        "body": {
+          "description": "Plain text after the recap. A blank line starts a new paragraph.",
           "$ref": "#/$defs/text"
         }
       }

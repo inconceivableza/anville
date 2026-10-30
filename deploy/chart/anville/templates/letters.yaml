@@ -1,0 +1,55 @@
+{{- /*
+Copyright (C) New Community Church SE London 2026.
+For licensing information see ../../../../LICENSE.md
+*/ -}}
+{{- if .Values.letters.enabled }}
+{{- /*
+✨ Each participant whose sealed letter has reached its date is emailed that it is ready (ticket 104): the send_letter_emails
+command, in the application's own image, with the web pod's environment. Never two at once; a run that overlapped
+another would still send no email twice.
+*/ -}}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-letters
+  labels:
+    {{- include "anville.labels" . | nindent 4 }}
+    app.kubernetes.io/component: letters
+spec:
+  schedule: {{ .Values.letters.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            {{- include "anville.labels" . | nindent 12 }}
+            app.kubernetes.io/component: letters
+        spec:
+          restartPolicy: Never
+          automountServiceAccountToken: false
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: letters
+              image: {{ include "anville.image" . }}
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["python", "manage.py", "send_letter_emails"]
+              env:
+                {{- include "anville.djangoEnv" . | nindent 16 }}
+              securityContext:
+                {{- include "anville.containerSecurity" . | nindent 16 }}
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: tmp
+              emptyDir: {}
+{{- end }}

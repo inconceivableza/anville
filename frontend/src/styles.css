@@ -3241,6 +3241,86 @@ body:not(.framed) .question-card > p + form {
   color: var(--green-deep);
 }
 
+/* ✨ The letter to your future self (ticket 104): where the participant has got to beside it, Print and Copy text under
+   it while it is written, the date it opens on beside the press that seals it, and, sealed or opened, the box in its
+   place. */
+
+.recap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-md) var(--space-lg);
+  margin-bottom: var(--space-md);
+}
+
+.recap h2 {
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+}
+
+.recap dt {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--green-deep);
+}
+
+.recap dd {
+  margin: 0 0 var(--space-sm);
+}
+
+.letter-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.letter-tools[hidden],
+.letter-print {
+  display: none;
+}
+
+.letter-label {
+  font-weight: 600;
+  margin-bottom: var(--space-sm);
+}
+
+.letter-opened .letter-text {
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  color: var(--ink-light);
+}
+
+.seal-note {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-bottom: var(--space-sm);
+}
+
+.seal-date {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+@media print {
+  body.printing-letter * {
+    visibility: hidden;
+  }
+
+  body.printing-letter .letter-print {
+    display: block;
+    visibility: visible;
+    position: absolute;
+    inset: 0 auto auto 0;
+    white-space: pre-wrap;
+    font-family: var(--font-heading);
+  }
+}
+
 /* The 1–10 agreement scale. Each point is a radio button drawn as a button. */
 
 /* ✨ As v3's ratings page (sprint-3c-r3-fix-4), wherever a rating is (fix-11): each statement a row under a fine line,
