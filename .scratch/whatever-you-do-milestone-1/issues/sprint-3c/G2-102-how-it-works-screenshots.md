@@ -4,15 +4,15 @@
 
 **Blocked by:** 101 (Photos and the new video), G1; 88 (Finishing Section 1 from the results page), A3A; 95 (The hub's cards and next steps), D3; 97 (Lock notes on "Locked"), E2; 74 ("Stay in touch" on the homepage), F4; 91 (A fixed top bar, and the new logo), B3
 
-**Status:** ready-for-human
+**Status:** resolved
 
 **Sprint:** 3c (ends Fri 30 Oct)
 
 **Spec:** Sprint 3c: the content owner's feedback
 
-- [ ] Each of How it works' five steps shows a screenshot of the app for that step, taken from a fresh participant with made-up details, in place of its photo
-- [ ] Each screenshot has a description for screen readers saying what it shows
-- [ ] At phone width each screenshot is cropped or scaled so its point stays visible
+- [x] Each of How it works' five steps shows a screenshot of the app for that step, taken from a fresh participant with made-up details, in place of its photo
+- [x] Each screenshot has a description for screen readers saying what it shows
+- [x] At phone width each screenshot is cropped or scaled so its point stays visible
 
 **Context**
 
