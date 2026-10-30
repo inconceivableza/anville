@@ -1,0 +1,14 @@
+allow|{"tool_input":{"command":"grep -n -E \"sed|<<|rm |cd \" bin/x","description":"Search a script for patterns"}}
+deny|{"tool_input":{"command":"rm notes.txt","description":"Delete the notes file"}}
+deny|{"tool_input":{"command":"ls && rm -rf build","description":"List then delete build"}}
+deny|{"tool_input":{"command":"bash -c \"rm notes.txt\"","description":"Delete through a shell"}}
+deny|{"tool_input":{"command":"find . -name '*.pyc' -delete","description":"Delete compiled files"}}
+allow|{"tool_input":{"command":"cd /Users/ryan/_Work/Inconceivable/Anville/.claude/worktrees/B1-89 && sed -i '' 's/a/b/' engine/x.py","description":"Edit a file in a worktree"}}
+deny|{"tool_input":{"command":"cd /Users/ryan/_Work/Inconceivable/Anville/.claude/worktrees/B1-89 && rm x.py","description":"Delete a file in a worktree"}}
+ask|{"tool_input":{"command":"sed -i '' 's/a/b/' engine/x.py","description":"Edit a file in main"}}
+ask|{"tool_input":{"command":"cat > notes.txt <<EOF","description":"Write a file in main"}}
+ask|{"tool_input":{"command":"echo 'hi' > notes.txt","description":"Write a file in main"}}
+allow|{"tool_input":{"command":"git log --format='%h > %s' | head","description":"List commits with arrows"}}
+deny|{"tool_input":{"command":"git -C /x push origin main","description":"Push the main branch"}}
+ask|{"tool_input":{"command":"git -C /x commit --no-verify -F msg.txt","description":"Commit without the hook"}}
+allow|{"tool_input":{"command":"git -C /x commit -F msg.txt","description":"Commit the staged files"}}

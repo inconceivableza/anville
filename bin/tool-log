@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# ✨ Local-only. Follows .claude/tool-log.txt in colour: subagents in cyan, Bash in yellow, edits in green, the
+# command or path after ┊ dimmed.
+#
+#   bin/tool-log          the last 30 calls, then follow
+#   bin/tool-log B2       only calls mentioning B2 (any text, case-insensitive: a worktree, a tool, "commit")
+#   bin/tool-log main     only the main session's own calls
+
+log="$(cd "$(dirname "$0")/.." && pwd)/.claude/tool-log.txt"
+tail -n 30 -F "$log" 2>/dev/null \
+  | grep --line-buffered -i -- "${1:-}" \
+  | awk '
+      BEGIN { for (i = 128; i < 256; i++) hi = hi sprintf("%c", i) }
+      # The log keeps long Bash commands whole; show about 140 characters after ┊. This awk counts bytes, so drop
+      # any trailing non-ASCII bytes rather than print half a character.
+      function trim(s,   at, cut) {
+        at = index(s, "┊")
+        if (!at || length(s) <= at + 143) return s
+        cut = substr(s, 1, at + 142)
+        while (index(hi, substr(cut, length(cut), 1))) cut = substr(cut, 1, length(cut) - 1)
+        return cut "…"
+      }
+      {
+        line = trim($0)
+        sub(/^[0-9:]+/, "\033[2m&\033[0m", line)
+        if ($2 != "main") sub($2, "\033[36m&\033[0m", line)
+        if ($3 == "Bash") sub(/  Bash  /, "  \033[33mBash\033[0m  ", line)
+        else if ($3 == "Edit" || $3 == "Write") sub("  " $3 "  ", "  \033[32m" $3 "\033[0m  ", line)
+        sub(/┊.*/, "\033[2m&\033[0m", line)
+        print line
+        fflush()
+      }'

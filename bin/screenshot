@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# ✨ Local-only. Draws the pages a worktree's snapshot tests saved (.claude/tools/snapshot/snap.py says how to save
+# them) as PNGs at phone and desktop width, using that worktree's own frontend build; no runserver, no dev database.
+# 06, run 2: half its fixes were looks no implementer had seen, each found by the developer by eye.
+#
+#   bin/screenshot <worktree>                  # every saved page, at 1280 px
+#   bin/screenshot <worktree> 375,1280         # a layout change: phone and desktop
+#
+# A page saved with snapshot(..., element=".selector") is drawn as that element alone. Each picture costs a reader
+# about 1,000-1,600 tokens, so draw the changed element at one width unless the change is to layout.
+#
+# The PNGs land beside the saved pages, in .claude/snapshots/<worktree name>/, and their paths are printed: Read them
+# to look. Needs the worktree's frontend build (npm ci && npm run build) and the Playwright venv in
+# .claude/tools/playwright-venv (made once: python -m venv, pip install playwright, playwright install chromium).
+set -euo pipefail
+
+main="$(cd "$(dirname "$0")/.." && pwd)"
+worktree="$(cd "${1:?usage: bin/screenshot <worktree> [widths]}" && pwd)"
+widths="${2:-1280}"
+folder="$main/.claude/snapshots/$(basename "$worktree")"
+venv="$main/.claude/tools/playwright-venv"
+
+if [ ! -f "$worktree/frontend/dist/manifest.json" ]; then
+    echo "✗ no frontend build in $worktree: cd $worktree/frontend && npm ci && npm run build" >&2
+    exit 2
+fi
+if [ ! -x "$venv/bin/python" ]; then
+    echo "✗ no Playwright venv at $venv: see this script's header to make it" >&2
+    exit 2
+fi
+
+"$venv/bin/python" "$main/.claude/tools/snapshot/draw.py" "$worktree" "$folder" "$widths"

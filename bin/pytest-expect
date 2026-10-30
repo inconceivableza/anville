@@ -1,0 +1,269 @@
+#!/usr/bin/env bash
+# ✨ Local-only. Runs pytest quietly, shows its progress and any FAILED/ERROR lines, and says whether the final
+# summary is the one expected.
+#
+#   bin/pytest-expect "all passed"                              # every test these args collect passes
+#   bin/pytest-expect "1 failed, rest passed" tests/organisations
+#   bin/pytest-expect "13 passed" tests/organisations
+#   bin/pytest-expect "2 errors" tests/organisations --continue-on-collection-errors
+#   bin/pytest-expect "1 failed, rest passed" --why "leaving_ends_it=assert 'Leave'" tests/organisations
+#   bin/pytest-expect --db b2 "all passed" tests/organisations
+#   bin/pytest-expect "named failed, rest passed" --why "leaving_ends_it=assert" tests/organisations
+#
+# "named failed" is as many failures as the collected tests the --why names pick out, every parametrized case of a
+# named test counted, so the failed count is never worked out by hand.
+#
+# --db <name> (first, if given) runs against the test database test_anville_<name>, so two runs at once (say in two
+# worktrees) don't share one. pytest comes from this checkout's .venv, so the script can be called by its full path
+# from a worktree, which has no .venv of its own; the tests are the ones in the current directory. --db from the main
+# checkout itself is refused.
+#
+# The count is the script's, not yours: it first collects the same args, then "all passed" means every collected test
+# passes, and "rest" stands for whatever the other counts leave ("1 failed, rest passed"). A "N deselected" is added
+# when -k or -m deselects some. A summary with plain numbers is checked against the collection before anything runs,
+# so a wrong total stops at once instead of after the whole run (06, run 1: about ten runs lost to guessed totals).
+#
+# The expected text must match the start of pytest's summary line, up to a comma or " in" (so warnings after it
+# don't matter, but "13 passed" never matches "130 passed").
+#
+# Each --why "<part of the test name>=<words copied from its error>" (as many as needed, before the pytest args)
+# checks the FAILED/ERROR line for that test carries those words after its " - ". Copy them from the error: a bare
+# `assert` fails as "assert …", not "AssertionError". Once any --why is given, a FAILED/ERROR line no --why names is
+# unexpected, and so is a --why that names no line. Exits 0 when everything matches, 1 when anything doesn't, 2 when
+# it stops before running.
+#
+# Progress lines show only in a terminal: an agent's run (no terminal) prints just the FAILED/ERROR lines and the
+# verdict, which is all it reads.
+set -uo pipefail
+
+main="$(cd "$(dirname "$0")/.." && pwd -P)"
+if [ $# -ge 2 ] && [ "$1" = "--db" ]; then
+    # ✨ A database name means a worktree's run. From the main checkout it would test main's code and report it as the
+    # worktree's (fix-8, 20 Oct), so it stops instead.
+    here="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+    if [ "$(cd "$here" && pwd -P)" = "$main" ]; then
+        echo "✗ --db $2 given, but this is the main checkout ($main): its tests are main's, not a worktree's." >&2
+        echo "  Run it from the worktree: cd <worktree> && $0 --db $2 ..." >&2
+        exit 2
+    fi
+    export ANVILLE_TEST_DATABASE_NAME="test_anville_$2"
+    shift 2
+fi
+if [ $# -lt 1 ]; then
+    echo 'usage: bin/pytest-expect [--db <name>] "<expected summary: all passed | 1 failed, rest passed | N passed>"' >&2
+    echo '         [--why "<part of test name>=<words copied from its error>"]... [pytest args...]' >&2
+    exit 2
+fi
+pytest="$main/.venv/bin/pytest"
+[ -x "$pytest" ] || pytest=pytest
+expected="$1"
+shift
+whys=()
+while [ $# -ge 2 ] && [ "$1" = "--why" ]; do
+    whys+=("$2")
+    shift 2
+done
+
+top="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+
+# ✨ A merge left half done (conflicts unresolved, or resolved but not committed) is no tree to report a count on: a
+# merge chained to the suite with ";" ran it on one and printed a meaningless "passed" (06, run 2).
+if git -C "$top" rev-parse -q --verify MERGE_HEAD >/dev/null 2>&1; then
+    echo "✗ a merge is in progress in $top: finish it (resolve and commit) or abort it before running the suite." >&2
+    unmerged="$(git -C "$top" diff --name-only --diff-filter=U)"
+    [ -n "$unmerged" ] && echo "  unmerged: $(tr '\n' ' ' <<<"$unmerged")" >&2
+    exit 2
+fi
+
+# ✨ Pages are drawn through Vite's manifest, so without a frontend build every test that renders one errors, after
+# minutes (06, run 1: 701 errors from a worktree not yet built). Stop at once when the run needs pages: the whole
+# suite, or any path under tests/journeys.
+if [ -d "$top/frontend" ] && [ ! -f "$top/frontend/dist/manifest.json" ]; then
+    paths=0
+    journeys=0
+    for arg in "$@"; do
+        # A path is an argument naming a file or folder, or a test id (path::name); option values such as -k's are not.
+        if [[ "$arg" != -* ]] && { [ -e "$arg" ] || [[ "$arg" == *::* ]]; }; then
+            paths=1
+            case "$arg" in *journeys*) journeys=1 ;; esac
+        fi
+    done
+    if [ $paths -eq 0 ] || [ $journeys -eq 1 ]; then
+        echo "✗ no frontend build: $top/frontend/dist/manifest.json is missing, so every page a test renders errors." >&2
+        echo "  Build it first: cd $top/frontend && npm ci && npm run build" >&2
+        exit 2
+    fi
+    echo "  (no frontend build here: a test that renders a page will error)"
+fi
+
+# ✨ Every test that touches the database errors when PostgreSQL is down, after the whole run (06, after run 1: 906
+# errors once Docker had stopped). Connecting once through the project's own settings stops it in a second instead;
+# nothing reads .env here but Django itself.
+if [ -f "$top/manage.py" ]; then
+    if ! db_out="$(cd "$top" && "$main/.venv/bin/python" manage.py shell -c \
+        'from django.db import connection; connection.ensure_connection()' 2>&1)"; then
+        echo "✗ the database can't be reached, so every test that uses it would error:" >&2
+        grep -m 1 -E 'OperationalError|could not|refused' <<<"$db_out" | cut -c 1-200 >&2
+        echo "  Start it first: docker compose up -d (Docker Desktop running), in $main" >&2
+        exit 2
+    fi
+fi
+
+# ✨ Collect the same args first, so the count comes from pytest, not from arithmetic.
+collected_text="$(COLUMNS=1000 "$pytest" --collect-only -q "$@" 2>&1)"
+collected_line="$(grep -E '^[0-9]+(/[0-9]+)? tests? collected' <<<"$collected_text" | tail -n 1)"
+if [ -z "$collected_line" ]; then
+    echo "✗ collecting these args found no tests, or failed:" >&2
+    tail -n 5 <<<"$collected_text" >&2
+    exit 2
+fi
+selected="$(sed -E 's/^([0-9]+).*/\1/' <<<"$collected_line")"
+deselected=""   # empty unless -k or -m deselects some, so the messages below can leave it out
+if [[ "$collected_line" =~ \(([0-9]+)\ deselected\) ]]; then
+    deselected="${BASH_REMATCH[1]}"
+fi
+
+# ✨ Rebuild the expected summary in pytest's own order, "rest" filled in and "deselected" added where pytest puts it.
+order=(failed passed skipped deselected xfailed xpassed warnings warning errors error)
+# macOS's bash 3.2 has no associative arrays, so each outcome's count is its own variable, count_<outcome>.
+for outcome in "${order[@]}"; do printf -v "count_$outcome" '%s' ""; done
+rest=""
+listed_total=0
+IFS=',' read -ra parts <<<"$expected"
+for part in "${parts[@]}"; do
+    part="$(sed -E 's/^ +| +$//g' <<<"$part")"
+    if [ "$part" = "all passed" ] || [ "$part" = "rest passed" ]; then
+        rest="passed"
+    elif [ "$part" = "named failed" ]; then
+        # ✨ As many failures as collected tests the --why names pick out, each parametrized case counted (29 Oct: a
+        # failed count worked out by hand was wrong twice in one session).
+        if [ ${#whys[@]} -eq 0 ]; then
+            echo "✗ \"named failed\" counts the tests the --why names pick out, but none is given." >&2
+            exit 2
+        fi
+        number=0
+        while IFS= read -r id; do
+            for why in "${whys[@]}"; do
+                if [[ "$id" == *"${why%%=*}"* ]]; then
+                    number=$((number + 1))
+                    break
+                fi
+            done
+        done < <(grep '::' <<<"$collected_text")
+        count_failed=$number
+        listed_total=$((listed_total + number))
+    elif [[ "$part" =~ ^([0-9]+)\ ([a-z]+)$ ]] && [[ " ${order[*]} " == *" ${BASH_REMATCH[2]} "* ]]; then
+        number="${BASH_REMATCH[1]}"
+        outcome="${BASH_REMATCH[2]}"
+        printf -v "count_$outcome" '%s' "$number"
+        case "$outcome" in
+            deselected|warnings|warning) ;;
+            *) listed_total=$((listed_total + number)) ;;
+        esac
+    else
+        echo "✗ can't read \"$part\" in the expected summary: use \"all passed\", \"rest passed\" or \"N <outcome>\"." >&2
+        exit 2
+    fi
+done
+if [ -n "$rest" ]; then
+    left=$((selected - listed_total))
+    if [ $left -lt 0 ]; then
+        echo "✗ \"$expected\" names $listed_total tests, but these args collect $selected." >&2
+        exit 2
+    fi
+    [ $left -gt 0 ] && count_passed=$left
+elif ! grep -q -i 'error' <<<"$collected_line" && [ $listed_total -ne "$selected" ]; then
+    # ✨ Collection errors make the totals differ legitimately; otherwise a summary that doesn't add up is a guess.
+    echo "✗ \"$expected\" adds up to $listed_total tests, but these args collect $selected${deselected:+ ($deselected deselected)}." >&2
+    echo "  Write \"all passed\", or \"rest passed\" beside the counts you expect, and the script fills in the number." >&2
+    exit 2
+fi
+if [ -n "$deselected" ] && [ -z "$count_deselected" ]; then
+    count_deselected=$deselected
+fi
+expected=""
+for outcome in "${order[@]}"; do
+    var="count_$outcome"
+    [ -n "${!var}" ] && expected="${expected:+$expected, }${!var} $outcome"
+done
+echo "  collected $selected${deselected:+, $deselected deselected}; expecting \"$expected\""
+
+log="$(mktemp)"
+trap 'rm -f "$log"' EXIT
+
+# Piped, pytest assumes 80 columns and drops the " - <reason>" from a long FAILED line; widen it so the reason stays.
+# The wide line pads the progress out to 1000 columns too, so that padding is squeezed back.
+if [ -t 1 ]; then
+    COLUMNS=1000 "$pytest" -q --no-header --tb=short -rfE "$@" 2>&1 | tee "$log" \
+        | grep --line-buffered -E '\[ *[0-9]+%\]$' | sed -l -E 's/ {2,}(\[ *[0-9]+%\])$/  \1/'
+else
+    COLUMNS=1000 "$pytest" -q --no-header --tb=short -rfE "$@" >"$log" 2>&1
+fi
+
+status=0
+used=()
+# ✨ A broken setting or service can fail hundreds of tests with one reason (906 lines, 248 KB, in 06): beyond 20
+# lines with no --why to check, show the first 10 and the commonest reasons, which is what the reader acts on.
+failures="$(grep -E '^(FAILED|ERROR) ' "$log")"
+failure_count="$(grep -c . <<<"$failures")"
+if [ ${#whys[@]} -eq 0 ] && [ "$failure_count" -gt 20 ]; then
+    head -n 10 <<<"$failures" | sed 's/^/  /'
+    echo "  … and $((failure_count - 10)) more FAILED/ERROR lines. The commonest reasons:"
+    sed -E 's/^[^ ]+ [^ ]+ - //' <<<"$failures" | cut -c 1-160 | sort | uniq -c | sort -rn | head -n 3 | sed 's/^/  /'
+    failures=""
+fi
+while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    verdict="  "
+    note=""
+    if [ ${#whys[@]} -gt 0 ]; then
+        verdict="✗ "
+        note="  (not expected to fail)"
+        for why in "${whys[@]}"; do
+            name="${why%%=*}"
+            reason="${why#*=}"
+            if [[ "$line" == *"$name"* ]]; then
+                used+=("$why")
+                if [[ "$line" == *" - "*"$reason"* ]]; then
+                    verdict="✓ "
+                    note=""
+                elif [[ "$line" == *" - "* ]]; then
+                    note="  (expected \"$reason\" in its reason, which is: \"${line#* - }\")"
+                else
+                    note="  (expected \"$reason\", but this line carries no reason)"
+                fi
+                break
+            fi
+        done
+        [ "$verdict" = "✗ " ] && status=1
+    fi
+    echo "$verdict$line$note"
+done <<<"$failures"
+
+if [ ${#whys[@]} -gt 0 ]; then
+    for why in "${whys[@]}"; do
+        if [[ " ${used[*]-} " != *" $why "* ]]; then
+            echo "✗ no FAILED/ERROR line for ${why%%=*} (expected ${why#*=}); the part before = must be in the test's id"
+            status=1
+        fi
+    done
+fi
+
+summary="$(grep -v '^[[:space:]]*$' "$log" | tail -n 1)"
+summary="${summary#"${summary%%[!= ]*}"}"   # pytest may frame it in = signs
+summary="${summary%"${summary##*[!= ]}"}"
+
+if [[ "$summary" == "$expected" || "$summary" == "$expected,"* || "$summary" == "$expected in "* ]]; then
+    echo "  summary as expected: $summary"
+else
+    echo "✗ summary expected \"$expected\", got: $summary"
+    status=1
+fi
+
+# One verdict for the whole run, last, so a ✗ above is never followed by a closing ✓.
+if [ $status -eq 0 ]; then
+    echo "✓ ALL AS EXPECTED"
+else
+    echo "✗ NOT AS EXPECTED (see ✗ above)"
+fi
+exit $status

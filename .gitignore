@@ -49,4 +49,16 @@ compose.override.yml
 # Editor and tooling state
 .idea/
 .vscode/*.log
-.claude/
+# Claude Code: the hooks, shared settings, the build method and the snapshot tool are tracked; the installed skills
+# (see docs/ai-workflow.md), logs, local settings, per-build notes, screenshots, worktrees and the Playwright venv are not.
+.agents/
+.claude/*
+!.claude/hooks/
+!.claude/settings.json
+!.claude/settings.build.json
+!.claude/builds/
+.claude/builds/*
+!.claude/builds/method.md
+!.claude/tools/
+.claude/tools/*
+!.claude/tools/snapshot/

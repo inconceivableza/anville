@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# ✨ Local-only. Makes a worktree a ticket can be built and tested in: branch ticket/<name> from <base>, under
+# .claude/worktrees/<name>, with links to this checkout's .env (Django reads it to start; nobody needs to open it)
+# and built frontend/dist. Prints the commands to work in it.
+#
+#   bin/worktree B2 organisations-and-groups
+#   bin/worktree A3 organisations-and-groups --own-dist    # builds its own frontend: no dist link
+#
+# Run again after a half-made attempt: a ticket/<name> branch with no worktree gets its worktree on that branch, and
+# missing links are added. A worktree already there is reported and left alone.
+#
+# Undo: git worktree remove --force .claude/worktrees/<name> (the links are untracked, hence --force; the
+# real .env is untouched), then git branch -D ticket/<name>.
+set -euo pipefail
+# ✨ Output piped into `head` once closed the pipe and killed the script between making the branch and making the
+# worktree (06, run 1). git's output is captured instead, and the summary is printed only once the work is done.
+trap '' PIPE
+
+if [ $# -lt 2 ]; then
+    echo 'usage: bin/worktree <name> <base branch> [--own-dist]' >&2
+    exit 2
+fi
+name="$1"
+base="$2"
+own_dist="${3:-}"
+
+main="$(cd "$(dirname "$0")/.." && pwd)"
+tree="$main/.claude/worktrees/$name"
+branch="ticket/$name"
+
+if git -C "$main" worktree list --porcelain | grep -qx "worktree $tree"; then
+    made="already there, left as it was"
+elif git -C "$main" show-ref --verify --quiet "refs/heads/$branch"; then
+    out="$(git -C "$main" worktree add "$tree" "$branch" 2>&1)" || { echo "$out" >&2; exit 1; }
+    made="added on the existing $branch"
+else
+    out="$(git -C "$main" worktree add -b "$branch" "$tree" "$base" 2>&1)" || { echo "$out" >&2; exit 1; }
+    made="new, $branch from $base"
+fi
+
+[ -L "$tree/.env" ] || ln -s "$main/.env" "$tree/.env"
+if [ "$own_dist" != "--own-dist" ] && [ ! -e "$tree/frontend/dist" ]; then
+    ln -s "$main/frontend/dist" "$tree/frontend/dist"
+fi
+
+# ✨ Presence only, set or missing, so nobody has to name or read the file to know the link works.
+env_link=missing
+[ -L "$tree/.env" ] && [ -e "$tree/.env" ] && env_link=set
+if [ "$own_dist" = "--own-dist" ]; then
+    dist="own (build it: cd $tree/frontend && npm ci && npm run build)"
+elif [ -e "$tree/frontend/dist/manifest.json" ]; then
+    dist="linked to $main/frontend/dist"
+else
+    dist="linked, but $main/frontend/dist has no build"
+fi
+
+{
+    echo "Worktree $tree: $made, at $(git -C "$tree" rev-parse --short HEAD)"
+    echo "  env link: $env_link; frontend dist: $dist"
+    # ✨ One line each, since an agent's Bash calls don't keep a `cd` from one call to the next.
+    echo "  cd $tree && $main/bin/pytest-expect --db $(tr '[:upper:]' '[:lower:]' <<<"$name") \"all passed\" <paths>"
+    echo "  cd $tree && $main/.venv/bin/python manage.py <command>"
+} 2>/dev/null || true
