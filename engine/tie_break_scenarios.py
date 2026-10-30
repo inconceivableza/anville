@@ -91,9 +91,11 @@ class Profile:
 
 PROFILES = {
     "tied-apest": Profile(
-        "Tied on APEST(d) only: two roles level, PEP clear.", TIED_ON_APEST, frozenset({"apest"})
+        "Tied on the Contribution Profile only: two roles level, PEP clear.", TIED_ON_APEST, frozenset({"apest"})
     ),
-    "tied-pep": Profile("Tied on PEP only: two energies level, APEST(d) clear.", TIED_ON_PEP, frozenset({"pep"})),
+    "tied-pep": Profile(
+        "Tied on PEP only: two energies level, the Contribution Profile clear.", TIED_ON_PEP, frozenset({"pep"})
+    ),
     "tied-both": Profile(
         "Tied on both frameworks, not flat: pairs on both, alternating.", TIED_ON_BOTH, frozenset({"apest", "pep"})
     ),
@@ -126,10 +128,12 @@ ANSWERS = {
     "one-each-way": Answers("One answer each way: genuinely balanced.", each=EACH_WAY),
     "skip": Answers("Skip every pair.", each=SKIP),
     "separate-apest-skip-pep": Answers(
-        "APEST(d) separated, choosing the one behind each time; PEP skipped.", by_framework={"apest": BEHIND, "pep": SKIP}
+        "Contribution Profile separated, choosing the one behind each time; PEP skipped.",
+        by_framework={"apest": BEHIND, "pep": SKIP},
     ),
     "separate-pep-skip-apest": Answers(
-        "PEP separated, choosing the one behind each time; APEST(d) skipped.", by_framework={"apest": SKIP, "pep": BEHIND}
+        "PEP separated, choosing the one behind each time; Contribution Profile skipped.",
+        by_framework={"apest": SKIP, "pep": BEHIND},
     ),
 }
 

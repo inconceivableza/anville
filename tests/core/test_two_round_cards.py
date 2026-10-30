@@ -27,6 +27,38 @@ def prototype_pairs():
     return [(pair, [APEST[apest], PEP[pep]], first, second) for pair, apest, pep, first, second in found]
 
 
+def prototype_gifts():
+    """✨ The prototype's gifts, from its APEST object: each construct, its new name and its results description."""
+    gifts = TWO_ROUND[TWO_ROUND.index("const APEST = {") : TWO_ROUND.index("const PEP = {")]
+    found = re.findall(r"(\w): \{\s*name: '((?:[^'\\]|\\.)*)',\s*desc: '((?:[^'\\]|\\.)*)'", gifts)
+    return [(APEST[letter], name, description) for letter, name, description in found]
+
+
+def test_each_gift_has_the_two_round_prototypes_name_and_description_word_for_word():
+    """✨ The names are in everyday words, so none is named otherwise in text, as deacon was (fix-27)."""
+    pathway = whatever_you_do()
+    [apest] = [framework for framework in pathway["measurement"]["frameworks"] if framework["id"] == "apest"]
+    descriptions = {shown["construct"]: shown["description"] for shown in pathway["presentation"]["constructs"]}
+    gifts = prototype_gifts()
+    assert len(gifts) == 6
+    assert apest["constructs"] == [{"id": construct, "label": name} for construct, name, _ in gifts]
+    assert [descriptions[construct] for construct, _, _ in gifts] == [description for _, _, description in gifts]
+
+
+SUBTITLE = "The kind of difference you tend to make among the people around you. Based on Ephesians 4:11–13."
+
+
+def test_the_gifts_are_the_contribution_profile_with_the_prototypes_subtitle():
+    """✨ Its subtitle less the prototype's last sentence, about each bar's share, as results show standings, never
+    percents. The heading keeps the original prototype's ✨, beside PEP's ⚡."""
+    pathway = whatever_you_do()
+    [apest] = [framework for framework in pathway["measurement"]["frameworks"] if framework["id"] == "apest"]
+    [shown] = [shown for shown in pathway["presentation"]["frameworks"] if shown["framework"] == "apest"]
+    assert apest["label"] == "Contribution Profile"
+    assert shown == {"framework": "apest", "heading": "✨ Your Contribution Profile", "subtitle": SUBTITLE}
+    assert SUBTITLE in TWO_ROUND
+
+
 def test_whatever_you_do_has_the_two_round_prototypes_72_cards_word_for_word():
     """✨ In the participant's wording: every first-round card in the prototype's order, then every second-round card,
     each named after its twin with a "b" and naming it."""

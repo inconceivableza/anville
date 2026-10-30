@@ -660,14 +660,14 @@
     "frameworks": [
       {
         "id": "apest",
-        "label": "APEST(d)",
+        "label": "Contribution Profile",
         "constructs": [
-          { "id": "apostle", "label": "Apostle" },
-          { "id": "prophet", "label": "Prophet" },
-          { "id": "evangelist", "label": "Evangelist" },
-          { "id": "shepherd", "label": "Shepherd" },
-          { "id": "teacher", "label": "Teacher" },
-          { "id": "deacon", "label": "deacon", "text_label": "Deacon" }
+          { "id": "apostle", "label": "Pioneer" },
+          { "id": "prophet", "label": "Awakener" },
+          { "id": "evangelist", "label": "Persuader" },
+          { "id": "shepherd", "label": "Nurturer" },
+          { "id": "teacher", "label": "Explainer" },
+          { "id": "deacon", "label": "Helper" }
         ]
       },
       {
@@ -719,8 +719,8 @@
     "frameworks": [
       {
         "framework": "apest",
-        "heading": "✨ Your APEST(d) Profile",
-        "subtitle": "Fivefold ministry gifting plus diaconal service"
+        "heading": "✨ Your Contribution Profile",
+        "subtitle": "The kind of difference you tend to make among the people around you. Based on Ephesians 4:11–13."
       },
       {
         "framework": "pep",
@@ -729,12 +729,12 @@
       }
     ],
     "constructs": [
-      { "construct": "apostle", "tone": "violet", "description": "Envisioning, pioneering, designing foundations, developing content, raising leaders, building legacy" },
-      { "construct": "prophet", "tone": "rose", "description": "Challenging the status quo, strong instincts, sensing trends, advocating for justice, communicating hard truths" },
-      { "construct": "evangelist", "tone": "green", "description": "Empathy across difference, curiosity, one-to-one persuasion, motivating others, making ideas accessible" },
-      { "construct": "shepherd", "tone": "moss", "description": "Caring for those struggling, helping groups thrive, welcoming outsiders, correcting where needed, faithful presence" },
-      { "construct": "teacher", "tone": "blue", "description": "Going deep into source material, breaking down concepts, training to apply learning, communicating through media, evaluating accuracy" },
-      { "construct": "deacon", "tone": "brown", "description": "Supporting others’ initiatives, following through on detail, bringing order, improving processes, seeing and doing what’s needed" },
+      { "construct": "apostle", "tone": "violet", "description": "Starts new things and builds them to last, with vision, experimenting, laying foundations, raising leaders and leaving a blueprint others can follow" },
+      { "construct": "prophet", "tone": "rose", "description": "Sees what others miss and calls it out, challenging the status quo, speaking hard truths and pushing for change" },
+      { "construct": "evangelist", "tone": "green", "description": "Reaches people unlike them and wins them over, with empathy across difference, a persuasive message and an invitation to commit" },
+      { "construct": "shepherd", "tone": "moss", "description": "Helps people and communities flourish through care in hard times, gentle redirection and a real sense of belonging" },
+      { "construct": "teacher", "tone": "blue", "description": "Understands things deeply and helps others get it, with clear explanations, patient teaching and putting learning into practice" },
+      { "construct": "deacon", "tone": "brown", "description": "Makes things happen for others through practical service, thinking ahead, bringing order and rounding people up" },
       { "construct": "ponder", "tone": "violet", "persona": "The Philosopher", "description": "Stepping back to ask the big “what ifs?” and thinking deeply" },
       { "construct": "ideate", "tone": "green", "persona": "The Creator", "description": "Generating options and creating potential solutions" },
       { "construct": "assess", "tone": "blue", "persona": "The Judge", "description": "Applying a reality check to evaluate what will actually work" },

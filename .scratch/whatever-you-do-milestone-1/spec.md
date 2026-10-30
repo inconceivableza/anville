@@ -285,6 +285,7 @@ So FaithTech sees, on staging: the homepage, onboarding with a display name, Sec
 ### The instrument and scoring
 
 - The instrument is 36 items, each loading onto exactly one construct of APEST(d) (Apostle, Prophet, Evangelist, Shepherd, Teacher, deacon) and exactly one construct of PEP (Ponder, Ideate, Assess, Rally, Facilitate, Deliver). The item bank, the result descriptions, the personas and the validity disclaimer are migrated verbatim from the prototype reference.
+- Since 30 Oct, Whatever You Do (not the faithful port) shows APEST(d) as the two-round prototype does: the framework is the "Contribution Profile", its constructs Pioneer (apostle), Awakener (prophet), Persuader (evangelist), Nurturer (shepherd), Explainer (teacher) and Helper (deacon), with that prototype's descriptions and a subtitle citing Ephesians 4:11–13, so participants never see the original names. The construct identifiers are unchanged, so stored answers and results keep working; a result scored on an earlier version keeps the old names. The tie-break's label for the framework stays "Your role among people".
 - Buckets have named identifiers and an explicit order from weakest to strongest. The prototype's inverted stored integers never enter the new system. Seeds are as follows, taken from the prototype:
 
   | Bucket | Prototype id | Slider seed |

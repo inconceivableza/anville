@@ -148,12 +148,12 @@ def test_what_finishing_a_section_takes_is_authored_text():
 
 
 def test_a_construct_may_be_named_in_text_otherwise_than_beside_its_drawing_by_authored_text():
-    """✨ Both Whatever You Do pathways label deacon "deacon" beside its drawing and "Deacon" in text (fix-27)."""
-    for name in ("whatever-you-do.json", "whatever-you-do-faithful-port.json"):
-        pathway = json.loads((WHATEVER_YOU_DO.parent / name).read_text(encoding="utf-8"))
-        [apest] = [framework for framework in pathway["measurement"]["frameworks"] if framework["id"] == "apest"]
-        [deacon] = [construct for construct in apest["constructs"] if construct["id"] == "deacon"]
-        assert (deacon["label"], deacon["text_label"]) == ("deacon", "Deacon")
+    """✨ The faithful port labels deacon "deacon" beside its drawing and "Deacon" in text (fix-27). Whatever You Do's
+    Helper needs no such split (`tests/core/test_two_round_cards.py`)."""
+    pathway = json.loads((WHATEVER_YOU_DO.parent / "whatever-you-do-faithful-port.json").read_text(encoding="utf-8"))
+    [apest] = [framework for framework in pathway["measurement"]["frameworks"] if framework["id"] == "apest"]
+    [deacon] = [construct for construct in apest["constructs"] if construct["id"] == "deacon"]
+    assert (deacon["label"], deacon["text_label"]) == ("deacon", "Deacon")
 
     document = pathway_document()
     apostle = document["measurement"]["frameworks"][0]["constructs"][0]

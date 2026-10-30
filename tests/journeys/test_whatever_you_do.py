@@ -528,7 +528,8 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     its gate clause, or a message still saying four). The minimum-length messages are reworded the same way,
     the time estimates, checked above, the hub's section numbers, next-step wording and photos and Section 1's results
     are set aside, and so are the downloads in place of Sections 3–5's own blocks, Section 1's split in two (ticket
-    87), Section 2's way to the comparison, the two-round prototype's cards and the sealed letter (ticket 104)."""
+    87), Section 2's way to the comparison, the two-round prototype's cards and gift names, and the sealed letter
+    (ticket 104)."""
     expected = the_faithful_port()
     for section in expected["content"]["sections"]:
         for clause in section.get("gate", {}).get("clauses", []):
@@ -557,7 +558,9 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
                     without_the_tie_break(
                         without_the_coach_step(
                             without_estimates(
-                                without_the_wizard(without_the_cards(without_the_sealed_letter(the_pathway())))
+                                without_the_wizard(
+                                    without_the_cards(without_the_gift_names(without_the_sealed_letter(the_pathway())))
+                                )
                             )
                         )
                     )
@@ -576,6 +579,23 @@ def without_the_cards(document):
         for block in section["blocks"]:
             if block["id"] == "gifts-activity":
                 block.pop("body")
+    return document
+
+
+def without_the_gift_names(document):
+    """✨ The gifts' names and descriptions, and the Contribution Profile's heading and subtitle, are the two-round
+    prototype's (held to it in `tests/core/test_two_round_cards.py`), so the faithful port's are put back in their
+    place."""
+    faithful = the_faithful_port()
+    theirs = {framework["id"]: framework for framework in faithful["measurement"]["frameworks"]}
+    frameworks = document["measurement"]["frameworks"]
+    frameworks[:] = [theirs["apest"] if framework["id"] == "apest" else framework for framework in frameworks]
+    gifts = {"apest", *(construct["id"] for construct in theirs["apest"]["constructs"])}
+    for key, field in (("frameworks", "framework"), ("constructs", "construct")):
+        shown_there = {shown[field]: shown for shown in faithful["presentation"][key]}
+        document["presentation"][key] = [
+            shown_there[shown[field]] if shown[field] in gifts else shown for shown in document["presentation"][key]
+        ]
     return document
 
 
