@@ -9,7 +9,12 @@ import pytest
 
 from engine.models import Publication
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
-from tests.journeys.test_whatever_you_do import participant, the_pathway, through_to_the_letter  # noqa: F401
+from tests.journeys.test_whatever_you_do import (  # noqa: F401
+    participant,
+    the_pathway,
+    through_to_the_letter,
+    through_to_the_questions,
+)
 from tests.journeys.test_whatever_you_do_faithful_port import A_LETTER
 from tests.journeys.test_whatever_you_do_faithful_port import participant as port_participant  # noqa: F401
 from tests.journeys.test_whatever_you_do_faithful_port import through_to_the_letter as through_to_the_ports_letter
@@ -25,7 +30,7 @@ def autosave(client, block_id, value):
 
 @pytest.mark.django_db
 def test_a_closing_rating_answered_says_nothing_and_sends_back_only_its_gate(participant):  # noqa: F811
-    saved = autosave(through_to_the_letter(participant), "pl-peace", "8")
+    saved = autosave(through_to_the_questions(participant), "pl-peace", "8")
 
     assert saved.status_code == 200
     assert saved.content.decode().startswith('<div id="gate-refusal"')
@@ -33,7 +38,7 @@ def test_a_closing_rating_answered_says_nothing_and_sends_back_only_its_gate(par
 
 @pytest.mark.django_db
 def test_a_refused_closing_rating_still_says_why(participant):  # noqa: F811
-    refused = autosave(through_to_the_letter(participant), "pl-peace", "11")
+    refused = autosave(through_to_the_questions(participant), "pl-peace", "11")
 
     assert refused.status_code == 400
     assert "Not saved." in refused.content.decode()

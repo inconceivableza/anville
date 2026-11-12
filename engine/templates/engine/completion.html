@@ -37,10 +37,24 @@
     <div class="way-on"{% if refused %} id="refused"{% endif %}>
       {% include "engine/previous_page.html" %}
       {% url 'move_past_page' section.id page.number as move_on %}
+      {% if page.carries %}
+        {% comment %}
+          ✨ A page holding the letter (ticket 107): the button is the letter's form's, sending what is typed in the box
+          with the press, which stores it before going on, so nothing typed since its last save is lost, with JavaScript
+          or without. htmx sends a button's own form, the letter's, as a browser does.
+        {% endcomment %}
+        <button type="submit" form="block-{{ page.carries.id }}" class="pill full"
+          {% if messages_after_a_press %}
+            formaction="{{ move_on }}#refused" hx-post="{{ move_on }}" hx-target="#gate-refusal"
+          {% else %}
+            formaction="{{ move_on }}"{% if unmet %} disabled{% endif %}
+          {% endif %}>{{ page.carries.label|default:"Continue →" }}</button>
+      {% else %}
       <form method="post"{% if messages_after_a_press %} action="{{ move_on }}#refused" hx-post="{{ move_on }}" hx-target="#gate-refusal"{% else %} action="{{ move_on }}"{% endif %}>
         {% csrf_token %}
         <button type="submit" class="pill full"{% if unmet and not messages_after_a_press %} disabled{% endif %}>Continue →</button>
       </form>
+      {% endif %}
     </div>
     <div id="gate-refusal">{% include "engine/gate_refusal.html" %}</div>
   {% elif offers_way_on and section.is_side_card and not is_complete %}

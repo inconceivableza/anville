@@ -336,7 +336,11 @@ From your 30 October feedback on Sections 1 and 2 (pictures 36, 38, 41, 49, 51 a
 
 ### The letter and the closing questions on two pages
 
-Nothing yet.
+From your 30 October feedback on Section 6 ("Think these should be 2 separate screens – questions vs letter"). Section 6 is now two pages, in the same order as before: the letter first, then the questions and the seal. Each page says **"Page 1 of 2"** or **"Page 2 of 2"** under the title.
+
+- **Page 1:** "The task", Joshua 4:6b–7 and "Your letter", with "Print" and "Copy text", as before. The line under the letter now points to the next page: **"On the next page, answer five questions, then pick the day your letter opens and seal it. Once it is sealed, it can't be changed, and it can't be read here until that day."** It said "Answer the five questions below, then pick the day your letter opens and seal it…". The page ends in a new button, **"Save my letter and continue →"**, which saves the letter and opens page 2. If the letter is too short, pressing it says what sealing said before: **"Write your letter (10 characters or more) before sealing it."**
+- **Page 2:** "Where are you now?", the five questions, "Open it on" with its date, and **"Save my answers and seal my letter"**, all as before, with **"← Previous page"** beside the button, which goes back to the letter. If the letter has been cut short since, pressing the button shows the same line, "Write your letter (10 characters or more) before sealing it.", as a link back to the letter.
+- **Once sealed:** the participant lands on their sealed letter on page 1, as before. Its button then reads **"Continue →"** and opens page 2, where the five answers show, fixed.
 
 ### The strengths evaluation's sort, tie-break and names
 
@@ -374,7 +378,32 @@ From your 30 October feedback on the homepage (the last four pictures of "Friday
 
 ### Stay in touch with a choice
 
-Nothing yet.
+From your 30 October feedback that "Join the waitlist" led to a sign-up box with no waitlist in it. The box now asks what the visitor would like, and keeps each answer, so the list can be used for each.
+
+- **New, above the email box:** **"What would you like?"**, with three boxes to tick:
+  - **"Put my church on the waitlist"**
+  - **"Send me occasional writing and news by email"**
+  - **"Get in touch with me"**
+
+  "Join the waitlist" opens the box with the first one ticked, and "Contact us" with the third. The sentence beside the box, "Thoughtful writing on vocation, faith and work, and news of Whatever You Do for churches, delivered occasionally.", is unchanged.
+- **The button:** "Subscribe" becomes **"Sign up"**, since not every choice is a subscription.
+- **The small print:** "We'll only use your email to send these updates, and you can unsubscribe at any time. See our privacy notice." becomes **"We'll use your email only for what you tick, and you can ask us to stop at any time. See our privacy notice."**
+- **If nothing is ticked**, beside the button: **"Tick what you'd like."** The two messages about the email address are unchanged, and if both are missing, both show.
+- **The thanks:** "Thanks, you're subscribed. Look out for our next note." becomes **"Thank you."**, then a line for each box ticked:
+  - the waitlist: **"Your church is on the waitlist. We'll email you about next steps."**
+  - the news: **"You're subscribed to our news. Look out for our next note."**
+  - being contacted: **"We'll get in touch with you by email."**
+
+  The site itself emails nobody, so whoever runs it needs to look at the list for anyone waiting to hear from you.
+- **Signing up again** with the same address adds whatever is newly ticked and keeps what was ticked before; it never takes a choice away. Someone who wants one taken off asks, as now, and is taken off the list.
+- **The privacy page**, under "If you leave your email address on the homepage": "we keep your email address, when you left it, and which version of the sentence you agreed to, to send you occasional writing on vocation, faith and work, and news of Whatever You Do for churches. Only the people who run this service see the list." becomes **"we keep your email address, what you ticked, when you ticked each, and which version of the box's wording you saw. Only the people who run this service see the list. Each thing you can tick leads to one thing, and we use your email for nothing you did not tick:"**, then:
+  - **"Your church on the waitlist: we email you about next steps for your church."**
+  - **"News by email: we send you occasional writing on vocation, faith and work, and news of Whatever You Do for churches."**
+  - **"To be contacted: someone who runs this service emails you."**
+  - and below them, **"If you sign up again with the same address, we add anything new you tick and keep what you ticked before."**
+
+  Under "What we send by email", "the occasional updates above. These are not sent by this site: the people who run this service copy the list into a mailing tool and send them from there." becomes **"only what you ticked, as above. None of it is sent by this site: the people who run this service copy the list into a mailing tool, or write from their own email."**
+- **Why ticks now** (in place of "Why no tick box" in Part 2): the waitlist, the news and being contacted are different uses of an address, so each needs its own yes, and people can only be sent what they asked for. Anyone who signed up before this change agreed to the one sentence, the occasional writing and news, and has no ticks recorded.
 
 ### Before we begin's reasons and photos
 

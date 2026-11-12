@@ -853,8 +853,9 @@ class SealedLetter(models.Model):
 class SignUp(models.Model):
     """✨ An email address left under "Stay in touch" on the homepage (ticket 74, ADR 0023): one list for the
     newsletter, contact and the churches' waitlist, kept here for the operator to export from the admin, and nothing
-    sent from the app. Kept with when it was left and the version of the form's sentence it was left under. Belongs to
-    no account. One row per address, whatever its case, so a repeat address stores nothing new."""
+    sent from the app. Kept with when it was first left and the version of the form's wording it was left under, and
+    since ticket 111 with what it asked for (`SignUpChoice`, ADR 0027). Belongs to no account. One row per address,
+    whatever its case, so a repeat address adds only the choices it had not made."""
 
     email = models.EmailField(max_length=EMAIL_MAX_LENGTH)
     signed_up_at = models.DateTimeField(default=timezone.now)
@@ -866,6 +867,35 @@ class SignUp(models.Model):
 
     def __str__(self):
         return self.email
+
+    def choices_made(self):
+        """✨ Each choice this sign-up has made, by its value. Empty for one left before there were choices (wording
+        version 1), which agreed only to that version's one sentence."""
+        return {made.choice: made for made in self.choices.all()}
+
+
+class SignUpChoice(models.Model):
+    """✨ One thing a sign-up asked for under "Stay in touch" (ticket 111, ADR 0027): their church on the waitlist,
+    news by email, or to be contacted. Kept with when it was ticked and the version of the form's wording it was ticked
+    under, so a choice added by a later press keeps its own. The form only ever adds one; the operator deleting the
+    sign-up in the admin takes its choices with it."""
+
+    class Choice(models.TextChoices):
+        # ✨ In the form's order, which the admin's list and export keep.
+        WAITLIST = "waitlist", "Church on the waitlist"
+        NEWS = "news", "News by email"
+        CONTACT = "contact", "To be contacted"
+
+    sign_up = models.ForeignKey(SignUp, on_delete=models.CASCADE, related_name="choices")
+    choice = models.CharField(max_length=8, choices=Choice.choices)
+    chosen_at = models.DateTimeField(default=timezone.now)
+    wording_version = models.PositiveSmallIntegerField()
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["sign_up", "choice"], name="one_of_each_choice_per_sign_up")]
+
+    def __str__(self):
+        return self.get_choice_display()
 
 
 class _MergeJson(Func):

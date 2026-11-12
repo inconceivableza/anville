@@ -321,7 +321,7 @@ def test_for_churches_has_the_new_copy_and_a_waitlist_button_and_the_articles_ar
     assert "<b>95%</b>" in churches
     points = re.findall(r"<li><b>([^<]+)</b>", churches)
     assert points == ["Run it together", "Invite trusted voices", "Raise up coaches", "Free for participants"]
-    waitlist = re.search(r'<a\s[^>]*href="#([^"]*)"[^>]*>\s*Join the waitlist', churches)
+    waitlist = re.search(r'<a\s[^>]*href="[^"#]*#([^"]*)"[^>]*>\s*Join the waitlist', churches)
     assert waitlist, "no Join the waitlist button"
     assert re.search(r'\bid="%s"' % waitlist.group(1), page)
     assert "Ideas to explore" not in page
@@ -416,7 +416,7 @@ def test_the_black_footer_has_the_quote_and_one_column_of_links(client):
         ("#how", "How it works"),
         ("#impact", "Impact"),
         ("#churches", "For churches"),
-        ("#stay-in-touch", "Contact us"),
+        ("/?stay=contact#stay-in-touch", "Contact us"),  # ✨ ticked in the form (ticket 111)
         ("/privacy/", "Privacy"),
         ("/credits/", "Credits"),
     ]

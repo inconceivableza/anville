@@ -674,7 +674,7 @@
       ]
     },
     "page_break": {
-      "description": "Where one page of a section ends and the next begins. The page before it ends in 'Continue →'; a section without one is a single page.",
+      "description": "Where one page of a section ends and the next begins. The page before it ends in 'Continue →', or, where that page holds a letter being written, in the letter's own press, which saves it first; a section without one is a single page.",
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "type"],
@@ -1120,6 +1120,10 @@
         },
         "copy_note": {
           "description": "An optional line beside Print and Copy text while the letter is written, such as asking the participant to keep their own copy before it is sealed.",
+          "$ref": "#/$defs/text"
+        },
+        "continue_label": {
+          "description": "Where a page follows the letter's, the wording of the press leading there, which saves the letter first, such as 'Save my letter and continue →'. Without it, 'Continue →'.",
           "$ref": "#/$defs/text"
         },
         "seal_label": {

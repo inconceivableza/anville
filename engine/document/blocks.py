@@ -161,7 +161,7 @@ def _choice_schema(document, block, role):
 CHOICE = AnswerKind("choice", _choice_schema, "Choose one of the options.", _text_from_form)
 
 
-def _choices_schema(document, block):
+def _choices_schema(document, block, role):
     """✨ The identifiers of any of the block's own options, each at most once, never their labels. None at all takes
     the answer back: an empty list counts as unanswered everywhere."""
     return {"type": "array", "uniqueItems": True, "items": {"enum": [option["id"] for option in block["options"]]}}
@@ -332,7 +332,8 @@ class BlockType(NamedTuple):
     to the block waiting on it. `quiet_setting` names the document setting under which its answer saves without saying
     "Saved" (`saves_quietly`). `reached_at_top` marks a block reached at its page's top, with no anchor, when it opens
     that page (`anchor_of`). `lists_links` marks a block whose people are listed with their links, so its page shows a
-    link just issued, this once.
+    link just issued, this once. `saved_by_way_on` marks a block whose form the press leading on from its page sends,
+    so its answer is stored with that press, under the block's `continue_label` where it has one (`carried_by_way_on`).
     """
 
     name: str
@@ -346,6 +347,7 @@ class BlockType(NamedTuple):
     quiet_setting: str | None = None
     reached_at_top: bool = False
     lists_links: bool = False
+    saved_by_way_on: bool = False
 
     @property
     def is_interactive(self):
@@ -375,11 +377,22 @@ BLOCK_TYPES = {
             "scripture_passages", text_fields=("heading", "note"), text_lists=(("passages", ("reference", "text")),)
         ),
         BlockType("long_text", text_fields=("prompt", "placeholder"), captures=TEXT),
-        # ✨ A long text sealed as its section is finished, until a date the participant picks (ticket 104).
+        # ✨ A long text sealed as its section is finished, until a date the participant picks (ticket 104). Where a page
+        # follows its own, the press leading there saves it, so nothing typed since its last save is lost, with
+        # JavaScript or without (ticket 107).
         BlockType(
             "letter",
-            text_fields=("prompt", "placeholder", "copy_note", "seal_label", "seal_note", "date_label"),
+            text_fields=(
+                "prompt",
+                "placeholder",
+                "copy_note",
+                "continue_label",
+                "seal_label",
+                "seal_note",
+                "date_label",
+            ),
             captures=TEXT,
+            saved_by_way_on=True,
         ),
         BlockType(
             "agreement_scale",
@@ -603,6 +616,14 @@ def pages_of(section):
         else:
             pages[-1].append(block)
     return pages
+
+
+def carried_by_way_on(page, sealed_ids):
+    """✨ The block on a page, a list of its blocks, whose form the press leading on from that page sends
+    (`saved_by_way_on`), or None: a letter while it is written, not once it is sealed, when it has no form (ticket 107).
+    `sealed_ids` are the blocks of the participant's sealed letters."""
+    carried = (block for block in page if BLOCK_TYPES[block["type"]].saved_by_way_on)
+    return next((block for block in carried if block["id"] not in sealed_ids), None)
 
 
 def page_count(section):
