@@ -7,7 +7,8 @@ participant finished stay finished, and their view of the comparison stays, so n
 What the people they invited sent is deleted, with a warning first, and their links keep working, so they can answer
 again. The coach sees the evaluation as not done until the participant chooses to show them the new results.
 
-Loading a demo profile stays demo-only (tests/journeys/test_demo_retake.py)."""
+Loading a demo profile stays demo-only (tests/journeys/test_demo_retake.py). What each page says is a hand check; these
+tests read what the engine says from where it is written."""
 
 import re
 
@@ -15,6 +16,8 @@ import pytest
 from django.test import Client
 from django.utils.html import escape
 
+from engine.document.blocks import COMPARISON_STATUSES, COMPARISON_UNSORTED
+from engine.document.observers import minimum_observers
 from engine.models import Contact, Invitation, ObserverResponse, Response, Result
 from tests.journeys.test_coach_checklist import choose
 from tests.journeys.test_coach_link import answer_as_coach
@@ -29,6 +32,7 @@ from tests.journeys.test_whatever_you_do import (
     section_2,
     serves_workbook_1,
     submit_the_sort,
+    the_pathway,
     through_section_1,
 )
 from tests.journeys.pages import main_of, text_of
@@ -38,9 +42,14 @@ SORT = "strengths-sort"
 RESULTS = f"/results/{SORT}/"
 RETAKE = f"{RESULTS}retake/"
 SORT_PAGE = "/sections/strengths/"
-NOT_DONE = "finishes the strengths evaluation and sends it to you"
-UNSORTED = "Finish your strengths evaluation to compare."
-GREYED = '<span class="pill is-waiting" role="link" aria-disabled="true">Compare with how others see you →</span>'
+VOICES_PAGE = "/sections/trusted-voices/"
+CARD = "how-others-see-you"
+UNSORTED = " ".join(COMPARISON_UNSORTED)
+# ✨ The press on to the comparison greyed: a span that cannot be followed, in place of the form posting the visit.
+GREYED = '<span class="pill is-waiting" role="link" aria-disabled="true">'
+VISIT = f'action="{RESULTS}comparison/visit/"'
+# ✨ The coach's page drawing the participant's results.
+RESULTS_DRAWN = 'class="result-bar-row"'
 
 
 @pytest.fixture
@@ -69,17 +78,14 @@ def test_off_a_demo_system_the_results_page_links_to_the_retake_which_asks_first
     results = client.get(RESULTS).content.decode()
     asked = client.get(RETAKE)
 
-    assert f'<a href="{RETAKE}">Retake the strengths evaluation</a>' in results
+    assert f'href="{RETAKE}"' in results
     assert "data-demo-reveal" not in results
     page = asked.content.decode()
     assert asked.status_code == 200
+    # ✨ It asks: a form posting back here to delete, and a way back to the results that keeps them.
     assert f'action="{RETAKE}"' in page
-    assert "Retaking deletes your results. They can’t be brought back." in page
-    # ✨ Keeping them is the default: the green button, first; deleting them the red one below.
-    keep = page.index(f'<a class="pill full" href="{RESULTS}">Keep my results</a>')
-    assert keep < page.index('<button type="submit" class="pill danger full">Delete and retake</button>')
-    assert "Demo only" not in page
-    assert 'name="profile"' not in page
+    assert re.search(rf'<a [^>]*href="{RESULTS}"', page)
+    assert 'name="profile"' not in page and 'name="answers"' not in page
     assert Result.objects.exists()  # ✨ opening the page clears nothing
 
 
@@ -99,29 +105,35 @@ def test_retaking_clears_the_sort_and_its_result_and_opens_the_sort_again(live, 
 def test_retaking_keeps_every_finished_section_finished_and_the_comparison_viewed(live, participant):  # noqa: F811
     """✨ So Section 2's first workbook, which waits on the comparison, never locks again."""
     compared(participant)
-    asked = participant.get(RETAKE).content.decode()
 
     assert participant.post(RETAKE).status_code == 303
 
     response = Response.objects.get()
     assert not Result.objects.exists()
-    assert "no longer be marked complete" not in asked
     assert {"onboarding", "designed", "others"} <= set(response.completed_sections)
     assert SORT in response.comparisons_viewed
     assert serves_workbook_1(participant)
 
 
 @pytest.mark.django_db
-def test_with_answers_in_the_retake_page_warns_they_will_be_deleted_and_that_the_links_keep_working(
+def test_with_answers_in_the_retake_page_lists_them_among_what_it_deletes_saying_how_many(
     live, participant  # noqa: F811
 ):
-    compared(participant)
+    through_section_1(participant)
+    before_answers = deleted_list(participant.get(RETAKE).content.decode())
+    people_answer(participant)
 
-    page = participant.get(RETAKE).content.decode()
+    with_answers = deleted_list(participant.get(RETAKE).content.decode())
 
-    warning = "What the people you invited sent (3 answers). Their links still work, so they can answer again."
-    assert f"<li>{warning}</li>" in page
+    added = [item for item in with_answers if item not in before_answers]
+    assert len(added) == 1 and re.search(r"\b3\b", added[0])
     assert ObserverResponse.objects.count() == 3
+
+
+def deleted_list(page):
+    """✨ The items of the retake page's first list, what retaking deletes."""
+    deletes = re.search(r'<ul class="retake-list">(.*?)</ul>', page, re.S).group(1)
+    return re.findall(r"<li>(.*?)</li>", deletes, re.S)
 
 
 @pytest.mark.django_db
@@ -150,11 +162,11 @@ def test_after_retaking_the_coach_sees_the_evaluation_as_not_done_until_the_new_
     link, coach = reissue_coach_link(participant), Client()
     assert answer_as_coach(coach, link, "accept").status_code == 303
     participant.post(f"{RESULTS}comparison/coach/", {"share": "on"})
-    assert escape(NOT_DONE) not in coach.get(link).content.decode()
+    assert RESULTS_DRAWN in coach.get(link).content.decode()
 
     participant.post(RETAKE)
 
-    assert escape(NOT_DONE) in coach.get(link).content.decode()
+    assert RESULTS_DRAWN not in coach.get(link).content.decode()
     assert Invitation.objects.get(contact__role=Contact.Role.COACH).results_shared_at is None
 
 
@@ -170,14 +182,19 @@ def test_after_retaking_section_2_keeps_how_others_see_you_greyed_saying_to_fini
 
     participant.post(RETAKE)
 
-    page = section_2(participant)
-    assert "How others see you" in text_of(page)
-    assert "Invite people who know you →" in page
-    assert GREYED in page
-    assert UNSORTED in text_of(page)
-    assert re.search(rf'<a href="{SORT_PAGE}"[^>]*>Finish your strengths evaluation</a>', page)
-    assert "Viewed" not in text_of(page)
-    assert "comparison-signpost is-complete" not in page
+    card = card_of(section_2(participant))
+    assert f'href="{VOICES_PAGE}"' in card
+    assert GREYED in card and VISIT not in card
+    assert UNSORTED in text_of(card)
+    assert re.search(rf'<a href="{SORT_PAGE}"[^>]*>', card)
+    assert "is-complete" not in card
+
+
+def card_of(page):
+    """✨ Section 2's How others see you card."""
+    found = re.search(rf'<div id="block-{CARD}" class="signpost comparison-signpost[^"]*">.*?</p>\s*</div>', page, re.S)
+    assert found, "Section 2 has no How others see you card"
+    return found.group(0)
 
 
 @pytest.mark.django_db
@@ -191,7 +208,8 @@ def test_after_retaking_the_hub_keeps_the_how_others_see_you_row_saying_to_finis
     page = main_of(participant.get("/hub/").content.decode())
     row = re.search(r'<li class="hub-section srow hub-part hub-comparison.*?</li>', page, re.S)
     assert row, "the hub has no How others see you row"
-    assert f'<span class="tag status-waiting">{UNSORTED}</span>' in row.group(0)
+    assert f'<span class="tag status-waiting">{escape(UNSORTED)}</span>' in row.group(0)
+    assert f'href="{SORT_PAGE}"' in row.group(0)
 
 
 @pytest.mark.django_db
@@ -201,7 +219,10 @@ def test_once_the_new_sort_is_in_how_others_see_you_counts_the_answers_again(liv
 
     submit_the_sort(participant)
 
-    page = section_2(participant)
-    assert UNSORTED not in text_of(page)
-    assert GREYED in page  # ✨ the answers went with the retake, so too few are in again
-    assert "0 of 3 answered" in text_of(page)  # ✨ its three links still out, so none more to invite
+    card = card_of(section_2(participant))
+    assert UNSORTED not in text_of(card)
+    assert f'href="{SORT_PAGE}"' not in card
+    assert GREYED in card  # ✨ the answers went with the retake, so too few are in again
+    # ✨ Its three links still out, so none more to invite: it counts the answers, from none.
+    counted = COMPARISON_STATUSES["waiting"].format(answered=0, minimum=minimum_observers(the_pathway()))
+    assert counted in text_of(card)
