@@ -337,7 +337,32 @@ From your 30 October feedback on Section 6 ("Think these should be 2 separate sc
 
 ### What participants and the people they ask are told
 
-Nothing yet.
+From your 30 October feedback (the note for people asked to rate someone, and "Withdraw my data" after a coach accepts) and from the review, which found wording that still described the evaluation before its two rounds, said different things in different places, or had never been shown to you.
+
+- **The note for people asked to rate someone** ("You've been invited", before they start): the line **"[Draft: this notice must be written properly before anyone real takes part.]"** goes. Its first paragraph now describes the evaluation as it is:
+  - Before: "Sam has asked you to help them see their strengths as others see them. You'll sort some strengths into buckets and adjust the intensity of each. Takes about 10–15 minutes."
+  - Now: **"Sam has asked you to help them see their strengths as others see them. You'll sort short statements about Sam into buckets, from "Definitely not Sam" to "Real strength", in two quick rounds, with nothing to adjust afterwards. If a statement describes something you haven't seen, choose "Haven’t seen this" rather than guessing: it isn't counted. It takes about 7 minutes."**
+  - Its third paragraph ends with a new sentence: **"If Sam later retakes the strengths evaluation, what you sent is deleted, and you can answer again through your link while it works."**
+  - In its last paragraph, "we'll email you a reminder once a week" becomes **"we may email you a reminder once a week"**, since reminders go only where the site has them switched on. The rest of the note is unchanged.
+- **The weekly reminder email** to people who haven't answered: "It takes about 10–15 minutes." becomes **"It takes about 7 minutes."**
+- **The privacy page**, under "If someone asks you to rate them", ends its second paragraph with the same: **"If they retake their strengths evaluation, what you sent is deleted, and you can answer again through your link while it works."**
+- **How long the evaluation takes** now reads about 7 minutes everywhere, as Section 1's activity and the homepage's first step already said. People rating someone are told the same 7 minutes (your two-round prototype suggests about 6 for them; say if you'd rather they were told that).
+  - The hub's next step: "Start with the ten-minute strengths evaluation." becomes **"Start with the strengths evaluation, which takes about 7 minutes."**
+  - The welcome at the end of Before we begin: "You’re all set. Section 1 starts with the ten-minute strengths evaluation." becomes **"You’re all set. Section 1 starts with the strengths evaluation, which takes about 7 minutes."**
+  - The Strengths evaluation's row on the hub: "About 10 minutes" becomes **"About 7 minutes"**.
+- **Section 1's Strengths evaluation card** no longer mentions fine-tuning: "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 3 trusted people to evaluate you too." becomes **"Sort your strengths into buckets, in two quick rounds – then invite at least 3 trusted people to evaluate you too."**
+- **Sending the evaluation twice** (only possible from a page left open in another tab): "Your results are already in. Retaking the sort is not offered yet." becomes **"Your results are already in. To sort again, retake the strengths evaluation from your results."**, since the results page now offers the retake.
+- **The menu ("Your pathway")**: the links below its sections now have the names of the pages they open, as the hub and the menu above them name those pages. "Your results" is unchanged.
+  - "Invite others to assess you" becomes **"Five trusted voices"**.
+  - "Your coach" becomes **"Walk with a coach"**.
+  - "How others experience you" becomes **"How others see you"**. (The comparison page itself is still headed "How others experience you".)
+- **Consent ("What this means")**, as the privacy page already says: "You see everything you write." becomes **"You see everything you write, except your letter to your future self once you seal it: that is held back from you until the day you pick. It is stored as you wrote it."** What is stored and who sees it are unchanged, so nobody who has already agreed is asked again.
+- **Five trusted voices** has a new small grey line above the list: **"Adding someone doesn't email them: send each person their link yourself."** (The suggested "We don't email them" would stop being true once the weekly reminders are switched on, so it says that adding someone sends them nothing.)
+- **Withdrawing**, after a coach accepts: "Withdraw my data" is now a small grey line below the "Thank you — Sam will be told" box, in place of a full-size link (your picture of 30 October). After someone rating a participant sends their evaluation, "Withdraw my answers" moves out of the "Thank you" box to the same small grey line below it. It keeps "answers" rather than "data": withdrawing deletes what they sent, while their name stays on the participant's list.
+- **Recorded here for the first time** (the review found these were never shown to you; neither has changed):
+  - On "How others experience you", when the coach accepted but their link has since expired, at the top of the page: **"Nick's link has expired. Make a new one from your coach page; once Nick accepts again, you can share your results and the comparison below."** with **"Your coach page →"**.
+  - The homepage's band of photos has a small round pause button below it, on the right, which screen readers announce as **"Pause the photos"**, and once paused **"Play the photos"**.
+- **"Both are right"**: "Which is more true of you?" now offers **"Both are right"** beside "Neither is more true of me" (see "The strengths evaluation's sort, tie-break and names" above), so Part 1's line about "Neither is more true of me" no longer gives the only way past a pair.
 
 ### The homepage
 

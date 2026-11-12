@@ -224,7 +224,7 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 
 - Open "Your pathway" with Before we begin done and nothing else: hover "Locked" on Section 2 (a section entry), then on a locked entry in the side cards at the foot of the panel. The note floats in a small box just below the pill, over the entries beneath, which do not move. It is not cut off by the panel's edge or by the side card it sits in, even on the last entry at the foot of a scrolled panel. The pointer can move into the box and it stays; it goes when the pointer leaves both.
 - Keyboard: Tab to a "Locked" in the sidebar, with a focus ring: the note shows. Escape closes the note and leaves the sidebar open; a second Escape closes the sidebar. A tap on a phone shows the note, and a tap elsewhere closes it. Phone width (about 375px): the note stays within the screen, wrapping, on a part's indented entry too, with nothing scrolling sideways.
-- Section 1 in *Whatever You Do*, the Strengths evaluation card: "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 3 trusted people to evaluate you too" breaks into lines of about the same length, at a wide screen and at phone width, with no long line over a short one.
+- Section 1 in *Whatever You Do*, the Strengths evaluation card: "Sort your strengths into buckets, in two quick rounds – then invite at least 3 trusted people to evaluate you too" (ticket 109) breaks into lines of about the same length, at a wide screen and at phone width, with no long line over a short one.
 
 ### sprint-3c-r3-fix-1: Part rows' pills and arrows line up with their section's (rebuild the frontend)
 
@@ -274,7 +274,7 @@ On every page below, check:
 The observer's pages (an observer's link, in a private window):
 - **The landing page:** "You've been invited" as the title, the privacy notice in its pale green box, then "I'm answering for …  →". With `ANVILLE_DEMO_NOTICE` set, the full amber notice is above the title.
 - **The observer's own page:** "Answering for …" as the title, the link to bookmark in its box with "Copy", then the relationship drop-down and the sort as before.
-- **The thank-you** (after sending): a card with "Thank you" in the heading face, then its sentence, then "Withdraw my answers" a line below it, not touching it.
+- **The thank-you** (after sending): a card with "Thank you" in the heading face, then its sentence; below the card, "Withdraw my answers" as a small grey line (ticket 109).
 - **Withdrawal:** "Withdraw your answers" as the title; a card with its sentence and, with room above it, the button. After pressing it, "Your answers have been withdrawn" in the heading face, then its sentence.
 - **A dead link** (a wrong, expired or revoked link), **a used one** (the landing page's link again, after starting from it) and **a frozen one** (answer collection frozen, ticket 55): the first two are a title and a sentence; the frozen landing page and own page show the card with its heading in the heading face.
 - **Stop reminders** (a reminder's stop link): the title, then a card with the sentence and, with room above it, the button; once pressed, "Reminders stopped" in the heading face.
@@ -310,6 +310,17 @@ The homepage (`/`):
 - Beneath the hero, "Whatever You Do is a pathway for discerning your purpose." then a row of small cream pills: Scripture, Strengths evaluation, Peer feedback, Coach oversight, Journey. At phone width they wrap onto two or three centred lines.
 - Nothing offers what does not exist yet: no newsletter card, no "Get in touch" card or email address, no "Support our work" section or donation, and no "Ask us about coaching", "Talk to us" or "Ask about supporting the work". The coach band in "How it works" is its icon and sentence alone, and the churches section ends with its three points.
 - There is no "Ideas to explore" section; the story from a parent, labelled "Impact", follows the churches section (ticket 99).
+
+### Ticket 109: What participants and the people they ask are told (rebuild the frontend, load the pathway again, and use a participant started after that; wide screen and about 375px)
+
+- **The observers' note** (a new link, in a private window): "You've been invited", then the note in its pale green box with no "[Draft: …]" line; its first paragraph describes two quick rounds with nothing to adjust, "Haven’t seen this" and about 7 minutes, and its third ends with what a retake does. Each paragraph is its own, and at phone width the box's words sit inside it with nothing scrolling sideways.
+- **The thank-you after sending** (the same observer, after sending): the "Thank you" card holds only its heading and sentence; "Withdraw my answers" is a small grey line below the card, a clear gap from it, and leads to "Withdraw your answers" as before. Hovering turns it green.
+- **A coach's page after accepting** (the coach's link, in a private window, then "Accept →"): below the green "Thank you — … will be told" box (and its "What happens next"), "Withdraw my data" is a small grey line, quieter than the box's text, as in the feedback's picture of 30 October but no longer full size; it leads to "Withdraw your data" as before. Once the participant shares the results, it is the last line of the page, below them.
+- **Five trusted voices:** above the first row, a small grey line, "Adding someone doesn't email them: send each person their link yourself.", the size and colour of "Five is a good number, but you can add more." below the rows. At phone width it wraps within the card.
+- **The sidebar** ("Your pathway"), with Section 1 finished and enough people answered: the links below the entries read "Your results", "How others see you", "Five trusted voices" and "Walk with a coach", each opening the page it names, the comparison headed "How others experience you" as before. In the faithful port (load it again): "Your results", "How others experience you" and "Invite others to assess you", as before.
+- **The time** (a new participant): the welcome at the end of Before we begin and the hub's next step say the strengths evaluation takes about 7 minutes, and the Strengths evaluation's row on the hub reads "About 7 minutes"; Section 1's card says "in two quick rounds", with nothing about fine-tuning.
+- **Consent** ("What this means" on the entry page, and `/consent/`): under "Who sees what", "You see everything you write, except your letter to your future self once you seal it: …", wrapping as one paragraph. Someone who agreed before this is not asked to agree again.
+- **The privacy page** (`/privacy/`): "If someone asks you to rate them" ends its second paragraph with what a retake does.
 
 ## Before we begin as a wizard (ticket 50; load the pathway again first, then sign up as someone new)
 
@@ -356,7 +367,7 @@ The homepage (`/`):
 - "About you": on the photo, "For we are his workmanship, created in Christ Jesus for good works, which God prepared beforehand, that we should walk in them." with "Ephesians 2:10" under it, and "Begin" large at the photo's foot. The tick reads "I agree to Whatever You Do storing my answers, including personal things I choose to share, such as my faith or my health, as set out in the privacy notice."
 - Page 1 (the reason): "Commit your work to the LORD, and your plans will be established.", "Proverbs 16:3" and "Choose"; the heading still "Before we begin".
 - Page 2: "Having gifts that differ according to the grace given to us, let us use them", "Romans 12:6" and "Reflect"; headed "Where are you coming from?", a little smaller than page 1's heading. The five ratings sit closer together, with no empty gap under each; a refused rating still says why under it. "← Previous page" is at the far left of the foot, "Continue →" at the far right.
-- The last "Continue →" opens "Welcome, [the first name given]", large and centred, "You’re all set. Section 1 starts with the ten-minute strengths evaluation." and "Continue →", which opens the hub. "All set" beside the counter, all three marks on; on the photo (the notebook), "Whatever you do, work heartily, as for the Lord and not for men", "Colossians 3:23" and "Welcome". `/sections/onboarding/welcome/` before the wizard is done leads to the page reached.
+- The last "Continue →" opens "Welcome, [the first name given]", large and centred, "You’re all set. Section 1 starts with the strengths evaluation, which takes about 7 minutes." (ticket 109) and "Continue →", which opens the hub. "All set" beside the counter, all three marks on; on the photo (the notebook), "Whatever you do, work heartily, as for the Lord and not for men", "Colossians 3:23" and "Welcome". `/sections/onboarding/welcome/` before the wizard is done leads to the page reached.
 - At about 375px: each of these reads, the photo above the page, its large word hidden as before.
 - A participant who agreed before this change is not asked again: the consent page still shows "You agreed to version 3 of this text".
 - The faithful port (no wizard): "About you" shows the Ephesians 2:10 verse in full, with no word under it.
@@ -389,7 +400,7 @@ The homepage (`/`):
 
 ## The hub's next step and its photo (load the pathway again first; ticket 49b)
 
-- Once Section 1 is next: "Start with your gifts." and "Start with the ten-minute strengths evaluation." (ticket 95), over the grass photo, shaded so the words read clearly, the panel taller, as the prototype's. "Begin" leads into Section 1.
+- Once Section 1 is next: "Start with your gifts." and "Start with the strengths evaluation, which takes about 7 minutes." (ticket 95; ticket 109), over the grass photo, shaded so the words read clearly, the panel taller, as the prototype's. "Begin" leads into Section 1.
 - `/credits/` lists "Photograph of grass, by Oliver Pacas on Unsplash." under "Photographs", after the scripture notices.
 - Without a photo of its own from the pathway, a step is drawn over the stylesheet's photo for it (sprint-3c-r3-fix-8).
 - Phone width: the photo fills the panel without stretching, and the words stay readable.
@@ -465,7 +476,7 @@ The homepage (`/`):
 
 ### Fix-4: A coach can withdraw their acceptance on their link (migrate first; no need to rebuild the frontend or load the pathway again)
 
-- In a private window, after Sam accepts: "Withdraw my data" is a link at the foot of the page, after "What happens next" (or after the shared results, once the participant shares them). After a decline there is none (fix-11).
+- In a private window, after Sam accepts: "Withdraw my data" is a link at the foot of the page, after "What happens next" (or after the shared results, once the participant shares them), a small grey line since ticket 109. After a decline there is none (fix-11).
 - It opens "Withdraw your data", saying "Withdrawing deletes your acceptance and the name participant gave us for you, and your link will stop working. participant is told only that their coach has withdrawn, so they can ask someone else. This can't be undone." and a "Withdraw my data" button; nothing is deleted yet, and going back leaves Sam's link as it was (fix-11).
 - The button shows "Your data has been withdrawn" and "We've deleted your acceptance and the name participant gave us for you, and your link no longer works. participant is told only that their coach has withdrawn." Reloading Sam's link, or opening its withdrawal page again: "This link does not work". In the Django admin or shell, the participant has no coach `Contact` and no coach `Invitation`; their `Response` has `coach_withdrew` ticked (fix-11).
 - Back on the participant's coach page: the card is amber, "Your coach has withdrawn", then "Your coach has withdrawn their agreement, so they're no longer your coach, and their link has stopped working." and "You can choose someone else, or carry on without a coach.", with "Choose someone else" as the only button in the row; Sam's name appears nowhere on the page (fix-11).
@@ -525,7 +536,7 @@ The homepage (`/`):
 
 ### Ticket 82: Where pages land
 
-- In *Whatever You Do*, open Walk with a coach from the hub card's title, the sidebar's "Your coach" and, once Sam is saved, "See your coach" (ticket 95): the page opens at its top, with "← Back to the hub" and the title in view, not scrolled down to the card. Saving Sam without JavaScript comes back to the top too.
+- In *Whatever You Do*, open Walk with a coach from the hub card's title, the sidebar's "Walk with a coach" link below its entries ("Your coach" until ticket 109) and, once Sam is saved, "See your coach" (ticket 95): the page opens at its top, with "← Back to the hub" and the title in view, not scrolled down to the card. Saving Sam without JavaScript comes back to the top too.
 - Scroll down the intro, press "Continue →", then "Back", "Continue →" through to the outcome: each new screen shows from the top of the page, title included. The same screen sent back (a refusal) stays where it is. At phone width too.
 - In the faithful port, where the coach checklist is part way down onboarding's page, it still opens at the checklist, as above.
 
@@ -762,7 +773,7 @@ No rebuild and no pathway reload needed.
 ### Fix-19: The comparison is part of Section 2 (no rebuild or reload needed; a participant started on the current pathway version)
 
 - A participant with the sort in and Section 1 not yet finished, three people answered (`seed_observers` cannot do this: invite three and answer as them). On the hub, "How others see you" is the first row within Section 2, "Your gifts, seen together", not within Section 1, which lists only the Strengths evaluation. Its title is plain text, and its pill is "Locked"; hover, focus or tap it and Section 2's own lock note shows, word for word as on Section 2's pill. The Five trusted voices card has only "Invite people". The count still reads "0 of 6 sections complete" (or as many as are done).
-- The sidebar ("Your pathway") shows the same: "How others see you" within Section 2, "Locked", no link, and no "How others experience you" among the links below ("Your results" is still there).
+- The sidebar ("Your pathway") shows the same: "How others see you" within Section 2, "Locked", no link, and no "How others see you" among the links below ("Your results" is still there; "How others experience you" until ticket 109).
 - Type `/results/strengths-sort/comparison/` in the address bar: you land on the hub, as you do typing a locked section's address. The results page, opened from the sidebar's "Your results", is unchanged.
 - Finish Section 1. The row and the sidebar's entry read "Ready to view" and press on to "Before you look" (fix-16), the voices card's "How others see you →" is back, and the sidebar lists "How others experience you" again. Confirm through: the comparison's top button is "← Back to Your gifts, seen together" and its end "On to your reflection →", both to Section 2.
 - With fewer than three answered and Section 1 finished, the row still opens the waiting page (fix-16).
@@ -1079,7 +1090,7 @@ Reload the page for the rebuilt frontend; no new participant is needed.
 - The next step's entry has a pale green background; its status pill is green only if it is under way, as the hub's, and "Not started" stays grey with its black outline (fix-6); the page you are on has a deep green edge.
 - Beside the hub, the panel lists the same entries in the same order with the same statuses and locks: the sections, the Strengths evaluation within Section 1, then, below a rule and each as a small outlined card, Walk with a coach and Five trusted voices, Five trusted voices with its card's tag ("2 more needed", "Links issued" …).
 - Once the sort is in, "How others see you" is listed within Section 2 (ticket 87), "Locked" with Section 2's lock note and no link while Section 2 is locked (fix-19), and once Section 1 is finished with the hub row's status ("0 of 3 answered"). Pressing it does what the hub's row does: with the minimum in and not yet confirmed, it asks before collection freezes; below it, it opens the comparison's waiting page (fix-16).
-- Regression: the links below read as before: "Your results" once the sort is in, "How others experience you" once the sort is in and, in *Whatever You Do*, Section 1 is finished (fix-19), "Invite others to assess you", and "Your coach".
+- Regression: the links below are as before, named since ticket 109 as the hub names the pages they open: "Your results" once the sort is in, "How others see you" once the sort is in and, in *Whatever You Do*, Section 1 is finished (fix-19), "Five trusted voices", and "Walk with a coach". In the faithful port: "Your results", "How others experience you" and "Invite others to assess you".
 - Phone width: the panel spans the header's width with no sideways scroll, and long titles wrap under their statuses.
 
 ### Ticket 81: How many more answers, or people, are needed
@@ -1129,7 +1140,7 @@ A walk through the whole app on staging, after a sprint's changes, to see it han
 Before starting: `curl -s https://anville.vabl.dev/healthz` gives the commit staging runs; if it is behind `main`, deploy, then publish `whatever-you-do-faithful-port.json` and, last, `whatever-you-do.json`, since the pathway published last is the one new participants get (`deploy/README.md`). Every participant in the walk is one started after that. Use made-up names and `example.com` addresses, except where a step needs a mailbox or a Google account.
 
 - **The participant**, in a private window: the homepage, "Begin your journey →", sign-up, "About you" (first name, 18 or over and consent, ticket 92), Before we begin's two pages, then the hub, with Before we begin gone from it and from the sidebar ("0 of 6 sections complete", ticket 87). Section 1's Strengths evaluation; its results, with "I've finished Section 1" and "Invite people who know you →"; Section 1 finished. Section 2's "How others see you" card inviting people and the reflection faded. A coach chosen and three people given links on Five trusted voices: Section 3 opens without Section 2. Section 3's workbook PDF, in a new tab; marking it finished. Removing one of the three: their link says "This link does not work".
-- **The observers**, each link in a private window of its own: the sort about the participant, in the observer's voice, sent after fine-tuning and once without; "Thank you" with only "Withdraw my answers". As the participant: "Not enough answers yet" at two, "Ready to view" at three, "Before you look", then the comparison, and the reflection open.
+- **The observers**, each link in a private window of its own: the sort about the participant, in the observer's voice, sent after fine-tuning and once without; "Thank you" with only "Withdraw my answers" (below the card since ticket 109). As the participant: "Not enough answers yet" at two, "Ready to view" at three, "Before you look", then the comparison, and the reflection open.
 - **The coach**, Sam's link in a private window: the six promises, "Accept →" refused with one unticked, accepted with all six. As the participant: Section 3 opens once Section 1 is marked complete. "Give my coach access…" ticked and unticked, with Sam's link showing the guide, the results and the comparison, then "What happens next" again.
 - **The tie-break**: `seed_tie_break --profile tied-apest --answers behind` prints a made-up participant's address, a sign-in link and the answers to give; its password is `information.`. The results read "Evangelist now sits on top, in place of Deacon…".
 - **Password reset** (sends email): sign up at an address you own, sign out, "Forgot your password?". The email arrives with `[TEST]` before its subject and the disclaimer at the top; the new password signs in, the old is refused, and the link fails a second time. An address with no account shows the same page and sends nothing.
@@ -1197,7 +1208,7 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 
 - Walk with a coach's card: in bold, "A coach helps you test what you're discovering with someone who knows you and your faith.", then "You'll need one before the later sections open.", and a small light "Choose your coach" pill to the coach page. Once a coach is chosen, "See your coach"; remove the coach and it is "Choose your coach" again. No line about Section 4 shows on the card, unanswered, declined or accepted.
 - Five trusted voices' card: its button reads "Invite people", the same small shape as the coach card's, white on the dark card rather than green, leading to its page. From three answered, the ringed "How others see you →" sits beside it.
-- With Before we begin done, the next step reads "Start with your gifts." and "Start with the ten-minute strengths evaluation."
+- With Before we begin done, the next step reads "Start with your gifts." and "Start with the strengths evaluation, which takes about 7 minutes." (ticket 109)
 - Below the sections only "Your consent" shows; there is no "Your groups".
 - Section 1's page: clear room between the strengths evaluation card's words and its "Open the strengths evaluation →", and more room above "I've finished Section 1" below the card.
 - With Section 1 done and both side cards complete, the next step is "The shape of your life" with one button, "Begin", which opens Section 3. There, its three paragraphs read apart from one another, then "Download Section 3 (PDF) (opens in a new tab)" set below them, then "I've finished Section 3" beneath the line.

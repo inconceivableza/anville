@@ -55,8 +55,11 @@
         {% include "engine/comparison_body.html" with comparison=shared.comparison for_coach=True %}
       </section>
     {% endif %}
-    {# ✨ As easy to take back as it was to give (ADR 0024): the page it leads to asks before anything is deleted. #}
-    <p><a href="{% url 'coach_withdrawal' token %}">Withdraw my data</a></p>
+    {% comment %}
+      ✨ As easy to take back as it was to give (ADR 0024): the page it leads to asks before anything is deleted. A
+      quiet line below the page's message (ticket 109), there to find but not competing with the thanks.
+    {% endcomment %}
+    <p class="withdraw-line"><a href="{% url 'coach_withdrawal' token %}">Withdraw my data</a></p>
   {% elif answer == "declined" %}
     <div class="coach-outcome coach-check">
       <h2>That's a good answer</h2>

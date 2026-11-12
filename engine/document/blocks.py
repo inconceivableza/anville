@@ -410,7 +410,7 @@ BLOCK_TYPES = {
         BlockType(
             "multi_select", text_fields=("prompt", "note"), text_lists=(("options", ("label",)),), captures=CHOICES
         ),
-        BlockType("contact_list", text_fields=("more_note",), captures=CONTACTS, lists_links=True),
+        BlockType("contact_list", text_fields=("more_note", "note"), captures=CONTACTS, lists_links=True),
         # ✨ Captures nothing: its answers are opinions about another person, never kept (see `coach.py`).
         BlockType(
             "coach_checklist",
