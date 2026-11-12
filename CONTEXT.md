@@ -157,7 +157,7 @@ A score expressed as a share of a grand total, so only relative shape survives a
 _Avoid_: normalised score, percentage score.
 
 **Tie-break**:
-The few "Which is more true of you?" pairs a participant answers straight after their self-assessment, before their results, when it leaves the leading constructs of one framework or both too close to call. Any pair may be skipped. Observers never get one.
+The few "Which is more true of you?" pairs a participant answers straight after their self-assessment, before their results, when it leaves the leading constructs of one framework or both too close to call. Any pair may be skipped ("Neither is more true of me") or answered "Both are right"; either leaves it tied, and each is kept as given. Observers never get one.
 _Avoid_: tiebreaker, decider, play-off.
 
 **Too close to call**:

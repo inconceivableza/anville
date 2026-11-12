@@ -41,7 +41,8 @@ REWEIGHTING = "pairwise_reweighting"
 JUST_PAST = Fraction(1, 100)
 
 # ✨ What the tie-break's answers did to a tied framework: a new construct leads, the same one leads, or none does,
-# because the best weight is shared, the choices having gone in a circle or not, or every pair was skipped (ADR 0018).
+# because the best weight is shared, the choices having gone in a circle or not, or every pair was skipped (ADR 0018),
+# which since ticket 108 includes "Both are right", as every pair left tied.
 TOP_CHANGED = "top_changed"
 SAME_TOP = "same_top"
 CIRCLE = "circle"
@@ -139,14 +140,14 @@ def reweigh(document, result, answers):
 
     Each tied framework that had pairs is re-weighted from its own answers alone, so neither framework's answers
     change the other. Each construct that entered its tie-break weighs 1 plus the share of its appearances it won, a
-    skip being an appearance for both and a win for neither. The weights decide the order of those constructs, and the
-    gap opens only enough to settle it (the developer's call, fix-22, ADR 0018 amended), where the prototype shared
-    their total out by weight, so that a lead of under a point could become one of fourteen. Constructs on the same
-    weight end level; each weight's constructs end just past the document's percentage ahead of the next weight's
-    (JUST_PAST), so they are no longer too close to call; and the unrounded share they had between them is kept. A
-    tied construct the gap pushes below one outside the cluster is listed below it, by its unrounded share like any
-    other: the answers put it last of the cluster, and keeping the cluster's total means its last falls as its first
-    rises.
+    skip, or "Both are right" (ticket 108), being an appearance for both and a win for neither. The weights decide the
+    order of those constructs, and the gap opens only enough to settle it (the developer's call, fix-22, ADR 0018
+    amended), where the prototype shared their total out by weight, so that a lead of under a point could become one
+    of fourteen. Constructs on the same weight end level; each weight's constructs end just past the document's
+    percentage ahead of the next weight's (JUST_PAST), so they are no longer too close to call; and the unrounded share
+    they had between them is kept. A tied construct the gap pushes below one outside the cluster is listed below it,
+    by its unrounded share like any other: the answers put it last of the cluster, and keeping the cluster's total
+    means its last falls as its first rises.
 
     Every construct keeps its unrounded share, as an exact fraction written out, beside its whole number: each
     re-weighted share is rounded half up on its own, as the compositional score rounds, where the prototype added what

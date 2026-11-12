@@ -101,6 +101,7 @@ from engine.hub import (
     section_by_id,
     track_sections,
     with_coach_answer,
+    WIZARD_PHOTOS,
     WizardStep,
     wizard_step,
 )
@@ -200,16 +201,14 @@ def home(request):
     return render(request, "engine/home.html", {"begin": begin, "stay": stay}, status=status)
 
 
-# ✨ The photographs the stylesheet draws on the homepage, in the wizard and behind the hub's next step, and the two
-# the homepage's steps 3 and 4 show (the notebook and the Bible, stand-ins for journalling until the final photos
-# are picked; ticket 110), each a courtesy credit (ticket 101). The credits page lists them after the pathway's own,
-# leaving out one the pathway lists too, and with them the video's, while the document's setting for courtesy credits
-# is on.
+# ✨ The photographs the stylesheet draws on the homepage and behind the hub's next step, and the two the homepage's
+# steps 3 and 4 show (the notebook and the Bible, stand-ins for journalling until the final photos are picked; ticket
+# 110), each a courtesy credit (ticket 101). The credits page lists them after the pathway's own, then the wizard's
+# (`WIZARD_PHOTOS`), leaving out one listed already, and with them the video's, while the document's setting for
+# courtesy credits is on.
 SITE_PHOTO_CREDITS = [
     "Photograph of a church gathering with Bibles open, by Sincerely Media on Unsplash.",
     "Photograph of a figure facing the sun, by Andreas Rasmussen on Unsplash.",
-    "Photograph of grass, by Oliver Pacas on Unsplash.",
-    "Photograph of a woman walking through a field of wheat, by Hannah Skelly on Unsplash.",
     "Photograph of a notebook, a pen and a cup of coffee, by Andres Molina on Unsplash.",
     "Photograph of a woman walking in a field at sunset, by Sasha Freemind on Unsplash.",
     "Photograph of misty hills at sunrise, by Alexander Philipp on Unsplash.",
@@ -245,7 +244,11 @@ def credits_page(request):
     shown = {
         "translations": translations.values(),
         "photo_credits": photo_credits,
-        "site_photo_credits": [credit for credit in SITE_PHOTO_CREDITS if credit not in photo_credits],
+        "site_photo_credits": [
+            credit
+            for credit in dict.fromkeys([*SITE_PHOTO_CREDITS, *(photo.credit for photo in WIZARD_PHOTOS)])
+            if credit not in photo_credits
+        ],
         "site_credits_shown": bool(version and version.document.get("show_courtesy_credits", False)),
     }
     return render(request, "engine/credits.html", shown)
@@ -727,7 +730,7 @@ def save_answer(request, block_id):
         return _answer_refused(request, state, section, block_id, *unstorable)
     block_type = BLOCK_TYPES[block["type"]]
     try:
-        value = answer_from_form(state.version.document, block, request.POST.get("value"))
+        value = answer_from_form(state.version.document, block, request.POST.getlist("value"))
     except AnswerRefused as refused:
         return _answer_refused(request, state, section, block_id, str(refused), status=400)
 
@@ -1081,8 +1084,8 @@ def _results_drawn(state, result, block_id):
 def tie_break(request, block_id):
     """✨ The tie-break's next unanswered pair (ticket 30b), for a participant whose own sort left one framework or both
     too close to call; anyone else, or one who has answered or skipped every pair, goes on to their results. Answering stores the
-    choice beside the sort's result and comes back here for the next. Only the participant's own result is read, so an
-    observer's sort never leads here."""
+    choice beside the sort's result, "Both are right" as given beside the skip (ticket 108), and comes back here for the
+    next. Only the participant's own result is read, so an observer's sort never leads here."""
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
@@ -1093,14 +1096,21 @@ def tie_break(request, block_id):
         except ValueError:
             place = -1
         chosen = request.POST.get("chosen") or None
-        if not 0 <= place < len(plan) or (chosen is not None and chosen not in plan[place]["constructs"]):
+        # ✨ "Both are right" (ticket 108) chooses neither, as the skip does, and only where the version offers it.
+        both = request.POST.get("both") == "true"
+        offers_both = "both" in state.version.document.get("presentation", {}).get("tie_break", {})
+        if (
+            not 0 <= place < len(plan)
+            or (chosen is not None and chosen not in plan[place]["constructs"])
+            or (both and (chosen is not None or not offers_both))
+        ):
             refusal = "That is not one of this pair’s answers."
             # ✨ Without JavaScript, the next pair again, saying why (fix-2); with every pair answered, a page of its own.
             left = len(result.tie_break_answers) < len(plan)
             page = (lambda status: _pair_shown(request, state, result, block_id, plan, status, refusal)) if left else None
             return _refused(request, refusal, status=400, page=page)
         # ✨ A pair already answered (a form sent twice, or from a stale tab) stores nothing; either way the next is shown.
-        result.answer_pair(place, plan[place], chosen)
+        result.answer_pair(place, plan[place], chosen, both=both)
         _scores_shown_storing_reweighted(state.version.document, result)  # ✨ the last answer re-weights the result
         return _see_other(_with_demo_profile(request, reverse("tie_break", args=[block_id])))
     if len(result.tie_break_answers) >= len(plan):
