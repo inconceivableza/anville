@@ -129,7 +129,7 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 
 - Hero: the summary, then "Begin your journey" alone (no "For coaches"), then "Learn more" with a down arrow below it; pressing it scrolls to the overview.
 - Overview: the heading, the five pillars, the logo and "A calling journey for every season of life", the paragraph beginning "Along the way, you'll come to understand…", then its own "Begin your journey" button, which opens sign-up (signed in, the hub).
-- "How it works" has no "Five steps…" line; each of the five steps shows its title and summary, with no bullets and no box beneath. Each step's drawn screen of the site changes with the tabs. With JavaScript blocked, the five steps show one under another with the same words, each with its screen (fix-3; screens since 29 Oct).
+- "How it works" has no "Five steps…" line; each of the five steps shows its title and summary, with no bullets and no box beneath. Each step's picture changes with the tabs: a drawn screen of the site for steps 1, 2 and 5, a photograph for steps 3 and 4 (since 30 Oct, ticket 110). With JavaScript blocked, the five steps show one under another with the same words, each with its picture (fix-3; screens since 29 Oct).
 - No "Space to reflect on what matters" section and no "Impact" link in the footer.
 - At about 375px, all of it reads in order, nothing cut off or scrolling sideways.
 
@@ -168,13 +168,23 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 - Impact: as v3's "A story from a parent": the label and the quote centred in one column, the words coming up as you scroll, the caption under it. The label still says "Impact".
 - "Stay in touch" is as wide as the other panels, its text and form in the same column and side margins as theirs; at 375px the copy, the form and the small print stack.
 - "For churches" lists four points: Run it together, Invite trusted voices, Raise up coaches, Free for participants.
-- With JavaScript blocked, "How it works" shows its five steps one under another, each with its tab's drawn screen below its words (29 Oct; they were photos).
+- With JavaScript blocked, "How it works" shows its five steps one under another, each with its tab's picture below its words (drawn screens from 29 Oct; photographs for steps 3 and 4 from 30 Oct, ticket 110).
 
 ### sprint-3c-r3-fix-6: the homepage's hero margin and "For churches" (rebuild the frontend first; wide screen and about 375px; no pathway reload or new participant needed)
 
 - Scroll to the very top at a window about 800px high, and again at about 650px (a laptop's): the hero ends about 12px above the window's foot, as v3's does at the same size, not touching it, with the demo notice and "Learn more" still inside it (fix-10: the hero used to grow past a window under about 740px high; the heading, the notice and the hero's foot padding now shrink with the window's height). A phone held at about 667px high still runs a little past the window.
 - "For churches" is shorter than before, nearer v3's: a smaller heading, less padding, the four points closer together with a line above each and one under the last. Nothing is cut off, and at about 375px it still stacks photo above text.
 - "Invite trusted voices" reads: "Participants can ask people who know them well to share their perspective, drawing the church community into walking alongside them."
+
+### Ticket 110: The homepage's arrow, overview heading, testimonial and How it works (rebuild the frontend first; wide screen and about 375px; no pathway reload or new participant needed)
+
+- "Learn more" in the hero: its arrow points straight down, not down and to the right. Hover it (a mouse): the arrow moves a few pixels straight down.
+- Overview: "Whatever You Do is a pathway for discerning your purpose." breaks into lines of even length, about "Whatever You Do is a pathway" over "for discerning your purpose." on a wide screen, never a long line over a short one, and at about 375px, and at a width between (try about 800px and 1000px).
+- Impact: the quote is three paragraphs with a gap between them, the first ending "…the choices weren't obvious at all.", the second "…some of the Whatever You Do questions.", and the third beginning "Now, he's gearing up…". The opening quotation mark is only at the start of the first and the closing one at the end of the last. The words still come up as you scroll, across all three.
+- How it works, steps 3 and 4: each shows a photograph (a notebook with a pen and coffee; an open Bible beside a lake), with no browser window around it, in place of the drawn screens. These are stand-ins: they show no people journalling, and the final photos are the developer's to choose (ticket 115 shows them to the content owner). Step 3's text says it is a workbook worked through on paper, and step 4's that it is in two more workbooks. Clicking tab 3 and tab 4 does not make the panel jump in height by more than a little, and at about 375px the photograph sits above the words and fits the width.
+- With JavaScript blocked, steps 3 and 4 each show their photograph below their words in the list, like the other steps' screens.
+- A screen reader (VoiceOver or NVDA) on "How it works": each tab's picture is read with a description, not skipped: the sort ("The strengths evaluation: a card reading…"), Five trusted voices, the notebook, the Bible, the letter. With JavaScript blocked, the same descriptions are read in the list.
+- `/credits/`, with courtesy credits on: it lists the notebook and Bible photographs (by Andres Molina and Aaron Burden on Unsplash).
 
 ## The hub's layout (the hub, beside the prototype's: `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html#hub`)
 
@@ -1216,11 +1226,11 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 
 ### Screens in "How it works" (rebuild the frontend first; wide screen and about 375px; no pathway reload needed)
 
-- Each tab shows, beside its words, a small browser window titled with the page it shows (Strengths evaluation, Five trusted voices, The shape of your life, Putting your calling into words, A letter to your future self), in place of a photo, and it changes with the tab, fading in.
+- Each tab shows, beside its words, a picture that changes with the tab, fading in: for steps 1, 2 and 5 a small browser window titled with the page it shows (Strengths evaluation, Five trusted voices, A letter to your future self), in place of a photo; for steps 3 and 4 a photograph (ticket 110's checks, above).
 - The Strengths evaluation screen looks like the sort page itself: "Round 1 of 2 · What you're good at", "Sort your strengths", a progress bar, "7 of 36" with "Choose the bucket that fits best", one card on its stacked deck, the seven buckets graded red to green with their dots, and "← Less like me" / "More like me →". The bucket labels fit inside their boxes without spilling.
-- Five trusted voices: the dark card with its Invited 3 / 5 and Answered 2 / 5 bars, and "How others see you" with "Still need answers from 1 person who knows you". The two workbook screens each show their line and a green "Download Workbook… (PDF)"; the letter shows "Your letter" and a box with a grey "Dear me," and a blinking caret (still, with reduced motion on).
+- Five trusted voices: the dark card with its Invited 3 / 5 and Answered 2 / 5 bars, and "How others see you" with "Still need answers from 1 person who knows you". The letter shows "Your letter" and a box with a grey "Dear me," and a blinking caret (still, with reduced motion on).
 - Nothing in a screen reacts to the mouse: no hover tint on the buckets, no pointer.
-- At about 375px the screen sits above the step's words and nothing runs off its side. With JavaScript blocked, each step in the list shows its screen below its words.
+- At about 375px the picture sits above the step's words and nothing runs off its side. With JavaScript blocked, each step in the list shows its picture below its words.
 - `/credits/` no longer lists the row of friends.
 
 ### Ticket 104: the letter is sealed until a chosen date (rebuild the frontend, `migrate`, load the pathway again; a participant through to Section 6; wide screen and about 375px)

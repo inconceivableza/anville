@@ -1,83 +1,74 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
-"""✨ The hub's next-step photos (fix-8, fix-12): one photo per subject. The coach, as the next step or in its
-wait, has one; the trusted voices, as the next step or waiting on answers, another; every other step and nothing
-waiting its own. How each looks is a hand check (docs/manual-checks.md)."""
+"""✨ The hub's next-step photos (fix-8, fix-12): the panel takes the look of what it shows, so the stylesheet can give
+each its own photo: the section that is next, or else the answers it waits on, the coach it waits on, or nothing
+waiting. Which photo each look shows, one per subject, is a hand check (docs/manual-checks.md, sprint-3c-r3-fix-8).
+Every photo the site shows has a credit line."""
 
-import json
 import re
-from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 
-from engine.views import SITE_PHOTO_CREDITS, next_look
+from engine.views import SITE_PHOTO_CREDITS
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
-from tests.journeys.test_onboarding_wizard import DOCUMENT, through_the_wizard
-
-ROOT = Path(__file__).resolve().parents[2]
-STYLESHEET = (ROOT / "frontend/src/styles.css").read_text(encoding="utf-8")
-PATHWAY = json.loads((ROOT / "pathways/whatever-you-do.json").read_text(encoding="utf-8"))
-
-
-def _hub(next_id=None, waiting=None):
-    return SimpleNamespace(next_step=SimpleNamespace(id=next_id) if next_id else None, waiting_on_answers=waiting)
-
-
-def _photos_by_look():
-    """✨ The photo the stylesheet gives each `.next.look-*` class, read from its source."""
-    rule = r'((?:\.next\.look-[\w-]+,?\s*)+)\{\s*background-image: url\("\.\./img/([\w-]+\.jpg)"\)'
-    found = re.findall(rule, STYLESHEET)
-    return {look: photo for selectors, photo in found for look in re.findall(r"look-[\w-]+", selectors)}
+from tests.journeys.test_whatever_you_do import (
+    complete,
+    invite_everyone,
+    next_step_panel,
+    the_pathway,
+    through_to_section_3,
+    to_section_2,
+)
 
 
-def test_the_next_step_takes_the_look_of_its_section_or_else_of_what_it_waits_on():
-    assert next_look(_hub("calling"), coach_wait=None) == "look-section-calling"
-    assert next_look(_hub(waiting=object()), coach_wait=object()) == "look-answers"
-    assert next_look(_hub(), coach_wait=object()) == "look-coach"
-    assert next_look(_hub(), coach_wait=None) == "look-rest"
+def as_authored(document):
+    """✨ The pathway unchanged."""
+    return document
 
 
-def test_the_coach_and_the_trusted_voices_each_take_one_photo_as_a_step_and_as_a_wait():
-    photos = _photos_by_look()
-
-    assert photos["look-coach"] == photos["look-section-walk-with-a-coach"] == "mentor.jpg"
-    assert photos["look-answers"] == photos["look-section-trusted-voices"] == "churches.jpg"
-    assert "friends.jpg" not in photos.values()
-
-
-def test_every_section_of_the_pathway_and_every_state_has_a_photo_and_no_subject_shares_one():
-    photos = _photos_by_look()
-    sections = [s["id"] for s in PATHWAY["content"]["sections"] if s["id"] != "onboarding"]
-    pairs = [
-        {"look-coach", "look-section-walk-with-a-coach"},
-        {"look-answers", "look-section-trusted-voices"},
-    ]
-
-    for look in [f"look-section-{section}" for section in sections] + ["look-coach", "look-answers", "look-rest"]:
-        assert look in photos, look
-    # ✨ One photo per subject: only the two pairs share a photo, so a photo seen twice is a pair or a mistake.
-    by_photo = {}
-    for look, photo in photos.items():
-        by_photo.setdefault(photo, set()).add(look)
-    for photo, looks in by_photo.items():
-        assert len(looks) == 1 or looks in pairs, photo
+def with_section_4_waiting_on_more_than_the_coach(document):
+    """✨ Section 4 made to require a section that can never open, so once Section 3 is done nothing is next and
+    nothing waits on the coach alone."""
+    calling = next(section for section in document["content"]["sections"] if section["id"] == "calling")
+    calling["requires"].append("growth")  # ✨ which requires Section 4 in turn
+    return document
 
 
-def test_a_card_with_its_own_photo_draws_no_stylesheet_photo_under_it():
-    # ✨ The first section's card showed the potter's hands until its own photo loaded (fix-12).
-    assert re.search(r"\.next\.next:has\(> img\)\s*\{\s*background-image: none;", STYLESHEET)
+def waiting_on_answers(client):
+    """✨ Section 3 done while Section 2 waits on the people invited, and Section 4 on the coach too."""
+    to_section_2(client)
+    invite_everyone(client)
+    complete(client, "shape")
+
+
+def section_3_done(client):
+    """✨ Sections 1 to 3 done, with the coach's link out and unanswered."""
+    through_to_section_3(client)
+    complete(client, "shape")
+
+
+# ✨ Each state of the panel: how the pathway is changed for it, how it is reached, and the look it takes.
+STATES = {
+    "a section next": (as_authored, through_to_section_3, "look-section-shape"),
+    "waiting on answers": (as_authored, waiting_on_answers, "look-answers"),
+    "waiting on the coach": (as_authored, section_3_done, "look-coach"),
+    "nothing waiting": (with_section_4_waiting_on_more_than_the_coach, section_3_done, "look-rest"),
+}
 
 
 @pytest.mark.django_db
-def test_the_hub_panel_carries_its_look_in_its_class(signed_in_client, load_pathway):  # noqa: F811
-    load_pathway(json.loads(DOCUMENT.read_text(encoding="utf-8")))
-    through_the_wizard(signed_in_client)
+@pytest.mark.parametrize("state", STATES)
+def test_the_next_step_takes_the_look_of_its_section_or_else_of_what_it_waits_on(
+    signed_in_client, load_pathway, state  # noqa: F811
+):
+    changed, reach, look = STATES[state]
+    load_pathway(changed(the_pathway()))
+    reach(signed_in_client)
 
-    page = signed_in_client.get("/hub/").content.decode()
+    panel = next_step_panel(signed_in_client)
 
-    assert re.search(r'<(section|div) class="panel next look-[\w-]+"', page)
+    assert re.match(rf'<(section|div) class="panel next {look}">', panel)
 
 
 def test_every_photo_the_next_step_can_show_has_a_credit_line():

@@ -214,28 +214,64 @@ def shown_to(label):
 
 
 def screens(page):
-    """✨ Each How it works step's drawn screen, by the title on its window, in the steps' order."""
+    """✨ Each How it works step's drawn screen, by the title on its window, in the steps' order. Steps done on paper
+    show a photograph in place of one, so they have none."""
     how = section(page, r'<section class="panel atabs"')
     steps = re.findall(r'<li class="step step-\d">(.*?)</li>', how, re.S)
     shown = {}
     for step in steps:
-        found = re.search(r'<figure class="shot" aria-hidden="true">.*?<span>([^<]+)</span>(.*?)</figure>', step, re.S)
-        assert found, "a step with no screen"
-        shown[found.group(1)] = text(found.group(2))
+        found = re.search(r'<figure class="shot"[^>]*>.*?<span>([^<]+)</span>(.*?)</figure>', step, re.S)
+        if found:
+            shown[found.group(1)] = text(found.group(2))
     return shown
 
 
+def pictures(page):
+    """✨ Each How it works step's picture, drawn or photographed, in the steps' order: its figure's opening tag and
+    what is inside it."""
+    how = section(page, r'<section class="panel atabs"')
+    steps = re.findall(r'<li class="step step-\d">(.*?)</li>', how, re.S)
+    found = [re.search(r'<figure (class="shot[^"]*"[^>]*)>(.*?)</figure>', step, re.S) for step in steps]
+    assert all(found), "a step with no picture"
+    return [(picture.group(1), picture.group(2)) for picture in found]
+
+
 @pytest.mark.django_db
-def test_each_step_shows_a_screen_of_the_tool_titled_with_the_page_it_shows(client):
-    """✨ Drawn screens of the tool in place of photos (checklist, 29 Oct), as v3 has them, one in each step, so the
-    list without JavaScript shows them too. Decoration, as each step's own words say what it does."""
+def test_the_steps_done_in_the_tool_show_a_screen_of_it_titled_with_the_page_it_shows(client):
+    """✨ Drawn screens of the tool in place of photos (checklist, 29 Oct), as v3 has them, so the list without
+    JavaScript shows them too. Steps 3 and 4, done on paper, show a photograph instead (the content owner, 30 Oct)."""
     assert list(screens(client.get("/").content.decode())) == [
         "Strengths evaluation",
         "Five trusted voices",
-        "The shape of your life",
-        "Putting your calling into words",
         "A letter to your future self",
     ]
+
+
+@pytest.mark.django_db
+def test_the_two_steps_done_on_paper_show_a_photograph_where_the_others_draw_a_screen(client):
+    """✨ The content owner, 30 Oct: steps 3 and 4 "can be more visual imagery of people journalling"; the photos are
+    the developer's to pick, so these are stand-ins from the site's own."""
+    shown = pictures(client.get("/").content.decode())
+    kinds = ["photo" if "shot-photo" in opening else "screen" for opening, _ in shown]
+
+    assert kinds == ["screen", "screen", "photo", "photo", "screen"]
+
+
+@pytest.mark.django_db
+def test_every_steps_picture_has_a_description_a_screen_reader_hears_in_the_list_and_in_the_panel(client):
+    """✨ Ticket 102's descriptions were never given: the drawn screens were hidden as decoration. Each is now one
+    image with a label, each photograph has its alt text, and neither the list of steps nor the panel the tabs copy
+    the current picture into is hidden."""
+    page = client.get("/").content.decode()
+
+    for opening, inside in pictures(page):
+        label = re.search(r'\brole="img"[^>]*\baria-label="([^"]+)"', opening) or re.search(
+            r'<img\b[^>]*\balt="([^"]+)"', inside
+        )
+        assert label, "a picture with no description"
+        assert "aria-hidden" not in opening
+    assert "aria-hidden" not in re.search(r'<ol class="steps"[^>]*>', page).group(0)
+    assert "aria-hidden" not in re.search(r'<div class="tp-shot"[^>]*>', page).group(0)
 
 
 @pytest.mark.django_db
@@ -255,8 +291,6 @@ def test_the_screens_carry_the_tools_own_words_and_none_of_v3s_that_are_not_true
     for words in sorting:
         assert words in shown["Strengths evaluation"]
     assert "Still need answers from" in shown["Five trusted voices"]
-    assert blocks["shape-pdf"]["button_label"] in shown["The shape of your life"]
-    assert blocks["calling-pdf"]["button_label"] in shown["Putting your calling into words"]
     for words in (blocks["lt-message"]["prompt"], blocks["lt-message"]["placeholder"]):
         assert words in shown["A letter to your future self"]
     how = text(section(page, r'<section class="panel atabs"'))
@@ -313,6 +347,15 @@ def test_the_testimonial_is_the_one_quote_alone(client):
 
     assert "story-pull" not in story
     assert len(re.findall(r"<blockquote", story)) == 1
+
+
+@pytest.mark.django_db
+def test_the_testimonial_is_one_quote_in_three_paragraphs(client):
+    """✨ The content owner, 30 Oct: "2 paragraph breaks", so three paragraphs. A hand check says where they fall."""
+    story = section(client.get("/").content.decode(), r'<section class="panel story-sec"')
+
+    quote = re.search(r"<blockquote\b[^>]*>(.*?)</blockquote>", story, re.S).group(1)
+    assert len(re.findall(r"<p>", quote)) == 3
 
 
 # ✨ v3's marquee of people, in its order, each photo's file under img/. Its nurse, musician and barista are left out,

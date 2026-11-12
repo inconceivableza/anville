@@ -1,12 +1,14 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
-"""✨ One entry per block type: what it renders, and what (if anything) it captures.
+"""✨ One entry per block type: what it renders, what (if anything) it captures, and the rules the views read for
+showing and saving it.
 
-Before this registry a new block type had to be found in four places at once. Adding one now means an
-entry here, its authored shape in `pathway.schema.json`, and a template in `engine/templates/engine/blocks/`.
-Nothing else needs to know the type exists: the answer schema, the refusal, the text a reader is shown,
-which gate clauses may name it and whether it counts towards progress all follow from the entry.
+Adding a block type means an entry here, its authored shape in `pathway.schema.json`, and a template in
+`engine/templates/engine/blocks/`. Unless its page needs something from the database, as a contact list's links or a
+sort's results do, nothing else needs to know the type exists: the answer schema, the refusal, the text a reader is
+shown, which gate clauses may name it, whether it counts towards progress, where a link to it lands and whether it saves
+quietly all follow from the entry.
 """
 
 import json
@@ -249,6 +251,9 @@ SORT_WORDING = {
     "Change either answer if it doesn’t look right. If both are true, leave them as they are.",
 }
 
+# ✨ What an observer is told on sending an assessment a second time through the same claim: the first one stands.
+SENT_ALREADY = "Your evaluation has already been sent."
+
 
 def _sort_widget(document, role, name=""):
     """✨ What the sort widget shows: every item in the reader's wording, the buckets weakest first, and the widget's
@@ -305,6 +310,12 @@ class BlockType(NamedTuple):
     scored into a result once, when it is submitted. `widget` gives a bespoke block's JavaScript what it
     shows, from the document, in one role's wording and naming the participant; a block rendered by its template alone
     has none.
+
+    `onward_label` is the wording of a button leading on to a block of this type, as the comparison's last button does
+    to the block waiting on it. `quiet_setting` names the document setting under which its answer saves without saying
+    "Saved" (`saves_quietly`). `reached_at_top` marks a block reached at its page's top, with no anchor, when it opens
+    that page (`anchor_of`). `lists_links` marks a block whose people are listed with their links, so its page shows a
+    link just issued, this once.
     """
 
     name: str
@@ -314,6 +325,10 @@ class BlockType(NamedTuple):
     opens_what_follows: bool = False
     scored: bool = False
     widget: Callable[[dict, str, str], dict] | None = None
+    onward_label: str = "On to your reflection →"
+    quiet_setting: str | None = None
+    reached_at_top: bool = False
+    lists_links: bool = False
 
     @property
     def is_interactive(self):
@@ -349,7 +364,12 @@ BLOCK_TYPES = {
             text_fields=("prompt", "placeholder", "copy_note", "seal_label", "seal_note", "date_label"),
             captures=TEXT,
         ),
-        BlockType("agreement_scale", text_fields=("prompt", "min_label", "max_label"), captures=SCALE_POINT),
+        BlockType(
+            "agreement_scale",
+            text_fields=("prompt", "min_label", "max_label"),
+            captures=SCALE_POINT,
+            quiet_setting="ratings_save_quietly",
+        ),
         BlockType(
             "single_select",
             text_fields=("prompt", "placeholder"),
@@ -360,7 +380,7 @@ BLOCK_TYPES = {
         BlockType(
             "multi_select", text_fields=("prompt", "note"), text_lists=(("options", ("label",)),), captures=CHOICES
         ),
-        BlockType("contact_list", text_fields=("more_note",), captures=CONTACTS),
+        BlockType("contact_list", text_fields=("more_note",), captures=CONTACTS, lists_links=True),
         # ✨ Captures nothing: its answers are opinions about another person, never kept (see `coach.py`).
         BlockType(
             "coach_checklist",
@@ -379,6 +399,9 @@ BLOCK_TYPES = {
                 "coach_declined",
             ),
             text_lists=(("questions", ("question", "note", "why", "coach_note", "coach_why", "commitment")),),
+            # ✨ An anchor on the checklist that opens its page would scroll past the page's title (ticket 82).
+            reached_at_top=True,
+            lists_links=True,
         ),
         BlockType("sort_assessment", captures=SORT, scored=True, widget=_sort_widget),
         # ✨ Its `sort`'s results in full, drawn as the results page draws them, once there are any (ticket 57).
@@ -387,7 +410,7 @@ BLOCK_TYPES = {
         # (ticket 67a).
         BlockType("comparison_signpost", text_fields=("title",)),
         BlockType("section_signpost", text_fields=("body", "button_label")),
-        BlockType("download", text_fields=("body", "button_label")),
+        BlockType("download", text_fields=("body", "button_label"), onward_label="On to your workbook →"),
         # ✨ Never shown: it splits its section into pages (`pages_of`).
         BlockType("page_break"),
     ]
@@ -459,6 +482,12 @@ COMPARISON_STATUSES = {
 }
 
 
+# ✨ What a comparison signpost says in place of its status between a retake and the new sort, as `(link, rest)`: the
+# words leading back to the sort, then the rest of the sentence. Its card makes the first part the link; the hub's row
+# and the sidebar show the two as one line.
+COMPARISON_UNSORTED = ("Finish your strengths evaluation", "to compare.")
+
+
 def comparison_status(answered, minimum, viewed):
     """✨ Where the way to a sort's comparison stands, as `(state, wording)`: viewed once the participant has pressed
     "Compare with how others see you →" with at least the minimum in, whatever has been answered since; otherwise ready
@@ -477,6 +506,24 @@ def translation_shown(document, passage):
     credits page says is the one used unless otherwise indicated. None when nothing is to be named."""
     own = passage.get("translation")
     return own if own != document.get("translation") else None
+
+
+def text_shown(document, block, role):
+    """✨ A block's authored text in one role's wording (`authored_text`), with each passage of a block quoting
+    scripture naming its translation beside its reference, where `translation_shown` names one."""
+    text = authored_text(block, role)
+    if block["type"] in PASSAGE_BLOCK_TYPES:
+        for passage, shown in zip(block["passages"], text["passages"]):
+            shown["translation"] = translation_shown(document, passage)
+    return text
+
+
+def saves_quietly(document, section, block):
+    """✨ Whether a block's answer saves without saying "Saved": every answer on a wizard's pages (ticket 83), and one
+    whose type names a document setting for it (`quiet_setting`) where the document turns that setting on, as
+    *Whatever You Do*'s 1–10 ratings do (sprint-3c-r3-fix-15). A refusal still says why."""
+    setting = BLOCK_TYPES[block["type"]].quiet_setting
+    return bool(section.get("wizard")) or bool(setting and document.get(setting, False))
 
 
 def blocks_of(document):
@@ -536,6 +583,15 @@ def landing_of(block):
     if BLOCK_TYPES[block["type"]].opens_what_follows:
         return f"block-{block['id']}-confirmed"
     return f"block-{block['id']}"
+
+
+def anchor_of(section, block_id):
+    """✨ The anchor a link to a block takes on its page: the block's own, or None for a block whose type is reached at
+    its page's top (`reached_at_top`) when it opens that page, so the page opens at its title (ticket 82)."""
+    opening = pages_of(section)[page_of(section, block_id) - 1][0]
+    if opening["id"] == block_id and BLOCK_TYPES[opening["type"]].reached_at_top:
+        return None
+    return f"block-{block_id}"
 
 
 def section_of(document, block_id):
