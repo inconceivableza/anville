@@ -239,6 +239,19 @@ def test_the_contact_list_opens_with_three_rows_needed_and_two_optional(particip
 
 
 @pytest.mark.django_db
+def test_five_trusted_voices_says_beside_its_list_that_adding_someone_sends_them_nothing(participant):
+    """✨ The participant sends each person their link (ADR 0005), so the list's note says so quietly, on the page where
+    people are added (ticket 109)."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+    [contacts] = [block for block in the_pathway_blocks() if block["type"] == "contact_list"]
+
+    page = participant.get(CONTACTS_PAGE).content.decode()
+
+    assert escape(contacts["note"]) in page
+
+
+@pytest.mark.django_db
 def test_all_five_start_ratings_are_fixed_once_onboarding_is_complete(participant):
     """✨ Before we begin is once-only (ticket 69), so a save to it leads to the hub rather than being refused there."""
     answer_onboarding(participant)
@@ -529,7 +542,8 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     the time estimates, checked above, the hub's section numbers, next-step wording and photos and Section 1's results
     are set aside, and so are the downloads in place of Sections 3–5's own blocks, Section 1's split in two (ticket
     87), Section 2's way to the comparison, the two-round prototype's cards and gift names, and the sealed letter
-    (ticket 104), and the reason taking one or more choices (ticket 112)."""
+    (ticket 104), the reason taking one or more choices (ticket 112), and what people are told of the sort and the
+    list, the observers' notice among it (ticket 109)."""
     expected = the_faithful_port()
     for section in expected["content"]["sections"]:
         for clause in section.get("gate", {}).get("clauses", []):
@@ -549,9 +563,10 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     a_download_in_place_of_each_of_sections_2_to_4(expected)
     in_six_sections(expected)
     no_relationship_question(expected)
-    expected = in_the_new_words(without_the_cards(as_one_reason(expected)))
+    as_told_now(expected)
+    expected = without_the_observers_notice(in_the_new_words(without_the_cards(as_one_reason(expected))))
 
-    assert without_what_finishing_takes(
+    ours = without_what_finishing_takes(
         without_the_comparison_signpost(
             without_the_next_step_and_photos(
                 without_numbers(
@@ -569,7 +584,30 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
                 )
             )
         )
-    ) == (without_numbers(expected))
+    )
+    assert without_the_observers_notice(ours) == without_numbers(expected)
+
+
+def as_told_now(document):
+    """✨ What this pathway tells people of its sort and its list, where the faithful port keeps the original
+    prototype's words (ticket 109): Section 1's card says the sort is in two rounds, as it is, with nothing
+    fine-tuned; the reminder gives the evaluation's time as Section 1 does; and the list of people to ask notes that
+    adding someone emails them nothing."""
+    for section in document["content"]["sections"]:
+        for block in section["blocks"]:
+            if block["id"] == "strengths-link":
+                block["body"] = block["body"].replace("fine-tune the intensity of each", "in two quick rounds")
+            if block["type"] == "contact_list":
+                block["note"] = "Adding someone doesn't email them: send each person their link yourself."
+    reminder = document["observers"]["reminder"]
+    reminder["body"] = reminder["body"].replace("It takes about 10–15 minutes.", "It takes about 7 minutes.")
+
+
+def without_the_observers_notice(document):
+    """✨ The observers' notice is this pathway's own since ticket 109, written for the two-round sort, "Haven't seen
+    this" and the retake, without the draft marker the faithful port's keeps; the tests above hold what it must keep."""
+    document["observers"].pop("privacy_notice")
+    return document
 
 
 def as_one_reason(document):

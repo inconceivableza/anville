@@ -2305,6 +2305,13 @@ body:not(.framed) .question-card > p + form {
   color: var(--muted);
 }
 
+/* ✨ A list's own note above its rows (ticket 109), as quiet as the one below them. */
+.contact-list-note {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
 /* ✨ How many withdrew (29 Oct): quiet, below the list. */
 .contact-withdrawn {
   margin: var(--space-sm) 0 0;
