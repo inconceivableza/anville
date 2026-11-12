@@ -630,8 +630,10 @@ class Result(models.Model):
     block_id = models.CharField(max_length=64)
     scores = models.JSONField()
     # ✨ The participant's answers to the tie-break's pairs (ticket 30b), in the order asked, each
-    # `{"framework", "constructs": [a, b], "round", "chosen"}`, `chosen` None for a skip. Kept beside the scores, which
-    # they never change.
+    # `{"framework", "constructs": [a, b], "round", "chosen"}`, `chosen` None where neither was chosen, and then
+    # `"both": true` where the answer was "Both are right" (ticket 108). An answer without it was "Neither is more true
+    # of me", as every one stored before ticket 108 was, the skip being the only such answer then. Kept beside the
+    # scores, which they never change.
     tie_break_answers = models.JSONField(default=list)
     # ✨ The scores re-weighted by those answers (ticket 30c), by their own named method, once every pair is answered or
     # skipped; None until then, and for anyone with no tie-break. Kept beside the scores, never in their place.
@@ -643,16 +645,17 @@ class Result(models.Model):
             models.UniqueConstraint(fields=["response", "block_id"], name="one_result_per_sort_per_response"),
         ]
 
-    def answer_pair(self, place, pair, chosen):
+    def answer_pair(self, place, pair, chosen, both=False):
         """✨ Store the answer to the tie-break's pair at `place` in the plan, `chosen` one of its constructs or None to
-        skip. Only the next unanswered pair takes one, checked under a lock, so a form sent twice or from a stale tab
-        stores nothing. Returns whether it was stored."""
+        skip, or None and `both` for "Both are right" (ticket 108). Only the next unanswered pair takes one, checked
+        under a lock, so a form sent twice or from a stale tab stores nothing. Returns whether it was stored."""
         with transaction.atomic():
             locked = Result.objects.select_for_update().get(pk=self.pk)
             if len(locked.tie_break_answers) != place:
                 return False
             answer = {key: pair[key] for key in ("framework", "constructs", "round")}
-            locked.tie_break_answers = [*locked.tie_break_answers, {**answer, "chosen": chosen}]
+            given = {"chosen": chosen, **({"both": True} if both else {})}
+            locked.tie_break_answers = [*locked.tie_break_answers, {**answer, **given}]
             locked.save(update_fields=["tie_break_answers"])
         self.tie_break_answers = locked.tie_break_answers
         return True

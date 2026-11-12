@@ -585,9 +585,13 @@ def as_one_reason(document):
 
 def without_the_cards(document):
     """✨ The cards, buckets and sort without fine-tuning are the two-round prototype's (held to it in
-    `tests/core/test_two_round_cards.py`), and so is Section 1's activity saying what sorting them takes."""
+    `tests/core/test_two_round_cards.py`), and so is Section 1's activity saying what sorting them takes. So too, since
+    ticket 108, are "Haven't seen this", in the instrument, and the method scoring it, and the sort shows no look at
+    how the buckets were used."""
     document.pop("instrument")
     document.pop("sorts_skip_fine_tuning", None)
+    document.pop("sorts_hide_bucket_summary", None)
+    document.get("measurement", {}).pop("scoring", None)
     for section in document["content"]["sections"]:
         for block in section["blocks"]:
             if block["id"] == "gifts-activity":

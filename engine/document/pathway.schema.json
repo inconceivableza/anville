@@ -7,6 +7,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["format", "title", "content"],
+  "if": { "required": ["instrument"], "properties": { "instrument": { "required": ["not_seen"] } } },
+  "then": {
+    "$comment": "✨ An item an observer has not seen can be scored only by the method that leaves such items out.",
+    "required": ["measurement"],
+    "properties": {
+      "measurement": {
+        "required": ["scoring"],
+        "properties": { "scoring": { "properties": { "method": { "const": "compositional_share_of_seen" } } } }
+      }
+    }
+  },
   "properties": {
     "format": { "const": 1 },
     "title": { "$ref": "#/$defs/text" },
@@ -83,6 +94,11 @@
       "type": "boolean",
       "default": false
     },
+    "sorts_hide_bucket_summary": {
+      "description": "Whether a sort never shows how the cards were spread over the buckets, for participants and observers alike: no counts once every card is placed, and no graph between the rounds, since seeing the spread invites people to even it out (ticket 108). Off, both show.",
+      "type": "boolean",
+      "default": false
+    },
     "content": {
       "type": "object",
       "additionalProperties": false,
@@ -100,6 +116,13 @@
           "type": "array",
           "items": { "$ref": "#/$defs/bucket" }
         },
+        "not_seen": {
+          "description": "\"Haven't seen this\" (ticket 108): a place beside the buckets, offered to observers only, never the participant, for an item they have not seen the participant do. It is not a bucket: an item placed there is left out of that observer's scores, which needs the compositional_share_of_seen scoring method. Its label is what the observer sees. Left out, there is no such place.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["label"],
+          "properties": { "label": { "$ref": "#/$defs/text" } }
+        },
         "items": { "type": "array", "items": { "$ref": "#/$defs/item" } }
       }
     },
@@ -109,11 +132,11 @@
       "properties": {
         "frameworks": { "type": "array", "items": { "$ref": "#/$defs/framework" } },
         "scoring": {
-          "description": "How a sort is scored: a named method, frozen once any response is scored with it (ADR 0003).",
+          "description": "How a sort is scored: a named method, frozen once any response is scored with it (ADR 0003). compositional_share is the prototype's, each construct's share of the grand total; compositional_share_of_seen scores a sort with every item seen exactly as it does, and leaves out any item an observer placed in instrument.not_seen, taking each construct's seen items' mean (ticket 108).",
           "type": "object",
           "additionalProperties": false,
           "required": ["method"],
-          "properties": { "method": { "enum": ["compositional_share"] } }
+          "properties": { "method": { "enum": ["compositional_share", "compositional_share_of_seen"] } }
         },
         "tie_break": {
           "description": "When a participant's own sort leaves a framework's leaders too close to call (ticket 30a, ADR 0018). A framework is tied when its leader's unrounded share is at most percent more than another construct's; at most cluster constructs, leader first, enter the tie-break. A participant tied on one framework or both is marked for the tie-break, unless every construct on every framework stands in a band between the lowest and the highest (presentation.standing): then they are flat, and told they are a generalist in presentation.generalist's wording, with nothing asked. With no tie_break, nobody is marked.",
@@ -275,13 +298,14 @@
           }
         },
         "tie_break": {
-          "description": "The wording of the tie-break's pair screen (measurement.tie_break, ticket 30b): the question over each pair, the skip, and a quiet label naming each framework, keyed by its id (the framework's own label when left out). Then what the results page says on each framework the answers re-weighted (ticket 30c, ADR 0018): separated, with a new leader (changed) or the same one (same), genuinely balanced, the choices having gone in a circle (circle) or left the best of them level (level), or every pair skipped (skipped), which says nothing about the participant. In those sentences {top} is replaced with the leader after the answers, {previous} with the sort's leader among the tied, {next} with the closest behind the top after the answers, and {names} with the tied constructs as shown, joined \"A, B and C\", each by its text_label (its label when it has none); no other placeholder is allowed. Needed whenever the pathway has a tie-break.",
+          "description": "The wording of the tie-break's pair screen (measurement.tie_break, ticket 30b): the question over each pair, the skip, beside it \"Both are right\" (both, ticket 108) where given, either keeping the pair tied, and a quiet label naming each framework, keyed by its id (the framework's own label when left out). Then what the results page says on each framework the answers re-weighted (ticket 30c, ADR 0018): separated, with a new leader (changed) or the same one (same), genuinely balanced, the choices having gone in a circle (circle) or left the best of them level (level), or every pair left tied, by the skip or \"Both are right\" (skipped), which says nothing about the participant. In those sentences {top} is replaced with the leader after the answers, {previous} with the sort's leader among the tied, {next} with the closest behind the top after the answers, and {names} with the tied constructs as shown, joined \"A, B and C\", each by its text_label (its label when it has none); no other placeholder is allowed. Needed whenever the pathway has a tie-break.",
           "type": "object",
           "additionalProperties": false,
           "required": ["question", "skip", "separated", "balanced", "skipped"],
           "properties": {
             "question": { "$ref": "#/$defs/text" },
             "skip": { "$ref": "#/$defs/text" },
+            "both": { "$ref": "#/$defs/text" },
             "frameworks": { "type": "object", "additionalProperties": { "$ref": "#/$defs/text" } },
             "separated": {
               "type": "object",
