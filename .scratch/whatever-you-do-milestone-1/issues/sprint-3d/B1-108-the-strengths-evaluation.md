@@ -4,17 +4,17 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 3d (end not yet set)
 
 **Spec:** Sprint 3d: the code review and the 30 October feedback; The instrument and scoring; Observers (ADR 0005)
 
-- [ ] Neither the participant's nor an observer's sort shows how the buckets were used, at halfway or at the end
-- [ ] An observer can place a card in "Haven't seen this", which leaves it out of that observer's scores; the participant's sort has no such choice
-- [ ] The tie-break offers "Both are right" beside "Neither is more true of me"; either keeps the pair tied, and the answer is stored as given
-- [ ] Wherever the sort or the results use colour to mean something, a second cue carries it too, so it reads the same in greyscale
-- [ ] Each gift has one name wherever a participant, coach or observer sees it: the results, the note on a gift that moved, the comparison, the tie-break and the coach's view
+- [x] Neither the participant's nor an observer's sort shows how the buckets were used, at halfway or at the end
+- [x] An observer can place a card in "Haven't seen this", which leaves it out of that observer's scores; the participant's sort has no such choice
+- [x] The tie-break offers "Both are right" beside "Neither is more true of me"; either keeps the pair tied, and the answer is stored as given
+- [x] Wherever the sort or the results use colour to mean something, a second cue carries it too, so it reads the same in greyscale
+- [x] Each gift has one name wherever a participant, coach or observer sees it: the results, the note on a gift that moved, the comparison, the tie-break and the coach's view
 
 **Context**
 
