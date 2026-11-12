@@ -4,7 +4,7 @@
 
 **Blocked by:** 110 (The homepage: the arrow, the overview, the testimonial and How it works), C1
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 3d (end not yet set)
 

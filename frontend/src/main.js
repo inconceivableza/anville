@@ -388,6 +388,27 @@ if (document.querySelector("main.page") && !reducedMotion) {
   });
 }
 
+// --- "Join the waitlist" and "Contact us": "Stay in touch" opened with their own choice ticked (ticket 111) ---
+// ✨ Each link names its choice for the server to tick, which reloads the homepage. Where the form is on the page
+// already, tick it here instead and go to the box without reloading, leaving any other tick and anything typed as it
+// was, with the focus on the box just ticked. Once the thanks has taken the form's place, the link reloads as without
+// JavaScript, bringing the form back.
+document.addEventListener("click", (event) => {
+  const modified = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+  if (event.defaultPrevented || event.button !== 0 || modified) return;
+  const link = event.target.closest("a[data-stay-choice]");
+  if (!link) return;
+  const box = document.getElementById("stay-in-touch");
+  const choice = [...(box?.querySelectorAll('input[name="choice"]') ?? [])].find(
+    (input) => input.value === link.dataset.stayChoice,
+  );
+  if (!choice) return;
+  event.preventDefault();
+  choice.checked = true;
+  choice.focus({ preventScroll: true });
+  box.scrollIntoView({ block: "start" }); // ✨ as the page's other links jump, by the stylesheet's scroll padding
+});
+
 // --- "The difference it makes": each figure and its bar count up from 0 as it scrolls into view, as v3's do ---
 // ✨ The page holds the final figures, so with JavaScript off, with reduced motion, or in a browser without
 // IntersectionObserver nothing here runs and they show at once.
