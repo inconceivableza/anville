@@ -11,7 +11,8 @@ Nothing in this module touches the database or a request. It reads a section as 
 response's answers as stored, so the same evaluation serves the section page, the hub and completion.
 """
 
-from engine.document.blocks import page_count, page_of
+from engine.document.blocks import blocks_of, page_count, page_of
+from engine.document.observers import minimum_observers
 from engine.document.text import text_for
 
 # ✨ The answer kinds each clause can read (see blocks.py). None means any block that captures an answer.
@@ -29,6 +30,7 @@ CLAUSE_ANSWER_KINDS = {
 CLAUSE_BLOCK_TYPES = {
     "links_issued": ("contact_list", "coach_checklist"),
     "coach_accepted": ("coach_checklist",),
+    "observers_answered": ("contact_list",),
 }
 
 
@@ -56,6 +58,23 @@ def coach_answer(answers, block_id):
     "waiting" while a working link is unanswered; None with no link, one expired unanswered, or one revoked."""
     answer = answers.get(coach_answer_key(block_id))
     return answer or ("waiting" if answers.get(links_issued_key(block_id)) else None)
+
+
+def observers_answered_key(block_id):
+    """✨ Where the answers the gate reads hold whether at least the pathway's minimum number of observers have sent
+    their assessments, for a contact list an `observers_answered` clause may name (ticket 106). Like
+    `comparison_visit_key`, never a block's own answer."""
+    return f"{block_id}/answered"
+
+
+def observers_answered(document, answered):
+    """✨ What every `observers_answered` clause reads (ticket 106), by the key of each contact list one may name:
+    whether `answered`, the observer assessments in, reach the pathway's minimum number of observers, the minimum the
+    comparison shows numbers from, read here and nowhere else for these clauses. One count serves every list, since an
+    observer's assessment is the participant's, kept whatever becomes of the list or the link it came by (ADR 0007)."""
+    enough = answered >= minimum_observers(document)
+    readable = CLAUSE_BLOCK_TYPES["observers_answered"]
+    return {observers_answered_key(block["id"]): enough for block in blocks_of(document) if block["type"] in readable}
 
 
 def comparison_viewed_key(block_id):
@@ -188,13 +207,16 @@ def clause_passes(clause, answers):
 
 def _reads(clause):
     """✨ What a clause reads: the named block's answer, for `comparison_visited` the visit to its comparison, for
-    `links_issued` how many of its people have a working link, and for `coach_accepted` the coach's answer."""
+    `links_issued` how many of its people have a working link, for `coach_accepted` the coach's answer, and for
+    `observers_answered` whether the minimum number of observers have answered."""
     if clause["type"] == "comparison_visited":
         return comparison_visit_key(clause["block"])
     if clause["type"] == "links_issued":
         return links_issued_key(clause["block"])
     if clause["type"] == "coach_accepted":
         return coach_answer_key(clause["block"])
+    if clause["type"] == "observers_answered":
+        return observers_answered_key(clause["block"])
     return clause["block"]
 
 
@@ -251,6 +273,11 @@ def _coach_accepted(clause, answer):
     return answer == "accepted"
 
 
+def _observers_answered(clause, enough):
+    # ✨ Answered, not issued: Section 2 waits on other people (ticket 106, as ADR 0019 lets a section).
+    return enough is True
+
+
 CLAUSES = {
     "has_answer": _has_answer,
     "min_text_length": _min_text_length,
@@ -260,6 +287,7 @@ CLAUSES = {
     "comparison_visited": _comparison_visited,
     "links_issued": _links_issued,
     "coach_accepted": _coach_accepted,
+    "observers_answered": _observers_answered,
 }
 
 

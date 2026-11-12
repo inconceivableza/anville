@@ -78,6 +78,11 @@
       "type": "boolean",
       "default": false
     },
+    "freeze_warning_beside_the_press": {
+      "description": "Whether the warning that no more answers are added once the participant looks at the comparison sits beside its press wherever it is offered, the press then showing the comparison at once. A hub row or sidebar entry that has no room for it leads to the comparison signpost instead, while a press would freeze answer collection. Off, the press first asks on a page of its own, 'Before you look'.",
+      "type": "boolean",
+      "default": false
+    },
     "sorts_skip_fine_tuning": {
       "description": "Whether a sort is sent once every card is placed, by participants and observers alike, each card at its bucket's seed, with no sliders. Off, a participant always fine-tunes and an observer may choose to.",
       "type": "boolean",
@@ -610,6 +615,10 @@
           "description": "The wording of the button that completes the section, such as 'Continue →'. Without one, it reads 'Mark complete'.",
           "$ref": "#/$defs/text"
         },
+        "complete_note": {
+          "description": "A line shown just above the button that completes the section, until it is complete, such as when to come back and press it.",
+          "$ref": "#/$defs/text"
+        },
         "to_finish": {
           "description": "What finishing this section takes, as the hub's note under a section requiring it says it after 'Opens once you've', such as 'added at least {min} people in {title}'. {title} is the section's title, in italics; {section} is what the hub calls it, such as 'Section 1'; {min} is the minimum of the section's own links_issued clause, of which it must have exactly one. Unfinished sections sharing one are named together, as 'completed Sections 1 and 2'. Without one, the note says 'finished' and the title.",
           "$ref": "#/$defs/text"
@@ -1135,7 +1144,8 @@
             "every_entry_has",
             "comparison_visited",
             "links_issued",
-            "coach_accepted"
+            "coach_accepted",
+            "observers_answered"
           ]
         }
       },
@@ -1147,7 +1157,8 @@
         { "if": { "properties": { "type": { "const": "every_entry_has" } } }, "then": { "$ref": "#/$defs/every_entry_has" } },
         { "if": { "properties": { "type": { "const": "comparison_visited" } } }, "then": { "$ref": "#/$defs/comparison_visited" } },
         { "if": { "properties": { "type": { "const": "links_issued" } } }, "then": { "$ref": "#/$defs/links_issued" } },
-        { "if": { "properties": { "type": { "const": "coach_accepted" } } }, "then": { "$ref": "#/$defs/coach_accepted" } }
+        { "if": { "properties": { "type": { "const": "coach_accepted" } } }, "then": { "$ref": "#/$defs/coach_accepted" } },
+        { "if": { "properties": { "type": { "const": "observers_answered" } } }, "then": { "$ref": "#/$defs/observers_answered" } }
       ]
     },
     "clause_message": {
@@ -1254,6 +1265,17 @@
       "required": ["type", "block", "message"],
       "properties": {
         "type": { "const": "coach_accepted" },
+        "block": { "$ref": "#/$defs/identifier" },
+        "message": { "$ref": "#/$defs/clause_message" }
+      }
+    },
+    "observers_answered": {
+      "description": "At least the pathway's minimum number of observers (observers.minimum_observers, the minimum the comparison shows numbers from) have sent their evaluations, the people this contact list holds being those asked. Answered, not only issued, so a section opening on it waits on other people. Every evaluation sent counts, whatever has since become of the person's link or their place on the list.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "block", "message"],
+      "properties": {
+        "type": { "const": "observers_answered" },
         "block": { "$ref": "#/$defs/identifier" },
         "message": { "$ref": "#/$defs/clause_message" }
       }

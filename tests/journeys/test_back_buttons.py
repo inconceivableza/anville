@@ -56,7 +56,9 @@ def leads_elsewhere_to(client, address, href):
 
 @pytest.mark.django_db
 def test_the_comparisons_one_way_back_leads_to_the_section_holding_its_signpost(participant):  # noqa: F811
+    """✨ Section 2, which opens once enough of the people invited have answered (ticket 106)."""
     client = through_section_1(participant)
+    people_answer(client)
 
     href, words = the_way_back(client, COMPARISON)
 

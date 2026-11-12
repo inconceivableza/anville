@@ -10,7 +10,10 @@
   loaded ahead of time does no harm, and the tag is the card's phrase (fix-3). While `holder`, the section it is listed
   in, is locked, the comparison is shut with it (fix-19): the row shows that section's "Locked" button and lock note,
   and leads nowhere. An open row is one control like the other rows (fix-23): its link or its press is stretched over
-  the row in CSS, with a hover wash and the arrow at its right; a locked row has no arrow.
+  the row in CSS, with a hover wash and the arrow at its right; a locked row has no arrow. Where the document puts the
+  freeze warning beside the press, the row has no room for it, so while a press would freeze answer collection the
+  title is a link to the comparison signpost on its section's page, where the warning sits beside the press (ticket
+  106).
 {% endcomment %}
 <li class="hub-section srow hub-part hub-comparison{% if holder.is_locked %} locked{% endif %}">
   <div class="srow-body">
@@ -21,6 +24,8 @@
       <h3><a class="hub-section-title" href="{{ comparison.unsorted }}">{{ comparison.title }}</a></h3>
     {% elif comparison.invite.waiting %}
       <h3><a class="hub-section-title" href="{% url 'comparison' comparison.sort %}">{{ comparison.title }}</a></h3>
+    {% elif comparison.warning %}
+      <h3><a class="hub-section-title" href="{{ comparison.signpost }}">{{ comparison.title }}</a></h3>
     {% else %}
       {% include "engine/comparison_press.html" with press_sort=comparison.sort press_class="hub-section-title" press_label=comparison.title press_in_heading=True %}
     {% endif %}

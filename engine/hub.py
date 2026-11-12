@@ -125,7 +125,8 @@ class SectionState(NamedTuple):
     the hub shows beside it, if any, and `side_card` the authored sentence of a section the hub draws as a side card, or
     None for one it lists (ticket 49a), with `side_card_lead` the bold line above it, if it has one (ticket 95).
     `next_step` is the authored heading and sentence the hub's next step shows while
-    this section is the next step, or None for a section without them (ticket 49b)."""
+    this section is the next step, or None for a section without them (ticket 49b). `shows_status` is False for a part
+    that is all its section's work, whose row shows no pill of its own: its section's says it (ticket 106)."""
 
     id: str
     title: str
@@ -141,6 +142,7 @@ class SectionState(NamedTuple):
     side_card_lead: str | None = None
     next_step: NextStepWording | None = None
     tone: str | None = None
+    shows_status: bool = True
 
     @property
     def is_locked(self):
@@ -213,8 +215,9 @@ def _coach_wait_wording(answer):
 class Hub(NamedTuple):
     """✨ A participant's whole hub: their track's sections, the one to do next, how many of the sections it
     counts (`counted_sections`) are complete, out of `total`, and the first section waiting on the coach, as a
-    `CoachWait`, if any. With no next step, `waiting_on_answers` is the first section passed over because its only open
-    work waits on the comparison, and so on other people's answers (ticket 68), or None."""
+    `CoachWait`, if any. With no next step, `waiting_on_answers` is the first section passed over because it waits on
+    other people's answers: its only open work waits on the comparison (ticket 68), or it is locked by nothing but
+    observers yet to answer (ticket 106); or None."""
 
     sections: tuple
     next_step: SectionState | None
@@ -594,11 +597,14 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None):
     blocks = {block["id"]: block for section in sections for block in section["blocks"]}
     open_states = [state for state in states if state.status in (NOT_STARTED, IN_PROGRESS)]
     waiting = {
-        state.id for state, section in zip(states, listed) if _waits_only_on_comparison(section, answers, blocks)
+        state.id
+        for state, section in zip(states, listed)
+        if (state.status in (NOT_STARTED, IN_PROGRESS) and _waits_only_on_comparison(section, answers, blocks))
+        or (state.is_locked and _shut_only_by_answers(section, answers, completed, sections, moved_past))
     }
     next_step = next((state for state in open_states if state.id not in waiting), None)
     states = [state._replace(is_next=state is next_step) for state in states]
-    waiting_on_answers = next((state for state in open_states if state.id in waiting), None)
+    waiting_on_answers = next((state for state in states if state.id in waiting), None)
     coach_wait = next(
         (
             CoachWait(
@@ -633,12 +639,32 @@ def _waits_only_on_comparison(section, answers, blocks):
     return all(waits_on_comparison(blocks.get(clause["block"], {}), answers) for clause in clauses)
 
 
+def _shut_only_by_answers(section, answers, completed, sections, moved_past):
+    """✨ Whether a section waits on nothing but observers yet to answer (ticket 106): the sections it requires are done,
+    it is no part still waiting on its section, and each of its opening conditions that fails is `observers_answered`,
+    as *Whatever You Do*'s Section 2's is. The hub's next step passes over it, as over a section whose only open work
+    waits on the comparison (ADR 0019)."""
+    failing = _failing_opening_clauses(section, answers)
+    return (
+        bool(failing)
+        and all(clause["type"] == "observers_answered" for clause in failing)
+        and _requires_met(section, completed)
+        and _waiting_on(section, completed, answers, sections, moved_past) is None
+    )
+
+
 def _waits_on_coach(section, answers):
     """✨ Whether a section not yet opened has a `coach_accepted` opening condition that fails (ADR 0019)."""
+    return any(clause["type"] == "coach_accepted" for clause in _failing_opening_clauses(section, answers))
+
+
+def _failing_opening_clauses(section, answers):
+    """✨ The opening conditions of a section not yet opened that fail, in the order authored; none once it has opened,
+    since that is stored and they are never asked again (ADR 0019)."""
     if _has_opened(section, answers):
-        return False
+        return []
     clauses = section.get("opens_when", {}).get("clauses", [])
-    return any(clause["type"] == "coach_accepted" and not clause_passes(clause, answers) for clause in clauses)
+    return [clause for clause in clauses if not clause_passes(clause, answers)]
 
 
 def _state(section, answers, completed, role, moved_past, sections):
@@ -657,7 +683,32 @@ def _state(section, answers, completed, role, moved_past, sections):
         side_card=text_for(section["side_card"]["sentence"], role) if "side_card" in section else None,
         side_card_lead=text_for(section["side_card"]["lead"], role) if "lead" in section.get("side_card", {}) else None,
         next_step=_next_step_wording(section, role),
+        shows_status=not _is_all_its_sections_work(section, sections),
     )
+
+
+def _is_all_its_sections_work(part, sections):
+    """✨ Whether a part of a section is all that section asks, as `works_through_its_parts` says of the section."""
+    parent = next((section for section in sections if section["id"] == part.get("part_of")), None)
+    return parent is not None and works_through_its_parts(parent, sections)
+
+
+def works_through_its_parts(section, sections):
+    """✨ Whether a section's work is all in its parts among `sections`: it has one, and none of its own blocks takes an
+    answer, as *Whatever You Do*'s Section 1, whose strengths evaluation is all it asks (ticket 106). Its parts then
+    show no status of their own on the hub and in the sidebar, the section's saying it, and its finish waits for them
+    (`finish_waits`). The faithful port's Section 1, with a reading to confirm and a summary to write, is not one."""
+    has_parts = any(other.get("part_of") == section["id"] for other in sections)
+    return has_parts and not _interactive_blocks(section)
+
+
+def finish_waits(section, sections, completed):
+    """✨ Whether a section's finish is not offered yet: its work is all in its parts (`works_through_its_parts`) and one
+    of them is not complete, so there is nothing yet to finish (ticket 106). It is not there at all, rather than greyed
+    or refused (sprint 3c), the section's page still saying what to do."""
+    if not works_through_its_parts(section, sections):
+        return False
+    return any(other.get("part_of") == section["id"] and other["id"] not in completed for other in sections)
 
 
 def _next_step_wording(section, role):
