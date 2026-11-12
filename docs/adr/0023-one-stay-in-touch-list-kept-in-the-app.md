@@ -1,10 +1,12 @@
 ---
-status: accepted
+status: accepted, partly superseded by ADR 0027
 ---
 
 # One "Stay in touch" list, kept in the app
 
 The content owner asked for three sign-ups on the homepage: a newsletter, general contact and churches' interest, the last the most important. They are one email field, "Stay in touch", whose sentence covers all three, and its addresses are kept in the app's database, where the operator sees and exports them in the admin. Nothing is sent from the app: the newsletters go out from whatever tool the list is exported to, and that tool carries the unsubscribe link. Submitting the form is the consent, since the form has no other purpose, so there is no tickbox.
+
+Partly superseded: the box now asks what the visitor wants, at least one of their church on the waitlist, news by email and to be contacted, and keeps each choice with when it was ticked (ADR 0027), so there is a tickbox for each. The one list, kept in the app and sent from nowhere, stands.
 
 > ✨ Drafted with AI assistance.
 

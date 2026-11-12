@@ -161,7 +161,7 @@ def _choice_schema(document, block, role):
 CHOICE = AnswerKind("choice", _choice_schema, "Choose one of the options.", _text_from_form)
 
 
-def _choices_schema(document, block):
+def _choices_schema(document, block, role):
     """✨ The identifiers of any of the block's own options, each at most once, never their labels. None at all takes
     the answer back: an empty list counts as unanswered everywhere."""
     return {"type": "array", "uniqueItems": True, "items": {"enum": [option["id"] for option in block["options"]]}}

@@ -140,8 +140,11 @@
           <li><b>Raise up coaches</b><span>Equip wise people in your church to walk alongside others, with a short briefing pack.</span></li>
           <li><b>Free for participants</b><span>No cost to the people you send through it.</span></li>
         </ul>
-        {# ✨ Leads to the "Stay in touch" form below (ticket 74), the churches' waitlist being its list. #}
-        <div class="ch-cta"><a class="pill" data-magnetic href="#stay-in-touch">Join the waitlist <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a></div>
+        {# ✨ Opens the "Stay in touch" form below (ticket 74) with the waitlist ticked by the server (ticket 111). #}
+        <div class="ch-cta">
+          <a class="pill" data-magnetic data-stay-choice="waitlist" href="{% url 'home' %}?stay=waitlist#stay-in-touch">
+            Join the waitlist <span class="pill-arrow"><svg><use href="#arrow"/></svg></span></a>
+        </div>
       </div>
     </section>
 
@@ -211,7 +214,14 @@
     <footer class="panel hp-footer">
       <div class="cols">
         <div><a class="brand" href="#top" aria-label="Whatever You Do home">{% include "engine/logo.html" %}</a><span>“Whatever you do, work at it with all your heart, as working for the Lord.” Colossians 3:23 (NIV)</span></div>
-        <nav class="foot-links" aria-label="Footer"><a href="#how">How it works</a><a href="#impact">Impact</a><a href="#churches">For churches</a><a href="#stay-in-touch">Contact us</a><a href="{% url 'privacy' %}">Privacy</a></nav>
+        {# ✨ "Contact us" opens "Stay in touch" with being contacted ticked by the server (ticket 111). #}
+        <nav class="foot-links" aria-label="Footer">
+          <a href="#how">How it works</a>
+          <a href="#impact">Impact</a>
+          <a href="#churches">For churches</a>
+          <a data-stay-choice="contact" href="{% url 'home' %}?stay=contact#stay-in-touch">Contact us</a>
+          <a href="{% url 'privacy' %}">Privacy</a>
+        </nav>
       </div>
       <div class="hp-footer-links">
         <span>© 2026 Whatever You Do</span>

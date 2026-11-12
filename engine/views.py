@@ -191,9 +191,12 @@ def home(request):
 
     Its "Stay in touch" form posts here (ticket 74): with htmx the section alone comes back to take the form's place,
     thanks or refusal, so there is no new page; without, the homepage comes back opened at the section, by the
-    fragment in the form's action."""
-    stay = stay_in_touch.subscribe(request.POST) if request.method == "POST" else stay_in_touch.StayInTouch()
-    status = 400 if stay.refusal else 200
+    fragment in the form's action. A link to the form may name a choice to tick in it (ticket 111)."""
+    if request.method == "POST":
+        stay = stay_in_touch.subscribe(request.POST)
+    else:
+        stay = stay_in_touch.opened_with(request.GET)
+    status = 400 if stay.refused else 200
     if request.method == "POST" and _is_htmx(request):
         return render(request, "engine/stay_in_touch.html", {"stay": stay}, status=status)
     begin = reverse("hub") if request.user.is_authenticated else reverse("account_signup")
