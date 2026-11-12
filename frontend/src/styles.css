@@ -5423,6 +5423,9 @@ body > svg[aria-hidden="true"] {
   justify-items: center;
 }
 
+/* ✨ The overview's heading balances its lines, as ticket 90 meant it to: `.mission .in` balances, but a rule of its
+   own here said `pretty`, which only keeps a lone word off the last line, so it broke into a wide line over a short
+   one (the content owner, 30 Oct; ticket 110). main.js wraps its words in spans, which balancing is unaffected by. */
 .reveal {
   font-family: var(--font-heading);
   font-weight: 300;
@@ -5431,7 +5434,7 @@ body > svg[aria-hidden="true"] {
   letter-spacing: -0.015em;
   color: var(--ink);
   margin: 0;
-  text-wrap: pretty;
+  text-wrap: balance;
 }
 
 .reveal .w,
@@ -5860,14 +5863,15 @@ body > svg[aria-hidden="true"] {
   width: 40%;
 }
 
-.s-btn {
-  justify-self: start;
-  padding: 9px 15px;
-  border-radius: 999px;
-  background: var(--green);
-  color: var(--green-ink);
-  font-size: 12.5px;
-  font-weight: 600;
+/* ✨ Steps 3 and 4's photograph in place of a drawn screen (the content owner, 30 Oct): the same rounded frame, with
+   no window bar, in a fixed shape so the panel does not change height from step to step. */
+.shot-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  max-height: 420px;
+  object-fit: cover;
+  object-position: center 55%;
 }
 
 .s-small {
@@ -6007,14 +6011,17 @@ body > svg[aria-hidden="true"] {
   text-shadow: 0 1px 8px var(--black-45);
 }
 
+/* ✨ The shared arrow points up and to the right, so a turn of 135 degrees points it straight down (the content owner,
+   30 Oct, who saw it point down and to the right at 90). The nudge on hover is straight down too, so it moves in the
+   page's direction and not along the arrow's own, which a rotated translate would. */
 .learn-more svg {
   width: 20px;
   height: 20px;
-  transform: rotate(90deg);
+  transform: rotate(135deg);
 }
 
 .learn-more:hover svg {
-  transform: rotate(90deg) translateX(3px);
+  transform: translateY(3px) rotate(135deg);
 }
 
 .imp-quote {
@@ -6602,6 +6609,11 @@ body > svg[aria-hidden="true"] {
   line-height: 1.35;
   color: var(--on-dark);
   text-wrap: pretty;
+}
+
+/* ✨ The quote's three paragraphs (the content owner, 30 Oct): a line's gap between them, none above the first. */
+.story-copy blockquote p + p {
+  margin-top: 0.8em;
 }
 
 .story-sec [data-reveal] .w {

@@ -337,7 +337,24 @@ Nothing yet.
 
 ### The homepage
 
-Nothing yet.
+From your 30 October feedback on the homepage (the last four pictures of "Friday 30th - updates").
+
+- **"Learn more":** its arrow now points straight down. It pointed down and to the right.
+- **The overview's heading:** the words are the same, but the two lines are now even in length, **"Whatever You Do is a pathway / for discerning your purpose."**, on a wide screen and on a phone. Before, the first line was long and the second short.
+- **The testimonial:** the quote is now three paragraphs, with a gap between them, breaking where you marked: after "...the choices weren't obvious at all." and after "...some of the Whatever You Do questions." Not a word of it has changed.
+- **How it works, step 3** ("Make sense of your story") now says the work is in a workbook:
+  - Before: "Work through guided prompts on your life, your work and the moments that have shaped you, at your own pace, and notice the themes that run through them."
+  - Now: **"Work through a workbook of guided prompts on your life, your work and the moments that have shaped you, on paper and at your own pace, and notice the themes that run through them."**
+- **How it works, step 4** ("Explore a sense of calling") does the same:
+  - Before: "Draw together your gifts, experience and reflections, put your sense of calling into words, and identify practical next steps."
+  - Now: **"In two more workbooks, draw together your gifts, experience and reflections, put your sense of calling into words, and identify practical next steps."**
+- **Steps 3 and 4's pictures:** a photograph in place of the drawn screens ("The shape of your life" and "Putting your calling into words", each with its "Download Workbook (PDF)" button). Steps 1, 2 and 5 keep their drawn screens. The two photographs are stand-ins, a notebook with a pen and a cup of coffee, and an open Bible beside a lake, neither with people in it. The final photographs, of people journalling, are still to be picked, and will be shown to you. The credits page lists both: **"Photograph of a notebook, a pen and a cup of coffee, by Andres Molina on Unsplash."** and **"Photograph of an open Bible on a jetty at sunrise, by Aaron Burden on Unsplash."**
+- **What a screen reader says for each step's picture:** nothing was said before, as the drawn screens were hidden. Now each has a description, which is not shown on the page:
+  - Step 1: **"The strengths evaluation: a card reading "Casting a compelling vision that gets people on board", to be placed in one of seven buckets, from "Definitely not me" to "Real strength"."**
+  - Step 2: **"The Five trusted voices page: three of five people invited and two of five answered, with a line saying answers are still needed from one more person."**
+  - Step 3: **"A notebook and a pen on a table beside a cup of coffee, ready for writing in"**
+  - Step 4: **"An open Bible on a wooden jetty at sunrise, beside a still lake"**
+  - Step 5: **"A letter to your future self: an empty box to write in, beginning "Dear me,"."**
 
 ### Stay in touch with a choice
 

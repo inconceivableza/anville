@@ -6,8 +6,6 @@
 
 **Status:** resolved
 
-**Handed over:** the last criterion, about a file that is untracked in the main checkout, to the developer, at the merge
-
 **Sprint:** 3d (end not yet set)
 
 **Spec:** Sprint 3d: the code review and the 30 October feedback; Out of Scope; Sprint 3c: the content owner's feedback
@@ -16,7 +14,7 @@
 - [x] The sprint 3c wording sheet says, at its top, that the wording changes document supersedes it, and tickets 87 and 102 each carry a line where what was built differs from a ticked criterion
 - [x] `AGENTS.md` names the feedback document, its images folder and the checklist as untracked, and the wording changes document as kept in the repository
 - [x] The glossary has the sealed letter, the wizard's welcome and "Haven't seen this" (through `/domain-modeling`), and withdrawing through an expired link has an ADR of its own in place of ADR 0005's in-place amendment
-- [ ] The checklist ticks Priority 2 (the letter) and lists the 30 Oct items with the ticket each went to (handed over to the developer, at the merge)
+- [x] The checklist ticks Priority 2 (the letter) and lists the 30 Oct items with the ticket each went to
 
 **Context**
 

@@ -213,7 +213,7 @@ Every passage is from a translation the document declares under `translations`, 
 
 ## Answers
 
-Each answer saves by itself as the participant types or chooses, and only that answer is written. A block type is defined in one place, `engine/document/blocks.py`: its authored text, what it captures and whether an answer to it puts its section in progress all follow from that entry. Answers are checked on the server against their block, and a participant signing in anywhere sees them all. Whether a response is test data is recorded on the server (`Response.is_test_data`), never set by a browser.
+Each answer saves by itself as the participant types or chooses, and only that answer is written. A block type is defined in one place, `engine/document/blocks.py`: its authored text, what it captures and whether an answer to it puts its section in progress all follow from that entry, and so do the rules for showing it that the views read, such as where a link to it lands, whether it saves without saying "Saved" and the words on a button leading on to it. Answers are checked on the server against their block, and a participant signing in anywhere sees them all. Whether a response is test data is recorded on the server (`Response.is_test_data`), never set by a browser.
 
 A `long_text` block may carry a `placeholder`: ghost text in the empty box, such as the letter's "Dear me,". It is a hint only; the prompt stays the box's label, and the placeholder is never saved as the answer.
 

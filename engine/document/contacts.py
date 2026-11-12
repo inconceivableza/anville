@@ -84,10 +84,10 @@ def voices_card(block, card, invited, answered, minimum, frozen=False, withdrew=
     The tag reads the card's section (`card`, as the hub sees it) first: locked, it says so. While answer collection is
     `frozen`, it is complete and says no more answers are added (ticket 55). While fewer of the `needed` people than
     that have a working link, it says how many more are needed, unless the section is not started, when it says so;
-    once complete it asks again after a removal, while the card stays complete (ticket 81, in place of ticket 51a's
-    "Complete"), and says when the comparison shows only while fewer than `minimum` have answered. Then it follows the
-    answers: links issued with none sent, some sent while fewer than `minimum`, then all of them once everyone with a
-    working link has sent, or else enough (fix-2)."""
+    once complete it asks again after a removal, while the card stays complete (ticket 81), and says when the
+    comparison shows only while fewer than `minimum` have answered. Then it follows the answers: links issued with none
+    sent, some sent while fewer than `minimum`, then all of them once everyone with a working link has sent, or else
+    enough (fix-2)."""
     tag, line = _voices_tag(card, needed(block), invited, answered, minimum, frozen)
     return {
         "tag": tag,

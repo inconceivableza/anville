@@ -222,7 +222,7 @@ class Response(models.Model):
                 Response.objects.filter(pk=self.pk).update(collection_frozen_at=None)
 
     def clear_sort(self, block_id):
-        """✨ The retake (29 Oct; fix-19's, once demo only): take back the participant's sort for `block_id` and all
+        """✨ The retake (29 Oct): take back the participant's sort for `block_id` and all
         worked out from it, so they can sort again from the start. Its answer and result go, and the tie-break's answers
         and re-weighted result with it. What observers sent goes too, and collection opens again, so the people they
         invited, whose links keep working, can send afresh and are reminded as before they sent (ADR 0016); nobody

@@ -173,6 +173,13 @@ def checklist(section, answers, role="participant", page=None):
     return list(met.items())
 
 
+def messages_after_a_press(document):
+    """✨ Whether the document's gate messages wait for a press (ticket 83): every way on is then offered, never
+    disabled, and its unmet messages show only once a press has been refused. Off, each requirement is listed from the
+    start and ticked once met."""
+    return document.get("messages_after_a_press", False)
+
+
 def clause_passes(clause, answers):
     """✨ Whether one clause holds, as the gate asks of each of its clauses and the hub of a section's opening
     conditions to tell which it waits on."""
