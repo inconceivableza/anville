@@ -200,7 +200,7 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 
 ### Ticket 97: Lock notes on "Locked" (rebuild the frontend; no need to load the pathway again or start a new participant)
 
-- On the hub, with Before we begin done and nothing else: no locked section has a line under its title. Each "Locked" pill looks as before, at the right of its row; hovering it shows its note in a small box below it ("Opens once you've completed Section 1." on Section 2), which stays while the pointer moves into the box and goes once it leaves both.
+- On the hub, with Before we begin done and nothing else: no locked section has a line under its title. Each "Locked" pill looks as before, at the right of its row; hovering it shows its note in a small box below it ("Opens once you've completed Section 1." on Section 2; "…, and enough of the people you invited have answered." since ticket 106), which stays while the pointer moves into the box and goes once it leaves both.
 - Keyboard only: Tab reaches each "Locked", with a focus ring, and its note shows while it has the focus; Escape closes the note, the focus staying on "Locked"; Tab on, and the next one's note shows.
 - In the sidebar ("Your pathway"), a locked entry's "Locked" shows its note floating just below the pill, as on the hub, on hover, focus or a tap (fix-7). With the note open, Escape closes the note and leaves the sidebar open; a second Escape closes the sidebar.
 - Without JavaScript (switched off in the developer tools): hovering or tabbing to "Locked" still shows the note, and moving away or tabbing on closes it.
@@ -216,7 +216,22 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 
 ### sprint-3c-r3-fix-1: Part rows' pills and arrows line up with their section's (rebuild the frontend)
 
-- On the hub at a wide screen (about 1280px), after Section 1: the Strengths evaluation's "Complete" pill and arrow end at the same right edge as Section 1's, and "How others see you"'s as Section 2's, not a few pixels left of them.
+- On the hub at a wide screen (about 1280px), after Section 1: the Strengths evaluation's "Complete" pill and arrow (its arrow alone in *Whatever You Do* since ticket 106) end at the same right edge as Section 1's, and "How others see you"'s as Section 2's, not a few pixels left of them.
+
+### Ticket 106: Sections 1 and 2 on the hub and their pages
+
+Rebuild the frontend, load *Whatever You Do* again and use a participant started after that (one started before keeps the version they began on). Wide screen and about 375px.
+
+- Before we begin done: Section 1's row has one pill, "Not started"; the Strengths evaluation's row within it has none, only its title, "Activity" and its arrow. The sidebar the same. Once the sort is begun Section 1 reads "In progress", and "Complete" once finished; the Strengths evaluation never shows a pill of its own. The faithful port's Strengths assessment keeps its pill.
+- Section 1's page before the sort: the passages, "Your activity" and the Strengths evaluation card, and nothing below the card: no "I've finished Section 1", no line, no greyed button. Once the sort is in, the card reads "You've completed the strengths evaluation…" and "I've finished Section 1" is below it, as on the results page. The faithful port's Section 1 offers its "Mark complete" as before.
+- Before Section 1 is finished, Section 2's "Locked" note reads "Opens once you've completed Section 1, and enough of the people you invited have answered."; finished, with a coach chosen and three people given links, "Opens once enough of the people you invited have answered.", on the hub and in the sidebar, and "How others see you" within it is locked with it. The next step is Section 3, "The shape of your life". Typing `/sections/others/` or `/results/strengths-sort/comparison/` lands on the hub.
+- Finish Section 3 too: the next step reads "Waiting on answers" / "Section 2's Workbook 1 opens once at least 3 of the people you invited have answered and you've seen how others see you.", with a "Five trusted voices" button to its page.
+- Two answer (their links in private windows): still locked. A third answers: Section 2 opens ("Not started"), and the next step reads "How others see you", "Enough of the people you invited have answered…", a green "Compare with how others see you →" and under it "Everyone you invited has answered. Once you look, you can't add anyone else." (with a fourth person invited, "3 of the 4 people you invited have answered. Once you look, …"), in the panel's light text, easy to read over its photo.
+- Section 2's card: the same sentence is the line under its two buttons, in place of "Ready to view", in slightly larger, darker type than a status line. On the hub, "How others see you"'s row, the sidebar's entry and the Five trusted voices card's "How others see you →" each open Section 2 at that card and press nothing (the row still washes on hover, with its arrow).
+- Press "Compare with how others see you →", on the card or in the next step: the comparison opens at once, with no "Before you look". Back on Section 2 the card reads "Viewed" and is lime; the row, the sidebar's entry and the voices card's pill now open the comparison directly. With JavaScript turned off, the same. The faithful port's results page still opens "Before you look".
+- Section 2's page: below Workbook 1's download, the rule, then "When you've finished Workbook 1, come back here to say so." and "I've finished Section 2" under it, clearly apart from the download; the workbook's text ends "…one for each of Sections 2 to 5.". Once Section 2 is finished, the line goes with the button.
+- An observer withdraws, leaving two: Section 2 stays open.
+- A long pill wraps within its place: from the results page, "Retake the strengths evaluation" and "Delete and retake", then look at the hub before sorting again. The comparison row's "Finish your strengths evaluation to compare." wraps over two or three lines at the right of the row, centred, never running over "How others see you", at a wide screen and at about 375px; the other rows' pills still end at the same right edge.
 
 ## The participant's pages in the hub's look (ticket 53b; each page signed in, at a wide screen and at about 375px)
 
@@ -236,7 +251,7 @@ Page by page:
 - **The card sort and fine-tuning** (Section 1's strengths evaluation): the thin progress bar, the card and the five buckets, "↩ Undo last", the all-sorted screen with its counts, and the sliders look as they did. They now sit on the cream inside the frame. At phone width the buckets stack one above another and nothing scrolls sideways, even as a card flies off. The observer's sort, in a private window, looks the same but stays plain cream, with no frame.
 - **The tie-break's pairs** (a participant tied on a framework): the pairs sit centred in the frame, and each option fills the column. At phone width the options are easy to tap.
 - **Results:** each framework is a card. Each construct's name sits on the left and its standing on the right, with a gap between them even at phone width, where a long name wraps rather than running into its standing. Every drawing, the generalist's box and a framework's tie-break box are as D5-59b left them, each construct in its standing's colour (fix-16). Centred below: in *Whatever You Do*, Section 1's finish with an outline button beside it (ticket 88); in the faithful port, "Compare with how others see you →".
-- **"Before you look"** (the freeze warning): its pale green box, then "Compare with how others see you →", centred.
+- **"Before you look"** (the freeze warning): its pale green box, then "Compare with how others see you →", centred. The faithful port's alone since ticket 106: *Whatever You Do* has the warning beside the press.
 - **The comparison:** the illustrative note is amber with its right-hand corners rounded. "You" is green and "Others" blue as before. The largest gaps and the questions to reflect on are cards, with no way back at the foot (ticket 96). At phone width each construct stacks: its name, then the drawing, then the words.
 - **Removing a contact** (without JavaScript, a person's "Remove" on the contact list): framed like the rest, with its form and buttons as before.
 - **Credits:** signed in, framed with the header; signed out, plain cream with no frame and no header.
@@ -248,7 +263,7 @@ Rebuild the frontend. No need to load the pathway again: a participant started o
 
 - In *Whatever You Do*, each of these opens with an outline button above its title, the first thing on the page, and nowhere else on it a way back: Section 1, Section 2 and a section on paper ("← Back to the hub"); Walk with a coach and Five trusted voices ("← Back to the hub", a button, not the quiet grey link it was); the Strengths evaluation before the sort ("← Back to How you've been designed – your strengths"); the results ("← Back to How you've been designed – your strengths"); and the comparison ("← Back to Your gifts, seen together" once Section 1 is finished, Section 1's button before then). Each lands where it says.
 - The results page, once Section 1 is finished, has no "Back to the hub" below the results; the comparison has no "← Return to …" at its foot and no "← Back to results" at its top (once it shows, it ends with a green "On to your reflection →", fix-18; it is never open while Section 2 is locked, fix-19).
-- "Before you look" (its button now leads to the hub, fix-21), the retake page, removing a contact without JavaScript, a refusal page and the credits page (signed in) have their way back as the same button, leading where it did.
+- "Before you look" (the faithful port's alone since ticket 106; its button now leads to the hub, fix-21), the retake page, removing a contact without JavaScript, a refusal page and the credits page (signed in) have their way back as the same button, leading where it did.
 - Walk with a coach has no "Back to the hub" in its lower button row, whatever the screen (fix-13); the button at the page's top is its way back.
 - At about 375px the long "← Back to How you've been designed – your strengths" wraps inside its button, with no sideways scroll. With JavaScript turned off, every one of these buttons works the same.
 
@@ -377,7 +392,7 @@ The homepage (`/`):
 - In the faithful port, before Section 1's reading is confirmed, the Strengths assessment shows "Locked" and is not a link, on the hub and in "Your pathway", and the hub says "Opens from How you've been designed, once you've read the passages."; typing `/sections/strengths/` lands on the hub. Once the reading is confirmed, it opens. In *Whatever You Do* it opens with Section 1, which has nothing to confirm (ticket 87).
 - On the hub, the Strengths evaluation sits inside Section 1's card, indented and quieter, on a line of its own; in "Your pathway" it is indented under Section 1. Both read well at phone width.
 - A screen reader announces the Strengths evaluation as a list nested within Section 1's entry.
-- Before the sort, the Strengths evaluation's page starts with "← Back to How you've been designed – your strengths" and has no "Mark complete". Once the sort is in, its chip reads "Complete" on the hub, in the sidebar and on Section 1's card.
+- Before the sort, the Strengths evaluation's page starts with "← Back to How you've been designed – your strengths" and has no "Mark complete". Once the sort is in, its chip reads "Complete" on the hub, in the sidebar and on Section 1's card. (Since ticket 106 *Whatever You Do*'s has no chip of its own on the hub or in the sidebar, Section 1's saying it.)
 - Once the sort is in, opening the Strengths evaluation from the hub, from "Your pathway", or by typing `/sections/strengths/` opens your results (or, with tie-break pairs still to answer, the next pair); the page saying only "Your sort is in. See your results" never shows. Same in both pathways.
 - The results page's "← Back to How you've been designed – your strengths" lands on Section 1 (the faithful port's "← Back to Section 1: How you've been designed"). The faithful port's comparison has the same at its top; *Whatever You Do*'s always leads to Section 2, the comparison opening only with it (ticket 96, fix-19).
 - On the hub, Section 1 and Section 6 read "How you've been designed – your strengths" and "A letter to your future self", with no "Section 1: " or "Section 6: " before them, beside their "01" and "06".
@@ -524,7 +539,7 @@ The homepage (`/`):
 ## A link to another section (Section 1's Strengths evaluation card)
 
 - The card reads as a way somewhere else: the Strengths evaluation's title, the text, the "Open the strengths evaluation →" button, and no status pill after it.
-- In the faithful port, before the sort is in, nothing follows the card: no reflection and no "Mark complete". After the sort, coming back to Section 1 shows the reflection. In *Whatever You Do* the card is the end of Section 1, before its "I've finished Section 1", and the reflection is Section 2's (ticket 87).
+- In the faithful port, before the sort is in, nothing follows the card: no reflection and no "Mark complete". After the sort, coming back to Section 1 shows the reflection. In *Whatever You Do* the card is the end of Section 1, before its "I've finished Section 1" (there only once the sort is in, ticket 106), and the reflection is Section 2's (ticket 87).
 - Keyboard only: Tab reaches the button, its focus is visible, and Enter opens the Strengths evaluation.
 - Screen reader: Tab to the button. It is a link styled as a button, since it goes to another page, so VoiceOver reads "Open the strengths evaluation, right arrow, link" and tells you how to follow it. Control-Option-Right arrow then reads the status.
 - Phone width: the card's text and button wrap, and no status pill appears (ticket 89).
@@ -532,6 +547,8 @@ The homepage (`/`):
 - Phone width: the finished sentence and the "View my results →" button wrap within the card.
 
 ## How others see you (ticket 67a; Section 2's card, above its reflection since ticket 87; after `migrate`, rebuild the frontend and load the pathway again, with a participant started after that)
+
+Changed by ticket 106 (above, under the hub's layout): Section 2 also waits for three of the people invited to answer, so below three the card is seen only once a withdrawal leaves fewer after it has opened; and with three, its line is the warning in place of "Ready to view", and its press opens the comparison at once, with no "Before you look".
 
 - Section 2 opens only once Section 1 is finished, which needs the sort. There, the card sits above the reflection, drawn as the Strengths evaluation card is: its title, the "Compare with how others see you →" button, then its status as a plain line of small grey text, not a pill.
 - With fewer than three observers answered, the chip says how many of three have answered, "2 of 3 answered" with two in (ticket 81). The card's "Compare with how others see you →" is greyed and opens nothing (fix-8); the hub's row and the sidebar's entry open the comparison's waiting page instead (fix-16, below), and back on Section 2 the chip still says "2 of 3 answered".
@@ -634,6 +651,8 @@ The homepage (`/`):
 
 Rebuild the frontend. No need to load the pathway again: a participant started on ticket 87's version will do.
 
+Changed by ticket 106: Section 1's own page shows its "I've finished Section 1" only once the sort is in; Section 2 is locked until three people have answered, so its card's phrases below three show only after a withdrawal; and with three, its press opens the comparison at once, the warning beside it.
+
 - *Whatever You Do*, the sort in and Section 1 not yet finished: below the results, centred, a green "I've finished Section 1" alone (fix-10 took the comparison and invitation buttons off the page; they are Section 2's card's). Pressing "I've finished Section 1" lands on the hub, with Section 1 "Complete". Section 1's own page still has its "I've finished Section 1".
 - Back on the results page: no button below the results; the way back is the button at the top (ticket 96).
 - Give three people links: the phrase under "Invite people who know you →" on Section 2's card reads "0 of 3 answered", then "2 of 3 answered" once two have answered (their links in private windows). The button opens Five trusted voices.
@@ -643,7 +662,7 @@ Rebuild the frontend. No need to load the pathway again: a participant started o
 
 ### Fix-3: The comparison's other buttons below the minimum
 
-Changed by fix-8 (below): Section 2's card and the results page now show both buttons; only the hub's row, the sidebar's entry and the Five trusted voices card follow this. Changed by fix-16 (below): the row and the sidebar's entry now open the comparison's waiting page, not Five trusted voices.
+Changed by fix-8 (below): Section 2's card and the results page now show both buttons; only the hub's row, the sidebar's entry and the Five trusted voices card follow this. Changed by fix-16 (below): the row and the sidebar's entry now open the comparison's waiting page, not Five trusted voices. Changed by ticket 106: the row is locked with Section 2 until three have answered, so it shows a count below three only after a withdrawal once Section 2 has opened; with three, until the comparison is looked at, the row, the sidebar's entry and the voices card's "How others see you →" open Section 2 at its card rather than pressing on.
 
 Rebuild the frontend. No need to load the pathway again.
 
@@ -654,7 +673,7 @@ Rebuild the frontend. No need to load the pathway again.
 
 ### Fix-8: The comparison's two buttons, on Section 2's card
 
-Changed by fix-10 (below): the results page no longer has either button, and the card's order is swapped.
+Changed by fix-10 (below): the results page no longer has either button, and the card's order is swapped. Changed by ticket 106: the card is reached once three have answered (below three, only after a withdrawal), and its green press opens the comparison at once, the warning beside it.
 
 Rebuild the frontend. No need to load the pathway again.
 
@@ -669,12 +688,14 @@ Rebuild the frontend. No need to load the pathway again.
 
 - *Whatever You Do*, the sort in, Section 1 not yet finished: the results page has only "I've finished Section 1" below the results, with no "Compare with how others see you →", no "Invite people who know you →" and no count phrase. The back button at the top is still there. Phone width too.
 - Section 2, fewer than three answered, the comparison not yet viewed: the "How others see you" card is on a plain cream fill with a grey edge, not lime. It shows "Invite people who know you →" on the left, the grey "Compare with how others see you →" on the right and "Still need answers from 3 people who know you" beneath.
-- Have three answer, press "Compare with how others see you →" and confirm: back on Section 2 the card turns lime. Before the press, "Ready to view" leaves it plain.
+- Have three answer, press "Compare with how others see you →" (and confirm, before ticket 106): back on Section 2 the card turns lime. Before the press, "Ready to view" leaves it plain.
 - Section 2's reflection, comparison not yet viewed: "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer." is a pale band at the top of the field's own bordered box, with the faded field beneath it inside the same box, not a loose line between the card above and the field below. Once the comparison is viewed, the box and band are gone and the field is as before. Phone width: the box fits with no sideways scroll.
 
 ### Fix-16: The comparison row opens the comparison, which waits below the minimum
 
 No rebuild and no pathway reload needed.
+
+Changed by ticket 106: the row is locked with Section 2 until three have answered, so the waiting page opens from it only once a withdrawal leaves fewer after Section 2 has opened; with three, until the comparison is looked at, the row opens Section 2 at its card.
 
 - *Whatever You Do*, the sort in, three people with links and two answered: the hub's "How others see you" row reads "2 of 3 answered"; its title opens "How others experience you", which shows "Not enough answers yet", "2 of 3 answered", "You'll see how others see you once 3 people have answered." and a green "Invite people who know you →", and nothing else: no "Comparing your strengths evaluation…" line, no "You need at least…", no dots, words or percents. The button opens Five trusted voices.
 - With fewer than three given links, the page says how many answers are still needed, counting answers, not links ("Still need answers from 3 people who know you" with one link out and nobody answered; "…from 1 person who knows you" with two answered), in place of "2 of 3 answered", as the row's tag does. Five trusted voices' own tag still counts links ("2 more needed").
@@ -695,7 +716,7 @@ No rebuild and no pathway reload needed.
 ### Fix-24: Section 2 is in progress once its comparison is viewed (no rebuild needed)
 
 - With Section 1 complete and fewer than three people answered, open "How others see you" (the waiting page), then go back to the hub: Section 2 still reads "Not started" on the hub and in the sidebar.
-- With three or more answered, press "Compare with how others see you →" and stop at "Before you look" without going on: Section 2 still reads "Not started".
+- With three or more answered, press "Compare with how others see you →" and stop at "Before you look" without going on: Section 2 still reads "Not started". (Since ticket 106 there is no "Before you look" in *Whatever You Do*: the press opens the comparison, and Section 2 then reads "In progress".)
 - Go on to the comparison, so that its card reads "Viewed", and return to the hub: Section 2 reads "In progress" on its hub row, in the sidebar, and in the next-step panel where it names Section 2, before the reflection is written.
 - Write the reflection and finish Section 2: it reads "Complete", as before.
 - The faithful port, with a fresh participant: its sections' statuses are as before.
@@ -703,7 +724,7 @@ No rebuild and no pathway reload needed.
 ### Fix-23: The comparison's row on the hub is one link like the others (rebuild the frontend; phone width too)
 
 - With Section 2 open and fewer than three people answered, hover "How others see you" under Section 2 anywhere on its row, not only the title: the whole row washes pale green, as the Strengths evaluation's row does, and the `→` at its right turns green. Click anywhere on it: it opens the comparison (the waiting page).
-- With three or more answered the same: the wash and the arrow, and a click anywhere on the row presses "How others see you", as before (the warning before collection freezes shows if it should, and the comparison opens; "Viewed" then shows).
+- With three or more answered the same: the wash and the arrow, and a click anywhere on the row presses "How others see you", as before (the warning before collection freezes shows if it should, and the comparison opens; "Viewed" then shows). Since ticket 106, until the comparison is looked at, a click opens Section 2 at its card instead, where the warning sits beside the press.
 - Tab through the hub: the comparison's row takes one stop, the link or the press, with the focus ring on the title; a screen reader reads one control, the title (the arrow is not read).
 - Hovering a part's row, or Section 2's own row, washes only that row.
 - While Section 2 is locked, the comparison's row has no link, no wash and no arrow; its "Locked" button still shows its note on hover or focus.
@@ -715,6 +736,8 @@ No rebuild and no pathway reload needed.
 - The comparison's row titles on the hub and in the sidebar ("How others see you") stay still.
 
 ### Fix-21: "Before you look" goes back to the hub (no rebuild or reload needed; phone width too)
+
+The faithful port's alone since ticket 106 (open it from the results page there): *Whatever You Do* has no "Before you look".
 
 - With three answered, open "Before you look" from the results page, then from the hub's row. At its top the button reads "← Back to the hub" and leads to the hub from either, changing nothing (it read "← Back to results" before). At phone width it fits with no sideways scroll.
 
@@ -728,8 +751,8 @@ No rebuild and no pathway reload needed.
 - A participant with the sort in and Section 1 not yet finished, three people answered (`seed_observers` cannot do this: invite three and answer as them). On the hub, "How others see you" is the first row within Section 2, "Your gifts, seen together", not within Section 1, which lists only the Strengths evaluation. Its title is plain text, and its pill is "Locked"; hover, focus or tap it and Section 2's own lock note shows, word for word as on Section 2's pill. The Five trusted voices card has only "Invite people". The count still reads "0 of 6 sections complete" (or as many as are done).
 - The sidebar ("Your pathway") shows the same: "How others see you" within Section 2, "Locked", no link, and no "How others experience you" among the links below ("Your results" is still there).
 - Type `/results/strengths-sort/comparison/` in the address bar: you land on the hub, as you do typing a locked section's address. The results page, opened from the sidebar's "Your results", is unchanged.
-- Finish Section 1. The row and the sidebar's entry read "Ready to view" and press on to "Before you look" (fix-16), the voices card's "How others see you →" is back, and the sidebar lists "How others experience you" again. Confirm through: the comparison's top button is "← Back to Your gifts, seen together" and its end "On to your reflection →", both to Section 2.
-- With fewer than three answered and Section 1 finished, the row still opens the waiting page (fix-16).
+- Finish Section 1. The row and the sidebar's entry read "Ready to view" and press on to "Before you look" (fix-16), the voices card's "How others see you →" is back, and the sidebar lists "How others experience you" again. (Since ticket 106 Section 2 also needs the three answers, which this participant has; the row, the sidebar's entry and the voices card then open Section 2 at its card, whose press opens the comparison at once.) Confirm through: the comparison's top button is "← Back to Your gifts, seen together" and its end "On to your reflection →", both to Section 2.
+- With fewer than three answered and Section 1 finished, the row still opens the waiting page (fix-16). (Since ticket 106 only once Section 2 has opened and a withdrawal has left fewer; before then the row is locked.)
 - Keyboard only: Tab reaches the row's "Locked" button, and its note shows on focus. At phone width the locked row and its note fit with no sideways scroll.
 - The faithful port: with the sort in and Section 1 unfinished, "Compare with how others see you →" on the results page still opens the comparison, which ends with its top button again.
 
@@ -784,7 +807,7 @@ No rebuild and no pathway reload needed.
 
 ## Answer collection freezes (after `migrate`; three observers answered, at least one more person invited)
 
-- On the results page, "Compare with how others see you →" opens "Before you look": "3 of the 4 people you invited have answered…" and the same button again. "← Back to the hub" leads to the hub and changes nothing (fix-21); pressing the button opens the comparison. With everyone invited answered (or after `seed_observers`), it reads "Everyone you invited has answered. Once you look, you can't add anyone else." Below three answered, the results page and Section 2's "How others see you" card offer "Invite people who know you →" instead (ticket 88, fix-3).
+- In the faithful port (since ticket 106 *Whatever You Do* says the same beside the press on Section 2's card, which opens the comparison at once), on the results page, "Compare with how others see you →" opens "Before you look": "3 of the 4 people you invited have answered…" and the same button again. "← Back to the hub" leads to the hub and changes nothing (fix-21); pressing the button opens the comparison. With everyone invited answered (or after `seed_observers`), it reads "Everyone you invited has answered. Once you look, you can't add anyone else." Below three answered, the results page and Section 2's "How others see you" card offer "Invite people who know you →" instead (ticket 88, fix-3).
 - Once looked: the hub's Five trusted voices card reads "Complete" with "You've seen your results, so no more answers are added." The list's page says the same and why, has no empty row and no "Issue link" or "Make a new link"; names can still be saved, and "Revoke link" still works. The coach page still issues and reissues the coach's link.
 - In a private window, an unanswered person's link shows the notice then "No more answers are being taken." with no button; their own link, if they had started, shows the same in place of the sort.
 - An observer who answered withdraws: with two left, the comparison is "Not enough answers yet" again, the list offers its empty row and links again, and the next press asks again.
@@ -918,7 +941,7 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - The link opens "Retake the strengths evaluation?", in the participant's frame, with no "Demo only" line and no drop-downs. First a pale red box with a red bar down its left, like the coach checklist's "stop": in bold red, "Retaking deletes your results. They can’t be brought back.", then "You’ll start again from an empty sort." and, under a small grey "This deletes", a bulleted list (the sort and results; with pairs answered, those answers; "What the people you invited sent (3 answers). Their links still work, so they can answer again."; the coach's view). Below the box, under "This keeps", the sections finished and the other answers and links. Then, set well apart below, the green "Keep my results" first and the red "Delete and retake", white on red, under it. Each line and label has room above it; nothing runs into the next. "Keep my results" and "← Back to results" go back to the results with nothing changed. With nobody's answers in, the line about deleting them is not there; with the results not shown to the coach, nor is the coach's.
 - "Delete and retake" opens the Strengths evaluation's sort with no cards placed. On the hub, Sections 1 and 2 are still "Complete"; Section 2's Workbook 1 still downloads. Section 2's "How others see you" card is still there, "Compare with how others see you →" greyed, with "Finish your strengths evaluation to compare.", its first words leading to the sort; the hub's "How others see you" row says the same and leads to the sort. Once the sort is sent again, the card reads "0 of 3 answered". "View my results" from a bookmark leads back to the sort. The invitations page still lists everyone, none counted as answered; the coach page still has the coach.
 - In each invited person's browser, their own link opens the questions again, and sending counts. The coach's link says "… finishes the strengths evaluation and sends it to you." and shows no results.
-- Sorting again leads to the results (or the pairs) as a first sort does; with three answers in again, "Compare with how others see you →" asks "Before you look" again. Ticking "show my coach" on the comparison shows the coach the new results.
+- Sorting again leads to the results (or the pairs) as a first sort does; with three answers in again, "Compare with how others see you →" asks "Before you look" again (in *Whatever You Do*, since ticket 106, the warning shows beside it again and the press opens the comparison). Ticking "show my coach" on the comparison shows the coach the new results.
 - Typing `/results/strengths-sort/retake/` before any sort shows the not-found page.
 - Phone width: the link and the page's buttons fit, nothing scrolls sideways.
 
@@ -981,6 +1004,8 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 
 ## Section 2's reflection waits for the comparison (ticket 68, Section 1's until ticket 87; rebuild the frontend and load both pathways again, then start a new participant)
 
+Changed by ticket 106: Section 2 is locked until three people have answered, so its waits below are seen once it has opened; while it is locked, the next step's "Waiting on answers" button leads to Five trusted voices, and with three its press opens the comparison at once, the warning beside it.
+
 - Section 2, with the sort in and Section 1 finished: the reflection's box shows, faded, with "This opens once you've seen how others see you. That needs at least 3 of the people you invited to answer." as a band at the top of the same bordered box (fix-10). Nothing can be typed in it, and its "Save" (without JavaScript) cannot be pressed.
 - Choose a coach and give three people links: the hub's next step is Section 3, not Section 2. Mark Section 3 finished: the next step reads "Waiting on answers" / "Section 2's reflection opens once at least 3 of the people you invited have answered and you've seen how others see you.", with a button to Section 2.
 - Have two people answer (their links in private windows), then press "Compare with how others see you →" on Section 2's card: the explanation shows, and the reflection is still faded. The hub still says "Waiting on answers" (sprint-3c-r3-fix-14). Have a third answer: the hub's next step reads "How others see you" / "Enough of the people you invited have answered. See how they see you, then carry on with Section 2.", with "Compare with how others see you →", which leads through "Before you look". Press it again, confirming: back on Section 2 the reflection can be written, and saves. The hub's next step is Section 2 again, under its title "How others see you".
@@ -999,6 +1024,8 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 - Phone width: both cards' pills stay small and on one line, the cards below the list with no sideways scroll; the panel's button sits under its sentence.
 
 ## How others see you on the hub (ticket 67b; rebuild the frontend, load the pathway again, and use a participant started after that)
+
+Changed by ticket 106: the row is locked with Section 2 until three have answered; with three, until the comparison is looked at, the row's title and the card's pill open Section 2 at its card, where the warning sits beside the press, which opens the comparison at once. Once it is looked at they press as below.
 
 - Before the sort is in, the hub lists no "How others see you" row within Section 2, and the Five trusted voices card has only "Invite people".
 - Once the sort is in, while Section 2 is locked: within Section 2, the first line under its title, a row "How others see you" whose title is plain text, no link or button, and whose pill is "Locked", showing Section 2's own lock note on hover, focus or a tap; the Five trusted voices card has only "Invite people", even with three answered (fix-19).
@@ -1026,7 +1053,7 @@ Superseded by ticket 87: the section it opened, "The shape of your life", is Sec
 
 Load *Whatever You Do* again, then start a new participant (the notes come from the pathway version a participant started on); reload the page for the rebuilt frontend.
 
-- With Before we begin done and nothing else, the hub's notes read (numbers since ticket 87): Section 2 "Opens once you've completed Section 1."; Section 3 "Opens once you've completed Section 1, sent a coach their link in *Walk with a coach* and added at least 3 people in *Five trusted voices*."; Section 4 "Opens once you've completed Sections 1, 2 and 3, and your coach has accepted."; Section 5 "Opens once you've completed Section 4."; the letter "Opens once you've completed Section 5.". The titles are in italics, in the grey of the rest of the note.
+- With Before we begin done and nothing else, the hub's notes read (numbers since ticket 87): Section 2 "Opens once you've completed Section 1." ("…Section 1, and enough of the people you invited have answered." since ticket 106); Section 3 "Opens once you've completed Section 1, sent a coach their link in *Walk with a coach* and added at least 3 people in *Five trusted voices*."; Section 4 "Opens once you've completed Sections 1, 2 and 3, and your coach has accepted."; Section 5 "Opens once you've completed Section 4."; the letter "Opens once you've completed Section 5.". The titles are in italics, in the grey of the rest of the note.
 - Choose a coach and send their link: Section 3's note drops the coach's part, and drops each other part as it is done.
 - Section 1's button reads "I've finished Section 1", as Sections 2–5's read for theirs.
 - In the faithful port, before Section 1's reading is confirmed, the Strengths assessment's note reads "Opens from *How you've been designed*, once you've read the passages.", the title in italics. *Whatever You Do*'s opens with Section 1 (ticket 87).
@@ -1039,14 +1066,16 @@ Load *Whatever You Do* again, then start a new participant (the notes come from 
 Reload the page for the rebuilt frontend; no new participant is needed.
 
 - At a wide screen, "Your pathway" opens a panel down the right-hand side of the page, under the header, its right edge at the header's, all inside the window.
-- Every entry has its status above its title, in small capitals on a grey pill, short titles and long ones alike; "How others see you" fits on one line.
+- Every entry has its status above its title (bar *Whatever You Do*'s Strengths evaluation since ticket 106, Section 1's saying it), in small capitals on a grey pill, short titles and long ones alike; "How others see you" fits on one line.
 - The next step's entry has a pale green background; its status pill is green only if it is under way, as the hub's, and "Not started" stays grey with its black outline (fix-6); the page you are on has a deep green edge.
 - Beside the hub, the panel lists the same entries in the same order with the same statuses and locks: the sections, the Strengths evaluation within Section 1, then, below a rule and each as a small outlined card, Walk with a coach and Five trusted voices, Five trusted voices with its card's tag ("2 more needed", "Links issued" …).
-- Once the sort is in, "How others see you" is listed within Section 2 (ticket 87), "Locked" with Section 2's lock note and no link while Section 2 is locked (fix-19), and once Section 1 is finished with the hub row's status ("0 of 3 answered"). Pressing it does what the hub's row does: with the minimum in and not yet confirmed, it asks before collection freezes; below it, it opens the comparison's waiting page (fix-16).
+- Once the sort is in, "How others see you" is listed within Section 2 (ticket 87), "Locked" with Section 2's lock note and no link while Section 2 is locked (fix-19), and once Section 1 is finished with the hub row's status ("0 of 3 answered"). Pressing it does what the hub's row does: with the minimum in and not yet confirmed, it asks before collection freezes (since ticket 106, it opens Section 2 at its card); below it, it opens the comparison's waiting page (fix-16).
 - Regression: the links below read as before: "Your results" once the sort is in, "How others experience you" once the sort is in and, in *Whatever You Do*, Section 1 is finished (fix-19), "Invite others to assess you", and "Your coach".
 - Phone width: the panel spans the header's width with no sideways scroll, and long titles wrap under their statuses.
 
 ### Ticket 81: How many more answers, or people, are needed
+
+Changed by ticket 106: Section 2, its card and its row are locked until three have answered, so their counts below three show only after a withdrawal once Section 2 has opened.
 
 Load *Whatever You Do* again, and start a new participant for the regression line: its `{min}` wording comes from the version loaded now. The other lines work with any participant.
 
@@ -1070,6 +1099,8 @@ Load *Whatever You Do* again, and start a new participant for the regression lin
 
 Load *Whatever You Do* again, then start a new participant: one started before keeps the five sections of the version they began on.
 
+Changed by ticket 106: Section 2 also waits on three of the people invited answering ("Opens once you've completed Section 1, and enough of the people you invited have answered."), and Section 1's page offers "I've finished Section 1" only once the sort is in, so there is nothing to refuse before then.
+
 - The hub lists "01 How you've been designed – your strengths", with the Strengths evaluation within it, "02 Your gifts, seen together", "03 The shape of your life", "04 Putting your calling into words", "05 Growth plan" and "06 A letter to your future self"; the header reads "0 of 6 sections complete", and choosing a coach or giving three people links leaves it at 0.
 - Section 1: "Scripture on gifts" over the three passages, with no "I've read these passages…" button; then "This section uses the strengths evaluation, where you sort and rate your strengths across 36 areas. …" and the Strengths evaluation card, whose "Open the strengths evaluation →" works at once. On the hub the Strengths evaluation is open from the start, with no lock note. "I've finished Section 1", pressed before the sort is in, is refused with "Complete the strengths evaluation to continue." (ticket 83); once the sort is in, it finishes the section, with nobody invited. Section 1 shows "In progress" on the hub once the sort is begun.
 - Section 2, locked until then with "Opens once you've completed Section 1.", holds the "How others see you" card and then the reflection, "Having completed the strengths evaluation, read the passages on gifts and seen how others see you, summarise: …", faded until the comparison is seen; "I've finished Section 2" waits on the reflection. On the hub, its "How others see you" row sits within Section 2. With the comparison seen and the reflection unwritten, the hub's next step is "Your gifts, seen together".
@@ -1092,8 +1123,8 @@ A walk through the whole app on staging, after a sprint's changes, to see it han
 
 Before starting: `curl -s https://anville.vabl.dev/healthz` gives the commit staging runs; if it is behind `main`, deploy, then publish `whatever-you-do-faithful-port.json` and, last, `whatever-you-do.json`, since the pathway published last is the one new participants get (`deploy/README.md`). Every participant in the walk is one started after that. Use made-up names and `example.com` addresses, except where a step needs a mailbox or a Google account.
 
-- **The participant**, in a private window: the homepage, "Begin your journey →", sign-up, "About you" (first name, 18 or over and consent, ticket 92), Before we begin's two pages, then the hub, with Before we begin gone from it and from the sidebar ("0 of 6 sections complete", ticket 87). Section 1's Strengths evaluation; its results, with "I've finished Section 1" and "Invite people who know you →"; Section 1 finished. Section 2's "How others see you" card inviting people and the reflection faded. A coach chosen and three people given links on Five trusted voices: Section 3 opens without Section 2. Section 3's workbook PDF, in a new tab; marking it finished. Removing one of the three: their link says "This link does not work".
-- **The observers**, each link in a private window of its own: the sort about the participant, in the observer's voice, sent after fine-tuning and once without; "Thank you" with only "Withdraw my answers". As the participant: "Not enough answers yet" at two, "Ready to view" at three, "Before you look", then the comparison, and the reflection open.
+- **The participant**, in a private window: the homepage, "Begin your journey →", sign-up, "About you" (first name, 18 or over and consent, ticket 92), Before we begin's two pages, then the hub, with Before we begin gone from it and from the sidebar ("0 of 6 sections complete", ticket 87). Section 1's Strengths evaluation; its results, with "I've finished Section 1" and "Invite people who know you →"; Section 1 finished. Section 2's "How others see you" card inviting people and the reflection faded (since ticket 106, Section 2 locked until three have answered). A coach chosen and three people given links on Five trusted voices: Section 3 opens without Section 2. Section 3's workbook PDF, in a new tab; marking it finished. Removing one of the three: their link says "This link does not work".
+- **The observers**, each link in a private window of its own: the sort about the participant, in the observer's voice, sent after fine-tuning and once without; "Thank you" with only "Withdraw my answers". As the participant: "Not enough answers yet" at two, "Ready to view" at three, "Before you look", then the comparison, and the reflection open (since ticket 106, the warning beside the press and no "Before you look").
 - **The coach**, Sam's link in a private window: the six promises, "Accept →" refused with one unticked, accepted with all six. As the participant: Section 3 opens once Section 1 is marked complete. "Give my coach access…" ticked and unticked, with Sam's link showing the guide, the results and the comparison, then "What happens next" again.
 - **The tie-break**: `seed_tie_break --profile tied-apest --answers behind` prints a made-up participant's address, a sign-in link and the answers to give; its password is `information.`. The results read "Evangelist now sits on top, in place of Deacon…".
 - **Password reset** (sends email): sign up at an address you own, sign out, "Forgot your password?". The email arrives with `[TEST]` before its subject and the disclaimer at the top; the new password signs in, the old is refused, and the link fails a second time. An address with no account shows the same page and sends nothing.
@@ -1125,7 +1156,7 @@ Walked at a wide screen on 22 Oct 2026, with staging on `56924e5`; each passed, 
 - "Complete" is lime (the green of the "next step" tag, dark text), not the deep green, on the hub's rows, the side cards and the sidebar's chips.
 - A complete section's signpost inside a section (Section 1's Strengths evaluation card once the sort is in) has a lime edge and a light lime tint, not the deep green.
 - So does Section 2's "How others see you" card once its status reads "Viewed" (fix-9), and not before: "2 of 3 answered" and "Ready to view" keep the gold card. An observer withdrawing after "Viewed" leaves it lime.
-- On the hub every row's pill ends at the same right edge: the sections' pills, and the pills beside "Strengths evaluation" under "How you've been designed", beside "How others see you", and "Locked" on a locked row, are all in one line down the page. Check at phone width too, where the titles narrow but the pills still line up.
+- On the hub every row's pill ends at the same right edge: the sections' pills, and the pills beside "Strengths evaluation" under "How you've been designed" (the faithful port's since ticket 106), beside "How others see you", and "Locked" on a locked row, are all in one line down the page. Check at phone width too, where the titles narrow but the pills still line up.
 - An open hub row is one link: hover it anywhere (not only its title) for a faint warm neutral wash (not green) and its arrow darkening and nudging a few pixels right (still with reduced motion on), and a click anywhere on it leads to its section. A part's row within a section is its own link, and hovering it washes only it, not its section. Tab through the hub: each open row takes one stop. A locked row has no link and no arrow; its "Locked" button still shows its note on hover or focus. Tapping a locked row opens nothing. The comparison's row ("How others see you") is one too, from fix-23 (see Fix-23 above).
 
 ### Fix-12: Locked pills' grey (rebuild the frontend; load the pathway again and use a participant started after that; phone width too)
@@ -1163,7 +1194,7 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 - Five trusted voices' card: its button reads "Invite people", the same small shape as the coach card's, white on the dark card rather than green, leading to its page. From three answered, the ringed "How others see you →" sits beside it.
 - With Before we begin done, the next step reads "Start with your gifts." and "Start with the ten-minute strengths evaluation."
 - Below the sections only "Your consent" shows; there is no "Your groups".
-- Section 1's page: clear room between the strengths evaluation card's words and its "Open the strengths evaluation →", and more room above "I've finished Section 1" below the card.
+- Section 1's page: clear room between the strengths evaluation card's words and its "Open the strengths evaluation →", and more room above "I've finished Section 1" below the card (there once the sort is in, ticket 106).
 - With Section 1 done and both side cards complete, the next step is "The shape of your life" with one button, "Begin", which opens Section 3. There, its three paragraphs read apart from one another, then "Download Section 3 (PDF) (opens in a new tab)" set below them, then "I've finished Section 3" beneath the line.
 - Open "Your pathway": each side card's status there matches its card's tag on the hub, after choosing a coach, after the coach declines, and with one, three and then fewer people with links.
 - Phone width: both cards' buttons stay small, on one line, with no sideways scroll; Section 3's paragraphs, PDF button and finish read in order.
@@ -1196,8 +1227,8 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 
 ### sprint-3c-r3-fix-14: the hub's next step once answers are in (no rebuild or pathway reload needed; wide screen and about 375px)
 
-- Sections 1 and 3 finished, a coach chosen, three people given links, two answered: the next step reads "Waiting on answers" with a button to Section 2, as before.
-- A third answers (a private window): the next step reads "How others see you" / "Enough of the people you invited have answered. See how they see you, then carry on with Section 2.", with a green "Compare with how others see you →" over the church-gathering photo. Pressing it shows "Before you look"; confirming opens the comparison with its numbers. Without JavaScript too.
+- Sections 1 and 3 finished, a coach chosen, three people given links, two answered: the next step reads "Waiting on answers" with a button to Section 2, as before (to Five trusted voices since ticket 106, Section 2 being locked).
+- A third answers (a private window): the next step reads "How others see you" / "Enough of the people you invited have answered. See how they see you, then carry on with Section 2.", with a green "Compare with how others see you →" over the church-gathering photo. Pressing it shows "Before you look"; confirming opens the comparison with its numbers (since ticket 106 the warning is under the button, which opens the comparison at once). Without JavaScript too.
 - With Section 3 not yet finished and three answered, Section 3 stays the next step.
 - Phone width: the sentence wraps and the button fits with no sideways scroll.
 

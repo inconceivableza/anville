@@ -27,3 +27,7 @@ This amends ADR 0007: revoking always works, but an observer's link cannot be re
 - Where the participant has withdrawn consent, an observer's link is refused as a dead link is, frozen or not, so the frozen page never tells its holder anything about the participant (ADR 0004).
 - Reminders stop while collection is frozen and start again if it unfreezes (ADR 0016).
 - The observers' privacy notice says that once the participant has looked at the combined results no new answers are added.
+
+## Amendment (12 November 2026)
+
+In *Whatever You Do* the telling moves beside the press (ticket 106): the comparison's card on Section 2 and the hub's next step say how many of the people invited have answered and that once they look no more answers are added, beside "Compare with how others see you →", and pressing it freezes collection with no page between. The hub's row, the sidebar's entry and the Five trusted voices card have no room for the sentence, so while a press would freeze they lead to the card instead. The freeze itself is unchanged, and so is the faithful port, which still asks on its own page.

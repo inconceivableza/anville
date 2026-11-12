@@ -316,7 +316,23 @@ The wording put in for your feedback of 30 October ("Friday 30th - updates") and
 
 ### Sections 1 and 2 on the hub and their pages
 
-Nothing yet.
+From your 30 October feedback on Sections 1 and 2 (pictures 36, 38, 41, 49, 51 and 52 of "Friday 30th - updates").
+
+- **Section 1 on the hub** shows one status, Section 1's own: the strengths evaluation's row beneath it no longer has a "Not started" (or "Complete") of its own. No words change.
+- **"I've finished Section 1"** on Section 1's page now appears only once the strengths evaluation is done. Before then there is nothing to finish, and the page's card, "Open the strengths evaluation →", says what to do. Its words are unchanged.
+- **Section 2 waits for answers.** It stays "Locked" on the hub and in the menu until at least three of the people invited have answered, and once open it stays open. Its note, shown on "Locked":
+  - Before: "Opens once you've completed Section 1."
+  - Now, until Section 1 is finished: **"Opens once you've completed Section 1, and enough of the people you invited have answered."**
+  - Now, once it is: **"Opens once enough of the people you invited have answered."**
+
+  Meanwhile the hub's next step points to Section 3. With nothing else to do, it still reads "Waiting on answers" and "Section 2's Workbook 1 opens once at least 3 of the people you invited have answered and you've seen how others see you.", and its button now reads **"Five trusted voices"**, leading there to invite more people (it read "Your gifts, seen together", which can't be opened yet).
+- **No "Before you look" page.** Its sentence now sits beside "Compare with how others see you →", and pressing the button shows the comparison straight away. The words are the same as before: **"Everyone you invited has answered. Once you look, you can't add anyone else."**, or, while some haven't, **"3 of the 4 people you invited have answered. Once you look, no more answers are added, so anyone who hasn't answered yet won't be able to."** It shows:
+  - on Section 2's "How others see you" card, under its two buttons, in place of "Ready to view";
+  - on the hub's next step, under its button, when that step is the comparison.
+
+  Until you've looked, "How others see you" in the hub's list, in the menu and on the Five trusted voices card opens Section 2 at that card, rather than the comparison itself, as there is no room beside them for the sentence. Once you've looked they open the comparison as before.
+- **Section 2's finish** is set apart from the workbook's download, with a line above it: **"When you've finished Workbook 1, come back here to say so."** The workbook's text loses the same sentence from its end, so it now ends "…one for each of Sections 2 to 5." (it ended "…one for each of Sections 2 to 5. When you've finished this one, come back here to say so."). Sections 3 to 5 keep "When you've finished it, come back here to say so." in their text, as before: say if you'd like them to match Section 2.
+- **Long statuses on the hub**, such as "Still need answers from 3 people who know you", now wrap within their place at the right of the row instead of running over its title. No words change.
 
 ### The letter and the closing questions on two pages
 

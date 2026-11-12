@@ -30,3 +30,7 @@ Until now a participant was never held back waiting on someone else: Section 2 n
 ## Amendment (29 October 2026)
 
 The reflection, by then in *Whatever You Do*'s Section 2, gives way to the first of the content owner's four workbooks, a download that waits on the comparison the same way: offered with no file until the press, and refused at its address. Section 2 has no gate; a block of a section still waiting on the comparison holds the section, so it cannot be finished before the press, and Section 4, which requires it, still waits on the minimum of observers. The hub passes over it while it waits, as before.
+
+## Amendment (12 November 2026)
+
+Section 2 now waits on others' answers to open, not only to be finished (ticket 106): an opening condition, `observers_answered`, holds it locked until the pathway's minimum of observers have answered, so nobody is shown a section they can do nothing in yet. Like the coach's condition, its opening is stored and it stays open if withdrawals later leave fewer. The hub passes over it while it is locked by nothing else, as it passes over a section waiting on the comparison, and Section 3, which needs only Section 1 and the side cards, is the next step meanwhile.
