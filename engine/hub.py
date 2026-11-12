@@ -248,6 +248,32 @@ def track_sections(document):
     return document["content"]["sections"]
 
 
+class WizardPhoto(NamedTuple):
+    """✨ A photo a wizard's step is drawn beside: its `file`, in `frontend/img`, and its `credit`, as the credits page
+    lists it."""
+
+    file: str
+    credit: str
+
+
+# ✨ The wizard's photos, one for each step in order: in *Whatever You Do*, "About you", the reason, the ratings and the
+# welcome, the fifth for a longer wizard. Changing a step's photo is changing its line here, with the file in
+# `frontend/img`: the page and the credits page both read it. They are static files, so the entry page shows one before
+# consent, unlike the pathway's own photos. For now, the hackathon prototype's five (ticket 101).
+WIZARD_PHOTOS = (
+    WizardPhoto("facing-sun.jpg", "Photograph of a figure facing the sun, by Andreas Rasmussen on Unsplash."),
+    WizardPhoto("grass.jpg", "Photograph of grass, by Oliver Pacas on Unsplash."),
+    WizardPhoto(
+        "field-woman.jpg", "Photograph of a woman walking through a field of wheat, by Hannah Skelly on Unsplash."
+    ),
+    WizardPhoto("notebook.jpg", "Photograph of a notebook, a pen and a cup of coffee, by Andres Molina on Unsplash."),
+    WizardPhoto(
+        "hero.jpg",
+        "Still of a woman in a sunhat walking through a field at sunset, from the video by Marian Croitoru on Pexels.",
+    ),
+)
+
+
 class WizardStep(NamedTuple):
     """✨ Where a wizard's page stands in its "Step N of M" counter: its `number`, out of `count`; and what the document
     has the step say, its verse, reference, word and heading (sprint-3c-r3-fix-7), or None."""
@@ -255,13 +281,12 @@ class WizardStep(NamedTuple):
     number: int
     count: int
     authored: dict | None = None
-    PHOTOS = 5  # ✨ the photos the stylesheet draws, the hackathon prototype's five (ticket 101)
 
     @property
     def photo(self):
-        """✨ Which of the wizard's photos this step is drawn beside, counted from 1: each page differs from the one
-        before, and a wizard longer than the photos there are begins them again."""
-        return (self.number - 1) % self.PHOTOS + 1
+        """✨ The `WizardPhoto` this step is drawn beside: each page's differs from the one before, and a wizard longer
+        than the photos there are begins them again."""
+        return WIZARD_PHOTOS[(self.number - 1) % len(WIZARD_PHOTOS)]
 
     @property
     def numbers(self):

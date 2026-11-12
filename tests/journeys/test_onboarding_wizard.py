@@ -77,7 +77,7 @@ def test_a_participant_who_has_not_completed_it_is_taken_to_its_wizard_in_place_
     assert 'id="answer-bl-bible-1"' not in page  # ✨ the ratings are its second page
     assert 'class="pathway-nav"' not in page
     assert 'href="/hub/"' not in page
-    assert 'class="ob-photo ob-photo-' in page  # ✨ its photo is the stylesheet's now (ticket 101)
+    assert re.search(r'<aside class="ob-photo"[^>]*>\s*<img src=', page)  # ✨ a photo of its own (ticket 101)
 
 
 @pytest.mark.django_db

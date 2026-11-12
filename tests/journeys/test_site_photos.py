@@ -10,7 +10,7 @@ import re
 import pytest
 from django.templatetags.static import static
 
-from engine.hub import WizardStep
+from engine.hub import WIZARD_PHOTOS, WizardStep
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_onboarding_wizard import (  # noqa: F401  (participant is a fixture, used by name)
     DOCUMENT,
@@ -23,8 +23,8 @@ from tests.journeys.test_onboarding_wizard import (  # noqa: F401  (participant 
 
 
 def _photo_of(page):
-    """✨ The photo's number a wizard page's panel names, read from the document."""
-    return re.search(r'class="ob-photo ob-photo-(\d+)"', page).group(1)
+    """✨ The photo a wizard page's panel shows, read from the document."""
+    return re.search(r'<aside class="ob-photo"[^>]*>\s*<img src="([^"]+)"', page).group(1)
 
 
 @pytest.mark.django_db
@@ -48,7 +48,7 @@ def test_the_steps_photos_differ_one_after_another_and_wrap_within_the_photos_th
     photos = [WizardStep(number, 12).photo for number in range(1, 13)]
 
     assert all(a != b for a, b in zip(photos, photos[1:]))
-    assert set(photos) <= set(range(1, WizardStep.PHOTOS + 1))
+    assert set(photos) <= set(WIZARD_PHOTOS)
 
 
 @pytest.mark.django_db

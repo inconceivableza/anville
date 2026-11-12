@@ -593,26 +593,16 @@ body.wizard > main.container {
   z-index: 1;
 }
 
-/* ✨ A different photo for each page of a wizard, the hackathon prototype's five in its order (ticket 101); the shade
-   above keeps the verse readable on any of them, and the photo is drawn without JavaScript or a sign-in. */
-.ob-photo-1 {
-  background: var(--hero-bg) url("../img/facing-sun.jpg") center / cover;
-}
-
-.ob-photo-2 {
-  background: var(--hero-bg) url("../img/grass.jpg") center / cover;
-}
-
-.ob-photo-3 {
-  background: var(--hero-bg) url("../img/field-woman.jpg") center / cover;
-}
-
-.ob-photo-4 {
-  background: var(--hero-bg) url("../img/notebook.jpg") center / cover;
-}
-
-.ob-photo-5 {
-  background: var(--hero-bg) url("../img/hero.jpg") center / cover;
+/* ✨ A different photo for each page of a wizard, the page's own image (`WIZARD_PHOTOS` names each), filling the panel
+   as v3's does, beneath the shade above, which keeps the verse readable on any of them; it is drawn without JavaScript
+   or a sign-in. */
+.ob-photo > img {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .ob-photo .q {
@@ -710,7 +700,8 @@ body.wizard > main.container {
   animation: onboarding-enter 0.35s ease both;
 }
 
-/* ✨ v3's choices (sprint-3c-r3-fix-4): two columns of cards, each a radio, the chosen one brown, as v3's pressed. */
+/* ✨ v3's choices (sprint-3c-r3-fix-4): two columns of cards, each a radio, or a checkbox where many may be chosen
+   (ticket 112), the chosen ones brown, as v3's pressed. */
 .choice-q fieldset {
   border: 0;
   min-width: 0;
@@ -720,6 +711,13 @@ body.wizard > main.container {
   margin-bottom: var(--space-md);
   font-size: var(--text-md);
   color: var(--muted);
+}
+
+/* ✨ A choice of many's note, on its own line beneath the prompt, as v3's "Choose as many as apply." (ticket 112). */
+.choice-note {
+  display: block;
+  margin-top: var(--space-2xs);
+  font-size: var(--text-sm);
 }
 
 .opts {
