@@ -529,7 +529,7 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     the time estimates, checked above, the hub's section numbers, next-step wording and photos and Section 1's results
     are set aside, and so are the downloads in place of Sections 3–5's own blocks, Section 1's split in two (ticket
     87), Section 2's way to the comparison, the two-round prototype's cards and gift names, and the sealed letter
-    (ticket 104)."""
+    (ticket 104), and the reason taking one or more choices (ticket 112)."""
     expected = the_faithful_port()
     for section in expected["content"]["sections"]:
         for clause in section.get("gate", {}).get("clauses", []):
@@ -549,7 +549,7 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     a_download_in_place_of_each_of_sections_2_to_4(expected)
     in_six_sections(expected)
     no_relationship_question(expected)
-    expected = in_the_new_words(without_the_cards(expected))
+    expected = in_the_new_words(without_the_cards(as_one_reason(expected)))
 
     assert without_what_finishing_takes(
         without_the_comparison_signpost(
@@ -559,7 +559,9 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
                         without_the_coach_step(
                             without_estimates(
                                 without_the_wizard(
-                                    without_the_cards(without_the_gift_names(without_the_sealed_letter(the_pathway())))
+                                    without_the_cards(
+                                        without_the_gift_names(without_the_sealed_letter(as_one_reason(the_pathway())))
+                                    )
                                 )
                             )
                         )
@@ -568,6 +570,17 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
             )
         )
     ) == (without_numbers(expected))
+
+
+def as_one_reason(document):
+    """✨ The reason takes one or more choices here, as cards with a note saying so (ticket 112); the faithful port's is
+    a drop-down of one, with its placeholder. Each is made a single select with neither, so their options are still
+    compared."""
+    [reason] = [block for block in document["content"]["sections"][0]["blocks"] if block["id"] == "reason"]
+    reason["type"] = "single_select"
+    reason.pop("note", None)
+    reason.pop("placeholder", None)
+    return document
 
 
 def without_the_cards(document):

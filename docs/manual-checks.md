@@ -301,7 +301,7 @@ The homepage (`/`):
 
 ## Before we begin as a wizard (ticket 50; load the pathway again first, then sign up as someone new)
 
-- After the entry page, Before we begin opens as the wizard, beside a photo (the stylesheet's, a different one on each page: ticket 101): no header, no "Your pathway", no link to the hub; "Step 2 of 3" with three bars at the top, two of them filled, the entry page being step 1 (ticket 92). Page 1 is the reason alone; "Continue →" leads to page 2, the five ratings, with "← Previous page" beside the way on.
+- After the entry page, Before we begin opens as the wizard, beside a photo (a different one on each page: ticket 101): no header, no "Your pathway", no link to the hub; "Step 2 of 3" with three bars at the top, two of them filled, the entry page being step 1 (ticket 92). Page 1 is the reason alone; "Continue →" leads to page 2, the five ratings, with "← Previous page" beside the way on.
 - Going to `/hub/` part-way lands on the page reached. The last "Continue →" lands on "Welcome, [name]" (sprint-3c-r3-fix-7), whose "Continue →" leads to the hub, Before we begin listed as complete, and the hub never sends you back. Its entry opens it as an ordinary section page, header and sidebar included, the ratings fixed.
 - `/credits/` lists "Photograph of a figure facing the sun, by Andreas Rasmussen on Unsplash." among the site's photographs (ticket 101).
 - Phone width: the photo sits above the page, the ratings fit without scrolling sideways.
@@ -332,7 +332,7 @@ The homepage (`/`):
 ### sprint-3c-r3-fix-4: the onboarding wizard against v3 (rebuild the frontend; sign up as someone new; beside v3's onboarding, `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html#onboarding`)
 
 - "About you" and both pages of Before we begin fill the window beneath the demo strip, edge to edge: no cream page footer below the box, no side margins, the brown showing only as the thin edge round the photo and the box. "Credits" and "Privacy" sit inside the box at its bottom right and open their pages.
-- Page 1: the reason's seven options are cards in two columns, as v3's, each its label in the heading face; clicking one turns it dark with light text, and clicking another moves the choice. A chosen reason is still chosen after a reload. Tab reaches the cards and the arrow keys move between them, with a green outline on the focused one. With JavaScript off, choose one and press "Save": the page comes back with it chosen.
+- Page 1: the reason's seven options are cards in two columns, as v3's, each its label in the heading face; clicking one turns it dark with light text. Since ticket 112 clicking another chooses it too, rather than moving the choice, and the keyboard is as below, under Ticket 112. A chosen reason is still chosen after a reload. With JavaScript off, choose one and press "Save": the page comes back with it chosen.
 - No dark panel behind the heading and questions on any page, and no line above "Continue →". "← Previous page" on page 2 is a plain underlined link on the left, readable, and "Continue →" a pill on the right.
 - Page 2: the five statements are rows under fine lines, in the heading face, not white cards. On a short window the ratings scroll within the box, the photo staying in view, and nothing shows below the box at their end.
 - At about 375px: the photo sits above the page, the cards in one column, and the page scrolls as any other, the demo strip held at the top, ending at the box with nothing below it.
@@ -363,6 +363,17 @@ The homepage (`/`):
 - With the network off (DevTools, Offline), press a number: "Not saved." with its reason shows under that rating.
 - Without JavaScript: each rating keeps its Save button, and saving comes back with the number chosen.
 - The faithful port's letter ratings still say "Saved".
+
+### Ticket 112: Before we begin's reasons and photos (rebuild the frontend, load the pathway again, and sign up as someone new; wide screen and about 375px)
+
+- Page 1: under "What's bringing you to the course?", on its own smaller line, "Choose as many as apply. There's no wrong answer.", then the seven cards. Click three: each turns dark with light text and stays so, and "Saved" shows after each click. Click one of them again: it turns light again, the other two staying dark. Reload: the same two are dark.
+- Untick every card, then press "Continue →": "Choose what's bringing you to the course to continue." shows beneath it, alone, and page 2 does not open. Tick one and press "Continue →": page 2 opens.
+- Keyboard only: Tab reaches each card in turn, with a green outline on the focused one, and Space ticks or unticks it, saving each time. With JavaScript, Enter on a card does nothing.
+- With JavaScript off: tick two cards and press "Save": the page comes back with both dark. Untick both and press "Save": none is dark, and "Continue →" is refused as above.
+- At about 375px: the cards are one column, the note wraps within the page, and the photo sits above the page.
+- Each page of the wizard shows the same photo as before this change (the figure facing the sun on "About you", the grass on the reason, the woman in the wheat on the ratings, the notebook on the welcome), filling the panel with no bare strip, the verse readable on it, the photo staying in view while the ratings scroll. `/credits/` still lists each of their credits once, among "Video and photographs on the site". New photos are for ticket 115.
+- A participant who started before the pathway was loaded again still sees the reason as before: one choice, a second click moving it.
+- The faithful port's onboarding still asks the reason in a drop-down.
 
 ## The hub's next step and its photo (load the pathway again first; ticket 49b)
 

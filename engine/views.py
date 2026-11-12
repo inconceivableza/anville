@@ -100,6 +100,7 @@ from engine.hub import (
     section_by_id,
     track_sections,
     with_coach_answer,
+    WIZARD_PHOTOS,
     WizardStep,
     wizard_step,
 )
@@ -199,16 +200,14 @@ def home(request):
     return render(request, "engine/home.html", {"begin": begin, "stay": stay}, status=status)
 
 
-# ✨ The photographs the stylesheet draws on the homepage, in the wizard and behind the hub's next step, and the two
-# the homepage's steps 3 and 4 show (the notebook and the Bible, stand-ins for journalling until the final photos
-# are picked; ticket 110), each a courtesy credit (ticket 101). The credits page lists them after the pathway's own,
-# leaving out one the pathway lists too, and with them the video's, while the document's setting for courtesy credits
-# is on.
+# ✨ The photographs the stylesheet draws on the homepage and behind the hub's next step, and the two the homepage's
+# steps 3 and 4 show (the notebook and the Bible, stand-ins for journalling until the final photos are picked; ticket
+# 110), each a courtesy credit (ticket 101). The credits page lists them after the pathway's own, then the wizard's
+# (`WIZARD_PHOTOS`), leaving out one listed already, and with them the video's, while the document's setting for
+# courtesy credits is on.
 SITE_PHOTO_CREDITS = [
     "Photograph of a church gathering with Bibles open, by Sincerely Media on Unsplash.",
     "Photograph of a figure facing the sun, by Andreas Rasmussen on Unsplash.",
-    "Photograph of grass, by Oliver Pacas on Unsplash.",
-    "Photograph of a woman walking through a field of wheat, by Hannah Skelly on Unsplash.",
     "Photograph of a notebook, a pen and a cup of coffee, by Andres Molina on Unsplash.",
     "Photograph of a woman walking in a field at sunset, by Sasha Freemind on Unsplash.",
     "Photograph of misty hills at sunrise, by Alexander Philipp on Unsplash.",
@@ -244,7 +243,11 @@ def credits_page(request):
     shown = {
         "translations": translations.values(),
         "photo_credits": photo_credits,
-        "site_photo_credits": [credit for credit in SITE_PHOTO_CREDITS if credit not in photo_credits],
+        "site_photo_credits": [
+            credit
+            for credit in dict.fromkeys([*SITE_PHOTO_CREDITS, *(photo.credit for photo in WIZARD_PHOTOS)])
+            if credit not in photo_credits
+        ],
         "site_credits_shown": bool(version and version.document.get("show_courtesy_credits", False)),
     }
     return render(request, "engine/credits.html", shown)
@@ -726,7 +729,7 @@ def save_answer(request, block_id):
         return _answer_refused(request, state, section, block_id, waiting, status=403)
     block_type = BLOCK_TYPES[block["type"]]
     try:
-        value = answer_from_form(state.version.document, block, request.POST.get("value"))
+        value = answer_from_form(state.version.document, block, request.POST.getlist("value"))
     except AnswerRefused as refused:
         return _answer_refused(request, state, section, block_id, str(refused), status=400)
 
