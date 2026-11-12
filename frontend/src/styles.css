@@ -3110,6 +3110,20 @@ body:not(.framed) .question-card > p + form {
   cursor: pointer;
 }
 
+/* ✨ The skip and "Both are right" side by side, centred, one above the other where the screen is too narrow for both
+   (ticket 108). */
+.pair-neither {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-xs) var(--space-lg);
+  margin-top: 15px;
+}
+
+.pair-neither .pair-skip {
+  margin: 0;
+}
+
 /* Hint boxes: rich text set off from the page */
 
 .hint-box {

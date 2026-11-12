@@ -387,3 +387,47 @@ def test_the_comparison_sets_the_re_weighted_result_beside_the_observers_sorts_a
     assert in_order(page, "Prophet", "You: Present", "Others: Present", "Apostle", "You: Present", "Others: Present")
     assert in_order(page, "Prophet (APEST(d))", "You rate higher (+1)")
     assert in_order(page, "Apostle (APEST(d))", "Others rate higher (+1)")
+
+
+# ✨ "Both are right" (ticket 108), beside "Neither is more true of me": either keeps the pair tied, and each answer is
+# stored as given.
+def offering_both(document):
+    document["presentation"]["tie_break"]["both"] = "Both are right"
+    return document
+
+
+def both_are_right(client, pair):
+    """✨ Answer one pair "Both are right", as its form does."""
+    return client.post(TIE_BREAK, {"pair": pair, "both": "true"})
+
+
+@pytest.mark.django_db
+def test_both_are_right_keeps_the_pair_tied_as_neither_does_and_is_stored_as_given(client, participant, load_pathway):
+    """✨ Had "Both are right" counted as a win for each, both pairs so answered would leave the two level, genuinely
+    balanced; as neither chose a side, the framework is left as sorted, as every pair skipped is."""
+    document = offering_both(tie_breaking_pathway())
+    load_pathway(document)
+    client.force_login(participant)
+    give_consent(client)
+    client.post("/sections/onboarding/complete/")
+    submit_sort(client, TIED_ON_ONE)
+
+    both_are_right(client, 0)
+    choose(client, 1, "")
+
+    _, answers = stored()
+    assert [(answer["chosen"], answer.get("both", False)) for answer in answers] == [(None, True), (None, False)]
+    page = text_of(results(client).content.decode())
+    wording = document["presentation"]["tie_break"]
+    assert in_order(page, "Your gifting", wording["skipped"]["heading"], wording["skipped"]["text"])
+    assert wording["balanced"]["heading"] not in page
+
+
+@pytest.mark.django_db
+def test_both_are_right_is_refused_where_the_pathway_version_does_not_offer_it(marked):
+    submit_sort(marked, TIED_ON_ONE)
+
+    refused = both_are_right(marked, 0)
+
+    assert refused.status_code == 400
+    assert stored()[1] == []

@@ -3,8 +3,9 @@
 {% extends "engine/participant.html" %}
 {% comment %}
   ✨ One of the tie-break's pairs (ticket 30b), as the content owner's prototype draws it: how far through, a quiet label
-  naming the framework, the question, one statement for each construct as a button, and a quiet skip. A plain form, so
-  it works without JavaScript; each button sends its construct.
+  naming the framework, the question, one statement for each construct as a button, and a quiet skip, with "Both are
+  right" beside it where the version has it (ticket 108). A plain form, so it works without JavaScript; each button
+  sends its construct, the skip none, and "Both are right" none and `both`.
 
   Demo only (fix-23): after a demo profile's sort, `demo`, its guide is below the pair (fix-24), and the form's address names
   it and its answers (fix-25), so the next pair shows it too.
@@ -28,7 +29,13 @@
           <button type="submit" class="pair-option" name="chosen" value="{{ option.construct }}">{{ option.text }}</button>
         {% endfor %}
       </div>
-      <button type="submit" class="pair-skip" name="chosen" value="">{{ pair.skip }}</button>
+      {# ✨ Two quiet ways to choose neither, side by side where the version offers "Both are right" (ticket 108). #}
+      <div class="pair-neither">
+        <button type="submit" class="pair-skip" name="chosen" value="">{{ pair.skip }}</button>
+        {% if pair.both %}
+          <button type="submit" class="pair-skip" name="both" value="true">{{ pair.both }}</button>
+        {% endif %}
+      </div>
     </form>
     <p class="pair-count">{{ pair.number }} of {{ pair.count }}</p>
     {% if demo %}{% include "engine/demo_guide.html" with guide=demo.guide %}{% endif %}
