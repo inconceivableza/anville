@@ -4,7 +4,7 @@
 
 **Blocked by:** 108 (The strengths evaluation's sort, tie-break and names), B1
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 3d (end not yet set)
 
