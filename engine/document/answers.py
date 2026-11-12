@@ -49,6 +49,6 @@ def answer_from_form(document, block, submitted, role="participant"):
     value = kind.from_form(submitted)
     if (role == "observer" or skips_fine_tuning(document)) and kind.observer_defaults is not None:
         value = kind.observer_defaults(document, value)
-    if not Draft202012Validator(kind.schema_for(document, block)).is_valid(value):
+    if not Draft202012Validator(kind.schema_for(document, block, role)).is_valid(value):
         raise AnswerRefused(kind.refusal)
     return value

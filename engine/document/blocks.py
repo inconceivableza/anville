@@ -58,16 +58,16 @@ class AnswerKind(NamedTuple):
     """
 
     name: str
-    schema: dict | Callable[[dict, dict], dict]
+    schema: dict | Callable[[dict, dict, str], dict]
     refusal: str
     from_form: Callable[[str], object] | None
     # ✨ What an observer may leave out of the answer, filled in from the document before it is held to the schema.
     observer_defaults: Callable[[dict, object], object] | None = None
 
-    def schema_for(self, document, block):
-        """✨ The answer schema for one block within its pathway document. Most kinds need neither; a sort
-        needs the document's items and buckets, and a choice its block's options."""
-        return self.schema(document, block) if callable(self.schema) else self.schema
+    def schema_for(self, document, block, role="participant"):
+        """✨ The answer schema for one block within its pathway document, for one role. Most kinds need none of them; a
+        sort needs the document's items and buckets, and whose sort it is, and a choice its block's options."""
+        return self.schema(document, block, role) if callable(self.schema) else self.schema
 
 
 TEXT = AnswerKind(
@@ -93,8 +93,13 @@ CONFIRMATION = AnswerKind(
 )
 
 
-def _sort_schema(document, block):
-    """✨ Every item of the instrument, each placed in one of its buckets with a whole value from 0 to 100."""
+# ✨ An item an observer placed in "Haven't seen this", as it is sent and kept (ticket 108): no bucket and no value.
+NOT_SEEN = {"seen": False}
+
+
+def _sort_schema(document, block, role):
+    """✨ Every item of the instrument, each placed in one of its buckets with a whole value from 0 to 100, or, in an
+    observer's sort where the document offers "Haven't seen this" (`offers_not_seen`), not seen (ticket 108)."""
     instrument = document["instrument"]
     placement = {
         "type": "object",
@@ -105,6 +110,8 @@ def _sort_schema(document, block):
             "value": {"type": "integer", "minimum": 0, "maximum": 100},
         },
     }
+    if offers_not_seen(document, role):
+        placement = {"oneOf": [placement, {"const": NOT_SEEN}]}
     item_ids = [item["id"] for item in instrument["items"]]
     return {
         "type": "object",
@@ -139,7 +146,7 @@ SORT = AnswerKind(
 )
 
 
-def _choice_schema(document, block):
+def _choice_schema(document, block, role):
     """✨ The identifier of one of the block's own options, never its label. The empty choice ("Select...")
     takes the answer back, as emptying a text box does: blank counts as unanswered everywhere."""
     return {"enum": ["", *(option["id"] for option in block["options"])]}
@@ -227,7 +234,8 @@ def _sort_widget(document, role, name=""):
     always fine-tunes, unless the document skips fine-tuning for everyone. Each item names its twin, either way round,
     and, where any is reworded, its round: the second for a rewording, the first for the rest. Where fine-tuning is
     skipped, a participant gets a quick check of twins answered far apart instead; an observer never does, as several
-    observers' contradictions average out."""
+    observers' contradictions average out. An observer is offered "Haven't seen this" beside the buckets where the
+    document has it (`offers_not_seen`, ticket 108)."""
     instrument = document["instrument"]
     authored = document.get("presentation", {}).get("sort_wording", {})
     twins = {}
@@ -253,10 +261,17 @@ def _sort_widget(document, role, name=""):
             for bucket in instrument["buckets"]
         ],
         "wording": {field: shown(authored.get(field, default)) for field, default in SORT_WORDING.items()},
+        "not_seen": {"label": shown(instrument["not_seen"]["label"])} if offers_not_seen(document, role) else None,
         "fine_tunes": not skips_fine_tuning(document),
         "sends_before_fine_tuning": role == "observer",
         "quick_check": role == "participant" and skips_fine_tuning(document),
     }
+
+
+def offers_not_seen(document, role):
+    """✨ Whether `role`'s sort offers "Haven't seen this" beside the buckets (ticket 108): an observer's, where the
+    document's instrument has it (`not_seen`); never the participant's, who answers for themselves."""
+    return role == "observer" and "not_seen" in document["instrument"]
 
 
 def skips_fine_tuning(document):
