@@ -17,6 +17,7 @@
   "show_courtesy_credits": true,
   "messages_after_a_press": true,
   "ratings_save_quietly": true,
+  "freeze_warning_beside_the_press": true,
   "sorts_skip_fine_tuning": true,
   "sorts_hide_bucket_summary": true,
   "content": {
@@ -241,8 +242,19 @@
         "title": "Your gifts, seen together",
         "number": "02",
         "requires": ["designed"],
+        "opens_when": {
+          "clauses": [
+            {
+              "type": "observers_answered",
+              "block": "contacts",
+              "message": "Opens once enough of the people you invited have answered."
+            }
+          ],
+          "with_sections": "Opens once you've {sections}, and enough of the people you invited have answered."
+        },
         "to_finish": "completed {section}",
         "complete_label": "I've finished Section 2",
+        "complete_note": "When you've finished Workbook 1, come back here to say so.",
         "next_step": {
           "waiting": "{section}'s Workbook 1 opens once at least {minimum} of the people you invited have answered and you've seen how others see you."
         },
@@ -257,7 +269,7 @@
             "id": "others-pdf",
             "type": "download",
             "file": "whatever-you-do-workbook-1.pdf",
-            "body": "Workbook 1, to work through on paper: two readings on how you've been designed, then a conversation with your coach about your results, your own answers and the answers others gave.\n\nIt is the first of four for the middle of the course, one for each of Sections 2 to 5. When you've finished this one, come back here to say so.",
+            "body": "Workbook 1, to work through on paper: two readings on how you've been designed, then a conversation with your coach about your results, your own answers and the answers others gave.\n\nIt is the first of four for the middle of the course, one for each of Sections 2 to 5.",
             "button_label": "Download Workbook 1 (PDF)",
             "after_comparison": {
               "sort": "strengths-sort",

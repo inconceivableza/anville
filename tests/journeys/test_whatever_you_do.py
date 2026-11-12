@@ -21,6 +21,7 @@ from django.test import Client
 from django.utils import timezone
 from django.utils.html import escape
 
+from engine.document.blocks import FREEZE_WARNINGS
 from engine.document.observers import minimum_observers, relationship_question
 from engine.hub import COACH_WAIT_WORDING, COMPARISON_READY_SENTENCE, hub_for, track_sections
 from engine.models import Contact, ObserverResponse, Publication, Response
@@ -686,7 +687,9 @@ def without_what_finishing_takes(document):
 def without_the_comparison_signpost(document):
     """✨ The way to the comparison, in Section 2 (ticket 87), is this pathway's alone (ticket 67a): the faithful port
     reaches the comparison from the results page only, as the original prototype does. Nor does anything in the
-    faithful port wait on the comparison (ticket 68), as this pathway's first workbook does."""
+    faithful port wait on the comparison (ticket 68), as this pathway's first workbook does, nor has it the freeze
+    warning beside the press, keeping "Before you look" (ticket 106)."""
+    document.pop("freeze_warning_beside_the_press", None)
     for section in document["content"]["sections"]:
         section["blocks"] = [block for block in section["blocks"] if block["type"] != "comparison_signpost"]
         for block in section["blocks"]:
@@ -830,6 +833,7 @@ WORKBOOKS = {"others": 1, "shape": 2, "calling": 3, "growth": 4}
 SENT = DOCUMENT.parents[1] / "Prototypes for reference" / "Workbook files" / "Workbooks sent 29 Oct"
 WORKBOOK_1 = "/downloads/others-pdf/"
 SECTION_2 = "/sections/others/"
+COMPARISON = "/results/strengths-sort/comparison/"
 SECTION_3 = "/sections/shape/"
 SECTION_4 = "/sections/calling/"
 
@@ -906,11 +910,27 @@ def test_section_1_opens_the_strengths_evaluation_at_once_and_is_finished_on_it_
 
 
 @pytest.mark.django_db
+def test_section_1s_page_offers_its_finish_only_once_the_evaluation_is_in(participant):
+    """✨ Ticket 106: the evaluation is all Section 1 asks, so before it is in there is nothing to finish, and the button
+    is not there at all, rather than greyed (sprint 3c); the page's own card says what to do."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+    finish = 'action="/sections/designed/complete/'
+
+    assert finish not in section_1(participant)
+
+    submit_the_sort(participant)
+
+    assert finish in section_1(participant)
+
+
+@pytest.mark.django_db
 def test_once_the_evaluation_is_done_section_1_shows_no_results_and_section_2_the_way_to_the_comparison(
     participant,
 ):
     """✨ "View my results →" is the way to them, as in the faithful port (fix-5, reversing ticket 57). The way to the
-    comparison (ticket 67a) and the first workbook are Section 2's (ticket 87), on the hub too."""
+    comparison (ticket 67a) and the first workbook are Section 2's (ticket 87), on the hub too, Section 2 opening once
+    enough of the people invited have answered (ticket 106)."""
     client = through_section_1(participant)
 
     page = section_1(client)
@@ -918,6 +938,7 @@ def test_once_the_evaluation_is_done_section_1_shows_no_results_and_section_2_th
     in_section_2 = ("how-others-see-you", "others-pdf")
     for block_id in in_section_2:
         assert f'id="block-{block_id}"' not in page
+    people_answer(client)
     page = section_2(client)
     in_order = [page.index(f'id="block-{block_id}"') for block_id in in_section_2]
     assert in_order == sorted(in_order)
@@ -925,6 +946,9 @@ def test_once_the_evaluation_is_done_section_1_shows_no_results_and_section_2_th
 
 
 COMPARISON_LINK = re.compile(r'(href|action)="/results/strengths-sort/comparison/')
+# ✨ Where an open row leads: the comparison, by its press or to its waiting page, or, while a press would freeze answer
+# collection, Section 2's card for it, which has room for the warning beside the press (ticket 106).
+TO_THE_COMPARISON = re.compile(r'(href|action)="(/results/strengths-sort/comparison/|/sections/others/#block-how-)')
 
 
 def comparison_row(html, kind):
@@ -937,7 +961,8 @@ def comparison_row(html, kind):
 @pytest.mark.django_db
 def test_the_comparisons_row_is_listed_under_section_2_and_locked_with_it(participant, settings):
     """✨ Fix-19: on the hub and in the sidebar, the row is Section 2's, "Locked" with its lock note and leading nowhere
-    while Section 2 is locked, and so is every other way to the comparison; once open, the row leads to it (fix-16)."""
+    while Section 2 is locked, and so is every other way to the comparison; once open, the row leads to it (fix-16), or
+    while a press would freeze answer collection, to Section 2's card for it (ticket 106)."""
     settings.ANVILLE_SIDEBAR = True
     answer_onboarding(participant)
     complete(participant, "onboarding")
@@ -960,7 +985,7 @@ def test_the_comparisons_row_is_listed_under_section_2_and_locked_with_it(partic
     ):
         row, section_2 = comparison_row(html, kind)
         assert row in section_2
-        assert "Locked" not in row and COMPARISON_LINK.search(row)
+        assert "Locked" not in row and TO_THE_COMPARISON.search(row)
         # ✨ Fix-23: one control, the link or the press, and the arrow at the right like the other open rows
         if kind == "hub":
             assert 'class="srow-arrow"' in row
@@ -989,18 +1014,30 @@ def section_2(client):
     return main_of(client.get(SECTION_2).content.decode())
 
 
-@pytest.mark.django_db
-def test_section_2_stays_locked_until_section_1_is_finished(participant):
-    """✨ Section 2's comparison and first workbook follow Section 1 (ticket 87)."""
-    answer_onboarding(participant)
-    complete(participant, "onboarding")
-    submit_the_sort(participant)
-    assert participant.get(SECTION_2).status_code == 302
-    assert escape(OPENS_ONCE.format(what_is_left("designed"))) in note_under(participant, "others")
+def section_2_opens_when():
+    """✨ Section 2's opening condition, as the document words it (ticket 106)."""
+    return pathway_section("others")["opens_when"]
 
-    complete(participant, "designed")
+
+@pytest.mark.django_db
+def test_section_2_opens_once_section_1_is_finished_and_enough_people_have_answered_then_stays_open(participant):
+    """✨ Ticket 106: Section 2 waits for the comparison, not on Section 1 alone (ADR 0019). Until the minimum of the
+    people invited have answered, its page and its comparison are refused, its lock note saying what it waits on; once
+    it has opened, a withdrawal leaving fewer never locks it again."""
+    to_section_2(participant)
+    browsers = people_answer(participant, count=minimum_observers(the_pathway()) - 1)
+    assert participant.get(SECTION_2).status_code == 302
+    assert participant.get(COMPARISON).status_code == 302
+    assert escape(section_2_opens_when()["clauses"][0]["message"]) in note_under(participant, "others")
+
+    last = Client()
+    claim(last, issue_link(participant, "Person 2"))
+    assert send(last, a_whole_sort()).status_code == 303
 
     assert participant.get(SECTION_2).status_code == 200
+    withdraw(browsers[0])
+    assert participant.get(SECTION_2).status_code == 200
+    assert participant.get(COMPARISON).status_code == 200
 
 
 @pytest.mark.django_db
@@ -1096,14 +1133,16 @@ def note_under(client, section_id):
 
 @pytest.mark.django_db
 def test_each_lock_note_names_exactly_what_is_left_in_the_sections_still_unfinished(participant):
-    """✨ Each by its phrase in the document (ticket 79), and Sections 1, 2 and 3 named together (ticket 87)."""
+    """✨ Each by its phrase in the document (ticket 79), and Sections 1, 2 and 3 named together (ticket 87). Section 2
+    also waits on the people invited answering, which its note names after Section 1, then alone (ticket 106)."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
 
     # ✨ Section 4 also waits on the coach, whom its note names after the sections (ticket 64).
     with_the_coach = opening_condition()["with_sections"].replace("{sections}", "{}")
     section_1, coach, voices = map(what_is_left, ["designed", "walk-with-a-coach", "trusted-voices"])
-    assert escape(OPENS_ONCE.format(section_1)) in note_under(participant, "others")
+    with_answers = section_2_opens_when()["with_sections"].replace("{sections}", section_1)
+    assert escape(with_answers) in note_under(participant, "others")
     assert escape(OPENS_ONCE.format(f"{section_1}, {coach} and {voices}")) in note_under(participant, "shape")
     assert escape(with_the_coach.format(what_is_left("designed", "Sections 1, 2 and 3"))) in note_under(
         participant, "calling"
@@ -1113,6 +1152,7 @@ def test_each_lock_note_names_exactly_what_is_left_in_the_sections_still_unfinis
     do_the_sort(participant)
     choose(participant)
     assert escape(OPENS_ONCE.format(voices)) in note_under(participant, "shape")
+    assert escape(section_2_opens_when()["clauses"][0]["message"]) in note_under(participant, "others")
 
     add_people(participant, 3)
     complete(participant, "shape")
@@ -1425,7 +1465,8 @@ def press_compare(client):
 
 
 def to_section_2(client):
-    """✨ Onboarding done, the sort sent and Section 1 finished, so Section 2 is open."""
+    """✨ Onboarding done, the sort sent and Section 1 finished, so Section 2 opens once enough of the people invited
+    have answered (ticket 106)."""
     answer_onboarding(client)
     complete(client, "onboarding")
     do_the_sort(client)
@@ -1524,7 +1565,9 @@ def test_while_section_2_waits_only_on_the_comparison_the_hubs_next_step_is_the_
 
 
 @pytest.mark.django_db
-def test_with_nothing_else_open_the_next_step_waits_on_answers_with_a_button_to_section_2(participant):
+def test_with_nothing_else_open_the_next_step_waits_on_answers_with_a_button_to_the_people_asked(participant):
+    """✨ Section 2 is locked until enough of them have answered (ticket 106), so the button leads to Five trusted
+    voices, where more people can be invited, as the coach's wait leads to the coach page."""
     client = to_section_2(participant)
     invite_everyone(client)
     complete(client, "shape")
@@ -1536,7 +1579,8 @@ def test_with_nothing_else_open_the_next_step_waits_on_answers_with_a_button_to_
     others = next(section for section in document["content"]["sections"] if section["id"] == "others")
     authored, minimum = others["next_step"]["waiting"], minimum_observers(document)
     assert escape(authored.replace("{section}", "Section 2").replace("{minimum}", str(minimum))) in panel
-    assert f'href="{SECTION_2}"' in panel
+    assert f'href="{CONTACTS_PAGE}"' in panel
+    assert f'href="{SECTION_2}"' not in panel
 
 
 @pytest.mark.django_db
@@ -1574,7 +1618,16 @@ def test_once_the_minimum_have_answered_the_next_step_is_the_press_on_to_the_com
 
 @pytest.mark.django_db
 def test_below_the_minimum_the_next_step_still_waits_on_answers_and_offers_no_comparison(participant):
-    panel = nothing_else_open(participant, answered=minimum_observers(the_pathway()) - 1)
+    """✨ Section 2 opened, then a withdrawal left fewer than the minimum before the comparison was viewed: it stays
+    open (ticket 106), its only open work waiting, so the button leads to it."""
+    to_section_2(participant)
+    invite_everyone(participant)
+    complete(participant, "shape")
+    browsers = people_answer(participant, count=minimum_observers(the_pathway()))
+    participant.get("/hub/")  # ✨ where Section 2's opening is stored
+    withdraw(browsers[0])
+
+    panel = next_step(participant.get("/hub/").content.decode())
 
     assert "Waiting on answers" in panel
     assert f'href="{SECTION_2}"' in panel
@@ -1591,6 +1644,50 @@ def test_with_the_minimum_in_another_open_section_is_still_the_next_step(partici
     panel = next_step(client.get("/hub/").content.decode())
 
     assert f'href="{SECTION_3}"' in panel
+
+
+# The warning before the comparison beside its press, with no page between (ticket 106)
+
+VISIT = 'action="/results/strengths-sort/comparison/visit/"'
+
+
+@pytest.mark.django_db
+def test_a_press_with_the_minimum_in_freezes_answer_collection_and_shows_the_comparison_with_no_page_between(
+    participant,
+):
+    """✨ The warning sits beside the press, so the press is the look (ADR 0017's freeze unchanged)."""
+    client = to_section_2(participant)
+    people_answer(client)
+
+    pressed = client.post("/results/strengths-sort/comparison/visit/")
+
+    assert (pressed.status_code, pressed["Location"]) == (303, COMPARISON)
+    response = Response.objects.get()
+    assert response.collection_frozen_at is not None
+    assert "strengths-sort" in response.comparisons_viewed
+
+
+@pytest.mark.django_db
+def test_while_a_press_would_freeze_answer_collection_the_hub_and_sidebar_offer_it_only_beside_the_warning(
+    participant, settings
+):
+    """✨ The next step's press carries the warning; the comparison's row, the sidebar's entry and the voices card, with
+    no room for it, lead to Section 2's card for the comparison instead, which carries it too. Once collection is
+    frozen there is nothing to warn of, and the row presses again."""
+    settings.ANVILLE_SIDEBAR = True
+    nothing_else_open(participant, answered=minimum_observers(the_pathway()))
+    warning = escape(FREEZE_WARNINGS["everyone"])  # ✨ the three invited have all answered
+
+    hub = main_of(participant.get("/hub/").content.decode())
+    panel = next_step(hub)
+    assert hub.count(VISIT) == 1 and VISIT in panel and warning in panel
+    assert VISIT not in sidebar_of(participant.get(SECTION_2).content.decode())
+    assert warning in section_2(participant)
+
+    press_compare(participant)
+
+    row, _ = comparison_row(main_of(participant.get("/hub/").content.decode()), "hub")
+    assert VISIT in row
 
 
 # The hub while Section 4 waits on the coach (ticket 65)

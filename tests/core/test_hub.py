@@ -10,6 +10,7 @@ to open is enforced separately, over HTTP, in tests/journeys/test_sections.py.
 import pytest
 from django.utils.html import conditional_escape
 
+from engine.document.gates import observers_answered_key
 from engine.hub import COMPLETE, IN_PROGRESS, LOCKED, NOT_STARTED, Piece, hub_for, is_locked, open_blocks
 
 
@@ -376,6 +377,24 @@ def test_a_section_with_no_gate_whose_download_waits_on_the_comparison_is_passed
     alone = hub_for([others], {}, completed=())
     assert alone.next_step is None
     assert alone.waiting_on_answers.id == "others"
+
+
+def test_a_section_locked_only_until_enough_observers_have_answered_is_passed_over_as_waiting_on_answers():
+    """✨ As *Whatever You Do*'s Section 2 since ticket 106: locked, the next step is the next section open, or with
+    none, the wait on answers; but not while a section it requires is unfinished, nor once enough have answered."""
+    asked = {"type": "observers_answered", "block": "contacts", "message": "Opens once enough have answered."}
+    others = {**section("others", requires=["designed"], blocks=[long_text("a")]), "opens_when": {"clauses": [asked]}}
+    sections = [section("designed"), others, section("shape", requires=["designed"])]
+
+    passed_over = hub_for(sections, {}, completed=["designed"])
+    alone = hub_for(sections, {}, completed=["designed", "shape"])
+    unfinished = hub_for(sections[:2], {}, completed=[])
+    answered = hub_for(sections[1:], {observers_answered_key("contacts"): True}, completed=["designed", "shape"])
+
+    assert passed_over.sections[1].is_locked and passed_over.next_step.id == "shape"
+    assert alone.next_step is None and alone.waiting_on_answers.id == "others"
+    assert unfinished.next_step.id == "designed" and unfinished.waiting_on_answers is None
+    assert answered.next_step.id == "others"
 
 
 def test_a_locked_section_names_the_sections_it_still_waits_for():

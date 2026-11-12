@@ -41,26 +41,36 @@
               </section>
             {% endwith %}
           {% elif comparison_next %}
-            {# ✨ Nothing is next, and the section waiting on answers has the minimum in (sprint-3c-r3-fix-14): the comparison signpost's title, the engine's sentence, and the comparison's press, through the freeze warning, as the results page draws it. #}
+            {% comment %}
+              ✨ Nothing is next, and the section waiting on answers has the minimum in (sprint-3c-r3-fix-14): the
+              comparison signpost's title, the engine's sentence, and the comparison's press, through the freeze
+              warning, as the results page draws it, or with it beneath where the document puts it beside the press
+              (ticket 106).
+            {% endcomment %}
             <section class="panel next {{ next_look }}">
               <p class="label">Your next step</p>
               <h2>{{ comparison_next.title }}</h2>
               <p>{{ comparison_next.sentence }}</p>
               {% include "engine/comparison_press.html" with press_sort=comparison_next.sort press_class="pill" press_magnetic=True %}
+              {% if comparison_next.warning %}<p class="freeze-warning">{{ comparison_next.warning }}</p>{% endif %}
             </section>
           {% elif hub.waiting_on_answers %}
-            {# ✨ Nothing is next, but a section's only open work waits on others' answers (ticket 68): the engine's heading, and the sentence the section carries for it (fix-2). #}
-            {% with waiting=hub.waiting_on_answers %}
-              <section class="panel next {{ next_look }}">
-                <p class="label">Your next step</p>
-                <h2>Waiting on answers</h2>
-                {% if waiting_sentence %}<p>{{ waiting_sentence }}</p>{% endif %}
-                <a class="pill" data-magnetic href="{% page_url waiting.id waiting.page %}">
-                  {{ waiting.title }}
+            {% comment %}
+              ✨ Nothing is next, but a section waits on others' answers, its only open work (ticket 68) or, locked, its
+              opening (ticket 106): the engine's heading, the sentence the section carries for it (fix-2), and the way
+              to it, or while it is locked to the people asked.
+            {% endcomment %}
+            <section class="panel next {{ next_look }}">
+              <p class="label">Your next step</p>
+              <h2>Waiting on answers</h2>
+              {% if waiting_sentence %}<p>{{ waiting_sentence }}</p>{% endif %}
+              {% if waiting_way %}
+                <a class="pill" data-magnetic href="{{ waiting_way.href }}">
+                  {{ waiting_way.label }}
                   <span class="pill-arrow"><svg width="10" height="10"><use href="#arrow"/></svg></span>
                 </a>
-              </section>
-            {% endwith %}
+              {% endif %}
+            </section>
           {% elif coach_wait %}
             {# ✨ Nothing is next, and a section waits on the coach alone: the engine's wording for the wait, by the coach's answer (ticket 65). #}
             <section class="panel next {{ next_look }}">

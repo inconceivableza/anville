@@ -17,7 +17,7 @@ from tests.documents import complete_sort, sort_pathway
 from tests.journeys.pages import main_of
 from tests.journeys.test_hub import signed_in_client  # noqa: F401 (a fixture)
 from tests.journeys.test_invitations import issue_link
-from tests.journeys.test_observer_assessment import send
+from tests.journeys.test_observer_assessment import send, withdraw
 from tests.journeys.test_observer_landing import claim
 from tests.journeys.test_results import STRENGTHS, submit_sort
 from tests.journeys.test_whatever_you_do import (
@@ -158,19 +158,20 @@ def test_the_results_ending_a_section_offer_only_its_finish_below_the_minimum_an
 @pytest.mark.django_db
 def test_the_section_2_signpost_puts_the_invitation_left_of_the_press_before_and_after_the_minimum(participant):
     """✨ fix-8's two buttons on the comparison signpost, in fix-10's order: the invitation, then the press (greyed
-    below the minimum)."""
+    below the minimum). Section 2 opens once three have answered (ticket 106), so it is below the minimum only once a
+    withdrawal leaves fewer, and stays open."""
     complete(participant, "designed")
-    people_answer(participant, count=2)
-
-    below = main_of(participant.get("/sections/others/").content.decode())
-    assert sections_and_comparison(below) == (True, False)
-    assert 'aria-disabled="true"' in below
-    assert below.index("/sections/trusted-voices/") < below.index('aria-disabled="true"')
-
-    the_third_person_answers(participant)
+    browsers = people_answer(participant, count=3)
 
     above = main_of(participant.get("/sections/others/").content.decode())
     assert sections_and_comparison(above) == (True, True)
     # ✨ The press alone: Workbook 1's button stays greyed until the comparison is seen (29 Oct).
     assert 'aria-disabled="true">Compare with how others see you →' not in above
     assert above.index("/sections/trusted-voices/") < above.index('action="/results/strengths-sort/comparison/visit/"')
+
+    withdraw(browsers[0])
+
+    below = main_of(participant.get("/sections/others/").content.decode())
+    assert sections_and_comparison(below) == (True, False)
+    assert 'aria-disabled="true"' in below
+    assert below.index("/sections/trusted-voices/") < below.index('aria-disabled="true"')

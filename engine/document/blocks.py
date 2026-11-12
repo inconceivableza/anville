@@ -531,6 +531,30 @@ def comparison_status(answered, minimum, viewed):
     return state, COMPARISON_STATUSES[state].format(answered=answered, minimum=minimum)
 
 
+# ✨ The warning before the press that freezes answer collection (ADR 0017), engine wording as the statuses are: when
+# everyone invited has answered, and otherwise, with how many have, out of how many invited.
+FREEZE_WARNINGS = {
+    "everyone": "Everyone you invited has answered. Once you look, you can't add anyone else.",
+    "some": "{answered} of the {invited} people you invited have answered. Once you look, no more answers are added, "
+    "so anyone who hasn't answered yet won't be able to.",
+}
+
+
+def freeze_warning(answered, invited):
+    """✨ What the participant is told before the press on to the comparison freezes answer collection (ADR 0017): on
+    "Before you look", or beside the press where the document puts it there (`warns_beside_the_press`)."""
+    if answered >= invited:
+        return FREEZE_WARNINGS["everyone"]
+    return FREEZE_WARNINGS["some"].format(answered=answered, invited=invited)
+
+
+def warns_beside_the_press(document):
+    """✨ Whether the document puts the freeze warning beside the press on to the comparison wherever it is offered, the
+    press then showing the comparison with no page between (ticket 106); off, as in the faithful port, the press first
+    asks on "Before you look"."""
+    return document.get("freeze_warning_beside_the_press", False)
+
+
 def translation_shown(document, passage):
     """✨ The translation named beside a passage's reference: its own, unless that is the document's, which the
     credits page says is the one used unless otherwise indicated. None when nothing is to be named."""

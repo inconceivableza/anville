@@ -4,7 +4,8 @@
   ✨ The gate and the way on. Rendered with the section, and again out of band after an autosave, so the
   messages and the button follow what the participant has just written rather than waiting for a reload.
   What it shows depends only on the answers, so a save is enough to bring it up to date. Nothing is offered
-  while the section's activity is shut behind a scripture reading, or while its sort is not yet in. On a page
+  while the section's activity is shut behind a scripture reading, while its sort is not yet in, or, in a section
+  whose work is all in its parts, until they are done (ticket 106): no finish greyed, none at all. On a page
   before a section's last, the way on is "Continue →" to the next page, and the gate is that page's own clauses.
 
   The wrapper is always here, even with nothing in it, so the autosave always has something to swap into.
@@ -60,6 +61,8 @@
     {# ✨ A hub side card is complete once its gate passes, with nothing to press (ticket 52): only what it waits on. #}
     {% include "engine/gate_checklist.html" %}
   {% elif offers_way_on and not section.is_part and not section.is_side_card and not is_complete %}
+    {# ✨ The section's line above its finish, such as when to come back and press it (ticket 106). #}
+    {% if section.complete_note %}<p class="completion-note">{{ section.complete_note }}</p>{% endif %}
     <div class="way-on"{% if refused %} id="refused"{% endif %}>
       {% include "engine/previous_page.html" %}
       {% url 'complete_section' section.id as complete %}

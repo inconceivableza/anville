@@ -44,6 +44,7 @@ from engine.document.blocks import (
     carried_by_way_on,
     coach_brief,
     comparison_status,
+    freeze_warning,
     landing_of,
     page_count,
     page_of,
@@ -53,6 +54,7 @@ from engine.document.blocks import (
     section_of,
     signpost_shown,
     text_shown,
+    warns_beside_the_press,
 )
 from engine.document.coach import (
     asked_in_a_sentence,
@@ -93,6 +95,7 @@ from engine.hub import (
     COMPLETE,
     block_ids_fixed_on_completion,
     complete_sections,
+    finish_waits,
     hub_for,
     is_locked,
     is_once_only_and_complete,
@@ -300,6 +303,7 @@ def hub(request):
             "comparison": comparison,
             "comparison_next": _comparison_next(hub, comparison),
             "waiting_sentence": waiting.waiting_sentence(minimum) if waiting is not None else None,
+            "waiting_way": _waiting_way(state.version.document, hub),
             "name": name_shown_for(state.response.participant) if state.response else None,
         },
     )
@@ -317,6 +321,25 @@ def _comparison_next(hub, comparison):
     if comparison["status"] != "ready" or comparison["locked"]:
         return None
     return {**comparison, "sentence": COMPARISON_READY_SENTENCE.replace("{section}", waiting.called)}
+
+
+def _waiting_way(document, hub):
+    """✨ Where the hub's "Waiting on answers" panel leads, as {"label", "href"}: to the section waiting, by its title,
+    at the page reached, while it is open (ticket 68); while it is locked by observers yet to answer, to the page of the
+    contact list its opening condition names, by that list's section's title, where more people can be invited (ticket
+    106), as the coach's wait leads to the coach page. None with no wait, or with that list's section locked too."""
+    waiting = hub.waiting_on_answers
+    if waiting is None:
+        return None
+    if not waiting.is_locked:
+        return {"label": waiting.title, "href": page_url(waiting.id, waiting.page)}
+    clauses = section_by_id(document, waiting.id)["opens_when"]["clauses"]
+    asked = next(clause["block"] for clause in clauses if clause["type"] == "observers_answered")
+    holding = section_of(document, asked)
+    if any(state.id == holding["id"] and state.is_locked for state in hub.sections):
+        return None
+    href = page_url(holding["id"], page_of(holding, asked))
+    return {"label": text_for(holding["title"], "participant"), "href": href}
 
 
 def _next_look(hub, coach_wait):
@@ -1314,6 +1337,15 @@ def _answered(response):
     return len(ObserverResponse.assessments_for(response).assessments)
 
 
+def _freeze_warning(response, answered, minimum):
+    """✨ The warning a press on to the comparison carries (`freeze_warning`) while it would freeze answer collection:
+    with `answered`, the observer assessments in, at least the `minimum` and collection not yet frozen; None
+    otherwise."""
+    if response.collection_frozen_at is not None or answered < minimum:
+        return None
+    return freeze_warning(answered, response.contacts.filter(role=Contact.Role.CONTACT).count())
+
+
 @login_required
 @consent_required
 @require_POST
@@ -1325,7 +1357,9 @@ def visit_comparison(request, block_id):
 
     With at least the minimum number of observer assessments in, and collection not yet frozen, the press first asks:
     how many of the people invited have answered, and that once they look no more answers are added. Its button
-    confirms, which freezes collection, then goes on as before (ticket 55). Below the minimum nothing is asked.
+    confirms, which freezes collection, then goes on as before (ticket 55). Below the minimum nothing is asked. Where
+    the document puts that warning beside the press (`warns_beside_the_press`), the press is the look: it freezes
+    collection and goes on with no page between (ticket 106).
 
     A press with the minimum in, confirmed or with collection already frozen, is also the view a comparison signpost's
     "Viewed" reads (ticket 67a), kept once withdrawals unfreeze collection."""
@@ -1335,17 +1369,12 @@ def visit_comparison(request, block_id):
     if _comparison_locked(state, block_id):
         return _to_the_hub_when_locked(request)  # ✨ nothing recorded or frozen, as on the page itself (fix-19)
     response = state.response
-    answered = _answered(response)
-    viewed = answered >= minimum_observers(state.version.document)
+    answered, minimum = _answered(response), minimum_observers(state.version.document)
+    viewed = answered >= minimum
     if response.collection_frozen_at is None and viewed:
-        if request.POST.get("confirmed") != "yes":
-            invited = response.contacts.filter(role=Contact.Role.CONTACT).count()
-            context = {
-                "block_id": block_id,
-                "answered": answered,
-                "invited": invited,
-                "everyone": answered >= invited,
-            }
+        asks = not warns_beside_the_press(state.version.document)
+        if asks and request.POST.get("confirmed") != "yes":
+            context = {"block_id": block_id, "warning": _freeze_warning(response, answered, minimum)}
             # ✨ No `back`: the button leads to the hub, as a section's does, since the page is reached from the hub's
             # cards and the sidebar as well as from the results page (fix-21).
             return render(request, "engine/comparison_confirm.html", context)
@@ -2697,6 +2726,8 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
     # ✨ A sort leads only to its results, as in the prototype, so completing is not offered beside it until it
     # is in. The linter makes its section's gate require it, so the server refuses completion before then too.
     sort_pending = any(BLOCK_TYPES[block["type"]].scored and block["id"] not in answers for block in blocks)
+    # ✨ Nor is it offered in a section whose work is all in its parts until they are done (ticket 106).
+    parts_pending = is_last and finish_waits(section, state.sections, state.completed)
     # ✨ A link shows the section it leads to exactly as the hub would: its title, its status and whether it is open.
     hub = hub_for(state.sections, answers, state.completed, moved_past=state.moved_past)
     links = _requirement_links(state, section, page)
@@ -2728,6 +2759,8 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
             "title": text_for(section["title"], "participant"),
             # ✨ While it holds a letter not yet sealed, the press that finishes it says it seals it (ticket 104).
             "complete_label": press["label"] if press else _complete_label(section),
+            # ✨ The line above the finish, such as when to come back and press it (ticket 106), or None.
+            "complete_note": text_for(section["complete_note"], "participant") if "complete_note" in section else None,
             "is_part": "part_of" in section,
             # ✨ On a part's last page, the finish of the section it is the last thing in, if it is (ticket 88).
             "finish": _finish_of(state, section) if is_last else None,
@@ -2762,7 +2795,7 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
         # ✨ Over the whole section, since the ratings it fixed may be on an earlier page than its completion.
         "holds_fixed_answers": any(block["id"] in fixed for block in section["blocks"]),
         # ✨ The way on, "Continue →" or completion. Going on from a page is refused on exactly these and `unmet`.
-        "offers_way_on": activity_open and not sort_pending,
+        "offers_way_on": activity_open and not sort_pending and not parts_pending,
         # ✨ What the checklist marks unmet: on the last page, where completing checks it, the whole gate.
         "unmet": [message for message, met, _ in gate_checklist if not met],
         "checklist": gate_checklist,
@@ -2937,7 +2970,10 @@ def _comparison_signpost_shown(state, block):
     minimum, where `_invite` marks the way to invite people `waiting`, the status says its phrase (fix-3), and the press
     is greyed (fix-8). Between a retake and the new sort, it is `unsorted`: the press greyed and its line leading back
     to the sort (29 Oct), in `COMPARISON_UNSORTED`'s words. That is while the sort's section, or the one it is part
-    of, stays finished, as a retake leaves it; before the first sort it cannot be."""
+    of, stays finished, as a retake leaves it; before the first sort it cannot be. Where the document puts the freeze
+    warning beside the press, `warning` is that warning while a press would freeze answer collection, or None; and
+    `signpost` is the address of the signpost on its page, where a hub row or sidebar entry with no room for the
+    warning leads meanwhile (ticket 106)."""
     if block["type"] != "comparison_signpost":
         return None
     sort = block["sort"]
@@ -2954,12 +2990,21 @@ def _comparison_signpost_shown(state, block):
             "unsorted": page_url(section["id"], page_of(section, sort)),
             "unsorted_line": {"link": link, "rest": rest},
         }
-    answered = _answered(state.response)
+    document = state.version.document
+    answered, minimum = _answered(state.response), minimum_observers(document)
     viewed = comparison_viewed(state.answers, sort)
-    status, label = comparison_status(answered, minimum_observers(state.version.document), viewed)
+    status, label = comparison_status(answered, minimum, viewed)
     invite = _invite(state)
     shown = invite.phrase if invite and invite.waiting else label
-    return {"sort": sort, "status": status, "label": shown, "invite": invite}
+    warning = _freeze_warning(state.response, answered, minimum) if warns_beside_the_press(document) else None
+    return {
+        "sort": sort,
+        "status": status,
+        "label": shown,
+        "invite": invite,
+        "warning": warning,
+        "signpost": _block_address(document, block["id"]),
+    }
 
 
 def _block_for_participant(

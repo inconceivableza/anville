@@ -24,3 +24,7 @@
 **Carried from 110**
 
 - [ ] Photographs of people journalling replace the stand-ins in How it works' steps 3 and 4 (the notebook and the Bible, from the site's own), with their descriptions and credits, picked from the free libraries as ticket 101's were and not all one narrow type of person, and shown to the content owner with the rest
+
+**Carried from 106**
+
+- [ ] Whether Sections 3–5 should match Section 2, their "When you've finished it, come back here to say so." moving from the workbook's text to a line above "I've finished Section N", is answered (the wording changes document asks it), and the pathway changed to match if so

@@ -10,7 +10,8 @@
   followable, and the status is the invite's phrase (ticket 88, fix-3, fix-8): two buttons show where the participant
   is going, and the grey one says it is not yet. The status is a plain line, not a pill (ticket 89). Once the
   comparison is viewed, the card is marked complete in lime, as a section signpost's is once its section is (fix-6,
-  fix-9).
+  fix-9). Where the document puts the freeze warning beside the press, the line is that warning while a press would
+  freeze answer collection, how many have answered and that no more are added once they look (ticket 106).
 {% endcomment %}
 {% if block.comparison %}
   <div id="block-{{ block.id }}" class="signpost comparison-signpost{% if block.comparison.status == 'viewed' %} is-complete{% endif %}">
@@ -31,6 +32,8 @@
         <a href="{{ block.comparison.unsorted }}">{{ block.comparison.unsorted_line.link }}</a>
         {{ block.comparison.unsorted_line.rest }}
       </p>
+    {% elif block.comparison.warning %}
+      <p class="signpost-line freeze-warning">{{ block.comparison.warning }}</p>
     {% else %}
       <p class="signpost-line">{{ block.comparison.label }}</p>
     {% endif %}

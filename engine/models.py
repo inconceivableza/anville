@@ -19,6 +19,7 @@ from engine.document.gates import (
     comparison_viewed_key,
     comparison_visit_key,
     links_issued_key,
+    observers_answered,
     opened_key,
 )
 from engine.document.observers import minimum_observers
@@ -324,7 +325,8 @@ class Response(models.Model):
         a sort's comparison is read in too, under a key no block can have, for a `comparison_visited` clause, and so is
         each view of one, for a block waiting on the comparison (ticket 68), how many of each block's people have a
         working link, for a `links_issued` clause, the coach's answer on their current link, expired or not, for a
-        `coach_accepted` clause, and when each section with opening conditions first opened, for the hub."""
+        `coach_accepted` clause, whether the minimum number of observers have answered, for an `observers_answered`
+        clause (ticket 106), and when each section with opening conditions first opened, for the hub."""
         kept, links, coach_answers = {}, {}, {}
         now = timezone.now()
         for contact in self.contacts.select_related("invitation").order_by("block_id", "position"):
@@ -341,7 +343,8 @@ class Response(models.Model):
         visits = {comparison_visit_key(block_id): at for block_id, at in self.comparisons_visited.items()}
         viewed = {comparison_viewed_key(block_id): at for block_id, at in self.comparisons_viewed.items()}
         opened = {opened_key(section_id): at for section_id, at in self.sections_opened.items()}
-        return {**self.answers, **kept, **visits, **viewed, **links, **coach_answers, **opened}
+        answered = observers_answered(self.version.document, _submitted_count(self))
+        return {**self.answers, **kept, **visits, **viewed, **links, **coach_answers, **answered, **opened}
 
 
 class Contact(models.Model):
