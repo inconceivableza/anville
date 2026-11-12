@@ -573,8 +573,9 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
 
 
 def as_one_reason(document):
-    """✨ The reason takes one or more choices here, as cards with a note saying so (ticket 112); the faithful port's is a
-    drop-down of one, with its placeholder. Either is read as one choice from the same options."""
+    """✨ The reason takes one or more choices here, as cards with a note saying so (ticket 112); the faithful port's is
+    a drop-down of one, with its placeholder. Each is made a single select with neither, so their options are still
+    compared."""
     [reason] = [block for block in document["content"]["sections"][0]["blocks"] if block["id"] == "reason"]
     reason["type"] = "single_select"
     reason.pop("note", None)
