@@ -408,8 +408,8 @@ def test_withdrawing_an_acceptance_deletes_the_coach_at_once_leaving_only_that_t
 
 @pytest.mark.django_db
 def test_once_accepted_the_coachs_own_page_leads_to_withdrawing_and_its_press_deletes_the_coach(participant, observer):
-    """✨ The way to withdraw, a quiet line below the page's message since ticket 109, is still there to follow: it leads
-    to the page that asks first, whose press deletes the coach (ADR 0024)."""
+    """✨ The way to withdraw, a quiet line below the page's message (ticket 109), leads to the page that asks first,
+    whose press deletes the coach (ADR 0024)."""
     link = issue_coach_link(participant)
     answer_as_coach(observer, link, "accept")
 

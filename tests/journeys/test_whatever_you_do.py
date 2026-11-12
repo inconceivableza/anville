@@ -604,8 +604,8 @@ def as_told_now(document):
 
 
 def without_the_observers_notice(document):
-    """✨ The observers' notice is this pathway's own since ticket 109, written for the two-round sort, "Haven't seen
-    this" and the retake, without the draft marker the faithful port's keeps; the tests above hold what it must keep."""
+    """✨ The observers' notice is this pathway's own (ticket 109), written for the two-round sort, "Haven't seen this"
+    and the retake, without the draft marker the faithful port's keeps; the tests above hold what it must keep."""
     document["observers"].pop("privacy_notice")
     return document
 
