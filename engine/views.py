@@ -2395,7 +2395,7 @@ def _refuse_link(request):
 
 
 # ✨ How an expired link that can still withdraw is found, by the role of the person it was for, and the address its
-# page posts to: a coach's link once it accepted, an observer's own link once they sent answers through it (29 Oct).
+# page posts to: a coach's link once it accepted, an observer's own link once they sent answers through it (ADR 0026).
 EXPIRED_WITHDRAWALS = {
     Contact.Role.COACH: (Invitation.expired_acceptance, "coach_withdrawal"),
     Contact.Role.CONTACT: (Invitation.expired_claim, "withdrawal_by_link"),
