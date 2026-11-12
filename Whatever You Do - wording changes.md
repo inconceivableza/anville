@@ -307,3 +307,41 @@ Whoever sends the newsletter then removes that address from the list. If you lat
 1. Your answers to the three questions in the table above, so the privacy page can go live.
 2. All existing data is wiped.
 3. The consent's "draft wording" notice comes off once you've signed off the privacy page.
+
+---
+
+## Part 3: Sprint 3d (from 12 November)
+
+The wording put in for your feedback of 30 October ("Friday 30th - updates") and for the review of 9–12 November. Each part below says what changed and quotes the new words beside what they replace.
+
+### Sections 1 and 2 on the hub and their pages
+
+Nothing yet.
+
+### The letter and the closing questions on two pages
+
+Nothing yet.
+
+### The strengths evaluation's sort, tie-break and names
+
+Nothing yet.
+
+### What participants and the people they ask are told
+
+Nothing yet.
+
+### The homepage
+
+Nothing yet.
+
+### Stay in touch with a choice
+
+Nothing yet.
+
+### Before we begin's reasons and photos
+
+Nothing yet.
+
+### Demo shortcuts
+
+Nothing yet.
