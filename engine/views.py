@@ -768,7 +768,8 @@ def save_answer(request, block_id):
         try:
             participant_response.submit_sort(block_id, value, scores)
         except IntegrityError:
-            refusal = "Your results are already in. Retaking the sort is not offered yet."
+            # ✨ A sort sent from a page left open: the retake, at the foot of the results, is the way to sort again.
+            refusal = "Your results are already in. To sort again, retake the strengths evaluation from your results."
             return _answer_refused(request, state, section, block_id, refusal, status=409)
         # ✨ A sort too close to call on one framework or both, and not flat, leads to the tie-break's pairs first.
         if pair_plan(state.version.document, scores):
