@@ -4,17 +4,19 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** resolved
+
+**Handed over:** the final photographs of people journalling for steps 3 and 4, which are the developer's to pick, to 115
 
 **Sprint:** 3d (end not yet set)
 
 **Spec:** Sprint 3d: the code review and the 30 October feedback; Sprint 3c: the content owner's feedback
 
-- [ ] "Learn more"'s arrow points straight down
-- [ ] The overview's heading breaks into lines of even length at every width
-- [ ] The testimonial breaks into three paragraphs, after "…weren't obvious at all." and after "…some of the Whatever You Do questions."
-- [ ] How it works' steps 3 and 4 show photos of people journalling in place of their drawn screens, their text saying the work is done in a workbook, and the new photos are credited on the credits page
-- [ ] Each How it works step's picture, drawn or photographed, has a description screen readers hear
+- [x] "Learn more"'s arrow points straight down
+- [x] The overview's heading breaks into lines of even length at every width
+- [x] The testimonial breaks into three paragraphs, after "…weren't obvious at all." and after "…some of the Whatever You Do questions."
+- [ ] How it works' steps 3 and 4 show photos of people journalling in place of their drawn screens, their text saying the work is done in a workbook, and the new photos are credited on the credits page (the final photos carried to 115)
+- [x] Each How it works step's picture, drawn or photographed, has a description screen readers hear
 
 **Context**
 

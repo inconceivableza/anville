@@ -15,3 +15,7 @@
 - [ ] Whether coaches and observers may stop reminders for good, beyond their link's life (checklist, Other tasks), is answered, and ticket 73 updated
 - [ ] The content owner confirms that a retake deletes what observers sent (ADR 0025), or says otherwise and a ticket follows
 - [ ] The content owner has seen this sprint's wording changes and new photos, and their replies are in the checklist
+
+**Carried from 110**
+
+- [ ] Photographs of people journalling replace the stand-ins in How it works' steps 3 and 4 (the notebook and the Bible, from the site's own), with their descriptions and credits, picked from the free libraries as ticket 101's were and not all one narrow type of person, and shown to the content owner with the rest
