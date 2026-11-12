@@ -320,7 +320,11 @@ Nothing yet.
 
 ### The letter and the closing questions on two pages
 
-Nothing yet.
+From your 30 October feedback on Section 6 ("Think these should be 2 separate screens – questions vs letter"). Section 6 is now two pages, in the same order as before: the letter first, then the questions and the seal. Each page says **"Page 1 of 2"** or **"Page 2 of 2"** under the title.
+
+- **Page 1:** "The task", Joshua 4:6b–7 and "Your letter", with "Print" and "Copy text", as before. The line under the letter now points to the next page: **"On the next page, answer five questions, then pick the day your letter opens and seal it. Once it is sealed, it can't be changed, and it can't be read here until that day."** It said "Answer the five questions below, then pick the day your letter opens and seal it…". The page ends in a new button, **"Save my letter and continue →"**, which saves the letter and opens page 2. If the letter is too short, pressing it says what sealing said before: **"Write your letter (10 characters or more) before sealing it."**
+- **Page 2:** "Where are you now?", the five questions, "Open it on" with its date, and **"Save my answers and seal my letter"**, all as before, with **"← Previous page"** beside the button, which goes back to the letter. If the letter has been cut short since, pressing the button shows the same line, "Write your letter (10 characters or more) before sealing it.", as a link back to the letter.
+- **Once sealed:** the participant lands on their sealed letter on page 1, as before. Its button then reads **"Continue →"** and opens page 2, where the five answers show, fixed.
 
 ### The strengths evaluation's sort, tie-break and names
 

@@ -373,8 +373,9 @@
             "placeholder": "Dear me,",
             "months": { "default": 12, "earliest": 3, "latest": 24 },
             "copy_note": "Keep your own copy too: once it's sealed, you can't read it here until the day you pick.",
+            "continue_label": "Save my letter and continue →",
             "seal_label": "Save my answers and seal my letter",
-            "seal_note": "Answer the five questions below, then pick the day your letter opens and seal it. Once it is sealed, it can't be changed, and it can't be read here until that day.",
+            "seal_note": "On the next page, answer five questions, then pick the day your letter opens and seal it. Once it is sealed, it can't be changed, and it can't be read here until that day.",
             "date_label": "Open it on",
             "sealed": "Your letter is sealed until {date}. On that day it opens here for you to read.",
             "email": {
@@ -382,6 +383,10 @@
               "body": "The letter you wrote to yourself in Whatever You Do is ready to open. Sign in to read it.",
               "link_label": "Read your letter"
             }
+          },
+          {
+            "id": "to-where-you-are-now",
+            "type": "page_break"
           },
           {
             "id": "pl-intro",

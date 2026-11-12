@@ -1984,7 +1984,8 @@ main > .hub ~ .hub-consent {
   flex-wrap: wrap;
 }
 
-.way-on > form {
+.way-on > form,
+.way-on > .pill.full {
   flex: 1 1 140px;
 }
 
