@@ -4,7 +4,7 @@
 
 **Blocked by:** 105 (The engine tidy-up from the code review), A1
 
-**Status:** ready-for-agent
+**Status:** claimed
 
 **Sprint:** 3d (end not yet set)
 
@@ -14,7 +14,7 @@
 - [ ] The second page's back button returns to the letter, everything kept; sealing is refused, beside the button, until the letter and all five questions are in, and a refusal for a short letter says where to go to fix it
 - [ ] Without JavaScript both pages work by reload, and a refusal opens at its message
 - [ ] Once sealed, the participant lands on the sealed letter as now, and the questions show as fixed answers
-- [ ] The linter refuses a letter whose earliest, default and latest months are not in that order, at the letter's document path, with one message
+- [x] The linter refuses a letter whose earliest, default and latest months are not in that order, at the letter's document path, with one message
 
 **Context**
 

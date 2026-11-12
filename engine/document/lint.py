@@ -41,6 +41,7 @@ def lint(document):
         *_results_of_no_sort(document),
         *_unwaitable_blocks(document),
         *_empty_pages(document),
+        *_letter_months_out_of_order(document),
         *_unreadable_clauses(document),
         *_minimums_written_twice(document),
         *_unknown_phrase_placeholders(document),
@@ -271,6 +272,20 @@ def _empty_pages(document):
             if b == 0 or b == len(blocks) - 1 or blocks[b - 1]["type"] == "page_break":
                 yield Problem(
                     f"/content/sections/{s}/blocks/{b}", "A page break must come between blocks, not leave a page empty."
+                )
+
+
+def _letter_months_out_of_order(document):
+    """✨ A letter's date is offered at its `default` months on and accepted from its `earliest` to its `latest`, so the
+    three must be in that order, or the date offered is refused or no date is accepted at all (ticket 107). The same
+    month twice is in order."""
+    for s, section in enumerate(document["content"]["sections"]):
+        for b, block in enumerate(section["blocks"]):
+            months = block["months"] if block["type"] == "letter" else None
+            if months is not None and not months["earliest"] <= months["default"] <= months["latest"]:
+                yield Problem(
+                    f"/content/sections/{s}/blocks/{b}/months",
+                    "A letter's earliest, default and latest months must be in that order.",
                 )
 
 

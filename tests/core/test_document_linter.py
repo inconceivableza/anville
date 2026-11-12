@@ -4,7 +4,7 @@
 import pytest
 
 from engine.document import Problem, validate
-from tests.documents import pathway_document, sort_pathway
+from tests.documents import letter_pathway, pathway_document, sort_pathway
 
 
 def test_an_item_loading_onto_a_construct_that_does_not_exist_is_reported():
@@ -459,3 +459,44 @@ def test_a_photo_whose_credit_is_not_required_courtesy_or_marked_as_needing_none
 
 def test_a_photo_marked_as_needing_no_credit_is_accepted():
     assert validate(with_a_photo(credit={"kind": "none"})) == []
+
+
+# ✨ The letter's months (ticket 107)
+
+
+def a_letter_opening(months):
+    """✨ The test pathway's letter, its section the last, opening `months` on as its `default`, `earliest` and
+    `latest`."""
+    document = letter_pathway()
+    document["content"]["sections"][-1]["blocks"][0]["months"] = months
+    return document
+
+
+@pytest.mark.parametrize(
+    "months",
+    [
+        {"default": 2, "earliest": 3, "latest": 24},
+        {"default": 30, "earliest": 3, "latest": 24},
+        {"default": 12, "earliest": 24, "latest": 3},
+    ],
+    ids=["default before the earliest", "default after the latest", "earliest after the latest"],
+)
+def test_a_letter_whose_earliest_default_and_latest_months_are_out_of_order_is_reported_once_at_its_months(months):
+    document = a_letter_opening(months)
+    letter = len(document["content"]["sections"]) - 1
+
+    assert validate(document) == [
+        Problem(
+            path=f"/content/sections/{letter}/blocks/0/months",
+            message="A letter's earliest, default and latest months must be in that order.",
+        )
+    ]
+
+
+@pytest.mark.parametrize(
+    "months",
+    [{"default": 12, "earliest": 3, "latest": 24}, {"default": 3, "earliest": 3, "latest": 3}],
+    ids=["apart", "all the same"],
+)
+def test_a_letter_whose_months_are_in_order_is_accepted(months):
+    assert validate(a_letter_opening(months)) == []
