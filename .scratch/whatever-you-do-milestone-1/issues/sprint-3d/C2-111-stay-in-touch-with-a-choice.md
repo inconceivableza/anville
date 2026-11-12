@@ -10,11 +10,11 @@
 
 **Spec:** Sprint 3d: the code review and the 30 October feedback; Sprint 3c: the content owner's feedback
 
-- [ ] The sign-up box asks for at least one of: their church on the waitlist, news by email, to be contacted; with none ticked, the refusal shows beside the button
-- [ ] "Join the waitlist" and "Contact us" open the box with their own choice ticked
-- [ ] Each sign-up keeps its choices with the address, the time and the wording's version; a repeat address adds choices and never removes one; the admin lists and exports them
-- [ ] The thanks says what happens next for what was ticked, and the privacy page says what each choice leads to
-- [ ] A new ADR records the choices, superseding ADR 0023's "there is no tickbox"
+- [x] The sign-up box asks for at least one of: their church on the waitlist, news by email, to be contacted; with none ticked, the refusal shows beside the button
+- [x] "Join the waitlist" and "Contact us" open the box with their own choice ticked
+- [x] Each sign-up keeps its choices with the address, the time and the wording's version; a repeat address adds choices and never removes one; the admin lists and exports them
+- [x] The thanks says what happens next for what was ticked, and the privacy page says what each choice leads to
+- [x] A new ADR records the choices, superseding ADR 0023's "there is no tickbox"
 
 **Context**
 

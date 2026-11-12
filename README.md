@@ -289,7 +289,7 @@ With `DJANGO_DEBUG` off, errors are printed to the server's output with any obse
 
 The admin's sign-in at `/admin/` refuses repeated wrong passwords as the site's sign-in does: five for one account in five minutes, or ten from one address in a minute.
 
-The homepage's "Stay in touch" addresses (ADR 0023) are kept in the app and sent nowhere. The admin lists them under "Sign ups", newest first, each with when it was left and the version of the form's sentence; to export, tick them (or "Select all"), choose "Export selected sign-ups as CSV" and press Go. Someone who asks to be removed is deleted there. Raise `WORDING_VERSION` in `engine/stay_in_touch.py` when the sentence changes what a visitor signs up to.
+The homepage's "Stay in touch" addresses (ADR 0023) are kept in the app and sent nowhere. The admin lists them under "Sign ups", newest first, each with when it was left, the version of the form's wording and what it asked for: its church on the waitlist, news by email or to be contacted (ADR 0027), each with when it was ticked on the sign-up's own page. "By choice" on the right lists those that asked for one; to export, tick them (or "Select all"), choose "Export selected sign-ups as CSV" and press Go, for a column per choice holding when it was ticked. A sign-up from before the choices (wording version 1) has none. Someone who asks to be removed is deleted there. Raise `WORDING_VERSION` in `engine/stay_in_touch.py` when the wording changes what a visitor signs up to.
 
 To serve the way a deployment does, gather the static files and start gunicorn, which reads `gunicorn.conf.py`:
 
