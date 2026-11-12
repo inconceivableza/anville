@@ -882,6 +882,10 @@
         "more_note": {
           "description": "One sentence above 'Add another person', saying more people can be added than the rows ask for.",
           "$ref": "#/$defs/text"
+        },
+        "note": {
+          "description": "One quiet sentence above the rows, such as that adding someone sends them nothing, so the participant sends each their link.",
+          "$ref": "#/$defs/text"
         }
       }
     },

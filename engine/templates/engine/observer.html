@@ -24,12 +24,17 @@
     </div>
   {% endif %}
   {% if sent %}
-    {# ✨ The prototype's thanks, without its "submitted anonymously" (ADR 0005). Nothing that was sent is shown. #}
+    {% comment %}
+      ✨ The prototype's thanks, without its "submitted anonymously" (ADR 0005). Nothing that was sent is shown. The way
+      to withdraw is a quiet line below it (ticket 109), as on a coach's page once they accept. It keeps "answers",
+      not the coach's "data": withdrawing deletes what the observer sent, while their name stays on the participant's
+      list.
+    {% endcomment %}
     <div class="question-card">
       <h3>Thank you</h3>
       <p>Your evaluation has been sent. It will help {{ name }} understand how God has designed them – that's a real gift.</p>
-      <p><a href="{{ withdraw_at }}">Withdraw my answers</a></p>
     </div>
+    <p class="withdraw-line"><a href="{{ withdraw_at }}">Withdraw my answers</a></p>
   {% elif frozen %}
     {# ✨ Answer collection is frozen (ticket 55): no assessment is offered, and none sent would be kept. #}
     <div class="question-card">

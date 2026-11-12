@@ -480,6 +480,32 @@ def _block_address(document, block_id):
     return f"{address}#{anchor}" if anchor else address
 
 
+def _quick_link_names(document, hub, scored):
+    """✨ What the sidebar's links to the comparison of the `scored` block, to the invitations and to the coach page are
+    called, as {"comparison", "invitations", "coach"}: what the hub calls each page they open, in the pathway's words
+    (ticket 109), the title of the comparison signpost's row or of the side card holding the contact list or the coach
+    checklist. Where the hub names no such page, as for a list or a checklist within a larger section, the engine's
+    own."""
+    names = {
+        "comparison": "How others experience you",
+        "invitations": "Invite others to assess you",
+        "coach": "Your coach",
+    }
+    signposts = [
+        block
+        for block in blocks_of(document)
+        if block["type"] == "comparison_signpost" and scored is not None and block["sort"] == scored["id"]
+    ]
+    if signposts:
+        names["comparison"] = authored_text(signposts[0], "participant")["title"]
+    cards = {card.id: card.title for card in hub.side_cards()}
+    for name, block_type in (("invitations", "contact_list"), ("coach", "coach_checklist")):
+        held = [section_of(document, block["id"])["id"] for block in blocks_of(document) if block["type"] == block_type]
+        if held and held[0] in cards:
+            names[name] = cards[held[0]]
+    return names
+
+
 def participant_nav(request):
     """✨ The header and sidebar of every participant page (ticket 41a), as `engine/participant_header.html` needs them:
     the pathway's name, and unless the site switches it off, the sidebar. The sidebar lists what the hub lists, in its
@@ -487,8 +513,8 @@ def participant_nav(request):
     their statuses and locks are the hub's; a locked section carries no address, and neither does a page within it,
     such as the coach page. Below them are links, kept beside the entries as quick ways in (developer's call, 23 Oct):
     results and the comparison once there is a result, since before then they lead only back to the sort, the
-    comparison only while it is open too (fix-19), the invitations, and the coach page. `current` is the section whose
-    page this is, if any."""
+    comparison only while it is open too (fix-19), the invitations, and the coach page, each named as the hub names the
+    page it opens (`_quick_link_names`). `current` is the section whose page this is, if any."""
     state = _participant(request.user)
     if state.version is None:
         return {"title": None, "sidebar": None}
@@ -499,14 +525,15 @@ def participant_nav(request):
     hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
     links = []
     scored = _scored_block(document)
+    names = _quick_link_names(document, hub, scored)
     if scored and Result.objects.filter(response=state.response, block_id=scored["id"]).exists():
         links.append(("Your results", reverse("results", args=[scored["id"]])))
         if not _comparison_locked(state, scored["id"]):
-            links.append(("How others experience you", reverse("comparison", args=[scored["id"]])))
-    links.append(("Invite others to assess you", reverse("invitations")))
+            links.append((names["comparison"], reverse("comparison", args=[scored["id"]])))
+    links.append((names["invitations"], reverse("invitations")))
     coach_page = _coach_page_of(document, hub)
     if coach_page:
-        links.append(("Your coach", coach_page))
+        links.append((names["coach"], coach_page))
     return {
         "title": title,
         "sidebar": {
@@ -768,7 +795,8 @@ def save_answer(request, block_id):
         try:
             participant_response.submit_sort(block_id, value, scores)
         except IntegrityError:
-            refusal = "Your results are already in. Retaking the sort is not offered yet."
+            # ✨ A sort sent from a page left open: the retake, at the foot of the results, is the way to sort again.
+            refusal = "Your results are already in. To sort again, retake the strengths evaluation from your results."
             return _answer_refused(request, state, section, block_id, refusal, status=409)
         # ✨ A sort too close to call on one framework or both, and not flat, leads to the tie-break's pairs first.
         if pair_plan(state.version.document, scores):

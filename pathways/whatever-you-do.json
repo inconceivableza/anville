@@ -49,7 +49,7 @@
         ],
         "welcome": {
           "heading": "Welcome, {name}",
-          "sentence": "You’re all set. Section 1 starts with the ten-minute strengths evaluation.",
+          "sentence": "You’re all set. Section 1 starts with the strengths evaluation, which takes about 7 minutes.",
           "button": "Continue →",
           "verse": "Whatever you do, work heartily, as for the Lord and not for men",
           "reference": "Colossians 3:23",
@@ -141,7 +141,7 @@
         "complete_label": "I've finished Section 1",
         "next_step": {
           "heading": "Start with your gifts.",
-          "sentence": "Start with the ten-minute strengths evaluation."
+          "sentence": "Start with the strengths evaluation, which takes about 7 minutes."
         },
         "blocks": [
           {
@@ -181,7 +181,7 @@
             "id": "strengths-link",
             "type": "section_signpost",
             "section": "strengths",
-            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 3 trusted people to evaluate you too.",
+            "body": "Sort your strengths into buckets, in two quick rounds – then invite at least 3 trusted people to evaluate you too.",
             "button_label": "Open the strengths evaluation →",
             "finished": {
               "body": "You've completed the strengths evaluation. You can review your results any time.",
@@ -202,7 +202,7 @@
       {
         "id": "strengths",
         "title": "Strengths evaluation",
-        "estimate": "About 10 minutes",
+        "estimate": "About 7 minutes",
         "requires": ["onboarding"],
         "part_of": "designed",
         "blocks": [
@@ -578,7 +578,8 @@
             "type": "contact_list",
             "needed": 3,
             "optional": 2,
-            "more_note": "Five is a good number, but you can add more."
+            "more_note": "Five is a good number, but you can add more.",
+            "note": "Adding someone doesn't email them: send each person their link yourself."
           }
         ],
         "gate": {
@@ -724,10 +725,10 @@
     }
   },
   "observers": {
-    "privacy_notice": "[Draft: this notice must be written properly before anyone real takes part.]\n\n{name} has asked you to help them see their strengths as others see them. You'll sort some strengths into buckets and adjust the intensity of each. Takes about 10–15 minutes.\n\nWhat we keep: your answers. You don't give your name: we know who this link was sent to because {name} added you to their list. {name} never sees which answers are whose, though the people who run the service can.\n\nWhat {name} sees of your answers: nothing until enough people have answered. Then, the average of everyone's answers, and each person's answers without their name, lowest first, as a word such as \"Strong\" and a dot on a line. {name} may also choose to show this to a trusted third party. Your name is never shown with your answers. Once {name} has looked at the combined results, no new answers are added.\n\nIf you change your mind, you can withdraw at any time, and your answers will be removed: through the link of your own you're shown when you start, even after it has expired, or by asking the people who run the service. If you haven't answered, we'll email you a reminder once a week until your link runs out, and every reminder lets you stop them. This link is yours alone, so you answer only once and can stop the reminders or withdraw. {name} sees your answers among everyone else's, never with your name on them.",
+    "privacy_notice": "{name} has asked you to help them see their strengths as others see them. You'll sort short statements about {name} into buckets, from \"Definitely not {name}\" to \"Real strength\", in two quick rounds, with nothing to adjust afterwards. If a statement describes something you haven't seen, choose \"Haven’t seen this\" rather than guessing: it isn't counted. It takes about 7 minutes.\n\nWhat we keep: your answers. You don't give your name: we know who this link was sent to because {name} added you to their list. {name} never sees which answers are whose, though the people who run the service can.\n\nWhat {name} sees of your answers: nothing until enough people have answered. Then, the average of everyone's answers, and each person's answers without their name, lowest first, as a word such as \"Strong\" and a dot on a line. {name} may also choose to show this to a trusted third party. Your name is never shown with your answers. Once {name} has looked at the combined results, no new answers are added. If {name} later retakes the strengths evaluation, what you sent is deleted, and you can answer again through your link while it works.\n\nIf you change your mind, you can withdraw at any time, and your answers will be removed: through the link of your own you're shown when you start, even after it has expired, or by asking the people who run the service. If you haven't answered, we may email you a reminder once a week until your link runs out, and every reminder lets you stop them. This link is yours alone, so you answer only once and can stop the reminders or withdraw. {name} sees your answers among everyone else's, never with your name on them.",
     "reminder": {
       "subject": "How do you see {name}'s strengths?",
-      "body": "Hi {observer}, {name} asked how you see {name}'s strengths, as part of Whatever You Do. It takes about 10–15 minutes. Please answer through the link {name} sent you, or with the button below. Your link works until {until}.\n\nYour name is never shown to {name} with your answers. {name} gave us your name and email address; we use them only to remind you, once a week until you answer or your link runs out.",
+      "body": "Hi {observer}, {name} asked how you see {name}'s strengths, as part of Whatever You Do. It takes about 7 minutes. Please answer through the link {name} sent you, or with the button below. Your link works until {until}.\n\nYour name is never shown to {name} with your answers. {name} gave us your name and email address; we use them only to remind you, once a week until you answer or your link runs out.",
       "stop": "Don't want these reminders? Stop reminders about {name}",
       "answer": "Answer for {name} →",
       "details": "How we handle your details"
