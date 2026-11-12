@@ -593,26 +593,16 @@ body.wizard > main.container {
   z-index: 1;
 }
 
-/* ✨ A different photo for each page of a wizard, the hackathon prototype's five in its order (ticket 101); the shade
-   above keeps the verse readable on any of them, and the photo is drawn without JavaScript or a sign-in. */
-.ob-photo-1 {
-  background: var(--hero-bg) url("../img/facing-sun.jpg") center / cover;
-}
-
-.ob-photo-2 {
-  background: var(--hero-bg) url("../img/grass.jpg") center / cover;
-}
-
-.ob-photo-3 {
-  background: var(--hero-bg) url("../img/field-woman.jpg") center / cover;
-}
-
-.ob-photo-4 {
-  background: var(--hero-bg) url("../img/notebook.jpg") center / cover;
-}
-
-.ob-photo-5 {
-  background: var(--hero-bg) url("../img/hero.jpg") center / cover;
+/* ✨ A different photo for each page of a wizard, the page's own image (`WIZARD_PHOTOS` names each), filling the panel
+   as v3's does, beneath the shade above, which keeps the verse readable on any of them; it is drawn without JavaScript
+   or a sign-in. */
+.ob-photo > img {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .ob-photo .q {
@@ -710,7 +700,8 @@ body.wizard > main.container {
   animation: onboarding-enter 0.35s ease both;
 }
 
-/* ✨ v3's choices (sprint-3c-r3-fix-4): two columns of cards, each a radio, the chosen one brown, as v3's pressed. */
+/* ✨ v3's choices (sprint-3c-r3-fix-4): two columns of cards, each a radio, or a checkbox where many may be chosen
+   (ticket 112), the chosen ones brown, as v3's pressed. */
 .choice-q fieldset {
   border: 0;
   min-width: 0;
@@ -720,6 +711,13 @@ body.wizard > main.container {
   margin-bottom: var(--space-md);
   font-size: var(--text-md);
   color: var(--muted);
+}
+
+/* ✨ A choice of many's note, on its own line beneath the prompt, as v3's "Choose as many as apply." (ticket 112). */
+.choice-note {
+  display: block;
+  margin-top: var(--space-2xs);
+  font-size: var(--text-sm);
 }
 
 .opts {
@@ -3141,6 +3139,20 @@ body:not(.framed) .question-card > p + form {
   cursor: pointer;
 }
 
+/* ✨ The skip and "Both are right" side by side, centred, one above the other where the screen is too narrow for both
+   (ticket 108). */
+.pair-neither {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-xs) var(--space-lg);
+  margin-top: 15px;
+}
+
+.pair-neither .pair-skip {
+  margin: 0;
+}
+
 /* Hint boxes: rich text set off from the page */
 
 .hint-box {
@@ -4544,6 +4556,25 @@ html[data-javascript="loaded"] .sort-progress {
 .grade-5 { --tone: var(--green-deep); --k: 66%; }
 .grade-6 { --tone: var(--green-deep); --k: 95%; }
 
+/* ✨ "Haven't seen this", an observer's place beside the buckets (ticket 108), as the two-round prototype draws it:
+   below them, dashed and grey, with no dot, since it is no bucket and says nothing of strength. */
+.bucket-btn.not-seen {
+  --tone: var(--muted);
+  --k: 20%;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+  max-width: 420px;
+  min-height: 44px;
+  margin: var(--space-sm) auto 0;
+  border-style: dashed;
+  font-size: var(--text-sm);
+}
+
+.bucket-btn.not-seen::before {
+  display: none;
+}
+
 .scale-ends {
   display: flex;
   justify-content: space-between;
@@ -4766,6 +4797,18 @@ html[data-javascript="loaded"] .sort-progress {
 .check-dot[aria-checked="true"] {
   background: color-mix(in oklab, var(--tone) var(--k), var(--paper));
   border-color: color-mix(in oklab, var(--tone) 90%, var(--ink));
+}
+
+/* ✨ The answer chosen is marked as well as filled, so it shows without its colour, in greyscale too (ticket 108). */
+.check-dot[aria-checked="true"]::after {
+  content: "";
+  display: block;
+  width: 10px;
+  height: 10px;
+  margin: auto;
+  border-radius: var(--radius-round-shape);
+  background: var(--paper);
+  box-shadow: 0 0 0 2px var(--ink);
 }
 
 .check-scale {
@@ -4996,6 +5039,10 @@ html[data-javascript="loaded"] .save-fallback {
     justify-content: flex-start;
     text-align: left;
     font-size: var(--text-sm);
+  }
+
+  .bucket-btn.not-seen {
+    max-width: 360px;
   }
 
   .scale-ends {

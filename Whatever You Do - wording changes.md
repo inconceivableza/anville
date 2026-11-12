@@ -340,7 +340,12 @@ Nothing yet.
 
 ### The strengths evaluation's sort, tie-break and names
 
-Nothing yet.
+- "How you used the buckets" goes, for participants and people rating someone alike. Between the rounds, the "Halfway" screen keeps "Round 1 done", its paragraph, "Start round 2" and "Undo last card", but no longer shows **"How you used the buckets"**, its sentence about the spread ("You used 6 of the 7 buckets. That’s a good spread…" or "Spreading your answers out makes the results clearer…") or the bars. Once every card is placed, "All 72 sorted!" no longer lists how many cards went in each bucket.
+- People rating someone have the two-round prototype's eighth choice, a dashed grey button below the seven buckets: **"Haven’t seen this"**. A card placed there isn't scored: it's left out of that person's results, as if they hadn't been shown it. On a computer its key is 0, and the tip below the card reads **"Tip: press 1–7, or 0 for “Haven’t seen this”"** in place of "Tip: press 1–7". The participant's own evaluation has no such choice.
+- "Which is more true of you?" offers **"Both are right"** beside "Neither is more true of me". Either one leaves the pair as the sort placed it.
+- Where every pair on a profile was answered "Neither is more true of me" or "Both are right", the box on the results reads **"Left as sorted"**: **"You didn’t pick one over the other in any “Which is more true of you?” pair here, so Helper and Persuader stay as your sort placed them."** It was "Skipped": "You skipped every “Which is more true of you?” pair here, so … stay as your sort placed them.", which isn't true of someone who said both were right.
+- The gifts' names are unchanged: since 30 October each gift has one name wherever it is shown, Pioneer, Awakener, Persuader, Nurturer, Explainer or Helper, on the results, in the box after "Which is more true of you?", on the comparison and in a coach's view (your picture of 30 October shows the names from before then). The pairs themselves name no gift, and are still labelled "Your role among people".
+- On the demo site only, the "Demo profile" note below a sort loaded from a demo profile says **"Every card is placed for this profile. Send the sort as it is."** and **"If you change a card, the profile may no longer come out as below."**, in place of lines about sliders and fine-tuning, which the evaluation no longer has.
 
 ### What participants and the people they ask are told
 
@@ -373,7 +378,10 @@ Nothing yet.
 
 ### Before we begin's reasons and photos
 
-Nothing yet.
+- "What's bringing you to the course?" now takes as many reasons as apply: each card stays chosen when another is clicked, and clicking a chosen card again unchooses it. Beneath the question, on its own smaller line, it says **"Choose as many as apply. There's no wrong answer."** (your prototype's sentence, without "It shapes the examples and readings you'll see", which isn't true yet). If someone unchooses every card and presses "Continue →", it still says "Choose what's bringing you to the course to continue."
+- If anything but the listed reasons were ever sent (it can't be from the page itself), the answer isn't saved and the page says **"Choose only from the options."**
+- Anyone who started before this change keeps the question as it was, with one reason.
+- The photos beside each page of Before we begin are unchanged for now, the woman in the wheat field among them. New ones (such as pairs of boots, some muddier than others) are waiting for you and the developer to pick, and each will be credited on the credits page.
 
 ### Demo shortcuts
 

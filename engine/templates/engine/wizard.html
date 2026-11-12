@@ -1,6 +1,7 @@
 {# Copyright (C) New Community Church SE London 2026. #}
 {# For licensing information see ../../../LICENSE.md #}
 {% extends "engine/base.html" %}
+{% load static %}
 {% comment %}
   ✨ A section the pathway document marks as a wizard (ticket 50), while it is not yet complete: one page of it, its
   blocks and its way on as on any section page, beside a photo that differs on each page, without the hub's links or the sidebar.
@@ -19,10 +20,14 @@
 
 {% block content %}
   <div class="ob">
-    {# ✨ The photo is the stylesheet's, a different one for each page (ticket 101), so it needs no pathway file or sign-in. #}
-    {# ✨ The step's own verse and the word beneath it, as v3's, where the document gives them (sprint-3c-r3-fix-7); #}
-    {# ✨ else the engine's verse, in the ESV's words, as the credits page's notice says the quotations are. #}
-    <aside class="ob-photo ob-photo-{{ step.photo }}" aria-label="A scripture reflection">
+    {% comment %}
+      ✨ The photo is the engine's, a different one for each page, named with its credit in one list (`WIZARD_PHOTOS`),
+      a static file, so it needs no pathway file or sign-in. The step's own verse and the word beneath it, as v3's,
+      where the document gives them (sprint-3c-r3-fix-7); else the engine's verse, in the ESV's words, as the credits
+      page's notice says the quotations are.
+    {% endcomment %}
+    <aside class="ob-photo" aria-label="A scripture reflection">
+      <img src="{% static step.photo.file %}" alt="">
       {% if step.authored %}
         <blockquote class="q">
           “{{ step.authored.verse }}”

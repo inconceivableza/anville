@@ -1,0 +1,31 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../../LICENSE.md #}
+{% load choices %}
+{% comment %}
+  ✨ One or more choices (ticket 112): v3's cards, each a checkbox, saving as each is ticked or unticked, in a wizard or
+  not. What is sent is the identifier of every option ticked, after a blank value sent first, so a form with nothing
+  ticked still says so and unticking every card takes the answer back; a gate asking for an answer then refuses. An
+  answer stored as one option, as a single select stores it, shows as that card ticked.
+{% endcomment %}
+<form id="block-{{ block.id }}" class="choice-q" method="post" action="{% url 'save_answer' block.id %}">
+  {% csrf_token %}
+  <input type="hidden" name="value" value="">
+  <fieldset id="answer-{{ block.id }}" hx-post="{% url 'save_answer' block.id %}" hx-trigger="change"
+            hx-sync="this:queue last" hx-target="next .save-status">
+    <legend class="choice-prompt">
+      {{ block.text.prompt }}
+      {% if block.text.note %}<span class="choice-note">{{ block.text.note }}</span>{% endif %}
+    </legend>
+    <div class="opts">
+      {% with chosen=block.answer|choices_of %}
+        {% for option in block.text.options %}
+          <label class="opt">
+            <input type="checkbox" name="value" value="{{ option.id }}"{% if option.id in chosen %} checked{% endif %}>
+            <b>{{ option.label }}</b>
+          </label>
+        {% endfor %}
+      {% endwith %}
+    </div>
+  </fieldset>
+  {% include "engine/save_row.html" %}
+</form>

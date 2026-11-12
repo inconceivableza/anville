@@ -8,7 +8,17 @@ from django.urls import reverse
 
 from access.consent import current_text_version, withdraw
 from access.models import Account, Consent
-from engine.document.blocks import BLOCK_TYPES, CHOICE, CONFIRMATION, CONTACTS, SCALE_POINT, SCALE_POINTS, SORT, TEXT
+from engine.document.blocks import (
+    BLOCK_TYPES,
+    CHOICE,
+    CHOICES,
+    CONFIRMATION,
+    CONTACTS,
+    SCALE_POINT,
+    SCALE_POINTS,
+    SORT,
+    TEXT,
+)
 from engine.document.observers import link_lifetime, minimum_observers
 from engine.document.scoring import score
 from engine.hub import block_ids_fixed_on_completion, track_sections
@@ -161,6 +171,8 @@ def _answer_of(kind, block, number):
         return SCALE_POINTS[number % len(SCALE_POINTS)]
     if kind is CHOICE:
         return block["options"][number % len(block["options"])]["id"]
+    if kind is CHOICES:
+        return [block["options"][number % len(block["options"])]["id"]]
     if kind is CONFIRMATION:
         return True
     raise CommandError(f"seed_cohort cannot answer a {kind.name} block yet.")

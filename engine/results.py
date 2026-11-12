@@ -159,9 +159,10 @@ def _after_tie_break(presentation, scores, framework, bars, role):
 
 def pair_page(document, plan, place):
     """✨ What the tie-break's pair screen shows of the pair at `place` in the plan (ticket 30b): the document's question
-    and skip, a quiet label naming the pair's framework (its own label where the document gives none), one statement
-    for each of its two constructs in a random left-right order, as the prototype flips them, and how far through the
-    participant is. Each option carries its construct, which is what the form sends back."""
+    and skip, and "Both are right" where it has it (ticket 108), None where not; a quiet label naming the pair's
+    framework (its own label where the document gives none), one statement for each of its two constructs in a random
+    left-right order, as the prototype flips them, and how far through the participant is. Each option carries its
+    construct, which is what the form sends back."""
     wording = document["presentation"]["tie_break"]
     pair = plan[place]
     frameworks = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
@@ -179,6 +180,7 @@ def pair_page(document, plan, place):
         "framework": text_for(label, "participant"),
         "question": text_for(wording["question"], "participant"),
         "skip": text_for(wording["skip"], "participant"),
+        "both": text_for(wording["both"], "participant") if "both" in wording else None,
         "options": options,
     }
 

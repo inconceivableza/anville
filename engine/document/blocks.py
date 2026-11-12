@@ -55,21 +55,25 @@ class AnswerKind(NamedTuple):
 
     The refusal is shown in place of the schema's own message, which would echo the participant's text back.
     `from_form` reads what a form sent; anything it does not recognise it passes on for the schema to refuse.
-    It is None for a kind whose form sends more than one value.
+    It reads the one value sent under the answer's name, or with `reads_every_value` all of them, as a list. It is
+    None for a kind whose form sends its answer under more than one name.
     Kinds are shared between block types, so a gate clause can say which kinds of answer it can read.
     """
 
     name: str
-    schema: dict | Callable[[dict, dict], dict]
+    schema: dict | Callable[[dict, dict, str], dict]
     refusal: str
-    from_form: Callable[[str], object] | None
+    from_form: Callable[[str], object] | Callable[[list[str]], object] | None
     # ✨ What an observer may leave out of the answer, filled in from the document before it is held to the schema.
     observer_defaults: Callable[[dict, object], object] | None = None
+    # ✨ Whether the form sends a value for each part of the answer, as a choice of many sends one for each option
+    # ticked, so `from_form` is given every value sent rather than the last.
+    reads_every_value: bool = False
 
-    def schema_for(self, document, block):
-        """✨ The answer schema for one block within its pathway document. Most kinds need neither; a sort
-        needs the document's items and buckets, and a choice its block's options."""
-        return self.schema(document, block) if callable(self.schema) else self.schema
+    def schema_for(self, document, block, role="participant"):
+        """✨ The answer schema for one block within its pathway document, for one role. Most kinds need none of them; a
+        sort needs the document's items and buckets, and whose sort it is, and a choice its block's options."""
+        return self.schema(document, block, role) if callable(self.schema) else self.schema
 
 
 TEXT = AnswerKind(
@@ -95,8 +99,13 @@ CONFIRMATION = AnswerKind(
 )
 
 
-def _sort_schema(document, block):
-    """✨ Every item of the instrument, each placed in one of its buckets with a whole value from 0 to 100."""
+# ✨ An item an observer placed in "Haven't seen this", as it is sent and kept (ticket 108): no bucket and no value.
+NOT_SEEN = {"seen": False}
+
+
+def _sort_schema(document, block, role):
+    """✨ Every item of the instrument, each placed in one of its buckets with a whole value from 0 to 100, or, in an
+    observer's sort where the document offers "Haven't seen this" (`offers_not_seen`), not seen (ticket 108)."""
     instrument = document["instrument"]
     placement = {
         "type": "object",
@@ -107,6 +116,8 @@ def _sort_schema(document, block):
             "value": {"type": "integer", "minimum": 0, "maximum": 100},
         },
     }
+    if offers_not_seen(document, role):
+        placement = {"oneOf": [placement, {"const": NOT_SEEN}]}
     item_ids = [item["id"] for item in instrument["items"]]
     return {
         "type": "object",
@@ -141,13 +152,39 @@ SORT = AnswerKind(
 )
 
 
-def _choice_schema(document, block):
+def _choice_schema(document, block, role):
     """✨ The identifier of one of the block's own options, never its label. The empty choice ("Select...")
     takes the answer back, as emptying a text box does: blank counts as unanswered everywhere."""
     return {"enum": ["", *(option["id"] for option in block["options"])]}
 
 
 CHOICE = AnswerKind("choice", _choice_schema, "Choose one of the options.", _text_from_form)
+
+
+def _choices_schema(document, block):
+    """✨ The identifiers of any of the block's own options, each at most once, never their labels. None at all takes
+    the answer back: an empty list counts as unanswered everywhere."""
+    return {"type": "array", "uniqueItems": True, "items": {"enum": [option["id"] for option in block["options"]]}}
+
+
+def _choices_from_form(sent):
+    # ✨ A value for each option ticked, after the blank one the form always sends first, so that a form sent with
+    # nothing ticked still says so, and unticking every option takes the answer back.
+    return [value for value in sent if value != ""]
+
+
+def choices_of(answer):
+    """✨ The identifiers a choice of many holds, as a list, for its template to tick. A single option's identifier, as
+    a single select stores it, reads as a choice of that one, so a reason given before it took many still shows; no
+    answer, or a blank one, as none."""
+    if isinstance(answer, list):
+        return answer
+    return [answer] if isinstance(answer, str) and answer else []
+
+
+CHOICES = AnswerKind(
+    "choices", _choices_schema, "Choose only from the options.", _choices_from_form, reads_every_value=True
+)
 
 # ✨ People other than the participant. A list is never sent as one form value: each person is added or changed on
 # their own (`contact_from_form` holds them to their rules), and they are kept as contacts rather than answers. The
@@ -232,7 +269,9 @@ def _sort_widget(document, role, name=""):
     always fine-tunes, unless the document skips fine-tuning for everyone. Each item names its twin, either way round,
     and, where any is reworded, its round: the second for a rewording, the first for the rest. Where fine-tuning is
     skipped, a participant gets a quick check of twins answered far apart instead; an observer never does, as several
-    observers' contradictions average out."""
+    observers' contradictions average out. An observer is offered "Haven't seen this" beside the buckets where the
+    document has it (`offers_not_seen`, ticket 108). How the cards were spread over the buckets is shown between the
+    rounds and once every card is placed, unless the document hides it, for everyone (ticket 108)."""
     instrument = document["instrument"]
     authored = document.get("presentation", {}).get("sort_wording", {})
     twins = {}
@@ -258,10 +297,18 @@ def _sort_widget(document, role, name=""):
             for bucket in instrument["buckets"]
         ],
         "wording": {field: shown(authored.get(field, default)) for field, default in SORT_WORDING.items()},
+        "not_seen": {"label": shown(instrument["not_seen"]["label"])} if offers_not_seen(document, role) else None,
+        "bucket_summary": not document.get("sorts_hide_bucket_summary", False),
         "fine_tunes": not skips_fine_tuning(document),
         "sends_before_fine_tuning": role == "observer",
         "quick_check": role == "participant" and skips_fine_tuning(document),
     }
+
+
+def offers_not_seen(document, role):
+    """✨ Whether `role`'s sort offers "Haven't seen this" beside the buckets (ticket 108): an observer's, where the
+    document's instrument has it (`not_seen`); never the participant's, who answers for themselves."""
+    return role == "observer" and "not_seen" in document["instrument"]
 
 
 def skips_fine_tuning(document):
@@ -345,6 +392,10 @@ BLOCK_TYPES = {
             text_fields=("prompt", "placeholder"),
             text_lists=(("options", ("label",)),),
             captures=CHOICE,
+        ),
+        # ✨ One or more choices from a list, as cards, each a checkbox (ticket 112).
+        BlockType(
+            "multi_select", text_fields=("prompt", "note"), text_lists=(("options", ("label",)),), captures=CHOICES
         ),
         BlockType("contact_list", text_fields=("more_note",), captures=CONTACTS, lists_links=True),
         # ✨ Captures nothing: its answers are opinions about another person, never kept (see `coach.py`).

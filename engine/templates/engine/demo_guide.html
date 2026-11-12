@@ -3,7 +3,8 @@
 {% comment %}
   ✨ Demo only: a demo profile's guide, below the sort it starts from (fix-23) and each pair that follows, with
   seed_tie_break's own lines: the answer to give each pair, in the pair screen's words, and what the results should then
-  show. `guide` is the profile's; `on_sort` says it is below the sort. Kept quiet and closed until opened (fix-24), so
+  show. `guide` is the profile's; `on_sort` says it is below the sort, and `fine_tunes` whether that sort has sliders,
+  which a sort that skips fine-tuning has not (ticket 108). Kept quiet and closed until opened (fix-24), so
   the sort and the pairs keep their full width and stay what the eye goes to. Offered only on a development or demo
   system, so its wording is written here rather than in the pathway document.
 {% endcomment %}
@@ -11,9 +12,12 @@
   <summary>Demo profile</summary>
   <p class="fixed-note">Demo only: this is offered only on a demo or development system.</p>
   <p>{{ guide.summary }}</p>
-  {% if on_sort %}
+  {% if on_sort and fine_tunes %}
     <p>Every card is placed and every slider set for this profile. Go on to fine-tuning and send the sort as it is.</p>
     <p>If you change a card or a slider, the profile may no longer come out as below.</p>
+  {% elif on_sort %}
+    <p>Every card is placed for this profile. Send the sort as it is.</p>
+    <p>If you change a card, the profile may no longer come out as below.</p>
   {% endif %}
   {% if guide.pairs %}
     <p>Answer the {{ guide.pairs|length }} pairs, in order:</p>
