@@ -4,7 +4,9 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** claimed
+**Status:** resolved
+
+**Handed over:** the new photos, to 115, for the developer to pick with the content owner and supply; the wizard's photos and their credits are now named in one list, so supplying them changes that list alone
 
 **Sprint:** 3d (end not yet set)
 
@@ -12,7 +14,7 @@
 
 - [x] "What's bringing you to the course?" takes one or more choices, and is refused only after "Continue →" with none
 - [x] A reason given before this change still shows, as one choice among many, wherever the reason is shown
-- [ ] Each wizard page shows one of the new photos, each credited on the credits page
+- [ ] Each wizard page shows one of the new photos, each credited on the credits page (photos not yet picked, carried to 115)
 - [x] A new pathway version if the document's shape changes; the faithful port is unchanged
 
 **Context**
