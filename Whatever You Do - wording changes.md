@@ -340,7 +340,10 @@ Nothing yet.
 
 ### Before we begin's reasons and photos
 
-Nothing yet.
+- "What's bringing you to the course?" now takes as many reasons as apply: each card stays chosen when another is clicked, and clicking a chosen card again unchooses it. Beneath the question, on its own smaller line, it says **"Choose as many as apply. There's no wrong answer."** (your prototype's sentence, without "It shapes the examples and readings you'll see", which isn't true yet). If someone unchooses every card and presses "Continue →", it still says "Choose what's bringing you to the course to continue."
+- If anything but the listed reasons were ever sent (it can't be from the page itself), the answer isn't saved and the page says **"Choose only from the options."**
+- Anyone who started before this change keeps the question as it was, with one reason.
+- The photos beside each page of Before we begin are unchanged for now, the woman in the wheat field among them. New ones (such as pairs of boots, some muddier than others) are waiting for you and the developer to pick, and each will be credited on the credits page.
 
 ### Demo shortcuts
 
