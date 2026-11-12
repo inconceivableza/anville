@@ -4,7 +4,7 @@
 
 **Blocked by:** 105 (The engine tidy-up from the code review), A1
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 3d (end not yet set)
 
