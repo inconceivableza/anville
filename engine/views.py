@@ -41,6 +41,7 @@ from engine.document.blocks import (
     SENT_ALREADY,
     anchor_of,
     blocks_of,
+    carried_by_way_on,
     coach_brief,
     comparison_status,
     landing_of,
@@ -567,7 +568,8 @@ def _sort_done_with(state, section):
 def move_past_page(request, section_id, page):
     """✨ "Continue →" from one page of a section to the next, allowed exactly when the page offers it: once that page's
     clauses pass and nothing on the way to it (an unconfirmed reading, a held link) holds what follows. Re-checked here
-    rather than trusted to the page. The last page has no way on but completing the section."""
+    rather than trusted to the page. The last page has no way on but completing the section. A press sending the form
+    of a block on the page stores that block's answer first (`_carried_stored`)."""
     state = _participant(request.user)
     section = _section_or_404(state.version, section_id)
     reached = state.reached(section)
@@ -577,6 +579,13 @@ def move_past_page(request, section_id, page):
         raise Http404("The last page of a section is moved past by completing it.")
     if page > reached:
         return _go_to(request, page_url(section_id, reached))
+    # ✨ A press sending the form of a block on the page (the letter, `saved_by_way_on`) stores its answer first, as its
+    # own save would, so what was typed since is kept whether or not the page then lets the participant on (ticket 107).
+    carried = carried_by_way_on(pages_of(section)[page - 1], _seals(state))
+    if carried is not None and "value" in request.POST:
+        state, refused = _carried_stored(request, state, section, carried)
+        if refused is not None:
+            return refused
     shown = _section_page(state, section, page)
     if not shown["offers_way_on"] or shown["unmet"]:
         return _way_on_refused(request, state, section, shown)
@@ -713,17 +722,9 @@ def save_answer(request, block_id):
         return _go_to(request, reverse("hub"))
     if not _is_open(state, section, block):
         return _refused(request, NOT_OPEN, status=403)
-    if block_id in _seals(state):
-        # ✨ Sealed, it is never changed, and the refusal, like the page, never carries it (ticket 104).
-        return _answer_refused(request, state, section, block_id, SEALED_REFUSAL, status=409)
-    if block_id in state.fixed:
-        # ✨ Refused here, not only disabled on the page, so a page left open from before completing cannot change it.
-        return _answer_refused(request, state, section, block_id, FIXED_REFUSAL, status=409)
-    waiting = comparison_wait_message(block, state.answers)
-    if waiting is not None:
-        # ✨ Refused here, not only disabled on the page, so the reflection is written only once its comparison has been
-        # seen (ADR 0019).
-        return _answer_refused(request, state, section, block_id, waiting, status=403)
+    unstorable = _why_not_stored(state, block)
+    if unstorable is not None:
+        return _answer_refused(request, state, section, block_id, *unstorable)
     block_type = BLOCK_TYPES[block["type"]]
     try:
         value = answer_from_form(state.version.document, block, request.POST.get("value"))
@@ -748,6 +749,42 @@ def save_answer(request, block_id):
         # ✨ a completion fixed it after the check above, and the UPDATE saw that
         return _answer_refused(request, state, section, block_id, FIXED_REFUSAL, status=409)
     return _saved(request, saved, section, block_id)
+
+
+def _why_not_stored(state, block):
+    """✨ Why an answer to a block the participant has reached may not be stored now, as `(refusal, status)`, or None
+    when it may."""
+    if block["id"] in _seals(state):
+        # ✨ Sealed, it is never changed, and the refusal, like the page, never carries it (ticket 104).
+        return SEALED_REFUSAL, 409
+    if block["id"] in state.fixed:
+        # ✨ Refused here, not only disabled on the page, so a page left open from before completing cannot change it.
+        return FIXED_REFUSAL, 409
+    waiting = comparison_wait_message(block, state.answers)
+    if waiting is not None:
+        # ✨ Refused here, not only disabled on the page, so the reflection is written only once its comparison has been
+        # seen (ADR 0019).
+        return waiting, 403
+    return None
+
+
+def _carried_stored(request, state, section, block):
+    """✨ The answer a press leading on from a page sends for the block whose form it sends (`saved_by_way_on`), stored
+    as that block's own save would store it, and refused for the same reasons, as `(state, refused)`: the state with it
+    in and None, or the state as it was and the refusal, shown as that save's would be (ticket 107)."""
+    if not _is_open(state, section, block):
+        return state, _refused(request, NOT_OPEN, status=403)
+    unstorable = _why_not_stored(state, block)
+    if unstorable is not None:
+        return state, _answer_refused(request, state, section, block["id"], *unstorable)
+    try:
+        value = answer_from_form(state.version.document, block, request.POST["value"])
+    except AnswerRefused as refused:
+        return state, _answer_refused(request, state, section, block["id"], str(refused), status=400)
+    if not state.stored_response(request.user).save_answer(block["id"], value):
+        # ✨ a completion fixed it after the check above, and the UPDATE saw that
+        return state, _answer_refused(request, state, section, block["id"], FIXED_REFUSAL, status=409)
+    return state.with_answers({**state.answers, block["id"]: value}), None
 
 
 def _answer_refused(request, state, section, block_id, refusal, status):
@@ -2621,12 +2658,13 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
     sort_pending = any(BLOCK_TYPES[block["type"]].scored and block["id"] not in answers for block in blocks)
     # ✨ A link shows the section it leads to exactly as the hub would: its title, its status and whether it is open.
     hub = hub_for(state.sections, answers, state.completed, moved_past=state.moved_past)
-    links = _requirement_links(state, section)
+    links = _requirement_links(state, section, page)
     gate_checklist = [(message, met, links.get(message)) for message, met in checklist(section, answers, page=page)]
     states = {other.id: other for other in hub.sections}
     seals = _seals(state)
     letter = unsealed_letter(section, seals) if is_last else None
     press = seal_press(letter, timezone.localdate(), chosen) if letter else None
+    carried = None if is_last else carried_by_way_on(pages_of(section)[page - 1], seals)
     return {
         # ✨ Where "← Back" at the top leads: the section this is a part of, or else the hub.
         "back": _section_this_is_part_of(state, section),
@@ -2634,6 +2672,10 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
             "number": page,
             "count": page_count(section),
             "is_last": is_last,
+            # ✨ The block whose form "Continue →" sends, storing its answer with the press, and the press's own label
+            # where the block gives one (ticket 107).
+            "carries": _carried_shown(carried),
+            "previous": _previous_page(section, page, seals),
         },
         "pathway": {
             "version_id": version.pk,
@@ -2686,6 +2728,25 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
         # ✨ Where the document asks for it (ticket 83), the checklist only once a press is refused, and unmet alone.
         "messages_after_a_press": messages_after_a_press(version.document),
     }
+
+
+def _carried_shown(block):
+    """✨ The block whose form a page's "Continue →" sends, as its template needs it: {"id", "label"}, the label its
+    `continue_label` or None for "Continue →"; None where the press sends no block's form (ticket 107)."""
+    if block is None:
+        return None
+    label = text_for(block["continue_label"], "participant") if "continue_label" in block else None
+    return {"id": block["id"], "label": label}
+
+
+def _previous_page(section, page, sealed_ids):
+    """✨ Where "← Previous page" leads: the page before, at its way on, the press that left it (ticket 41e), or at the
+    block whose form that press sent, so going back to the letter lands on it (ticket 107). None on the first page."""
+    if page == 1:
+        return None
+    carried = carried_by_way_on(pages_of(section)[page - 2], sealed_ids)
+    anchor = f"block-{carried['id']}" if carried else "completion"
+    return f"{page_url(section['id'], page - 1)}#{anchor}"
 
 
 def _completes_itself(section):
@@ -2789,13 +2850,17 @@ def _complete_label(section):
     return text_for(section.get("complete_label", "Mark complete"), "participant")
 
 
-def _requirement_links(state, section):
+def _requirement_links(state, section, page):
     """✨ Where each of a section's requirements met on another page is met, by its message (ticket 41b): a coach's link
     on the coach page, people's links on the invitations page. One whose page is not open yet is left out, and so is one
-    met in this section itself, as on a hub side card (ticket 52)."""
+    met in this section itself, as on a hub side card (ticket 52). One met on another page of this section, as the
+    letter is on the page before its seal, leads to its block there (ticket 107)."""
     document = state.version.document
     links = {}
     for clause in clauses_of(section):
+        on_page = page_of(section, clause["block"])
+        if on_page is not None and on_page != page:
+            links.setdefault(clause_message(clause), _block_address(document, clause["block"]))
         if clause["type"] != "links_issued":
             continue
         block = next(block for block in blocks_of(document) if block["id"] == clause["block"])

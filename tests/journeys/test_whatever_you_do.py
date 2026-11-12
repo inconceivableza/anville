@@ -23,7 +23,7 @@ from django.utils.html import escape
 
 from engine.document.observers import minimum_observers, relationship_question
 from engine.hub import COACH_WAIT_WORDING, COMPARISON_READY_SENTENCE, hub_for, track_sections
-from engine.models import Contact, ObserverResponse, Response
+from engine.models import Contact, ObserverResponse, Publication, Response
 from tests.journeys.test_coach_checklist import choose, step
 from tests.journeys.test_coach_link import answer_as_coach, coach_link_action, link_shown
 from tests.journeys.test_navigation import section_in, sidebar_of
@@ -125,6 +125,25 @@ def through_to_the_letter(client):
     return client
 
 
+# ✨ Section 6's two pages: the letter, then "Where are you now?" with the date and the seal (ticket 107).
+LETTER_PAGE = "/sections/letter/"
+QUESTIONS_PAGE = "/sections/letter/pages/2/"
+
+
+def go_on_from_the_letter(client, letter=A_LETTER):
+    """✨ The letter page's press, sending the letter typed above it, as its form does with or without JavaScript."""
+    return client.post(
+        "/sections/letter/pages/1/continue/", {"value": letter, "version": Publication.current_version().pk}
+    )
+
+
+def through_to_the_questions(client):
+    """✨ On to Section 6's second page, the letter written and saved by the press that leads there."""
+    through_to_the_letter(client)
+    go_on_from_the_letter(client)
+    return client
+
+
 @pytest.mark.django_db
 def test_the_fifth_statement_is_asked_after_the_original_prototypes_four(participant):
     page = to_the_ratings(participant).get(RATINGS_PAGE).content.decode()
@@ -157,7 +176,7 @@ def test_the_way_on_opens_once_all_five_are_answered(participant):
 
 @pytest.mark.django_db
 def test_the_fifth_statement_is_asked_again_at_the_end(participant):
-    page = through_to_the_letter(participant).get("/sections/letter/").content.decode()
+    page = through_to_the_questions(participant).get(QUESTIONS_PAGE).content.decode()
 
     assert escape(PEACE) in page
     assert page.count("Strongly disagree") == 5
@@ -165,8 +184,7 @@ def test_the_fifth_statement_is_asked_again_at_the_end(participant):
 
 @pytest.mark.django_db
 def test_the_letter_cannot_be_sent_without_the_fifth_after_rating(participant):
-    client = through_to_the_letter(participant)
-    answer(client, "lt-message", A_LETTER)
+    client = through_to_the_questions(participant)
     for slot in PROTOTYPE_SLOTS:
         answer(client, f"pl-{slot}", "8")
 
@@ -181,8 +199,8 @@ def test_the_letter_cannot_be_sent_without_the_fifth_after_rating(participant):
 
 def seal(client):
     """✨ The press that finishes Section 6 and seals the letter, with the date it opens on as the form offers it:
-    twelve months on (ticket 104)."""
-    page = client.get("/sections/letter/").content.decode()
+    twelve months on (ticket 104), from the page it is on, the second (ticket 107)."""
+    page = client.get(QUESTIONS_PAGE).content.decode()
     opens_on = re.search(r'name="opens_on"[^>]*value="([\d-]+)"', page).group(1)
     return client.post("/sections/letter/complete/", {"opens_on": opens_on})
 
@@ -251,8 +269,7 @@ def test_all_five_start_ratings_are_fixed_once_onboarding_is_complete(participan
 
 @pytest.mark.django_db
 def test_all_five_end_ratings_are_fixed_once_the_letter_is_sent(participant):
-    client = through_to_the_letter(participant)
-    answer(client, "lt-message", A_LETTER)
+    client = through_to_the_questions(participant)
     answer_all_five(client, prefix="pl")
     assert seal(client).status_code == 303
 
@@ -458,8 +475,9 @@ def without_the_coach_step(document):
 
 def without_the_sealed_letter(document):
     """✨ The letter sealed until a date the participant picks is this pathway's alone (ticket 104): its Joshua passage,
-    the task that says it is sealed, with prompts fitted to it, and the heading over the closing ratings. The faithful
-    port keeps the prototype's letter, so this pathway's is taken back to it: a long text with the prototype's task."""
+    the task that says it is sealed, with prompts fitted to it, the heading over the closing ratings, and the break
+    putting those ratings on a page after the letter's (ticket 107). The faithful port keeps the prototype's letter, so
+    this pathway's is taken back to it: a long text with the prototype's task, on one page with the ratings."""
     letter = next(section for section in document["content"]["sections"] if section["id"] == "letter")
     faithful = next(section for section in the_faithful_port()["content"]["sections"] if section["id"] == "letter")
     letter["blocks"] = [
@@ -467,7 +485,7 @@ def without_the_sealed_letter(document):
         if block_id in ("lt-task", "lt-message")
         else block
         for block in letter["blocks"]
-        if (block_id := block["id"]) != "lt-stones"
+        if (block_id := block["id"]) != "lt-stones" and block["type"] != "page_break"
     ]
     next(block for block in letter["blocks"] if block["id"] == "pl-intro").pop("heading")
     return document
