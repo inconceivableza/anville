@@ -61,6 +61,8 @@ def send_ready_letters():
 
 
 def _claim(letter, claimed_at):
+    """✨ Mark the letter's email as sent at `claimed_at`, by one UPDATE that matches only while no run has claimed it
+    yet; whether this call claimed it."""
     return (
         SealedLetter.objects.filter(pk=letter.pk, ready_email_sent_at__isnull=True).update(
             ready_email_sent_at=claimed_at
