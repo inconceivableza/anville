@@ -18,6 +18,7 @@
   "messages_after_a_press": true,
   "ratings_save_quietly": true,
   "sorts_skip_fine_tuning": true,
+  "sorts_hide_bucket_summary": true,
   "content": {
     "sections": [
       {
@@ -581,6 +582,7 @@
       { "id": "good-at-this", "label": "Good at this", "seed": 83 },
       { "id": "real-strength", "label": "Real strength", "seed": 100 }
     ],
+    "not_seen": { "label": "Haven’t seen this" },
     "items": [
       { "id": "a1", "text": "Pioneering new ideas through iteration and experimentation", "loads": ["apostle", "ideate"] },
       { "id": "a2", "text": "Identifying the right foundations and structures to put in place", "loads": ["apostle", "assess"] },
@@ -683,7 +685,7 @@
         ]
       }
     ],
-    "scoring": { "method": "compositional_share" },
+    "scoring": { "method": "compositional_share_of_seen" },
     "tie_break": {
       "percent": 5,
       "cluster": 4,
@@ -751,6 +753,7 @@
     "tie_break": {
       "question": "Which is more true of you?",
       "skip": "Neither is more true of me",
+      "both": "Both are right",
       "frameworks": { "apest": "Your role among people", "pep": "How you work" },
       "separated": {
         "heading": "Separated",
@@ -763,8 +766,8 @@
         "level": "{names} came out level after your answers to “Which is more true of you?”. That’s a real result rather than an error: they sit equally in you."
       },
       "skipped": {
-        "heading": "Skipped",
-        "text": "You skipped every “Which is more true of you?” pair here, so {names} stay as your sort placed them."
+        "heading": "Left as sorted",
+        "text": "You didn’t pick one over the other in any “Which is more true of you?” pair here, so {names} stay as your sort placed them."
       }
     },
     "standing": {
