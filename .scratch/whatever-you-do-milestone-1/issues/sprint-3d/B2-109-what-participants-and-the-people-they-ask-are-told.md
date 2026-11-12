@@ -12,7 +12,7 @@
 
 - [ ] The note for people asked to rate someone loses its draft marker and says what is true now: the sort as it is (no adjusting, "Haven't seen this"), the same time as Section 1 gives, and that a participant's retake deletes what they sent; the privacy page says the same of a retake
 - [ ] Nothing a participant sees mentions fine-tuning, and every estimate of the evaluation's time agrees
-- [ ] The menu's quick links have the names of the pages they open, in the journey's words ("evaluation", not "assess")
+- [x] The menu's quick links have the names of the pages they open, in the journey's words ("evaluation", not "assess")
 - [ ] The consent text says, as the privacy page does, that the letter is held back until its day; Five trusted voices says quietly that no email goes to the people added, so the participant sends each their link
 - [x] After a coach accepts or an observer sends, "Withdraw my data" is a quiet line below the page's message
 - [ ] Each line changed here is in the wording changes document, with the review's unrecorded lines (the expired coach link on the results page, the photo band's pause button) and a note that "Both are right" now stands beside "Neither is more true of me"

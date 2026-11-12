@@ -1554,9 +1554,30 @@ def button_to(html, label):
     return found.group(1) if found else None
 
 
+def quick_links(client):
+    """✨ The links below the sidebar's entries, as {address: label}."""
+    sidebar = sidebar_of(client.get("/hub/").content.decode())
+    links = re.search(r'<ul class="pathway-nav-links">.*?</ul>', sidebar, re.S).group(0)
+    return {href: label for href, label in re.findall(r'<a href="([^"]+)"[^>]*>([^<]+)</a>', links)}
+
+
 def the_coach_page(client):
-    """✨ The coach page's address, as the sidebar's "Your coach" gives it."""
-    return button_to(sidebar_of(client.get("/hub/").content.decode()), "Your coach")
+    """✨ The coach page's address, as the sidebar's link named after the Walk with a coach card gives it."""
+    return next((href for href, label in quick_links(client).items() if label == title_of("walk-with-a-coach")), None)
+
+
+@pytest.mark.django_db
+def test_the_menus_links_to_the_side_cards_and_the_comparison_are_named_as_the_hub_names_them(participant):
+    """✨ The links below the sidebar's entries name the pages they open in this pathway's words (ticket 109): Five
+    trusted voices and Walk with a coach by their cards' titles, and the comparison by its row's."""
+    through_section_2(participant)
+    [comparison] = [block for block in the_pathway_blocks() if block["type"] == "comparison_signpost"]
+
+    links = quick_links(participant)
+
+    assert links["/invitations/"] == title_of("trusted-voices")
+    assert links[COACH_PAGE] == title_of("walk-with-a-coach")
+    assert links[f"/results/{comparison['sort']}/comparison/"] == comparison["title"]
 
 
 def revoke_coach_link(client):
