@@ -620,7 +620,7 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "scripture_passages", "long_text", "letter", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "comparison_signpost", "section_signpost", "download", "page_break"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "scripture_passages", "long_text", "letter", "agreement_scale", "single_select", "multi_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "comparison_signpost", "section_signpost", "download", "page_break"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "letter" } } }, "then": { "$ref": "#/$defs/letter" } },
@@ -630,6 +630,7 @@
         { "if": { "properties": { "type": { "const": "long_text" } } }, "then": { "$ref": "#/$defs/long_text" } },
         { "if": { "properties": { "type": { "const": "agreement_scale" } } }, "then": { "$ref": "#/$defs/agreement_scale" } },
         { "if": { "properties": { "type": { "const": "single_select" } } }, "then": { "$ref": "#/$defs/single_select" } },
+        { "if": { "properties": { "type": { "const": "multi_select" } } }, "then": { "$ref": "#/$defs/multi_select" } },
         { "if": { "properties": { "type": { "const": "contact_list" } } }, "then": { "$ref": "#/$defs/contact_list" } },
         { "if": { "properties": { "type": { "const": "coach_checklist" } } }, "then": { "$ref": "#/$defs/coach_checklist" } },        { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } },
         { "if": { "properties": { "type": { "const": "sort_results" } } }, "then": { "$ref": "#/$defs/sort_results" } },
@@ -802,6 +803,24 @@
             }
           }
         }
+      }
+    },
+    "multi_select": {
+      "description": "Choices from a list, as checkbox cards. The answer is the chosen options' identifiers.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "prompt", "options"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "multi_select" },
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
+        "prompt": { "$ref": "#/$defs/text" },
+        "note": {
+          "description": "A line beneath the prompt, such as 'Choose as many as apply.'",
+          "$ref": "#/$defs/text"
+        },
+        "options": { "$ref": "#/$defs/single_select/properties/options" }
       }
     },
     "contact_list": {

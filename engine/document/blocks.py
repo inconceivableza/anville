@@ -53,16 +53,20 @@ class AnswerKind(NamedTuple):
 
     The refusal is shown in place of the schema's own message, which would echo the participant's text back.
     `from_form` reads what a form sent; anything it does not recognise it passes on for the schema to refuse.
-    It is None for a kind whose form sends more than one value.
+    It reads the one value sent under the answer's name, or with `reads_every_value` all of them, as a list. It is
+    None for a kind whose form sends its answer under more than one name.
     Kinds are shared between block types, so a gate clause can say which kinds of answer it can read.
     """
 
     name: str
     schema: dict | Callable[[dict, dict], dict]
     refusal: str
-    from_form: Callable[[str], object] | None
+    from_form: Callable[[str], object] | Callable[[list[str]], object] | None
     # ✨ What an observer may leave out of the answer, filled in from the document before it is held to the schema.
     observer_defaults: Callable[[dict, object], object] | None = None
+    # ✨ Whether the form sends a value for each part of the answer, as a choice of many sends one for each option
+    # ticked, so `from_form` is given every value sent rather than the last.
+    reads_every_value: bool = False
 
     def schema_for(self, document, block):
         """✨ The answer schema for one block within its pathway document. Most kinds need neither; a sort
@@ -146,6 +150,32 @@ def _choice_schema(document, block):
 
 
 CHOICE = AnswerKind("choice", _choice_schema, "Choose one of the options.", _text_from_form)
+
+
+def _choices_schema(document, block):
+    """✨ The identifiers of any of the block's own options, each at most once, never their labels. None at all takes
+    the answer back: an empty list counts as unanswered everywhere."""
+    return {"type": "array", "uniqueItems": True, "items": {"enum": [option["id"] for option in block["options"]]}}
+
+
+def _choices_from_form(sent):
+    # ✨ A value for each option ticked, after the blank one the form always sends first, so that a form sent with
+    # nothing ticked still says so, and unticking every option takes the answer back.
+    return [value for value in sent if value != ""]
+
+
+def choices_of(answer):
+    """✨ The identifiers a choice of many holds, as a list, for its template to tick. A single option's identifier, as
+    a single select stores it, reads as a choice of that one, so a reason given before it took many still shows; no
+    answer, or a blank one, as none."""
+    if isinstance(answer, list):
+        return answer
+    return [answer] if isinstance(answer, str) and answer else []
+
+
+CHOICES = AnswerKind(
+    "choices", _choices_schema, "Choose only from the options.", _choices_from_form, reads_every_value=True
+)
 
 # ✨ People other than the participant. A list is never sent as one form value: each person is added or changed on
 # their own (`contact_from_form` holds them to their rules), and they are kept as contacts rather than answers. The
@@ -325,6 +355,10 @@ BLOCK_TYPES = {
             text_fields=("prompt", "placeholder"),
             text_lists=(("options", ("label",)),),
             captures=CHOICE,
+        ),
+        # ✨ One or more choices from a list, as cards, each a checkbox (ticket 112).
+        BlockType(
+            "multi_select", text_fields=("prompt", "note"), text_lists=(("options", ("label",)),), captures=CHOICES
         ),
         BlockType("contact_list", text_fields=("more_note",), captures=CONTACTS),
         # ✨ Captures nothing: its answers are opinions about another person, never kept (see `coach.py`).

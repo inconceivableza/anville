@@ -11,7 +11,16 @@ from django.urls import reverse
 
 from access.consent import current_text_version
 from access.models import Account, Consent
-from engine.document.blocks import BLOCK_TYPES, CHOICE, CONFIRMATION, SCALE_POINT, SCALE_POINTS, TEXT, blocks_of
+from engine.document.blocks import (
+    BLOCK_TYPES,
+    CHOICE,
+    CHOICES,
+    CONFIRMATION,
+    SCALE_POINT,
+    SCALE_POINTS,
+    TEXT,
+    blocks_of,
+)
 from engine.hub import block_ids_fixed_on_completion, section_by_id, track_sections
 from engine.models import Publication, Response
 from engine.scenario_loading import load
@@ -121,6 +130,8 @@ def _answer_of(kind, block, number):
         return SCALE_POINTS[number % len(SCALE_POINTS)]
     if kind is CHOICE:
         return block["options"][number % len(block["options"])]["id"]
+    if kind is CHOICES:
+        return [block["options"][number % len(block["options"])]["id"]]
     if kind is CONFIRMATION:
         return True
     raise CommandError(f"seed_tie_break cannot answer a {kind.name} block before the sort.")

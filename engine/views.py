@@ -726,7 +726,7 @@ def save_answer(request, block_id):
         return _answer_refused(request, state, section, block_id, waiting, status=403)
     block_type = BLOCK_TYPES[block["type"]]
     try:
-        value = answer_from_form(state.version.document, block, request.POST.get("value"))
+        value = answer_from_form(state.version.document, block, request.POST.getlist("value"))
     except AnswerRefused as refused:
         return _answer_refused(request, state, section, block_id, str(refused), status=400)
 

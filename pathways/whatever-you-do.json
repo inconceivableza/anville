@@ -56,9 +56,9 @@
         "blocks": [
           {
             "id": "reason",
-            "type": "single_select",
+            "type": "multi_select",
             "prompt": "What's bringing you to the course?",
-            "placeholder": "Select...",
+            "note": "Choose as many as apply. There's no wrong answer.",
             "options": [
               { "id": "post-secondary", "label": "Considering post-secondary options" },
               { "id": "graduating", "label": "About to graduate third-level education" },
