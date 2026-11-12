@@ -2141,6 +2141,22 @@ form + .way-on,
   font-size: 12px;
 }
 
+/* ✨ The way to withdraw once a coach has accepted or an observer has sent: a quiet line below the page's message
+   (ticket 109), there to find but never competing with the thanks. */
+.withdraw-line {
+  margin: var(--space-lg) 0 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.withdraw-line a {
+  color: inherit;
+}
+
+.withdraw-line a:hover {
+  color: var(--green-deep);
+}
+
 /* ✨ A form's button that reads as a link in its sentence (29 Oct), for an action a plain link must not take, since
    mail filters open every link. */
 .link-button {
