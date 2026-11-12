@@ -81,11 +81,21 @@ def _compositional_share(document, answer):
     the grand total, rounded on its own, so a framework's percents need not add up to 100. Constructs are
     ranked by rounded percent, and ties keep the order the constructs were declared in.
     """
+    return _ranked(_raw_values(document, answer))
+
+
+def _ranked(raw_values):
+    """✨ Each framework's constructs with their raw values and percents, as `_compositional_share` ranks them. A raw
+    value that is not a whole number is kept as an exact fraction written out (`stored_share`), as a result is JSON."""
     frameworks = []
-    for framework, raw in _raw_values(document, answer):
+    for framework, raw in raw_values:
         unrounded = _share_of_total(raw)
         constructs = [
-            {"construct": construct, "raw": value, "percent": round_half_up(unrounded[construct])}
+            {
+                "construct": construct,
+                "raw": value if isinstance(value, int) else stored_share(value),
+                "percent": round_half_up(unrounded[construct]),
+            }
             for construct, value in raw.items()
         ]
         constructs.sort(key=lambda construct: -construct["percent"])  # ✨ stable, so ties keep declaration order
@@ -106,6 +116,47 @@ def _raw_values(document, answer):
             for construct in item["loads"]:
                 if construct in raw:
                     raw[construct] += answer[item["id"]]["value"]
+        yield framework, raw
+
+
+def _compositional_share_of_seen(document, answer):
+    """✨ `_compositional_share`, leaving out every item an observer placed in "Haven't seen this" (ticket 108).
+
+    Each construct's raw value is its seen items' mean, taken over all its items, so an item not seen neither raises
+    nor lowers its construct, as the two-round prototype scores its contacts. With every item seen, as in any
+    participant's sort, that is the sum of their values, and the result is `_compositional_share`'s exactly. As in the
+    prototype, a construct seen on too few of its items (FEWEST_SEEN) takes the mean over every item seen instead, and
+    an observer who saw nothing at all gives each construct the middle value (MIDDLE), so an even share.
+    """
+    return _ranked(_raw_values_of_seen(document, answer))
+
+
+def _compositional_shares_of_seen(document, answer):
+    """✨ `_compositional_share_of_seen`'s percents before rounding, frozen with it."""
+    return {framework["id"]: _share_of_total(raw) for framework, raw in _raw_values_of_seen(document, answer)}
+
+
+# ✨ The two-round prototype's `minSeen`: a construct seen on fewer of its items than this, or than all of them where it
+# has fewer, takes the mean over every item seen, so a card or two cannot carry it either way.
+FEWEST_SEEN = 4
+# ✨ The middle of an item's values, 0 to 100, for a sort with nothing seen, as the prototype takes its scale's middle.
+MIDDLE = 50
+
+
+def _raw_values_of_seen(document, answer):
+    """✨ Each framework with its constructs' raw values, as `_compositional_share_of_seen` takes them, in declaration
+    order: a whole number wherever it is one, as with every item seen, and otherwise an exact fraction."""
+    items = document["instrument"]["items"]
+    seen = {item["id"]: answer[item["id"]]["value"] for item in items if answer[item["id"]].get("seen", True)}
+    overall = Fraction(sum(seen.values()), len(seen)) if seen else Fraction(MIDDLE)
+    for framework in document["measurement"]["frameworks"]:
+        raw = {}
+        for construct in framework["constructs"]:
+            own = [item["id"] for item in items if construct["id"] in item["loads"]]
+            values = [seen[item] for item in own if item in seen]
+            enough = values and len(values) >= min(FEWEST_SEEN, len(own))
+            value = (Fraction(sum(values), len(values)) if enough else overall) * len(own)
+            raw[construct["id"]] = int(value) if value.denominator == 1 else value
         yield framework, raw
 
 
@@ -131,5 +182,10 @@ METHODS = {
         "score": _compositional_share,
         "shares": _compositional_shares,
         "stored_shares": _compositional_stored_shares,
-    }
+    },
+    "compositional_share_of_seen": {
+        "score": _compositional_share_of_seen,
+        "shares": _compositional_shares_of_seen,
+        "stored_shares": _compositional_stored_shares,
+    },
 }
