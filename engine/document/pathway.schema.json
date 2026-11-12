@@ -94,6 +94,11 @@
       "type": "boolean",
       "default": false
     },
+    "sorts_hide_bucket_summary": {
+      "description": "Whether a sort never shows how the cards were spread over the buckets, for participants and observers alike: no counts once every card is placed, and no graph between the rounds, since seeing the spread invites people to even it out (ticket 108). Off, both show.",
+      "type": "boolean",
+      "default": false
+    },
     "content": {
       "type": "object",
       "additionalProperties": false,

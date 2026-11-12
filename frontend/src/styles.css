@@ -4513,6 +4513,25 @@ html[data-javascript="loaded"] .sort-progress {
 .grade-5 { --tone: var(--green-deep); --k: 66%; }
 .grade-6 { --tone: var(--green-deep); --k: 95%; }
 
+/* ✨ "Haven't seen this", an observer's place beside the buckets (ticket 108), as the two-round prototype draws it:
+   below them, dashed and grey, with no dot, since it is no bucket and says nothing of strength. */
+.bucket-btn.not-seen {
+  --tone: var(--muted);
+  --k: 20%;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+  max-width: 420px;
+  min-height: 44px;
+  margin: var(--space-sm) auto 0;
+  border-style: dashed;
+  font-size: var(--text-sm);
+}
+
+.bucket-btn.not-seen::before {
+  display: none;
+}
+
 .scale-ends {
   display: flex;
   justify-content: space-between;
@@ -4735,6 +4754,18 @@ html[data-javascript="loaded"] .sort-progress {
 .check-dot[aria-checked="true"] {
   background: color-mix(in oklab, var(--tone) var(--k), var(--paper));
   border-color: color-mix(in oklab, var(--tone) 90%, var(--ink));
+}
+
+/* ✨ The answer chosen is marked as well as filled, so it shows without its colour, in greyscale too (ticket 108). */
+.check-dot[aria-checked="true"]::after {
+  content: "";
+  display: block;
+  width: 10px;
+  height: 10px;
+  margin: auto;
+  border-radius: var(--radius-round-shape);
+  background: var(--paper);
+  box-shadow: 0 0 0 2px var(--ink);
 }
 
 .check-scale {
@@ -4965,6 +4996,10 @@ html[data-javascript="loaded"] .save-fallback {
     justify-content: flex-start;
     text-align: left;
     font-size: var(--text-sm);
+  }
+
+  .bucket-btn.not-seen {
+    max-width: 360px;
   }
 
   .scale-ends {

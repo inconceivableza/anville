@@ -235,7 +235,8 @@ def _sort_widget(document, role, name=""):
     and, where any is reworded, its round: the second for a rewording, the first for the rest. Where fine-tuning is
     skipped, a participant gets a quick check of twins answered far apart instead; an observer never does, as several
     observers' contradictions average out. An observer is offered "Haven't seen this" beside the buckets where the
-    document has it (`offers_not_seen`, ticket 108)."""
+    document has it (`offers_not_seen`, ticket 108). How the cards were spread over the buckets is shown between the
+    rounds and once every card is placed, unless the document hides it, for everyone (ticket 108)."""
     instrument = document["instrument"]
     authored = document.get("presentation", {}).get("sort_wording", {})
     twins = {}
@@ -262,6 +263,7 @@ def _sort_widget(document, role, name=""):
         ],
         "wording": {field: shown(authored.get(field, default)) for field, default in SORT_WORDING.items()},
         "not_seen": {"label": shown(instrument["not_seen"]["label"])} if offers_not_seen(document, role) else None,
+        "bucket_summary": not document.get("sorts_hide_bucket_summary", False),
         "fine_tunes": not skips_fine_tuning(document),
         "sends_before_fine_tuning": role == "observer",
         "quick_check": role == "participant" and skips_fine_tuning(document),
