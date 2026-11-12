@@ -40,6 +40,7 @@ def seal_dates(block, today):
 
 
 def shown_date(day):
+    """✨ A date as a reader is told it, "4 March 2031" (`SHOWN_DATE`)."""
     return dateformat.format(day, SHOWN_DATE)
 
 
@@ -91,7 +92,9 @@ def seal_press(letter, today, chosen=None):
 
 def letter_shown(block, opens_on, today):
     """✨ Where a letter stands, for its template: "writing" until it is sealed (`opens_on` None), then "sealed" with
-    the sentence shown in its place, and "open" from the day it opens."""
+    the sentence shown in its place, and "open" from the day it opens. None for a block that is not a letter."""
+    if block["type"] != "letter":
+        return None
     if opens_on is None:
         return {"state": "writing"}
     if today < opens_on:
