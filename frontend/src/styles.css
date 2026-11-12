@@ -6665,14 +6665,53 @@ body > svg[aria-hidden="true"] {
   text-wrap: pretty;
 }
 
+/* ✨ The choices above the field and its button (ticket 111). */
 .stay form {
-  display: flex;
-  align-items: center;
+  display: grid;
   gap: var(--space-sm);
   margin: 0;
 }
 
-.stay input {
+.stay-choices {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.stay-choices legend {
+  margin-bottom: 4px;
+  padding: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.stay-choices label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--on-dark-2);
+  cursor: pointer;
+}
+
+.stay-choices input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--green);
+}
+
+.stay-send {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.stay input[type="email"] {
   width: 100%;
   min-width: 0;
   border: 1px solid var(--on-dark-22);
@@ -6684,16 +6723,16 @@ body > svg[aria-hidden="true"] {
   font-size: 14px;
 }
 
-.stay input::placeholder {
+.stay input[type="email"]::placeholder {
   color: var(--on-dark-2);
 }
 
-.stay input:focus {
+.stay input[type="email"]:focus {
   outline: 2px solid var(--green);
   outline-offset: 1px;
 }
 
-.stay input[aria-invalid="true"] {
+.stay input[type="email"][aria-invalid="true"] {
   border-color: var(--on-dark-refused);
 }
 
@@ -6708,8 +6747,14 @@ body > svg[aria-hidden="true"] {
 
 .stay-refusal,
 .stay-thanks {
-  margin: 0;
+  display: grid;
+  gap: 4px;
   font-size: var(--text-sm);
+}
+
+.stay-refusal p,
+.stay-thanks p {
+  margin: 0;
 }
 
 .stay-refusal {
@@ -6719,6 +6764,12 @@ body > svg[aria-hidden="true"] {
 .stay-thanks {
   color: var(--green);
   font-weight: 600;
+}
+
+/* ✨ Below the thanks, what happens next for each choice ticked (ticket 111), in the copy's own weight. */
+.stay-thanks p + p {
+  color: var(--on-dark);
+  font-weight: 400;
 }
 
 .stay small {
@@ -6739,7 +6790,7 @@ body > svg[aria-hidden="true"] {
     grid-row: auto;
   }
 
-  .stay form {
+  .stay-send {
     flex-wrap: wrap;
   }
 }
