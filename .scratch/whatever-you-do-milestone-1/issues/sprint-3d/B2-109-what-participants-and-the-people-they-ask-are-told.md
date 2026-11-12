@@ -15,7 +15,7 @@
 - [x] The menu's quick links have the names of the pages they open, in the journey's words ("evaluation", not "assess")
 - [x] The consent text says, as the privacy page does, that the letter is held back until its day; Five trusted voices says quietly that no email goes to the people added, so the participant sends each their link
 - [x] After a coach accepts or an observer sends, "Withdraw my data" is a quiet line below the page's message
-- [ ] Each line changed here is in the wording changes document, with the review's unrecorded lines (the expired coach link on the results page, the photo band's pause button) and a note that "Both are right" now stands beside "Neither is more true of me"
+- [x] Each line changed here is in the wording changes document, with the review's unrecorded lines (the expired coach link on the results page, the photo band's pause button) and a note that "Both are right" now stands beside "Neither is more true of me"
 
 **Carried from the handover's stubs**
 
