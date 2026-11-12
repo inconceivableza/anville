@@ -17,3 +17,8 @@
 **Context**
 
 - The developer takes the screenshots on Thursday; placing them can be handed to an agent. First in the cut order
+
+## Comments
+
+- First criterion: each step shows a drawn screen of the site, in a small browser window and in the site's own words, not a screenshot of the app from a fresh participant (29 Oct, as the content owner's v3 prototype draws them)
+- Second criterion: the drawn screens are hidden from screen readers, as decoration, since each step's words say what it does; none has a description of its own
