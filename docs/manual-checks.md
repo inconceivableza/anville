@@ -1357,3 +1357,11 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 - A good press lands on page 1 at the sealed letter, its button now "Continue →", which opens page 2: the five ratings fixed, "You marked this section complete" and "Mark as not complete".
 - At about 375px: both pages read, the long button wraps rather than running off the screen.
 - The faithful port's letter is unchanged: one page, its ratings under the letter, "Mark complete".
+
+### sprint-3d-r1-fix-3: The date picked on page 2 is kept (rebuild the frontend; no pathway reload or new participant needed; a participant on Section 6's page 2, the letter not sealed; wide screen and about 375px)
+
+- On page 2, change the date beside "Open it on", then press "← Previous page": page 1 opens at the letter. Press "Save my letter and continue →": page 2 offers the date picked, with its words beside it. With JavaScript blocked: the same.
+- With JavaScript, change the date, then leave another way ("← Back to the hub", the sidebar) and come back to page 2: the date picked again. With JavaScript blocked only "← Previous page" keeps it.
+- "← Previous page" on page 2 looks as it did, and as on other sections' later pages: the same outlined pill, size and place, to the left of the date and the seal, and above them at about 375px if the row wraps. Tab on from the date: the seal, then "← Previous page", as the coach checklist's "Back" comes after its "Continue →". Enter in the date field presses the seal (refused, if a rating is left), never "← Previous page".
+- Pick a date, go back and on, and seal: the letter is sealed until the date showing, as ticket 104's checks say. A date typed outside the range by hand, then going back and on: page 2 offers twelve months on again.
+- Sign out and back in: page 2 offers twelve months on again, since the date is kept only while signed in.
