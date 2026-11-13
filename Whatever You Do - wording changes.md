@@ -339,6 +339,9 @@ From your 30 October feedback on Sections 1 and 2 (pictures 36, 38, 41, 49, 51 a
   - Opened from the menu's link or a saved address before you've looked (or, after someone withdraws, once enough have answered again), it no longer shows the comparison: that would let someone look, ask one more person, then look again and see exactly what that person said. It shows **"Ready to view"**, then "Compare with how others see you →" with the same sentence beneath it as on Section 2's card ("Everyone you invited has answered. Once you look, you can't add anyone else.", or "3 of the 4 people you invited have answered. …"). Pressing it shows the comparison, as the card's button does.
   - Meanwhile a coach who has been shown the results sees, in place of the comparison: **"Not looked at yet"** and **"Enough people have answered, but Sam hasn't looked at how others see them yet. It shows here once they have."**
   - Someone rating a participant who puts every card in "Haven't seen this" is thanked as anyone else, but isn't counted among the three answers needed and isn't part of the comparison, as they have nothing to add. No words change: the counts ("2 of 3 answered", the Answered count on Five trusted voices, and "3 of the 4 people you invited have answered") simply leave them out.
+- **The coach's view of the comparison (fix 2, 13 November).** The heading over the comparison on a coach's page, once
+  the participant shares it: "How others experience Sam" becomes **"How others see Sam"**, the participant's own page's
+  heading, "How others see you", with their name where "you" is.
 
 ### The letter and the closing questions on two pages
 
