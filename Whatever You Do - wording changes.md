@@ -362,7 +362,7 @@ From your 30 October feedback (the note for people asked to rate someone, and "W
   - In its last paragraph, "we'll email you a reminder once a week" becomes **"we may email you a reminder once a week"**, since reminders go only where the site has them switched on. The rest of the note is unchanged.
 - **The weekly reminder email** to people who haven't answered: "It takes about 10–15 minutes." becomes **"It takes about 7 minutes."**
 - **The privacy page**, under "If someone asks you to rate them", ends its second paragraph with the same: **"If they retake their strengths evaluation, what you sent is deleted, and you can answer again through your link while it works."**
-- **How long the evaluation takes** now reads about 7 minutes everywhere, as Section 1's activity and the homepage's first step already said. People rating someone are told the same 7 minutes (your two-round prototype suggests about 6 for them; say if you'd rather they were told that).
+- **How long the evaluation takes** now reads about 7 minutes everywhere, as Section 1's activity and the homepage's first step already said. People rating someone are told the same 7 minutes.
   - The hub's next step: "Start with the ten-minute strengths evaluation." becomes **"Start with the strengths evaluation, which takes about 7 minutes."**
   - The welcome at the end of Before we begin: "You’re all set. Section 1 starts with the ten-minute strengths evaluation." becomes **"You’re all set. Section 1 starts with the strengths evaluation, which takes about 7 minutes."**
   - The Strengths evaluation's row on the hub: "About 10 minutes" becomes **"About 7 minutes"**.
