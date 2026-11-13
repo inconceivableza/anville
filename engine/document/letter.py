@@ -44,15 +44,22 @@ def shown_date(day):
     return dateformat.format(day, SHOWN_DATE)
 
 
+def _date_within(dates, submitted):
+    """✨ `submitted`, an ISO date as a date field sends it, where it is one from `dates`' earliest to latest; else
+    None, as for one missing or not a date."""
+    try:
+        chosen = date.fromisoformat(submitted or "")
+    except ValueError:
+        return None
+    return chosen if dates.earliest <= chosen <= dates.latest else None
+
+
 def opens_on_from_form(block, submitted, today):
     """✨ The date a sealing press chose, or None with the refusal saying the dates it may be: one missing, not a date,
     or outside the block's earliest and latest is refused alike."""
     dates = seal_dates(block, today)
-    try:
-        chosen = date.fromisoformat(submitted or "")
-    except ValueError:
-        chosen = None
-    if chosen is not None and dates.earliest <= chosen <= dates.latest:
+    chosen = _date_within(dates, submitted)
+    if chosen is not None:
         return chosen, None
     return None, f"Choose a date from {shown_date(dates.earliest)} to {shown_date(dates.latest)}."
 
@@ -69,12 +76,15 @@ def unsealed_letter(section, sealed_ids):
     return next((block for block in letters if block["id"] not in sealed_ids), None)
 
 
-def seal_press(letter, today, chosen=None):
+def seal_press(letter, today, chosen=None, kept=None):
     """✨ What the press that finishes a section holding an unsealed `letter` offers: its label, and the date the letter
-    opens on as the date field takes it, `chosen` where a refused press sent one back, else the default, with the
-    earliest and latest accepted. What sealing takes is said under the letter itself (its `seal_note`)."""
+    opens on as the date field takes it, `chosen` where a refused press sent one back, else `kept`, the date last
+    picked and kept for it (sprint-3d-r1-fix-3), while it is still one the letter accepts, since those are counted from
+    `today`, else the default, with the earliest and latest accepted. What sealing takes is said under the letter
+    itself (its `seal_note`)."""
     dates = seal_dates(letter, today)
-    chosen = chosen if chosen is not None else dates.default.isoformat()
+    if chosen is None:
+        chosen = (_date_within(dates, kept) or dates.default).isoformat()
     try:
         in_words = dateformat.format(date.fromisoformat(chosen), "l " + SHOWN_DATE)
     except ValueError:

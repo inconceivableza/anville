@@ -7,6 +7,7 @@ opens in place, and an email to their own address says it is ready (ticket 104).
 The section is driven over HTTP; the daily job is run by calling it, as its command does, as the reminders' tests do.
 """
 
+import re
 from datetime import date, datetime, timedelta, timezone
 from urllib.parse import parse_qs, urlsplit
 
@@ -55,6 +56,22 @@ def reopen(client):
 
 def shown(client):
     return client.get(SECTION).content.decode()
+
+
+def date_field(page):
+    """✨ The attributes of the field picking the date the letter opens on, as the page draws it."""
+    field = re.search(r'<input [^>]*name="opens_on"[^>]*>', page).group(0)
+    return dict(re.findall(r'([\w-]+)="([^"]*)"', field))
+
+
+def keep_date(client, opens_on):
+    """✨ The date changed in its field, which with JavaScript is sent where the field says as it changes, kept
+    without a press (sprint-3d-r1-fix-3)."""
+    return client.post(date_field(shown(client))["hx-post"], {"opens_on": str(opens_on)}, HTTP_HX_REQUEST="true")
+
+
+def date_offered(client):
+    return date_field(shown(client))["value"]
 
 
 @pytest.fixture
@@ -128,6 +145,30 @@ def test_a_date_from_3_to_24_months_on_seals_the_letter_until_then_and_shows_it_
     assert sealed.url == f"{SECTION}#block-letter-box"  # ✨ back to the letter, to see it sealed, not the hub
     assert SealedLetter.objects.get().opens_on == opens_on
     assert "letter" in Response.objects.get().completed_sections
+
+
+@pytest.mark.django_db
+def test_a_kept_date_is_offered_while_the_letter_accepts_it_and_the_default_once_it_does_not(participant):
+    """✨ The dates a letter accepts are counted from today, so its earliest kept today is too soon tomorrow."""
+    earliest = date(2030, 6, 4)  # ✨ 3 months on
+    on(participant, SEALED_AT, keep_date, earliest)
+
+    assert on(participant, SEALED_AT, date_offered) == str(earliest)
+    assert on(participant, SEALED_AT + timedelta(days=1), date_offered) == "2031-03-05"  # ✨ 12 months on from then
+
+
+@pytest.mark.django_db
+def test_sealing_takes_only_the_date_its_press_sends_and_forgets_the_date_kept(participant):
+    kept = date(2032, 3, 4)
+    on(participant, SEALED_AT, keep_date, kept)
+
+    refused = on(participant, SEALED_AT, seal, "")
+    sealed = on(participant, SEALED_AT, seal, OPENS_ON)
+
+    assert refused.status_code == 400
+    assert sealed.status_code == 303
+    assert SealedLetter.objects.get().opens_on == OPENS_ON
+    assert str(kept) not in str(dict(participant.session.items()))
 
 
 @pytest.mark.django_db

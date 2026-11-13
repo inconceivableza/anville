@@ -2038,6 +2038,14 @@ form + .way-on,
   flex-shrink: 0;
 }
 
+/* ✨ On the page that seals a letter, a button (sprint-3d-r1-fix-3), drawn as the link is: with the page's line height,
+   not the browser's for a button, and shown first, though it follows the seal's form in the markup so that Enter in the
+   date still seals, as "Back" in the coach checklist does (fix-12). */
+button.page-back {
+  order: -1;
+  line-height: inherit;
+}
+
 .completion-done {
   font-size: var(--text-sm);
   font-weight: 600;

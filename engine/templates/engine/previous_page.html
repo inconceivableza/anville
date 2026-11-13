@@ -5,7 +5,15 @@
   a page already gone through stays open to return to. Worded "← Previous page" so it reads apart from "← Back to
   the hub" at the top, and it lands at that page's way on, the "Continue →" pressed to leave it, rather than its top
   (ticket 41e), or at the block whose form that press sent, as the letter (ticket 107).
+
+  On the page that seals a letter (`keeps_date`, the seal) it is a press of the seal's form instead, drawn as the link
+  is and placed after the form, sending the date picked as it goes back, for that page to offer again
+  (sprint-3d-r1-fix-3): without JavaScript nothing else keeps it. With JavaScript, which keeps it as it changes, htmx
+  sends the form to the button's own address.
 {% endcomment %}
-{% if page.previous %}
+{% if page.previous and keeps_date %}
+  <button type="submit" form="seal-form" formaction="{% url 'letter_date' keeps_date.letter %}" name="back"
+          class="pill ghost page-back">← Previous page</button>
+{% elif page.previous %}
   <a class="pill ghost page-back" href="{{ page.previous }}">← Previous page</a>
 {% endif %}

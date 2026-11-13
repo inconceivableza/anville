@@ -64,22 +64,32 @@
     {# ✨ The section's line above its finish, such as when to come back and press it (ticket 106). #}
     {% if section.complete_note %}<p class="completion-note">{{ section.complete_note }}</p>{% endif %}
     <div class="way-on"{% if refused %} id="refused"{% endif %}>
-      {% include "engine/previous_page.html" %}
+      {% if not seal %}{% include "engine/previous_page.html" %}{% endif %}
       {% url 'complete_section' section.id as complete %}
       {# ✨ A date out of range is refused by the server, saying why, after the press, never by the browser before it. #}
-      <form method="post"{% if seal %} novalidate{% endif %}{% if messages_after_a_press %} action="{{ complete }}#refused" hx-post="{{ complete }}" hx-target="#gate-refusal"{% else %} action="{{ complete }}"{% endif %}>
+      <form method="post"{% if seal %} id="seal-form" novalidate{% endif %}{% if messages_after_a_press %} action="{{ complete }}#refused" hx-post="{{ complete }}" hx-target="#gate-refusal"{% else %} action="{{ complete }}"{% endif %}>
         {% csrf_token %}
         {% if seal %}
-          {# ✨ The date the letter opens on, picked with the press that seals it (ticket 104), with it in words beside #}
-          {# ✨ it, both kept as picked when an autosave redraws this out of band. #}
+          {% comment %}
+            ✨ The date the letter opens on, picked with the press that seals it (ticket 104), with it in words beside
+            it, both kept as picked when an autosave redraws this out of band. With JavaScript the date is kept too,
+            quietly, as it changes, so going back to the letter and on offers it again (sprint-3d-r1-fix-3); nothing
+            comes back, so nothing is redrawn.
+          {% endcomment %}
           <p class="seal-date">
             <label for="opens-on">{{ seal.date_label }}</label>
-            <input type="date" id="opens-on" hx-preserve name="opens_on" value="{{ seal.chosen }}" min="{{ seal.earliest }}" max="{{ seal.latest }}" data-opens-on>
+            <input type="date" id="opens-on" hx-preserve name="opens_on" value="{{ seal.chosen }}"
+                   min="{{ seal.earliest }}" max="{{ seal.latest }}" data-opens-on
+                   hx-post="{% url 'letter_date' seal.letter %}" hx-trigger="change" hx-swap="none">
             <output id="opens-on-words" hx-preserve for="opens-on" class="seal-date-words" data-opens-on-words aria-live="polite">{{ seal.chosen_in_words }}</output>
           </p>
         {% endif %}
         <button type="submit" class="pill full"{% if unmet and not messages_after_a_press %} disabled{% endif %}>{{ section.complete_label }}</button>
       </form>
+      {% if seal %}
+        {# ✨ After the seal's form, so Enter in the date still presses the seal, its first (sprint-3d-r1-fix-3). #}
+        {% include "engine/previous_page.html" with keeps_date=seal %}
+      {% endif %}
     </div>
     <div id="gate-refusal">{% include "engine/gate_refusal.html" %}</div>
   {% elif offers_way_on and section.finish %}
