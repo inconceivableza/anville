@@ -22,8 +22,8 @@ WORDING_VERSION = 2
 # ✨ The field no person sees or fills: a bot that fills every field is turned away by it.
 TRAP = "website"
 
-# ✨ The query a link to the form names a choice by, to open it with that one ticked: "Join the waitlist" and "Contact
-# us" (ticket 111), with or without JavaScript.
+# ✨ The query a link to the form names a choice by, to open it with that one ticked and the address ready to type in:
+# "Join the waitlist" and "Contact us" (ticket 111; the address since sprint-3d-r1-fix-4), with or without JavaScript.
 OPENS_WITH = "stay"
 
 NO_ADDRESS = "Add your email address."
@@ -33,13 +33,15 @@ NO_CHOICE = "Tick what you’d like."
 
 class StayInTouch(NamedTuple):
     """✨ What the form shows: the thanks in its place, for what was ticked, or the form again with each refusal, what
-    was typed and what was ticked."""
+    was typed and what was ticked. `focus_email` is for a form a link opened with a choice, whose address takes the
+    focus; a plain visit leaves it where it was, and so does a refusal, beside the button that was pressed."""
 
     subscribed: bool = False
     address_refusal: str = ""
     choice_refusal: str = ""
     typed: str = ""
     chosen: tuple = ()
+    focus_email: bool = False
 
     @property
     def refused(self):
@@ -52,8 +54,10 @@ def _chosen(values):
 
 
 def opened_with(query):
-    """✨ The form as a link opens it: with the choice the link names ticked, and nothing refused."""
-    return StayInTouch(chosen=_chosen(query.getlist(OPENS_WITH)))
+    """✨ The form as a link opens it: with the choice the link names ticked, nothing refused, and, when a choice was
+    named, the address ready to type in. A visit that names none, or none of the three, is a plain one."""
+    chosen = _chosen(query.getlist(OPENS_WITH))
+    return StayInTouch(chosen=chosen, focus_email=bool(chosen))
 
 
 def subscribe(posted):

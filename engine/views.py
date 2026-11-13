@@ -21,6 +21,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.vary import vary_on_headers
 
 from access.consent import consent_required
 from access.models import name_shown_for
@@ -191,19 +192,22 @@ class Finish(NamedTuple):
     done: bool
 
 
+@vary_on_headers("HX-Request")
 def home(request):
     """✨ The public homepage (ticket 32a), the same for everyone; "Begin" leads to sign-up, or to the hub once
     signed in.
 
     Its "Stay in touch" form posts here (ticket 74): with htmx the section alone comes back to take the form's place,
     thanks or refusal, so there is no new page; without, the homepage comes back opened at the section, by the
-    fragment in the form's action. A link to the form may name a choice to tick in it (ticket 111)."""
+    fragment in the form's action. A link to the form may name a choice to tick in it (ticket 111); with htmx, which
+    asks for it to bring the form back in place of the thanks (sprint-3d-r1-fix-4), it is the section alone again, so
+    the response varies with that header, or a cache could hand the section alone to a visit for the page."""
     if request.method == "POST":
         stay = stay_in_touch.subscribe(request.POST)
     else:
         stay = stay_in_touch.opened_with(request.GET)
     status = 400 if stay.refused else 200
-    if request.method == "POST" and _is_htmx(request):
+    if _is_htmx(request):
         return render(request, "engine/stay_in_touch.html", {"stay": stay}, status=status)
     begin = reverse("hub") if request.user.is_authenticated else reverse("account_signup")
     return render(request, "engine/home.html", {"begin": begin, "stay": stay}, status=status)

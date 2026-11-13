@@ -33,6 +33,13 @@ def ticked(section):
     return {re.search(r'\bvalue="([^"]*)"', box).group(1) for box in boxes if re.search(r"\bchecked\b", box)}
 
 
+def takes_the_focus(section):
+    """✨ Whether the section's address field is set to take the focus as the page or the section arrives."""
+    field = re.search(r'<input\b[^>]*\bname="email"[^>]*>', section)
+    assert field, "no address field"
+    return bool(re.search(r"\sautofocus[\s/>]", field.group(0)))
+
+
 def stored():
     """✨ Every choice kept, as (address, choice), whatever the order they were kept in."""
     return set(SignUpChoice.objects.values_list("sign_up__email", "choice"))
@@ -127,6 +134,49 @@ def test_join_the_waitlist_and_contact_us_open_the_box_with_their_own_choice_tic
     assert href.endswith("#stay-in-touch")
     assert opened.status_code == 200
     assert ticked(stay_in_touch(opened.content.decode())) == {choice}
+
+
+@pytest.mark.django_db
+def test_a_link_naming_a_choice_opens_the_form_with_only_that_box_ticked_and_the_address_set_to_take_the_focus(client):
+    """✨ So the visitor can type their address at once, with JavaScript or without (sprint-3d-r1-fix-4)."""
+    for choice in CHOICES:
+        opened = stay_in_touch(client.get("/", {"stay": choice}).content.decode())
+
+        assert ticked(opened) == {choice}
+        assert takes_the_focus(opened)
+
+
+@pytest.mark.django_db
+def test_a_form_no_link_opened_with_a_choice_does_not_take_the_focus(client):
+    """✨ A plain visit would otherwise scroll to the box and raise a phone's keyboard; a refusal leaves the focus on
+    the button that was pressed."""
+    plain = client.get("/")
+    naming_nothing = client.get("/", {"stay": "spam"})
+    refused = client.post("/", {"choice": ["news"]}, **HTMX)
+
+    assert refused.status_code == 400
+    for response in (plain, naming_nothing, refused):
+        assert not takes_the_focus(stay_in_touch(response.content.decode()))
+
+
+@pytest.mark.django_db
+def test_with_the_thanks_showing_htmx_asking_by_a_link_is_sent_the_form_alone_fresh_with_that_choice_ticked(client):
+    """✨ How "Join the waitlist" and "Contact us" bring the form back in place of the thanks (sprint-3d-r1-fix-4): a
+    link followed to the address the page is at already would do nothing. The server keeps nothing of the sign-up
+    the thanks answered, so what comes back is what any visit by the link shows."""
+    client.post("/", {"email": "sam@example.com", "choice": ["news", "contact"]}, **HTMX)
+
+    for choice in ("waitlist", "contact"):
+        response = client.get("/", {"stay": choice}, **HTMX)
+
+        assert response.status_code == 200
+        page = response.content.decode()
+        assert "<main" not in page, "htmx is sent the section alone, not a new page"
+        shown = stay_in_touch(page)
+        assert ticked(shown) == {choice}
+        assert 'value=""' in shown
+        assert takes_the_focus(shown)
+        assert "HX-Request" in response["Vary"], "a cache must not hand the section alone to a visit for the page"
 
 
 @pytest.mark.django_db
