@@ -105,6 +105,7 @@ def test_a_comparison_that_shows_ends_on_to_the_workbook_with_the_top_button_kep
     which waits on the comparison, at the download's anchor, and the top back button stays."""
     client = through_section_1(participant)
     people_answer(client)
+    client.post(f"{COMPARISON}visit/")  # ✨ the look, which freezes collection, so the comparison shows (ADR 0017)
 
     page = client.get(COMPARISON).content.decode()
 

@@ -4,16 +4,38 @@
   ✨ The comparison itself, from `comparison`: the participant's stored result beside their observers' means, drawn
   and worded as variant F did (ticket 38) in the results page's wording, with how far the observers agree on each,
   then the largest gaps and the questions to reflect on. Below the minimum there is a count and no numbers at
-  all, as a page waiting on answers where `invite` is given (fix-16), or else as a refusal. Neither state names who has answered. Shared by the participant's comparison and, once they consent, their
-  coach's link (ticket 27), so the coach sees no more than the participant. With `for_coach`, the engine's own words
-  name the participant (`name`) in place of "you", and the participant's own way to invite people goes; the pathway's
-  authored words stay in the participant's wording.
+  all, as a page waiting on answers where `invite` is given (fix-16), or else as a refusal. Neither state names who has
+  answered. From the minimum while answer collection is open (`comparison.ready`), there are no numbers either, until
+  the participant looks (ADR 0017; sprint-3d-r1-fix-1). Shared by the participant's comparison and, once they consent,
+  their coach's link (ticket 27), so the coach sees no more than the participant. With `for_coach`, the engine's own
+  words name the participant (`name`) in place of "you", and the participant's own way to invite people goes; the
+  pathway's authored words stay in the participant's wording.
 {% endcomment %}
 {% if comparison.illustrative %}
   <p class="comparison-illustrative" role="note">This comparison is illustrative: every answer in it is test data, not from someone who knows {% if for_coach %}{{ name }}{% else %}you{% endif %}.</p>
 {% endif %}
 
-{% if comparison.frameworks is None and invite and not for_coach %}
+{% if comparison.ready %}
+  {% comment %}
+    ✨ Enough have answered, but answer collection is open, so nothing of the observers' answers is shown until the
+    participant looks (ADR 0017; sprint-3d-r1-fix-1): for them, the press that looks, with `warning` beneath it, how
+    many of the people they invited have answered and that no more answers are added once they look, as Section 2's
+    card has them (ticket 106); for their coach, that they haven't looked yet.
+  {% endcomment %}
+  <section class="results-section comparison-waiting comparison-ready">
+    {% if for_coach %}
+      <h2>Not looked at yet</h2>
+      <p>
+        Enough people have answered, but {{ name }} hasn't looked at how others see them yet. It shows here once they
+        have.
+      </p>
+    {% else %}
+      <h2>Ready to view</h2>
+      {% include "engine/comparison_press.html" with press_sort=block_id press_class="pill" press_magnetic=True %}
+      <p class="freeze-warning">{{ warning }}</p>
+    {% endif %}
+  </section>
+{% elif comparison.frameworks is None and invite and not for_coach %}
   {% comment %}
     ✨ Below the minimum, where the pathway has a Five trusted voices card, a page that waits rather than an empty
     comparison (fix-16): the phrase that card's way in shows, how many more are needed or how many have answered, the

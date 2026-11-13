@@ -3043,6 +3043,13 @@ body:not(.framed) .question-card > p + form {
   font-size: var(--text-sm);
 }
 
+/* ✨ On the comparison's own page, while a look would freeze collection (sprint-3d-r1-fix-1): under its press, as on
+   the hub's next step, and darker than the page's waiting lines, as on Section 2's card. */
+.comparison-ready p.freeze-warning {
+  margin-top: var(--space-md);
+  color: var(--ink-light);
+}
+
 /* ✨ Room between a signpost's words and its green button, which sat tight beneath them (ticket 95). */
 .signpost > p:has(> .pill) {
   margin-top: var(--space-md);

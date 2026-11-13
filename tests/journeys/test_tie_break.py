@@ -10,7 +10,7 @@ from tests.documents import complete_sort, sort_pathway, with_a_tie_break
 from engine.models import Response, Result
 from tests.journeys.pages import text_of
 from tests.journeys.test_answers import participant  # noqa: F401 (a fixture)
-from tests.journeys.test_comparison import comparison, observer_sort, with_observers
+from tests.journeys.test_comparison import looked_at, observer_sort, with_observers
 from tests.journeys.test_consent import give_consent
 from tests.journeys.test_contact_list import JO, PRIYA, save_contacts
 from tests.journeys.test_hub import signed_in_client  # noqa: F401 (a fixture)
@@ -56,7 +56,7 @@ def test_observers_sorts_tied_on_both_frameworks_never_make_the_participant_a_ge
     with_observers(signed_in, participant, [observer_sort(50)] * 3)
 
     assert GENERALIST not in results(signed_in).content.decode()
-    assert GENERALIST not in comparison(signed_in).content.decode()
+    assert GENERALIST not in looked_at(signed_in).content.decode()
 
 
 # ✨ The tie-break's pairs (ticket 30b). The test pathway's two items load the same way on both frameworks, so a third,
@@ -367,7 +367,7 @@ def test_a_result_re_weighted_before_its_shares_were_kept_still_shows_its_gaps_o
     for _ in range(3):
         an_observer(response, TIED_ON_ONE)
 
-    page = text_of(comparison(marked).content.decode())
+    page = text_of(looked_at(marked).content.decode())
 
     assert in_order(page, "Prophet (APEST(d))", "You rate higher (+17)")
     assert in_order(page, "Apostle (APEST(d))", "Others rate higher (+17)")
@@ -382,7 +382,7 @@ def test_the_comparison_sets_the_re_weighted_result_beside_the_observers_sorts_a
     for _ in range(3):
         an_observer(response, TIED_ON_ONE)
 
-    page = text_of(comparison(marked).content.decode())
+    page = text_of(looked_at(marked).content.decode())
 
     assert in_order(page, "Prophet", "You: Present", "Others: Present", "Apostle", "You: Present", "Others: Present")
     assert in_order(page, "Prophet (APEST(d))", "You rate higher (+1)")

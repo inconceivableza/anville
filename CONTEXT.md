@@ -149,7 +149,7 @@ One item's bucket and value within an assessment: its fine-tuned value, or, wher
 _Avoid_: rating, card.
 
 **Haven't seen this**:
-The eighth place an observer can put an item, beside the buckets, for something they have not seen the participant do. It is not a bucket and is not scored: an item placed there is left out of that observer's results, as if it had not been shown. An observer who sends still counts toward the minimum number of observers.
+The eighth place an observer can put an item, beside the buckets, for something they have not seen the participant do. It is not a bucket and is not scored: an item placed there is left out of that observer's results, as if it had not been shown. An observer who sends with any item in a bucket still counts toward the minimum number of observers; one who placed every item here has nothing to add, so counts toward no minimum and is left out of the comparison, though what they sent is kept and can be withdrawn.
 _Avoid_: skip (the tie-break's word), not sure (the middle bucket's), unscored bucket.
 
 **Compositional score**:

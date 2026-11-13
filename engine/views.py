@@ -480,24 +480,32 @@ def _block_address(document, block_id):
     return f"{address}#{anchor}" if anchor else address
 
 
+# ✨ What the comparison is called where no comparison signpost names it, as in the faithful port: the original
+# prototype's heading for it.
+COMPARISON_TITLE = "How others experience you"
+
+
+def _comparison_title(document, sort_id):
+    """✨ What the comparison of the sort `sort_id` is called, in the sidebar's link to it and as its own page's
+    heading: the title of the comparison signpost pointing at it, as the hub's row names it (ticket 109;
+    sprint-3d-r1-fix-1), or where no signpost does, the engine's own."""
+    for block in blocks_of(document):
+        if block["type"] == "comparison_signpost" and block["sort"] == sort_id:
+            return authored_text(block, "participant")["title"]
+    return COMPARISON_TITLE
+
+
 def _quick_link_names(document, hub, scored):
     """✨ What the sidebar's links to the comparison of the `scored` block, to the invitations and to the coach page are
     called, as {"comparison", "invitations", "coach"}: what the hub calls each page they open, in the pathway's words
-    (ticket 109), the title of the comparison signpost's row or of the side card holding the contact list or the coach
-    checklist. Where the hub names no such page, as for a list or a checklist within a larger section, the engine's
-    own."""
+    (ticket 109), the title of the comparison signpost's row (`_comparison_title`) or of the side card holding the
+    contact list or the coach checklist. Where the hub names no such page, as for a list or a checklist within a larger
+    section, the engine's own."""
     names = {
-        "comparison": "How others experience you",
+        "comparison": _comparison_title(document, scored["id"]) if scored is not None else COMPARISON_TITLE,
         "invitations": "Invite others to assess you",
         "coach": "Your coach",
     }
-    signposts = [
-        block
-        for block in blocks_of(document)
-        if block["type"] == "comparison_signpost" and scored is not None and block["sort"] == scored["id"]
-    ]
-    if signposts:
-        names["comparison"] = authored_text(signposts[0], "participant")["title"]
     cards = {card.id: card.title for card in hub.side_cards()}
     for name, block_type in (("invitations", "contact_list"), ("coach", "coach_checklist")):
         held = [section_of(document, block["id"])["id"] for block in blocks_of(document) if block["type"] == block_type]
@@ -1202,7 +1210,10 @@ def comparison(request, block_id):
     sections they have done, save where a section holds a comparison signpost to the sort: the comparison is then that
     section's, refused while it is locked, as its pages are (fix-19). Below the minimum it shows how many have
     answered and no numbers; it never shows which person has answered, and single observers' percents only in the
-    distribution strip, in ascending order."""
+    distribution strip, in ascending order. From the minimum, the numbers show only while answer collection is frozen
+    (ADR 0017): before the press that looks, and again once withdrawals unfreeze collection, this address shows that
+    press and its warning in their place, so loading it, from the menu or a typed address, never looks
+    (sprint-3d-r1-fix-1)."""
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
@@ -1215,13 +1226,25 @@ def _comparison_shown(request, state, result, section, block_id, status=200, sha
     """✨ The comparison page, from `_own_result`'s state, result and section, with `share_refusal`, a refused tick of the
     coach's box sent without JavaScript, said above the box (fix-2). Below the minimum, where the pathway has a Five
     trusted voices card, `invite` is the way to it, and the page waits on answers with it in place of its refusal
-    (fix-16); otherwise None, and the refusal stands, as in the faithful port."""
-    scores = _scores_shown_storing_reweighted(state.version.document, result)
+    (fix-16); otherwise None, and the refusal stands, as in the faithful port.
+
+    From the minimum while answer collection is open (`ready`), `warning` is the freeze warning, which the page says
+    beneath the press that looks, as Section 2's card does (ticket 106); where the document asks on a page of its own
+    instead, as the faithful port does, the page is that one, "Before you look", unless a refused tick is to be said
+    (sprint-3d-r1-fix-1)."""
+    document = state.version.document
+    scores = _scores_shown_storing_reweighted(document, result)
     shown = _comparison_of(state.response, scores, state.answers[block_id])
-    sort = next(block for block in blocks_of(state.response.version.document) if block["id"] == block_id)
+    warning = _freeze_warning(state.response, shown["observers"], shown["minimum"]) if shown["ready"] else None
+    if warning and not warns_beside_the_press(document) and share_refusal is None:
+        context = {"block_id": block_id, "warning": warning}
+        return render(request, "engine/comparison_confirm.html", context, status=status)
+    sort = next(block for block in blocks_of(document) if block["id"] == block_id)
     invite = _invite(state) if shown["frameworks"] is None else None
     context = {
+        "heading": _comparison_title(document, block_id),
         "comparison": shown,
+        "warning": warning,
         "invite": invite if invite and invite.waiting else None,
         "block_id": block_id,
         "coach": _coach_sharing(state.response, block_id),
@@ -1262,11 +1285,19 @@ def share_with_coach(request, block_id):
 
 
 def _comparison_of(response, scores, sort):
-    """✨ The comparison of one participant's result with their observers, as both they and their coach see it."""
+    """✨ The comparison of one participant's result with their observers, as both they and their coach see it. The
+    observers' answers are worked into it only while answer collection is frozen, which the participant's look does
+    (ADR 0017): with the minimum in while it is open, it is `ready`, with a count and no numbers, as below the minimum,
+    so neither they nor their coach can see what one more answer adds (sprint-3d-r1-fix-1)."""
     document = response.version.document
     assessments = ObserverResponse.assessments_for(response)
-    shown = comparison_page(document, scores, sort, aggregate(document, assessments.assessments))
-    # ✨ Below the minimum there is no comparison on the page to call illustrative.
+    if response.collection_frozen_at is not None:
+        average = aggregate(document, assessments.assessments)
+    else:
+        average = {"observers": len(assessments.assessments), "frameworks": None}
+    shown = comparison_page(document, scores, sort, average)
+    shown["ready"] = response.collection_frozen_at is None and shown["observers"] >= shown["minimum"]
+    # ✨ Below the minimum, or before the look, there is no comparison on the page to call illustrative.
     shown["illustrative"] = assessments.all_test_data and shown["frameworks"] is not None
     return shown
 
@@ -1333,8 +1364,9 @@ def _hub_voices(state, hub):
 
 
 def _answered(response):
-    """✨ How many observers' assessments of a participant's `response` are in."""
-    return len(ObserverResponse.assessments_for(response).assessments)
+    """✨ How many observers' assessments of a participant's `response` are in and count toward the minimum, as every
+    count on the way to the comparison reads it (`ObserverResponse.counted`)."""
+    return ObserverResponse.counted(response)
 
 
 def _freeze_warning(response, answered, minimum):
@@ -1362,7 +1394,8 @@ def visit_comparison(request, block_id):
     collection and goes on with no page between (ticket 106).
 
     A press with the minimum in, confirmed or with collection already frozen, is also the view a comparison signpost's
-    "Viewed" reads (ticket 67a), kept once withdrawals unfreeze collection."""
+    "Viewed" reads (ticket 67a), kept once withdrawals unfreeze collection. Only this press freezes, so only it shows
+    the observers' numbers: the comparison's own address offers it while collection is open (sprint-3d-r1-fix-1)."""
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return _see_other(page_url(section["id"], section["page"]))
@@ -1431,8 +1464,9 @@ def retake(request, block_id):
             ),
             "sort_page": sort_page,
             "offer": offer,
-            # ✨ None or 0 when nobody has sent anything, which leaves nothing to warn of.
-            "answered": _answered(response) if result is not None else None,
+            # ✨ None or 0 when nobody has sent anything, which leaves nothing to warn of. Every send, counting or not
+            # (sprint-3d-r1-fix-1), since the retake deletes them all.
+            "answered": ObserverResponse.sent_count(response) if result is not None else None,
             "tie_break": bool(result and result.tie_break_answers),
             "coach_shown": result is not None and bool((_coach_of(response) or {}).get("shared")),
             "refusal": refusal,

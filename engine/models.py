@@ -22,7 +22,7 @@ from engine.document.gates import (
     observers_answered,
     opened_key,
 )
-from engine.document.observers import minimum_observers
+from engine.document.observers import counts, minimum_observers
 
 
 class CollectionFrozen(Exception):
@@ -201,25 +201,26 @@ class Response(models.Model):
         )
 
     def freeze_collection(self):
-        """✨ Freeze answer collection, if at least the minimum number of observer assessments are in, counted under a
-        lock on this response, which a send takes too, so no send lands between the count and the freeze. Freezing
-        again keeps the first time. Returns whether collection is frozen."""
+        """✨ Freeze answer collection, if at least the minimum number of observer assessments that count
+        (`ObserverResponse.counted`) are in, counted under a lock on this response, which a send takes too, so no send
+        lands between the count and the freeze. Freezing again keeps the first time. Returns whether collection is
+        frozen."""
         minimum = minimum_observers(self.version.document)
         with transaction.atomic():
             locked = Response.objects.select_for_update().get(pk=self.pk)
-            if locked.collection_frozen_at is None and _submitted_count(self) >= minimum:
+            if locked.collection_frozen_at is None and ObserverResponse.counted(self) >= minimum:
                 locked.collection_frozen_at = timezone.now()
                 locked.save(update_fields=["collection_frozen_at"])
         self.collection_frozen_at = locked.collection_frozen_at
         return self.collection_frozen_at is not None
 
     def unfreeze_below_minimum(self):
-        """✨ Open answer collection again if fewer than the minimum number of observer assessments are in, as after a
-        withdrawal (ticket 55). Counted under the same lock as freezing."""
+        """✨ Open answer collection again if fewer than the minimum number of observer assessments that count are in,
+        as after a withdrawal (ticket 55). Counted under the same lock as freezing."""
         minimum = minimum_observers(self.version.document)
         with transaction.atomic():
             Response.objects.select_for_update().filter(pk=self.pk).first()
-            if _submitted_count(self) < minimum:
+            if ObserverResponse.counted(self) < minimum:
                 Response.objects.filter(pk=self.pk).update(collection_frozen_at=None)
 
     def clear_sort(self, block_id):
@@ -343,7 +344,7 @@ class Response(models.Model):
         visits = {comparison_visit_key(block_id): at for block_id, at in self.comparisons_visited.items()}
         viewed = {comparison_viewed_key(block_id): at for block_id, at in self.comparisons_viewed.items()}
         opened = {opened_key(section_id): at for section_id, at in self.sections_opened.items()}
-        answered = observers_answered(self.version.document, _submitted_count(self))
+        answered = observers_answered(self.version.document, ObserverResponse.counted(self))
         return {**self.answers, **kept, **visits, **viewed, **links, **coach_answers, **answered, **opened}
 
 
@@ -791,22 +792,33 @@ class ObserverResponse(models.Model):
 
     @classmethod
     def assessments_for(cls, response):
-        """✨ The submitted observer assessments of one participant's response, and whether every one is test data.
+        """✨ The submitted observer assessments of one participant's response that count, and whether every one is
+        test data. This is the one read of them: the comparison averages these, and the minimum, wherever it is
+        checked, counts these (`counted`).
 
-        Drafts never count, and nothing else of an observer travels with their assessment: not their written answers,
-        and not which record it came from. With no observers there is nothing to call illustrative, so that is False.
+        Drafts never count, and neither does an assessment with no card in a scored bucket (`counts`), which has nothing
+        to add (sprint-3d-r1-fix-1). Nothing else of an observer travels with their assessment: not their written
+        answers, and not which record it came from. With no observers there is nothing to call illustrative, so that is
+        False.
         """
         submitted = cls.objects.filter(response=response, submitted_at__isnull=False).order_by("pk")
-        rows = list(submitted.values_list("assessment", "is_test_data"))
+        rows = [row for row in submitted.values_list("assessment", "is_test_data") if counts(row[0])]
         return ObserverAssessments(
             assessments=[assessment for assessment, _ in rows],
             all_test_data=bool(rows) and all(is_test_data for _, is_test_data in rows),
         )
 
+    @classmethod
+    def counted(cls, response):
+        """✨ How many observer assessments of a participant's response count toward the minimum, as
+        `assessments_for` reads them."""
+        return len(cls.assessments_for(response).assessments)
 
-def _submitted_count(response):
-    """✨ How many observer assessments of a participant's response have been sent, as the minimum counts them."""
-    return ObserverResponse.objects.filter(response=response, submitted_at__isnull=False).count()
+    @classmethod
+    def sent_count(cls, response):
+        """✨ How many observer assessments of a participant's response have been sent, counting or not: all of what a
+        retake deletes."""
+        return cls.objects.filter(response=response, submitted_at__isnull=False).count()
 
 
 def _sent_by(secret):
