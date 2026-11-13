@@ -28,6 +28,7 @@ from engine.document.gates import (
     waits_on_comparison,
     with_people_minimum,
 )
+from engine.document.photos import REQUIRED, Credit, CreditPart, on_pexels, on_unsplash
 from engine.document.text import text_for
 
 LOCKED = "locked"
@@ -252,28 +253,76 @@ def track_sections(document):
 
 
 class WizardPhoto(NamedTuple):
-    """✨ A photo a wizard's step is drawn beside: its `file`, in `frontend/img`, and its `credit`, as the credits page
-    lists it."""
+    """✨ A photo a wizard's step is drawn beside: its `file`, in `frontend/img`, and its `credit`, a `Credit`, as the
+    credits page lists it."""
 
     file: str
-    credit: str
+    credit: Credit
 
+
+# ✨ The homepage's video, by its page on Pexels, and so of its stills, such as its poster (sprint-3d-r1-fix-5). The
+# credits page lists it first among the site's.
+HERO_VIDEO_CREDIT = on_pexels(
+    "Video of a woman running through a field of wheat",
+    "Marian Croitoru",
+    "https://www.pexels.com/@marian-croitoru-2984359/",
+    "https://www.pexels.com/video/healthy-light-landscape-nature-4524595/",
+)
+
+# ✨ The ratings step's photo's page on Wikimedia Commons (sprint-3d-r1-fix-5).
+COMMONS_PAGE = (
+    "https://commons.wikimedia.org/wiki/"
+    "File:A_rock_band_in_Iran_-_Mortaz_Band_-_Canon_Photography-_Mostafa_Meraji_07.jpg"
+)
 
 # ✨ The wizard's photos, one for each step in order: in *Whatever You Do*, "About you", the reason, the ratings and the
 # welcome, the fifth for a longer wizard. Changing a step's photo is changing its line here, with the file in
 # `frontend/img`: the page and the credits page both read it. They are static files, so the entry page shows one before
-# consent, unlike the pathway's own photos. For now, the hackathon prototype's five (ticket 101).
+# consent, unlike the pathway's own photos. For now, the hackathon prototype's five (ticket 101) but for two
+# (sprint-3d-r1-fix-5): the ratings step's, a photo from Wikimedia Commons, under CC BY-SA 4.0, so its credit is
+# required and the file is as Commons gives it, unedited (the page may crop it for display); and the fifth, the homepage
+# video's poster, in place of a photo whose source was never found. Not `hero-poster.jpg`: `frontend/img`'s is a still
+# of the video, but `frontend/public`'s, of a forest, shadows it. Each credit is as traced to its page.
 WIZARD_PHOTOS = (
-    WizardPhoto("facing-sun.jpg", "Photograph of a figure facing the sun, by Andreas Rasmussen on Unsplash."),
-    WizardPhoto("grass.jpg", "Photograph of grass, by Oliver Pacas on Unsplash."),
     WizardPhoto(
-        "field-woman.jpg", "Photograph of a woman walking through a field of wheat, by Hannah Skelly on Unsplash."
+        "facing-sun.jpg",
+        on_unsplash(
+            "Photograph of a figure facing the sun",
+            "Andreas Rasmussen",
+            "https://unsplash.com/@andreasdress",
+            "https://unsplash.com/photos/woman-sitting-in-front-of-grassfield-VLYvYq4da-A",
+        ),
     ),
-    WizardPhoto("notebook.jpg", "Photograph of a notebook, a pen and a cup of coffee, by Andres Molina on Unsplash."),
     WizardPhoto(
-        "hero.jpg",
-        "Still of a woman in a sunhat walking through a field at sunset, from the video by Marian Croitoru on Pexels.",
+        "grass.jpg",
+        on_unsplash(
+            "Photograph of grass",
+            "Oliver Pacas",
+            "https://unsplash.com/@oliverpacas",
+            "https://unsplash.com/photos/person-holding-tall-grass-during-sunset-LGD8eV8ar4E",
+        ),
     ),
+    WizardPhoto(
+        "musicians-in-wheat.jpg",
+        Credit(
+            REQUIRED,
+            description="Photograph of a violinist and a bass guitarist playing in a field of wheat",
+            title=CreditPart("A rock band in Iran - Mortaz Band - Canon Photography- Mostafa Meraji 07", COMMONS_PAGE),
+            author=CreditPart("Mostafameraji", "https://commons.wikimedia.org/wiki/User:Mostafameraji"),
+            source=CreditPart("Wikimedia Commons", COMMONS_PAGE),
+            licence=CreditPart("CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0/"),
+        ),
+    ),
+    WizardPhoto(
+        "notebook.jpg",
+        on_unsplash(
+            "Photograph of a notebook, a pen and a cup of coffee",
+            "Andres Molina",
+            "https://unsplash.com/@nomadicfitlust",
+            "https://unsplash.com/photos/a-cup-of-coffee-and-a-notebook-on-a-table-8CGOX7oSMbI",
+        ),
+    ),
+    WizardPhoto("hero-landscape-poster.jpg", HERO_VIDEO_CREDIT),
 )
 
 

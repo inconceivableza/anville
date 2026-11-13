@@ -9,8 +9,12 @@ another translation names it beside its reference, so that translation's marked 
 verse is the homepage's own, so its notice is too, whatever pathway is published.
 """
 
-import pytest
+import re
 
+import pytest
+from django.utils.html import escape
+
+from engine.hub import WIZARD_PHOTOS
 from tests.documents import ESV_NOTICE, NIV_NOTICE, pathway_document, sort_pathway, translated
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 
@@ -77,3 +81,59 @@ def test_a_required_credit_is_always_listed_a_courtesy_one_only_while_the_settin
     assert REQUIRED in page
     assert (COURTESY in page) is courtesy_shown
     assert page.count('class="credits-photo"') == (2 if courtesy_shown else 1)
+
+
+# ✨ A photo under a Creative Commons licence, credited as the licence asks: its title, author, source and licence, each
+# linked (sprint-3d-r1-fix-5).
+CC_CREDIT = {
+    "kind": "required",
+    "title": {"name": "Ezra Collective", "url": "https://www.flickr.com/photos/andjustinforall/43420549881/"},
+    "author": {"name": "Justin de Nooijer", "url": "https://www.flickr.com/photos/andjustinforall/"},
+    "source": {"name": "Flickr", "url": "https://www.flickr.com/"},
+    "licence": {"name": "CC BY-NC 2.0", "url": "https://creativecommons.org/licenses/by-nc/2.0/"},
+}
+
+
+PARTS = ("title", "author", "source", "licence")
+
+
+def links(credit):
+    """✨ Each of a credit's parts that has an address, as its address and its name."""
+    if isinstance(credit, dict):
+        return [(credit[part]["url"], credit[part]["name"]) for part in PARTS if "url" in credit.get(part, {})]
+    return [(part.url, part.name) for part in (getattr(credit, name) for name in PARTS) if part and part.url]
+
+
+def linked(link, page):
+    """✨ Whether the page links this address by this name."""
+    url, name = link
+    return re.search(rf'<a href="{re.escape(escape(url))}"[^>]*>{re.escape(escape(name))}</a>', page)
+
+
+def in_the_pathways_photos(document):
+    """✨ A photo of the pathway's own, with its credit: the document's to give."""
+    document["photos"] = {"onboarding": {"file": "grass.jpg", "credit": CC_CREDIT}}
+    return CC_CREDIT
+
+
+def in_the_sites_photos(document):
+    """✨ The wizard's ratings step's photo, from Wikimedia Commons: the engine's, which no document can change."""
+    return next(photo.credit for photo in WIZARD_PHOTOS if photo.credit.kind == "required")
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("given", [in_the_pathways_photos, in_the_sites_photos])
+def test_a_required_creative_commons_credit_shows_its_title_author_source_and_licence_each_linked(
+    client, load_pathway, given
+):
+    """✨ Even with courtesy credits off, as a credit the licence requires is never hidden, wherever it is given."""
+    document = sort_pathway()
+    credit = given(document)
+    document["show_courtesy_credits"] = False
+    load_pathway(document)
+
+    page = client.get(CREDITS).content.decode()
+
+    assert len(links(credit)) == 4
+    for link in links(credit):
+        assert linked(link, page), link
