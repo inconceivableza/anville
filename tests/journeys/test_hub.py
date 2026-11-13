@@ -459,10 +459,14 @@ def test_the_row_of_someone_who_withdrew_looks_as_the_row_of_someone_who_sent(tr
 
     rows = re.findall(r'<li class="contact-row" id="person-.*?</li>', voices_page(trusted_voices), re.S)
 
-    jo, priya = (
-        re.sub(r'\d+|name="drawn" value="[^"]*"', "#", row.replace(name, "NAME").replace(email, "EMAIL"))
-        for row, (name, email) in zip(rows, PEOPLE)
-    )
+    def without_the_person(row, name, email):
+        """✨ The row with what varies between people taken out, the CSRF token's value and `drawn` first: the token is
+        random text, the same in every row of a page, which holds "Jo" about one time in sixty, and was then rewritten
+        in Jo's row and no other's."""
+        row = re.sub(r'name="(?:csrfmiddlewaretoken|drawn)" value="[^"]*"', "#", row)
+        return re.sub(r"\d+", "#", row.replace(name, "NAME").replace(email, "EMAIL"))
+
+    jo, priya = (without_the_person(row, *person) for row, person in zip(rows, PEOPLE))
     assert "Link works until" in jo
     assert jo == priya
 
