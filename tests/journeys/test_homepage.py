@@ -302,7 +302,7 @@ def test_the_screens_carry_the_tools_own_words_and_none_of_v3s_that_are_not_true
 def test_how_it_works_shows_no_photos_with_javascript_or_without(client):
     """✨ The row of friends was shown nowhere else, so its credit goes with it."""
     page = client.get("/").content.decode()
-    assert "row of friends" not in " ".join(SITE_PHOTO_CREDITS)
+    assert all("row of friends" not in (credit.text or credit.description) for credit in SITE_PHOTO_CREDITS)
     stylesheet = (Path(__file__).resolve().parents[2] / "frontend" / "src" / "styles.css").read_text()
 
     assert 'id="aImgs"' not in page

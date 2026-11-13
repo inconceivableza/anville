@@ -71,9 +71,18 @@ def test_the_next_step_takes_the_look_of_its_section_or_else_of_what_it_waits_on
     assert re.match(rf'<(section|div) class="panel next {look}">', panel)
 
 
+def credit_lines():
+    """✨ The site's photos' credits, each as plain words, its parts' names in place of their links
+    (sprint-3d-r1-fix-5)."""
+    return " ".join(
+        credit.text or f"{credit.description}, by {credit.author.name} on {credit.source.name}."
+        for credit in SITE_PHOTO_CREDITS
+    )
+
+
 def test_every_photo_the_next_step_can_show_has_a_credit_line():
     # ✨ By a word of each credit's subject, as the lines are the content owner's to reword.
-    credits = " ".join(SITE_PHOTO_CREDITS)
+    credits = credit_lines()
 
     for subject in ("clay", "carpenter", "Bible", "two friends talking", "misty hills", "notebook"):
         assert subject in credits, subject
@@ -81,7 +90,7 @@ def test_every_photo_the_next_step_can_show_has_a_credit_line():
 
 def test_every_photo_the_stylesheet_shows_has_a_credit_line():
     """✨ The hero's photo, by a word of its credit's subject."""
-    credits = " ".join(SITE_PHOTO_CREDITS)
+    credits = credit_lines()
 
     assert "sunhat" in credits
 
@@ -89,12 +98,12 @@ def test_every_photo_the_stylesheet_shows_has_a_credit_line():
 def test_every_calling_in_the_homepages_marquee_has_a_credit_line_and_no_photo_it_dropped_does():
     """✨ v3's callings (29 Oct), by a word of each credit's subject and its photographer, as traced in the photo
     sources. The parent, pastor, student and graduate are in no band of v3's, so their photos are shown nowhere now."""
-    credits = " ".join(SITE_PHOTO_CREDITS)
+    credits = credit_lines()
 
     assert "teacher" in credits
     for dropped in ("baby", "pastor", "headphones", "graduate"):
         assert dropped not in credits, dropped
-    credits = " ".join(SITE_PHOTO_CREDITS)
+    credits = credit_lines()
 
     for subject, by in (
         ("rice paddy", "Nandhu Kumar on Pexels"),

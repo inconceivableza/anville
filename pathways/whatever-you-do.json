@@ -11,7 +11,16 @@
   "photos": {
     "designed": {
       "file": "grass.jpg",
-      "credit": { "kind": "courtesy", "text": "Photograph of grass, by Oliver Pacas on Unsplash." }
+      "credit": {
+        "kind": "courtesy",
+        "description": "Photograph of grass",
+        "author": { "name": "Oliver Pacas", "url": "https://unsplash.com/@oliverpacas" },
+        "source": {
+          "name": "Unsplash",
+          "url": "https://unsplash.com/photos/person-holding-tall-grass-during-sunset-LGD8eV8ar4E"
+        },
+        "licence": { "name": "Unsplash License", "url": "https://unsplash.com/license" }
+      }
     }
   },
   "show_courtesy_credits": true,

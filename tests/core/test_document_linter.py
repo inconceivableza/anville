@@ -461,6 +461,46 @@ def test_a_photo_marked_as_needing_no_credit_is_accepted():
     assert validate(with_a_photo(credit={"kind": "none"})) == []
 
 
+# ✨ A credit as a Creative Commons licence asks for it: its title, author, source and licence, each linked, and so no
+# wording of its own (sprint-3d-r1-fix-5).
+CC_CREDIT = {
+    "kind": "required",
+    "title": {"name": "Hills", "url": "https://example.com/photos/hills"},
+    "author": {"name": "Ada Example", "url": "https://example.com/@ada"},
+    "source": {"name": "Flickr", "url": "https://example.com/photos/hills"},
+    "licence": {"name": "CC BY 2.0", "url": "https://creativecommons.org/licenses/by/2.0/"},
+}
+
+
+def but(**changed):
+    """✨ The Creative Commons credit with these fields changed, or taken out where given as None."""
+    credit = {**CC_CREDIT, **changed}
+    return {field: value for field, value in credit.items() if value is not None}
+
+
+@pytest.mark.parametrize(
+    "credit, refused",
+    [
+        (CC_CREDIT, False),
+        (but(title=None, description="Photograph of hills"), False),
+        (but(author={"name": "Ada", "url": "javascript:alert(1)"}), True),
+        (but(author={"name": "Ada", "url": "http://example.com/@ada"}), True),
+        (but(author={"url": "https://example.com/@ada"}), True),
+        (but(author={"name": "Ada", "handle": "@ada"}), True),
+        (but(licence="CC BY 2.0"), True),
+        (but(title=None), True),  # ✨ by whom, but of what?
+        (but(author=None, source=None, licence=None), True),  # ✨ of what, but by whom?
+    ],
+)
+def test_a_credits_parts_are_each_named_and_linked_only_to_a_secure_web_address(credit, refused):
+    """✨ sprint-3d-r1-fix-5: the credits page links each part of a credit to its address, so an address that is not
+    https, such as a script, never reaches a page."""
+    problems = validate(with_a_photo(credit=credit))
+
+    assert bool(problems) is refused
+    assert all(problem.path.startswith("/photos/calling/credit") for problem in problems)
+
+
 # ✨ The letter's months (ticket 107)
 
 
