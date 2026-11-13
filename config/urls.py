@@ -41,6 +41,7 @@ from engine.views import (
     hub,
     invitations,
     issue_invitation,
+    letter_date,
     move_past_page,
     observe,
     observer,
@@ -78,6 +79,8 @@ urlpatterns = [
     path("results/<slug:block_id>/comparison/", comparison, name="comparison"),
     path("results/<slug:block_id>/comparison/visit/", visit_comparison, name="visit_comparison"),
     path("results/<slug:block_id>/comparison/coach/", share_with_coach, name="share_with_coach"),
+    # ✨ The date a letter opens on, kept as it is picked, before the press that seals it (sprint-3d-r1-fix-3).
+    path("letters/<slug:block_id>/date/", letter_date, name="letter_date"),
     path("downloads/<slug:block_id>/", download, name="download"),
     path("photos/<slug:section_id>/", photo, name="photo"),
     # ✨ A contact list's people, each added (with their link) or changed on their own (ticket 51a).

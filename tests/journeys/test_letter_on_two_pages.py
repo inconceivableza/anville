@@ -12,7 +12,7 @@ from django.utils.html import escape
 
 from engine.models import Response, SealedLetter
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
-from tests.journeys.test_pages import previous_page
+from tests.journeys.test_letter_sealed import date_field
 from tests.journeys.test_whatever_you_do import (  # noqa: F401  (participant is a fixture, used by name)
     A_LETTER,
     LETTER_PAGE,
@@ -42,6 +42,15 @@ def stored_letter():
     return Response.objects.get().answers.get("lt-message")
 
 
+def back_from_the_questions(client, opens_on):
+    """✨ "← Previous page" on the questions page without JavaScript: a press of the seal's form, sending the date in its
+    field as it goes (sprint-3d-r1-fix-3)."""
+    page = client.get(QUESTIONS_PAGE).content.decode()
+    tag = re.search(r"<button [^>]*>← Previous page</button>", page).group(0)
+    button = dict(re.findall(r'([\w-]+)="([^"]*)"', tag))
+    return client.post(button["formaction"], {"opens_on": opens_on, button["name"]: button.get("value", "")})
+
+
 def where_unmet_leads(page, message):
     """✨ Where an unmet requirement's message leads, or None where it is not a link."""
     link = re.search(rf'<a [^>]*href="([^"]+)"[^>]*>\s*<span class="gate-message">{re.escape(escape(message))}<', page)
@@ -58,9 +67,29 @@ def test_the_letter_pages_press_stores_the_letter_sent_with_it_and_opens_the_que
 
     assert (went_on.status_code, went_on.url) == (303, QUESTIONS_PAGE)
     assert stored_letter() == A_LETTER
-    back = previous_page(client.get(QUESTIONS_PAGE).content.decode())
-    assert back == f"{LETTER_PAGE}#block-lt-message"
-    assert escape(A_LETTER) in client.get(back).content.decode()
+    back = back_from_the_questions(client, date_field(client.get(QUESTIONS_PAGE).content.decode())["value"])
+    assert (back.status_code, back.url) == (303, f"{LETTER_PAGE}#block-lt-message")
+    assert escape(A_LETTER) in client.get(back.url).content.decode()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("javascript", [False, True], ids=["without JavaScript", "with JavaScript"])
+def test_a_date_picked_then_going_back_to_the_letter_and_on_again_is_offered_again(participant, javascript):
+    """✨ With JavaScript the date is kept as it is changed, whichever way the participant then leaves the page; without,
+    "← Previous page" sends it as it goes (sprint-3d-r1-fix-3)."""
+    client = through_to_the_questions(participant)
+    field = date_field(client.get(QUESTIONS_PAGE).content.decode())
+    picked = field["max"]  # ✨ the latest the letter accepts, not the date first offered
+    assert picked != field["value"]
+
+    if javascript:
+        client.post(field["hx-post"], {"opens_on": picked}, HTTP_HX_REQUEST="true")
+        client.get(LETTER_PAGE)
+    else:
+        back_from_the_questions(client, picked)
+    go_on_from_the_letter(client)
+
+    assert date_field(client.get(QUESTIONS_PAGE).content.decode())["value"] == picked
 
 
 @pytest.mark.django_db

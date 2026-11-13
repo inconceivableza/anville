@@ -5,6 +5,7 @@ import hashlib
 import json
 import mimetypes
 import re
+from datetime import date
 from typing import NamedTuple
 
 from django.conf import settings
@@ -614,7 +615,8 @@ def section(request, section_id, page=1):
     issued = _issued_link(request) if shows_links else None
     demo = _demo_prefill(request, state.version.document)
     _open_letters_due(state, pages_of(section)[page - 1])
-    shown = _section_shown(request, state, section, _section_page(state, section, page, issued=issued, demo=demo))
+    drawn = _section_page(state, section, page, issued=issued, demo=demo, kept=_letter_dates(request))
+    shown = _section_shown(request, state, section, drawn)
     if issued is not None:
         shown["Cache-Control"] = "no-store"
         shown.delete_cookie(ISSUED_COOKIE, path=request.path)
@@ -703,6 +705,7 @@ def complete_section(request, section_id):
         if letter is not None:
             SealedLetter.seal(participant_response, letter["id"], opens_on)
     if letter is not None:
+        _keep_letter_date(request, letter["id"], None)  # ✨ sealed, it keeps no date picked (sprint-3d-r1-fix-3)
         # ✨ Back to the letter, so the participant sees it sealed and until when, rather than only a tick on the hub.
         return _go_to(request, f"{page_url(section_id, page_of(section, letter['id']))}#{landing_of(letter)}")
     # ✨ Back to the hub, which points at the next step, as the prototype's `completePillar` goes (ticket 41b); a wizard
@@ -710,6 +713,47 @@ def complete_section(request, section_id):
     if section.get("wizard") and "welcome" in section:
         return _go_to(request, reverse("wizard_welcome", args=[section_id]))
     return _go_to(request, reverse("hub"))
+
+
+# ✨ The date last picked for each letter not yet sealed, by its block, kept in the participant's session as it is
+# changed, so the page that seals it offers it again after going back to the letter and on (sprint-3d-r1-fix-3). Never
+# stored beyond the session: sealing takes only the date its own press sends.
+LETTER_DATES_KEY = "letter_dates"
+
+
+@login_required
+@consent_required
+@require_POST
+def letter_date(request, block_id):
+    """✨ The date a letter not yet sealed opens on, kept quietly as it is picked (sprint-3d-r1-fix-3): with JavaScript
+    as its field changes; without, as "← Previous page" goes back from the page that seals it, sending the seal's form
+    (`back`), which this then leads on to. Anything but a date forgets the one kept, and a letter sealed keeps none."""
+    state = _participant(request.user)
+    block = _block_of_type(state.version, block_id, "letter")
+    section = section_of(state.version.document, block_id)
+    last = page_count(section)
+    if state.reached(section) != last:
+        return _refused(request, NOT_OPEN, status=403)
+    try:
+        picked = date.fromisoformat(request.POST.get("opens_on") or "").isoformat()
+    except ValueError:
+        picked = None
+    seals = _seals(state)
+    _keep_letter_date(request, block["id"], None if block["id"] in seals else picked)
+    if "back" not in request.POST:
+        return HttpResponse(status=204)
+    return _go_to(request, _previous_page(section, last, seals) or page_url(section["id"], last))
+
+
+def _letter_dates(request):
+    """✨ The dates kept for the participant's letters not yet sealed, by block (`LETTER_DATES_KEY`)."""
+    return request.session.get(LETTER_DATES_KEY, {})
+
+
+def _keep_letter_date(request, block_id, picked):
+    """✨ Keep `picked`, an ISO date, as the date last picked for the letter `block_id`, or forget it with None."""
+    kept = {letter: day for letter, day in _letter_dates(request).items() if letter != block_id}
+    request.session[LETTER_DATES_KEY] = {**kept, block_id: picked} if picked else kept
 
 
 @login_required
@@ -869,7 +913,7 @@ def _answer_refused(request, state, section, block_id, refusal, status):
     the bare status line (fix-7)."""
 
     def its_page(status):
-        shown = _section_page(state, section, page_of(section, block_id))
+        shown = _section_page(state, section, page_of(section, block_id), kept=_letter_dates(request))
         _on_page(shown, block_id)["refusal"] = refusal
         return _section_shown(request, state, section, shown, status=status)
 
@@ -2791,14 +2835,15 @@ def _section_or_404(version, section_id):
     return section
 
 
-def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None, chosen=None):
+def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None, chosen=None, kept=None):
     """✨ One page of a section as its template needs it. Every page but the last ends in "Continue →", held by that
     page's own clauses; the last ends in the section's completion, held by the whole gate. `issued` is a link just
     issued, a coach's or an observer's, which the page shows this once beside the person it is for. `demo` is a demo
     profile, from `_demo_prefill`, that a sort not yet in starts from (fix-23). `rows_back` is how a contact list's
     rows come back from a press without JavaScript, by its identifier, as `_contact_rows` takes it (ticket 70,
     fix-1). `chosen` is the date a refused press to seal a letter sent, offered again in place of the default (ticket
-    104)."""
+    104); `kept` the dates last picked for the participant's letters, by block, as their session keeps them, each
+    offered while its letter still accepts it (`_letter_dates`, sprint-3d-r1-fix-3)."""
     rows_back = rows_back or {}
     version, answers, fixed = state.version, state.answers, state.fixed
     opened, activity_open = open_blocks(section, answers, state.sections, up_to_page=page)
@@ -2817,7 +2862,7 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
     states = {other.id: other for other in hub.sections}
     seals = _seals(state)
     letter = unsealed_letter(section, seals) if is_last else None
-    press = seal_press(letter, timezone.localdate(), chosen) if letter else None
+    press = seal_press(letter, timezone.localdate(), chosen, (kept or {}).get(letter["id"])) if letter else None
     carried = None if is_last else carried_by_way_on(pages_of(section)[page - 1], seals)
     return {
         # ✨ Where "← Back" at the top leads: the section this is a part of, or else the hub.
@@ -2869,8 +2914,9 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
                 for block in blocks
             ],
         },
-        # ✨ The date the press that finishes the section seals its letter until, while it holds one not yet sealed.
-        "seal": press,
+        # ✨ The date the press that finishes the section seals its letter until, while it holds one not yet sealed, and
+        # the letter's block, whose date is kept as it is picked (sprint-3d-r1-fix-3).
+        "seal": {**press, "letter": letter["id"]} if press else None,
         "is_complete": section["id"] in state.completed,
         # ✨ Demo only (fix-21): a sort not yet in offers a hidden "Load a demo profile (demo only)", where one holds.
         "demo_profile": (
