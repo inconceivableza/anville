@@ -6,11 +6,17 @@
   not. What is sent is the identifier of every option ticked, after a blank value sent first, so a form with nothing
   ticked still says so and unticking every card takes the answer back; a gate asking for an answer then refuses. An
   answer stored as one option, as a single select stores it, shows as that card ticked.
+
+  Its fields, the blank value too, belong to the page's one form (`engine/page_form.html`), under the block's own name,
+  so that without JavaScript every press on the page, its Save or its way on, sends the cards ticked with every other
+  answer (sprint-3d-r1-fix-6); this form only holds them in place, with their status. With JavaScript htmx sends the
+  page's form as each card changes, and `hx-params` keeps only this answer of it.
 {% endcomment %}
-<form id="block-{{ block.id }}" class="choice-q" method="post" action="{% url 'save_answer' block.id %}">
-  {% csrf_token %}
-  <input type="hidden" name="value" value="">
-  <fieldset id="answer-{{ block.id }}" hx-post="{% url 'save_answer' block.id %}" hx-trigger="change"
+<form id="block-{{ block.id }}" class="choice-q">
+  <input type="hidden" form="page-answers" name="{{ block.field }}" value="">
+  <fieldset id="answer-{{ block.id }}" form="page-answers"
+            hx-post="{% url 'save_answer' block.id %}" hx-trigger="change"
+            hx-params="{{ block.field }}, version, csrfmiddlewaretoken"
             hx-sync="this:queue last" hx-target="next .save-status">
     <legend class="choice-prompt">
       {{ block.text.prompt }}
@@ -20,7 +26,8 @@
       {% with chosen=block.answer|choices_of %}
         {% for option in block.text.options %}
           <label class="opt">
-            <input type="checkbox" name="value" value="{{ option.id }}"{% if option.id in chosen %} checked{% endif %}>
+            <input type="checkbox" form="page-answers" name="{{ block.field }}"
+                   value="{{ option.id }}"{% if option.id in chosen %} checked{% endif %}>
             <b>{{ option.label }}</b>
           </label>
         {% endfor %}

@@ -8,17 +8,24 @@
   In a wizard (`choices_as_cards`) the options are v3's cards instead, each a radio, saving as soon as one is chosen;
   nothing is checked until one is, so nothing is sent, and the wizard's gate asks for one. With no empty option to go
   back to, a choice can be changed but not cleared, as v3's cards are.
+
+  Either way its fields belong to the page's one form (`engine/page_form.html`), under the block's own name, so that
+  without JavaScript every press on the page, its Save or its way on, sends the choice with every other answer
+  (sprint-3d-r1-fix-6); this form only holds it in place, with its status. With JavaScript htmx sends the page's form as
+  it saves, and `hx-params` keeps only this answer of it.
 {% endcomment %}
 {% if choices_as_cards %}
-<form id="block-{{ block.id }}" class="choice-q" method="post" action="{% url 'save_answer' block.id %}">
-  {% csrf_token %}
-  <fieldset id="answer-{{ block.id }}" hx-post="{% url 'save_answer' block.id %}" hx-trigger="change"
+<form id="block-{{ block.id }}" class="choice-q">
+  <fieldset id="answer-{{ block.id }}" form="page-answers"
+            hx-post="{% url 'save_answer' block.id %}" hx-trigger="change"
+            hx-params="{{ block.field }}, version, csrfmiddlewaretoken"
             hx-sync="this:queue last" hx-target="next .save-status">
     <legend class="choice-prompt">{{ block.text.prompt }}</legend>
     <div class="opts">
       {% for option in block.text.options %}
         <label class="opt">
-          <input type="radio" name="value" value="{{ option.id }}"{% if block.answer == option.id %} checked{% endif %}>
+          <input type="radio" form="page-answers" name="{{ block.field }}"
+                 value="{{ option.id }}"{% if block.answer == option.id %} checked{% endif %}>
           <b>{{ option.label }}</b>
         </label>
       {% endfor %}
@@ -27,11 +34,11 @@
   {% include "engine/save_row.html" %}
 </form>
 {% else %}
-<form id="block-{{ block.id }}" class="question-card" method="post" action="{% url 'save_answer' block.id %}">
-  {% csrf_token %}
+<form id="block-{{ block.id }}" class="question-card">
   <label for="answer-{{ block.id }}">{{ block.text.prompt }}</label>
-  <select id="answer-{{ block.id }}" name="value"
+  <select id="answer-{{ block.id }}" form="page-answers" name="{{ block.field }}"
           hx-post="{% url 'save_answer' block.id %}" hx-trigger="change"
+          hx-params="{{ block.field }}, version, csrfmiddlewaretoken"
           hx-sync="this:queue last" hx-target="next .save-status">
     <option value="">{{ block.text.placeholder|default:"" }}</option>
     {% for option in block.text.options %}

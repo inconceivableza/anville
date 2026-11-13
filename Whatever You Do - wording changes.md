@@ -458,3 +458,22 @@ These are on the demo site only (and on a developer's own computer), for showing
 - **Two hidden controls**, which appear only when whoever is presenting holds the Alt (Option) key on its own for a second, or presses and holds the page's title on a phone, as the strengths evaluation's "Load a demo profile (demo only)" already does:
   - On the hub, under "Welcome, [name]": **"Open a section (demo only)"**, a list of each section not open yet ("Section 2" to "Section 6"), and a button, **"Complete what it needs"**. It fills in what that section needs to open, and nothing more, as a real participant would have: the strengths evaluation; a coach called **"Alex (demo)"**, who accepts; and people asked to rate the participant, called **"Demo voice 1"**, **"Demo voice 2"** and **"Demo voice 3"**, with no email address, who send their evaluations. A box of text a section needs to be finished would read **"(demo answer)"** (none of Sections 1 to 5 has one today). It then comes back to the hub, with no message. Where it can't open the section without changing something the participant has already done, it says instead: **"The demo shortcut can't open that section without changing what you've already done."**
   - For someone asked to rate a participant, below the strengths evaluation: **"Load a demo profile (demo only)"**, a list of the five demo profiles, each described as on the participant's own "Load a demo profile?" page, and a button, **"Load this profile"**. It places the cards for them, about one in eight in "Haven't seen this"; nothing is sent until they send it.
+
+### Saving without JavaScript (fix 6, 13 November)
+
+This shows only in a browser with JavaScript switched off, as some people's are. With it on, each answer still saves as
+it is chosen or typed, and no "Save" shows.
+
+- **One "Save" for each page.** Each answer had a "Save" button of its own under it, and a press on one saved that
+  answer alone, so choosing several of "Where are you coming from?"'s ratings and pressing one "Save" lost the rest, and
+  "Continue →" lost them all. Now each page has one **"Save"**, at its foot to the left of "Continue →" (or "I've
+  finished Section …", or the seal), and it saves every answer on the page. The button that goes on saves them too, as
+  it is pressed, so "Continue →" with three of five ratings chosen keeps the three and says only "Answer all five to
+  continue".
+- **If an answer can't be saved**, which happens only on a page left open from before the section was finished, the line
+  beneath the button now names it: **"“I am at peace with God's plan for my life” was not saved. This answer was fixed
+  when you completed this section."** (the statement, or the question, in quotation marks, then why). Before, the reason
+  showed under the answer itself, "Not saved. This answer was fixed when you completed this section.", and only when its
+  own "Save" was pressed.
+- On the page with the seal, pressing Enter in the date no longer seals the letter: with JavaScript off it saves the
+  page, as Enter on a rating does, and with it on it does nothing.

@@ -255,7 +255,7 @@ def test_an_agreement_scale_is_ten_radio_buttons_from_one_to_ten(signed_in):
     points = _points(shown(signed_in, ONBOARDING), "baseline-bible")
 
     assert [re.search(r' value="(\d+)"', point).group(1) for point in points] == [str(n) for n in range(1, 11)]
-    assert all('type="radio"' in point and ' name="value"' in point for point in points)
+    assert all('type="radio"' in point and ' name="answer-baseline-bible"' in point for point in points)
 
 
 @pytest.mark.django_db
@@ -304,5 +304,5 @@ def test_deleting_an_account_deletes_its_responses(signed_in, participant):
 
 def _chosen_point(page, block_id):
     """✨ The point a participant sees chosen on an agreement scale, read from the rendered radio buttons."""
-    match = re.search(rf'id="answer-{block_id}-(\d+)" name="value" value="\d+" checked', page)
+    match = re.search(rf'id="answer-{block_id}-(\d+)"[^>]* value="\d+" checked', page)
     return match.group(1) if match else None

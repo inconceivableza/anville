@@ -126,11 +126,12 @@ def test_sealing_with_the_letter_cut_short_is_refused_and_leads_back_to_the_lett
 
 @pytest.mark.django_db
 def test_once_sealed_the_letter_pages_press_changes_nothing_and_leads_on_to_the_questions(participant):
+    """✨ Sealed, the letter has no field on its page, so the press sends none (sprint-3d-r1-fix-6)."""
     client = through_to_the_questions(participant)
     answer_all_five(client, prefix="pl")
     seal(client)
 
-    went_on = go_on_from_the_letter(client, "Dear me, a different letter.")
+    went_on = go_on_from_the_letter(client, None)
 
     assert (went_on.status_code, went_on.url) == (303, QUESTIONS_PAGE)
     assert stored_letter() == A_LETTER

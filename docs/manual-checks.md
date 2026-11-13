@@ -25,7 +25,7 @@ Run `npm run build` in `frontend/` first, so the browser gets the current JavaSc
 - With a mouse, the homepage's, hub's and wizard's pills lean towards the pointer as before; a button on any other page stays still.
 - Without JavaScript, the Copy buttons on the invitations, coach and organisation pages are still hidden.
 - In the faithful port, a disabled "Mark complete" is grey with muted words, and the pointer shows it can't be pressed. *Whatever You Do* disables none (ticket 83).
-- Phone width: the header's "Your pathway" and "Sign out", and the save row's "Save", are the small size and fit on one line.
+- Phone width: the header's "Your pathway" and "Sign out", and (without JavaScript) the page's "Save" beside its way on, are the small size and fit on one line.
 
 ## The homepage (`/`, signed out and signed in; beside v3's, `Prototypes for reference/whatever-you-do-site-hackethon-artifact-v3/index.html`)
 
@@ -407,7 +407,7 @@ The homepage (`/`):
 - "A letter to your future self": press a number on each of two closing ratings. No "Saved" shows under either, no empty row sits under them, and nothing below moves, as on "Where are you coming from?". Reload: both numbers are kept.
 - Writing the letter itself still shows "Saved" under it.
 - With the network off (DevTools, Offline), press a number: "Not saved." with its reason shows under that rating.
-- Without JavaScript: each rating keeps its Save button, and saving comes back with the number chosen.
+- Without JavaScript: the page's one "Save", beside the seal, saves every rating chosen, coming back with each number chosen (sprint-3d-r1-fix-6, in place of a Save under each rating).
 - The faithful port's letter ratings still say "Saved".
 
 ### Ticket 112: Before we begin's reasons and photos (rebuild the frontend, load the pathway again, and sign up as someone new; wide screen and about 375px)
@@ -446,11 +446,25 @@ The homepage (`/`):
 - With the server stopped, a save says "Not saved. Check your connection, then try again."
 - A refused answer shows its reason where "Saved" would be.
 - Near the 20,000-character limit, the text box says how many characters are left.
-- Without JavaScript, a Save button appears and saves the answer. With JavaScript it is hidden.
-- Without JavaScript, pressing Save (or Enter) on a 1–10 scale with no point chosen comes back to the same page, "Not saved. No answer was sent." beside the button. With JavaScript, Enter in an answer never reloads the page (fix-7).
+- Without JavaScript, the page has one "Save", beside its way on, which saves every answer on the page (sprint-3d-r1-fix-6, below). With JavaScript it is hidden, and no answer has a Save of its own.
+- Without JavaScript, pressing the page's "Save" (or Enter in a rating) with nothing chosen comes back to the same page at the "Save", nothing stored. With JavaScript, Enter in an answer never reloads the page (fix-7).
 - Screen reader: "Saved" and a refusal are announced.
 - Ghost text (Section 1's reflection, the letter): it shows in grey in the empty box, is readable against the background, and disappears as you type. A screen reader names the box by its prompt, not by the ghost text.
 - The reason in the faithful port's onboarding (in *Whatever You Do*'s wizard it is cards since sprint-3c-r3-fix-4): it looks like the prototype's account-screen drop-down (a small dark caret at the right, not the browser's arrow), and is amber while "Select..." is showing, turning white once a reason is chosen, with or without JavaScript. The drop-down shows "Select..." until a reason is chosen, and choosing one shows "Saved" with no button press. Going back to "Select..." shows "Saved", turns the drop-down amber again, and unticks "Choose what's bringing you to the course" beneath the button; a reload still shows "Select...". Keyboard only: Tab reaches it, and the arrow keys change it (each change saves). It fills the card's width at phone width.
+
+### sprint-3d-r1-fix-6: Every answer on a page goes with every press (rebuild the frontend; no pathway reload or new participant needed; JavaScript switched off in the developer tools unless a check says otherwise; wide screen and about 375px)
+
+- Before we begin's page 2 ("Where are you coming from?"): no rating has a "Save" of its own. One "Save" sits at the foot, to the left of "Continue →", the same outlined small pill the ratings' Saves were. Choose 3 on the first rating, 5 on the second and 8 on the third, then press "Save": the page comes back at its foot with all three chosen. Reload: still all three.
+- Choose the last two as well, without pressing "Save", and press "Continue →": the welcome opens, which it does only once all five are stored. With a new participant, choose three and press "Continue →": the page comes back at its foot with "Answer all five to continue" alone beneath it, and the three still chosen.
+- Page 1 (the reason's cards): tick two and press "Continue →" at once: page 2 opens, and "← Previous page" shows both still dark. The "Save" there sits to the left of "Continue →" too.
+- Section 6, page 2: choose two closing ratings, change the date beside "Open it on", and press "Save": the page comes back at its foot with both ratings chosen and the date picked, its words beside it. Choose the rest and press "Save my answers and seal my letter": the letter is sealed until that date, every rating kept. On another participant, choose two ratings and press "← Previous page", then "Save my letter and continue →": both still chosen.
+- Section 6, page 1: type a letter and press "Save": the page comes back at its foot, the letter as typed; "Save my letter and continue →" sits to the right of "Save".
+- A refusal names the answer: open Before we begin's page 2 in the developer tools' Elements panel, change one rating's `value="7"` to `value="11"`, choose it and two others, and press "Continue →". The page comes back at its foot with "Answer all five to continue" and, beneath it, "“…” was not saved. Choose a number from 1 to 10.", naming that rating's statement; the other two stay chosen. The same with "Save": only the named line.
+- The faithful port: onboarding's page 1 has one "Save" to the left of the greyed "Continue →". Choose a reason and the four ratings, press "Save": every answer comes back chosen and "Continue →" is no longer greyed, its checklist all ticked. Its letter's page (the letter, its ratings beneath it) and its calling statement's (after its reading) do the same with "Mark complete". A page with nothing to answer (the strengths evaluation's, a workbook's) has no "Save".
+- A page whose answers are all fixed (the faithful port's onboarding page 1 once complete has its reason still open, so a "Save" stays; Section 6's page 2 once sealed has none) shows "Save" only while something can still be changed.
+- With JavaScript on: no "Save" anywhere on these pages; each rating, reason and the letter save as they change, as before ("Saved" where they said it, nothing in the wizard or under the letter's ratings). Enter in a rating does nothing. "Continue →" and the seal work as before.
+- Keyboard only, without JavaScript: Tab from the last answer reaches "← Previous page" (where there is one), then "Save", then the way on (on Section 6's page 2, "Save", the seal, then "← Previous page", as under sprint-3d-r1-fix-3 above); Enter in a rating presses "Save".
+- At about 375px: "← Previous page", "Save" and the way on share a row where they fit; the way on wraps to a line of its own rather than the page scrolling sideways.
 
 ## The contact list ("Who knows you best?")
 
@@ -554,7 +568,7 @@ The homepage (`/`):
 - In *Whatever You Do*, with JavaScript, scroll to the foot of a wizard page and press "Continue →" with something missing (page 1 with no reason, page 2 with a rating unanswered): what is missing shows beneath the button, the page neither reloads nor moves, and no "This page is not finished yet." under it. The focus stays on the button, so Enter presses it again; a screen reader announces the list. The same for "I've finished Section 1" pressed before the sort is in, and for "I've finished Section 1" on the results page wherever its gate refuses it.
 - Answering what was missing and pressing again goes on as before: the next page at its top, or the hub.
 - Without JavaScript: the same presses come back with the page opened at the button and the list beneath it, not at the top. The page an accepted press then leads to opens at its top.
-- The faithful port is unchanged: a refused press (re-enable the button in DevTools) reloads the page, with "This page is not finished yet." or "This section was not marked complete…" under the list.
+- The faithful port is unchanged but for where the page opens: a refused press (re-enable the button in DevTools) reloads the page, opened at the button since sprint-3d-r1-fix-6, with "This page is not finished yet." or "This section was not marked complete…" under the list.
 - At about 375px: the list wraps within the page beneath the button.
 
 ### Ticket 82: Where pages land
@@ -1080,7 +1094,7 @@ Run with `DJANGO_DEBUG=false DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1` before `p
 ## Refusals without JavaScript (ticket 71; JavaScript switched off in the browser's developer tools)
 
 - A page left open after collection froze: open the list's page from the hub's Five trusted voices card in one tab, freeze collection in another (press "Compare with how others see you →" with three answered, and confirm), then in the first tab type a name and email in the empty row and press "Get link", or press "Issue link" beside someone. Each shows the list's page again in the participant's dark frame, with "You've seen your results, so no more answers are added. You can't add anyone…" at the top of the list, no empty row and no "Issue link"; nobody is added and no link is shown.
-- A section not open yet: open a page of a section that another section's completion opens, then in another tab press "Mark as not complete" on that other section, so the first is locked again. In the first tab type an answer and press Enter (or "Save"), or press a coach checklist button where the page has one: a page in the participant's dark frame with "← Back to the hub", "Not saved" and "This is not open yet."; the link leads to the hub, and the hub shows nothing saved from that press.
+- A section not open yet: open a page of a section that another section's completion opens, then in another tab press "Mark as not complete" on that other section, so the first is locked again. In the first tab type an answer and press Enter (or the page's "Save"), or press a coach checklist button where the page has one: a page in the participant's dark frame with "← Back to the hub", "Not saved" and "This is not open yet."; the link leads to the hub, and the hub shows nothing saved from that press.
 - The coach's box on the comparison (fix-2): with the box showing, have the coach's link revoked in another tab, then tick the box and press "Save". The comparison comes back in the participant's frame with "Not saved. Your coach can see this only once they have accepted and you have seen your comparison." above the coach's part, and nothing shared.
 - The demo retake page (fix-2; a demo system): choose a starting profile and a way of answering that do not fit and press the button. The retake page comes back in the participant's frame with "Not saved. …" and why above the choices; nothing is cleared. (A tie-break pair refuses only a form changed by hand, which the tests cover; it comes back on the pair the same way.)
 - With JavaScript on, the same presses show only the short "Not saved. …" line beside what was pressed, as before.
@@ -1369,9 +1383,9 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 ### Ticket 107: The letter and the closing questions on two pages (rebuild the frontend, load the pathway again, and use a participant started after that, through to Section 6; wide screen and about 375px)
 
 - Section 6 says "Page 1 of 2" under its title and holds "The task", Joshua 4:6b–7 and "Your letter", with "Print" and "Copy text", then "On the next page, answer five questions, then pick the day your letter opens and seal it…", and ends in "Save my letter and continue →" alone, the full width, as "Continue →" is elsewhere. No ratings, no date and no seal on it.
-- Type a letter and press the button at once, without pausing: page 2 opens. "← Previous page" there lands on the letter, every word as typed. Do the same with JavaScript blocked, never pressing the letter's own Save: the same.
+- Type a letter and press the button at once, without pausing: page 2 opens. "← Previous page" there lands on the letter, every word as typed. Do the same with JavaScript blocked, never pressing the page's "Save": the same.
 - With fewer than 10 characters, the press says "Write your letter (10 characters or more) before sealing it." beneath the button, with JavaScript without the page moving; blocked, the page comes back at the button with the line under it and the letter as typed.
-- Page 2: "Page 2 of 2", "Where are you now?", the five ratings, then "← Previous page" beside "Open it on", its date and "Save my answers and seal my letter", as ticket 104's checks above. A press with a rating left says "Answer all five to continue" beneath it. Go back, cut the letter short, then forward again (the browser's forward, or the hub's link to Section 6) and press: "Write your letter…" shows as a link, which opens page 1 at the letter.
+- Page 2: "Page 2 of 2", "Where are you now?", the five ratings, then "Open it on" and its date, and beneath them "← Previous page" beside "Save my answers and seal my letter" (and, without JavaScript, the page's "Save" between them: sprint-3d-r1-fix-6), as ticket 104's checks above. A press with a rating left says "Answer all five to continue" beneath it. Go back, cut the letter short, then forward again (the browser's forward, or the hub's link to Section 6) and press: "Write your letter…" shows as a link, which opens page 1 at the letter.
 - A good press lands on page 1 at the sealed letter, its button now "Continue →", which opens page 2: the five ratings fixed, "You marked this section complete" and "Mark as not complete".
 - At about 375px: both pages read, the long button wraps rather than running off the screen.
 - The faithful port's letter is unchanged: one page, its ratings under the letter, "Mark complete".
@@ -1380,6 +1394,6 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 
 - On page 2, change the date beside "Open it on", then press "← Previous page": page 1 opens at the letter. Press "Save my letter and continue →": page 2 offers the date picked, with its words beside it. With JavaScript blocked: the same.
 - With JavaScript, change the date, then leave another way ("← Back to the hub", the sidebar) and come back to page 2: the date picked again. With JavaScript blocked only "← Previous page" keeps it.
-- "← Previous page" on page 2 looks as it did, and as on other sections' later pages: the same outlined pill, size and place, to the left of the date and the seal, and above them at about 375px if the row wraps. Tab on from the date: the seal, then "← Previous page", as the coach checklist's "Back" comes after its "Continue →". Enter in the date field presses the seal (refused, if a rating is left), never "← Previous page".
+- "← Previous page" on page 2 looks as on other sections' later pages: the same outlined pill and size, beneath the date since sprint-3d-r1-fix-6, to the left of the seal, and above it at about 375px if the row wraps. Tab on from the date: the page's "Save" (without JavaScript), the seal, then "← Previous page", as the coach checklist's "Back" comes after its "Continue →". Enter in the date field never presses "← Previous page" or the seal: without JavaScript it presses the page's "Save", which keeps the date and the ratings chosen; with JavaScript, nothing.
 - Pick a date, go back and on, and seal: the letter is sealed until the date showing, as ticket 104's checks say. A date typed outside the range by hand, then going back and on: page 2 offers twelve months on again.
 - Sign out and back in: page 2 offers twelve months on again, since the date is kept only while signed in.

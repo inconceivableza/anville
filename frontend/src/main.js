@@ -61,7 +61,8 @@ document.addEventListener("htmx:sendError", notSaved);
 // ✨ An autosaved answer is saved as it changes, so its form is never submitted as a page while JavaScript runs:
 // Enter in it would otherwise send it through the hidden fallback button and reload the page (fix-7). Without
 // JavaScript, that button and Enter still save it.
-// ✨ A contact list's Save belongs to the list's one form, not its row's (fix-1), hence the submitter too.
+// ✨ A contact list's Save belongs to the list's one form, not its row's (fix-1), and an answer's to its page's one
+// form, as the page's Save (sprint-3d-r1-fix-6), hence the submitter too.
 document.addEventListener("submit", (event) => {
   const fallback = event.target.querySelector(".save-fallback") || event.submitter?.matches(".save-fallback");
   if (fallback) event.preventDefault();
@@ -220,9 +221,11 @@ const OPENS_ON_IN_WORDS = new Intl.DateTimeFormat("en-GB", {
   timeZone: "UTC",
 });
 
+// ✨ The field belongs to the page's one form, away from it in the page (sprint-3d-r1-fix-6), so the words are found
+// beside the field itself.
 document.addEventListener("input", (event) => {
   if (!event.target.matches?.("[data-opens-on]")) return;
-  const words = event.target.closest("form").querySelector("[data-opens-on-words]");
+  const words = event.target.parentElement.querySelector("[data-opens-on-words]");
   const chosen = event.target.valueAsDate;
   words.textContent = chosen ? OPENS_ON_IN_WORDS.format(chosen).replace(",", "") : "";
 });

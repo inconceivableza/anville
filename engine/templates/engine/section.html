@@ -23,6 +23,8 @@
     and a figure under some headings and not others read as missing. An activity's own still shows below.
   {% endcomment %}
 
+  {# ✨ The page's one form, which every answer on it and every press beneath them belong to (sprint-3d-r1-fix-6). #}
+  {% include "engine/page_form.html" %}
   {% for block in section.blocks %}
     {# ✨ Where a section has several activities, the block that starts each one says how long it takes. #}
     {% if block.text.estimate %}<p class="time-estimate">This part: {{ block.text.estimate }}</p>{% endif %}

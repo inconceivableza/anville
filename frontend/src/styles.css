@@ -783,14 +783,14 @@ body.wizard > main.container {
 }
 
 /* ✨ Closer together, as v3's compact ratings (sprint-3c-r3-fix-7): its smaller heading, and no empty row under each
-   rating, the wizard saving without saying "Saved"; the row comes back to say why a rating was refused, and stays
-   without JavaScript for its Save button. The letter's ratings in Whatever You Do save quietly too
-   (sprint-3c-r3-fix-15), so the rule follows the rating's own mark rather than the wizard. */
+   rating, the wizard saving without saying "Saved"; the row comes back to say why a rating was refused. Without
+   JavaScript too, since the page's one Save took the row's own (sprint-3d-r1-fix-6). The letter's ratings in Whatever
+   You Do save quietly too (sprint-3c-r3-fix-15), so the rule follows the rating's own mark rather than the wizard. */
 .ob-main .step:has(.baseline-q) h1 {
   font-size: clamp(32px, 3.6vw, 46px);
 }
 
-html[data-javascript="loaded"] .baseline-q.saves-quietly .save-row:has(.save-status:empty) {
+.baseline-q.saves-quietly .save-row:has(.save-status:empty) {
   display: none;
 }
 
@@ -835,6 +835,11 @@ html[data-javascript="loaded"] .baseline-q.saves-quietly .save-row:has(.save-sta
 .ob-main .way-on > .pill:not(.page-back) {
   flex: 0 1 auto;
   margin-left: auto;
+}
+
+/* ✨ The page's Save, shown only without JavaScript, keeps the way on beside it at the right (sprint-3d-r1-fix-6). */
+html:not([data-javascript="loaded"]) .ob-main .way-on > .page-save + .pill {
+  margin-left: 0;
 }
 
 .ob-main .way-on .pill.full {
@@ -2034,13 +2039,15 @@ form + .way-on,
   margin-top: 16px;
 }
 
-.page-back {
+.page-back,
+.page-save {
   flex-shrink: 0;
 }
 
 /* ✨ On the page that seals a letter, a button (sprint-3d-r1-fix-3), drawn as the link is: with the page's line height,
-   not the browser's for a button, and shown first, though it follows the seal's form in the markup so that Enter in the
-   date still seals, as "Back" in the coach checklist does (fix-12). */
+   not the browser's for a button, and shown first, though it follows the seal in the markup, as "Back" in the coach
+   checklist does (fix-12), so that the page's form's first button, which Enter in an answer presses, is its Save
+   (sprint-3d-r1-fix-6). */
 button.page-back {
   order: -1;
   line-height: inherit;

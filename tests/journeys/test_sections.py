@@ -14,7 +14,7 @@ import pytest
 
 from engine.models import Response
 from tests.documents import complete_sort, pathway_document, scripture_reading, sort_pathway, translated
-from tests.journeys.pages import gate_checklist, loads_the_built_stylesheet, main_of
+from tests.journeys.pages import button, gate_checklist, is_disabled, loads_the_built_stylesheet, main_of
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_results import in_order
 
@@ -135,7 +135,7 @@ def test_a_section_whose_gate_does_not_pass_says_what_is_missing_and_offers_no_w
     page = open_calling().get(CALLING).content.decode()
 
     assert gate_checklist(page) == {"Write a statement of at least ten characters.": False}
-    assert "<button type=\"submit\" class=\"pill full\" disabled>Mark complete</button>" in page
+    assert is_disabled(button(page, "Mark complete"))
 
 
 @pytest.mark.django_db
@@ -208,7 +208,7 @@ def test_a_section_may_word_its_button_its_own_way(signed_in_client, load_pathwa
 
     onboarding = signed_in_client.get(ONBOARDING).content.decode()
 
-    assert '<button type="submit" class="pill full">Continue →</button>' in onboarding
+    assert not is_disabled(button(onboarding, "Continue →"))
     assert "Mark complete" not in onboarding
     signed_in_client.post("/sections/onboarding/complete/")
     assert "Mark complete</button>" in signed_in_client.get(CALLING).content.decode()
@@ -263,7 +263,7 @@ def test_writing_enough_opens_the_way_on_without_the_participant_reloading(open_
     sent_back = autosave(client, "statement", LONG_ENOUGH)
 
     assert 'hx-swap-oob="true"' in sent_back
-    assert '<button type="submit" class="pill full">Mark complete</button>' in sent_back
+    assert not is_disabled(button(sent_back, "Mark complete"))
     assert gate_checklist(sent_back) == {"Write a statement of at least ten characters.": True}
 
 
@@ -285,7 +285,7 @@ def test_writing_too_little_sends_back_the_gate_message_and_no_way_on(open_calli
     sent_back = autosave(client, "statement", "too short")
 
     assert gate_checklist(sent_back) == {"Write a statement of at least ten characters.": False}
-    assert '<button type="submit" class="pill full" disabled>Mark complete</button>' in sent_back
+    assert is_disabled(button(sent_back, "Mark complete"))
 
 
 @pytest.mark.django_db
@@ -312,7 +312,7 @@ def test_the_gate_keeps_up_with_an_answer_taken_back_again(open_calling):
     sent_back = autosave(client, "statement", "")
 
     assert "Write a statement of at least ten characters." in sent_back
-    assert '<button type="submit" class="pill full" disabled>Mark complete</button>' in sent_back
+    assert is_disabled(button(sent_back, "Mark complete"))
 
 
 # Reopening, the mirror of completing
