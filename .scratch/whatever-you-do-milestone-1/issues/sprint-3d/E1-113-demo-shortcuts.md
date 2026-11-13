@@ -4,17 +4,17 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** claimed
+**Status:** resolved
 
 **Sprint:** 3d (end not yet set)
 
 **Spec:** Sprint 3d: the code review and the 30 October feedback; Operating and demonstrating; Engine: sections, tracks, gates, progress
 
-- [ ] On a demo system, an observer's sort offers the participant's five demo profiles, revealed as the participant's is; each places the cards, about one in eight of them in "Haven't seen this", and nothing is stored until the observer sends
-- [ ] On a demo system, a hidden control on the hub, revealed the same way, offers each section not yet open; pressing it completes what that section needs to open, and only that, then returns to the hub, with no email sent
-- [ ] On a participant who has already started, the control only adds what is missing: no answer, observer or coach is changed or removed, and nothing goes backwards
-- [ ] On the homepage and the sign-up page, where demo tools are on, a line suggests signing up with a made-up @example.com address, its example a name and two digits chosen afresh on each page
-- [ ] Where demo tools are off, none of this is offered and the server refuses it
+- [x] On a demo system, an observer's sort offers the participant's five demo profiles, revealed as the participant's is; each places the cards, about one in eight of them in "Haven't seen this", and nothing is stored until the observer sends
+- [x] On a demo system, a hidden control on the hub, revealed the same way, offers each section not yet open; pressing it completes what that section needs to open, and only that, then returns to the hub, with no email sent
+- [x] On a participant who has already started, the control only adds what is missing: no answer, observer or coach is changed or removed, and nothing goes backwards
+- [x] On the homepage and the sign-up page, where demo tools are on, a line suggests signing up with a made-up @example.com address, its example a name and two digits chosen afresh on each page
+- [x] Where demo tools are off, none of this is offered and the server refuses it
 
 **Carried from the handover's stubs**
 
