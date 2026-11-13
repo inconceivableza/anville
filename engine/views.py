@@ -107,6 +107,7 @@ from engine.hub import (
     section_by_id,
     track_sections,
     with_coach_answer,
+    HERO_VIDEO_CREDIT,
     WIZARD_PHOTOS,
     WizardStep,
     wizard_step,
@@ -119,7 +120,7 @@ from engine.document.observers import (
     relationship_question,
 )
 from engine.document.letter import letter_shown, opens_on_from_form, seal_press, unsealed_letter
-from engine.document.photos import credits_listed
+from engine.document.photos import COURTESY, Credit, credits_listed, listed, on_pexels, on_unsplash
 from engine.models import (
     CollectionFrozen,
     Contact,
@@ -215,53 +216,176 @@ def home(request):
 
 # ✨ The photographs the stylesheet draws on the homepage and behind the hub's next step, and the two the homepage's
 # steps 3 and 4 show (the notebook and the Bible, stand-ins for journalling until the final photos are picked; ticket
-# 110), each a courtesy credit (ticket 101). The credits page lists them after the pathway's own, then the wizard's
-# (`WIZARD_PHOTOS`), leaving out one listed already, and with them the video's, while the document's setting for
-# courtesy credits is on.
+# 110), each a courtesy credit (ticket 101), linked to its photographer and its page as traced (sprint-3d-r1-fix-5).
+# The credits page lists them after the pathway's own, after the video's and before the wizard's (`WIZARD_PHOTOS`),
+# leaving out one listed already: a required credit always, a courtesy one while the document's setting for courtesy
+# credits is on.
 SITE_PHOTO_CREDITS = [
-    "Photograph of a church gathering with Bibles open, by Sincerely Media on Unsplash.",
-    "Photograph of a figure facing the sun, by Andreas Rasmussen on Unsplash.",
-    "Photograph of a notebook, a pen and a cup of coffee, by Andres Molina on Unsplash.",
-    "Photograph of a woman walking in a field at sunset, by Sasha Freemind on Unsplash.",
-    "Photograph of misty hills at sunrise, by Alexander Philipp on Unsplash.",
-    "Photograph of two friends talking beside a lake, by Aarón Blanco Tejedor on Unsplash.",
-    "Photograph of hands shaping clay, by Alex Jones on Unsplash.",
-    "Photograph of a carpenter planing wood, by Minh Đức on Unsplash.",
-    "Photograph of an open Bible on a jetty at sunrise, by Aaron Burden on Unsplash.",
-    "Photograph of a woman in a summer dress looking out over a field of wheat, by Klara Kulikova on Unsplash.",
-    "Still of a woman in a sunhat walking through a field at sunset, from the video by Marian Croitoru on Pexels.",
-    "Photograph of a teacher standing before a classroom of pupils, by Quilia on Unsplash.",
-    "Photograph of a woman working in a rice paddy, by Nandhu Kumar on Pexels.",
-    "Photograph of a chef chopping vegetables in a restaurant kitchen, by Pylyp Sukhenko on Unsplash.",
-    "Photograph of a man and a child looking at a plant, by OPPO Find X5 Pro on Unsplash.",
-    "Photograph of a mechanic working on a machine in a garage, by Kato Blackmore on Unsplash.",
-    "Photograph of a doctor in blue scrubs, by Bruno Rodrigues on Unsplash.",
-    "Photograph of a builder in a hard hat on a building frame, by Josh Olalde on Unsplash.",
-    "Photograph of a grandmother peeling potatoes with her grandson, by CDC on Unsplash.",
-    "Photograph of an artist holding a paint palette, by Vitaly Gariev on Unsplash.",
-    "Photograph of a woman working at a laptop by a window, by Andrew Neel on Unsplash.",
-    "Photograph of a scientist in a white coat, by National Cancer Institute on Unsplash.",
-    "Photograph of a fisherman holding a cormorant on a raft, by Willian Justen de Vasconcellos on Unsplash.",
-    "Photograph of a carer helping an elderly couple with colouring, by Age Cymru on Unsplash.",
+    on_unsplash(
+        "Photograph of a church gathering with Bibles open",
+        "Sincerely Media",
+        "https://unsplash.com/@sincerelymedia",
+        "https://unsplash.com/photos/woman-reading-book-dGxOgeXAXm8",
+    ),
+    on_unsplash(
+        "Photograph of a figure facing the sun",
+        "Andreas Rasmussen",
+        "https://unsplash.com/@andreasdress",
+        "https://unsplash.com/photos/woman-sitting-in-front-of-grassfield-VLYvYq4da-A",
+    ),
+    on_unsplash(
+        "Photograph of a notebook, a pen and a cup of coffee",
+        "Andres Molina",
+        "https://unsplash.com/@nomadicfitlust",
+        "https://unsplash.com/photos/a-cup-of-coffee-and-a-notebook-on-a-table-8CGOX7oSMbI",
+    ),
+    on_unsplash(
+        "Photograph of a woman walking in a field at sunset",
+        "Sasha Freemind",
+        "https://unsplash.com/@sashafreemind",
+        "https://unsplash.com/photos/woman-standing-on-grass-field-frq5Q6Ne9k4",
+    ),
+    on_unsplash(
+        "Photograph of misty hills at sunrise",
+        "Alexander Philipp",
+        "https://unsplash.com/@alexphily",
+        "https://unsplash.com/photos/golden-sunrise-over-misty-hills-and-distant-ocean-22-PF7Tkk7E",
+    ),
+    on_unsplash(
+        "Photograph of two friends talking beside a lake",
+        "Aarón Blanco Tejedor",
+        "https://unsplash.com/@the_meaning_of_love",
+        "https://unsplash.com/photos/man-in-black-jacket-standing-beside-body-of-water-during-sunset-aocUkMcxeqI",
+    ),
+    on_unsplash(
+        "Photograph of hands shaping clay",
+        "Alex Jones",
+        "https://unsplash.com/@alexjones",
+        "https://unsplash.com/photos/"
+        "a-clay-stained-hand-of-a-potter-engaging-in-a-craft-work-of-pottery-or-molding-Tq4YjCa2BSc",
+    ),
+    on_unsplash(
+        "Photograph of a carpenter planing wood",
+        "Minh Đức",
+        "https://unsplash.com/@meanduck",
+        "https://unsplash.com/photos/craftsman-planing-wood-on-a-workbench-P4mxT-OgYho",
+    ),
+    on_unsplash(
+        "Photograph of an open Bible on a jetty at sunrise",
+        "Aaron Burden",
+        "https://unsplash.com/@aaronburden",
+        "https://unsplash.com/photos/book-on-top-of-table-and-body-of-water-535Npq1wFG8",
+    ),
+    on_unsplash(
+        "Photograph of a woman in a summer dress looking out over a field of wheat",
+        "Hannah Skelly",
+        "https://unsplash.com/@ivelisseskelly",
+        "https://unsplash.com/photos/woman-in-orange-dress-on-wheat-field-4aJ9VluXAgo",
+    ),
+    # ✨ The homepage story's photo, `hero.jpg`, which the stylesheet draws. Its source was never found: the video's
+    # stills are a different scene, so this credit is unsupported and has no parts (sprint-3d-r1-fix-5).
+    Credit(
+        COURTESY,
+        text="Still of a woman in a sunhat walking through a field at sunset, from the video by Marian Croitoru on "
+        "Pexels.",
+    ),
+    on_unsplash(
+        "Photograph of a teacher standing before a classroom of pupils",
+        "Quilia",
+        "https://unsplash.com/@heyquilia",
+        "https://unsplash.com/photos/students-in-classroom-with-teacher-presenting-zFSo6bnZJTw",
+    ),
+    on_pexels(
+        "Photograph of a woman working in a rice paddy",
+        "Nandhu Kumar",
+        "https://www.pexels.com/@nandhukumar/",
+        "https://www.pexels.com/photo/woman-working-on-rice-paddy-field-12883428/",
+    ),
+    on_unsplash(
+        "Photograph of a chef chopping vegetables in a restaurant kitchen",
+        "Pylyp Sukhenko",
+        "https://unsplash.com/@novokayn",
+        "https://unsplash.com/photos/chef-chopping-vegetables-in-restaurant-kitchen-y-XZf_TNRms",
+    ),
+    on_unsplash(
+        "Photograph of a man and a child looking at a plant",
+        "OPPO Find X5 Pro",
+        "https://unsplash.com/@oppofindx5pro",
+        "https://unsplash.com/photos/a-man-and-a-child-looking-at-a-plant-Nc-hc5g5yhw",
+    ),
+    on_unsplash(
+        "Photograph of a mechanic working on a machine in a garage",
+        "Kato Blackmore",
+        "https://unsplash.com/@katoblackmore",
+        "https://unsplash.com/photos/a-man-working-on-a-machine-in-a-garage-KhF58h0hTbc",
+    ),
+    on_unsplash(
+        "Photograph of a doctor in blue scrubs",
+        "Bruno Rodrigues",
+        "https://unsplash.com/@naosouogagliasso",
+        "https://unsplash.com/photos/man-in-blue-medical-scrubs-279xIHymPYY",
+    ),
+    on_unsplash(
+        "Photograph of a builder in a hard hat on a building frame",
+        "Josh Olalde",
+        "https://unsplash.com/@josholalde",
+        "https://unsplash.com/photos/construction-worker-in-hard-hat-on-building-frame-X1P1_EDNnok",
+    ),
+    on_unsplash(
+        "Photograph of a grandmother peeling potatoes with her grandson",
+        "CDC",
+        "https://unsplash.com/@cdc",
+        "https://unsplash.com/photos/"
+        "woman-in-yellow-and-white-floral-button-up-shirt-holding-yellow-banana-E9BR0lNMiQE",
+    ),
+    on_unsplash(
+        "Photograph of an artist holding a paint palette",
+        "Vitaly Gariev",
+        "https://unsplash.com/@silverkblack",
+        "https://unsplash.com/photos/artist-holding-colorful-paint-palette-malUrSBj1v8",
+    ),
+    on_unsplash(
+        "Photograph of a woman working at a laptop by a window",
+        "Andrew Neel",
+        "https://unsplash.com/@andrewtneel",
+        "https://unsplash.com/photos/"
+        "girl-wearing-grey-long-sleeved-shirt-using-macbook-pro-on-brown-wooden-table-ute2XAFQU2I",
+    ),
+    on_unsplash(
+        "Photograph of a scientist in a white coat",
+        "National Cancer Institute",
+        "https://unsplash.com/@nci",
+        "https://unsplash.com/photos/woman-in-white-robe-sitting-on-black-office-rolling-chair-uVnRa6mOLOM",
+    ),
+    on_unsplash(
+        "Photograph of a fisherman holding a cormorant on a raft",
+        "Willian Justen de Vasconcellos",
+        "https://unsplash.com/@willianjusten",
+        "https://unsplash.com/photos/fisherman-holding-a-cormorant-on-a-raft-BDO8psCMUFU",
+    ),
+    on_unsplash(
+        "Photograph of a carer helping an elderly couple with colouring",
+        "Age Cymru",
+        "https://unsplash.com/@agecymru",
+        "https://unsplash.com/photos/caregiver-assisting-elderly-couple-with-coloring-bSXk1lOp8T0",
+    ),
 ]
 
 
 def credits_page(request):
     """✨ The copyright notice of each translation the published pathway quotes, open to anyone, since the public
     homepage quotes scripture too. The publishers ask for their notices on the work's copyright page (ticket 39). After
-    them, the credits of the pathway's photos that the document lists (ticket 49b)."""
+    them, the credits of the pathway's photos that the document lists (ticket 49b), then the site's own, by the same
+    rule: a required credit always, a courtesy one only while the document's setting is on (sprint-3d-r1-fix-5)."""
     version = Publication.current_version()
     translations = version.document.get("translations", {}) if version else {}
     photo_credits = credits_listed(version.document) if version else []
+    site_credits = dict.fromkeys([HERO_VIDEO_CREDIT, *SITE_PHOTO_CREDITS, *(photo.credit for photo in WIZARD_PHOTOS)])
+    courtesy = bool(version and version.document.get("show_courtesy_credits", False))
     shown = {
         "translations": translations.values(),
         "photo_credits": photo_credits,
-        "site_photo_credits": [
-            credit
-            for credit in dict.fromkeys([*SITE_PHOTO_CREDITS, *(photo.credit for photo in WIZARD_PHOTOS)])
-            if credit not in photo_credits
-        ],
-        "site_credits_shown": bool(version and version.document.get("show_courtesy_credits", False)),
+        "site_photo_credits": [credit for credit in listed(site_credits, courtesy) if credit not in photo_credits],
     }
     return render(request, "engine/credits.html", shown)
 
