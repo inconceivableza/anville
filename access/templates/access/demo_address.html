@@ -1,0 +1,13 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% load demo_tools %}
+{% comment %}
+  ✨ Demo only (ticket 113): on the homepage and the sign-up page, beside the demo notice, a line of its own suggesting a
+  made-up address to sign up with, its example chosen afresh on each page. Shown only where demo tools are on (DEBUG, or
+  a demo deployment's notice set), so its wording is written here rather than in the pathway document. Nothing refuses
+  another address.
+{% endcomment %}
+{% made_up_address as address %}
+{% if address %}
+  <p class="demo-address" role="note">Want to sign up for this demo with a fake email address? Use one ending @example.com, such as {{ address }}.</p>
+{% endif %}

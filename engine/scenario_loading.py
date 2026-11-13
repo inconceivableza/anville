@@ -5,11 +5,15 @@
 answering its pairs (fix-25), into a participant's stored sort, or handing it to the sort to start from, and what to
 show beside it: the answer to give each pair, and what the results should then show. `seed_tie_break` stores it
 (`load`); the demo-only choice of a demo profile hands it to the sort, storing nothing until the participant sends it
-themselves (`prefill`, fix-23). Both work it forward and check it exactly as the other does."""
+themselves (`prefill`, fix-23). Both work it forward and check it exactly as the other does. An observer's sort is
+handed a profile's observer version (`observer_sort`, ticket 113), which the hub's demo shortcut's made-up people send
+too."""
 
+from collections import Counter
 from dataclasses import dataclass
 from urllib.parse import urlencode
 
+from engine.document.blocks import NOT_SEEN, offers_not_seen
 from engine.results import pair_page
 from engine.tie_break_scenarios import (
     ANSWERS,
@@ -19,6 +23,7 @@ from engine.tie_break_scenarios import (
     fit,
     holding,
     seeding,
+    sort_with_totals,
     summary,
 )
 
@@ -124,6 +129,41 @@ def prefill(document, profile, answers=None):
         sort=seeded.sort,
         guide=_guide(document, summary(profile, answers), seeded),
     )
+
+
+def observer_sort(document, profile):
+    """✨ `profile`'s sort as an observer sends it, storing nothing (ticket 113): every card in the bucket the profile
+    places it in, at that bucket's seed, but where the document offers observers "Haven't seen this", the cards an
+    observer of a demo profile has not seen (`unseen`) placed there. None for a profile `offered` does not offer on
+    `document`, as the participant's choice would not."""
+    if profile not in [choice.name for choice in offered(document).profiles]:
+        return None
+    sort = sort_with_totals(document, PROFILES[profile].totals)
+    hidden = unseen(document) if offers_not_seen(document, "observer") else set()
+    return {item: dict(NOT_SEEN) if item in hidden else placement for item, placement in sort.items()}
+
+
+# ✨ An observer of a demo profile has not seen one card in eight (9 of Whatever You Do's 72), and no more than two of
+# any one gift's, so the profile still shows through and the observer still counts toward the minimum (ticket 113).
+UNSEEN_ONE_IN = 8
+UNSEEN_MOST_OF_A_GIFT = 2
+
+
+def unseen(document):
+    """✨ The items an observer of a demo profile has not seen, the same every time: one in eight of the instrument's,
+    taken from every eighth item first, then the rest in the document's order, passing over any that would leave a gift
+    (a construct an item loads) with more than two not seen."""
+    items = document["instrument"]["items"]
+    order = sorted(range(len(items)), key=lambda at: ((at + 1) % UNSEEN_ONE_IN != 0, at))
+    chosen, per_gift = set(), Counter()
+    for at in order:
+        if len(chosen) == len(items) // UNSEEN_ONE_IN:
+            break
+        loads = items[at]["loads"]
+        if all(per_gift[gift] < UNSEEN_MOST_OF_A_GIFT for gift in loads):
+            chosen.add(items[at]["id"])
+            per_gift.update(loads)
+    return chosen
 
 
 # ✨ The address's fields naming the demo profile the sort starts from and the answers the pairs are guided by (fix-23,

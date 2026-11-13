@@ -16,9 +16,26 @@
     <div class="hub">
       <div class="wrap">
         <div class="hub-head">
-          <h1>Welcome, <i>{{ name }}</i></h1>
+          {# ✨ On a demo system the greeting is where a press-and-hold reveals the demo shortcut below, on a phone (ticket 113). #}
+          <h1{% if demo_shortcut %} data-demo-reveal-hold{% endif %}>Welcome, <i>{{ name }}</i></h1>
           <span class="label hub-progress">{{ hub.complete }} of {{ hub.total }} sections complete</span>
         </div>
+        {% if demo_shortcut %}
+          {% comment %}
+            ✨ Demo only (ticket 113): each section not yet open, and a press that completes what the one chosen needs to
+            open, making up what a real participant would have, then comes back here. Hidden until revealed, as the
+            sort's demo-profile link is (data-demo-reveal, in main.js), and offered only on a development or demo
+            system, so its wording is written here rather than in the pathway document.
+          {% endcomment %}
+          <form class="demo-shortcut" method="post" action="{% url 'demo_shortcut' %}" data-demo-reveal hidden>
+            {% csrf_token %}
+            <label for="demo-shortcut-section">Open a section (demo only)</label>
+            <select id="demo-shortcut-section" name="section">
+              {% for section in demo_shortcut %}<option value="{{ section.id }}">{{ section.called }}</option>{% endfor %}
+            </select>
+            <button type="submit" class="pill small">Complete what it needs</button>
+          </form>
+        {% endif %}
         {# ✨ The next step, the section list and the side cards are the grid's own items, so the side cards can share the next step's row and its height. #}
         <div class="hub-grid">
           {% if hub.next_step %}

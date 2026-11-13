@@ -245,11 +245,12 @@ document.addEventListener("change", (event) => {
   shown.classList.remove("unset");
 });
 
-// ✨ Demo only (fix-20): a demo-only element marked data-demo-reveal (the sort page's "Load a demo profile (demo only)")
-// comes `hidden`, and only a demo system's markup carries one. Option/Alt held on its own for a second shows
-// it, or on a phone the element marked data-demo-reveal-hold (the page's title) pressed and held for a second; another
-// key, a click, letting go early or a scroll cancels. Once shown it stays until the page is left, so the participant
-// can let go and click it. On a page without one no listener is added.
+// ✨ Demo only (fix-20): a demo-only element marked data-demo-reveal (the sort page's "Load a demo profile (demo only)",
+// and since ticket 113 the observer's sort's demo profiles and the hub's demo shortcut) comes `hidden`, and only a demo
+// system's markup carries one. Option/Alt held on its own for a second shows it, or on a phone the element marked
+// data-demo-reveal-hold (the page's title, or the hub's "Welcome") pressed and held for a second; another key, a click,
+// letting go early or a scroll cancels. Once shown it stays until the page is left, so the participant can let go and
+// click it. On a page without one no listener is added.
 (() => {
   const hidden = [...document.querySelectorAll("[data-demo-reveal]")];
   if (!hidden.length) return;

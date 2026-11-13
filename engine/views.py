@@ -128,7 +128,7 @@ from engine.models import (
     Result,
     SealedLetter,
 )
-from engine import reminders, scenario_loading, stay_in_touch
+from engine import demo_shortcuts, reminders, scenario_loading, stay_in_touch
 from engine.document.tie_break import pair_plan, reweigh
 from engine.results import comparison_page, pair_page, results_page
 
@@ -305,6 +305,8 @@ def hub(request):
             "waiting_sentence": waiting.waiting_sentence(minimum) if waiting is not None else None,
             "waiting_way": _waiting_way(state.version.document, hub),
             "name": name_shown_for(state.response.participant) if state.response else None,
+            # ✨ Demo only (ticket 113): the sections the hidden shortcut offers to open.
+            "demo_shortcut": demo_shortcuts.offered(state.version.document, hub) if demo_shortcuts.tools_on() else [],
         },
     )
 
@@ -1403,25 +1405,43 @@ def visit_comparison(request, block_id):
         return _to_the_hub_when_locked(request)  # ✨ nothing recorded or frozen, as on the page itself (fix-19)
     response = state.response
     answered, minimum = _answered(response), minimum_observers(state.version.document)
-    viewed = answered >= minimum
-    if response.collection_frozen_at is None and viewed:
+    if response.collection_frozen_at is None and answered >= minimum:
         asks = not warns_beside_the_press(state.version.document)
         if asks and request.POST.get("confirmed") != "yes":
             context = {"block_id": block_id, "warning": _freeze_warning(response, answered, minimum)}
             # ✨ No `back`: the button leads to the hub, as a section's does, since the page is reached from the hub's
             # cards and the sidebar as well as from the results page (fix-21).
             return render(request, "engine/comparison_confirm.html", context)
-        # ✨ Counted again under the freeze's lock: a withdrawal since may have left fewer than the minimum.
-        viewed = response.freeze_collection()
-    response.visit_comparison(block_id, viewed=viewed)
+    # ✨ The freeze is counted again under its lock: a withdrawal since may have left fewer than the minimum.
+    response.look_at_comparison(block_id)
     return _see_other("comparison", block_id)
 
 
-def _demo_tools_on():
-    """✨ Whether this is a development or demo system, where tools that write made-up data or take back a
-    participant's answers are offered: DEBUG on, or a demo notice set, as for `seed_tie_break` (fix-15). A production
-    deployment has neither."""
-    return bool(settings.DEBUG or settings.ANVILLE_DEMO_NOTICE)
+@login_required
+@consent_required
+@require_POST
+def demo_shortcut(request):
+    """✨ Demo only (ticket 113): the hub's hidden control, completing what the section chosen needs to open, and only
+    that (`demo_shortcuts.open_section`), then back to the hub with no message. A section not offered now, as one
+    opened since the hub was drawn, is left as it is. Off a development or demo system there is no such control, so it
+    is a 404; something it can't make up without changing what the participant has is refused, keeping nothing."""
+    if not demo_shortcuts.tools_on():
+        raise Http404("There are no demo shortcuts here.")
+    state = _participant(request.user)
+    if state.version is None or _wizard_due(state) is not None:
+        return _see_other("hub")  # ✨ the hub sends them on, as it would without the press
+    section = _section_or_404(state.version, request.POST.get("section", ""))
+    hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    if section["id"] in {offered.id for offered in demo_shortcuts.offered(state.version.document, hub)}:
+        try:
+            demo_shortcuts.open_section(state.stored_response(request.user), section["id"])
+        except demo_shortcuts.CannotMakeUp:
+            return _refused(request, DEMO_SHORTCUT_REFUSED, status=409)
+    return _see_other("hub")
+
+
+# ✨ What the hub's demo shortcut says when it can't open a section without changing what the participant has.
+DEMO_SHORTCUT_REFUSED = "The demo shortcut can't open that section without changing what you've already done."
 
 
 @login_required
@@ -1441,7 +1461,7 @@ def retake(request, block_id):
     404. A combination not offered, as none is with a sort in, is refused with its reason and nothing cleared."""
     state, result, section = _own_result(request.user, block_id)
     demo_profiles = result is None
-    if demo_profiles and not _demo_tools_on():
+    if demo_profiles and not demo_shortcuts.tools_on():
         raise Http404("There is no self-assessment to retake yet.")
     sort_page = page_url(section["id"], section["page"])
     document = state.version.document
@@ -1497,7 +1517,7 @@ def _demo_prefill(request, document):
     gives them, or None: off a development or demo system, with no profile named, or with a combination not offered on
     this pathway."""
     profile = request.GET.get(scenario_loading.PROFILE_FIELD)
-    if not profile or not _demo_tools_on():
+    if not profile or not demo_shortcuts.tools_on():
         return None
     return scenario_loading.prefill(document, profile, request.GET.get(scenario_loading.ANSWERS_FIELD) or None)
 
@@ -1506,7 +1526,7 @@ def _with_demo_profile(request, url):
     """✨ `url` naming the same demo profile and answers as this request's address, on a development or demo system
     (fix-23), so the pairs that follow a demo profile's sort show its guide too."""
     profile = request.GET.get(scenario_loading.PROFILE_FIELD)
-    if not profile or not _demo_tools_on():
+    if not profile or not demo_shortcuts.tools_on():
         return url
     return f"{url}?{scenario_loading.demo_query(profile, request.GET.get(scenario_loading.ANSWERS_FIELD) or None)}"
 
@@ -2495,7 +2515,10 @@ def _observers_page(request, secret, came_by_link=False):
     assessment until it is sent, then thanks. While answer collection is frozen, one who has not sent is told no more
     answers are being taken, and offered no assessment (ticket 55). An observer who `came_by_link` rather than by the
     cookie is at their own link, which the page offers to copy, and sends the assessment through it. Never cached,
-    since it is reached by a secret."""
+    since it is reached by a secret.
+
+    Demo only (ticket 113): the sort offers the participant's demo profiles, hidden until revealed, and starts from the
+    one the address names (`_observer_demo_prefill`)."""
     invitation = Invitation.claimed_by(secret)
     if invitation is None:
         return _refuse_link(request)
@@ -2510,7 +2533,12 @@ def _observers_page(request, secret, came_by_link=False):
             "widget": BLOCK_TYPES[scored["type"]].widget(document, "observer", name),
             "action": reverse("send_assessment_by_link", args=[secret]) if came_by_link else reverse("send_assessment"),
             "relationship": relationship_question(document, name),
+            "demo_profiles": scenario_loading.offered(document).profiles if demo_shortcuts.tools_on() else [],
         }
+        placed = _observer_demo_prefill(request, document)
+        if placed is not None:
+            # ✨ Each card already where the profile places it, so the widget opens at "All sorted" (`placed` in sort.js).
+            assessment["widget"] = {**assessment["widget"], "placed": placed}
     withdraw_at = reverse("withdrawal_by_link", args=[secret]) if came_by_link else reverse("withdrawal")
     context = {
         "name": name,
@@ -2523,6 +2551,16 @@ def _observers_page(request, secret, came_by_link=False):
     shown = render(request, "engine/observer.html", context)
     shown["Cache-Control"] = "no-store"
     return shown
+
+
+def _observer_demo_prefill(request, document):
+    """✨ Demo only (ticket 113): the observer version of the demo profile the address names, as
+    `scenario_loading.observer_sort` gives it, for an observer's sort to start from, storing nothing until they send it;
+    or None: off a development or demo system, with no profile named, or with one not offered on this pathway."""
+    profile = request.GET.get(scenario_loading.PROFILE_FIELD)
+    if not profile or not demo_shortcuts.tools_on():
+        return None
+    return scenario_loading.observer_sort(document, profile)
 
 
 def _scored_block(document):
@@ -2825,7 +2863,9 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
         "seal": press,
         "is_complete": section["id"] in state.completed,
         # ✨ Demo only (fix-21): a sort not yet in offers a hidden "Load a demo profile (demo only)", where one holds.
-        "demo_profile": sort_pending and _demo_tools_on() and bool(scenario_loading.offered(version.document).profiles),
+        "demo_profile": (
+            sort_pending and demo_shortcuts.tools_on() and bool(scenario_loading.offered(version.document).profiles)
+        ),
         # ✨ Over the whole section, since the ratings it fixed may be on an earlier page than its completion.
         "holds_fixed_answers": any(block["id"] in fixed for block in section["blocks"]),
         # ✨ The way on, "Continue →" or completion. Going on from a page is refused on exactly these and `unmet`.

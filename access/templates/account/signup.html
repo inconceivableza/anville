@@ -11,6 +11,8 @@
   {% trans "Signup" %}
 {% endblock head_title %}
 {% block content %}
+  {# ✨ Demo only (ticket 113): a made-up address to sign up with, just below the layout's demo notice. #}
+  {% include "access/demo_address.html" %}
   {% element h1 %}
     {% trans "Sign Up" %}
   {% endelement %}
