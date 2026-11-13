@@ -332,8 +332,14 @@ class BlockType(NamedTuple):
     to the block waiting on it. `quiet_setting` names the document setting under which its answer saves without saying
     "Saved" (`saves_quietly`). `reached_at_top` marks a block reached at its page's top, with no anchor, when it opens
     that page (`anchor_of`). `lists_links` marks a block whose people are listed with their links, so its page shows a
-    link just issued, this once. `saved_by_way_on` marks a block whose form the press leading on from its page sends,
-    so its answer is stored with that press, under the block's `continue_label` where it has one (`carried_by_way_on`).
+    link just issued, this once.
+
+    `sent_with_its_page` marks an ordinary answer, whose fields belong to its page's one form under the block's own
+    name (`page_field`), so that every press on the page sends it, and the press stores it before anything else: the
+    page's Save without JavaScript, its way on with JavaScript or without, and the way back from a page that seals a
+    letter (sprint-3d-r1-fix-6). With JavaScript it also saves on its own as it changes. `names_its_way_on` marks a
+    block, the letter, that the press leading on from its page is for: worded by the block's `continue_label` where it
+    has one, and landed on going back to that page (`way_on_named_by`, ticket 107).
     """
 
     name: str
@@ -347,7 +353,8 @@ class BlockType(NamedTuple):
     quiet_setting: str | None = None
     reached_at_top: bool = False
     lists_links: bool = False
-    saved_by_way_on: bool = False
+    sent_with_its_page: bool = False
+    names_its_way_on: bool = False
 
     @property
     def is_interactive(self):
@@ -376,10 +383,9 @@ BLOCK_TYPES = {
         BlockType(
             "scripture_passages", text_fields=("heading", "note"), text_lists=(("passages", ("reference", "text")),)
         ),
-        BlockType("long_text", text_fields=("prompt", "placeholder"), captures=TEXT),
+        BlockType("long_text", text_fields=("prompt", "placeholder"), captures=TEXT, sent_with_its_page=True),
         # ✨ A long text sealed as its section is finished, until a date the participant picks (ticket 104). Where a page
-        # follows its own, the press leading there saves it, so nothing typed since its last save is lost, with
-        # JavaScript or without (ticket 107).
+        # follows its own, the press leading there is worded for it, "Save my letter and continue →" (ticket 107).
         BlockType(
             "letter",
             text_fields=(
@@ -392,23 +398,30 @@ BLOCK_TYPES = {
                 "date_label",
             ),
             captures=TEXT,
-            saved_by_way_on=True,
+            sent_with_its_page=True,
+            names_its_way_on=True,
         ),
         BlockType(
             "agreement_scale",
             text_fields=("prompt", "min_label", "max_label"),
             captures=SCALE_POINT,
             quiet_setting="ratings_save_quietly",
+            sent_with_its_page=True,
         ),
         BlockType(
             "single_select",
             text_fields=("prompt", "placeholder"),
             text_lists=(("options", ("label",)),),
             captures=CHOICE,
+            sent_with_its_page=True,
         ),
         # ✨ One or more choices from a list, as cards, each a checkbox (ticket 112).
         BlockType(
-            "multi_select", text_fields=("prompt", "note"), text_lists=(("options", ("label",)),), captures=CHOICES
+            "multi_select",
+            text_fields=("prompt", "note"),
+            text_lists=(("options", ("label",)),),
+            captures=CHOICES,
+            sent_with_its_page=True,
         ),
         BlockType("contact_list", text_fields=("more_note", "note"), captures=CONTACTS, lists_links=True),
         # ✨ Captures nothing: its answers are opinions about another person, never kept (see `coach.py`).
@@ -618,12 +631,18 @@ def pages_of(section):
     return pages
 
 
-def carried_by_way_on(page, sealed_ids):
-    """✨ The block on a page, a list of its blocks, whose form the press leading on from that page sends
-    (`saved_by_way_on`), or None: a letter while it is written, not once it is sealed, when it has no form (ticket 107).
-    `sealed_ids` are the blocks of the participant's sealed letters."""
-    carried = (block for block in page if BLOCK_TYPES[block["type"]].saved_by_way_on)
-    return next((block for block in carried if block["id"] not in sealed_ids), None)
+def way_on_named_by(page, sealed_ids):
+    """✨ The block on a page, a list of its blocks, that the press leading on from that page is for
+    (`names_its_way_on`), or None: a letter while it is written, not once it is sealed, when there is nothing of it to
+    save (ticket 107). `sealed_ids` are the blocks of the participant's sealed letters."""
+    named = (block for block in page if BLOCK_TYPES[block["type"]].names_its_way_on)
+    return next((block for block in named if block["id"] not in sealed_ids), None)
+
+
+def page_field(block):
+    """✨ The name an answer sent with its page is sent under (`sent_with_its_page`, sprint-3d-r1-fix-6): the block's
+    own, since one form sends every answer on the page and no two may share a name."""
+    return f"answer-{block['id']}"
 
 
 def page_count(section):

@@ -6,15 +6,22 @@
   scale's ends. Until a point is chosen nothing is checked, so nothing is sent.
 
   A fixed rating shows the point chosen, with every point disabled and nothing to save; the server refuses it anyway,
-  and a page left open from before that sends one anyway, without JavaScript, comes back saying so (fix-7).
+  and a page left open from before that sends one anyway, without JavaScript, comes back saying so (fix-7), beneath
+  the press, naming it (sprint-3d-r1-fix-6).
 
   One that saves quietly (a wizard's, or where the document asks: sprint-3c-r3-fix-15) is marked `saves-quietly`, so
   the empty row beneath it is hidden once JavaScript has loaded, and once fixed it carries no note of its own (ticket
   104), the section's end saying so once.
+
+  Its points belong to the page's one form (`engine/page_form.html`), under the block's own name, so that without
+  JavaScript every press on the page, its Save or its way on, sends this rating with all the others
+  (sprint-3d-r1-fix-6); this form only holds it in place, with the status beside it. With JavaScript it saves on its
+  own as it changes: htmx sends the page's form, which carries the rating, and `hx-params` keeps only this answer.
 {% endcomment %}
-<form id="block-{{ block.id }}" class="baseline-q{% if block.saves_quietly %} saves-quietly{% endif %}" method="post" action="{% url 'save_answer' block.id %}">
-  {% csrf_token %}
-  <fieldset{% if not block.is_fixed %} hx-post="{% url 'save_answer' block.id %}" hx-trigger="change"
+<form id="block-{{ block.id }}" class="baseline-q{% if block.saves_quietly %} saves-quietly{% endif %}">
+  <fieldset{% if not block.is_fixed %} form="page-answers"
+            hx-post="{% url 'save_answer' block.id %}" hx-trigger="change"
+            hx-params="{{ block.field }}, version, csrfmiddlewaretoken"
             hx-sync="this:queue last" hx-target="next .save-status"{% endif %}>
     <legend class="baseline-label scale-qh">
       <span>{{ block.text.prompt }}</span>
@@ -27,7 +34,11 @@
     <div class="rate">
       {% for point in pathway.scale_points %}
         <label class="rate-point">
-          <input type="radio" id="answer-{{ block.id }}-{{ point }}" name="value" value="{{ point }}"{% if block.answer == point %} checked{% endif %}{% if block.is_fixed %} disabled{% endif %}{% if forloop.first %} aria-describedby="anchor-{{ block.id }}-min"{% elif forloop.last %} aria-describedby="anchor-{{ block.id }}-max"{% endif %}>
+          <input type="radio" id="answer-{{ block.id }}-{{ point }}" form="page-answers" name="{{ block.field }}"
+                 value="{{ point }}"{% if block.answer == point %} checked{% endif %}
+                 {% if block.is_fixed %}disabled{% endif %}
+                 {% if forloop.first %}aria-describedby="anchor-{{ block.id }}-min"{% endif %}
+                 {% if forloop.last %}aria-describedby="anchor-{{ block.id }}-max"{% endif %}>
           <span>{{ point }}</span>
         </label>
       {% endfor %}

@@ -25,6 +25,17 @@ def gate_checklist(page):
     return {unescape(message): bool(met) for met, message in items}
 
 
+def button(page, label):
+    """✨ The opening tag of the button with this label, as the page draws it, or None."""
+    found = re.search(rf"(<button\b[^>]*>)\s*{re.escape(label)}\s*</button>", page)
+    return found.group(1) if found else None
+
+
+def is_disabled(tag):
+    """✨ Whether a tag, as `button` gives it, is drawn disabled."""
+    return re.search(r"\sdisabled\b", tag) is not None
+
+
 def loads_the_built_stylesheet(page):
     return re.search(r'<link\s+rel="stylesheet" href="/static/assets/main-[\w-]+\.css" />', page) is not None
 

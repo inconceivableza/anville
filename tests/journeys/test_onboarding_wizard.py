@@ -96,7 +96,7 @@ def test_a_single_select_in_it_is_a_card_for_each_option_the_one_saved_chosen(
     page = signed_in_client.get(WIZARD).content.decode()
 
     assert "<select" not in page
-    assert re.findall(r'<input type="radio" name="value" value="([^"]+)" checked>', page) == ["job-change"]
+    assert re.findall(r'<input type="radio" [^>]*value="([^"]+)" checked>', page) == ["job-change"]
     assert len(re.findall(r'<label class="opt">', page)) == 7
 
 
@@ -321,6 +321,6 @@ def test_once_complete_it_can_be_reread_and_a_changed_rating_is_refused(wizard_l
     reread = participant.get(RATINGS_PAGE)
 
     assert reread.status_code == 200
-    assert 'id="answer-bl-bible-7" name="value" value="7" checked disabled' in reread.content.decode()
+    assert re.search(r'id="answer-bl-bible-7"[^>]* value="7" checked\s+disabled', reread.content.decode())
     assert answer(participant, "bl-bible", "2").status_code == 409
     assert Response.objects.get().answers["bl-bible"] == 7

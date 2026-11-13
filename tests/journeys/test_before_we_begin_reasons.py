@@ -27,7 +27,7 @@ BLANK = ""
 
 def ticked(page):
     """✨ The identifiers of the reason's cards a page shows ticked, in the order shown."""
-    return re.findall(r'<input type="checkbox" name="value" value="([^"]+)" checked>', page)
+    return re.findall(r'<input type="checkbox" [^>]*value="([^"]+)" checked>', page)
 
 
 def reason_options():
@@ -44,7 +44,7 @@ def test_the_reason_keeps_every_choice_ticked_and_shows_each_ticked_again(partic
     assert saved.status_code in (200, 303)
     page = participant.get(WIZARD).content.decode()
     assert "<select" not in page
-    assert len(re.findall(r'<input type="checkbox" name="value"', page)) == len(reason_options())
+    assert len(re.findall(r'<input type="checkbox" ', page)) == len(reason_options())
     assert ticked(page) == chosen
     assert Response.objects.get().answers["reason"] == chosen
 

@@ -132,10 +132,11 @@ QUESTIONS_PAGE = "/sections/letter/pages/2/"
 
 
 def go_on_from_the_letter(client, letter=A_LETTER):
-    """✨ The letter page's press, sending the letter typed above it, as its form does with or without JavaScript."""
-    return client.post(
-        "/sections/letter/pages/1/continue/", {"value": letter, "version": Publication.current_version().pk}
-    )
+    """✨ The letter page's press, sending the letter typed above it, as the page's form does with or without
+    JavaScript, under the letter's own name there (sprint-3d-r1-fix-6); with `letter` None, as a page with the letter
+    sealed sends it, with no letter."""
+    sent = {"answer-lt-message": letter} if letter is not None else {}
+    return client.post("/sections/letter/pages/1/continue/", {**sent, "version": Publication.current_version().pk})
 
 
 def through_to_the_questions(client):

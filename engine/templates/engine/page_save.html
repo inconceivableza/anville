@@ -1,0 +1,13 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ The page's one Save, for a browser without JavaScript (sprint-3d-r1-fix-6), in place of a Save under each answer:
+  it sends every answer on the page with the page's form (`engine/page_form.html`), stored at once, and comes back to
+  this place, or, with one refused, opened at the refusal beneath it, which names it. It sits to the left of the
+  page's way on, or where that would be while none is offered, drawn as each answer's Save was, and only while the
+  page has an answer to send. Hidden once JavaScript has loaded, as `.save-fallback`, since each answer then saves as
+  it changes.
+{% endcomment %}
+{% if page.saves %}
+  <button type="submit" form="page-answers" class="pill ghost small save-fallback page-save">Save</button>
+{% endif %}

@@ -44,12 +44,12 @@ from engine.document.blocks import (
     SENT_ALREADY,
     anchor_of,
     blocks_of,
-    carried_by_way_on,
     coach_brief,
     comparison_status,
     freeze_warning,
     landing_of,
     page_count,
+    page_field,
     page_of,
     pages_of,
     saves_quietly,
@@ -58,6 +58,7 @@ from engine.document.blocks import (
     signpost_shown,
     text_shown,
     warns_beside_the_press,
+    way_on_named_by,
 )
 from engine.document.coach import (
     asked_in_a_sentence,
@@ -649,9 +650,9 @@ def _sort_done_with(state, section):
 def move_past_page(request, section_id, page):
     """✨ "Continue →" from one page of a section to the next, allowed exactly when the page offers it: once that page's
     clauses pass and nothing on the way to it (an unconfirmed reading, a held link) holds what follows. Re-checked here
-    rather than trusted to the page. The last page has no way on but completing the section. A press sending the form
-    of a block on the page stores that block's answer first (`_carried_stored`)."""
-    state = _participant(request.user)
+    rather than trusted to the page. The last page has no way on but completing the section. Every answer on the page
+    the press sends is stored first (`_page_answers_stored`)."""
+    state = _participant(request.user, first_version=lambda: _version_sent(request))
     section = _section_or_404(state.version, section_id)
     reached = state.reached(section)
     if reached is None:
@@ -660,16 +661,13 @@ def move_past_page(request, section_id, page):
         raise Http404("The last page of a section is moved past by completing it.")
     if page > reached:
         return _go_to(request, page_url(section_id, reached))
-    # ✨ A press sending the form of a block on the page (the letter, `saved_by_way_on`) stores its answer first, as its
-    # own save would, so what was typed since is kept whether or not the page then lets the participant on (ticket 107).
-    carried = carried_by_way_on(pages_of(section)[page - 1], _seals(state))
-    if carried is not None and "value" in request.POST:
-        state, refused = _carried_stored(request, state, section, carried)
-        if refused is not None:
-            return refused
+    # ✨ Every answer on the page is sent with the press and stored first, as its own save would store it, so what was
+    # chosen or typed since is kept whether or not the page then lets the participant on, without JavaScript too (ticket
+    # 107's letter, then every answer: sprint-3d-r1-fix-6). One refused refuses the press, saying which.
+    state, not_saved = _page_answers_stored(request, state, section, page)
     shown = _section_page(state, section, page)
-    if not shown["offers_way_on"] or shown["unmet"]:
-        return _way_on_refused(request, state, section, shown)
+    if not_saved or not shown["offers_way_on"] or shown["unmet"]:
+        return _way_on_refused(request, state, section, {**shown, "not_saved": not_saved})
 
     state.stored_response(request.user).move_past_page(section_id, page)
     return _go_to(request, page_url(section_id, page + 1))
@@ -681,8 +679,10 @@ def move_past_page(request, section_id, page):
 def complete_section(request, section_id):
     """✨ The participant's own act of finishing a section, re-checked here rather than trusted to the page. It is
     done from the section's last page, so a participant who has not reached it is sent to the page they have. A part of
-    a section, or a hub side card, has no completion of its own: it is complete once its gate passes."""
-    state = _participant(request.user)
+    a section, or a hub side card, has no completion of its own: it is complete once its gate passes. Every answer on
+    the last page the press sends is stored first, so the gate reads them (`_page_answers_stored`, sprint-3d-r1-fix-6),
+    and a refusal lists only what is still missing."""
+    state = _participant(request.user, first_version=lambda: _version_sent(request))
     section = _section_or_404(state.version, section_id)
     if _completes_itself(section):
         raise Http404("This section is complete once its gate passes, with no completion of its own.")
@@ -692,15 +692,16 @@ def complete_section(request, section_id):
     last = page_count(section)
     if reached < last:
         return _go_to(request, page_url(section_id, reached))
+    state, not_saved = _page_answers_stored(request, state, section, last)
     # ✨ The press that finishes a section holding a letter not yet sealed seals it too, until the date it chose (ticket
     # 104); a letter sealed already keeps its first date, whatever is sent.
     letter = unsealed_letter(section, _seals(state))
     chosen = request.POST.get("opens_on")
     opens_on, seal_refusal = opens_on_from_form(letter, chosen, timezone.localdate()) if letter else (None, None)
-    if unmet(section, state.answers) or seal_refusal:
+    if not_saved or unmet(section, state.answers) or seal_refusal:
         # ✨ The date the press sent comes back as sent, so a page drawn again without JavaScript keeps it.
         shown = _section_page(state, section, last, chosen=chosen)
-        return _way_on_refused(request, state, section, {**shown, "seal_refusal": seal_refusal})
+        return _way_on_refused(request, state, section, {**shown, "seal_refusal": seal_refusal, "not_saved": not_saved})
 
     fixed_block_ids = block_ids_fixed_on_completion(section, state.answers)
     with transaction.atomic():
@@ -730,23 +731,32 @@ LETTER_DATES_KEY = "letter_dates"
 @require_POST
 def letter_date(request, block_id):
     """✨ The date a letter not yet sealed opens on, kept quietly as it is picked (sprint-3d-r1-fix-3): with JavaScript
-    as its field changes; without, as "← Previous page" goes back from the page that seals it, sending the seal's form
-    (`back`), which this then leads on to. Anything but a date forgets the one kept, and a letter sealed keeps none."""
+    as its field changes; without, as "← Previous page" goes back from the page that seals it, sending the page's form
+    (`back`), which this then leads on to. Anything but a date forgets the one kept, and a letter sealed keeps none.
+    Going back stores every answer on the page sent with it too, as any press on a page does (sprint-3d-r1-fix-6), or,
+    with one refused, draws the page again saying which, at its refusal."""
     state = _participant(request.user)
     block = _block_of_type(state.version, block_id, "letter")
     section = section_of(state.version.document, block_id)
     last = page_count(section)
     if state.reached(section) != last:
         return _refused(request, NOT_OPEN, status=403)
-    try:
-        picked = date.fromisoformat(request.POST.get("opens_on") or "").isoformat()
-    except ValueError:
-        picked = None
     seals = _seals(state)
-    _keep_letter_date(request, block["id"], None if block["id"] in seals else picked)
+    _keep_letter_date(request, block["id"], None if block["id"] in seals else _date_sent(request))
     if "back" not in request.POST:
         return HttpResponse(status=204)
+    state, not_saved = _page_answers_stored(request, state, section, last)
+    if not_saved:
+        return _answers_refused(request, state, section, last, not_saved)
     return _go_to(request, _previous_page(section, last, seals) or page_url(section["id"], last))
+
+
+def _date_sent(request):
+    """✨ The date a press sent for a letter to open on, as an ISO date, or None for anything but a date."""
+    try:
+        return date.fromisoformat(request.POST.get("opens_on") or "").isoformat()
+    except ValueError:
+        return None
 
 
 def _letter_dates(request):
@@ -794,8 +804,9 @@ def _to_the_hub_when_locked(request):
 
 
 def _way_on_refused(request, state, section, shown):
-    """✨ A refused "Continue →" or completion, nothing stored: with htmx, only what sits beneath the button, for the
-    page's `#gate-refusal`, so the page neither reloads nor moves (fix-2); without, the page again."""
+    """✨ A refused "Continue →" or completion, nothing stored by it but the answers it sent (`not_saved` lists any of
+    those refused): with htmx, only what sits beneath the button, for the page's `#gate-refusal`, so the page neither
+    reloads nor moves (fix-2); without, the page again."""
     shown = {**shown, "refused": True}
     if _is_htmx(request):
         return render(request, "engine/gate_refusal.html", shown, status=400)
@@ -850,7 +861,7 @@ def save_answer(request, block_id):
         return _answer_refused(request, state, section, block_id, *unstorable)
     block_type = BLOCK_TYPES[block["type"]]
     try:
-        value = answer_from_form(state.version.document, block, request.POST.getlist("value"))
+        value = answer_from_form(state.version.document, block, _answer_sent(request, block))
     except AnswerRefused as refused:
         return _answer_refused(request, state, section, block_id, str(refused), status=400)
 
@@ -892,23 +903,95 @@ def _why_not_stored(state, block):
     return None
 
 
-def _carried_stored(request, state, section, block):
-    """✨ The answer a press leading on from a page sends for the block whose form it sends (`saved_by_way_on`), stored
-    as that block's own save would store it, and refused for the same reasons, as `(state, refused)`: the state with it
-    in and None, or the state as it was and the refusal, shown as that save's would be (ticket 107)."""
+def _answer_sent(request, block):
+    """✨ What a form sent as one block's answer, every value under its name: its page's name for it (`page_field`), as
+    its page's form and its own save with JavaScript send it (sprint-3d-r1-fix-6), or else `value`, as a form of its
+    own sends it (a reading's confirmation, the sort)."""
+    field = page_field(block)
+    return request.POST.getlist(field if field in request.POST else "value")
+
+
+@login_required
+@consent_required
+@require_POST
+def save_page(request, section_id, page):
+    """✨ A page's own Save, beside its way on, for a browser without JavaScript (sprint-3d-r1-fix-6): every answer on
+    the page stored at once, as each saves on its own with JavaScript, then the page again at the Save; or, with any
+    refused, the page drawn again at its refusal, saying which. The date a letter opens on, sent from the page that
+    seals it, is kept as going back from that page keeps it (sprint-3d-r1-fix-3), so the page offers it again. A page
+    shut, or not reached, is refused as an answer on it would be, on a page of its own (ticket 71); a once-only section
+    complete leads to the hub (ticket 69)."""
+    state = _participant(request.user, first_version=lambda: _version_sent(request))
+    section = _section_or_404(state.version, section_id)
+    _page_or_404(section, page)
+    if is_once_only_and_complete(section, state.completed):
+        return _go_to(request, reverse("hub"))
+    reached = state.reached(section)
+    if reached is None or page > reached:
+        return _refused(request, NOT_OPEN, status=403)
+    state, not_saved = _page_answers_stored(request, state, section, page)
+    letter = unsealed_letter(section, _seals(state)) if page == page_count(section) else None
+    if letter is not None and "opens_on" in request.POST:
+        _keep_letter_date(request, letter["id"], _date_sent(request))
+    if not_saved:
+        return _answers_refused(request, state, section, page, not_saved)
+    return _see_other(f"{page_url(section_id, page)}#completion")
+
+
+def _version_sent(request):
+    """✨ The pathway version a press on a page records a first answer against, as `save_answer` does: the published
+    version the page was drawn from, which its form names, or else the one published now, for a press sending none."""
+    return _published_version(request.POST.get("version")) or Publication.current_version()
+
+
+def _answer_stored(request, state, section, block, sent):
+    """✨ One answer sent with a press, `sent` its values, stored as the block's own save would store it, and refused for
+    the same reasons, as `(value, refusal)`: the value stored and None, or None and why it was not."""
     if not _is_open(state, section, block):
-        return state, _refused(request, NOT_OPEN, status=403)
+        return None, NOT_OPEN
     unstorable = _why_not_stored(state, block)
     if unstorable is not None:
-        return state, _answer_refused(request, state, section, block["id"], *unstorable)
+        return None, unstorable[0]
     try:
-        value = answer_from_form(state.version.document, block, request.POST["value"])
+        value = answer_from_form(state.version.document, block, sent)
     except AnswerRefused as refused:
-        return state, _answer_refused(request, state, section, block["id"], str(refused), status=400)
+        return None, str(refused)
     if not state.stored_response(request.user).save_answer(block["id"], value):
-        # ✨ a completion fixed it after the check above, and the UPDATE saw that
-        return state, _answer_refused(request, state, section, block["id"], FIXED_REFUSAL, status=409)
-    return state.with_answers({**state.answers, block["id"]: value}), None
+        return None, FIXED_REFUSAL  # ✨ a completion fixed it after the check above, and the UPDATE saw that
+    return value, None
+
+
+def _page_answers_stored(request, state, section, page):
+    """✨ Every answer on one page of a section that a press there sent (sprint-3d-r1-fix-6). The page's answers belong
+    to its one form (`sent_with_its_page`), so its Save, its way on and the way back from a page that seals a letter all
+    send them, and each is stored as its own save would store it, refused for the same reasons: without JavaScript,
+    nothing chosen on the page is lost to a press, and none is refused silently. An answer not sent, as a rating with no
+    point chosen or one fixed and so disabled, is left as it was.
+
+    Returns `(state, not_saved)`: the state with what was stored in it, and each answer refused, in the page's order, as
+    {"name", "refusal"}: its prompt, which names it on the press's refusal, and why."""
+    stored, not_saved = {}, []
+    for block in pages_of(section)[page - 1]:
+        field = page_field(block)
+        if not BLOCK_TYPES[block["type"]].sent_with_its_page or field not in request.POST:
+            continue
+        value, refusal = _answer_stored(request, state, section, block, request.POST.getlist(field))
+        if refusal is None:
+            stored[block["id"]] = value
+        else:
+            not_saved.append({"name": text_for(block["prompt"], "participant"), "refusal": refusal})
+    if stored:
+        state = state._replace(response=state.stored_response(request.user))
+        state = state.with_answers({**state.answers, **stored})
+    return state, not_saved
+
+
+def _answers_refused(request, state, section, page, not_saved):
+    """✨ A press on a page that is not a way on (its Save, or going back from the page that seals a letter) with answers
+    refused: the page drawn again, those stored in it, opened at its refusal (`#refused`), which names each answer not
+    saved and says why. Only without JavaScript, which saves each answer on its own."""
+    shown = _section_page(state, section, page, chosen=request.POST.get("opens_on"), kept=_letter_dates(request))
+    return _section_shown(request, state, section, {**shown, "not_saved": not_saved}, status=400)
 
 
 def _answer_refused(request, state, section, block_id, refusal, status):
@@ -2867,7 +2950,7 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
     seals = _seals(state)
     letter = unsealed_letter(section, seals) if is_last else None
     press = seal_press(letter, timezone.localdate(), chosen, (kept or {}).get(letter["id"])) if letter else None
-    carried = None if is_last else carried_by_way_on(pages_of(section)[page - 1], seals)
+    named = None if is_last else way_on_named_by(pages_of(section)[page - 1], seals)
     return {
         # ✨ Where "← Back" at the top leads: the section this is a part of, or else the hub.
         "back": _section_this_is_part_of(state, section),
@@ -2875,9 +2958,12 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
             "number": page,
             "count": page_count(section),
             "is_last": is_last,
-            # ✨ The block whose form "Continue →" sends, storing its answer with the press, and the press's own label
-            # where the block gives one (ticket 107).
-            "carries": _carried_shown(carried),
+            # ✨ The press's own label where the block it is for gives one, as the letter's "Save my letter and continue
+            # →" (ticket 107), or None for "Continue →".
+            "way_on_label": _way_on_label(named),
+            # ✨ Whether the page has its own Save, shown without JavaScript beside its way on (sprint-3d-r1-fix-6):
+            # while any answer on it can be sent with its form.
+            "saves": any(_sent_with_its_page(state, block, seals) for block in blocks),
             "previous": _previous_page(section, page, seals),
         },
         "pathway": {
@@ -2938,22 +3024,32 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
     }
 
 
-def _carried_shown(block):
-    """✨ The block whose form a page's "Continue →" sends, as its template needs it: {"id", "label"}, the label its
-    `continue_label` or None for "Continue →"; None where the press sends no block's form (ticket 107)."""
-    if block is None:
+def _way_on_label(block):
+    """✨ The label of the press leading on from a page, from the block it is for (`way_on_named_by`): its
+    `continue_label`, or None for "Continue →", as where the press is for no block (ticket 107)."""
+    if block is None or "continue_label" not in block:
         return None
-    label = text_for(block["continue_label"], "participant") if "continue_label" in block else None
-    return {"id": block["id"], "label": label}
+    return text_for(block["continue_label"], "participant")
+
+
+def _sent_with_its_page(state, block, seals):
+    """✨ Whether a block shown on a page has an answer its page's form sends (sprint-3d-r1-fix-6): an ordinary answer
+    (`sent_with_its_page`) that can still be changed there, so not fixed, not a sealed letter and not waiting on the
+    comparison, each of which the page draws with nothing to send."""
+    if not BLOCK_TYPES[block["type"]].sent_with_its_page:
+        return False
+    if block["id"] in state.fixed or block["id"] in seals:
+        return False
+    return comparison_wait_message(block, state.answers) is None
 
 
 def _previous_page(section, page, sealed_ids):
     """✨ Where "← Previous page" leads: the page before, at its way on, the press that left it (ticket 41e), or at the
-    block whose form that press sent, so going back to the letter lands on it (ticket 107). None on the first page."""
+    block that press was for, so going back to the letter lands on it (ticket 107). None on the first page."""
     if page == 1:
         return None
-    carried = carried_by_way_on(pages_of(section)[page - 2], sealed_ids)
-    anchor = f"block-{carried['id']}" if carried else "completion"
+    named = way_on_named_by(pages_of(section)[page - 2], sealed_ids)
+    anchor = f"block-{named['id']}" if named else "completion"
     return f"{page_url(section['id'], page - 1)}#{anchor}"
 
 
@@ -3197,6 +3293,9 @@ def _block_for_participant(
             else None
         ),
         "id": block["id"],
+        # ✨ The name its page's form sends its answer under, every answer on a page being sent at once
+        # (sprint-3d-r1-fix-6).
+        "field": page_field(block),
         "landing": landing_of(block),  # ✨ where saving it without JavaScript comes back to
         "type": block["type"],
         "template": f"engine/blocks/{block['type']}.html",

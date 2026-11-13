@@ -1,0 +1,19 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ The page's one form (sprint-3d-r1-fix-6). Every ordinary answer on the page belongs to it by its `form`
+  attribute, each under its own name, and so do the page's presses: its Save (`engine/page_save.html`), its way on and,
+  on the page that seals a letter, the date and "← Previous page". So without JavaScript any press on the page sends
+  every answer on it, which the press stores before anything else, and nothing chosen is lost to a press on something
+  else. A contact list, a coach checklist and a reading's confirmation keep their own forms.
+
+  It holds nothing itself but the pathway version the page was drawn from, which a first answer is recorded against,
+  and it sits outside `#completion`, which an autosave can redraw out of band, so it is never swapped away. Its address
+  is the Save's, the first of its buttons, which Enter in an answer presses; with JavaScript that Save is hidden and
+  main.js stops the press, so Enter in an answer never reloads the page (fix-7). novalidate leaves the date, as every
+  answer, to the server, whose refusal says why after the press.
+{% endcomment %}
+<form id="page-answers" method="post" action="{% url 'save_page' section.id page.number %}#refused" novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="version" value="{{ pathway.version_id }}">
+</form>

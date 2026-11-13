@@ -326,7 +326,7 @@ def test_the_sorts_section_is_refused_completion_before_the_sort_is_in(signed_in
 def test_once_the_sort_is_in_its_section_can_be_completed(signed_in):
     submit_sort(signed_in, complete_sort())
 
-    assert f'action="/sections/{STRENGTHS}/complete/"' in signed_in.get(f"/sections/{STRENGTHS}/").content.decode()
+    assert f'action="/sections/{STRENGTHS}/complete/' in signed_in.get(f"/sections/{STRENGTHS}/").content.decode()
     assert signed_in.post(f"/sections/{STRENGTHS}/complete/").status_code == 303
 
 

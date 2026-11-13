@@ -81,11 +81,12 @@ def through_to(client, page):
 
 
 def way_on(page):
-    """✨ The form at the foot of a page: where it goes, its button's words, and whether the button is disabled."""
-    form = re.search(
-        r'<div id="completion".*?<form method="post" action="([^"]+)">.*?<button([^>]*)>(.*?)</button>', page, re.S
+    """✨ The press at the foot of a page: where it goes, its button's words, and whether the button is disabled. It
+    sends the page's one form to its own address (sprint-3d-r1-fix-6), anchored at where a refusal opens."""
+    press = re.search(
+        r'<div id="completion".*?<button([^>]*) formaction="([^"#]+)[^"]*"([^>]*)>(.*?)</button>', page, re.S
     )
-    return form.group(1), unescape(form.group(3)).strip(), " disabled" in form.group(2)
+    return press.group(2), unescape(press.group(4)).strip(), " disabled" in press.group(1) + press.group(3)
 
 
 def previous_page(page):
@@ -127,7 +128,7 @@ def test_a_pages_unmet_clauses_are_listed_beneath_its_continue(participant):
 def test_answering_what_the_page_needs_opens_its_continue_without_a_reload(participant):
     sent_back = save(participant, "why", "To find out.").content.decode()
 
-    assert '<button type="submit" class="pill full">Continue →</button>' in sent_back
+    assert way_on(sent_back)[1:] == ("Continue →", False)
 
 
 @pytest.mark.django_db

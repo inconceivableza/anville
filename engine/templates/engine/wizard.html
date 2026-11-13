@@ -61,6 +61,8 @@
         <div class="step">
           {% block step %}
             <h1>{{ step.authored.heading|default:section.title }}</h1>
+            {# ✨ The page's one form, which its answers and its presses belong to (sprint-3d-r1-fix-6). #}
+            {% include "engine/page_form.html" %}
             {# ✨ A choice is v3's cards here, not the section page's drop-down (sprint-3c-r3-fix-4). #}
             {% for block in section.blocks %}
               {% include "engine/block_drawn.html" with choices_as_cards=True %}
