@@ -34,6 +34,7 @@ from engine.views import (
     contact_removal,
     contacts,
     credits_page,
+    demo_shortcut,
     download,
     fresh_link,
     home,
@@ -112,6 +113,7 @@ urlpatterns = [
     path("sections/<slug:section_id>/reopen/", reopen_section, name="reopen_section"),
     path("sections/<slug:section_id>/welcome/", wizard_welcome, name="wizard_welcome"),
     path("hub/", hub, name="hub"),
+    path("hub/demo-shortcut/", demo_shortcut, name="demo_shortcut"),  # ✨ demo only (ticket 113)
     path("credits/", credits_page, name="credits"),
     path("privacy/", privacy, name="privacy"),
     # ✨ Joining by link, a participant's groups and admins' pages; each adds its routes in organisations/urls.py.

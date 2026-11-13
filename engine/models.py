@@ -186,6 +186,17 @@ class Response(models.Model):
         if viewed:
             self._stamp_once("comparisons_viewed", block_id, now)
 
+    def look_at_comparison(self, block_id):
+        """✨ The look at a sort's comparison, as its press records it once nothing is left to ask (ticket 55, ticket
+        106): with at least the minimum number of observer assessments that count in, answer collection frozen, counted
+        again under the freeze's lock, since a withdrawal may have left fewer meanwhile; then the visit, and the view
+        when the minimum is in (`visit_comparison`). The participant's press and the hub's demo shortcut (ticket 113)
+        both look through here."""
+        viewed = ObserverResponse.counted(self) >= minimum_observers(self.version.document)
+        if self.collection_frozen_at is None and viewed:
+            viewed = self.freeze_collection()
+        self.visit_comparison(block_id, viewed=viewed)
+
     def open_section(self, section_id):
         """✨ Record that a section with opening conditions has opened, in one UPDATE that merges it in. The first time
         is kept, and a later one writes nothing."""

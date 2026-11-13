@@ -11,7 +11,8 @@
 
 {% block content %}
   <div class="section-header">
-    <h2>Answering for {{ name }}</h2>
+    {# ✨ On a demo system the title is where a press-and-hold reveals the sort's demo profiles, on a phone (ticket 113). #}
+    <h2{% if assessment.demo_profiles %} data-demo-reveal-hold{% endif %}>Answering for {{ name }}</h2>
   </div>
   {% if own_link %}
     <div class="name-section invitation-link">
@@ -72,5 +73,21 @@
         <noscript><p>The sort needs JavaScript. Turn it on in your browser, then reload this page.</p></noscript>
       </form>
     {% endwith %}
+    {% if assessment.demo_profiles %}
+      {% comment %}
+        ✨ Demo only (ticket 113): the participant's demo profiles, each opening the sort with the cards placed as an
+        observer of that profile would place them, about one in eight in "Haven't seen this"; nothing is stored until
+        the observer sends it. Hidden until revealed, as on the participant's sort (data-demo-reveal, in main.js), and
+        offered only on a development or demo system, so its wording is written here rather than in the pathway
+        document.
+      {% endcomment %}
+      <form class="demo-shortcut" method="get" data-demo-reveal hidden>
+        <label for="demo-profile">Load a demo profile (demo only)</label>
+        <select id="demo-profile" name="profile">
+          {% for profile in assessment.demo_profiles %}<option value="{{ profile.name }}">{{ profile.summary }}</option>{% endfor %}
+        </select>
+        <button type="submit" class="pill small">Load this profile</button>
+      </form>
+    {% endif %}
   {% endif %}
 {% endblock content %}

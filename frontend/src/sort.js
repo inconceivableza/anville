@@ -35,8 +35,9 @@ export function mountSorts() {
 
 function mountSort(form) {
   // ✨ `placed` comes only with a demo profile, on a development or demo system (fix-23): each item's bucket and value,
-  // so the sort opens with every card already placed and fine-tuning's sliders already set. The participant still
-  // sends it themselves. Everyone else gets none and starts from a full deck.
+  // or for an observer's, `{ seen: false }` for a card in "Haven't seen this" (ticket 113), so the sort opens with
+  // every card already placed and fine-tuning's sliders already set. The participant or observer still sends it
+  // themselves. Everyone else gets none and starts from a full deck.
   const {
     items,
     buckets,
@@ -53,7 +54,8 @@ function mountSort(form) {
   const stage = form.querySelector(".sort-stage");
   const announcer = form.querySelector("[data-sort-announcer]");
   const progress = form.querySelector(".sort-progress");
-  const bucketOf = (item) => buckets.find((bucket) => bucket.id === placed[item.id]?.bucket);
+  const bucketOf = (item) =>
+    placed[item.id]?.seen === false ? notSeen : buckets.find((bucket) => bucket.id === placed[item.id]?.bucket);
   const deck = dealt(items).filter((item) => !bucketOf(item)); // ✨ Still to sort; the first is the card on show.
   const sortedPercent = fine_tunes ? SORTED_PERCENT : 100;
   // ✨ Every placement, { item, bucket }, in the order made, so undo can go all the way back.
