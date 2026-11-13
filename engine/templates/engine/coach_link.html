@@ -51,7 +51,8 @@
         <h1>{{ name }}'s results</h1>
         <p class="results-desc">{{ name }} is happy for you to see this, exactly as {{ name }} sees it. It goes from here if {{ name }} stops sharing it.</p>
         {% include "engine/results_body.html" with results=shared.results %}
-        <h1>How others experience {{ name }}</h1>
+        {# ✨ Headed as the participant's own page is, with their name in place of "you" (`comparison_heading`, sprint-3d-r1-fix-2). #}
+        <h1>{{ shared.comparison_heading }}</h1>
         {% include "engine/comparison_body.html" with comparison=shared.comparison for_coach=True %}
       </section>
     {% endif %}
