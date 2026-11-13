@@ -36,6 +36,14 @@ def comparison(client, block_id=SORT):
     return client.get(f"/results/{block_id}/comparison/")
 
 
+def looked_at(client, block_id=SORT):
+    """✨ The comparison once the participant has looked: their press of "Compare with how others see you →",
+    confirmed as it asks, which freezes answer collection with the minimum in, so the observers' numbers show (ADR
+    0017), then the page it leads to."""
+    client.post(f"/results/{block_id}/comparison/visit/", {"confirmed": "yes"})
+    return comparison(client, block_id)
+
+
 def observer_sort(apostle_share):
     """✨ An observer's sort of the two items, splitting 100 between them, so its percents are easy to read: Apostle
     and Deliver get `apostle_share`, Prophet and Ponder the rest."""
@@ -100,8 +108,9 @@ def test_from_the_minimum_no_percent_reaches_the_participant_neither_theirs_the_
     its markup, which no reader sees."""
     with_observers(signed_in, participant, THREE_OBSERVERS)
 
-    shown = text(comparison(signed_in))
+    shown = text(looked_at(signed_in))
 
+    assert "Others:" in shown
     assert not A_PERCENT.search(shown)
 
 
@@ -115,7 +124,7 @@ def test_each_construct_names_the_participants_standing_and_the_observers_and_ho
     readers, as the drawing is hidden from them."""
     with_observers(signed_in, participant, THREE_OBSERVERS)
 
-    shown = text(comparison(signed_in))
+    shown = text(looked_at(signed_in))
 
     at_90 = ["You: Leading", "Others: Leading", "Others place this lower"]
     at_10 = ["You: Less used", "Others: Less used", "Others place this higher"]
@@ -133,7 +142,7 @@ def test_the_comparison_shows_how_many_have_answered_never_who(signed_in, partic
     response = with_observers(signed_in, participant, THREE_OBSERVERS[:observers])
     with_contacts(response, PRIYA, CHRIS)
 
-    shown = comparison(signed_in).content.decode()
+    shown = looked_at(signed_in).content.decode()
 
     assert count in shown
     assert PRIYA not in shown and CHRIS not in shown
@@ -167,7 +176,7 @@ def test_the_comparison_says_it_is_illustrative_only_when_every_observer_is_test
     for sort, is_test_data in zip(THREE_OBSERVERS, test_data):
         an_observer(response, sort, is_test_data=is_test_data)
 
-    shown = comparison(signed_in).content.decode()
+    shown = looked_at(signed_in).content.decode()
 
     assert ("illustrative" in shown) is illustrative
 
@@ -207,7 +216,7 @@ def test_the_gaps_list_who_rates_each_construct_higher_largest_first(signed_in, 
     the order declared: Apostle and Prophet, then Ponder and Deliver."""
     with_observers(signed_in, participant, THREE_OBSERVERS)
 
-    shown = comparison(signed_in).content.decode()
+    shown = looked_at(signed_in).content.decode()
 
     assert in_order(
         shown,
@@ -232,7 +241,7 @@ def test_each_construct_shows_how_far_the_observers_agree(signed_in, participant
     """✨ Each observer's Prophet and Ponder are 100 less their Apostle and Deliver, so all four share one range."""
     with_observers(signed_in, participant, [observer_sort(share) for share in apostle_shares])
 
-    shown = comparison(signed_in).content.decode()
+    shown = looked_at(signed_in).content.decode()
 
     assert shown.count(band) == 4
 
@@ -245,7 +254,7 @@ def test_the_spread_gives_each_observers_standing_in_ascending_order_never_the_o
     comes first, as the participant ranks it first."""
     with_observers(signed_in, participant, [observer_sort(80), observer_sort(60), observer_sort(70)])
 
-    apostle = strips(comparison(signed_in).content.decode())[0]
+    apostle = strips(looked_at(signed_in).content.decode())[0]
 
     assert apostle == ["Strong", "Leading", "Leading"]
 

@@ -648,6 +648,32 @@ def test_below_the_minimum_after_a_withdrawal_collection_unfreezes_until_the_nex
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("when", ["before the look", "after an unfreeze"])
+def test_with_the_minimum_in_the_comparisons_address_shows_no_observers_numbers_until_the_press_freezes_collection(
+    participant, three_answered, when
+):
+    """✨ Opened from the menu or a typed address, the comparison never looks (sprint-3d-r1-fix-1): it offers the press
+    that does, through "Before you look" in this pathway, so nobody can look, have one more person answer, and look
+    again to see what they added (ADR 0017). After an unfreeze, Sam's answer brings the minimum back in."""
+    if when == "before the look":
+        participant.post("/sections/onboarding/complete/")
+        submit_sort(participant, complete_sort())
+    else:
+        freeze(participant)
+        withdraw(three_answered["Jo"])
+        assert send(three_answered["Sam"], complete_sort()).status_code == 303
+
+    page = participant.get(f"/results/{SORT}/comparison/")
+
+    assert page.status_code == 200
+    assert "Others:" not in text_of(page.content.decode())
+    assert f'action="/results/{SORT}/comparison/visit/"' in page.content.decode()
+    assert Response.objects.get().collection_frozen_at is None
+    assert press_compare(participant).status_code == 303
+    assert "Others:" in text_of(participant.get(f"/results/{SORT}/comparison/").content.decode())
+
+
+@pytest.mark.django_db
 def test_with_consent_withdrawn_and_collection_frozen_an_observers_link_gets_the_dead_link_refusal(
     participant, three_answered
 ):

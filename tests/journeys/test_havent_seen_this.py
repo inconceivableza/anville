@@ -4,7 +4,8 @@
 """✨ "Haven't seen this" (ticket 108): an observer's eighth choice beside the buckets, where the pathway offers it.
 
 A card placed there is kept as placed, and left out of that observer's scores; the observer still counts toward the
-minimum, wherever their cards went. The participant has no such choice.
+minimum while any card of theirs is in a bucket, but one who saw nothing counts toward no minimum and is left out of the
+comparison, having nothing to add (sprint-3d-r1-fix-1). The participant has no such choice.
 """
 
 import pytest
@@ -12,7 +13,7 @@ import pytest
 from engine.models import ObserverResponse, Response, Result
 from tests.documents import complete_sort
 from tests.journeys.pages import text_of
-from tests.journeys.test_comparison import comparison
+from tests.journeys.test_comparison import THREE_OBSERVERS, looked_at, strips
 from tests.journeys.test_contact_list import JO, PRIYA, save_contacts
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_invitations import issue_link, observer  # noqa: F401  (observer is a fixture)
@@ -23,6 +24,7 @@ from tests.journeys.test_results import SORT, STRENGTHS, submit_sort, widget_dat
 
 NOT_SEEN = {"seen": False}
 A_CARD_NOT_SEEN = {"a5": {"bucket": "strength"}, "p1": NOT_SEEN}
+NOTHING_SEEN = {"a5": NOT_SEEN, "p1": NOT_SEEN}
 
 
 def offering_it(document):
@@ -58,7 +60,42 @@ def test_an_observers_card_in_havent_seen_this_is_kept_as_placed_and_they_count_
     submit_sort(participant, complete_sort())
     for _ in range(2):
         an_observer(Response.objects.get(), complete_sort())
-    assert "Others:" in text_of(comparison(participant).content.decode())
+    assert "Others:" in text_of(looked_at(participant).content.decode())
+
+
+def jo_sends_having_seen_nothing(participant, observer):  # noqa: F811
+    """✨ Jo claims her link and sends with every card in "Haven't seen this", which is stored as any send is."""
+    claim(observer, issue_link(participant, "Jo"))
+    assert send(observer, NOTHING_SEEN).status_code == 303
+
+
+@pytest.mark.django_db
+def test_an_observer_who_saw_nothing_is_kept_but_counts_toward_no_minimum(participant, observer):  # noqa: F811
+    """✨ With two others in, the press freezes nothing and the comparison still waits on a third."""
+    jo_sends_having_seen_nothing(participant, observer)
+    submit_sort(participant, complete_sort())
+    for _ in range(2):
+        an_observer(Response.objects.get(), complete_sort())
+
+    shown = looked_at(participant).content.decode()
+
+    assert ObserverResponse.objects.filter(submitted_at__isnull=False).count() == 3
+    assert Response.objects.get().collection_frozen_at is None
+    assert "2 of 3" in shown
+    assert "Others:" not in text_of(shown)
+
+
+@pytest.mark.django_db
+def test_an_observer_who_saw_nothing_is_left_out_of_the_averages_and_the_spread(participant, observer):  # noqa: F811
+    """✨ Counted, their even share would be a fourth dot in each construct's spread, and pull each mean toward it."""
+    jo_sends_having_seen_nothing(participant, observer)
+    submit_sort(participant, complete_sort())
+    for sort in THREE_OBSERVERS:
+        an_observer(Response.objects.get(), sort)
+
+    spreads = strips(looked_at(participant).content.decode())
+
+    assert spreads and all(len(spread) == 3 for spread in spreads)
 
 
 @pytest.mark.django_db

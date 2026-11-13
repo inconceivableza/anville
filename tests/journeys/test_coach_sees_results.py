@@ -121,6 +121,27 @@ def test_below_the_minimum_the_coach_sees_how_many_have_answered_and_no_observer
 
 
 @pytest.mark.django_db
+def test_the_coach_sees_the_observers_numbers_only_once_the_participant_has_looked(
+    signed_in, participant, observer  # noqa: F811
+):
+    """✨ Shared after a press below the minimum, which visits and freezes nothing: a third answer then brings the
+    minimum in while collection is open, and the coach sees no more than the participant, nothing of the observers'
+    until the participant's press freezes it (ADR 0017; sprint-3d-r1-fix-1)."""
+    response = with_a_result(signed_in, participant, observers=THREE_OBSERVERS[:2])
+    link = an_accepted_coach(signed_in, observer)
+    assert share(signed_in).status_code == 303
+    an_observer(response, THREE_OBSERVERS[2])
+
+    before = what_the_coach_sees(observer, link)
+    assert signed_in.post(f"/results/{SORT}/comparison/visit/", {"confirmed": "yes"}).status_code == 303
+    after = what_the_coach_sees(observer, link)
+
+    assert SHOWN in before  # ✨ the participant's own result
+    assert "Others:" not in before
+    assert "Others: Leading" in after
+
+
+@pytest.mark.django_db
 def test_nothing_else_of_the_participants_reaches_the_coach(signed_in, participant, observer):  # noqa: F811
     response = with_a_result(signed_in, participant)
     answer(signed_in, "statement", "A calling statement only I should read.", section=CALLING)

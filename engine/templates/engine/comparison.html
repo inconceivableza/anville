@@ -3,14 +3,15 @@
 {% extends "engine/participant.html" %}
 {% comment %}
   ✨ The participant's comparison, then, once their coach has accepted, the consent for the coach to see it and the
-  results (ticket 27).
+  results (ticket 27). Headed as the hub's row and the sidebar's link name it, by its comparison signpost's title, or
+  the engine's own where none names it (`heading`, sprint-3d-r1-fix-1).
 {% endcomment %}
-{% block head_title %}How others experience you{% endblock head_title %}
+{% block head_title %}{{ heading }}{% endblock head_title %}
 
 {% block content %}
   {# ✨ To the section holding its signpost (ticket 96), in place of "← Back to results" here and "← Return to …" at its foot. #}
   {% include "engine/back_button.html" %}
-  <h1>How others experience you</h1>
+  <h1>{{ heading }}</h1>
 
   {# ✨ First, so the participant meets the choice before reading on. A tick refused without JavaScript says why above it, whether or not the box is still offered (fix-2). #}
   {% if share_refusal %}<p class="save-status" role="alert"><span class="save-refused">Not saved. {{ share_refusal }}</span></p>{% endif %}

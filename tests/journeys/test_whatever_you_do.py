@@ -28,7 +28,7 @@ from engine.models import Contact, ObserverResponse, Publication, Response
 from tests.journeys.test_coach_checklist import choose, step
 from tests.journeys.test_coach_link import answer_as_coach, coach_link_action, link_shown
 from tests.journeys.test_navigation import section_in, sidebar_of
-from tests.journeys.pages import main_of
+from tests.journeys.pages import main_of, text_of
 from tests.journeys.test_hub import (  # noqa: F401  (signed_in_client is a fixture, used by name)
     hub_entry,
     next_step,
@@ -1688,6 +1688,24 @@ def test_while_a_press_would_freeze_answer_collection_the_hub_and_sidebar_offer_
 
     row, _ = comparison_row(main_of(participant.get("/hub/").content.decode()), "hub")
     assert VISIT in row
+
+
+@pytest.mark.django_db
+def test_with_the_minimum_in_the_comparisons_own_address_offers_the_press_beside_its_warning_and_no_numbers(
+    participant,
+):
+    """✨ Opened from the menu or a typed address, the comparison never looks (sprint-3d-r1-fix-1): it offers the press
+    that does, with the warning beside it, as Section 2's card does, and the numbers show only once it is pressed."""
+    client = to_section_2(participant)
+    people_answer(client)
+
+    page = client.get(COMPARISON).content.decode()
+
+    assert VISIT in page and escape(FREEZE_WARNINGS["everyone"]) in page  # ✨ the three invited have all answered
+    assert "Others:" not in text_of(page)
+    assert Response.objects.get().collection_frozen_at is None
+    assert client.post(f"{COMPARISON}visit/").status_code == 303
+    assert "Others:" in text_of(client.get(COMPARISON).content.decode())
 
 
 # The hub while Section 4 waits on the coach (ticket 65)
