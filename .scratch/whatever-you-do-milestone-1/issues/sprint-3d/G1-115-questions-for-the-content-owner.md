@@ -27,4 +27,4 @@
 
 **Carried from 106**
 
-- [ ] Whether Sections 3–5 should match Section 2, their "When you've finished it, come back here to say so." moving from the workbook's text to a line above "I've finished Section N", is answered (the wording changes document asks it), and the pathway changed to match if so
+- [x] Whether Sections 3–5 should match Section 2, their "When you've finished it, come back here to say so." moving from the workbook's text to a line above "I've finished Section N", is answered (the wording changes document asks it), and the pathway changed to match if so (answered yes by the developer, 13 Nov, and the pathway changed)
