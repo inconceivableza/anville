@@ -4,6 +4,7 @@
 import hashlib
 import json
 import mimetypes
+import re
 from typing import NamedTuple
 
 from django.conf import settings
@@ -495,6 +496,14 @@ def _comparison_title(document, sort_id):
         if block["type"] == "comparison_signpost" and block["sort"] == sort_id:
             return authored_text(block, "participant")["title"]
     return COMPARISON_TITLE
+
+
+def _comparison_title_for_coach(document, sort_id, name):
+    """✨ What a coach's shared view calls the comparison of the sort `sort_id`: the title the participant's own page is
+    headed with (`_comparison_title`), with the participant's `name` in place of "you", so "How others see you" reads
+    "How others see Sam" and the engine's own "How others experience you" reads "How others experience Sam"
+    (sprint-3d-r1-fix-2). A title that never says "you" is kept as written."""
+    return re.sub(r"\byou\b", lambda _: name, _comparison_title(document, sort_id), flags=re.IGNORECASE)
 
 
 def _quick_link_names(document, hub, scored):
@@ -2401,6 +2410,7 @@ def _shared_with_coach(invitation, name):
     return {
         "results": results_page(document, scores, sort, name),
         "comparison": _comparison_of(participant_response, scores, sort),
+        "comparison_heading": _comparison_title_for_coach(document, scored["id"], name),
     }
 
 

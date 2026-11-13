@@ -13,6 +13,7 @@ import re
 
 import pytest
 
+from access.models import name_shown_for
 from engine.models import Invitation, Response
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.test_answers import CALLING, answer, participant  # noqa: F401 (a fixture)
@@ -39,15 +40,21 @@ def with_a_sort_and_a_coach():
     return document
 
 
-@pytest.fixture
-def signed_in(client, participant, load_pathway):  # noqa: F811
-    """✨ A participant who has chosen Sam as their coach and completed onboarding, so the sort is open."""
-    load_pathway(with_a_sort_and_a_coach())
+def signed_in_over(document, client, participant, load_pathway):  # noqa: F811
+    """✨ A participant of the pathway `document` who has chosen Sam as their coach and completed onboarding, so the sort
+    is open."""
+    load_pathway(document)
     client.force_login(participant)
     give_consent(client)
     assert choose(client).status_code == 200
     client.post("/sections/onboarding/complete/")
     return client
+
+
+@pytest.fixture
+def signed_in(client, participant, load_pathway):  # noqa: F811
+    """✨ A participant who has chosen Sam as their coach and completed onboarding, so the sort is open."""
+    return signed_in_over(with_a_sort_and_a_coach(), client, participant, load_pathway)
 
 
 def with_a_result(client, participant, observers=THREE_OBSERVERS, visited=True):  # noqa: F811
@@ -139,6 +146,43 @@ def test_the_coach_sees_the_observers_numbers_only_once_the_participant_has_look
     assert SHOWN in before  # ✨ the participant's own result
     assert "Others:" not in before
     assert "Others: Leading" in after
+
+
+# ✨ What a pathway's comparison signpost may be titled: neither of the engine's own wordings, so that the test reads the
+# title from the document it gave.
+OWN_TITLE = "What others notice about you"
+
+
+def the_headings(page):
+    """✨ The words of each `<h1>` on a page, in order."""
+    return [text(heading).strip() for heading in re.findall(r"<h1[^>]*>(.*?)</h1>", page.content.decode(), re.S)]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("titled", [True, False], ids=["a signpost titles it", "no signpost"])
+def test_the_coach_sees_the_comparison_headed_as_the_participant_does_with_their_name_in_place_of_you(
+    client, participant, observer, load_pathway, titled  # noqa: F811
+):
+    """✨ From the document, never from which pathway it is (sprint-3d-r1-fix-2): the signpost's title where there is
+    one, as the participant's own page is headed, otherwise the engine's own."""
+    document = with_a_sort_and_a_coach()
+    if titled:
+        document["content"]["sections"][1]["blocks"].append(
+            {"id": "others", "type": "comparison_signpost", "sort": SORT, "title": OWN_TITLE}
+        )
+    signed_in = signed_in_over(document, client, participant, load_pathway)
+    with_a_result(signed_in, participant)
+    link = an_accepted_coach(signed_in, observer)
+    assert share(signed_in).status_code == 303
+    named = name_shown_for(participant)
+
+    own = the_headings(signed_in.get(f"/results/{SORT}/comparison/"))[-1]
+    coach_headings = the_headings(observer.get(link))
+
+    assert (own == OWN_TITLE) is titled
+    assert "you" in own
+    assert coach_headings[-1] == own.replace("you", named)
+    assert f"{named}'s results" in coach_headings
 
 
 @pytest.mark.django_db
