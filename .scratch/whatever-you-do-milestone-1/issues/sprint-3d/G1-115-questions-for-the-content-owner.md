@@ -18,8 +18,9 @@
 
 **Carried from 112**
 
-- [ ] The wizard's new photos are picked, by the developer with the content owner, suggesting the journey without picturing one kind of person (the content owner suggested pairs of feet in boots, some muddier than others), each file added beside the site's other photos and named with its credit in the engine's one list of wizard photos (the README says where), a line for each step: "About you", the reason, the ratings and the welcome; the pages and the credits page then show them, so each wizard page shows one of the new photos, credited on the credits page
+- [ ] The wizard's new photos are picked, by the developer with the content owner, suggesting the journey without picturing one kind of person (the content owner suggested pairs of feet in boots, some muddier than others), each file added beside the site's other photos and named with its credit in the engine's one list of wizard photos (the README says where), a line for each step: "About you", the reason and the welcome; the pages and the credits page then show them, so each wizard page shows one of the new photos, credited on the credits page
 - The container that built 112 could reach neither Unsplash nor Pexels, so it changed no photo
+- The ratings step's photo was chosen by the developer (13 Nov): musicians in a field of wheat, from Wikimedia Commons, under CC BY-SA 4.0, its credit required (sprint-3d-r1-fix-5). The boots question covers the other steps only
 
 **Carried from 110**
 
