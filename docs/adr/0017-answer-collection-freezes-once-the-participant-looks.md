@@ -31,3 +31,19 @@ This amends ADR 0007: revoking always works, but an observer's link cannot be re
 ## Amendment (12 November 2026)
 
 In *Whatever You Do* the telling moves beside the press (ticket 106): the comparison's card on Section 2 and the hub's next step say how many of the people invited have answered and that once they look no more answers are added, beside "Compare with how others see you →", and pressing it freezes collection with no page between. The hub's row, the sidebar's entry and the Five trusted voices card have no room for the sentence, so while a press would freeze they lead to the card instead. The freeze itself is unchanged, and so is the faithful port, which still asks on its own page.
+
+## Amendment (13 November 2026)
+
+The look is the only thing that shows the numbers, so they show only while collection is frozen. The comparison's own
+address (the menu's link, a typed address) used to show them whenever the minimum was in, before the participant's press
+and again after withdrawals unfroze collection, which let a participant open it, have one more person answer and open it
+again to see what that person added. With the minimum in and collection open it now shows the count, the freeze warning
+and the press that looks, in the faithful port on its "Before you look" page, and only the press freezes. A coach shown
+the comparison is told the participant hasn't looked yet and sees no numbers meanwhile. "Viewed" on the hub is kept once
+withdrawals unfreeze collection, though the numbers then need a look again. This amends ADR 0005's hiding of the
+numbers, which the minimum alone no longer decides.
+
+"With the minimum in" counts only observers with something to add: one who sends with every card in "Haven't seen this"
+is stored and can withdraw, but counts toward no minimum, whether for the press, the warning or the unfreeze, and is
+left out of the averages and the spread (ADR 0005, amended the same day). The spec's Sprint 3d section has both, under
+No page before the comparison and Haven't seen this.

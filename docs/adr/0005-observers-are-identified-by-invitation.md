@@ -1,5 +1,5 @@
 ---
-status: accepted, partly superseded by ADR-0007 and ADR-0008, amended by ADR-0026
+status: accepted, partly superseded by ADR-0007 and ADR-0008, amended by ADR-0026 and ADR-0017
 ---
 
 # Observers are identified by their invitation, not by what they type
@@ -30,3 +30,10 @@ Partly superseded: written answers are now shown to the participant without name
 - The prototype's observer flow is unreachable in normal use (see `docs/prototype/`), so nothing is being migrated; this is designed from scratch.
 - Amended 29 Oct: once an observer has sent answers, their own link still withdraws them after it expires (ADR 0026).
 - Amended 29 Oct: the participant is told how many observers withdrew, never which (ADR 0026).
+- Amended 13 Nov: the minimum is not the only thing that hides the numbers. From the minimum while answer collection is
+  open, before the participant's look or after withdrawals unfreeze collection, the comparison shows the count and the
+  press that looks and no numbers, which show only while collection is frozen (ADR 0017's amendment of 13 Nov; spec,
+  Sprint 3d, No page before the comparison).
+- Amended 13 Nov: an observer who sends with every card in "Haven't seen this" counts toward no minimum and is left out
+  of the averages and the spread, having nothing to add. Their send is still stored and can be withdrawn, and the count
+  the participant sees leaves them out (spec, Sprint 3d, Haven't seen this).
