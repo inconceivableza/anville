@@ -162,6 +162,7 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 - Block JavaScript (DevTools, Command menu, "Disable JavaScript") and reload: "Join the waitlist" and "Contact us" each reload the homepage opened at the box, with only their own choice ticked and the focus in the email field (sprint-3d-r1-fix-4). Pressing "Sign up" with nothing ticked reloads it opened at the box, the refusal in view under the button, at about 375px too; with a choice and an address, the thanks.
 - The privacy page (`/privacy/`), "If you leave your email address on the homepage": what is kept (the address, what was ticked, when, the wording's version), then the three choices, each with what it leads to, and that signing up again adds and keeps. "What we send by email" says only what was ticked is sent.
 - At about 375px: the copy, then the three boxes one under another, each line wrapping beside its box, then the field and "Sign up", the refusal or the thanks, and the small print; nothing cut off or scrolling sideways.
+- At about 800px and wider: "Sign up" on one line beside the field, never "Sign" over "up" (hand check of 17 Nov).
 
 ### sprint-3d-r1-fix-4: "Join the waitlist" and "Contact us" focus the email field, and bring the form back after the thanks (rebuild the frontend; no pathway reload or new participant needed; wide screen and about 375px)
 

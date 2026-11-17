@@ -6833,6 +6833,13 @@ body > svg[aria-hidden="true"] {
   gap: var(--space-sm);
 }
 
+/* ✨ "Sign up" on one line beside the field: the field gives way, not the button, which squeezed to two lines at
+   800px and wider (hand check of 17 Nov). */
+.stay-send .pill {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .stay input[type="email"] {
   width: 100%;
   min-width: 0;
