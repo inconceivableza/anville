@@ -283,14 +283,6 @@ SITE_PHOTO_CREDITS = [
         "https://unsplash.com/@ivelisseskelly",
         "https://unsplash.com/photos/woman-in-orange-dress-on-wheat-field-4aJ9VluXAgo",
     ),
-    # ✨ The homepage story's photo, `hero.jpg`, which the stylesheet draws: not a still from the video, as it was once
-    # credited, but Leon Seierlein's photograph on Unsplash (traced 17 Nov, after sprint-3d-r1-fix-5).
-    on_unsplash(
-        "Photograph of a woman in a sunhat walking through a field at sunset",
-        "Leon Seierlein",
-        "https://unsplash.com/@leonseierlein",
-        "https://unsplash.com/photos/person-standing-on-green-grass-during-sunset-_aCF1ls65YE",
-    ),
     on_unsplash(
         "Photograph of a teacher standing before a classroom of pupils",
         "Quilia",

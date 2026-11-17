@@ -6706,7 +6706,7 @@ body > svg[aria-hidden="true"] {
   inset: 0;
   background:
     linear-gradient(90deg, var(--brown-78), var(--brown-45)),
-    url("../img/hero.jpg") center 55% / cover;
+    url("../img/hero-landscape-poster.jpg") center 55% / cover;
   transform: scale(1.01);
 }
 

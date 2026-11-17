@@ -88,13 +88,6 @@ def test_every_photo_the_next_step_can_show_has_a_credit_line():
         assert subject in credits, subject
 
 
-def test_every_photo_the_stylesheet_shows_has_a_credit_line():
-    """✨ The hero's photo, by a word of its credit's subject."""
-    credits = credit_lines()
-
-    assert "sunhat" in credits
-
-
 def test_every_calling_in_the_homepages_marquee_has_a_credit_line_and_no_photo_it_dropped_does():
     """✨ v3's callings (29 Oct), by a word of each credit's subject and its photographer, as traced in the photo
     sources. The parent, pastor, student and graduate are in no band of v3's, so their photos are shown nowhere now."""
