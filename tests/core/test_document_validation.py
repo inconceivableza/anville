@@ -46,9 +46,18 @@ def test_a_block_type_the_engine_does_not_know_is_refused():
 def test_role_keyed_text_must_name_the_participant_wording_and_only_known_roles():
     document = pathway_document()
     document["title"] = {"observer": "Their pathway"}
-    document["instrument"]["items"][0]["text"] = {"participant": "Pioneering", "coach": "Pioneering"}
+    document["instrument"]["items"][0]["text"] = {"participant": "Pioneering", "mentor": "Pioneering"}
 
     assert [problem.path for problem in validate(document)] == ["/instrument/items/0/text", "/title"]
+
+
+def test_role_keyed_text_may_word_it_for_a_coach():
+    """✨ A coach reads the results and comparison a participant shares with them, worded about the participant (ticket
+    118)."""
+    document = pathway_document()
+    document["title"] = {"participant": "Your pathway", "coach": "{name}'s pathway"}
+
+    assert validate(document) == []
 
 
 def test_an_identifier_must_be_a_name_and_never_a_position():

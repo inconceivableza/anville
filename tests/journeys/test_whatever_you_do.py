@@ -562,8 +562,8 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     the time estimates, checked above, the hub's section numbers, next-step wording and photos and Section 1's results
     are set aside, and so are the downloads in place of Sections 3–5's own blocks, Section 1's split in two (ticket
     87), Section 2's way to the comparison, the two-round prototype's cards and gift names, and the sealed letter
-    (ticket 104), the reason taking one or more choices (ticket 112), and what people are told of the sort and the
-    list, the observers' notice among it (ticket 109)."""
+    (ticket 104), the reason taking one or more choices (ticket 112), what people are told of the sort and the
+    list, the observers' notice among it (ticket 109), and the coach's wording (ticket 118)."""
     expected = the_faithful_port()
     for section in expected["content"]["sections"]:
         for clause in section.get("gate", {}).get("clauses", []):
@@ -586,6 +586,7 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     as_told_now(expected)
     expected = without_the_observers_notice(in_the_new_words(without_the_cards(as_one_reason(expected))))
 
+    pathway = without_the_coachs_wording(the_pathway())
     ours = without_what_finishing_takes(
         without_the_comparison_signpost(
             without_the_next_step_and_photos(
@@ -595,7 +596,7 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
                             without_estimates(
                                 without_the_wizard(
                                     without_the_cards(
-                                        without_the_gift_names(without_the_sealed_letter(as_one_reason(the_pathway())))
+                                        without_the_gift_names(without_the_sealed_letter(as_one_reason(pathway)))
                                     )
                                 )
                             )
@@ -606,6 +607,19 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
         )
     )
     assert without_the_observers_notice(ours) == without_numbers(expected)
+
+
+def without_the_coachs_wording(node):
+    """✨ `node` with the wording this pathway gives a coach about the participant (ticket 118) set aside, a field left
+    with the participant's alone as plain text again, as the faithful port, which has no coach, words it."""
+    if isinstance(node, dict) and "coach" in node and set(node) <= {"participant", "observer", "coach"}:
+        rest = {role: text for role, text in node.items() if role != "coach"}
+        return rest["participant"] if set(rest) == {"participant"} else rest
+    if isinstance(node, dict):
+        return {key: without_the_coachs_wording(value) for key, value in node.items()}
+    if isinstance(node, list):
+        return [without_the_coachs_wording(value) for value in node]
+    return node
 
 
 def as_told_now(document):

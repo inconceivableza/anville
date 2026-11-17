@@ -535,7 +535,7 @@
       "maxLength": 64
     },
     "text": {
-      "description": "One string for every role, or wording per role. A blank observer wording means the same as the participant's.",
+      "description": "One string for every role, or wording per role. A blank observer wording means the same as the participant's; a blank coach wording, the observer's, and then the participant's (ticket 118). A coach reads only the results and comparison a participant shares with them, where {name} is the participant's name.",
       "oneOf": [
         { "type": "string" },
         {
@@ -544,7 +544,8 @@
           "required": ["participant"],
           "properties": {
             "participant": { "type": "string" },
-            "observer": { "type": "string" }
+            "observer": { "type": "string" },
+            "coach": { "type": "string" }
           }
         }
       ]

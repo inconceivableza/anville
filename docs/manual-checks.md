@@ -532,6 +532,18 @@ The homepage (`/`):
 - Phone width: the shared results and comparison on Sam's link fit as on the participant's own pages.
 - As an observer, in a private window: the privacy notice says the participant may also show what they see to a trusted third party (load the pathway again first).
 
+### Ticket 118: The coach's view names the participant
+
+Load *Whatever You Do* again, then use a participant started after that (Ada below), with three people answered, the comparison looked at, a coach accepted and "Give my coach access…" ticked; the coach's link in a private window, wide screen and about 375px. Changes the third bullet above: the pathway's headings, gaps and questions no longer say "you" on the coach's link.
+
+- Under "Ada's results": "Ada is happy for you to see this: the results and comparison Ada sees. It goes from here if Ada stops sharing it."
+- The results: "✨ Ada’s Contribution Profile", "The kind of difference Ada tends to make among the people around them. Based on Ephesians 4:11–13.", "⚡ Ada’s Professional Energy Profile (PEP)", "Which types of work energise Ada most, and which drain them?", and the disclaimer's "designed to give Ada a useful starting point". "Show item scores" lists the cards as Ada's observers read them ("…improving it as they go"), not "you".
+- The comparison, under "How others see Ada": "🔍 Biggest Gaps" (unchanged), "Where Ada’s self-perception differs most from how others experience them.…", each gap's badge "ADA RATES HIGHER" or "OTHERS RATE HIGHER" with its description about Ada, then "💬 Questions to explore with Ada", "These are for Ada’s honest reflection, and for your conversations with them." and the four questions about Ada ("Where others rate Ada higher than they rate themselves…").
+- Nowhere on the coach's link: "Your", "You rate higher", "Questions to sit with", or a "{name}" left unfilled.
+- Ada's own results and comparison are unchanged: "✨ Your Contribution Profile", "You rate higher", "💬 Questions to sit with".
+- A participant started before the pathway was loaded again: their coach's link still reads as before, "you".
+- Phone width: the coach's link fits, with no sideways scroll; the longer badges wrap rather than overflow.
+
 ## The coach's guide (ticket 25a; load the pathway again first)
 
 - The comparison, reached by "Compare with how others see you →", with Sam chosen: in the coach card at the top, beneath the "Once Sam accepts…" line, or once Sam has accepted beneath the tick and its line, a pale green panel, closed, "🧭 Session 1 – Their gifts – coach guidance" with "Tap to see what your coach is asked to do." beneath and a ▾ on the right. Clicking it, or Enter or Space on it, opens it (▴): "PURPOSE" and "SUGGESTED LENGTH" in small green capitals, each over its line; "QUESTIONS TO ASK", four bullets; "WHAT TO LOOK OUT FOR", two; then a white box with a red left edge, "AVOID" in red over its sentence. No "Sent with this" and no placeholder note. Clicking again closes it. Without JavaScript it opens and closes the same. Ticking and unticking the consent leaves the panel as it was.

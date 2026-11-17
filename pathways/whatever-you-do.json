@@ -751,13 +751,13 @@
     "frameworks": [
       {
         "framework": "apest",
-        "heading": "✨ Your Contribution Profile",
-        "subtitle": "The kind of difference you tend to make among the people around you. Based on Ephesians 4:11–13."
+        "heading": { "participant": "✨ Your Contribution Profile", "coach": "✨ {name}’s Contribution Profile" },
+        "subtitle": { "participant": "The kind of difference you tend to make among the people around you. Based on Ephesians 4:11–13.", "coach": "The kind of difference {name} tends to make among the people around them. Based on Ephesians 4:11–13." }
       },
       {
         "framework": "pep",
-        "heading": "⚡ Your Professional Energy Profile (PEP)",
-        "subtitle": "Which types of work energise you most, and which drain you?"
+        "heading": { "participant": "⚡ Your Professional Energy Profile (PEP)", "coach": "⚡ {name}’s Professional Energy Profile (PEP)" },
+        "subtitle": { "participant": "Which types of work energise you most, and which drain you?", "coach": "Which types of work energise {name} most, and which drain them?" }
       }
     ],
     "constructs": [
@@ -774,7 +774,10 @@
       { "construct": "facilitate", "tone": "moss", "persona": "The Coach", "description": "Clearing hurdles, navigating logistics and supporting the team" },
       { "construct": "deliver", "tone": "brown", "persona": "The Doer", "description": "Rolling up sleeves and pushing the work over the finish line" }
     ],
-    "disclaimer": "Important: This is a free, rapid, directional tool, designed to give you a useful starting point for reflection and conversation. It is not backed by extensive psychometric datasets or rigorous validation (yet). Please treat these results as indicative, not definitive.",
+    "disclaimer": {
+      "participant": "Important: This is a free, rapid, directional tool, designed to give you a useful starting point for reflection and conversation. It is not backed by extensive psychometric datasets or rigorous validation (yet). Please treat these results as indicative, not definitive.",
+      "coach": "Important: This is a free, rapid, directional tool, designed to give {name} a useful starting point for reflection and conversation. It is not backed by extensive psychometric datasets or rigorous validation (yet). Please treat these results as indicative, not definitive."
+    },
     "generalist": {
       "heading": "You’re a generalist",
       "text": "Both your profiles are flat: every result reads Present or Strong, with none leading and none less used. That’s a real result rather than an error: you draw on all of these in much the same measure. Better to say so than force a winner.",
@@ -824,24 +827,36 @@
       },
       "gaps": {
         "heading": "🔍 Biggest Gaps",
-        "intro": "Where your self-perception differs most from how others experience you. These are the most fruitful areas for reflection and conversation.",
+        "intro": {
+          "participant": "Where your self-perception differs most from how others experience you. These are the most fruitful areas for reflection and conversation.",
+          "coach": "Where {name}’s self-perception differs most from how others experience them. These are the most fruitful areas for reflection and conversation."
+        },
         "others_higher": {
           "label": "Others rate higher",
-          "description": "Others see this as more of a strength in you than you do yourself. This could be a hidden strength – something that comes so naturally you don’t recognise it as special."
+          "description": {
+            "participant": "Others see this as more of a strength in you than you do yourself. This could be a hidden strength – something that comes so naturally you don’t recognise it as special.",
+            "coach": "Others see this as more of a strength in {name} than {name} does. This could be a hidden strength – something that comes so naturally to them they don’t recognise it as special."
+          }
         },
         "you_higher": {
-          "label": "You rate higher",
-          "description": "You rate yourself higher here than others do. This could mean you value this more than it’s currently visible to others, or that your self-image in this area is stronger than your current expression of it."
+          "label": { "participant": "You rate higher", "coach": "{name} rates higher" },
+          "description": {
+            "participant": "You rate yourself higher here than others do. This could mean you value this more than it’s currently visible to others, or that your self-image in this area is stronger than your current expression of it.",
+            "coach": "{name} rates themselves higher here than others do. This could mean they value this more than it’s currently visible to others, or that their self-image in this area is stronger than their current expression of it."
+          }
         },
         "modest": "A modest gap – worth noting but not necessarily significant."
       },
-      "prompts_heading": "💬 Questions to sit with",
-      "prompts_intro": "These are designed for honest reflection – ideally with a coach or trusted friend.",
+      "prompts_heading": { "participant": "💬 Questions to sit with", "coach": "💬 Questions to explore with {name}" },
+      "prompts_intro": {
+        "participant": "These are designed for honest reflection – ideally with a coach or trusted friend.",
+        "coach": "These are for {name}’s honest reflection, and for your conversations with them."
+      },
       "prompts": [
-        { "title": "Hidden strengths", "text": "Where others rate you higher than you rate yourself – what might it mean that you undervalue these? Could you lean into them more intentionally?" },
-        { "title": "Blind spots", "text": "Where you rate yourself higher than others do – is this an area where your intention doesn’t yet match your impact? Or do others simply not see this side of you?" },
-        { "title": "Confirmed strengths", "text": "Where you and others agree – these are your most reliable strengths. How are you stewarding them?" },
-        { "title": "The surprise", "text": "Which gap surprised you most? What would change if you took that feedback seriously?" }
+        { "title": "Hidden strengths", "text": { "participant": "Where others rate you higher than you rate yourself – what might it mean that you undervalue these? Could you lean into them more intentionally?", "coach": "Where others rate {name} higher than they rate themselves – what might it mean that they undervalue these? Could they lean into them more intentionally?" } },
+        { "title": "Blind spots", "text": { "participant": "Where you rate yourself higher than others do – is this an area where your intention doesn’t yet match your impact? Or do others simply not see this side of you?", "coach": "Where {name} rates themselves higher than others do – is this an area where their intention doesn’t yet match their impact? Or do others simply not see this side of them?" } },
+        { "title": "Confirmed strengths", "text": { "participant": "Where you and others agree – these are your most reliable strengths. How are you stewarding them?", "coach": "Where {name} and others agree – these are their most reliable strengths. How are they stewarding them?" } },
+        { "title": "The surprise", "text": { "participant": "Which gap surprised you most? What would change if you took that feedback seriously?", "coach": "Which gap surprised {name} most? What would change if they took that feedback seriously?" } }
       ]
     },
     "sort_wording": {

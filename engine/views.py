@@ -1543,8 +1543,9 @@ def share_with_coach(request, block_id):
     return _see_other(f"{reverse('comparison', args=[block_id])}#coach-share")
 
 
-def _comparison_of(response, scores, sort):
-    """✨ The comparison of one participant's result with their observers, as both they and their coach see it. The
+def _comparison_of(response, scores, sort, role="participant", name=""):
+    """✨ The comparison of one participant's result with their observers, as both they and their coach see it, worded
+    for `role`, the coach's about the participant by `name` (ticket 118). The
     observers' answers are worked into it only while answer collection is frozen, which the participant's look does
     (ADR 0017): with the minimum in while it is open, it is `ready`, with a count and no numbers, as below the minimum,
     so neither they nor their coach can see what one more answer adds (sprint-3d-r1-fix-1)."""
@@ -1554,7 +1555,7 @@ def _comparison_of(response, scores, sort):
         average = aggregate(document, assessments.assessments)
     else:
         average = {"observers": len(assessments.assessments), "frameworks": None}
-    shown = comparison_page(document, scores, sort, average)
+    shown = comparison_page(document, scores, sort, average, role, name)
     shown["ready"] = response.collection_frozen_at is None and shown["observers"] >= shown["minimum"]
     # ✨ Below the minimum, or before the look, there is no comparison on the page to call illustrative.
     shown["illustrative"] = assessments.all_test_data and shown["frameworks"] is not None
@@ -2641,10 +2642,11 @@ COACH_TEXT_FIELDS = ("coach_invitation", "coach_accepted", "coach_declined")
 
 
 def _shared_with_coach(invitation, name):
-    """✨ The participant's results and comparison, as they see them, for a coach who accepted through this link and
-    whom they are happy to show; otherwise None. Read afresh on every visit, so a withdrawal shows at once (ticket 27).
-    Nothing else of the participant's is read: only the stored result, the sort it was scored from and the observers'
-    assessments, through the same suppression as the participant's own comparison."""
+    """✨ The participant's results and comparison, as they see them but worded about them by `name`, as the observer's
+    pages are (ticket 118), for a coach who accepted through this link and whom they are happy to show; otherwise None.
+    Read afresh on every visit, so a withdrawal shows at once (ticket 27). Nothing else of the participant's is read:
+    only the stored result, the sort it was scored from and the observers' assessments, through the same suppression
+    as the participant's own comparison."""
     if invitation.coach_answer != Invitation.CoachAnswer.ACCEPTED or invitation.results_shared_at is None:
         return None
     participant_response = invitation.contact.response
@@ -2656,8 +2658,8 @@ def _shared_with_coach(invitation, name):
     sort = participant_response.answers[scored["id"]]
     scores = _scores_shown_storing_reweighted(document, result)
     return {
-        "results": results_page(document, scores, sort, name),
-        "comparison": _comparison_of(participant_response, scores, sort),
+        "results": results_page(document, scores, sort, name, role="coach"),
+        "comparison": _comparison_of(participant_response, scores, sort, role="coach", name=name),
         "comparison_heading": _comparison_title_for_coach(document, scored["id"], name),
     }
 

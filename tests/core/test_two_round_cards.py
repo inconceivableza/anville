@@ -46,6 +46,8 @@ def test_each_gift_has_the_two_round_prototypes_name_and_description_word_for_wo
 
 
 SUBTITLE = "The kind of difference you tend to make among the people around you. Based on Ephesians 4:11–13."
+# ✨ The same, for a coach the participant shares their results with, about the participant (ticket 118).
+COACH_SUBTITLE = "The kind of difference {name} tends to make among the people around them. Based on Ephesians 4:11–13."
 
 
 def test_the_gifts_are_the_contribution_profile_with_the_prototypes_subtitle():
@@ -55,7 +57,11 @@ def test_the_gifts_are_the_contribution_profile_with_the_prototypes_subtitle():
     [apest] = [framework for framework in pathway["measurement"]["frameworks"] if framework["id"] == "apest"]
     [shown] = [shown for shown in pathway["presentation"]["frameworks"] if shown["framework"] == "apest"]
     assert apest["label"] == "Contribution Profile"
-    assert shown == {"framework": "apest", "heading": "✨ Your Contribution Profile", "subtitle": SUBTITLE}
+    assert shown == {
+        "framework": "apest",
+        "heading": {"participant": "✨ Your Contribution Profile", "coach": "✨ {name}’s Contribution Profile"},
+        "subtitle": {"participant": SUBTITLE, "coach": COACH_SUBTITLE},
+    }
     assert SUBTITLE in TWO_ROUND
 
 

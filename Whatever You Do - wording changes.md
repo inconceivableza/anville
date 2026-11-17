@@ -477,3 +477,26 @@ it is chosen or typed, and no "Save" shows.
   own "Save" was pressed.
 - On the page with the seal, pressing Enter in the date no longer seals the letter: with JavaScript off it saves the
   page, as Enter on a rating does, and with it on it does nothing.
+
+### What a coach reads (17 November)
+
+When a participant ticks "Give my coach access to my results and this comparison", their coach's link shows the results and the comparison. Until now it showed them in the participant's own words, so a coach read about someone else as "you": "Your Contribution Profile", "You rate higher", "Questions to sit with". It now speaks of the participant by name, as the pages for people rating someone do. Nothing the participant reads has changed. Below, "Ada" stands for the participant's name.
+
+- **The line under "Ada's results"**: "Ada is happy for you to see this, exactly as Ada sees it. It goes from here if Ada stops sharing it." becomes **"Ada is happy for you to see this: the results and comparison Ada sees. It goes from here if Ada stops sharing it."**, since the words are no longer exactly Ada's.
+- **The results**:
+  - "✨ Your Contribution Profile" becomes **"✨ Ada’s Contribution Profile"**, and its line "The kind of difference you tend to make among the people around you. Based on Ephesians 4:11–13." becomes **"The kind of difference Ada tends to make among the people around them. Based on Ephesians 4:11–13."**
+  - "⚡ Your Professional Energy Profile (PEP)" becomes **"⚡ Ada’s Professional Energy Profile (PEP)"**, and "Which types of work energise you most, and which drain you?" becomes **"Which types of work energise Ada most, and which drain them?"**
+  - The note at the foot: "…designed to give you a useful starting point…" becomes **"…designed to give Ada a useful starting point…"**; the rest is unchanged.
+  - Under "Show item scores", each statement reads as people rating Ada read it ("…improving it as they go"), not as Ada reads it ("…as you go"). These are the words those people already see; none is new.
+- **The comparison** ("How others see Ada"):
+  - "🔍 Biggest Gaps" is unchanged. Its line "Where your self-perception differs most from how others experience you. These are the most fruitful areas for reflection and conversation." becomes **"Where Ada’s self-perception differs most from how others experience them. These are the most fruitful areas for reflection and conversation."**
+  - The badge "You rate higher" becomes **"Ada rates higher"**, and its description becomes **"Ada rates themselves higher here than others do. This could mean they value this more than it’s currently visible to others, or that their self-image in this area is stronger than their current expression of it."**
+  - "Others rate higher" is unchanged; its description becomes **"Others see this as more of a strength in Ada than Ada does. This could be a hidden strength – something that comes so naturally to them they don’t recognise it as special."**
+  - "A modest gap – worth noting but not necessarily significant." is unchanged.
+  - "💬 Questions to sit with" becomes **"💬 Questions to explore with Ada"**, and "These are designed for honest reflection – ideally with a coach or trusted friend." becomes **"These are for Ada’s honest reflection, and for your conversations with them."**
+  - The four questions keep their titles:
+    - Hidden strengths: **"Where others rate Ada higher than they rate themselves – what might it mean that they undervalue these? Could they lean into them more intentionally?"**
+    - Blind spots: **"Where Ada rates themselves higher than others do – is this an area where their intention doesn’t yet match their impact? Or do others simply not see this side of them?"**
+    - Confirmed strengths: **"Where Ada and others agree – these are their most reliable strengths. How are they stewarding them?"**
+    - The surprise: **"Which gap surprised Ada most? What would change if they took that feedback seriously?"**
+- A coach whose participant started before this change still reads the earlier wording, "you", as the pathway's versions keep what a participant started on.

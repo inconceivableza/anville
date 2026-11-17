@@ -24,6 +24,21 @@ def test_an_observer_sees_the_participant_wording_when_theirs_is_blank():
     assert text_for({"participant": "Sensing trends"}, "observer") == "Sensing trends"
 
 
+def test_a_coach_sees_their_own_wording_then_the_observers_then_the_participants():
+    """✨ A coach reads about the participant, as an observer does, so the observer's wording serves where the coach has
+    none of their own (ticket 118)."""
+    text = {"participant": "Your profile", "observer": "{name}'s profile, as you see it", "coach": "{name}'s profile"}
+
+    assert text_for(text, "coach") == "{name}'s profile"
+    assert text_for({**text, "coach": "  "}, "coach") == "{name}'s profile, as you see it"
+    assert text_for({"participant": "Your profile", "observer": ""}, "coach") == "Your profile"
+    assert text_for("Much the same", "coach") == "Much the same"
+
+
+def test_an_observer_never_sees_the_coachs_wording():
+    assert text_for({"participant": "Your profile", "coach": "{name}'s profile"}, "observer") == "Your profile"
+
+
 def test_an_unknown_role_is_refused():
     with pytest.raises(ValueError):
-        text_for("Anything", "coach")
+        text_for("Anything", "mentor")

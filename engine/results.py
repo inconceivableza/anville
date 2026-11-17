@@ -85,6 +85,18 @@ OUTCOME_WORDS = {
 GAP_CLASSES = {"others_higher": "gap-others-higher", "you_higher": "gap-you-higher"}
 
 
+class Voice(NamedTuple):
+    """✨ Whom the results and the comparison are worded for: the participant, their own, or a coach they share them
+    with, who reads them worded about the participant by `name` (ticket 118). `{name}` is replaced as plain text, never
+    through `format()`, so an author's braces can reach nothing; the template escapes whatever comes out."""
+
+    role: str = "participant"
+    name: str = ""
+
+    def said(self, text):
+        return text_for(text, self.role).replace("{name}", self.name)
+
+
 def standing_colour(document, percent, constructs):
     """✨ The stylesheet class of a share's standing, by the standing's place among the document's bands, never its
     label, so a colour never disagrees with the word beside it and another pathway's labels take the same colours."""
@@ -93,32 +105,29 @@ def standing_colour(document, percent, constructs):
 
 
 def results_page(document, scores, sort, name, role="participant"):
-    """✨ Everything the results page shows, from a stored result and the sort it was scored from.
-
-    `{name}` in the authored title is replaced as plain text, never through `format()`, so an author's
-    braces can reach nothing. The template escapes whatever comes out.
-    """
-    return _results(document, scores, unrounded_shares(scores), sort, name, role)
+    """✨ Everything the results page shows, from a stored result and the sort it was scored from, worded for `role`:
+    the participant's own, or a coach's (ticket 118), with `{name}` the participant's `name` (`Voice`)."""
+    return _results(document, scores, unrounded_shares(scores), sort, Voice(role, name))
 
 
-def _results(document, scores, shares, sort, name, role):
+def _results(document, scores, shares, sort, voice):
     """✨ `results_page`, given the result's unrounded `shares`, so the comparison works them out only once."""
     presentation = document.get("presentation", {})
     title = presentation.get("results_title", document["title"])
     shown = []
     for scored in scores["frameworks"]:
-        framework = _framework(document, scored, shares[scored["framework"]], sort, role)
-        framework["tie_break"] = _after_tie_break(presentation, scores, scored["framework"], framework["bars"], role)
+        framework = _framework(document, scored, shares[scored["framework"]], sort, voice)
+        framework["tie_break"] = _after_tie_break(presentation, scores, scored["framework"], framework["bars"], voice)
         shown.append(framework)
     return {
-        "title": text_for(title, role).replace("{name}", name),
+        "title": voice.said(title),
         "frameworks": shown,
-        "disclaimer": _text(presentation, "disclaimer", role),
-        "generalist": _generalist(document, scores, presentation, role),
+        "disclaimer": _text(presentation, "disclaimer", voice),
+        "generalist": _generalist(document, scores, presentation, voice),
     }
 
 
-def _generalist(document, scores, presentation, role):
+def _generalist(document, scores, presentation, voice):
     """✨ The document's words telling a participant that they are a generalist (ADR 0018, amended), or None. Judged on
     the result shown, the participant's own stored result and the only one this page is given: it must be flat on both
     frameworks, whether as sorted or as the tie-break re-weighted it, and never beside a framework the tie-break
@@ -129,10 +138,10 @@ def _generalist(document, scores, presentation, role):
         return None
     wording = presentation["generalist"]
     text = wording.get("after_pairs", wording["text"]) if broken else wording["text"]
-    return {"heading": text_for(wording["heading"], role), "text": text_for(text, role)}
+    return {"heading": voice.said(wording["heading"]), "text": voice.said(text)}
 
 
-def _after_tie_break(presentation, scores, framework, bars, role):
+def _after_tie_break(presentation, scores, framework, bars, voice):
     """✨ What the results page says of a framework the tie-break re-weighted (ticket 30c, ADR 0018), in the document's
     words (OUTCOME_WORDS), or None for any other: separated, with a new leader or the same one; genuinely balanced, the
     choices having gone in a circle or left the best of them level, with no winner named; or every pair skipped.
@@ -154,7 +163,7 @@ def _after_tie_break(presentation, scores, framework, bars, role):
         "previous": labels[tied[0]] if tied else "",
         "names": joined([bar["text_label"] for bar in bars if bar["construct"] in tied]),
     }
-    return {"heading": text_for(said["heading"], role), "text": named(text_for(said[field], role), names)}
+    return {"heading": voice.said(said["heading"]), "text": named(voice.said(said[field]), names)}
 
 
 def pair_page(document, plan, place):
@@ -185,8 +194,9 @@ def pair_page(document, plan, place):
     }
 
 
-def comparison_page(document, scores, sort, observer_average):
-    """✨ Everything the comparison shows: the participant's self-result beside the observer average (ADR 0005).
+def comparison_page(document, scores, sort, observer_average, role="participant", name=""):
+    """✨ Everything the comparison shows: the participant's self-result beside the observer average (ADR 0005), worded
+    for `role`, the participant's own or a coach's (ticket 118), with `{name}` the participant's `name` (`Voice`).
 
     Each construct is drawn as variant F drew it (ticket 38): the participant's dot and the observers' on one axis,
     the gap between them shaded, a person icon above the one and a group icon below the other, each with its standing
@@ -207,13 +217,14 @@ def comparison_page(document, scores, sort, observer_average):
         for framework in observer_average["frameworks"]
     }
     shares = unrounded_shares(scores)
-    page = _results(document, scores, shares, sort, name="", role="participant")
+    voice = Voice(role, name)
+    page = _results(document, scores, shares, sort, voice)
     declared = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
     for framework, scored in zip(page["frameworks"], scores["frameworks"]):
         construct_count = len(declared[scored["framework"]]["constructs"])
 
         def worded(percent):
-            return text_for(standing(document, percent, construct_count), "participant")
+            return voice.said(standing(document, percent, construct_count))
 
         pairs = [(bar, observed[scored["framework"]][bar["construct"]]) for bar in framework["bars"]]
         # ✨ The results page's axis, so each mark of the participant's sits where it does there.
@@ -228,13 +239,9 @@ def comparison_page(document, scores, sort, observer_average):
             bar["you_x"], bar["others_x"] = _mark(you_at), _mark(others_at)
             bar["gap_from"], bar["gap_width"] = min(you_at, others_at), round(abs(you_at - others_at), 2)
             bar["others_standing"] = worded(others["share"])
-            bar["seen_by_others"] = text_for(
-                seen_by_others(
-                    document, shares[scored["framework"]][bar["construct"]], others["share"], construct_count
-                ),
-                "participant",
-            )
-            bar["agreement"] = text_for(agreement(document, others["per_observer_shares"]), "participant")
+            yours = shares[scored["framework"]][bar["construct"]]
+            bar["seen_by_others"] = voice.said(seen_by_others(document, yours, others["share"], construct_count))
+            bar["agreement"] = voice.said(agreement(document, others["per_observer_shares"]))
             bar["agreement_at"] = _label_at(others_at)
             bar["strip"] = {
                 "dots": [
@@ -257,7 +264,7 @@ def comparison_page(document, scores, sort, observer_average):
             "you_y": round(LINE_Y - DOT_RADIUS - MARK_CLEARANCE - MARK_SIZE, 2),
             "others_y": round(LINE_Y + DOT_RADIUS + MARK_CLEARANCE, 2),
         },
-        **_reflection(document, shares, observed),
+        **_reflection(document, shares, observed, voice),
     }
 
 
@@ -297,23 +304,23 @@ def _mark(centre):
     return round(centre - MARK_SIZE / 2, 2)
 
 
-def _reflection(document, yours, observed):
+def _reflection(document, yours, observed, voice):
     """✨ Below the drawings: the largest gaps between the participant's unrounded shares, `yours`, and the observers',
     worded, and the questions to reflect on, all from the document.
 
-    Only the participant sees the comparison, so it is worded for them. A document with no gaps wording lists no gaps,
-    since there would be nothing to say about them; the schema asks for all of it or none.
+    Worded for whoever is shown the comparison (`voice`): the participant, or a coach they share it with, about them
+    by name (ticket 118). A document with no gaps wording lists no gaps, since there would be nothing to say about
+    them; the schema asks for all of it or none.
     """
-    role = "participant"
     wording = comparison_settings(document)
     prompts = [
-        {"title": text_for(prompt["title"], role), "text": text_for(prompt["text"], role)}
+        {"title": voice.said(prompt["title"]), "text": voice.said(prompt["text"])}
         for prompt in wording.get("prompts", [])
     ]
     shown = {
         "gaps": [],
-        "prompts_heading": _text(wording, "prompts_heading", role),
-        "prompts_intro": _text(wording, "prompts_intro", role),
+        "prompts_heading": _text(wording, "prompts_heading", voice),
+        "prompts_intro": _text(wording, "prompts_intro", voice),
         "prompts": prompts,
     }
     if "gaps" not in wording:
@@ -328,7 +335,7 @@ def _reflection(document, yours, observed):
     ]
     frameworks = {framework["id"]: framework for framework in document["measurement"]["frameworks"]}
     labels = {
-        (framework["id"], construct["id"]): _text_label(construct, role)
+        (framework["id"], construct["id"]): _text_label(construct, voice)
         for framework in frameworks.values()
         for construct in framework["constructs"]
     }
@@ -339,19 +346,19 @@ def _reflection(document, yours, observed):
         shown["gaps"].append(
             {
                 "label": labels[(gap["framework"], gap["construct"])],
-                "framework": text_for(frameworks[gap["framework"]]["label"], role),
+                "framework": voice.said(frameworks[gap["framework"]]["label"]),
                 "gap": gap["gap"],
-                "badge": text_for(direction["label"], role) if direction else "",
+                "badge": voice.said(direction["label"]) if direction else "",
                 "badge_class": GAP_CLASSES.get(gap["direction"], ""),
-                "description": text_for(
-                    direction["description"] if direction and gap["significant"] else gap_wording["modest"], role
+                "description": voice.said(
+                    direction["description"] if direction and gap["significant"] else gap_wording["modest"]
                 ),
             }
         )
     return {
         **shown,
-        "gaps_heading": _text(gap_wording, "heading", role),
-        "gaps_intro": _text(gap_wording, "intro", role),
+        "gaps_heading": _text(gap_wording, "heading", voice),
+        "gaps_intro": _text(gap_wording, "intro", voice),
     }
 
 
@@ -368,9 +375,10 @@ def _at(percent, top):
     return round(min(percent / top, 1) * 100, 2)
 
 
-def _framework(document, scored, shares, sort, role):
+def _framework(document, scored, shares, sort, voice):
     """✨ One framework as the results page draws it: what the participant's result holds of it, `scored` as stored and
-    `shares` unrounded; its words, from the `document`, for `role`; and its items' values, from the `sort`."""
+    `shares` unrounded; its words, from the `document`, for `voice`; and its items' values, from the `sort`. A coach
+    reads the items as an observer sorts them, about the participant (ticket 118)."""
     framework = next(f for f in document["measurement"]["frameworks"] if f["id"] == scored["framework"])
     document_presentation = document.get("presentation", {})
     presentation = {entry["framework"]: entry for entry in document_presentation.get("frameworks", [])}.get(
@@ -378,8 +386,8 @@ def _framework(document, scored, shares, sort, role):
     )
     construct_presentation = {entry["construct"]: entry for entry in document_presentation.get("constructs", [])}
     items = document["instrument"]["items"]
-    labels = {construct["id"]: text_for(construct["label"], role) for construct in framework["constructs"]}
-    in_text = {construct["id"]: _text_label(construct, role) for construct in framework["constructs"]}
+    labels = {construct["id"]: voice.said(construct["label"]) for construct in framework["constructs"]}
+    in_text = {construct["id"]: _text_label(construct, voice) for construct in framework["constructs"]}
     # ✨ Listed by unrounded share, highest first, as they are drawn, so a shorter bar is never above a longer one;
     # exact ties keep the order declared. Ordered here, never stored, so a result stored before is ordered so too.
     declared = [construct["id"] for construct in framework["constructs"]]
@@ -398,19 +406,19 @@ def _framework(document, scored, shares, sort, role):
                 "text_label": in_text[construct["construct"]],
                 "percent": construct["percent"],
                 # ✨ From the unrounded share, so the words never round a construct into a band it is short of.
-                "standing": text_for(standing(document, shares[construct["construct"]], constructs), role),
+                "standing": voice.said(standing(document, shares[construct["construct"]], constructs)),
                 # ✨ Drawn at the unrounded share too, so two constructs a fraction apart are never drawn as one.
                 "at": _at(shares[construct["construct"]], top),
                 "past_end": shares[construct["construct"]] > top,
-                "persona": _text(shown, "persona", role),
-                "description": _text(shown, "description", role),
+                "persona": _text(shown, "persona", voice),
+                "description": _text(shown, "description", voice),
                 # ✨ The standing's colour, from the same unrounded share, on every framework (developer's call, 20 Oct).
                 "colour": standing_colour(document, shares[construct["construct"]], constructs),
             }
         )
     return {
-        "heading": _text(presentation, "heading", role) or text_for(framework["label"], role),
-        "subtitle": _text(presentation, "subtitle", role),
+        "heading": _text(presentation, "heading", voice) or voice.said(framework["label"]),
+        "subtitle": _text(presentation, "subtitle", voice),
         # ✨ The dashed tick: an even share of the framework, 100 divided among its constructs.
         "even_at": _at(100 / constructs, top),
         "bars": bars,
@@ -421,7 +429,7 @@ def _framework(document, scored, shares, sort, role):
                 "label": in_text[construct["id"]],
                 "colour": _tone(construct_presentation.get(construct["id"], {})),
                 "items": [
-                    {"text": text_for(item["text"], role), "value": sort[item["id"]]["value"]}
+                    {"text": voice.said(item["text"]), "value": sort[item["id"]]["value"]}
                     for item in items
                     if construct["id"] in item["loads"]
                 ],
@@ -431,14 +439,14 @@ def _framework(document, scored, shares, sort, role):
     }
 
 
-def _text_label(construct, role):
+def _text_label(construct, voice):
     """✨ A construct's name wherever text names it: its text label, or its label where the pathway version gives none
     (fix-27). Its label alone is for beside its drawing, so Whatever You Do's "deacon" is "Deacon" in a sentence."""
-    return text_for(construct.get("text_label", construct["label"]), role)
+    return voice.said(construct.get("text_label", construct["label"]))
 
 
-def _text(entry, field, role):
-    return text_for(entry[field], role) if field in entry else ""
+def _text(entry, field, voice):
+    return voice.said(entry[field]) if field in entry else ""
 
 
 def _tone(entry):

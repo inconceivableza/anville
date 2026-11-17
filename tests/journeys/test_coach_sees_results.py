@@ -185,6 +185,54 @@ def test_the_coach_sees_the_comparison_headed_as_the_participant_does_with_their
     assert f"{named}'s results" in coach_headings
 
 
+def worded_for_a_coach():
+    """✨ The sort's test pathway with a coach, worded for the coach about the participant by name where the document
+    says so, and where it does not, through the observer's wording, as an item's text is (ticket 118)."""
+    document = with_a_sort_and_a_coach()
+    presentation = document["presentation"]
+    presentation["frameworks"][0]["heading"] = {"participant": "Your gifting", "coach": "{name}'s gifting"}
+    gaps = presentation["comparison"]["gaps"]
+    gaps["you_higher"]["label"] = {"participant": "You rate higher", "coach": "{name} rates higher"}
+    presentation["comparison"]["prompts"] = [
+        {
+            "title": "The surprise",
+            "text": {"participant": "Which gap surprised you most?", "coach": "Which surprised {name}?"},
+        }
+    ]
+    document["instrument"]["items"][0]["text"] = {
+        "participant": "Starting things where you are",
+        "observer": "Starting things where they are",
+    }
+    return document
+
+
+@pytest.mark.django_db
+def test_the_coachs_link_speaks_of_the_participant_by_name_and_their_own_pages_still_speak_to_them(
+    client, participant, observer, load_pathway  # noqa: F811
+):
+    """✨ The coach is not the participant, so their link names them, as an observer's pages do (ticket 118); the
+    participant's own results and comparison are as they were."""
+    signed_in = signed_in_over(worded_for_a_coach(), client, participant, load_pathway)
+    with_a_result(signed_in, participant)
+    link = an_accepted_coach(signed_in, observer)
+    assert share(signed_in).status_code == 303
+    named = name_shown_for(participant)
+
+    shared = what_the_coach_sees(observer, link)
+    own = text(signed_in.get(f"/results/{SORT}/")) + text(signed_in.get(f"/results/{SORT}/comparison/"))
+
+    for theirs, yours in [
+        (f"{named}'s gifting", "Your gifting"),
+        (f"{named} rates higher", "You rate higher"),
+        (f"Which surprised {named}?", "Which gap surprised you most?"),
+        ("Starting things where they are", "Starting things where you are"),
+    ]:
+        assert theirs in shared and yours not in shared
+        assert yours in own and theirs not in own
+    assert "{name}" not in shared
+    assert f"{named} is happy for you to see this: the results and comparison {named} sees." in shared
+
+
 @pytest.mark.django_db
 def test_nothing_else_of_the_participants_reaches_the_coach(signed_in, participant, observer):  # noqa: F811
     response = with_a_result(signed_in, participant)
