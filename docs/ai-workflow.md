@@ -63,6 +63,7 @@ Keep the grilling, spec and tickets in one session; start each ticket fresh. Tic
 | `bin/tool-log` | Reads `.claude/tool-log.txt`, the log of every tool call. |
 | `bin/screenshot` | Draws pages saved by snapshot tests as PNGs (needs the Playwright venv; see the script). |
 | `bin/deploy-staging` | Interactive walk through a staging deploy. |
+| `bin/playwright-mcp` | Starts the Playwright MCP server `.mcp.json` registers, so Claude can drive a running `runserver` in a real browser. Claude spawns it; `PLAYWRIGHT_CHROMIUM` picks the browser. See the script. |
 
 Hooks in `.claude/hooks/`, wired up in `.claude/settings.json`:
 

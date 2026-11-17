@@ -62,3 +62,6 @@ compose.override.yml
 !.claude/tools/
 .claude/tools/*
 !.claude/tools/snapshot/
+
+# Playwright MCP writes page snapshots into the directory it runs from (.mcp.json registers the server).
+.playwright-mcp/

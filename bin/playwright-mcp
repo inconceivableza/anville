@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# ✨ Local-only. Starts the Playwright MCP server that .mcp.json registers, pointed at a Chromium this container
+# actually has. Claude Code spawns this itself; there is no need to run it by hand.
+#
+# Why a wrapper rather than flags in .mcp.json: @playwright/mcp defaults to branded Chrome at
+# /opt/google/chrome/chrome, which is not installed and is not published for this container's aarch64, so a browser
+# must be named. Naming one in .mcp.json would pin a cache path and a revision into committed config; choosing it
+# here keeps that out of the repo and leaves one documented way to override it.
+#
+#   PLAYWRIGHT_CHROMIUM=/path/to/chrome bin/playwright-mcp    # use this browser
+#
+# Unset, the highest-numbered chromium-* in the Playwright cache is used, which is what @playwright/mcp's bundled
+# playwright-core expects; a `playwright-mcp install-browser chrome-for-testing` that bumps the revision therefore
+# needs no change here. Set PLAYWRIGHT_CHROMIUM to pin an older build, or to point at a Chrome of your own. To make
+# it permanent, add it to containerEnv in .devcontainer/devcontainer.json and to .devcontainer/devcontainer.patch.json
+# (the patch file is what survives the next sandbox update), then rebuild the container.
+#
+# Installing browsers needs cdn.playwright.dev and storage.googleapis.com in .devcontainer/allowed-domains; the
+# download redirects to the second, so allowing only the first fails partway with an EAI_AGAIN.
+set -euo pipefail
+
+browser="${PLAYWRIGHT_CHROMIUM:-}"
+
+if [ -z "$browser" ]; then
+    cache="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}"
+    # Highest revision wins. -path covers both the chrome-linux/ and the arm64 chrome-linux-arm64/ layouts.
+    browser="$(find "$cache" -maxdepth 3 -type f -name chrome -path '*/chromium-*' 2>/dev/null | sort -V | tail -1)"
+fi
+
+if [ ! -x "$browser" ]; then
+    echo "✗ no Chromium at ${browser:-<none found in the Playwright cache>}" >&2
+    echo "  Install one with 'playwright-mcp install-browser chrome-for-testing', or set PLAYWRIGHT_CHROMIUM to an" >&2
+    echo "  executable. See the header of $0." >&2
+    exit 2
+fi
+
+exec playwright-mcp --headless --isolated --browser chromium --executable-path "$browser" "$@"
