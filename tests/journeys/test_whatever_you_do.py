@@ -925,18 +925,28 @@ def test_section_1_opens_the_strengths_evaluation_at_once_and_is_finished_on_it_
 
 
 @pytest.mark.django_db
-def test_section_1s_page_offers_its_finish_only_once_the_evaluation_is_in(participant):
+def test_section_1_completes_as_the_evaluation_ends_its_page_then_offering_the_way_on_to_the_hub(participant):
     """✨ Ticket 106: the evaluation is all Section 1 asks, so before it is in there is nothing to finish, and the button
-    is not there at all, rather than greyed (sprint 3c); the page's own card says what to do."""
+    is not there at all, rather than greyed (sprint 3c); the page's own card says what to do. Ticket 119: its end
+    completes Section 1, with nothing to press, so the hub's next step moves on, and Section 1's page offers its
+    finish's label as a link on to the hub, never "Mark as not complete"."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
     finish = 'action="/sections/designed/complete/'
+    way_on = f'<a class="pill full" href="/hub/">{escape(pathway_section("designed")["complete_label"])}</a>'
+    start = pathway_section("designed")["next_step"]["sentence"]
 
-    assert finish not in section_1(participant)
+    before = section_1(participant)
+    assert finish not in before and way_on not in before
+    assert start in next_step_panel(participant)
 
     submit_the_sort(participant)
 
-    assert finish in section_1(participant)
+    after = section_1(participant)
+    assert "designed" in Response.objects.get().completed_sections
+    assert finish not in after and way_on in after
+    assert "Mark as not complete" not in after
+    assert start not in next_step_panel(participant)
 
 
 @pytest.mark.django_db
@@ -981,18 +991,18 @@ def test_the_comparisons_row_is_listed_under_section_2_and_locked_with_it(partic
     settings.ANVILLE_SIDEBAR = True
     answer_onboarding(participant)
     complete(participant, "onboarding")
-    submit_the_sort(participant)
-    people_answer(participant)
+    submit_the_sort(participant)  # ✨ which completes Section 1 (ticket 119), so Section 2 waits on answers alone
     hub = main_of(participant.get("/hub/").content.decode())
     sidebar = sidebar_of(participant.get("/sections/designed/").content.decode())
+    [waiting] = pathway_section("others")["opens_when"]["clauses"]
 
     for html, kind in ((hub, "hub"), (sidebar, "pathway-nav")):
         row, section_2 = comparison_row(html, kind)
         assert row in section_2
-        assert "Locked" in row and escape(OPENS_ONCE.format(what_is_left("designed"))) in row
+        assert "Locked" in row and escape(waiting["message"]) in row
         assert not COMPARISON_LINK.search(html)
 
-    complete(participant, "designed")
+    people_answer(participant)
 
     for html, kind in (
         (main_of(participant.get("/hub/").content.decode()), "hub"),

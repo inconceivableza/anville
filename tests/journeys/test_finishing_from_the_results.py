@@ -2,8 +2,9 @@
 # For licensing information see ../../LICENSE.md
 
 """✨ Finishing a section from the end of its part (ticket 88): the strengths evaluation is the last thing in *Whatever
-You Do*'s Section 1, so its results page finishes Section 1, and beside that sends a participant without enough
-answers to invite people rather than to a comparison they cannot see yet. Wording and layout are hand checks."""
+You Do*'s Section 1, so its results page is Section 1's end. Since ticket 119 the evaluation's end completes Section 1
+itself, so the results offer its finish's label as a way on to the hub (`test_completed_by_its_evaluation.py`); a
+section with work of its own still finishes from the press there. Wording and layout are hand checks."""
 
 import re
 
@@ -15,6 +16,7 @@ from engine.hub import section_by_id
 from engine.models import Response
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.pages import main_of
+from tests.journeys.test_answers import CALLING, answer
 from tests.journeys.test_hub import signed_in_client  # noqa: F401 (a fixture)
 from tests.journeys.test_invitations import issue_link
 from tests.journeys.test_observer_assessment import send, withdraw
@@ -31,6 +33,7 @@ from tests.journeys.test_whatever_you_do_faithful_port import complete
 
 RESULTS = "/results/strengths-sort/"
 FINISH_SECTION_1 = 'action="/sections/designed/complete/'  # ✨ its refusal's place after it (fix-2)
+ON_FROM_SECTION_1 = '<a class="pill" href="/hub/">'  # ✨ the way on in the press's place (ticket 119)
 
 
 @pytest.fixture
@@ -53,22 +56,22 @@ def section_1_label():
 
 
 @pytest.mark.django_db
-def test_until_section_1_is_complete_its_results_finish_it_and_land_on_the_hub(participant):
+def test_section_1_is_complete_once_its_results_show_which_offer_its_finish_as_the_way_on_to_the_hub(participant):
+    """✨ Ticket 119: where the press landed, the hub, whose next step says what comes after."""
     page = results_page(participant)
-    assert FINISH_SECTION_1 in page
-    assert escape(section_1_label()) in page
 
-    finished = participant.post("/sections/designed/complete/")
-
-    assert (finished.status_code, finished.url) == (303, "/hub/")
     assert "designed" in Response.objects.get().completed_sections
+    assert f"{ON_FROM_SECTION_1}{escape(section_1_label())}</a>" in page
+    assert FINISH_SECTION_1 not in page
 
 
 @pytest.mark.django_db
-def test_with_javascript_a_refused_finish_comes_back_into_a_place_beneath_it_on_the_results_page(participant):
+def test_with_javascript_a_refused_finish_comes_back_into_a_place_beneath_it_on_the_results_page(
+    signed_in_client, load_pathway  # noqa: F811
+):
     """✨ fix-2: htmx swaps a refusal into the element the form names, which must be on this page."""
-    page = results_page(participant)
-    form = re.search(r'<form [^>]*action="/sections/designed/complete/[^"]*"[^>]*>', page).group(0)
+    page = results_page(a_part_of_calling(signed_in_client, load_pathway, last=True, messages_after_a_press=True))
+    form = re.search(r'<form [^>]*action="/sections/calling/complete/[^"]*"[^>]*>', page).group(0)
 
     target = re.search(r'hx-target="#([^"]+)"', form).group(1)
 
@@ -76,22 +79,29 @@ def test_with_javascript_a_refused_finish_comes_back_into_a_place_beneath_it_on_
 
 
 @pytest.mark.django_db
-def test_once_section_1_is_complete_its_results_offer_no_finish_and_no_second_way_back(participant):
+def test_once_a_section_with_work_of_its_own_is_complete_its_parts_results_offer_no_finish_and_no_second_way_back(
+    signed_in_client, load_pathway  # noqa: F811
+):
     """✨ Ticket 88's "Back to the hub" in the finish's place gave way to the page's one way back, at its top (ticket
-    96)."""
-    assert FINISH_SECTION_1 in results_page(participant)
+    96). A section its evaluation completes offers its way on there instead (ticket 119), above."""
+    client = a_part_of_calling(signed_in_client, load_pathway, last=True)
+    assert 'action="/sections/calling/complete/"' in results_page(client)
+    answer(client, "statement", "My calling, in a sentence or two.", section=CALLING)
 
-    complete(participant, "designed")
+    assert client.post("/sections/calling/complete/").status_code == 303
 
-    page = results_page(participant)
-    assert FINISH_SECTION_1 not in page
+    page = results_page(client)
+    assert "/sections/calling/complete/" not in page
     assert 'href="/hub/"' not in page
 
 
-def a_part_of_calling(signed_in_client, load_pathway, last):  # noqa: F811
+def a_part_of_calling(signed_in_client, load_pathway, last, messages_after_a_press=False):  # noqa: F811
     """✨ The test pathway's calling section linking to the Strengths assessment as its part, the link its last block
-    if `last`, or else followed by its statement; onboarding done and the sort in."""
+    if `last`, or else followed by its statement; onboarding done and the sort in. Its messages show only after a
+    press if `messages_after_a_press`, as *Whatever You Do*'s do (ticket 83)."""
     document = sort_pathway()
+    if messages_after_a_press:
+        document["messages_after_a_press"] = True
     calling, strengths = (section_by_id(document, section_id) for section_id in ("calling", STRENGTHS))
     strengths["part_of"] = "calling"
     link = {"id": "to-strengths", "type": "section_signpost", "section": STRENGTHS}
@@ -152,7 +162,7 @@ def test_the_results_ending_a_section_offer_only_its_finish_below_the_minimum_an
     for page in (below, above):
         assert sections_and_comparison(page) == (False, False)
         assert 'aria-disabled="true"' not in page
-        assert FINISH_SECTION_1 in page
+        assert ON_FROM_SECTION_1 in page
 
 
 @pytest.mark.django_db

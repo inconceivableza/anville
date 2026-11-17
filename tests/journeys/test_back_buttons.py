@@ -71,32 +71,32 @@ def test_the_comparisons_one_way_back_leads_to_the_section_holding_its_signpost(
 @pytest.mark.django_db
 def test_while_section_2_is_locked_its_comparison_is_refused_as_its_pages_are(participant):  # noqa: F811
     """✨ Fix-19, replacing ticket 96's comparison open to anyone with a result: the comparison is Section 2's, so while
-    Section 2 waits on Section 1 its page, waiting or full, and its press lead to the hub, recording nothing."""
+    Section 2 is locked its page and its press lead to the hub, recording nothing. The sort completes Section 1 (ticket
+    119), so Section 2 waits on enough answers alone (ticket 106)."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
     submit_the_sort(participant)
-    refused = [participant.get(COMPARISON)]
-    people_answer(participant)
 
-    refused += [participant.get(COMPARISON), participant.post(f"{COMPARISON}visit/", {"confirmed": "yes"})]
+    refused = [participant.get(COMPARISON), participant.post(f"{COMPARISON}visit/", {"confirmed": "yes"})]
 
-    assert [(shown.status_code, shown["Location"]) for shown in refused] == [(302, "/hub/")] * 3
+    assert [(shown.status_code, shown["Location"]) for shown in refused] == [(302, "/hub/")] * 2
     assert Response.objects.get().comparisons_visited == {}
     assert Response.objects.get().collection_frozen_at is None
-    complete(participant, "designed")
+    people_answer(participant)
     assert participant.get(COMPARISON).status_code == 200
 
 
 @pytest.mark.django_db
 def test_the_results_pages_one_way_back_leads_to_the_section_holding_its_signpost(participant):  # noqa: F811
-    """✨ Once Section 1 is finished, its "Back to the hub" at the foot gives way to it."""
+    """✨ Once Section 1 is finished, its "Back to the hub" at the foot gives way to it. The one link to the hub left is
+    the way on, "I've finished Section 1", which marks nothing (ticket 119), as the comparison's end does (fix-18)."""
     client = through_section_1(participant)
 
     href, words = the_way_back(client, RESULTS)
 
     assert href == "/sections/designed/"
     assert TITLES["designed"] in words
-    assert leads_elsewhere_to(client, RESULTS, "/hub/") == []
+    assert leads_elsewhere_to(client, RESULTS, "/hub/") == [("pill", "/hub/", "I've finished Section 1")]
 
 
 @pytest.mark.django_db

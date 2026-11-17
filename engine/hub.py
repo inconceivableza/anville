@@ -14,7 +14,7 @@ from typing import NamedTuple
 from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
 
-from engine.document.blocks import BLOCK_TYPES, page_count, page_of, pages_of
+from engine.document.blocks import BLOCK_TYPES, ends_in_signpost_to, page_count, page_of, pages_of
 from engine.document.gates import (
     clause_passes,
     clauses_of,
@@ -774,6 +774,23 @@ def works_through_its_parts(section, sections):
     (`finish_waits`). The faithful port's Section 1, with a reading to confirm and a summary to write, is not one."""
     has_parts = any(other.get("part_of") == section["id"] for other in sections)
     return has_parts and not _interactive_blocks(section)
+
+
+def completes_with_its_evaluation(section, sections):
+    """✨ The sort whose evaluation completes `section` as it ends, with no press (ticket 119), or None. A section whose
+    work is all in its parts (`works_through_its_parts`) and that ends in its signpost to one of them, as *Whatever You
+    Do*'s Section 1 ends in the strengths evaluation, has nothing left to do once that part's last block, a sort, is
+    done: the sort in and every tie-break pair answered or skipped. Its finish was only a press saying so, so it is
+    stored then, and its label becomes a way on to the hub's next step. The faithful port's Section 1, with work of its
+    own, keeps its press."""
+    if not works_through_its_parts(section, sections):
+        return None
+    part = next(
+        (other for other in sections if other.get("part_of") == section["id"] and ends_in_signpost_to(section, other)),
+        None,
+    )
+    ending = part["blocks"][-1] if part is not None and part["blocks"] else None
+    return ending["id"] if ending is not None and BLOCK_TYPES[ending["type"]].scored else None
 
 
 def finish_waits(section, sections, completed):

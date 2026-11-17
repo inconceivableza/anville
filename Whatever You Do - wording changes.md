@@ -478,6 +478,14 @@ it is chosen or typed, and no "Save" shows.
 - On the page with the seal, pressing Enter in the date no longer seals the letter: with JavaScript off it saves the
   page, as Enter on a rating does, and with it on it does nothing.
 
+### Section 1 finishes itself (17 November)
+
+Section 1 used to be complete only once you pressed "I've finished Section 1" after the strengths evaluation, so someone who had sorted their cards and answered every "Which is more true of you?" pair was still told on the hub to "Start with the strengths evaluation, which takes about 7 minutes." Now Section 1 is complete as soon as the evaluation is: the cards sent, and every pair answered, skipped or "Both are right". No new words are added; some go, and one button now takes you on rather than marking anything.
+
+- **"I've finished Section 1"** keeps its words. Below the results it is now a link on to the hub, which says what comes next, and it stays there whenever the results are shown. (Before, it was a button that marked Section 1 complete and then went.)
+- **Section 1's own page**, once the evaluation is done, shows the same "I've finished Section 1" link where its button was. It no longer says **"You marked this section complete. You can still change your answers here."**, since nothing was marked and Section 1 has nothing of its own to change, and it no longer offers **"Mark as not complete"**. Before the evaluation is done there is nothing below the Strengths evaluation card, as before.
+- **The hub** shows Section 1 as complete, and its next step moves on, as soon as the evaluation is done.
+
 ### What a coach reads (17 November)
 
 When a participant ticks "Give my coach access to my results and this comparison", their coach's link shows the results and the comparison. Until now it showed them in the participant's own words, so a coach read about someone else as "you": "Your Contribution Profile", "You rate higher", "Questions to sit with". It now speaks of the participant by name, as the pages for people rating someone do. Nothing the participant reads has changed. Below, "Ada" stands for the participant's name.

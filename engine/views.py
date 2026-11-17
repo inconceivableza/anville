@@ -99,6 +99,7 @@ from engine.hub import (
     COMPLETE,
     block_ids_fixed_on_completion,
     complete_sections,
+    completes_with_its_evaluation,
     finish_waits,
     hub_for,
     is_locked,
@@ -187,11 +188,14 @@ class Invite(NamedTuple):
 
 class Finish(NamedTuple):
     """✨ The finish a part's end offers when the part is the last thing in its section (ticket 88): that section's
-    identifier, its finish button's label, and whether it is complete already."""
+    identifier, its finish button's label, whether it is complete already, and whether it completes itself as its
+    evaluation ends (`completes_with_its_evaluation`, ticket 119), so that its label is a way on to the hub, not a
+    press."""
 
     section_id: str
     label: str
     done: bool
+    way_on: bool = False
 
 
 @vary_on_headers("HX-Request")
@@ -935,10 +939,10 @@ def _way_on_refused(request, state, section, shown):
 @require_POST
 def reopen_section(request, section_id):
     """✨ The participant taking back their own completion. Their answers stay exactly as they left them. A section that
-    completes itself was never theirs to take back, and a side card stays complete (ticket 52). Nor is a wizard's, which
-    the hub never asks for again once given (ticket 50)."""
+    completes itself was never theirs to take back, and a side card stays complete (ticket 52), as does a section its
+    evaluation completed (ticket 119). Nor is a wizard's, which the hub never asks for again once given (ticket 50)."""
     state = _participant(request.user)
-    if not _reopens(_section_or_404(state.version, section_id)):
+    if not _reopens(_section_or_404(state.version, section_id), state.sections):
         raise Http404("This section's completion is not taken back.")
     if state.response is not None:
         state.response.reopen_section(section_id)
@@ -996,6 +1000,7 @@ def save_answer(request, block_id):
         # ✨ A sort too close to call on one framework or both, and not flat, leads to the tie-break's pairs first.
         if pair_plan(state.version.document, scores):
             return _go_to(request, _with_demo_profile(request, reverse("tie_break", args=[block_id])))
+        _participant(request.user)  # ✨ the evaluation has ended, so a section it ends completes now (ticket 119)
         return _to_results(request, block_id)
     if not participant_response.save_answer(block_id, value):
         # ✨ a completion fixed it after the check above, and the UPDATE saw that
@@ -1433,6 +1438,8 @@ def tie_break(request, block_id):
         # ✨ A pair already answered (a form sent twice, or from a stale tab) stores nothing; either way the next is shown.
         result.answer_pair(place, plan[place], chosen, both=both)
         _scores_shown_storing_reweighted(state.version.document, result)  # ✨ the last answer re-weights the result
+        if not _pairs_left(state.version.document, result):
+            _participant(request.user)  # ✨ the evaluation has ended, so a section it ends completes now (ticket 119)
         return _see_other(_with_demo_profile(request, reverse("tie_break", args=[block_id])))
     if len(result.tie_break_answers) >= len(plan):
         return redirect("results", block_id)
@@ -2956,14 +2963,19 @@ def _participant(user, first_version=Publication.current_version):
 
 
 def _store_completions_and_openings(participant_response):
-    """✨ Store each hub side card's completion and each opened section's opening the first time either is seen, and
-    return the response's track sections, the answers the gate reads, the sections complete and the pages moved past,
-    those included."""
+    """✨ Store each hub side card's completion, the completion of each section its evaluation's end completes (ticket
+    119), and each opened section's opening the first time any is seen, and return the response's track sections, the
+    answers the gate reads, the sections complete and the pages moved past, those included."""
     sections = track_sections(participant_response.version.document)
     answers = participant_response.answers_with_contacts_and_visits()
     # ✨ A part of a section, or a hub side card, is complete once its gate passes, so locks and the hub count it without
     # a completion.
     completed = complete_sections(sections, answers, participant_response.completed_sections)
+    moved_past = participant_response.moved_past_by_section()
+    # ✨ Likewise a section that completes itself as its evaluation ends, the first time it is seen to have (ticket 119),
+    # before the side cards and openings that may wait on it.
+    if _complete_those_ended_by_their_evaluation(participant_response, sections, answers, completed, moved_past):
+        completed = complete_sections(sections, answers, participant_response.completed_sections)
     # ✨ A side card's completion is stored the first time it is seen, so it stays complete once its links expire or are revoked, or
     # its people are taken off the list, and never locks again what it opened (ticket 52).
     stored = participant_response.completed_sections
@@ -2972,7 +2984,6 @@ def _store_completions_and_openings(participant_response):
             participant_response.complete_section(section["id"])
     # ✨ Likewise the first time a section with opening conditions is open, so it stays open once the coach's link is
     # revoked or reissued, or the coach changed (ADR 0019).
-    moved_past = participant_response.moved_past_by_section()
     for section in sections:
         if (
             "opens_when" in section
@@ -2982,6 +2993,41 @@ def _store_completions_and_openings(participant_response):
             participant_response.open_section(section["id"])
             answers[opened_key(section["id"])] = True
     return sections, answers, completed, moved_past
+
+
+def _complete_those_ended_by_their_evaluation(participant_response, sections, answers, completed, moved_past):
+    """✨ Store the completion of each section that completes itself as its evaluation ends (ticket 119,
+    `completes_with_its_evaluation`) and has not been stored yet, once that evaluation has ended: the sort in, and every
+    tie-break pair answered or skipped. It is re-checked as the participant's own press is (`complete_section`): open
+    and reached to its last page, its parts done and its gate met. Stored, never worked out on the fly, so a retake,
+    which clears the sort, leaves it complete (ADR 0025). Whether any was stored; the response's completions are read
+    again if so."""
+    waiting = [
+        (section, sort_id)
+        for section in sections
+        if (sort_id := completes_with_its_evaluation(section, sections)) is not None
+        and section["id"] not in participant_response.completed_sections
+    ]
+    document = participant_response.version.document
+    stored = False
+    for section, sort_id in waiting:
+        if (
+            is_locked(section, completed, answers, sections, moved_past)
+            or page_reached(section, moved_past, answers, sections) < page_count(section)
+            or finish_waits(section, sections, completed)
+            or unmet(section, answers)
+        ):
+            continue
+        result = Result.objects.filter(response=participant_response, block_id=sort_id).first()
+        if result is None or _pairs_left(document, result):
+            continue
+        participant_response.complete_section(
+            section["id"], fixed_block_ids=block_ids_fixed_on_completion(section, answers)
+        )
+        stored = True
+    if stored:
+        participant_response.refresh_from_db(fields=["completed_sections", "fixed_answers", "updated_at"])
+    return stored
 
 
 def _is_open(state, section, block):
@@ -3101,7 +3147,9 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
             # ✨ On a part's last page, the finish of the section it is the last thing in, if it is (ticket 88).
             "finish": _finish_of(state, section) if is_last else None,
             "is_side_card": "side_card" in section,
-            "reopens": _reopens(section),
+            "reopens": _reopens(section, state.sections),
+            # ✨ Completed as its evaluation ends, with no press, its label then a way on to the hub (ticket 119).
+            "completes_with_evaluation": completes_with_its_evaluation(section, state.sections) is not None,
             "blocks": [
                 _block_for_participant(
                     version.document,
@@ -3178,10 +3226,15 @@ def _completes_itself(section):
     return "part_of" in section or "side_card" in section
 
 
-def _reopens(section):
-    """✨ Whether the participant can take back a section's completion: not one that completes itself, nor a wizard,
-    which once complete is never asked for again (ticket 50)."""
-    return not _completes_itself(section) and not section.get("wizard")
+def _reopens(section, sections):
+    """✨ Whether the participant can take back a section's completion: not one that completes itself, nor one its
+    evaluation completes (ticket 119), which would complete again at once, nor a wizard, which once complete is never
+    asked for again (ticket 50)."""
+    return (
+        not _completes_itself(section)
+        and completes_with_its_evaluation(section, sections) is None
+        and not section.get("wizard")
+    )
 
 
 def _section_this_is_part_of(state, section):
@@ -3259,13 +3312,15 @@ def _reflection_after_comparison(state, sort_id):
 def _finish_of(state, part):
     """✨ The finish a part's end offers when the part is the last thing in its section (ticket 88), as a `Finish`;
     once its section is complete, the end offers nothing in its place, the way back at the
-    page's top being the only one (ticket 96). None for a part that ends nothing, or whose section the participant
+    page's top being the only one (ticket 96), save where its evaluation completed it, when its label is the way on to
+    the hub's next step (ticket 119). None for a part that ends nothing, or whose section the participant
     has not reached. Pressing it is that section's own completion, so its gate refuses it exactly as it refuses the
     section's own button."""
     ended = section_ended_by(state.version.document, part)
     if ended is None or state.reached(ended) is None:
         return None
-    return Finish(ended["id"], _complete_label(ended), ended["id"] in state.completed)
+    way_on = completes_with_its_evaluation(ended, state.sections) is not None
+    return Finish(ended["id"], _complete_label(ended), ended["id"] in state.completed, way_on)
 
 
 def _complete_label(section):

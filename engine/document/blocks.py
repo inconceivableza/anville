@@ -690,7 +690,10 @@ def section_ended_by(document, part):
     if "part_of" not in part:
         return None
     parent = next((section for section in document["content"]["sections"] if section["id"] == part["part_of"]), None)
-    last = parent["blocks"][-1] if parent and parent["blocks"] else None
-    if last is None or last["type"] != "section_signpost" or last["section"] != part["id"]:
-        return None
-    return parent
+    return parent if parent is not None and ends_in_signpost_to(parent, part) else None
+
+
+def ends_in_signpost_to(parent, part):
+    """✨ Whether a section's last block is its signpost to `part`, so the part's end is the section's (ticket 88)."""
+    last = parent["blocks"][-1] if parent["blocks"] else None
+    return last is not None and last["type"] == "section_signpost" and last["section"] == part["id"]

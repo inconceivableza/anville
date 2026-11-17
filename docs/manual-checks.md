@@ -243,6 +243,8 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 
 Rebuild the frontend, load *Whatever You Do* again and use a participant started after that (one started before keeps the version they began on). Wide screen and about 375px.
 
+Changed by ticket 119 (under Results): once the sort's evaluation ends, pairs and all, Section 1 is complete with nothing pressed, and "I've finished Section 1" below the card is a link to the hub; before then there is nothing below the card. So Section 2's first "Locked" note, before Section 1 is finished, shows only while a tie-break pair is left.
+
 - Before we begin done: Section 1's row has one pill, "Not started"; the Strengths evaluation's row within it has none, only its title, "Activity" and its arrow. The sidebar the same. Once the sort is begun Section 1 reads "In progress", and "Complete" once finished; the Strengths evaluation never shows a pill of its own. The faithful port's Strengths assessment keeps its pill.
 - Section 1's page before the sort: the passages, "Your activity" and the Strengths evaluation card, and nothing below the card: no "I've finished Section 1", no line, no greyed button. Once the sort is in, the card reads "You've completed the strengths evaluation…" and "I've finished Section 1" is below it, as on the results page. The faithful port's Section 1 offers its "Mark complete" as before.
 - Before Section 1 is finished, Section 2's "Locked" note reads "Opens once you've completed Section 1, and enough of the people you invited have answered."; finished, with a coach chosen and three people given links, "Opens once enough of the people you invited have answered.", on the hub and in the sidebar, and "How others see you" within it is locked with it. The next step is Section 3, "The shape of your life". Typing `/sections/others/` or `/results/strengths-sort/comparison/` lands on the hub.
@@ -745,12 +747,28 @@ Rebuild the frontend. No need to load the pathway again: a participant started o
 
 Changed by ticket 106: Section 1's own page shows its "I've finished Section 1" only once the sort is in; Section 2 is locked until three people have answered, so its card's phrases below three show only after a withdrawal; and with three, its press opens the comparison at once, the warning beside it.
 
+Changed by ticket 119 (below): Section 1 is complete by the time its results show, so the first two bullets no longer hold; "I've finished Section 1" is a link to the hub, there whenever the results are.
+
 - *Whatever You Do*, the sort in and Section 1 not yet finished: below the results, centred, a green "I've finished Section 1" alone (fix-10 took the comparison and invitation buttons off the page; they are Section 2's card's). Pressing "I've finished Section 1" lands on the hub, with Section 1 "Complete". Section 1's own page still has its "I've finished Section 1".
 - Back on the results page: no button below the results; the way back is the button at the top (ticket 96).
 - Give three people links: the phrase under "Invite people who know you →" on Section 2's card reads "0 of 3 answered", then "2 of 3 answered" once two have answered (their links in private windows). The button opens Five trusted voices.
 - With three answered: Section 2's "Compare with how others see you →" is no longer grey and opens "Before you look" as before; "Invite people who know you →" stays, with no phrase.
 - With JavaScript turned off, the finish button works the same.
 - Phone width: the finish button is centred, with no sideways scroll.
+
+### Ticket 119: Section 1 completes as the evaluation ends
+
+Load *Whatever You Do* again and use participants started after that, one sorting level so the tie-break asks pairs (`seed_tie_break --profile tied-apest --answers skip` seeds one with them answered) and one sorting clearly (no pairs); wide screen and about 375px.
+
+- Before the sort: Section 1's page has nothing below the Strengths evaluation card, and the hub's next step reads "Start with your gifts." / "Start with the strengths evaluation, which takes about 7 minutes."
+- With pairs: after the sort, while a pair is left, the hub still shows Section 1 "In progress" and its next step unchanged, and Section 1's page offers nothing to press. After the last pair, answered, skipped or "Both are right", the results show, and below them, centred, a green "I've finished Section 1".
+- Without pressing it, open the hub in another tab: Section 1 is "Complete", the count reads "1 of 6 sections complete", and the next step has moved on from the strengths evaluation (to "Walk with a coach" for someone with no coach yet).
+- "I've finished Section 1" on the results is a link: hovering shows `/hub/` as its address, and pressing it opens the hub. Going back to the results, it is still there; the way back at the page's top still leads to Section 1.
+- Section 1's own page: the Strengths evaluation card, then "I've finished Section 1" as a link to the hub, in the place of the old button; no "You marked this section complete." and no "Mark as not complete".
+- Without pairs (a clear sort): "See my results →" lands on the results with "I've finished Section 1" as above, and Section 1 already "Complete" on the hub.
+- Retake the strengths evaluation from the results: Section 1 stays "Complete" on the hub while the sort is redone, the next step leading back to the evaluation, and Section 1's page has nothing below the card until the new results are in, as before.
+- The faithful port (load it again, a new participant, then load *Whatever You Do* again after): after the sort and its results, Section 1 is still not complete, and its page offers "Mark complete" as before.
+- With JavaScript turned off, the same. Phone width: the link is centred, with no sideways scroll.
 
 ### Fix-3: The comparison's other buttons below the minimum
 

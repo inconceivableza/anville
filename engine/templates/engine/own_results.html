@@ -19,9 +19,15 @@
       section's own completion, which its gate may refuse; once it is complete, the way back at the page's top is the
       only one (ticket 96). It stands alone (fix-10): the press on to the comparison and the way to invite people are
       the comparison signpost's, in the section after, so the page offers one thing to do. It works without JavaScript.
+
+      Where the section completes itself as the evaluation ends (ticket 119), as Whatever You Do's Section 1 does, it is
+      complete by the time its results show, so the button keeps its label but is a link on to the hub, whose next step
+      says what comes after, where the press used to land.
     {% endcomment %}
     <div class="results-next results-finish">
-      {% if not finish.done %}
+      {% if finish.done and finish.way_on %}
+        <a class="pill" href="{% url 'hub' %}">{{ finish.label }}</a>
+      {% elif not finish.done %}
         {% include "engine/finish_form.html" with button_class="pill" %}
       {% endif %}
     </div>

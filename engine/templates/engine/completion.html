@@ -33,7 +33,7 @@
   button, which a redraw would swap out from under the pointer, losing the press. Only a refused press's list goes.
 {% endcomment %}
 {% if out_of_band and messages_after_a_press %}
-  {% if offers_way_on and not page.is_last or offers_way_on and not section.is_part and not section.is_side_card and not is_complete or offers_way_on and section.finish and not section.finish.done %}
+  {% if offers_way_on and not page.is_last or offers_way_on and not section.is_part and not section.is_side_card and not section.completes_with_evaluation and not is_complete or offers_way_on and section.finish and not section.finish.done %}
     <div id="gate-refusal" hx-swap-oob="true">{% include "engine/gate_refusal.html" %}</div>
   {% endif %}
 {% else %}
@@ -58,6 +58,19 @@
       <div class="way-on"{% if not_saved %} id="refused"{% endif %}>{% include "engine/page_save.html" %}</div>
       {% include "engine/not_saved.html" %}
     {% endif %}
+  {% elif offers_way_on and section.completes_with_evaluation %}
+    {% comment %}
+      ✨ A section that completes itself as its evaluation ends (ticket 119), as Whatever You Do's Section 1 does, has
+      nothing to press: until then its signpost leads to the evaluation, and once complete its finish's label is a link
+      on to the hub, whose next step says what comes after, as on the evaluation's results. It is never taken back, so
+      there is no "Mark as not complete".
+    {% endcomment %}
+    <div class="way-on">
+      {% include "engine/previous_page.html" %}
+      {% include "engine/page_save.html" %}
+      {% if is_complete %}<a class="pill full" href="{% url 'hub' %}">{{ section.complete_label }}</a>{% endif %}
+    </div>
+    {% include "engine/not_saved.html" %}
   {% elif offers_way_on and not section.is_part and not section.is_side_card and not is_complete %}
     {# ✨ The section's line above its finish, such as when to come back and press it (ticket 106). #}
     {% if section.complete_note %}<p class="completion-note">{{ section.complete_note }}</p>{% endif %}
@@ -97,12 +110,15 @@
   {% elif offers_way_on and section.finish %}
     {# ✨ A part that is the last thing in its section ends in that section's finish (ticket 88), refused by its gate: #}
     {# ✨ with JavaScript, into `#gate-refusal` beneath it; without, on that section's last page, at its way on. Once #}
-    {# ✨ that section is complete, the way back at the page's top is the only one (ticket 96). The finish is a form #}
-    {# ✨ of its own, which sends none of this page's answers: no part holds any beside it. #}
+    {# ✨ that section is complete, the way back at the page's top is the only one (ticket 96), save where its #}
+    {# ✨ evaluation completed it, when its label is a link on to the hub (ticket 119). The finish is a form of its #}
+    {# ✨ own, which sends none of this page's answers: no part holds any beside it. #}
     <div class="way-on"{% if not_saved %} id="refused"{% endif %}>
       {% include "engine/previous_page.html" %}
       {% include "engine/page_save.html" %}
-      {% if not section.finish.done %}
+      {% if section.finish.done and section.finish.way_on %}
+        <a class="pill full" href="{% url 'hub' %}">{{ section.finish.label }}</a>
+      {% elif not section.finish.done %}
         {% include "engine/finish_form.html" with finish=section.finish button_class="pill full" %}
       {% endif %}
     </div>
