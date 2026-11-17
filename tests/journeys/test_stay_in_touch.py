@@ -124,14 +124,16 @@ def test_a_press_with_no_choice_is_refused_beside_the_button_storing_nothing_and
 def test_join_the_waitlist_and_contact_us_open_the_box_with_their_own_choice_ticked_without_javascript(
     client, link, choice
 ):
-    """✨ The link asks the server for its choice, so it is ticked with or without JavaScript, and lands at the box."""
+    """✨ The link asks the server for its choice, so it is ticked with or without JavaScript, and lands at the box: by
+    the address's autofocus, which a fragment naming an element would stop the browser applying (17 Nov)."""
     page = client.get("/").content.decode()
     assert ticked(stay_in_touch(page)) == set(), "nothing is ticked on arrival"
     href = re.search(link, page).group(1)
 
     opened = client.get(href)
 
-    assert href.endswith("#stay-in-touch")
+    assert href == f"/?stay={choice}", "no fragment, or the browser would not focus the address"
+    assert takes_the_focus(stay_in_touch(opened.content.decode()))
     assert opened.status_code == 200
     assert ticked(stay_in_touch(opened.content.decode())) == {choice}
 
@@ -161,8 +163,8 @@ def test_a_form_no_link_opened_with_a_choice_does_not_take_the_focus(client):
 
 @pytest.mark.django_db
 def test_with_the_thanks_showing_htmx_asking_by_a_link_is_sent_the_form_alone_fresh_with_that_choice_ticked(client):
-    """✨ How "Join the waitlist" and "Contact us" bring the form back in place of the thanks (sprint-3d-r1-fix-4): a
-    link followed to the address the page is at already would do nothing. The server keeps nothing of the sign-up
+    """✨ How "Join the waitlist" and "Contact us" bring the form back in place of the thanks (sprint-3d-r1-fix-4):
+    following the link would load the page again, restarting the hero video. The server keeps nothing of the sign-up
     the thanks answered, so what comes back is what any visit by the link shows."""
     client.post("/", {"email": "sam@example.com", "choice": ["news", "contact"]}, **HTMX)
 

@@ -398,9 +398,8 @@ if (document.querySelector("main.page") && !reducedMotion) {
 // on the address (fix-4), whichever the box is showing:
 //   - the form on the page: tick the choice here, leaving any other tick and anything typed as it was;
 //   - the thanks in the form's place: ask the server for the form again by the link's own query, with htmx, and swap it
-//     in, the choice ticked and the address empty as on a fresh visit. The link itself would do nothing here when the
-//     page is at its address already, as it is after the link loaded it: a link to the address a page is at, fragment
-//     and all, is a jump within the page, not a new one.
+//     in, the choice ticked and the address empty as on a fresh visit. Following the link itself would load the page
+//     again, restarting the hero video.
 // `settle:0` has htmx finish the swap, and focus the swapped-in form's `autofocus` address, before the scroll below.
 document.addEventListener("click", (event) => {
   const modified = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
