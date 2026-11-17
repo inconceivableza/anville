@@ -413,7 +413,7 @@ The homepage (`/`):
 
 ### Ticket 112: Before we begin's reasons and photos (rebuild the frontend, load the pathway again, and sign up as someone new; wide screen and about 375px)
 
-- Page 1: under "What's bringing you to the course?", on its own smaller line, "Choose as many as apply. There's no wrong answer.", then the seven cards. Click three: each turns dark with light text and stays so, and "Saved" shows after each click. Click one of them again: it turns light again, the other two staying dark. Reload: the same two are dark.
+- Page 1: under "What's bringing you to the course?", on its own smaller line, "Choose as many as apply. There's no wrong answer.", then the seven cards. Click three: each turns dark with light text and stays so. Click one of them again: it turns light again, the other two staying dark. Reload: the same two are dark.
 - Untick every card, then press "Continue →": "Choose what's bringing you to the course to continue." shows beneath it, alone, and page 2 does not open. Tick one and press "Continue →": page 2 opens.
 - Keyboard only: Tab reaches each card in turn, with a green outline on the focused one, and Space ticks or unticks it, saving each time. With JavaScript, Enter on a card does nothing.
 - With JavaScript off: tick two cards and press "Save": the page comes back with both dark. Untick both and press "Save": none is dark, and "Continue →" is refused as above.
