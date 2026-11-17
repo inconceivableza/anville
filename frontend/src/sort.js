@@ -12,7 +12,8 @@
 // a look at how the buckets were used, then the rewordings. A participant whose sort skips fine-tuning then gets the
 // prototype's quick check: the pairs answered furthest apart, to change if they look wrong. A document may hide how the
 // buckets were used, between the rounds and at the end alike (ticket 108), and may offer observers the prototype's
-// "Haven't seen this" beside the buckets, which is no bucket: a card placed there is sent as not seen.
+// "Haven't seen this" beside the buckets, which is no bucket: a card placed there is sent as not seen. An observer who
+// places every card there is told what sending it means, since the server keeps it as a decline (ticket 120).
 //
 // The widget's own wording ("Sort your strengths", "Not me", …) comes with the items, in the reader's wording: an
 // observer's is about the participant, in the third person.
@@ -383,6 +384,7 @@ function mountSort(form) {
 
   function allSorted() {
     announcer.textContent = `All ${items.length} sorted.`;
+    if (notSeen && inBucket(notSeen).length === items.length) return nothingSeen();
     return [
       stepHeader(fine_tunes && "Step 1 of 2 — Sort", wording.sort_heading),
       el(
@@ -403,6 +405,30 @@ function mountSort(form) {
         undoButton(),
       ),
     ];
+  }
+
+  // ✨ Every card in "Haven't seen this" (ticket 120): there is nothing to fine-tune and nothing to count, so the
+  // observer is told that sending keeps only that they couldn't answer, with one press to send it and undo to go back.
+  function nothingSeen() {
+    return [
+      stepHeader(fine_tunes && "Step 1 of 2 — Sort", wording.sort_heading),
+      el(
+        "div",
+        { class: "sort-done" },
+        el("h3", {}, wording.all_sorted.replaceAll("{count}", items.length)),
+        el("p", { class: "sort-done-choice" }, wording.nothing_seen),
+        el("div", { class: "sort-done-actions" }, declineButton()),
+        undoButton(),
+      ),
+    ];
+  }
+
+  function declineButton() {
+    return on(
+      el("button", { type: "submit", class: "pill sort-submit", "data-focus": "send" }, wording.decline_label),
+      "click",
+      writeBuckets,
+    );
   }
 
   // ✨ How many cards each bucket holds, strongest first, where the document shows how the buckets were used.

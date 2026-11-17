@@ -75,7 +75,17 @@ def withdrawn_sentence(withdrew):
     return f"{withdrew} people have withdrawn their answers."
 
 
-def voices_card(block, card, invited, answered, minimum, frozen=False, withdrew=0):
+def declined_sentence(declined):
+    """✨ How many observers declined, every card of theirs in "Haven't seen this" (ticket 120), as the list's page says
+    it, naming nobody, as withdrawals are told; None if none has. Engine wording."""
+    if not declined:
+        return None
+    if declined == 1:
+        return "1 person replied that they couldn’t answer."
+    return f"{declined} people replied that they couldn’t answer."
+
+
+def voices_card(block, card, invited, answered, minimum, frozen=False, withdrew=0, declined=0):
     """✨ The side card holding a contact list, as the Five trusted voices card shows it (ticket 51a): a tag, a line under
     it or None, and its meters, how many people have a working link (`invited`) and how many observer assessments have
     been sent (`answered`), each out of the rows the list asks to be filled. Engine wording, as the section statuses
@@ -87,8 +97,9 @@ def voices_card(block, card, invited, answered, minimum, frozen=False, withdrew=
     once complete it asks again after a removal, while the card stays complete (ticket 81), and says when the
     comparison shows only while fewer than `minimum` have answered. Then it follows the answers: links issued with none
     sent, some sent while fewer than `minimum`, then all of them once everyone with a working link has sent, or else
-    enough (fix-2)."""
-    tag, line = _voices_tag(card, needed(block), invited, answered, minimum, frozen)
+    enough (fix-2). Someone who `declined` has replied (ticket 120), so all are in once the answers and the declines
+    together reach everyone with a working link."""
+    tag, line = _voices_tag(card, needed(block), invited, answered, minimum, frozen, declined)
     return {
         "tag": tag,
         # ✨ The pill's colours follow the tag's meaning, not the section's status (fix-12, fix-17): "waiting" for a
@@ -102,13 +113,15 @@ def voices_card(block, card, invited, answered, minimum, frozen=False, withdrew=
         "more_needed": more_needed(needed(block), invited),
         "invited": invited,
         "answered": answered,
-        # ✨ How many observers withdrew, said beside the Answered count so the card grows no taller (29 Oct).
+        # ✨ How many observers withdrew, said beside the Answered count so the card grows no taller (29 Oct), and how
+        # many declined, beside it in the same way (ticket 120).
         "withdrew": withdrew,
+        "declined": declined,
         "out_of": max(rows_to_fill(block), invited, answered, 1),
     }
 
 
-def _voices_tag(card, needed, invited, answered, minimum, frozen):
+def _voices_tag(card, needed, invited, answered, minimum, frozen, declined):
     if not card.is_locked and frozen:
         return LABELS[COMPLETE], "You've seen your results, so no more answers are added."
     if card.status in (LOCKED, NOT_STARTED):
@@ -120,7 +133,7 @@ def _voices_tag(card, needed, invited, answered, minimum, frozen):
         return "Links issued", None
     if answered < minimum:
         return "Some answers received", None
-    if answered == invited:
+    if answered + declined == invited:
         return "All answers received", None
     return "Enough answers received", None
 

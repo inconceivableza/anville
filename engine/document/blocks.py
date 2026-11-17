@@ -228,6 +228,11 @@ SORT_WORDING = {
     "slider_min": {"participant": "Not me", "observer": "Not {name}"},
     "slider_max": "Real strength",
     "submit_label": {"participant": "See my results →", "observer": "Send my evaluation →"},
+    # ✨ Observers only, where "Haven't seen this" is offered: once every card is placed there, what sending means, and
+    # the press that sends it, in place of the others (ticket 120). Such a send is kept as a decline.
+    "nothing_seen": "You haven’t seen any of these in {name}, so there’s nothing to add to how others see them. If "
+    "that’s right, send it, and we’ll keep only that you couldn’t answer. To change a card, undo back to it.",
+    "decline_label": "Send that I couldn’t answer →",
     # ✨ The two-round prototype's, used only where some items are reworded (see `twin`): round 1 the originals, round 2
     # the rewordings, with a look at how the buckets were used between them.
     "round_1_title": {"participant": "What you’re good at", "observer": "What {name} is good at"},
@@ -545,20 +550,22 @@ def comparison_status(answered, minimum, viewed):
 
 
 # ✨ The warning before the press that freezes answer collection (ADR 0017), engine wording as the statuses are: when
-# everyone invited has answered, and otherwise, with how many have, out of how many invited.
+# everyone invited has replied, and otherwise, with how many have, out of how many invited. Replied, not answered, since
+# ticket 120: someone who declined has replied, and is waited on no longer.
 FREEZE_WARNINGS = {
-    "everyone": "Everyone you invited has answered. Once you look, you can't add anyone else.",
-    "some": "{answered} of the {invited} people you invited have answered. Once you look, no more answers are added, "
-    "so anyone who hasn't answered yet won't be able to.",
+    "everyone": "Everyone you invited has replied. Once you look, you can't add anyone else.",
+    "some": "{replied} of the {invited} people you invited have replied. Once you look, no more answers are added, "
+    "so anyone who hasn't replied yet won't be able to.",
 }
 
 
-def freeze_warning(answered, invited):
+def freeze_warning(replied, invited):
     """✨ What the participant is told before the press on to the comparison freezes answer collection (ADR 0017): on
-    "Before you look", or beside the press where the document puts it there (`warns_beside_the_press`)."""
-    if answered >= invited:
+    "Before you look", or beside the press where the document puts it there (`warns_beside_the_press`). `replied` counts
+    the assessments that count and the declines (ticket 120)."""
+    if replied >= invited:
         return FREEZE_WARNINGS["everyone"]
-    return FREEZE_WARNINGS["some"].format(answered=answered, invited=invited)
+    return FREEZE_WARNINGS["some"].format(replied=replied, invited=invited)
 
 
 def warns_beside_the_press(document):

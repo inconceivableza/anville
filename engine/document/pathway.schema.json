@@ -490,6 +490,14 @@
             "slider_min": { "$ref": "#/$defs/text" },
             "slider_max": { "$ref": "#/$defs/text" },
             "submit_label": { "$ref": "#/$defs/text" },
+            "nothing_seen": {
+              "description": "Shown to observers only, where not_seen is offered, once every card is placed there: what sending means, since such a sort is kept as a decline.",
+              "$ref": "#/$defs/text"
+            },
+            "decline_label": {
+              "description": "Shown to observers only, in place of the other presses, once every card is in not_seen: sending the decline.",
+              "$ref": "#/$defs/text"
+            },
             "round_1_title": {
               "description": "Used only where some items are reworded (twin): the first round's, of the originals.",
               "$ref": "#/$defs/text"

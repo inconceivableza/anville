@@ -76,6 +76,7 @@ from engine.document.contacts import (
     MAX_CONTACTS,
     can_add_row,
     contact_from_form,
+    declined_sentence,
     needed,
     rows_of,
     voices_card,
@@ -1624,8 +1625,10 @@ def _hub_voices(state, hub):
         invited = state.answers.get(links_issued_key(block["id"]), 0)
         answered = _answered(state.response) if state.response else 0
         withdrew = state.response.observers_withdrew if state.response else 0
+        declined = ObserverResponse.declined(state.response) if state.response else 0
         minimum = minimum_observers(document)
-        shown = voices_card(block, card, invited, answered, minimum, frozen=_frozen(state.response), withdrew=withdrew)
+        frozen = _frozen(state.response)
+        shown = voices_card(block, card, invited, answered, minimum, frozen, withdrew=withdrew, declined=declined)
         return {"section": section_id, **shown}
     return None
 
@@ -1639,10 +1642,11 @@ def _answered(response):
 def _freeze_warning(response, answered, minimum):
     """✨ The warning a press on to the comparison carries (`freeze_warning`) while it would freeze answer collection:
     with `answered`, the observer assessments in, at least the `minimum` and collection not yet frozen; None
-    otherwise."""
+    otherwise. Those who declined have replied too, and are waited on no longer (ticket 120)."""
     if response.collection_frozen_at is not None or answered < minimum:
         return None
-    return freeze_warning(answered, response.contacts.filter(role=Contact.Role.CONTACT).count())
+    replied = answered + ObserverResponse.declined(response)
+    return freeze_warning(replied, response.contacts.filter(role=Contact.Role.CONTACT).count())
 
 
 @login_required
@@ -2682,7 +2686,8 @@ def send_assessment(request, token=None):
     """✨ The observer sending their observer assessment, once, with the secret they claimed: from their own link
     (`token`), or else from the cookie. It counts at once, and nothing of it is ever shown back. The participant's copy
     of the link is not a secret, so it is refused here as any wrong link is. Then back to the page it was sent from,
-    which now says thank you.
+    which now says thank you. One with every card in "Haven't seen this" is kept as a decline (ticket 120), however it
+    was sent, though the sort asks first.
 
     A second send from the same secret is refused, and the first stands. A reissued link is a new claim, so its observer
     may send one too, and both count (ADR 0007).
@@ -2779,10 +2784,10 @@ OBSERVER_COOKIE = "observer"
 
 def _observers_page(request, secret, came_by_link=False):
     """✨ The observer's page for the invitation a secret claimed, or the refusal if there is none: the observer
-    assessment until it is sent, then thanks. While answer collection is frozen, one who has not sent is told no more
-    answers are being taken, and offered no assessment (ticket 55). An observer who `came_by_link` rather than by the
-    cookie is at their own link, which the page offers to copy, and sends the assessment through it. Never cached,
-    since it is reached by a secret.
+    assessment until it is sent, then thanks, worded for a decline where they saw nothing (ticket 120). While answer
+    collection is frozen, one who has not sent is told no more answers are being taken, and offered no assessment
+    (ticket 55). An observer who `came_by_link` rather than by the cookie is at their own link, which the page offers
+    to copy, and sends the assessment through it. Never cached, since it is reached by a secret.
 
     Demo only (ticket 113): the sort offers the participant's demo profiles, hidden until revealed, and starts from the
     one the address names (`_observer_demo_prefill`)."""
@@ -2792,6 +2797,7 @@ def _observers_page(request, secret, came_by_link=False):
     document, name = _asked_by(invitation)
     scored = _scored_block(document)
     sent = ObserverResponse.sent_with(secret)
+    declined = sent and ObserverResponse.declined_with(secret)
     frozen = not sent and invitation.contact.response.collection_frozen_at is not None
     assessment = None
     if scored and not sent and not frozen:
@@ -2812,6 +2818,7 @@ def _observers_page(request, secret, came_by_link=False):
         "own_link": request.build_absolute_uri(reverse("observe", args=[secret])) if came_by_link else None,
         "assessment": assessment,
         "sent": sent,
+        "declined": declined,
         "frozen": NO_MORE_ANSWERS if frozen else None,
         "withdraw_at": withdraw_at,
     }
@@ -3116,6 +3123,9 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
     letter = unsealed_letter(section, seals) if is_last else None
     press = seal_press(letter, timezone.localdate(), chosen, (kept or {}).get(letter["id"])) if letter else None
     named = None if is_last else way_on_named_by(pages_of(section)[page - 1], seals)
+    # ✨ How many observers declined, read only for a page that holds a contact list, the one place it is said.
+    lists = state.response is not None and any(block["type"] == "contact_list" for block in blocks)
+    declined = ObserverResponse.declined(state.response) if lists else 0
     return {
         # ✨ Where "← Back" at the top leads: the section this is a part of, or else the hub.
         "back": _section_this_is_part_of(state, section),
@@ -3165,6 +3175,7 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
                     rows_back=rows_back.get(block["id"]),
                     coach_withdrew=state.response is not None and state.response.coach_withdrew,
                     observers_withdrew=state.response.observers_withdrew if state.response is not None else 0,
+                    observers_declined=declined,
                     saves_quietly=saves_quietly(version.document, section, block),
                     letter=_letter_of(block, seals),
                 )
@@ -3425,6 +3436,7 @@ def _block_for_participant(
     rows_back=None,
     coach_withdrew=False,
     observers_withdrew=0,
+    observers_declined=0,
     saves_quietly=False,
     letter=None,
 ):
@@ -3437,9 +3449,9 @@ def _block_for_participant(
     `_comparison_signpost_shown`. A sort not yet in starts from `demo`, a demo profile, with its guide beside it
     (fix-23). A coach checklist opens saying the coach withdrew while the response keeps that they did
     (`coach_withdrew`, ADR 0024). A contact list says how many observers withdrew, naming nobody
-    (`observers_withdrew`). One that `saves_quietly` says nothing on a save (`blocks.saves_quietly`). A letter stands as
-    `letter` says (`letter_shown`), and while it is sealed its answer is left out, so nothing on the page can carry it
-    (ticket 104)."""
+    (`observers_withdrew`), and how many declined (`observers_declined`, ticket 120). One that `saves_quietly` says
+    nothing on a save (`blocks.saves_quietly`). A letter stands as `letter` says (`letter_shown`), and while it is
+    sealed its answer is left out, so nothing on the page can carry it (ticket 104)."""
     rows = _contact_rows(block, answers, issued, **(rows_back or {})) if block["type"] == "contact_list" else None
     widget = BLOCK_TYPES[block["type"]].widget
     shown_widget = widget(document, "participant", "") if widget else None  # ✨ the participant's wording names no one
@@ -3483,6 +3495,7 @@ def _block_for_participant(
         "results": results,  # ✨ where a section signpost's button leads instead, once its section is done (ticket 61)
         "frozen": RESULTS_SEEN if frozen and block["type"] == "contact_list" else None,
         "withdrawn": withdrawn_sentence(observers_withdrew) if block["type"] == "contact_list" else None,
+        "declined": declined_sentence(observers_declined) if block["type"] == "contact_list" else None,
         "drawn": drawn,
         "comparison": comparison,
         # ✨ While it waits on the comparison, its authored message, and it is drawn disabled (ticket 68).

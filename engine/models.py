@@ -239,8 +239,8 @@ class Response(models.Model):
         worked out from it, so they can sort again from the start. Its answer and result go, and the tie-break's answers
         and re-weighted result with it. What observers sent goes too, and collection opens again, so the people they
         invited, whose links keep working, can send afresh and are reminded as before they sent (ADR 0016); nobody
-        withdrew, so the count of withdrawals starts again too. The coach no longer sees the results until the
-        participant chooses to show them again (ADR 0011).
+        withdrew, so the count of withdrawals starts again too. Declines go with them (ticket 120), so those people are
+        asked again. The coach no longer sees the results until the participant chooses to show them again (ADR 0011).
 
         The sections they finished stay finished, and the visit to the comparison and the view of it stay, so nothing
         already opened locks again (ADR 0019). The coach's link and every other answer stay. Done together or not at
@@ -710,6 +710,9 @@ class ObserverResponse(models.Model):
     assessment = models.JSONField(null=True, blank=True)
     written_answers = models.JSONField(default=dict)
     submitted_at = models.DateTimeField(null=True, blank=True)
+    # ✨ When the observer declined, by sending a sort with every card in "Haven't seen this" (ticket 120): then this
+    # is all that is kept of what they sent, with no assessment, and it is never submitted, so it counts toward nothing.
+    declined_at = models.DateTimeField(null=True, blank=True)
     # ✨ How the observer knows the participant, by the id of a choice the document offers, or empty if they chose none.
     # Stored only: nothing reads it to slice or filter results (ticket 15b).
     relationship = models.CharField(max_length=64, null=True, blank=True)
@@ -725,6 +728,12 @@ class ObserverResponse(models.Model):
                 condition=models.Q(submitted_at__isnull=True) | models.Q(assessment__isnull=False),
                 name="a_submitted_observer_response_holds_an_assessment",
             ),
+            # ✨ A decline keeps only that the observer declined (ticket 120).
+            models.CheckConstraint(
+                condition=models.Q(declined_at__isnull=True)
+                | models.Q(assessment__isnull=True, submitted_at__isnull=True, relationship__isnull=True),
+                name="a_declined_observer_response_holds_nothing_else",
+            ),
         ]
 
     @classmethod
@@ -733,6 +742,10 @@ class ObserverResponse(models.Model):
         the relationship the observer chose, if any. It counts at once. A second from the same secret raises
         IntegrityError from the database and changes nothing. `is_test_data` is set only by a seeding command, never
         from a request.
+
+        An assessment with no card seen, every one in "Haven't seen this" (`counts`), is the observer declining (ticket
+        120): only that is kept, as `declined_at`, and neither the assessment nor the relationship, which say nothing
+        of the participant. Either way the observer has answered, and is never reminded again.
 
         The claimed link's row is locked first, as a withdrawal's ending of the claim locks it, so a send and a
         withdrawal at once take turns: a send that finds the claim ended meanwhile stores nothing and returns None, and
@@ -754,11 +767,13 @@ class ObserverResponse(models.Model):
             if open_to_answers is None:
                 raise CollectionFrozen
             now = timezone.now()
+            seen = counts(assessment)
             sent = cls.objects.create(
                 response=response,
-                assessment=assessment,
-                relationship=relationship,
-                submitted_at=now,
+                assessment=assessment if seen else None,
+                relationship=relationship if seen else None,
+                submitted_at=now if seen else None,
+                declined_at=None if seen else now,
                 sent_by=_sent_by(secret),
                 is_test_data=is_test_data,
             )
@@ -768,8 +783,13 @@ class ObserverResponse(models.Model):
 
     @classmethod
     def sent_with(cls, secret):
-        """✨ Whether an observer assessment has been sent with this secret."""
+        """✨ Whether an observer assessment has been sent with this secret, a decline included."""
         return cls.objects.filter(sent_by=_sent_by(secret)).exists()
+
+    @classmethod
+    def declined_with(cls, secret):
+        """✨ Whether what was sent with this secret was a decline (ticket 120)."""
+        return cls.objects.filter(sent_by=_sent_by(secret), declined_at__isnull=False).exists()
 
     @classmethod
     def withdraw(cls, secret):
@@ -779,7 +799,8 @@ class ObserverResponse(models.Model):
 
         The participant's copy of the link stays used up, as it was, so nothing they can see changes. Ending the claim
         and deleting happen together or not at all. Withdrawing works while answer collection is frozen too, and if it
-        leaves fewer than the minimum, collection opens again (ticket 55).
+        leaves fewer than the minimum, collection opens again (ticket 55). A decline is never offered withdrawal, as a
+        coach's is not, but reached anyway it goes as answers do, without counting as answers withdrawn (ticket 120).
         """
         if not secret:
             return False
@@ -793,8 +814,10 @@ class ObserverResponse(models.Model):
             if claimed is None:
                 return False
             Invitation.objects.filter(pk=claimed.pk).update(secret_hash=None)
-            deleted, _ = cls.objects.filter(sent_by=_sent_by(secret)).delete()
-            if deleted:
+            sent = cls.objects.filter(sent_by=_sent_by(secret))
+            answered = sent.filter(declined_at__isnull=True).exists()
+            sent.delete()
+            if answered:
                 Response.objects.filter(pk=claimed.contact.response_id).update(
                     observers_withdrew=F("observers_withdrew") + 1
                 )
@@ -824,6 +847,12 @@ class ObserverResponse(models.Model):
         """✨ How many observer assessments of a participant's response count toward the minimum, as
         `assessments_for` reads them."""
         return len(cls.assessments_for(response).assessments)
+
+    @classmethod
+    def declined(cls, response):
+        """✨ How many observers declined to answer about a participant's response (ticket 120): replies, but no
+        assessments, said to the participant only as a count, as withdrawals are."""
+        return cls.objects.filter(response=response, declined_at__isnull=False).count()
 
     @classmethod
     def sent_count(cls, response):

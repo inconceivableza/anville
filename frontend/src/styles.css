@@ -2367,7 +2367,7 @@ body:not(.framed) .question-card > p + form {
   color: var(--muted);
 }
 
-/* ✨ How many withdrew (29 Oct): quiet, below the list. */
+/* ✨ How many withdrew (29 Oct), and how many couldn't answer (ticket 120): quiet, below the list. */
 .contact-withdrawn {
   margin: var(--space-sm) 0 0;
   font-size: 12px;

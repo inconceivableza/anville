@@ -5,7 +5,8 @@
 
 A card placed there is kept as placed, and left out of that observer's scores; the observer still counts toward the
 minimum while any card of theirs is in a bucket, but one who saw nothing counts toward no minimum and is left out of the
-comparison, having nothing to add (sprint-3d-r1-fix-1). The participant has no such choice.
+comparison, having nothing to add (sprint-3d-r1-fix-1), and since ticket 120 has declined, only that being kept
+(`test_declining_by_seeing_nothing.py`). The participant has no such choice.
 """
 
 import pytest
@@ -64,13 +65,14 @@ def test_an_observers_card_in_havent_seen_this_is_kept_as_placed_and_they_count_
 
 
 def jo_sends_having_seen_nothing(participant, observer):  # noqa: F811
-    """✨ Jo claims her link and sends with every card in "Haven't seen this", which is stored as any send is."""
+    """✨ Jo claims her link and sends with every card in "Haven't seen this", which is kept as a decline (ticket
+    120)."""
     claim(observer, issue_link(participant, "Jo"))
     assert send(observer, NOTHING_SEEN).status_code == 303
 
 
 @pytest.mark.django_db
-def test_an_observer_who_saw_nothing_is_kept_but_counts_toward_no_minimum(participant, observer):  # noqa: F811
+def test_an_observer_who_saw_nothing_counts_toward_no_minimum(participant, observer):  # noqa: F811
     """✨ With two others in, the press freezes nothing and the comparison still waits on a third."""
     jo_sends_having_seen_nothing(participant, observer)
     submit_sort(participant, complete_sort())
@@ -79,7 +81,8 @@ def test_an_observer_who_saw_nothing_is_kept_but_counts_toward_no_minimum(partic
 
     shown = looked_at(participant).content.decode()
 
-    assert ObserverResponse.objects.filter(submitted_at__isnull=False).count() == 3
+    assert ObserverResponse.objects.filter(submitted_at__isnull=False).count() == 2
+    assert ObserverResponse.declined(Response.objects.get()) == 1
     assert Response.objects.get().collection_frozen_at is None
     assert "2 of 3" in shown
     assert "Others:" not in text_of(shown)
