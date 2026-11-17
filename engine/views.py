@@ -121,7 +121,7 @@ from engine.document.observers import (
     relationship_question,
 )
 from engine.document.letter import letter_shown, opens_on_from_form, seal_press, unsealed_letter
-from engine.document.photos import COURTESY, Credit, credits_listed, listed, on_pexels, on_unsplash
+from engine.document.photos import credits_listed, listed, on_pexels, on_unsplash
 from engine.models import (
     CollectionFrozen,
     Contact,
@@ -283,12 +283,13 @@ SITE_PHOTO_CREDITS = [
         "https://unsplash.com/@ivelisseskelly",
         "https://unsplash.com/photos/woman-in-orange-dress-on-wheat-field-4aJ9VluXAgo",
     ),
-    # ✨ The homepage story's photo, `hero.jpg`, which the stylesheet draws. Its source was never found: the video's
-    # stills are a different scene, so this credit is unsupported and has no parts (sprint-3d-r1-fix-5).
-    Credit(
-        COURTESY,
-        text="Still of a woman in a sunhat walking through a field at sunset, from the video by Marian Croitoru on "
-        "Pexels.",
+    # ✨ The homepage story's photo, `hero.jpg`, which the stylesheet draws: not a still from the video, as it was once
+    # credited, but Leon Seierlein's photograph on Unsplash (traced 17 Nov, after sprint-3d-r1-fix-5).
+    on_unsplash(
+        "Photograph of a woman in a sunhat walking through a field at sunset",
+        "Leon Seierlein",
+        "https://unsplash.com/@leonseierlein",
+        "https://unsplash.com/photos/person-standing-on-green-grass-during-sunset-_aCF1ls65YE",
     ),
     on_unsplash(
         "Photograph of a teacher standing before a classroom of pupils",
