@@ -532,8 +532,9 @@ COMPARISON_STATUSES = {
 
 # ✨ What a comparison signpost says in place of its status between a retake and the new sort, as `(link, rest)`: the
 # words leading back to the sort, then the rest of the sentence. Its card makes the first part the link; the hub's row
-# and the sidebar show the two as one line.
-COMPARISON_UNSORTED = ("Finish your strengths evaluation", "to compare.")
+# and the sidebar show the two as one pill, without the full stop, as their other pills have none. Short, so the pill
+# wraps over no more than three lines in its narrow column (hand check of 18 Nov).
+COMPARISON_UNSORTED = ("Finish your evaluation", "first.")
 
 
 def comparison_status(answered, minimum, viewed):

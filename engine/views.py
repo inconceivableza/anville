@@ -3400,7 +3400,7 @@ def _comparison_signpost_shown(state, block):
         return {
             "sort": sort,
             "status": "waiting",
-            "label": f"{link} {rest}",
+            "label": f"{link} {rest}".removesuffix("."),
             "invite": _invite(state),
             "unsorted": page_url(section["id"], page_of(section, sort)),
             "unsorted_line": {"link": link, "rest": rest},

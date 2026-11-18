@@ -1608,12 +1608,16 @@ main > .hub ~ .hub-consent {
 }
 
 /* ✨ A pill longer than its column, such as "Still need answers from 3 people who know you", wraps within the column,
-   its lines centred and balanced, rather than running left over the row's title (ticket 106). */
+   its lines centred and balanced, rather than running left over the row's title (ticket 106). Its corners are rounded
+   by half a one-line pill's height, not fully: a one-line pill looks as every other does, and a wrapped one is a
+   rounded box, where full rounding made a tall stadium whose ends cut into its first and last lines (hand check of
+   18 Nov). */
 .srow > .tag {
   max-width: 100%;
   white-space: normal;
   text-align: center;
   text-wrap: balance;
+  border-radius: calc(0.5lh + var(--space-2xs));
 }
 
 /* ✨ An open row is one link (fix-6): its title's link is stretched over the row, so the whole row is clickable, with

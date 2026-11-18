@@ -45,6 +45,8 @@ SORT_PAGE = "/sections/strengths/"
 VOICES_PAGE = "/sections/trusted-voices/"
 CARD = "how-others-see-you"
 UNSORTED = " ".join(COMPARISON_UNSORTED)
+# ✨ The hub's row and the sidebar say it as a pill, which has no full stop.
+UNSORTED_PILL = UNSORTED.removesuffix(".")
 # ✨ The press on to the comparison greyed: a span that cannot be followed, in place of the form posting the visit.
 GREYED = '<span class="pill is-waiting" role="link" aria-disabled="true">'
 VISIT = f'action="{RESULTS}comparison/visit/"'
@@ -208,8 +210,9 @@ def test_after_retaking_the_hub_keeps_the_how_others_see_you_row_saying_to_finis
     page = main_of(participant.get("/hub/").content.decode())
     row = re.search(r'<li class="hub-section srow hub-part hub-comparison.*?</li>', page, re.S)
     assert row, "the hub has no How others see you row"
-    assert f'<span class="tag status-waiting">{escape(UNSORTED)}</span>' in row.group(0)
+    assert f'<span class="tag status-waiting">{escape(UNSORTED_PILL)}</span>' in row.group(0)
     assert f'href="{SORT_PAGE}"' in row.group(0)
+    assert UNSORTED_PILL != UNSORTED, "the pill keeps the sentence's full stop"
 
 
 @pytest.mark.django_db

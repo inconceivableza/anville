@@ -520,3 +520,10 @@ Someone rating a participant who put every card in "Haven't seen this" used to b
 - **Five trusted voices' page**, below the list: **"1 person replied that they couldn’t answer."** (or "2 people replied that they couldn’t answer."), as "1 person has withdrawn their answers." is shown.
 - **The Five trusted voices card on the hub**: beside the Answered count, **"· 1 couldn’t answer"**, as "· 1 withdrew" is shown. Its label reads "All answers received" once everyone else with a link has answered, rather than "Enough answers received".
 - Nothing else changes: someone who couldn't answer still isn't counted among the three answers needed ("2 of 3 answered"), and isn't part of the comparison. If Ada retakes the strengths evaluation, they are asked again, as everyone else is.
+
+### Waiting on a retake (18 November)
+
+After "Delete and retake", until the new evaluation is sent, "How others see you" said **"Finish your strengths evaluation to compare."** On the hub its pill wrapped over four lines in the narrow column at the right of the row. The words are shorter now.
+
+- **Section 2's "How others see you" card**, under the greyed "Compare with how others see you →": **"Finish your evaluation first."**, "Finish your evaluation" still leading back to it. This replaces "Finish your strengths evaluation to compare."
+- **Its row on the hub, and the menu**: the same words as a pill, **"Finish your evaluation first"**, without the full stop, as the other pills have none.
