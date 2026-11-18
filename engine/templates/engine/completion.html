@@ -30,7 +30,9 @@
 
   Where the document wants messages only after a press, an autosave redraws `#gate-refusal` alone: no button there is
   ever disabled, so the way on has nothing to change, and a text box saves as it loses the focus to a press on the
-  button, which a redraw would swap out from under the pointer, losing the press. Only a refused press's list goes.
+  button, which a redraw would swap out from under the pointer, losing the press. Only a refused press's list goes,
+  and not while a press is on its way or until an answer changes after its refusal (`frontend/src/main.js`), so the
+  save made by that same press never wipes or hides what the press says (hand check of ticket 107, 18 Nov).
 {% endcomment %}
 {% if out_of_band and messages_after_a_press %}
   {% if offers_way_on and not page.is_last or offers_way_on and not section.is_part and not section.is_side_card and not section.completes_with_evaluation and not is_complete or offers_way_on and section.finish and not section.finish.done %}

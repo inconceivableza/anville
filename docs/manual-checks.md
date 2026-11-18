@@ -1444,6 +1444,14 @@ Rebuild the frontend, load *Whatever You Do* again and start a new participant: 
 - At about 375px: both pages read, the long button wraps rather than running off the screen.
 - The faithful port's letter is unchanged: one page, its ratings under the letter, "Mark complete".
 
+### Hand check of 18 Nov (ticket 107): a refused press keeps its line (rebuild the frontend; no pathway reload or new participant needed; a participant on Section 6, the letter not sealed; wide screen and about 375px)
+
+- With JavaScript, on page 1, type a letter of fewer than 10 characters and press "Save my letter and continue →" straight from the box, without clicking anywhere else first: "Write your letter (10 characters or more) before sealing it." shows beneath the button at once and stays, however long you wait. Before, it came and went, or never showed, so the press seemed to do nothing until it was pressed again: the letter saves as the box loses the focus to the press, and that save's answer, coming back before or after the press's, cleared the space beneath the button.
+- Do it again a few times, changing the letter each time but keeping it short: the line shows every time, whichever answer comes back first.
+- Then type one more character, still short: the line goes within a second, as before, since the letter has changed since the press. Press again: it is back.
+- Page 2, with a rating left: "Answer all five to continue" beneath the button; choose the fifth: the line goes.
+- Without JavaScript nothing has changed: the page comes back at the button with the line under it.
+
 ### sprint-3d-r1-fix-3: The date picked on page 2 is kept (rebuild the frontend; no pathway reload or new participant needed; a participant on Section 6's page 2, the letter not sealed; wide screen and about 375px)
 
 - On page 2, change the date beside "Open it on", then press "← Previous page": page 1 opens at the letter. Press "Save my letter and continue →": page 2 offers the date picked, with its words beside it. With JavaScript blocked: the same.

@@ -58,6 +58,38 @@ function notSaved(event) {
 document.addEventListener("htmx:responseError", notSaved);
 document.addEventListener("htmx:sendError", notSaved);
 
+// ✨ A press refused beneath its button (fix-2) stays until an answer changes after it. A text box saves as it loses the
+// focus to that press, and the save redraws `#gate-refusal`, replacing it, to take away a refused press's list once an
+// answer changes. Back before the press's answer, the redraw left that answer going into the replaced, unseen box;
+// back after it, the redraw wiped it. Either way the press seemed to do nothing (hand check of ticket 107, 18 Nov: a
+// letter too short). The press sent every answer and stored them before it was checked, so its answer is the newer:
+// a redraw is swapped in only while no press is on its way, and once something has been typed or chosen since the
+// last refusal came.
+let pressesOnTheirWay = 0;
+let answeredSinceRefusal = true;
+
+// ✨ A press is sent in the background into `#gate-refusal` beneath its button (fix-2); nothing else is sent there.
+const isPress = (event) => event.detail.target?.id === "gate-refusal";
+
+document.addEventListener("input", () => (answeredSinceRefusal = true));
+
+document.addEventListener("htmx:beforeRequest", (event) => {
+  if (isPress(event)) pressesOnTheirWay += 1;
+});
+
+document.addEventListener("htmx:afterRequest", (event) => {
+  if (isPress(event)) pressesOnTheirWay = Math.max(0, pressesOnTheirWay - 1);
+});
+
+document.addEventListener("htmx:afterSwap", (event) => {
+  if (event.detail.target?.id === "gate-refusal") answeredSinceRefusal = false;
+});
+
+document.addEventListener("htmx:oobBeforeSwap", (event) => {
+  if (event.detail.target?.id !== "gate-refusal") return;
+  if (pressesOnTheirWay > 0 || !answeredSinceRefusal) event.detail.shouldSwap = false;
+});
+
 // ✨ An autosaved answer is saved as it changes, so its form is never submitted as a page while JavaScript runs:
 // Enter in it would otherwise send it through the hidden fallback button and reload the page (fix-7). Without
 // JavaScript, that button and Enter still save it.
