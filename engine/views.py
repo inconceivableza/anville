@@ -1456,6 +1456,20 @@ def _pair_shown(request, state, result, block_id, plan, status=200, refusal=None
     return render(request, "engine/tie_break.html", context, status=status)
 
 
+def _signposted_pairs_left(state, block):
+    """✨ For a section signpost, whether the section it leads to holds a sort that is in with tie-break pairs still to
+    answer or skip: its evaluation has not ended, so the signpost keeps its own wording, its button leading through
+    that section and the results on to the next pair, rather than saying it is finished (hand check of 18 Nov). False
+    for any other block, and for a section with no sort or none in yet."""
+    if block["type"] != "section_signpost" or state.response is None:
+        return False
+    document = state.version.document
+    linked = section_by_id(document, block["section"]) or {"blocks": []}
+    sort = next((other["id"] for other in linked["blocks"] if BLOCK_TYPES[other["type"]].scored), None)
+    result = Result.objects.filter(response=state.response, block_id=sort).first() if sort else None
+    return result is not None and _pairs_left(document, result)
+
+
 def _pairs_left(document, result):
     """✨ Whether the participant still has tie-break pairs to answer or skip before their results (ticket 30b)."""
     return len(result.tie_break_answers) < len(pair_plan(document, result.scores))
@@ -3184,6 +3198,7 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
                     drawn=_sort_results_drawn(state, block),
                     demo=demo,
                     comparison=_comparison_signpost_shown(state, block),
+                    pairs_left=_signposted_pairs_left(state, block),
                     rows_back=rows_back.get(block["id"]),
                     coach_withdrew=state.response is not None and state.response.coach_withdrew,
                     observers_withdrew=state.response.observers_withdrew if state.response is not None else 0,
@@ -3445,6 +3460,7 @@ def _block_for_participant(
     drawn=None,
     demo=None,
     comparison=None,
+    pairs_left=False,
     rows_back=None,
     coach_withdrew=False,
     observers_withdrew=0,
@@ -3458,8 +3474,9 @@ def _block_for_participant(
     nobody (ticket 55); otherwise it offers "Add another person" until it shows the most rows it may (ticket 70). Its
     rows come back from a press without JavaScript as `rows_back` gives them (fix-1). `drawn` is a `sort_results`
     block's results, from `_sort_results_drawn`, and `comparison` a `comparison_signpost`'s status, from
-    `_comparison_signpost_shown`. A sort not yet in starts from `demo`, a demo profile, with its guide beside it
-    (fix-23). A coach checklist opens saying the coach withdrew while the response keeps that they did
+    `_comparison_signpost_shown`. A section signpost whose section's sort has `pairs_left`, from
+    `_signposted_pairs_left`, is not yet finished. A sort not yet in starts from `demo`, a demo profile, with its guide
+    beside it (fix-23). A coach checklist opens saying the coach withdrew while the response keeps that they did
     (`coach_withdrew`, ADR 0024). A contact list says how many observers withdrew, naming nobody
     (`observers_withdrew`), and how many declined (`observers_declined`, ticket 120). One that `saves_quietly` says
     nothing on a save (`blocks.saves_quietly`). A letter stands as `letter` says (`letter_shown`), and while it is
@@ -3478,7 +3495,7 @@ def _block_for_participant(
     results = None
     if link is not None:
         linked = section_by_id(document, block["section"])
-        text, sort = signpost_shown(block, text, linked, link.status == COMPLETE, "participant")
+        text, sort = signpost_shown(block, text, linked, link.status == COMPLETE and not pairs_left, "participant")
         results = reverse("results", args=[sort]) if sort else None
     return {
         "rows": rows,

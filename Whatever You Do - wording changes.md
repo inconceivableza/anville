@@ -485,6 +485,7 @@ Section 1 used to be complete only once you pressed "I've finished Section 1" af
 - **"I've finished Section 1"** keeps its words. Below the results it is now a link on to the hub, which says what comes next, and it stays there whenever the results are shown. (Before, it was a button that marked Section 1 complete and then went.)
 - **Section 1's own page**, once the evaluation is done, shows the same "I've finished Section 1" link where its button was. It no longer says **"You marked this section complete. You can still change your answers here."**, since nothing was marked and Section 1 has nothing of its own to change, and it no longer offers **"Mark as not complete"**. Before the evaluation is done there is nothing below the Strengths evaluation card, as before.
 - **The hub** shows Section 1 as complete, and its next step moves on, as soon as the evaluation is done.
+- **The Strengths evaluation card** on Section 1's page (18 November) says **"You've completed the strengths evaluation. You can review your results any time."** only once the evaluation is done, every "Which is more true of you?" question answered or skipped. Before, it said so as soon as the cards were sent, with questions still to answer. Until then it keeps "Open the strengths evaluation →", which now leads straight to the next question. No words change.
 
 ### What a coach reads (17 November)
 

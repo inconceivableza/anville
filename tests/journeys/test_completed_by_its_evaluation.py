@@ -23,6 +23,9 @@ LABEL = "I've finished your gifts"
 RESULTS = "/results/strengths-sort/"
 FINISH = f'action="/sections/{GIFTS}/complete/'
 WAY_ON = f'href="/hub/">{escape(LABEL)}</a>'
+# ✨ What the section's signpost to its Strengths assessment says before the evaluation ends, and once it has.
+OPEN_IT = "Open the strengths assessment →"
+FINISHED = "You've finished the strengths assessment."
 
 
 def ended_by_its_evaluation():
@@ -36,7 +39,15 @@ def ended_by_its_evaluation():
         "title": "Your gifts",
         "requires": ["onboarding"],
         "complete_label": LABEL,
-        "blocks": [{"id": "to-strengths", "type": "section_signpost", "section": "strengths"}],
+        "blocks": [
+            {
+                "id": "to-strengths",
+                "type": "section_signpost",
+                "section": "strengths",
+                "button_label": OPEN_IT,
+                "finished": {"body": FINISHED, "button_label": "View my results →"},
+            }
+        ],
         "gate": {"clauses": [{"type": "has_answer", "block": "strengths-sort", "message": "Finish the sort first."}]},
     }
     sections.insert(sections.index(strengths), gifts)
@@ -97,6 +108,25 @@ def test_before_the_evaluation_ends_its_own_page_offers_no_finish_to_press(signe
     page = main_of(signed_in.get(f"/sections/{GIFTS}/").content.decode())
 
     assert FINISH not in page and WAY_ON not in page
+
+
+@pytest.mark.django_db
+def test_its_signpost_says_the_evaluation_is_finished_only_once_the_last_pair_is_answered_or_skipped(signed_in):
+    """✨ Until then it keeps its own wording, and its button leads through the sort's section and its results on to the
+    next pair (hand check of 18 Nov), where it had said it was finished as soon as the sort was sent."""
+    submit_sort(signed_in, TIED_ON_ONE)
+
+    page = main_of(signed_in.get(f"/sections/{GIFTS}/").content.decode())
+    assert escape(OPEN_IT) in page and escape(FINISHED) not in page
+    assert 'href="/sections/strengths/"' in page
+    assert signed_in.get("/sections/strengths/", follow=True).redirect_chain[-1][0] == TIE_BREAK
+
+    choose(signed_in, 0, "apostle")
+    choose(signed_in, 1, "")
+
+    page = main_of(signed_in.get(f"/sections/{GIFTS}/").content.decode())
+    assert escape(FINISHED) in page and escape(OPEN_IT) not in page
+    assert f'href="{RESULTS}"' in page
 
 
 @pytest.mark.django_db

@@ -1059,7 +1059,7 @@
           "$ref": "#/$defs/text"
         },
         "finished": {
-          "description": "What the signpost says once the linked section is complete, in place of its body and button label, such as 'View my results →'. Its button then leads to the results of the sort in that section, if it holds one, and otherwise to the section.",
+          "description": "What the signpost says once the linked section is complete, and the evaluation of any sort in it has ended, every tie-break pair answered or skipped, in place of its body and button label, such as 'View my results →'. Its button then leads to the results of the sort in that section, if it holds one, and otherwise to the section.",
           "type": "object",
           "additionalProperties": false,
           "required": ["button_label"],
