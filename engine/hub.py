@@ -128,7 +128,9 @@ class SectionState(NamedTuple):
     None for one it lists (ticket 49a), with `side_card_lead` the bold line above it, if it has one (ticket 95).
     `next_step` is the authored heading and sentence the hub's next step shows while
     this section is the next step, or None for a section without them (ticket 49b). `shows_status` is False for a part
-    that is all its section's work, whose row shows no pill of its own: its section's says it (ticket 106)."""
+    that is all its section's work, whose row shows no pill of its own: its section's says it (ticket 106).
+    `explains_lock` marks the one locked section whose lock note the hub shows under it, not only on its "Locked"
+    (`_explained`)."""
 
     id: str
     title: str
@@ -145,6 +147,7 @@ class SectionState(NamedTuple):
     next_step: NextStepWording | None = None
     tone: str | None = None
     shows_status: bool = True
+    explains_lock: bool = False
 
     @property
     def is_locked(self):
@@ -705,7 +708,8 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None, m
         or (state.is_locked and _shut_only_by_answers(section, answers, completed, sections, moved_past))
     }
     next_step = next((state for state in open_states if state.id not in waiting), None)
-    states = [state._replace(is_next=state is next_step) for state in states]
+    explained = _explained(states, waiting)
+    states = [state._replace(is_next=state is next_step, explains_lock=state.id == explained) for state in states]
     waiting_on_answers = next((state for state in states if state.id in waiting), None)
     coach_wait = next(
         (
@@ -728,6 +732,22 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None, m
         coach_wait=coach_wait,
         waiting_on_answers=None if next_step is not None else waiting_on_answers,
     )
+
+
+def _explained(states, waiting):
+    """✨ The section whose lock note the hub shows under it, not only on its "Locked", or None (hand check of 18 Nov).
+    While a section listed is open with work the participant can do, it is where to go next, and the notes of those
+    locked can wait on "Locked" (ticket 97). Once every one is finished, locked, or open with nothing but other
+    people's answers to wait for (`waiting`), the first locked one is what the participant is waiting on, and its note
+    says what opens it, from the pathway's own requirements and opening conditions: people invited answering, a coach
+    accepting, a side card to finish. Side cards are drawn beside the list, not in it, so one left to do does not hold
+    the note back; the note names it where it is what is needed. A part is explained by its section's note."""
+    listed = [state for state in states if state.side_card is None]
+    if any(state.status in (NOT_STARTED, IN_PROGRESS) and state.id not in waiting for state in listed):
+        return None
+    sections = {state.id for state in listed if state.part_of is None}
+    explained = (state for state in listed if state.is_locked and state.lock_note and state.part_of not in sections)
+    return next((state.id for state in explained), None)
 
 
 def _waits_only_on_comparison(section, answers, blocks):

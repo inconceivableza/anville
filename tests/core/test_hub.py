@@ -498,6 +498,45 @@ def test_an_opening_conditions_note_names_the_section_holding_its_block_in_itali
     )
 
 
+def explained(sections, completed, answers=None):
+    """✨ The ids of the sections whose lock note the hub shows under them, not only on "Locked"."""
+    return [state.id for state in hub_for(sections, answers or {}, completed).sections if state.explains_lock]
+
+
+def waits_on_answers(id, requires=()):
+    """✨ A section that opens once enough observers have answered, as *Whatever You Do*'s Section 2 does."""
+    asked = {"type": "observers_answered", "block": "contacts", "message": "Opens once enough have answered."}
+    return {**section(id, requires, blocks=[long_text(f"{id}-work")]), "opens_when": {"clauses": [asked]}}
+
+
+def test_with_a_listed_section_open_no_lock_note_is_shown_under_its_section():
+    """✨ Where to go next is the open section, and the notes of those locked wait on "Locked" (ticket 97)."""
+    sections = [section("first"), waits_on_answers("second", ["first"]), section("third", ["first"])]
+
+    assert explained(A_CHAIN, completed=[]) == []
+    assert explained(sections, completed=["first"]) == []  # ✨ the third is open, passing the second by
+
+
+def test_once_nothing_listed_is_left_to_do_the_first_locked_sections_note_is_shown_under_it():
+    """✨ What the participant is waiting on, whatever the pathway's requirements and opening conditions are (hand check
+    of 18 Nov): here answers, then a section waiting on them, and only the first locked shows its note."""
+    sections = [section("first"), waits_on_answers("second", ["first"]), section("third", ["second"])]
+    chained = [section("first"), section("second", ["first", "elsewhere"]), section("third", ["second"])]
+
+    assert explained(sections, completed=["first"]) == ["second"]
+    assert explained(chained, completed=["first"]) == ["second"]
+    assert explained(sections, completed=["first", "second"]) == []
+
+
+def test_a_side_card_left_to_do_does_not_hold_the_note_back_and_a_part_is_never_explained_alone():
+    """✨ Side cards are drawn beside the list, not in it, and the note names one where it is what is needed; a locked
+    part is explained by its section's note."""
+    part = {**section("part", ["second"]), "part_of": "second"}
+    sections = [section("first"), side_card("card"), waits_on_answers("second", ["first"]), part]
+
+    assert explained(sections, completed=["first"]) == ["second"]
+
+
 def test_a_lock_note_says_the_pathways_minimum_number_of_observer_answers_where_it_says_minimum():
     """✨ As the waiting sentence does, so the number is written once, in the pathway's observers (hand check of 18 Nov):
     in an opening condition's message, and in the sentence naming the sections still unfinished beside it."""

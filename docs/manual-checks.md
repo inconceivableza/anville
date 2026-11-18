@@ -221,13 +221,22 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 
 ### Ticket 97: Lock notes on "Locked" (rebuild the frontend; no need to load the pathway again or start a new participant)
 
-- On the hub, with Before we begin done and nothing else: no locked section has a line under its title. Each "Locked" pill looks as before, at the right of its row; hovering it shows its note in a small box below it ("Opens once you've completed Section 1." on Section 2; "…, and enough of the people you invited have answered." since ticket 106, and "…, and at least 3 people you invite have answered." since the hand check of 18 Nov), which stays while the pointer moves into the box and goes once it leaves both.
+- On the hub, with Before we begin done and nothing else: no locked section has a line under its title (since the hand check of 18 Nov, except the one section waited on once nothing listed is left to do: see below). Each "Locked" pill looks as before, at the right of its row; hovering it shows its note in a small box below it ("Opens once you've completed Section 1." on Section 2; "…, and enough of the people you invited have answered." since ticket 106, and "…, and at least 3 people you invite have answered." since the hand check of 18 Nov), which stays while the pointer moves into the box and goes once it leaves both.
 - Keyboard only: Tab reaches each "Locked", with a focus ring, and its note shows while it has the focus; Escape closes the note, the focus staying on "Locked"; Tab on, and the next one's note shows.
 - In the sidebar ("Your pathway"), a locked entry's "Locked" shows its note floating just below the pill, as on the hub, on hover, focus or a tap (fix-7). With the note open, Escape closes the note and leaves the sidebar open; a second Escape closes the sidebar.
 - Without JavaScript (switched off in the developer tools): hovering or tabbing to "Locked" still shows the note, and moving away or tabbing on closes it.
 - Screen reader: "Locked, button" is followed by its note, as its description.
 - Phone width (about 375px): a tap on "Locked" shows the note, and a tap elsewhere closes it; the note stays within the screen, wrapping, with nothing scrolling sideways, on the hub and in the sidebar. A locked side card, if any, works the same.
 - Faithful port: its locked sections behave the same, their notes reading as before ("Opens once you've finished *Before we begin*.").
+
+### Hand check of 18 Nov: the hub says what it is waiting on (rebuild the frontend and load the pathway again, version 8; phone width too)
+
+- *Whatever You Do*, Section 1 finished and nobody invited, no coach chosen: Section 2's entry ends with a line, below "How others see you", **"Opens once at least 3 people you invite in *Five trusted voices* have answered."**, in darker grey than "About 30–40 minutes", from under its title to the row's right edge. Its "Locked" is a plain pill, with no box on hover or a tap. "How others see you" within it, Section 3 and every later section keep their notes on "Locked", with no line.
+- Choose a coach and give three people links: Section 3 opens and is the next step, and the line goes; Section 2's note is on its "Locked" again. Finish Section 3: the line is back under Section 2, beside the next step's "Waiting on answers".
+- Three answer: Section 2 opens, and nothing has a line. With Sections 1–3 finished and the coach yet to accept, the line is under Section 4: "Opens once your coach has accepted. If they decline, choose someone else."
+- Phone width (about 375px): the line wraps across the row's width, not the title's narrow column, with nothing scrolling sideways.
+- The sidebar shows no lines, as before: every locked entry's note opens from its "Locked".
+- Any other pathway, by its own requirements and opening conditions: the faithful port, whose sections each open from the one before, never shows a line while the section before is open.
 
 ### Fix-7: The sidebar's lock note floats; the strengths evaluation signpost's lines are even (rebuild the frontend; no need to load the pathway again or start a new participant)
 

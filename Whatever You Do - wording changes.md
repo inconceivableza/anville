@@ -536,3 +536,4 @@ Section 2 stays "Locked" until at least three of the people invited have answere
 - Until Section 1 is finished: "Opens once you've completed Section 1, and enough of the people you invited have answered." becomes **"Opens once you've completed Section 1, and at least 3 people you invite have answered."**
 - Once it is: "Opens once enough of the people you invited have answered." becomes **"Opens once at least 3 people you invite in *Five trusted voices* have answered."**
 - A participant who started before this change keeps the earlier wording.
+- When there is nothing else in the list to do, the hub now shows this note as a line under Section 2 itself, not only when "Locked" is pressed or the pointer rests on it. The same goes for whichever locked section is being waited on, such as Section 4 while the coach hasn't yet accepted. No words change for this.

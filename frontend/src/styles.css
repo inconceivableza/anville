@@ -1485,6 +1485,16 @@ main > .hub ~ .hub-consent {
   color: var(--muted);
 }
 
+/* ✨ The one locked section's note the hub shows as a line (hand check of 18 Nov): what the participant is waiting on,
+   with nothing listed left to do. At the foot of its entry, from under its title to the row's right edge, so it keeps
+   a readable width on a phone, where the title's column is narrow; in the darker grey of a sentence to read. */
+.srow > .lock-reason {
+  grid-column: 2 / -1;
+  margin: 0;
+  color: var(--ink-light);
+  text-wrap: pretty;
+}
+
 .srow.locked h3 a {
   color: var(--muted);
 }
