@@ -5,7 +5,7 @@
 {# ✨ The `comparison` link in this section is listed after the part holding its sort (ticket 67b), or first where no part of it holds the sort (ticket 87). #}
 {# ✨ A locked one's note is no line under it but the description of its "Locked" button (ticket 97), but for the one #}
 {# whose note `explains_lock` (`hub._explained`), what the participant waits on with nothing listed left to do: its #}
-{# note is a line at the foot of its entry, spanning to the row's right, and its "Locked" a plain pill (18 Nov). #}
+{# note is a line under its title, above any parts (on a phone reaching under its pill), its "Locked" plain (18 Nov). #}
 {# ✨ A part that is all its section's work shows no pill of its own, its section's saying it (ticket 106). #}
 {# ✨ An open row is one link (fix-6): its title's link is stretched over the row in CSS, with a small decorative arrow #}
 {# at its right. A locked row has neither, holding the "Locked" button, and an interactive element is never nested in a link. #}
@@ -19,6 +19,9 @@
     {% endif %}
     {% if section.part_of %}<span class="row-kind">Activity</span>{% endif %}
     {% if section.estimate %}<p>{{ section.estimate }}</p>{% endif %}
+    {% if section.explains_lock %}
+      <p class="lock-reason" id="lock-note-{{ section.id }}">{{ section.lock_note }}</p>
+    {% endif %}
     {% if parts or comparison.section == section.id %}
       <ol class="hub-parts">
         {% if comparison.section == section.id and not comparison.after %}{% include "engine/hub_comparison.html" with holder=section %}{% endif %}
@@ -35,5 +38,4 @@
     {% include "engine/lock_status.html" with pill="tag" note_id="lock-note-"|add:section.id up_next=True note_below=section.explains_lock %}
   {% endif %}
   {% if not section.is_locked %}<span class="srow-arrow" aria-hidden="true">&rarr;</span>{% endif %}
-  {% if section.explains_lock %}<p class="lock-reason" id="lock-note-{{ section.id }}">{{ section.lock_note }}</p>{% endif %}
 </li>

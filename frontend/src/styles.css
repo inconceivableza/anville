@@ -1486,13 +1486,29 @@ main > .hub ~ .hub-consent {
 }
 
 /* ✨ The one locked section's note the hub shows as a line (hand check of 18 Nov): what the participant is waiting on,
-   with nothing listed left to do. At the foot of its entry, from under its title to the row's right edge, so it keeps
-   a readable width on a phone, where the title's column is narrow; in the darker grey of a sentence to read. */
-.srow > .lock-reason {
-  grid-column: 2 / -1;
-  margin: 0;
-  color: var(--ink-light);
+   with nothing listed left to do. Close under its title, as a section's "About 30–40 minutes" is, above any parts, in
+   the title's column, clear of "Locked"; in italics, in its locked title's colour, the titles it names set upright. */
+.srow-body > .lock-reason {
+  color: var(--muted);
+  font-style: italic;
   text-wrap: pretty;
+}
+
+.srow-body > .lock-reason em {
+  font-style: normal;
+}
+
+/* ✨ On a phone the title's column is too narrow for it (a few words a line at 375px), so it reaches under "Locked" to
+   the row's right edge, as the parts do. A one-line title above it is made as tall as the plain pill (a line of
+   --text-xs at the body's line height, and its padding), so the line starts below the pill, not beside it. */
+@media (max-width: 560px) {
+  .srow-body > .lock-reason {
+    margin-right: calc(-1 * (var(--hub-pill-column) + var(--hub-arrow-column) + 2 * var(--space-md)));
+  }
+
+  .srow-body > h3:has(+ .lock-reason) {
+    min-height: calc(var(--text-xs) * 1.6 + 2 * var(--space-2xs));
+  }
 }
 
 .srow.locked h3 a {

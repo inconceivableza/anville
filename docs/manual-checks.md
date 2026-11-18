@@ -231,10 +231,10 @@ Needs the Google pair set; any participant will do, with no need to load the pat
 
 ### Hand check of 18 Nov: the hub says what it is waiting on (rebuild the frontend and load the pathway again, version 8; phone width too)
 
-- *Whatever You Do*, Section 1 finished and nobody invited, no coach chosen: Section 2's entry ends with a line, below "How others see you", **"Opens once at least 3 people you invite in *Five trusted voices* have answered."**, in darker grey than "About 30–40 minutes", from under its title to the row's right edge. Its "Locked" is a plain pill, with no box on hover or a tap. "How others see you" within it, Section 3 and every later section keep their notes on "Locked", with no line.
+- *Whatever You Do*, Section 1 finished and nobody invited, no coach chosen: Section 2's entry has a line under its title, above "How others see you": **"Opens once at least 3 people you invite in *Five trusted voices* have answered."**, in italics, "Five trusted voices" upright against them, in the colour of its title, set as close under it as "About 30–40 minutes" is under Section 3's, within the title's width, wrapping before "Locked", never touching it. Its "Locked" is a plain pill, with no box on hover or a tap. "How others see you" within it, Section 3 and every later section keep their notes on "Locked", with no line.
 - Choose a coach and give three people links: Section 3 opens and is the next step, and the line goes; Section 2's note is on its "Locked" again. Finish Section 3: the line is back under Section 2, beside the next step's "Waiting on answers".
 - Three answer: Section 2 opens, and nothing has a line. With Sections 1–3 finished and the coach yet to accept, the line is under Section 4: "Opens once your coach has accepted. If they decline, choose someone else."
-- Phone width (about 375px): the line wraps across the row's width, not the title's narrow column, with nothing scrolling sideways.
+- Phone width (about 375px): the line wraps across the row's width, under the "Locked" pill, starting below it, not in the title's narrow column, with nothing scrolling sideways.
 - The sidebar shows no lines, as before: every locked entry's note opens from its "Locked".
 - Any other pathway, by its own requirements and opening conditions: the faithful port, whose sections each open from the one before, never shows a line while the section before is open.
 
