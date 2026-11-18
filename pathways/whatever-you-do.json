@@ -256,10 +256,10 @@
             {
               "type": "observers_answered",
               "block": "contacts",
-              "message": "Opens once enough of the people you invited have answered."
+              "message": "Opens once at least {minimum} people you invite in {title} have answered."
             }
           ],
-          "with_sections": "Opens once you've {sections}, and enough of the people you invited have answered."
+          "with_sections": "Opens once you've {sections}, and at least {minimum} people you invite have answered."
         },
         "to_finish": "completed {section}",
         "complete_label": "I've finished Section 2",

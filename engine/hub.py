@@ -16,6 +16,7 @@ from django.utils.safestring import mark_safe
 
 from engine.document.blocks import BLOCK_TYPES, ends_in_signpost_to, page_count, page_of, pages_of
 from engine.document.gates import (
+    clause_message,
     clause_passes,
     clauses_of,
     comparison_viewed,
@@ -535,22 +536,23 @@ class LockNote(str):
 GENERAL_LOCK_NOTE = "Complete what comes before this to open it."
 
 
-def _lock_note(section, completed, answers, sections, moved_past, role):
+def _lock_note(section, completed, answers, sections, moved_past, role, minimum=None):
     """✨ What the hub says of a locked section: the sections it requires still unfinished, and with them its
     opening conditions in the sentence it carries for that; once those sections are done, the message of each failing
     opening condition (ADR 0019); for a part waiting on its section, where it opens from and, while a reading there is
-    unconfirmed, what opens it; otherwise the engine's general note."""
+    unconfirmed, what opens it; otherwise the engine's general note. The opening conditions' wording says the pathway's
+    `minimum` number of observer answers wherever it says {minimum} (hand check of 18 Nov)."""
     notes = unmet_opening_notes(section, answers, role)
     if not _requires_met(section, completed):
         named = _unfinished_named(section, completed, sections, role)
         with_sections = section.get("opens_when", {}).get("with_sections")
         if named and notes and with_sections:
-            return LockNote(_filled(text_for(with_sections, role), "{sections}", named))
+            return LockNote(_filled(_with_minimum(text_for(with_sections, role), minimum), "{sections}", named))
         if not named:
             return LockNote([plain(GENERAL_LOCK_NOTE)])
         return LockNote([plain("Opens once you've "), *named, plain(".")])
     if notes:
-        return LockNote([plain(" ".join(notes))])
+        return LockNote(_opening_note(section, answers, sections, role, minimum))
     waiting = _waiting_on(section, completed, answers, sections, moved_past)
     if waiting is None:
         return LockNote([plain(GENERAL_LOCK_NOTE)])
@@ -558,6 +560,31 @@ def _lock_note(section, completed, answers, sections, moved_past, role):
     if waiting.holding is not None and BLOCK_TYPES[waiting.holding["type"]].opens_what_follows:
         return LockNote([plain("Opens from "), title, plain(", once you've read the passages.")])
     return LockNote([plain("Opens from "), title, plain(".")])
+
+
+def _opening_note(section, answers, sections, role, minimum=None):
+    """✨ What a section's failing opening conditions say, as a lock note's pieces: each authored message once, in the
+    order authored (ADR 0019). Where a message says {title}, the title, in italics, of the section holding the block its
+    condition reads, as Section 2's names *Five trusted voices*, where the people it waits on are invited (hand check
+    of 18 Nov). A section outside the track is not named."""
+    said = {}
+    for clause in _failing_opening_clauses(section, answers):
+        message = _with_minimum(clause_message(clause, role), minimum)
+        holding = next((other for other in sections if _holds(other, clause["block"])), None)
+        title = [italic(text_for(holding["title"], role))] if holding else []
+        said.setdefault(message, _filled(message, "{title}", title))
+    return [piece for index, note in enumerate(said.values()) for piece in [*([plain(" ")] if index else []), *note]]
+
+
+def _with_minimum(text, minimum):
+    """✨ `text` with the pathway's `minimum` number of observer answers wherever it says {minimum}, or as written
+    without one. Replaced as plain text, never through `format()`, so other braces stay."""
+    return text if minimum is None else text.replace("{minimum}", str(minimum))
+
+
+def _holds(section, block_id):
+    """✨ Whether `section` holds the block `block_id`."""
+    return any(block["id"] == block_id for block in section.get("blocks", ()))
 
 
 def _unfinished_named(section, completed, sections, role):
@@ -661,13 +688,14 @@ def counted_sections(sections, completed):
     return numbered or listed
 
 
-def hub_for(sections, answers, completed, role="participant", moved_past=None):
+def hub_for(sections, answers, completed, role="participant", moved_past=None, minimum=None):
     """✨ A participant's hub over one track's sections, less any once-only section once complete. `moved_past` holds,
-    by section, the pages moved past."""
+    by section, the pages moved past; `minimum` is the pathway's minimum number of observer answers, which a lock note
+    says wherever its wording says {minimum}, as the waiting sentence does."""
     moved_past = moved_past or {}
     completed = complete_sections(sections, answers, completed)
     listed = listed_sections(sections, completed)
-    states = [_state(section, answers, completed, role, moved_past, sections) for section in listed]
+    states = [_state(section, answers, completed, role, moved_past, sections, minimum) for section in listed]
     blocks = {block["id"]: block for section in sections for block in section["blocks"]}
     open_states = [state for state in states if state.status in (NOT_STARTED, IN_PROGRESS)]
     waiting = {
@@ -741,7 +769,7 @@ def _failing_opening_clauses(section, answers):
     return [clause for clause in clauses if not clause_passes(clause, answers)]
 
 
-def _state(section, answers, completed, role, moved_past, sections):
+def _state(section, answers, completed, role, moved_past, sections, minimum=None):
     status = _status(section, answers, completed, sections, moved_past)
     return SectionState(
         id=section["id"],
@@ -752,7 +780,9 @@ def _state(section, answers, completed, role, moved_past, sections):
         # ✨ A completed section is reopened to reread, so from its start rather than where it was left (ticket 41e).
         page=1 if status == COMPLETE else page_reached(section, moved_past, answers, sections),
         part_of=section.get("part_of"),
-        lock_note=_lock_note(section, completed, answers, sections, moved_past, role) if status == LOCKED else None,
+        lock_note=(
+            _lock_note(section, completed, answers, sections, moved_past, role, minimum) if status == LOCKED else None
+        ),
         number=section.get("number"),
         side_card=text_for(section["side_card"]["sentence"], role) if "side_card" in section else None,
         side_card_lead=text_for(section["side_card"]["lead"], role) if "lead" in section.get("side_card", {}) else None,

@@ -186,6 +186,24 @@ def test_an_opening_condition_must_be_a_clause_from_the_fixed_set():
     assert [problem.path for problem in validate(document)] == ["/content/sections/1/opens_when/clauses/0/type"]
 
 
+def test_an_opening_conditions_message_may_say_its_blocks_section_and_the_minimum_and_no_other_placeholder():
+    """✨ The hub fills {title} and {minimum} (hand check of 18 Nov); a typo such as {titel} would reach the participant
+    as written."""
+    accepted = {"type": "coach_accepted", "block": "coach", "message": "Opens once {minimum} accept in {title}."}
+    assert validate(document_whose_section_opens_when(accepted)) == []
+
+    mistyped = {"participant": "In {titel}.", "observer": "."}
+    document = document_whose_section_opens_when({**accepted, "message": mistyped})
+
+    assert validate(document) == [
+        Problem(
+            path="/content/sections/1/opens_when/clauses/0/message/participant",
+            message="The engine fills no {titel} here: an opening condition's message may say {title}, the title of "
+            "the section holding its block, {minimum} or {min}.",
+        )
+    ]
+
+
 def test_coach_accepted_must_name_a_coach_checklist_and_may_name_one_in_another_section():
     accepted = {"type": "coach_accepted", "block": "coach", "message": "Opens once your coach has accepted."}
     assert validate(document_whose_section_opens_when(accepted)) == []

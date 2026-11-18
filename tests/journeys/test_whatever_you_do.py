@@ -994,12 +994,10 @@ def test_the_comparisons_row_is_listed_under_section_2_and_locked_with_it(partic
     submit_the_sort(participant)  # ✨ which completes Section 1 (ticket 119), so Section 2 waits on answers alone
     hub = main_of(participant.get("/hub/").content.decode())
     sidebar = sidebar_of(participant.get("/sections/designed/").content.decode())
-    [waiting] = pathway_section("others")["opens_when"]["clauses"]
-
     for html, kind in ((hub, "hub"), (sidebar, "pathway-nav")):
         row, section_2 = comparison_row(html, kind)
         assert row in section_2
-        assert "Locked" in row and escape(waiting["message"]) in row
+        assert "Locked" in row and section_2_note() in row
         assert not COMPARISON_LINK.search(html)
 
     people_answer(participant)
@@ -1044,6 +1042,17 @@ def section_2_opens_when():
     return pathway_section("others")["opens_when"]
 
 
+def section_2_note(italic=True):
+    """✨ The hub's note under Section 2 once Section 1 is done, as the page draws it, or with `italic` false as
+    `note_under` reads it: its opening condition's message, naming *Five trusted voices*, where the people it waits on
+    are invited (hand check of 18 Nov)."""
+    [waiting] = section_2_opens_when()["clauses"]
+    assert "{title}" in waiting["message"] and "{minimum}" in waiting["message"]
+    voices = escape(pathway_section("trusted-voices")["title"])
+    said = escape(waiting["message"]).replace("{minimum}", str(minimum_observers(the_pathway())))
+    return said.replace("{title}", f"<em>{voices}</em>" if italic else voices)
+
+
 @pytest.mark.django_db
 def test_section_2_opens_once_section_1_is_finished_and_enough_people_have_answered_then_stays_open(participant):
     """✨ Ticket 106: Section 2 waits for the comparison, not on Section 1 alone (ADR 0019). Until the minimum of the
@@ -1053,7 +1062,7 @@ def test_section_2_opens_once_section_1_is_finished_and_enough_people_have_answe
     browsers = people_answer(participant, count=minimum_observers(the_pathway()) - 1)
     assert participant.get(SECTION_2).status_code == 302
     assert participant.get(COMPARISON).status_code == 302
-    assert escape(section_2_opens_when()["clauses"][0]["message"]) in note_under(participant, "others")
+    assert section_2_note(italic=False) in note_under(participant, "others")
 
     last = Client()
     claim(last, issue_link(participant, "Person 2"))
@@ -1167,6 +1176,7 @@ def test_each_lock_note_names_exactly_what_is_left_in_the_sections_still_unfinis
     with_the_coach = opening_condition()["with_sections"].replace("{sections}", "{}")
     section_1, coach, voices = map(what_is_left, ["designed", "walk-with-a-coach", "trusted-voices"])
     with_answers = section_2_opens_when()["with_sections"].replace("{sections}", section_1)
+    with_answers = with_answers.replace("{minimum}", str(minimum_observers(the_pathway())))
     assert escape(with_answers) in note_under(participant, "others")
     assert escape(OPENS_ONCE.format(f"{section_1}, {coach} and {voices}")) in note_under(participant, "shape")
     assert escape(with_the_coach.format(what_is_left("designed", "Sections 1, 2 and 3"))) in note_under(
@@ -1177,7 +1187,7 @@ def test_each_lock_note_names_exactly_what_is_left_in_the_sections_still_unfinis
     do_the_sort(participant)
     choose(participant)
     assert escape(OPENS_ONCE.format(voices)) in note_under(participant, "shape")
-    assert escape(section_2_opens_when()["clauses"][0]["message"]) in note_under(participant, "others")
+    assert section_2_note(italic=False) in note_under(participant, "others")
 
     add_people(participant, 3)
     complete(participant, "shape")

@@ -527,3 +527,11 @@ After "Delete and retake", until the new evaluation is sent, "How others see you
 
 - **Section 2's "How others see you" card**, under the greyed "Compare with how others see you →": **"Finish your evaluation first."**, "Finish your evaluation" still leading back to it. This replaces "Finish your strengths evaluation to compare."
 - **Its row on the hub, and the menu**: the same words as a pill, **"Finish your evaluation first"**, without the full stop, as the other pills have none.
+
+### Section 2's note says where to invite people (18 November)
+
+Section 2 stays "Locked" until at least three of the people invited have answered. Its note, shown on "Locked", said "enough of the people you invited", which told someone who hadn't invited anyone nothing about inviting people, or where to do it. It now says how many, and names *Five trusted voices*, in italics as section titles are in these notes.
+
+- Until Section 1 is finished: "Opens once you've completed Section 1, and enough of the people you invited have answered." becomes **"Opens once you've completed Section 1, and at least 3 people you invite have answered."**
+- Once it is: "Opens once enough of the people you invited have answered." becomes **"Opens once at least 3 people you invite in *Five trusted voices* have answered."**
+- A participant who started before this change keeps the earlier wording.

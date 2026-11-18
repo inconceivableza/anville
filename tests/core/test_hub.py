@@ -481,6 +481,38 @@ def test_every_title_a_note_names_is_in_italics_and_escaped():
     )
 
 
+def test_an_opening_conditions_note_names_the_section_holding_its_block_in_italics_where_it_says_title():
+    """✨ As Section 2's names *Five trusted voices*, where the people it waits on are invited, once Section 1 is done
+    (hand check of 18 Nov). Each failing condition is said once, in the order authored."""
+    voices = {**section("voices", blocks=[long_text("contacts")]), "title": "<b>Voices</b>"}
+    asked = {"type": "observers_answered", "block": "contacts", "message": "Opens once 3 you invite in {title} answer."}
+    coached = {"type": "coach_accepted", "block": "coach", "message": "And your coach accepts."}
+    others = {**section("others", requires=["designed"]), "opens_when": {"clauses": [asked, asked, coached]}}
+    sections = [section("designed"), voices, others]
+
+    note = lock_note(sections, completed=["designed"], title_of="others")
+
+    assert note == "Opens once 3 you invite in <b>Voices</b> answer. And your coach accepts."
+    assert conditional_escape(note) == (
+        "Opens once 3 you invite in <em>&lt;b&gt;Voices&lt;/b&gt;</em> answer. And your coach accepts."
+    )
+
+
+def test_a_lock_note_says_the_pathways_minimum_number_of_observer_answers_where_it_says_minimum():
+    """✨ As the waiting sentence does, so the number is written once, in the pathway's observers (hand check of 18 Nov):
+    in an opening condition's message, and in the sentence naming the sections still unfinished beside it."""
+    asked = {"type": "observers_answered", "block": "contacts", "message": "Opens once {minimum} have answered."}
+    opens_when = {"clauses": [asked], "with_sections": "Opens once you've {sections}, and {minimum} have answered."}
+    others = {**section("others", requires=["designed"]), "opens_when": opens_when}
+
+    def note(completed):
+        hub = hub_for([section("designed"), others], {}, completed, minimum=4)
+        return next(state for state in hub.sections if state.id == "others").lock_note
+
+    assert note(["designed"]) == "Opens once 4 have answered."
+    assert note([]) == "Opens once you've finished Designed, and 4 have answered."
+
+
 # What the hub says about each section
 
 

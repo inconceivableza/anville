@@ -45,6 +45,7 @@ def lint(document):
         *_unreadable_clauses(document),
         *_minimums_written_twice(document),
         *_unknown_phrase_placeholders(document),
+        *_unknown_opening_placeholders(document),
         *_unreadable_opening_conditions(document),
         *_missing_constructs(document, construct_ids),
         *_loads_per_framework(document, construct_ids),
@@ -370,6 +371,26 @@ def _unknown_phrase_placeholders(document):
                     f"/content/sections/{s}/to_finish" + (f"/{role}" if role else ""),
                     f"The engine fills no {{{name}}} here: a phrase may say {{title}}, {{section}} or {{min}}.",
                 )
+
+
+# ✨ The placeholders an opening condition's message may hold: the hub fills {title} with the title of the section
+# holding the block it reads and {minimum} with the pathway's minimum number of observer answers, as the waiting
+# sentence does (hand check of 18 Nov), and {min} as in every clause's message, and no other.
+OPENING_PLACEHOLDERS = {"title", "minimum", "min"}
+
+
+def _unknown_opening_placeholders(document):
+    """✨ A placeholder in an opening condition's message that the hub does not fill, which would reach the participant
+    as written, as a phrase's would."""
+    for s, section in enumerate(document["content"]["sections"]):
+        for c, clause in enumerate(section.get("opens_when", {}).get("clauses", [])):
+            for role, said in _by_role(clause.get("message", "")):
+                for name in sorted(set(re.findall(r"\{(\w+)\}", said)) - OPENING_PLACEHOLDERS):
+                    yield Problem(
+                        f"/content/sections/{s}/opens_when/clauses/{c}/message" + (f"/{role}" if role else ""),
+                        f"The engine fills no {{{name}}} here: an opening condition's message may say {{title}}, the "
+                        "title of the section holding its block, {minimum} or {min}.",
+                    )
 
 
 def _by_role(text):

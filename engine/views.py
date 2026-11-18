@@ -407,7 +407,7 @@ def hub(request):
     wizard = _wizard_due(state)
     if wizard is not None:
         return redirect(wizard)
-    hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    hub = _hub_of(state)
     coach = _coach_of(state.response, state.answers)
     coach_section = _coach_section_of(state.version.document)
     coach_page = _coach_page_of(state.version.document, hub)
@@ -669,7 +669,7 @@ def participant_nav(request):
     title = text_for(document["title"], "participant")
     if not settings.ANVILLE_SIDEBAR or not any(section["blocks"] for section in state.sections):
         return {"title": title, "sidebar": None}
-    hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    hub = _hub_of(state)
     links = []
     scored = _scored_block(document)
     names = _quick_link_names(document, hub, scored)
@@ -713,7 +713,7 @@ def start(request):
     state = _participant(request.user)
     if state.response is not None or state.version is None:
         return redirect("hub")
-    next_step = hub_for(state.sections, state.answers, state.completed).next_step
+    next_step = _hub_of(state).next_step
     if next_step is None or not any(section["blocks"] for section in state.sections):
         return redirect("hub")  # ✨ the hub's empty state says there is nothing to begin
     return redirect("section", next_step.id)
@@ -1378,7 +1378,7 @@ def _invite(state):
     phrase is empty. None for a pathway without that card or while it is locked, where the press is offered alone, as
     before."""
     answered, minimum = _answered(state.response), minimum_observers(state.version.document)
-    hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    hub = _hub_of(state)
     voices = _hub_voices(state, hub)
     if voices is None:
         return None
@@ -1700,7 +1700,7 @@ def demo_shortcut(request):
     if state.version is None or _wizard_due(state) is not None:
         return _see_other("hub")  # ✨ the hub sends them on, as it would without the press
     section = _section_or_404(state.version, request.POST.get("section", ""))
-    hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    hub = _hub_of(state)
     if section["id"] in {offered.id for offered in demo_shortcuts.offered(state.version.document, hub)}:
         try:
             demo_shortcuts.open_section(state.stored_response(request.user), section["id"])
@@ -2943,6 +2943,18 @@ def _go_to(request, where):
     return _see_other(where)
 
 
+def _hub_of(state, answers=None):
+    """✨ The participant's hub as `hub_for` works it out from their state, with `answers` in place of their stored ones
+    where a page has newer, and the pathway's minimum number of observer answers, which a lock note may say."""
+    return hub_for(
+        state.sections,
+        state.answers if answers is None else answers,
+        state.completed,
+        moved_past=state.moved_past,
+        minimum=minimum_observers(state.version.document),
+    )
+
+
 def _participant(user, first_version=Publication.current_version):
     """✨ Everything stored for this participant, as a `ParticipantState`.
 
@@ -3115,7 +3127,7 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
     # ✨ Nor is it offered in a section whose work is all in its parts until they are done (ticket 106).
     parts_pending = is_last and finish_waits(section, state.sections, state.completed)
     # ✨ A link shows the section it leads to exactly as the hub would: its title, its status and whether it is open.
-    hub = hub_for(state.sections, answers, state.completed, moved_past=state.moved_past)
+    hub = _hub_of(state, answers)
     links = _requirement_links(state, section, page)
     gate_checklist = [(message, met, links.get(message)) for message, met in checklist(section, answers, page=page)]
     states = {other.id: other for other in hub.sections}
