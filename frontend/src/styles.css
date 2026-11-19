@@ -3263,6 +3263,12 @@ body:not(.framed) .question-card > p + form {
   line-height: 1.5;
 }
 
+/* ✨ A box of several paragraphs, as the note for people asked to rate someone, sets them apart as the pathway's rich
+   text does (`.rich-text p + p`), rather than running them together (hand check of ticket 109, 19 Nov). */
+.hint-box p + p {
+  margin-top: 12px;
+}
+
 .hint-box strong {
   color: var(--green-deep);
   font-size: var(--text-xs);
