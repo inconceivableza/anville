@@ -324,12 +324,17 @@ def _unreadable_clauses(document):
 def _minimums_written_twice(document):
     """✨ The number of people a `links_issued` clause needs is written once, in the clause (ticket 81): its message and
     its section's `to_finish` say it by {min}, so a different number written in either is refused, and a {min} in the
-    `to_finish` of a section without exactly one such clause, which would reach the participant as written."""
+    `to_finish` of a section without exactly one such clause, or in the message of any other clause, which would reach
+    the participant as written."""
     for s, section in enumerate(document["content"]["sections"]):
         for c, clause in enumerate(clauses_of(section)):
             minimum = people_minimum([clause])
+            path = f"/content/sections/{s}/gate/clauses/{c}/message"
             if minimum is not None:
-                yield from _other_numbers(clause["message"], minimum, f"/content/sections/{s}/gate/clauses/{c}/message")
+                yield from _other_numbers(clause["message"], minimum, path)
+            elif any("{min}" in said for _, said in _by_role(clause.get("message", ""))):
+                # ✨ Nothing fills it, so it would reach the participant as written (code review of 23 Nov).
+                yield Problem(path, "{min} is the minimum of a 'links_issued' clause, and this clause is not one.")
         if "to_finish" not in section:
             continue
         path = f"/content/sections/{s}/to_finish"
@@ -375,8 +380,11 @@ def _unknown_phrase_placeholders(document):
 
 # ✨ The placeholders an opening condition's message may hold: the hub fills {title} with the title of the section
 # holding the block it reads and {minimum} with the pathway's minimum number of observer answers, as the waiting
-# sentence does (hand check of 18 Nov), and {min} as in every clause's message, and no other.
-OPENING_PLACEHOLDERS = {"title", "minimum", "min"}
+# sentence does (hand check of 18 Nov), and no other but {min} where its clause has a minimum to say (`SAYS_MIN`).
+OPENING_PLACEHOLDERS = {"title", "minimum"}
+# ✨ The clauses with a minimum an opening condition's message may say as {min}: a `links_issued` clause's own, and
+# the pathway's minimum number of observer answers an `observers_answered` clause waits on (code review of 23 Nov).
+SAYS_MIN = {"links_issued", "observers_answered"}
 
 
 def _unknown_opening_placeholders(document):
@@ -384,12 +392,14 @@ def _unknown_opening_placeholders(document):
     as written, as a phrase's would."""
     for s, section in enumerate(document["content"]["sections"]):
         for c, clause in enumerate(section.get("opens_when", {}).get("clauses", [])):
+            filled = OPENING_PLACEHOLDERS | ({"min"} if clause.get("type") in SAYS_MIN else set())
             for role, said in _by_role(clause.get("message", "")):
-                for name in sorted(set(re.findall(r"\{(\w+)\}", said)) - OPENING_PLACEHOLDERS):
+                for name in sorted(set(re.findall(r"\{(\w+)\}", said)) - filled):
                     yield Problem(
                         f"/content/sections/{s}/opens_when/clauses/{c}/message" + (f"/{role}" if role else ""),
                         f"The engine fills no {{{name}}} here: an opening condition's message may say {{title}}, the "
-                        "title of the section holding its block, {minimum} or {min}.",
+                        "title of the section holding its block, {minimum}, and for a 'links_issued' or "
+                        "'observers_answered' clause {min}.",
                     )
 
 

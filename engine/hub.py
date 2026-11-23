@@ -572,11 +572,21 @@ def _opening_note(section, answers, sections, role, minimum=None):
     of 18 Nov). A section outside the track is not named."""
     said = {}
     for clause in _failing_opening_clauses(section, answers):
-        message = _with_minimum(clause_message(clause, role), minimum)
+        message = _opening_message(clause, role, minimum)
         holding = next((other for other in sections if _holds(other, clause["block"])), None)
         title = [italic(text_for(holding["title"], role))] if holding else []
         said.setdefault(message, _filled(message, "{title}", title))
     return [piece for index, note in enumerate(said.values()) for piece in [*([plain(" ")] if index else []), *note]]
+
+
+def _opening_message(clause, role, minimum):
+    """✨ An opening condition's message with the numbers it may say: {min}, the minimum its clause waits on, that is a
+    `links_issued` clause's own (`clause_message`) or, for an `observers_answered` clause, the pathway's `minimum`
+    number of observer answers (code review of 23 Nov); and {minimum}, that number, whatever the clause."""
+    message = clause_message(clause, role)
+    if clause["type"] == "observers_answered":
+        message = message.replace("{min}", "{minimum}")
+    return _with_minimum(message, minimum)
 
 
 def _with_minimum(text, minimum):

@@ -1222,7 +1222,7 @@
       }
     },
     "opens_when": {
-      "description": "What must be true before this section first opens, beside the sections it requires, such as the coach having accepted. Every clause must pass; while one fails the section is locked and the hub's note under it gives that clause's message, where {title} is the title, in italics, of the section holding the block the clause reads, and {minimum} the pathway's minimum number of observer answers, such as 'Opens once at least {minimum} people you invite in {title} have answered.' Once the section has opened it stays open, whatever later happens to these clauses.",
+      "description": "What must be true before this section first opens, beside the sections it requires, such as the coach having accepted. Every clause must pass; while one fails the section is locked and the hub's note under it gives that clause's message, where {title} is the title, in italics, of the section holding the block the clause reads, and {minimum} the pathway's minimum number of observer answers, such as 'Opens once at least {minimum} people you invite in {title} have answered.', which an observers_answered clause's message may also say as {min}, the minimum it waits on, as a links_issued clause's says its own. Once the section has opened it stays open, whatever later happens to these clauses.",
       "type": "object",
       "additionalProperties": false,
       "required": ["clauses"],

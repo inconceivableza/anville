@@ -552,6 +552,17 @@ def test_a_lock_note_says_the_pathways_minimum_number_of_observer_answers_where_
     assert note([]) == "Opens once you've finished Designed, and 4 have answered."
 
 
+def test_an_opening_condition_on_observers_answering_says_the_minimum_it_waits_on_where_it_says_min():
+    """✨ The pathway's minimum number of observer answers, as {minimum} (code review of 23 Nov: "{min}" reached the
+    participant as written)."""
+    asked = {"type": "observers_answered", "block": "contacts", "message": "Opens once {min} have answered."}
+    others = {**section("others", requires=["designed"]), "opens_when": {"clauses": [asked]}}
+
+    hub = hub_for([section("designed"), others], {}, ["designed"], minimum=4)
+
+    assert next(state for state in hub.sections if state.id == "others").lock_note == "Opens once 4 have answered."
+
+
 # What the hub says about each section
 
 
