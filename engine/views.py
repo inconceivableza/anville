@@ -1011,7 +1011,7 @@ def save_answer(request, block_id):
         # ✨ A sort too close to call on one framework or both, and not flat, leads to the tie-break's pairs first.
         if pair_plan(state.version.document, scores):
             return _go_to(request, _with_demo_profile(request, reverse("tie_break", args=[block_id])))
-        _participant(request.user)  # ✨ the evaluation has ended, so a section it ends completes now (ticket 119)
+        _complete_what_the_evaluation_ended(participant_response)
         return _to_results(request, block_id)
     if not participant_response.save_answer(block_id, value):
         # ✨ a completion fixed it after the check above, and the UPDATE saw that
@@ -1450,7 +1450,7 @@ def tie_break(request, block_id):
         result.answer_pair(place, plan[place], chosen, both=both)
         _scores_shown_storing_reweighted(state.version.document, result)  # ✨ the last answer re-weights the result
         if not _pairs_left(state.version.document, result):
-            _participant(request.user)  # ✨ the evaluation has ended, so a section it ends completes now (ticket 119)
+            _complete_what_the_evaluation_ended(state.response)
         return _see_other(_with_demo_profile(request, reverse("tie_break", args=[block_id])))
     if len(result.tie_break_answers) >= len(plan):
         return redirect("results", block_id)
@@ -3038,6 +3038,20 @@ def _store_completions_and_openings(participant_response):
             participant_response.open_section(section["id"])
             answers[opened_key(section["id"])] = True
     return sections, answers, completed, moved_past
+
+
+def _complete_what_the_evaluation_ended(participant_response):
+    """✨ Store, now, the completion of each section the participant's evaluation has just ended (ticket 119): called
+    as the sort with no pairs is sent and as the last tie-break pair is answered, so the completion is stored by the
+    press that ends the evaluation, not left for the next request's `_participant` to find. A write, returning nothing
+    (code review of 23 Nov: it was a call to `_participant` whose state was thrown away). The response is read again
+    first, since the press stored the sort or the pair by an UPDATE its copy here never saw."""
+    participant_response.refresh_from_db()
+    sections = track_sections(participant_response.version.document)
+    answers = participant_response.answers_with_contacts_and_visits()
+    completed = complete_sections(sections, answers, participant_response.completed_sections)
+    moved_past = participant_response.moved_past_by_section()
+    _complete_those_ended_by_their_evaluation(participant_response, sections, answers, completed, moved_past)
 
 
 def _complete_those_ended_by_their_evaluation(participant_response, sections, answers, completed, moved_past):
