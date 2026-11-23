@@ -25,7 +25,7 @@ from tests.journeys.test_havent_seen_this import A_CARD_NOT_SEEN, NOTHING_SEEN, 
 from tests.journeys.test_hub import DEE, PEOPLE, add_people_with_links, answer_through, meters, tag_of, voices_card
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_invitations import issue_link
-from tests.journeys.test_observer_assessment import SAM, answered_by, press_compare, send, withdraw
+from tests.journeys.test_observer_assessment import SAM, answered_by, expire_every_link, press_compare, send, withdraw
 from tests.journeys.test_observer_landing import claim, the_observers_page
 from tests.journeys.test_observer_responses import an_observer
 from tests.journeys.test_results import SORT, submit_sort, widget_data
@@ -233,6 +233,21 @@ def test_a_decline_reached_through_the_withdrawal_page_goes_without_counting_as_
 
     assert not ObserverResponse.objects.exists()
     assert Response.objects.get().observers_withdrew == 0
+
+
+@pytest.mark.django_db
+def test_once_a_decliners_link_has_expired_it_offers_no_withdrawal_and_withdraws_nothing(participant):  # noqa: F811
+    """✨ As their working link offers none (code review of 23 Nov: the expired link's page offered to withdraw answers
+    they never gave, and pressing it took the decline from the participant's count)."""
+    _, own_link = declines(participant, "Jo")
+    expire_every_link()
+
+    opened = Client().get(own_link)
+
+    page = opened.content.decode()
+    assert opened.status_code == 404 and "This link has expired" not in page and "expired-withdraw" not in page
+    assert withdraw(Client(), own_link).status_code == 404
+    assert ObserverResponse.declined(Response.objects.get()) == 1
 
 
 @pytest.mark.django_db

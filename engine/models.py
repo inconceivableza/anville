@@ -620,13 +620,15 @@ class Invitation(models.Model):
     def expired_claim(cls, secret):
         """✨ The observer's link an own secret claimed once it has expired, if they sent answers through it, or None:
         what they sent can still be withdrawn through it, as easily as it was given (GDPR Article 7(3), 29 Oct). With
-        nothing sent there is nothing of theirs to withdraw, so it is refused as any dead link is."""
+        nothing sent there is nothing of theirs to withdraw, so it is refused as any dead link is; and so it is after a
+        decline, which kept nothing about the participant and is never offered withdrawal (ticket 120; code review of
+        23 Nov)."""
         if not secret:
             return None
         expired = cls.objects.filter(
             secret_hash=_hash_of(secret), expires_at__lte=timezone.now(), contact__role=Contact.Role.CONTACT
         ).first()
-        return expired if expired is not None and ObserverResponse.sent_with(secret) else None
+        return expired if expired is not None and ObserverResponse.answered_with(secret) else None
 
 
 def _hash_of(token):
@@ -785,6 +787,12 @@ class ObserverResponse(models.Model):
     def sent_with(cls, secret):
         """✨ Whether an observer assessment has been sent with this secret, a decline included."""
         return cls.objects.filter(sent_by=_sent_by(secret)).exists()
+
+    @classmethod
+    def answered_with(cls, secret):
+        """✨ Whether an observer assessment has been sent with this secret that is not a decline (ticket 120): answers
+        about the participant, which can be withdrawn."""
+        return cls.objects.filter(sent_by=_sent_by(secret), declined_at__isnull=True).exists()
 
     @classmethod
     def declined_with(cls, secret):
