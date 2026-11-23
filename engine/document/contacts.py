@@ -98,7 +98,8 @@ def voices_card(block, card, invited, answered, minimum, frozen=False, withdrew=
     comparison shows only while fewer than `minimum` have answered. Then it follows the answers: links issued with none
     sent, some sent while fewer than `minimum`, then all of them once everyone with a working link has sent, or else
     enough (fix-2). Someone who `declined` has replied (ticket 120), so all are in once the answers and the declines
-    together reach everyone with a working link."""
+    together reach everyone with a working link; and once they do with fewer than `minimum` answers, nobody else will
+    answer, so it says how many more people are needed, as while links are short (code review of 23 Nov)."""
     tag, line = _voices_tag(card, needed(block), invited, answered, minimum, frozen, declined)
     return {
         "tag": tag,
@@ -106,7 +107,7 @@ def voices_card(block, card, invited, answered, minimum, frozen=False, withdrew=
         # count of people still needed, grey like "Locked"; "ready" for "Links issued" and "Some answers received",
         # open, black like "Not started"; "complete" for "Enough answers received" and "All answers received", lime
         # like done, whether or not the card is the next step; None leaves them following the section's status.
-        "tone": _voices_tone(card, needed(block), invited, answered, minimum, frozen),
+        "tone": _voices_tone(card, needed(block), invited, answered, minimum, frozen, declined),
         "line": line,
         # ✨ How many more people need a working link, as the tag says it, or None once enough have; the results page
         # says it beside "Invite people who know you →" (ticket 88), whatever the tag says meanwhile.
@@ -126,9 +127,11 @@ def _voices_tag(card, needed, invited, answered, minimum, frozen, declined):
         return LABELS[COMPLETE], "You've seen your results, so no more answers are added."
     if card.status in (LOCKED, NOT_STARTED):
         return card.label, None
+    waiting = f"You'll see how others see you once {minimum} people have answered."
     if invited < needed:
-        line = f"You'll see how others see you once {minimum} people have answered." if answered < minimum else None
-        return more_needed(needed, invited), line
+        return more_needed(needed, invited), waiting if answered < minimum else None
+    if _short_by_declines(invited, answered, minimum, declined):
+        return f"{minimum - answered} more needed", waiting
     if answered == 0:
         return "Links issued", None
     if answered < minimum:
@@ -138,11 +141,17 @@ def _voices_tag(card, needed, invited, answered, minimum, frozen, declined):
     return "Enough answers received", None
 
 
-def _voices_tone(card, needed, invited, answered, minimum, frozen):
+def _short_by_declines(invited, answered, minimum, declined):
+    """✨ Whether everyone with a working link has replied, too many that they couldn't answer (ticket 120), so fewer
+    than `minimum` have answered and nobody else will: more people are needed, though the links are enough."""
+    return bool(declined) and answered < minimum and answered + declined == invited
+
+
+def _voices_tone(card, needed, invited, answered, minimum, frozen, declined):
     """✨ The state the voices pill's colours follow (fix-12, fix-17), by the tag `_voices_tag` gives it."""
     if frozen or card.status in (LOCKED, NOT_STARTED):
         return None
-    if invited < needed:
+    if invited < needed or _short_by_declines(invited, answered, minimum, declined):
         return "waiting"
     return "ready" if answered < minimum else "complete"
 

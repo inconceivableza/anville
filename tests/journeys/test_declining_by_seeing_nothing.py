@@ -162,6 +162,33 @@ def test_with_a_decline_the_voices_card_has_all_answers_once_the_rest_have_answe
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("declining", [2, 3])
+def test_once_all_have_replied_with_too_few_answers_the_voices_card_says_how_many_more_are_needed(voices, declining):
+    """✨ Nobody else will answer, so as many more people are needed as answers still are (code review of 23 Nov: with 2
+    declined and 1 answered it said "Some answers received" for good, and with all 3 declined "Links issued")."""
+    links = add_people_with_links(voices, *PEOPLE)
+    for link in links[:declining]:
+        decline_through(link)
+    answer_through(*links[declining:])
+
+    card = voices_card(voices)
+
+    assert tag_of(card) == f"{declining} more needed"
+    assert '<span class="tag status-waiting' in card
+    assert escape("You'll see how others see you once 3 people have answered.") in card
+
+
+@pytest.mark.django_db
+def test_while_someone_with_a_link_may_still_answer_the_voices_card_waits_on_them_whatever_others_declined(voices):
+    links = add_people_with_links(voices, *PEOPLE, DEE)
+    for link in links[:2]:
+        decline_through(link)
+    answer_through(links[2])
+
+    assert tag_of(voices_card(voices)) == "Some answers received"
+
+
+@pytest.mark.django_db
 def test_a_retake_deletes_the_decline_so_the_observer_is_asked_again(participant):  # noqa: F811
     """✨ As it deletes what observers sent (29 Oct): they can send afresh, and are reminded as before they sent."""
     jo, _ = declines(participant, "Jo")
