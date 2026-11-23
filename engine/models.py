@@ -856,8 +856,8 @@ class ObserverResponse(models.Model):
 
     @classmethod
     def sent_count(cls, response):
-        """✨ How many observer assessments of a participant's response have been sent, counting or not: all of what a
-        retake deletes."""
+        """✨ How many observer assessments of a participant's response have been sent, counting toward the minimum or
+        not. A retake deletes these and the declines (`declined`), which are no assessment and so are not among them."""
         return cls.objects.filter(response=response, submitted_at__isnull=False).count()
 
 

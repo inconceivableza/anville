@@ -29,6 +29,7 @@ from tests.journeys.test_observer_assessment import SAM, answered_by, press_comp
 from tests.journeys.test_observer_landing import claim, the_observers_page
 from tests.journeys.test_observer_responses import an_observer
 from tests.journeys.test_results import SORT, submit_sort, widget_data
+from tests.journeys.test_retake import deleted_list
 
 THANKS = "We've kept only that you couldn't answer for"
 
@@ -171,6 +172,28 @@ def test_a_retake_deletes_the_decline_so_the_observer_is_asked_again(participant
     assert not ObserverResponse.objects.exists()
     assert Contact.objects.get(name="Jo").sent_at is None
     assert "data-sort" in the_observers_page(jo).content.decode()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "answering, said",
+    [
+        ((), "What the people you invited sent (1 reply that they couldn’t answer)."),
+        (("Priya",), "What the people you invited sent (1 answer and 1 reply that they couldn’t answer)."),
+    ],
+)
+def test_the_retake_page_counts_a_decline_among_what_it_deletes(participant, answering, said):  # noqa: F811
+    """✨ The retake deletes the decline, and that person is asked again, so it says so, as of the answers (code review
+    of 23 Nov: with only declines in, it warned of nothing)."""
+    declines(participant, "Jo")
+    answered_by(participant, *answering)
+    submit_sort(participant, complete_sort())
+
+    deletes = deleted_list(participant.get(f"/results/{SORT}/retake/").content.decode())
+
+    assert [item for item in deletes if item.startswith("What the people")] == [
+        f"{said} Their links still work, so they can answer again."
+    ]
 
 
 @pytest.mark.django_db

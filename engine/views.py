@@ -1768,8 +1768,10 @@ def retake(request, block_id):
             "sort_page": sort_page,
             "offer": offer,
             # ✨ None or 0 when nobody has sent anything, which leaves nothing to warn of. Every send, counting or not
-            # (sprint-3d-r1-fix-1), since the retake deletes them all.
+            # (sprint-3d-r1-fix-1), and every decline (ticket 120), since the retake deletes them all and those people
+            # are asked again.
             "answered": ObserverResponse.sent_count(response) if result is not None else None,
+            "declined": ObserverResponse.declined(response) if result is not None else None,
             "tie_break": bool(result and result.tie_break_answers),
             "coach_shown": result is not None and bool((_coach_of(response) or {}).get("shared")),
             "refusal": refusal,
