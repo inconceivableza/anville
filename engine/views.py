@@ -4,7 +4,6 @@
 import hashlib
 import json
 import mimetypes
-import re
 from datetime import date
 from typing import NamedTuple
 
@@ -124,6 +123,7 @@ from engine.document.observers import (
 )
 from engine.document.letter import letter_shown, opens_on_from_form, seal_press, unsealed_letter
 from engine.document.photos import credits_listed, listed, on_pexels, on_unsplash
+from engine.document.text import speaking_of, worded_for
 from engine.models import (
     CollectionFrozen,
     Contact,
@@ -620,18 +620,28 @@ def _comparison_title(document, sort_id):
     """✨ What the comparison of the sort `sort_id` is called, in the sidebar's link to it and as its own page's
     heading: the title of the comparison signpost pointing at it, as the hub's row names it (ticket 109;
     sprint-3d-r1-fix-1), or where no signpost does, the engine's own."""
+    return text_for(_comparison_title_field(document, sort_id), "participant")
+
+
+def _comparison_title_field(document, sort_id):
+    """✨ The title of the comparison signpost pointing at the sort `sort_id`, as authored, or else the engine's own."""
     for block in blocks_of(document):
         if block["type"] == "comparison_signpost" and block["sort"] == sort_id:
-            return authored_text(block, "participant")["title"]
+            return block["title"]
     return COMPARISON_TITLE
 
 
 def _comparison_title_for_coach(document, sort_id, name):
-    """✨ What a coach's shared view calls the comparison of the sort `sort_id`: the title the participant's own page is
-    headed with (`_comparison_title`), with the participant's `name` in place of "you", so "How others see you" reads
-    "How others see Sam" and the engine's own "How others experience you" reads "How others experience Sam"
-    (sprint-3d-r1-fix-2). A title that never says "you" is kept as written."""
-    return re.sub(r"\byou\b", lambda _: name, _comparison_title(document, sort_id), flags=re.IGNORECASE)
+    """✨ What a coach's shared view calls the comparison of the sort `sort_id`. Where the signpost's title has wording
+    for a coach (`worded_for`), a sentence of its own saying the participant's `name` as {name} (ticket 118), that:
+    "How you’re seen by your friends" needs one, "How {name} is seen by your friends", and the linter asks for it.
+    Otherwise the title the participant's own page is headed with (`_comparison_title`), with their `name` in place of
+    "you" (`speaking_of`), so "How others see you" reads "How others see Sam" and the engine's own "How others experience
+    you" reads "How others experience Sam" (sprint-3d-r1-fix-2). A title that never says "you" is kept as written."""
+    title = _comparison_title_field(document, sort_id)
+    if worded_for(title, "coach"):
+        return text_for(title, "coach").replace("{name}", name)
+    return speaking_of(text_for(title, "participant"), name)
 
 
 def _quick_link_names(document, hub, scored):

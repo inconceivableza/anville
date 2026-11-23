@@ -11,6 +11,7 @@ import re
 from engine.document.blocks import BLOCK_TYPES, PASSAGE_BLOCK_TYPES, block_types_by_id
 from engine.document.gates import CLAUSE_ANSWER_KINDS, CLAUSE_BLOCK_TYPES, clauses_of, people_minimum
 from engine.document.problem import Problem
+from engine.document.text import YOU_A_NAME_CANNOT_TAKE, text_for, worded_for
 from engine.document.tie_break import PLACEHOLDERS
 
 # ✨ The tie-break's results sentences, as (group, key) in presentation.tie_break: the ones that may hold placeholders.
@@ -39,6 +40,7 @@ def lint(document):
         *_unknown_linked_sections(document, section_ids),
         *_signposts_holding_their_own_section(document),
         *_results_of_no_sort(document),
+        *_comparison_titles_a_coach_cannot_read(document),
         *_unwaitable_blocks(document),
         *_empty_pages(document),
         *_letter_months_out_of_order(document),
@@ -221,6 +223,24 @@ def _results_of_no_sort(document):
         for b, block in enumerate(section["blocks"]):
             if block["type"] in ("sort_results", "comparison_signpost"):
                 yield from _no_such_sort(types, block["sort"], f"/content/sections/{s}/blocks/{b}/sort")
+
+
+def _comparison_titles_a_coach_cannot_read(document):
+    """✨ A comparison signpost's title heads the comparison on a coach's shared view, the participant's name in place of
+    "you" (`speaking_of`, sprint-3d-r1-fix-2). Where a name would not agree with what follows that "you"
+    (`YOU_A_NAME_CANNOT_TAKE`), as in "How you’re seen", the title needs a sentence of its own for the coach, saying
+    {name} (code review of 23 Nov)."""
+    for s, section in enumerate(document["content"]["sections"]):
+        for b, block in enumerate(section["blocks"]):
+            if block["type"] != "comparison_signpost" or worded_for(block["title"], "coach"):
+                continue
+            if YOU_A_NAME_CANNOT_TAKE.search(text_for(block["title"], "participant")):
+                yield Problem(
+                    f"/content/sections/{s}/blocks/{b}/title",
+                    "A coach reads this title with the participant's name in place of \"you\", which this \"you\" "
+                    "will not take; give it a coach's wording saying {name}, such as \"How {name} is seen by your "
+                    "friends\".",
+                )
 
 
 def _unwaitable_blocks(document):

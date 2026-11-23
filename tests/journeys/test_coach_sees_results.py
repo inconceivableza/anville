@@ -185,6 +185,27 @@ def test_the_coach_sees_the_comparison_headed_as_the_participant_does_with_their
     assert f"{named}'s results" in coach_headings
 
 
+@pytest.mark.django_db
+def test_where_the_signposts_title_has_a_sentence_for_the_coach_the_coach_sees_the_comparison_headed_by_it(
+    client, participant, observer, load_pathway  # noqa: F811
+):
+    """✨ "How you’re seen" would read "How Sam’re seen" with the name in place of "you" (code review of 23 Nov)."""
+    document = with_a_sort_and_a_coach()
+    title = {"participant": "How you’re seen by your friends", "coach": "How {name} is seen by your friends"}
+    document["content"]["sections"][1]["blocks"].append(
+        {"id": "others", "type": "comparison_signpost", "sort": SORT, "title": title}
+    )
+    signed_in = signed_in_over(document, client, participant, load_pathway)
+    with_a_result(signed_in, participant)
+    link = an_accepted_coach(signed_in, observer)
+    assert share(signed_in).status_code == 303
+
+    own = the_headings(signed_in.get(f"/results/{SORT}/comparison/"))[-1]
+
+    assert own == "How you’re seen by your friends"
+    assert the_headings(observer.get(link))[-1] == f"How {name_shown_for(participant)} is seen by your friends"
+
+
 def worded_for_a_coach():
     """✨ The sort's test pathway with a coach, worded for the coach about the participant by name where the document
     says so, and where it does not, through the observer's wording, as an item's text is (ticket 118)."""

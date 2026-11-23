@@ -4,6 +4,7 @@
 import pytest
 
 from engine.document import text_for
+from engine.document.text import speaking_of, worded_for
 
 
 def test_a_single_string_is_the_same_for_every_role():
@@ -42,3 +43,25 @@ def test_an_observer_never_sees_the_coachs_wording():
 def test_an_unknown_role_is_refused():
     with pytest.raises(ValueError):
         text_for("Anything", "mentor")
+
+
+@pytest.mark.parametrize(
+    "written, read",
+    [
+        ("How others see you", "How others see Sam"),
+        ("You and your friends", "Sam and your friends"),
+        ("How you’re seen", "How you’re seen"),  # ✨ never "How Sam’re seen": the linter asks for a sentence of its own
+    ],
+)
+def test_wording_written_to_the_participant_speaks_of_them_by_name_in_place_of_you_but_not_of_a_contraction(
+    written, read
+):
+    assert speaking_of(written, "Sam") == read
+
+
+def test_a_coach_has_wording_of_their_own_only_where_a_field_gives_a_coachs_or_an_observers():
+    assert not worded_for("How others see you", "coach")
+    assert not worded_for({"participant": "How others see you"}, "coach")
+    assert worded_for({"participant": "How you’re seen", "coach": "How {name} is seen"}, "coach")
+    assert worded_for({"participant": "How you’re seen", "observer": "How {name} is seen"}, "coach")
+

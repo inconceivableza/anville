@@ -188,6 +188,30 @@ def test_a_comparison_signpost_naming_anything_but_a_sort_is_reported(named):
     ]
 
 
+def a_comparison_titled(title):
+    """✨ The sort pathway with the calling section's comparison signpost titled `title`."""
+    document = sort_pathway()
+    card = {"id": "compare", "type": "comparison_signpost", "sort": "strengths-sort", "title": title}
+    document["content"]["sections"][1]["blocks"].append(card)
+    return document
+
+
+@pytest.mark.parametrize("title", ["How you’re seen by your friends", "How you are seen by your friends"])
+def test_a_comparison_title_whose_you_a_name_cannot_stand_in_for_needs_a_coachs_wording(title):
+    """✨ A coach's view puts the participant's name in place of "you": "How Sam’re seen", "How Sam are seen" (code
+    review of 23 Nov)."""
+    assert validate(a_comparison_titled(title)) == [
+        Problem(
+            path="/content/sections/1/blocks/1/title",
+            message='A coach reads this title with the participant\'s name in place of "you", which this "you" will not '
+            'take; give it a coach\'s wording saying {name}, such as "How {name} is seen by your friends".',
+        )
+    ]
+    worded = {"participant": title, "coach": "How {name} is seen by your friends"}
+    assert validate(a_comparison_titled(worded)) == []
+    assert validate(a_comparison_titled("How others see you")) == []
+
+
 def waiting_on_the_comparison(block_id, sort="strengths-sort"):
     """✨ The sort pathway with the block `block_id` waiting on the comparison of `sort` (ticket 68)."""
     document = sort_pathway()
