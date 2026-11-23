@@ -1,5 +1,7 @@
 # Sprint 3c wording sheet
 
+> Superseded. `Whatever You Do - wording changes.md`, at the repository root, is the wording as built and as shown to the content owner, with everything changed since 26 October. Where it differs from this sheet, it is right; this sheet is kept as the 26 October settlement.
+
 The exact participant-facing wording for sprint 3c, settled 26 Oct from the content owner's feedback of 23–25 Oct. Apply it as written; don't reword. Where a row says "remove", remove the text and anything that only exists to show it.
 
 `{name}`, `{count}`, `{min}` and the like are the template's or pathway's existing placeholders.

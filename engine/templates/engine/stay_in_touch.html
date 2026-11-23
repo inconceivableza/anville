@@ -1,13 +1,23 @@
 {# Copyright (C) New Community Church SE London 2026. #}
 {# For licensing information see ../../../LICENSE.md #}
 {% comment %}
-  ✨ The homepage's "Stay in touch" (ticket 74, ADR 0023), in the page and on its own as htmx's answer to "Subscribe":
+  ✨ The homepage's "Stay in touch" (ticket 74, ADR 0023), in the page and on its own as htmx's answer to "Sign up":
   with JavaScript the press goes in the background and this section comes back in its own place, thanks or refusal, so
   the page neither reloads nor moves; without, the homepage comes back opened here, by the action's fragment.
-  "Join the waitlist" and the footer's "Contact us" lead here by its id. A change to what the sentence signs a visitor
-  up to raises WORDING_VERSION in engine/stay_in_touch.py, and is checked against the privacy page.
-  novalidate leaves the address to the server, whose refusal shows only after the press. The trap field is hidden
-  from everyone: a person leaves it empty, and a bot filling every field is thanked with nothing stored.
+  It asks what the visitor wants, at least one of three (ticket 111, ADR 0027), each choice's value one of
+  SignUpChoice.Choice's, and the thanks says what happens next for each one ticked. "Join the waitlist" and the
+  footer's "Contact us" lead here, naming their own choice for the server to tick (`stay` in the query), and the
+  address takes the focus, by `autofocus`, only in a form a link opened that way (stay.focus_email): a plain visit
+  does not take the focus, and a refusal leaves it on the button pressed (sprint-3d-r1-fix-4). The links carry no
+  fragment: a browser applies no `autofocus` on a page whose address has a fragment naming an element (the HTML
+  standard's rule), and taking the focus scrolls the address into view, the box around it, by itself (hand check of
+  17 Nov). Where the form is on the page already, main.js ticks the choice and focuses the address in place; once the
+  thanks has taken the form's place, it asks for this section again by the link's own query (htmx, a GET), which
+  comes back as a fresh form, the address empty. Following the link instead would load the page again, restarting
+  the hero video. A change to what this wording signs a visitor up to
+  raises WORDING_VERSION in engine/stay_in_touch.py, and is checked against the privacy page.
+  novalidate leaves the address to the server, whose refusals show only after the press, beside the button. The trap
+  field is hidden from everyone: a person leaves it empty, and a bot filling every field is thanked with nothing stored.
 {% endcomment %}
 <section class="panel stay" id="stay-in-touch" aria-labelledby="stayTitle">
   <div class="stay-card">
@@ -16,22 +26,54 @@
       <p>Thoughtful writing on vocation, faith and work, and news of Whatever You Do for churches, delivered occasionally.</p>
     </div>
     {% if stay.subscribed %}
-      <p class="stay-thanks" role="status">Thanks, you’re subscribed. Look out for our next note.</p>
+      <div class="stay-thanks" role="status">
+        <p>Thank you.</p>
+        {% if "waitlist" in stay.chosen %}
+          <p>Your church is on the waitlist. We’ll email you about next steps.</p>
+        {% endif %}
+        {% if "news" in stay.chosen %}<p>You’re subscribed to our news. Look out for our next note.</p>{% endif %}
+        {% if "contact" in stay.chosen %}<p>We’ll get in touch with you by email.</p>{% endif %}
+      </div>
     {% else %}
       <form method="post" action="{% url 'home' %}#stay-in-touch" novalidate
             hx-post="{% url 'home' %}" hx-target="closest section" hx-swap="outerHTML">
         {% csrf_token %}
-        <label class="sr" for="stayEmail">Email address</label>
-        <input id="stayEmail" type="email" name="email" placeholder="Your email" autocomplete="email"
-               value="{{ stay.typed }}"{% if stay.refusal %} aria-invalid="true" aria-describedby="stayRefusal"{% endif %}>
+        <fieldset class="stay-choices"{% if stay.choice_refusal %} aria-describedby="stayChoiceRefusal"{% endif %}>
+          <legend>What would you like?</legend>
+          <label>
+            <input type="checkbox" name="choice" value="waitlist"{% if "waitlist" in stay.chosen %} checked{% endif %}>
+            Put my church on the waitlist
+          </label>
+          <label>
+            <input type="checkbox" name="choice" value="news"{% if "news" in stay.chosen %} checked{% endif %}>
+            Send me occasional writing and news by email
+          </label>
+          <label>
+            <input type="checkbox" name="choice" value="contact"{% if "contact" in stay.chosen %} checked{% endif %}>
+            Get in touch with me
+          </label>
+        </fieldset>
+        <div class="stay-send">
+          <label class="sr" for="stayEmail">Email address</label>
+          <input id="stayEmail" type="email" name="email" placeholder="Your email" autocomplete="email"
+                 value="{{ stay.typed }}"{% if stay.focus_email %} autofocus{% endif %}
+                 {% if stay.address_refusal %}aria-invalid="true" aria-describedby="stayRefusal"{% endif %}>
+          <button class="pill" type="submit" id="staySignUp">Sign up</button>
+        </div>
         <div class="stay-trap" aria-hidden="true">
           <label for="stayWebsite">Leave this empty</label>
           <input id="stayWebsite" type="text" name="website" tabindex="-1" autocomplete="off">
         </div>
-        <button class="pill" type="submit" id="staySubscribe">Subscribe</button>
       </form>
-      {% if stay.refusal %}<p class="stay-refusal" id="stayRefusal" role="alert">{{ stay.refusal }}</p>{% endif %}
+      {% if stay.refused %}
+        {# ✨ Each refusal once, in the order of the fields it is about. #}
+        <div class="stay-refusal" role="alert">
+          {% if stay.choice_refusal %}<p id="stayChoiceRefusal">{{ stay.choice_refusal }}</p>{% endif %}
+          {% if stay.address_refusal %}<p id="stayRefusal">{{ stay.address_refusal }}</p>{% endif %}
+        </div>
+      {% endif %}
     {% endif %}
-    <small>We’ll only use your email to send these updates, and you can unsubscribe at any time. See our <a href="{% url 'privacy' %}">privacy notice</a>.</small>
+    <small>We’ll use your email only for what you tick, and you can ask us to stop at any time.
+      See our <a href="{% url 'privacy' %}">privacy notice</a>.</small>
   </div>
 </section>

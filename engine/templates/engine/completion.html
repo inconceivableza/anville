@@ -4,7 +4,8 @@
   ✨ The gate and the way on. Rendered with the section, and again out of band after an autosave, so the
   messages and the button follow what the participant has just written rather than waiting for a reload.
   What it shows depends only on the answers, so a save is enough to bring it up to date. Nothing is offered
-  while the section's activity is shut behind a scripture reading, or while its sort is not yet in. On a page
+  while the section's activity is shut behind a scripture reading, while its sort is not yet in, or, in a section
+  whose work is all in its parts, until they are done (ticket 106): no finish greyed, none at all. On a page
   before a section's last, the way on is "Continue →" to the next page, and the gate is that page's own clauses.
 
   The wrapper is always here, even with nothing in it, so the autosave always has something to swap into.
@@ -19,62 +20,111 @@
   in the background and a refusal comes back into `#gate-refusal` alone, beneath the button, which keeps the focus
   (fix-2). Without, the page comes back opened at `#refused`, the way on, which only a refused press's page has: an
   accepted press's next page would otherwise open at its own way on, since a redirect keeps the address's fragment.
-  The faithful port's way on is disabled until it can be pressed, so it keeps its plain form.
+  The faithful port's way on is disabled until it can be pressed, so it is never sent in the background.
+
+  Every press here belongs to the page's one form (`engine/page_form.html`), which every answer on the page belongs to
+  as well, so each sends them all, and the press stores them first (sprint-3d-r1-fix-6): the way on, with JavaScript or
+  without, and beside it, to its left, the page's own Save for a browser without JavaScript (`engine/page_save.html`),
+  which sits where the way on would be while none is offered. htmx sends a button's form, the page's, as a browser
+  does. An answer a press could not store is named beneath it, the page opened there.
 
   Where the document wants messages only after a press, an autosave redraws `#gate-refusal` alone: no button there is
   ever disabled, so the way on has nothing to change, and a text box saves as it loses the focus to a press on the
-  button, which a redraw would swap out from under the pointer, losing the press. Only a refused press's list goes.
+  button, which a redraw would swap out from under the pointer, losing the press. Only a refused press's list goes,
+  and not while a press is on its way or until an answer changes after its refusal (`frontend/src/main.js`), so the
+  save made by that same press never wipes or hides what the press says (hand check of ticket 107, 18 Nov).
 {% endcomment %}
 {% if out_of_band and messages_after_a_press %}
-  {% if offers_way_on and not page.is_last or offers_way_on and not section.is_part and not section.is_side_card and not is_complete or offers_way_on and section.finish and not section.finish.done %}
+  {% if offers_way_on and not page.is_last or offers_way_on and not section.is_part and not section.is_side_card and not section.completes_with_evaluation and not is_complete or offers_way_on and section.finish and not section.finish.done %}
     <div id="gate-refusal" hx-swap-oob="true">{% include "engine/gate_refusal.html" %}</div>
   {% endif %}
 {% else %}
 <div id="completion"{% if offers_way_on %} class="completion"{% endif %}{% if out_of_band %} hx-swap-oob="true"{% endif %}>
   {% if offers_way_on and not page.is_last %}
     {# ✨ Every page but the last goes on to the next, held by that page's own requirements, listed as below. #}
-    <div class="way-on"{% if refused %} id="refused"{% endif %}>
+    <div class="way-on"{% if refused or not_saved %} id="refused"{% endif %}>
       {% include "engine/previous_page.html" %}
+      {% include "engine/page_save.html" %}
       {% url 'move_past_page' section.id page.number as move_on %}
-      <form method="post"{% if messages_after_a_press %} action="{{ move_on }}#refused" hx-post="{{ move_on }}" hx-target="#gate-refusal"{% else %} action="{{ move_on }}"{% endif %}>
-        {% csrf_token %}
-        <button type="submit" class="pill full"{% if unmet and not messages_after_a_press %} disabled{% endif %}>Continue →</button>
-      </form>
+      {# ✨ Worded for the block it is for, where the page has one: the letter's "Save my letter and continue →". #}
+      <button type="submit" form="page-answers" formaction="{{ move_on }}#refused" class="pill full"
+        {% if messages_after_a_press %}hx-post="{{ move_on }}" hx-target="#gate-refusal"
+        {% elif unmet %}disabled{% endif %}
+        >{{ page.way_on_label|default:"Continue →" }}</button>
     </div>
     <div id="gate-refusal">{% include "engine/gate_refusal.html" %}</div>
   {% elif offers_way_on and section.is_side_card and not is_complete %}
     {# ✨ A hub side card is complete once its gate passes, with nothing to press (ticket 52): only what it waits on. #}
     {% include "engine/gate_checklist.html" %}
-  {% elif offers_way_on and not section.is_part and not section.is_side_card and not is_complete %}
-    <div class="way-on"{% if refused %} id="refused"{% endif %}>
+    {% if page.saves %}
+      <div class="way-on"{% if not_saved %} id="refused"{% endif %}>{% include "engine/page_save.html" %}</div>
+      {% include "engine/not_saved.html" %}
+    {% endif %}
+  {% elif offers_way_on and section.completes_with_evaluation %}
+    {% comment %}
+      ✨ A section that completes itself as its evaluation ends (ticket 119), as Whatever You Do's Section 1 does, has
+      nothing to press: until then its signpost leads to the evaluation, and once complete its finish's label is a link
+      on to the hub, whose next step says what comes after, as on the evaluation's results. It is never taken back, so
+      there is no "Mark as not complete".
+    {% endcomment %}
+    <div class="way-on">
       {% include "engine/previous_page.html" %}
-      {% url 'complete_section' section.id as complete %}
-      {# ✨ A date out of range is refused by the server, saying why, after the press, never by the browser before it. #}
-      <form method="post"{% if seal %} novalidate{% endif %}{% if messages_after_a_press %} action="{{ complete }}#refused" hx-post="{{ complete }}" hx-target="#gate-refusal"{% else %} action="{{ complete }}"{% endif %}>
-        {% csrf_token %}
-        {% if seal %}
-          {# ✨ The date the letter opens on, picked with the press that seals it (ticket 104), with it in words beside #}
-          {# ✨ it, both kept as picked when an autosave redraws this out of band. #}
-          <p class="seal-date">
-            <label for="opens-on">{{ seal.date_label }}</label>
-            <input type="date" id="opens-on" hx-preserve name="opens_on" value="{{ seal.chosen }}" min="{{ seal.earliest }}" max="{{ seal.latest }}" data-opens-on>
-            <output id="opens-on-words" hx-preserve for="opens-on" class="seal-date-words" data-opens-on-words aria-live="polite">{{ seal.chosen_in_words }}</output>
-          </p>
-        {% endif %}
-        <button type="submit" class="pill full"{% if unmet and not messages_after_a_press %} disabled{% endif %}>{{ section.complete_label }}</button>
-      </form>
+      {% include "engine/page_save.html" %}
+      {% if is_complete %}<a class="pill full" href="{% url 'hub' %}">{{ section.complete_label }}</a>{% endif %}
+    </div>
+    {% include "engine/not_saved.html" %}
+  {% elif offers_way_on and not section.is_part and not section.is_side_card and not is_complete %}
+    {# ✨ The section's line above its finish, such as when to come back and press it (ticket 106). #}
+    {% if section.complete_note %}<p class="completion-note">{{ section.complete_note }}</p>{% endif %}
+    {% url 'complete_section' section.id as complete %}
+    {% if seal %}
+      {% comment %}
+        ✨ The date the letter opens on, picked with the press that seals it (ticket 104), with it in words beside it,
+        both kept as picked when an autosave redraws this out of band, and opened at with a refused press, so a
+        refusal of the date is beside it. With JavaScript the date is kept too, quietly, as it changes, so going back
+        to the letter and on offers it again (sprint-3d-r1-fix-3), sending only itself of the page's form; nothing
+        comes back, so nothing is redrawn. Without, the page's Save keeps it in the same way. A date out of range is
+        refused by the server, saying why, after the press, never by the browser before it.
+      {% endcomment %}
+      <p class="seal-date"{% if refused or not_saved %} id="refused"{% endif %}>
+        <label for="opens-on">{{ seal.date_label }}</label>
+        <input type="date" id="opens-on" form="page-answers" hx-preserve name="opens_on" value="{{ seal.chosen }}"
+               min="{{ seal.earliest }}" max="{{ seal.latest }}" data-opens-on
+               hx-post="{% url 'letter_date' seal.letter %}" hx-trigger="change"
+               hx-params="opens_on, csrfmiddlewaretoken" hx-swap="none">
+        <output id="opens-on-words" hx-preserve for="opens-on" class="seal-date-words" data-opens-on-words
+                aria-live="polite">{{ seal.chosen_in_words }}</output>
+      </p>
+    {% endif %}
+    <div class="way-on"{% if not seal and refused or not seal and not_saved %} id="refused"{% endif %}>
+      {% if not seal %}{% include "engine/previous_page.html" %}{% endif %}
+      {% include "engine/page_save.html" %}
+      <button type="submit" form="page-answers" formaction="{{ complete }}#refused" class="pill full"
+        {% if messages_after_a_press %}hx-post="{{ complete }}" hx-target="#gate-refusal"
+        {% elif unmet %}disabled{% endif %}
+        >{{ section.complete_label }}</button>
+      {% if seal %}
+        {# ✨ After the seal, so the press Enter in an answer makes is the Save's, never this (sprint-3d-r1-fix-3). #}
+        {% include "engine/previous_page.html" with keeps_date=seal %}
+      {% endif %}
     </div>
     <div id="gate-refusal">{% include "engine/gate_refusal.html" %}</div>
   {% elif offers_way_on and section.finish %}
     {# ✨ A part that is the last thing in its section ends in that section's finish (ticket 88), refused by its gate: #}
     {# ✨ with JavaScript, into `#gate-refusal` beneath it; without, on that section's last page, at its way on. Once #}
-    {# ✨ that section is complete, the way back at the page's top is the only one (ticket 96). #}
-    <div class="way-on">
+    {# ✨ that section is complete, the way back at the page's top is the only one (ticket 96), save where its #}
+    {# ✨ evaluation completed it, when its label is a link on to the hub (ticket 119). The finish is a form of its #}
+    {# ✨ own, which sends none of this page's answers: no part holds any beside it. #}
+    <div class="way-on"{% if not_saved %} id="refused"{% endif %}>
       {% include "engine/previous_page.html" %}
-      {% if not section.finish.done %}
+      {% include "engine/page_save.html" %}
+      {% if section.finish.done and section.finish.way_on %}
+        <a class="pill full" href="{% url 'hub' %}">{{ section.finish.label }}</a>
+      {% elif not section.finish.done %}
         {% include "engine/finish_form.html" with finish=section.finish button_class="pill full" %}
       {% endif %}
     </div>
+    {% include "engine/not_saved.html" %}
     {% if not section.finish.done %}<div id="gate-refusal"></div>{% endif %}
   {% else %}
     {% if section.is_part or section.is_side_card %}
@@ -94,7 +144,14 @@
         </form>
       {% endif %}
     {% endif %}
-    {% if page.number > 1 %}<div class="way-on">{% include "engine/previous_page.html" %}</div>{% endif %}
+    {# ✨ The page's Save stays while it has an answer to send, where the way on would be (sprint-3d-r1-fix-6). #}
+    {% if page.number > 1 or page.saves %}
+      <div class="way-on"{% if not_saved %} id="refused"{% endif %}>
+        {% include "engine/previous_page.html" %}
+        {% include "engine/page_save.html" %}
+      </div>
+      {% include "engine/not_saved.html" %}
+    {% endif %}
   {% endif %}
 </div>
 {% endif %}

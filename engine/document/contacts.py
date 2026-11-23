@@ -75,7 +75,17 @@ def withdrawn_sentence(withdrew):
     return f"{withdrew} people have withdrawn their answers."
 
 
-def voices_card(block, card, invited, answered, minimum, frozen=False, withdrew=0):
+def declined_sentence(declined):
+    """✨ How many observers declined, every card of theirs in "Haven't seen this" (ticket 120), as the list's page says
+    it, naming nobody, as withdrawals are told; None if none has. Engine wording."""
+    if not declined:
+        return None
+    if declined == 1:
+        return "1 person replied that they couldn’t answer."
+    return f"{declined} people replied that they couldn’t answer."
+
+
+def voices_card(block, card, invited, answered, minimum, frozen=False, withdrew=0, declined=0):
     """✨ The side card holding a contact list, as the Five trusted voices card shows it (ticket 51a): a tag, a line under
     it or None, and its meters, how many people have a working link (`invited`) and how many observer assessments have
     been sent (`answered`), each out of the rows the list asks to be filled. Engine wording, as the section statuses
@@ -84,52 +94,64 @@ def voices_card(block, card, invited, answered, minimum, frozen=False, withdrew=
     The tag reads the card's section (`card`, as the hub sees it) first: locked, it says so. While answer collection is
     `frozen`, it is complete and says no more answers are added (ticket 55). While fewer of the `needed` people than
     that have a working link, it says how many more are needed, unless the section is not started, when it says so;
-    once complete it asks again after a removal, while the card stays complete (ticket 81, in place of ticket 51a's
-    "Complete"), and says when the comparison shows only while fewer than `minimum` have answered. Then it follows the
-    answers: links issued with none sent, some sent while fewer than `minimum`, then all of them once everyone with a
-    working link has sent, or else enough (fix-2)."""
-    tag, line = _voices_tag(card, needed(block), invited, answered, minimum, frozen)
+    once complete it asks again after a removal, while the card stays complete (ticket 81), and says when the
+    comparison shows only while fewer than `minimum` have answered. Then it follows the answers: links issued with none
+    sent, some sent while fewer than `minimum`, then all of them once everyone with a working link has sent, or else
+    enough (fix-2). Someone who `declined` has replied (ticket 120), so all are in once the answers and the declines
+    together reach everyone with a working link; and once they do with fewer than `minimum` answers, nobody else will
+    answer, so it says how many more people are needed, as while links are short (code review of 23 Nov)."""
+    tag, line = _voices_tag(card, needed(block), invited, answered, minimum, frozen, declined)
     return {
         "tag": tag,
         # ✨ The pill's colours follow the tag's meaning, not the section's status (fix-12, fix-17): "waiting" for a
         # count of people still needed, grey like "Locked"; "ready" for "Links issued" and "Some answers received",
         # open, black like "Not started"; "complete" for "Enough answers received" and "All answers received", lime
         # like done, whether or not the card is the next step; None leaves them following the section's status.
-        "tone": _voices_tone(card, needed(block), invited, answered, minimum, frozen),
+        "tone": _voices_tone(card, needed(block), invited, answered, minimum, frozen, declined),
         "line": line,
         # ✨ How many more people need a working link, as the tag says it, or None once enough have; the results page
         # says it beside "Invite people who know you →" (ticket 88), whatever the tag says meanwhile.
         "more_needed": more_needed(needed(block), invited),
         "invited": invited,
         "answered": answered,
-        # ✨ How many observers withdrew, said beside the Answered count so the card grows no taller (29 Oct).
+        # ✨ How many observers withdrew, said beside the Answered count so the card grows no taller (29 Oct), and how
+        # many declined, beside it in the same way (ticket 120).
         "withdrew": withdrew,
+        "declined": declined,
         "out_of": max(rows_to_fill(block), invited, answered, 1),
     }
 
 
-def _voices_tag(card, needed, invited, answered, minimum, frozen):
+def _voices_tag(card, needed, invited, answered, minimum, frozen, declined):
     if not card.is_locked and frozen:
         return LABELS[COMPLETE], "You've seen your results, so no more answers are added."
     if card.status in (LOCKED, NOT_STARTED):
         return card.label, None
+    waiting = f"You'll see how others see you once {minimum} people have answered."
     if invited < needed:
-        line = f"You'll see how others see you once {minimum} people have answered." if answered < minimum else None
-        return more_needed(needed, invited), line
+        return more_needed(needed, invited), waiting if answered < minimum else None
+    if _short_by_declines(invited, answered, minimum, declined):
+        return f"{minimum - answered} more needed", waiting
     if answered == 0:
         return "Links issued", None
     if answered < minimum:
         return "Some answers received", None
-    if answered == invited:
+    if answered + declined == invited:
         return "All answers received", None
     return "Enough answers received", None
 
 
-def _voices_tone(card, needed, invited, answered, minimum, frozen):
+def _short_by_declines(invited, answered, minimum, declined):
+    """✨ Whether everyone with a working link has replied, too many that they couldn't answer (ticket 120), so fewer
+    than `minimum` have answered and nobody else will: more people are needed, though the links are enough."""
+    return bool(declined) and answered < minimum and answered + declined == invited
+
+
+def _voices_tone(card, needed, invited, answered, minimum, frozen, declined):
     """✨ The state the voices pill's colours follow (fix-12, fix-17), by the tag `_voices_tag` gives it."""
     if frozen or card.status in (LOCKED, NOT_STARTED):
         return None
-    if invited < needed:
+    if invited < needed or _short_by_declines(invited, answered, minimum, declined):
         return "waiting"
     return "ready" if answered < minimum else "complete"
 

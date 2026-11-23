@@ -77,18 +77,26 @@ def test_a_participant_who_has_not_completed_it_is_taken_to_its_wizard_in_place_
     assert 'id="answer-bl-bible-1"' not in page  # ✨ the ratings are its second page
     assert 'class="pathway-nav"' not in page
     assert 'href="/hub/"' not in page
-    assert 'class="ob-photo ob-photo-' in page  # ✨ its photo is the stylesheet's now (ticket 101)
+    assert re.search(r'<aside class="ob-photo"[^>]*>\s*<img src=', page)  # ✨ a photo of its own (ticket 101)
 
 
 @pytest.mark.django_db
-def test_its_reason_is_a_card_for_each_option_the_one_saved_chosen(participant):
-    """✨ v3's cards, not a drop-down (sprint-3c-r3-fix-4): one radio for each option, the saved one checked."""
-    answer(participant, "reason", "job-change")
+def test_a_single_select_in_it_is_a_card_for_each_option_the_one_saved_chosen(
+    signed_in_client, load_pathway  # noqa: F811
+):
+    """✨ v3's cards, not a drop-down (sprint-3c-r3-fix-4): one radio for each option, the saved one checked. The reason
+    takes many choices since ticket 112, so here it is a single select again."""
+    document = json.loads(DOCUMENT.read_text(encoding="utf-8"))
+    reason = document["content"]["sections"][0]["blocks"][0]
+    reason["type"] = "single_select"
+    del reason["note"]
+    load_pathway(document)
+    answer(signed_in_client, "reason", "job-change")
 
-    page = participant.get(WIZARD).content.decode()
+    page = signed_in_client.get(WIZARD).content.decode()
 
     assert "<select" not in page
-    assert re.findall(r'<input type="radio" name="value" value="([^"]+)" checked>', page) == ["job-change"]
+    assert re.findall(r'<input type="radio" [^>]*value="([^"]+)" checked>', page) == ["job-change"]
     assert len(re.findall(r'<label class="opt">', page)) == 7
 
 
@@ -313,6 +321,6 @@ def test_once_complete_it_can_be_reread_and_a_changed_rating_is_refused(wizard_l
     reread = participant.get(RATINGS_PAGE)
 
     assert reread.status_code == 200
-    assert 'id="answer-bl-bible-7" name="value" value="7" checked disabled' in reread.content.decode()
+    assert re.search(r'id="answer-bl-bible-7"[^>]* value="7" checked\s+disabled', reread.content.decode())
     assert answer(participant, "bl-bible", "2").status_code == 409
     assert Response.objects.get().answers["bl-bible"] == 7

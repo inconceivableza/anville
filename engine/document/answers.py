@@ -42,13 +42,17 @@ def answer_from_form(document, block, submitted, role="participant"):
     The document is the block's own pathway version, since what a valid answer is can depend on it. An observer's
     answer may leave out what its kind fills in for observers (an observer's sort, its slider values), as may a
     participant's where the document skips fine-tuning.
+
+    `submitted` is the one value sent, or every value sent under the answer's name, as a list (a QueryDict's
+    `getlist`): a kind reads the last of them, as `QueryDict.get` does, unless it `reads_every_value`.
     """
-    if submitted is None:
+    sent = submitted if isinstance(submitted, list) else [] if submitted is None else [submitted]
+    if not sent:
         raise AnswerRefused("No answer was sent.")
     kind = BLOCK_TYPES[block["type"]].captures
-    value = kind.from_form(submitted)
+    value = kind.from_form(sent if kind.reads_every_value else sent[-1])
     if (role == "observer" or skips_fine_tuning(document)) and kind.observer_defaults is not None:
         value = kind.observer_defaults(document, value)
-    if not Draft202012Validator(kind.schema_for(document, block)).is_valid(value):
+    if not Draft202012Validator(kind.schema_for(document, block, role)).is_valid(value):
         raise AnswerRefused(kind.refusal)
     return value

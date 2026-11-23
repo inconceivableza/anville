@@ -3,15 +3,15 @@
 {% comment %}
   ✨ The way to a sort's comparison (ticket 67a), drawn as a section signpost is: its title, its button, then where it
   stands.
-  The compare button is the one the results page had before fix-10 took it off, a form posting to the same address, so it
-  warns before collection freezes as that one does and works without JavaScript; a browser never loads a POST ahead of
-  time. Before there is a result, nothing is shown. Where the pathway has a Five trusted voices card, the results
-  page's "Invite people who know you →" sits beside it as a quieter ghost button, before and after the minimum, leading
-  to that card's page; below the minimum the press is greyed and not followable, and the status is the invite's phrase
-  (ticket 88, fix-3, changed by fix-8: fix-3 swapped one button for the other, which hid the comparison's button until
-  it could be pressed; two buttons show where the participant is going, and the grey one says it is not yet). The
-  status is a plain line, not a pill (ticket 89). Once the comparison is viewed, the card is marked complete in lime, as
-  a section signpost's is once its section is (fix-6, fix-9).
+  The compare button is a form posting to the comparison's visit (fix-10), so it warns before collection freezes and
+  works without JavaScript; a browser never loads a POST ahead of time. Before there is a result, nothing is shown.
+  Where the pathway has a Five trusted voices card, "Invite people who know you →" sits beside it as a quieter ghost
+  button, before and after the minimum, leading to that card's page; below the minimum the press is greyed and not
+  followable, and the status is the invite's phrase (ticket 88, fix-3, fix-8): two buttons show where the participant
+  is going, and the grey one says it is not yet. The status is a plain line, not a pill (ticket 89). Once the
+  comparison is viewed, the card is marked complete in lime, as a section signpost's is once its section is (fix-6,
+  fix-9). Where the document puts the freeze warning beside the press, the line is that warning while a press would
+  freeze answer collection, how many have answered and that no more are added once they look (ticket 106).
 {% endcomment %}
 {% if block.comparison %}
   <div id="block-{{ block.id }}" class="signpost comparison-signpost{% if block.comparison.status == 'viewed' %} is-complete{% endif %}">
@@ -26,9 +26,14 @@
         {% include "engine/comparison_press.html" with press_sort=block.comparison.sort press_class="pill" press_waiting=block.comparison.invite.waiting press_magnetic=True %}
       {% endif %}
     </div>
-    {# ✨ Between a retake and the new sort, the line leads back to the sort (29 Oct). #}
+    {# ✨ Between a retake and the new sort, the line leads back to the sort (29 Oct), its first words the link. #}
     {% if block.comparison.unsorted %}
-      <p class="signpost-line"><a href="{{ block.comparison.unsorted }}">Finish your strengths evaluation</a> to compare.</p>
+      <p class="signpost-line">
+        <a href="{{ block.comparison.unsorted }}">{{ block.comparison.unsorted_line.link }}</a>
+        {{ block.comparison.unsorted_line.rest }}
+      </p>
+    {% elif block.comparison.warning %}
+      <p class="signpost-line freeze-warning">{{ block.comparison.warning }}</p>
     {% else %}
       <p class="signpost-line">{{ block.comparison.label }}</p>
     {% endif %}

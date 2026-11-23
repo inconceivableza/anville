@@ -4,17 +4,17 @@
 
 **Blocked by:** 105 (The engine tidy-up from the code review), A1
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 **Sprint:** 3d (end not yet set)
 
 **Spec:** Sprint 3d: the code review and the 30 October feedback; Blocks; Engine: sections, tracks, gates, progress
 
-- [ ] Section 6's first page holds the task, the verse and the letter, with Print and Copy text; its button saves the letter and opens the second page, holding "Where are you now?", the date and the seal
-- [ ] The second page's back button returns to the letter, everything kept; sealing is refused, beside the button, until the letter and all five questions are in, and a refusal for a short letter says where to go to fix it
-- [ ] Without JavaScript both pages work by reload, and a refusal opens at its message
-- [ ] Once sealed, the participant lands on the sealed letter as now, and the questions show as fixed answers
-- [ ] The linter refuses a letter whose earliest, default and latest months are not in that order, at the letter's document path, with one message
+- [x] Section 6's first page holds the task, the verse and the letter, with Print and Copy text; its button saves the letter and opens the second page, holding "Where are you now?", the date and the seal
+- [x] The second page's back button returns to the letter, everything kept; sealing is refused, beside the button, until the letter and all five questions are in, and a refusal for a short letter says where to go to fix it
+- [x] Without JavaScript both pages work by reload, and a refusal opens at its message
+- [x] Once sealed, the participant lands on the sealed letter as now, and the questions show as fixed answers
+- [x] The linter refuses a letter whose earliest, default and latest months are not in that order, at the letter's document path, with one message
 
 **Context**
 

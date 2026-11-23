@@ -7,11 +7,13 @@
   The status sits above the title, in every entry, so the title has the panel's width; the comparison signpost's entry
   follows the part holding its sort, as on the hub (ticket 80), or comes first where no part of its section holds the
   sort (ticket 87). A locked entry's note, which the sidebar shows no line for, is the description of its "Locked"
-  button, as on the hub (ticket 97).
+  button, as on the hub (ticket 97). A part that is all its section's work shows no status, as on the hub (ticket 106).
 {% endcomment %}
 <li class="pathway-nav-section{% if section.is_next %} is-next{% endif %}{% if section.id == current %} is-current{% endif %}">
   <div class="pathway-nav-row">
-    {% include "engine/lock_status.html" with pill="status-chip" note_id="nav-lock-note-"|add:section.id %}
+    {% if section.shows_status %}
+      {% include "engine/lock_status.html" with pill="status-chip" note_id="nav-lock-note-"|add:section.id %}
+    {% endif %}
     {% if section.is_locked %}
       <span class="pathway-nav-title">{{ section.title }}</span>
     {% else %}

@@ -21,13 +21,14 @@ from django.test import Client
 from django.utils import timezone
 from django.utils.html import escape
 
+from engine.document.blocks import FREEZE_WARNINGS
 from engine.document.observers import minimum_observers, relationship_question
 from engine.hub import COACH_WAIT_WORDING, COMPARISON_READY_SENTENCE, hub_for, track_sections
-from engine.models import Contact, ObserverResponse, Response
+from engine.models import Contact, ObserverResponse, Publication, Response
 from tests.journeys.test_coach_checklist import choose, step
 from tests.journeys.test_coach_link import answer_as_coach, coach_link_action, link_shown
 from tests.journeys.test_navigation import section_in, sidebar_of
-from tests.journeys.pages import main_of
+from tests.journeys.pages import main_of, text_of
 from tests.journeys.test_hub import (  # noqa: F401  (signed_in_client is a fixture, used by name)
     hub_entry,
     next_step,
@@ -125,6 +126,26 @@ def through_to_the_letter(client):
     return client
 
 
+# ✨ Section 6's two pages: the letter, then "Where are you now?" with the date and the seal (ticket 107).
+LETTER_PAGE = "/sections/letter/"
+QUESTIONS_PAGE = "/sections/letter/pages/2/"
+
+
+def go_on_from_the_letter(client, letter=A_LETTER):
+    """✨ The letter page's press, sending the letter typed above it, as the page's form does with or without
+    JavaScript, under the letter's own name there (sprint-3d-r1-fix-6); with `letter` None, as a page with the letter
+    sealed sends it, with no letter."""
+    sent = {"answer-lt-message": letter} if letter is not None else {}
+    return client.post("/sections/letter/pages/1/continue/", {**sent, "version": Publication.current_version().pk})
+
+
+def through_to_the_questions(client):
+    """✨ On to Section 6's second page, the letter written and saved by the press that leads there."""
+    through_to_the_letter(client)
+    go_on_from_the_letter(client)
+    return client
+
+
 @pytest.mark.django_db
 def test_the_fifth_statement_is_asked_after_the_original_prototypes_four(participant):
     page = to_the_ratings(participant).get(RATINGS_PAGE).content.decode()
@@ -157,7 +178,7 @@ def test_the_way_on_opens_once_all_five_are_answered(participant):
 
 @pytest.mark.django_db
 def test_the_fifth_statement_is_asked_again_at_the_end(participant):
-    page = through_to_the_letter(participant).get("/sections/letter/").content.decode()
+    page = through_to_the_questions(participant).get(QUESTIONS_PAGE).content.decode()
 
     assert escape(PEACE) in page
     assert page.count("Strongly disagree") == 5
@@ -165,8 +186,7 @@ def test_the_fifth_statement_is_asked_again_at_the_end(participant):
 
 @pytest.mark.django_db
 def test_the_letter_cannot_be_sent_without_the_fifth_after_rating(participant):
-    client = through_to_the_letter(participant)
-    answer(client, "lt-message", A_LETTER)
+    client = through_to_the_questions(participant)
     for slot in PROTOTYPE_SLOTS:
         answer(client, f"pl-{slot}", "8")
 
@@ -181,8 +201,8 @@ def test_the_letter_cannot_be_sent_without_the_fifth_after_rating(participant):
 
 def seal(client):
     """✨ The press that finishes Section 6 and seals the letter, with the date it opens on as the form offers it:
-    twelve months on (ticket 104)."""
-    page = client.get("/sections/letter/").content.decode()
+    twelve months on (ticket 104), from the page it is on, the second (ticket 107)."""
+    page = client.get(QUESTIONS_PAGE).content.decode()
     opens_on = re.search(r'name="opens_on"[^>]*value="([\d-]+)"', page).group(1)
     return client.post("/sections/letter/complete/", {"opens_on": opens_on})
 
@@ -239,6 +259,19 @@ def test_the_contact_list_opens_with_three_rows_needed_and_two_optional(particip
 
 
 @pytest.mark.django_db
+def test_five_trusted_voices_says_beside_its_list_that_adding_someone_sends_them_nothing(participant):
+    """✨ The participant sends each person their link (ADR 0005), so the list's note says so quietly, on the page where
+    people are added (ticket 109)."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+    [contacts] = [block for block in the_pathway_blocks() if block["type"] == "contact_list"]
+
+    page = participant.get(CONTACTS_PAGE).content.decode()
+
+    assert escape(contacts["note"]) in page
+
+
+@pytest.mark.django_db
 def test_all_five_start_ratings_are_fixed_once_onboarding_is_complete(participant):
     """✨ Before we begin is once-only (ticket 69), so a save to it leads to the hub rather than being refused there."""
     answer_onboarding(participant)
@@ -251,8 +284,7 @@ def test_all_five_start_ratings_are_fixed_once_onboarding_is_complete(participan
 
 @pytest.mark.django_db
 def test_all_five_end_ratings_are_fixed_once_the_letter_is_sent(participant):
-    client = through_to_the_letter(participant)
-    answer(client, "lt-message", A_LETTER)
+    client = through_to_the_questions(participant)
     answer_all_five(client, prefix="pl")
     assert seal(client).status_code == 303
 
@@ -458,8 +490,9 @@ def without_the_coach_step(document):
 
 def without_the_sealed_letter(document):
     """✨ The letter sealed until a date the participant picks is this pathway's alone (ticket 104): its Joshua passage,
-    the task that says it is sealed, with prompts fitted to it, and the heading over the closing ratings. The faithful
-    port keeps the prototype's letter, so this pathway's is taken back to it: a long text with the prototype's task."""
+    the task that says it is sealed, with prompts fitted to it, the heading over the closing ratings, and the break
+    putting those ratings on a page after the letter's (ticket 107). The faithful port keeps the prototype's letter, so
+    this pathway's is taken back to it: a long text with the prototype's task, on one page with the ratings."""
     letter = next(section for section in document["content"]["sections"] if section["id"] == "letter")
     faithful = next(section for section in the_faithful_port()["content"]["sections"] if section["id"] == "letter")
     letter["blocks"] = [
@@ -467,7 +500,7 @@ def without_the_sealed_letter(document):
         if block_id in ("lt-task", "lt-message")
         else block
         for block in letter["blocks"]
-        if (block_id := block["id"]) != "lt-stones"
+        if (block_id := block["id"]) != "lt-stones" and block["type"] != "page_break"
     ]
     next(block for block in letter["blocks"] if block["id"] == "pl-intro").pop("heading")
     return document
@@ -529,7 +562,8 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     the time estimates, checked above, the hub's section numbers, next-step wording and photos and Section 1's results
     are set aside, and so are the downloads in place of Sections 3–5's own blocks, Section 1's split in two (ticket
     87), Section 2's way to the comparison, the two-round prototype's cards and gift names, and the sealed letter
-    (ticket 104)."""
+    (ticket 104), the reason taking one or more choices (ticket 112), what people are told of the sort and the
+    list, the observers' notice among it (ticket 109), and the coach's wording (ticket 118)."""
     expected = the_faithful_port()
     for section in expected["content"]["sections"]:
         for clause in section.get("gate", {}).get("clauses", []):
@@ -549,9 +583,11 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
     a_download_in_place_of_each_of_sections_2_to_4(expected)
     in_six_sections(expected)
     no_relationship_question(expected)
-    expected = in_the_new_words(without_the_cards(expected))
+    as_told_now(expected)
+    expected = without_the_observers_notice(in_the_new_words(without_the_cards(as_one_reason(expected))))
 
-    assert without_what_finishing_takes(
+    pathway = without_the_coachs_wording(the_pathway())
+    ours = without_what_finishing_takes(
         without_the_comparison_signpost(
             without_the_next_step_and_photos(
                 without_numbers(
@@ -559,7 +595,9 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
                         without_the_coach_step(
                             without_estimates(
                                 without_the_wizard(
-                                    without_the_cards(without_the_gift_names(without_the_sealed_letter(the_pathway())))
+                                    without_the_cards(
+                                        without_the_gift_names(without_the_sealed_letter(as_one_reason(pathway)))
+                                    )
                                 )
                             )
                         )
@@ -567,14 +605,65 @@ def test_the_pathway_is_the_faithful_port_with_a_fifth_rating_and_nothing_else()
                 )
             )
         )
-    ) == (without_numbers(expected))
+    )
+    assert without_the_observers_notice(ours) == without_numbers(expected)
+
+
+def without_the_coachs_wording(node):
+    """✨ `node` with the wording this pathway gives a coach about the participant (ticket 118) set aside, a field left
+    with the participant's alone as plain text again, as the faithful port, which has no coach, words it."""
+    if isinstance(node, dict) and "coach" in node and set(node) <= {"participant", "observer", "coach"}:
+        rest = {role: text for role, text in node.items() if role != "coach"}
+        return rest["participant"] if set(rest) == {"participant"} else rest
+    if isinstance(node, dict):
+        return {key: without_the_coachs_wording(value) for key, value in node.items()}
+    if isinstance(node, list):
+        return [without_the_coachs_wording(value) for value in node]
+    return node
+
+
+def as_told_now(document):
+    """✨ What this pathway tells people of its sort and its list, where the faithful port keeps the original
+    prototype's words (ticket 109): Section 1's card says the sort is in two rounds, as it is, with nothing
+    fine-tuned; the reminder gives the evaluation's time as Section 1 does; and the list of people to ask notes that
+    adding someone emails them nothing."""
+    for section in document["content"]["sections"]:
+        for block in section["blocks"]:
+            if block["id"] == "strengths-link":
+                block["body"] = block["body"].replace("fine-tune the intensity of each", "in two quick rounds")
+            if block["type"] == "contact_list":
+                block["note"] = "Adding someone doesn't email them: send each person their link yourself."
+    reminder = document["observers"]["reminder"]
+    reminder["body"] = reminder["body"].replace("It takes about 10–15 minutes.", "It takes about 7 minutes.")
+
+
+def without_the_observers_notice(document):
+    """✨ The observers' notice is this pathway's own (ticket 109), written for the two-round sort, "Haven't seen this"
+    and the retake, without the draft marker the faithful port's keeps; the tests above hold what it must keep."""
+    document["observers"].pop("privacy_notice")
+    return document
+
+
+def as_one_reason(document):
+    """✨ The reason takes one or more choices here, as cards with a note saying so (ticket 112); the faithful port's is
+    a drop-down of one, with its placeholder. Each is made a single select with neither, so their options are still
+    compared."""
+    [reason] = [block for block in document["content"]["sections"][0]["blocks"] if block["id"] == "reason"]
+    reason["type"] = "single_select"
+    reason.pop("note", None)
+    reason.pop("placeholder", None)
+    return document
 
 
 def without_the_cards(document):
     """✨ The cards, buckets and sort without fine-tuning are the two-round prototype's (held to it in
-    `tests/core/test_two_round_cards.py`), and so is Section 1's activity saying what sorting them takes."""
+    `tests/core/test_two_round_cards.py`), and so is Section 1's activity saying what sorting them takes. So too, since
+    ticket 108, are "Haven't seen this", in the instrument, and the method scoring it, and the sort shows no look at
+    how the buckets were used."""
     document.pop("instrument")
     document.pop("sorts_skip_fine_tuning", None)
+    document.pop("sorts_hide_bucket_summary", None)
+    document.get("measurement", {}).pop("scoring", None)
     for section in document["content"]["sections"]:
         for block in section["blocks"]:
             if block["id"] == "gifts-activity":
@@ -613,7 +702,9 @@ def without_what_finishing_takes(document):
 def without_the_comparison_signpost(document):
     """✨ The way to the comparison, in Section 2 (ticket 87), is this pathway's alone (ticket 67a): the faithful port
     reaches the comparison from the results page only, as the original prototype does. Nor does anything in the
-    faithful port wait on the comparison (ticket 68), as this pathway's first workbook does."""
+    faithful port wait on the comparison (ticket 68), as this pathway's first workbook does, nor has it the freeze
+    warning beside the press, keeping "Before you look" (ticket 106)."""
+    document.pop("freeze_warning_beside_the_press", None)
     for section in document["content"]["sections"]:
         section["blocks"] = [block for block in section["blocks"] if block["type"] != "comparison_signpost"]
         for block in section["blocks"]:
@@ -757,6 +848,7 @@ WORKBOOKS = {"others": 1, "shape": 2, "calling": 3, "growth": 4}
 SENT = DOCUMENT.parents[1] / "Prototypes for reference" / "Workbook files" / "Workbooks sent 29 Oct"
 WORKBOOK_1 = "/downloads/others-pdf/"
 SECTION_2 = "/sections/others/"
+COMPARISON = "/results/strengths-sort/comparison/"
 SECTION_3 = "/sections/shape/"
 SECTION_4 = "/sections/calling/"
 
@@ -833,11 +925,37 @@ def test_section_1_opens_the_strengths_evaluation_at_once_and_is_finished_on_it_
 
 
 @pytest.mark.django_db
+def test_section_1_completes_as_the_evaluation_ends_its_page_then_offering_the_way_on_to_the_hub(participant):
+    """✨ Ticket 106: the evaluation is all Section 1 asks, so before it is in there is nothing to finish, and the button
+    is not there at all, rather than greyed (sprint 3c); the page's own card says what to do. Ticket 119: its end
+    completes Section 1, with nothing to press, so the hub's next step moves on, and Section 1's page offers its
+    finish's label as a link on to the hub, never "Mark as not complete"."""
+    answer_onboarding(participant)
+    complete(participant, "onboarding")
+    finish = 'action="/sections/designed/complete/'
+    way_on = f'<a class="pill full" href="/hub/">{escape(pathway_section("designed")["complete_label"])}</a>'
+    start = pathway_section("designed")["next_step"]["sentence"]
+
+    before = section_1(participant)
+    assert finish not in before and way_on not in before
+    assert start in next_step_panel(participant)
+
+    submit_the_sort(participant)
+
+    after = section_1(participant)
+    assert "designed" in Response.objects.get().completed_sections
+    assert finish not in after and way_on in after
+    assert "Mark as not complete" not in after
+    assert start not in next_step_panel(participant)
+
+
+@pytest.mark.django_db
 def test_once_the_evaluation_is_done_section_1_shows_no_results_and_section_2_the_way_to_the_comparison(
     participant,
 ):
     """✨ "View my results →" is the way to them, as in the faithful port (fix-5, reversing ticket 57). The way to the
-    comparison (ticket 67a) and the first workbook are Section 2's (ticket 87), on the hub too."""
+    comparison (ticket 67a) and the first workbook are Section 2's (ticket 87), on the hub too, Section 2 opening once
+    enough of the people invited have answered (ticket 106)."""
     client = through_section_1(participant)
 
     page = section_1(client)
@@ -845,6 +963,7 @@ def test_once_the_evaluation_is_done_section_1_shows_no_results_and_section_2_th
     in_section_2 = ("how-others-see-you", "others-pdf")
     for block_id in in_section_2:
         assert f'id="block-{block_id}"' not in page
+    people_answer(client)
     page = section_2(client)
     in_order = [page.index(f'id="block-{block_id}"') for block_id in in_section_2]
     assert in_order == sorted(in_order)
@@ -852,6 +971,9 @@ def test_once_the_evaluation_is_done_section_1_shows_no_results_and_section_2_th
 
 
 COMPARISON_LINK = re.compile(r'(href|action)="/results/strengths-sort/comparison/')
+# ✨ Where an open row leads: the comparison, by its press or to its waiting page, or, while a press would freeze answer
+# collection, Section 2's card for it, which has room for the warning beside the press (ticket 106).
+TO_THE_COMPARISON = re.compile(r'(href|action)="(/results/strengths-sort/comparison/|/sections/others/#block-how-)')
 
 
 def comparison_row(html, kind):
@@ -864,22 +986,21 @@ def comparison_row(html, kind):
 @pytest.mark.django_db
 def test_the_comparisons_row_is_listed_under_section_2_and_locked_with_it(participant, settings):
     """✨ Fix-19: on the hub and in the sidebar, the row is Section 2's, "Locked" with its lock note and leading nowhere
-    while Section 2 is locked, and so is every other way to the comparison; once open, the row leads to it (fix-16)."""
+    while Section 2 is locked, and so is every other way to the comparison; once open, the row leads to it (fix-16), or
+    while a press would freeze answer collection, to Section 2's card for it (ticket 106)."""
     settings.ANVILLE_SIDEBAR = True
     answer_onboarding(participant)
     complete(participant, "onboarding")
-    submit_the_sort(participant)
-    people_answer(participant)
+    submit_the_sort(participant)  # ✨ which completes Section 1 (ticket 119), so Section 2 waits on answers alone
     hub = main_of(participant.get("/hub/").content.decode())
     sidebar = sidebar_of(participant.get("/sections/designed/").content.decode())
-
     for html, kind in ((hub, "hub"), (sidebar, "pathway-nav")):
         row, section_2 = comparison_row(html, kind)
         assert row in section_2
-        assert "Locked" in row and escape(OPENS_ONCE.format(what_is_left("designed"))) in row
+        assert "Locked" in row and section_2_note() in row
         assert not COMPARISON_LINK.search(html)
 
-    complete(participant, "designed")
+    people_answer(participant)
 
     for html, kind in (
         (main_of(participant.get("/hub/").content.decode()), "hub"),
@@ -887,7 +1008,7 @@ def test_the_comparisons_row_is_listed_under_section_2_and_locked_with_it(partic
     ):
         row, section_2 = comparison_row(html, kind)
         assert row in section_2
-        assert "Locked" not in row and COMPARISON_LINK.search(row)
+        assert "Locked" not in row and TO_THE_COMPARISON.search(row)
         # ✨ Fix-23: one control, the link or the press, and the arrow at the right like the other open rows
         if kind == "hub":
             assert 'class="srow-arrow"' in row
@@ -916,18 +1037,41 @@ def section_2(client):
     return main_of(client.get(SECTION_2).content.decode())
 
 
-@pytest.mark.django_db
-def test_section_2_stays_locked_until_section_1_is_finished(participant):
-    """✨ Section 2's comparison and first workbook follow Section 1 (ticket 87)."""
-    answer_onboarding(participant)
-    complete(participant, "onboarding")
-    submit_the_sort(participant)
-    assert participant.get(SECTION_2).status_code == 302
-    assert escape(OPENS_ONCE.format(what_is_left("designed"))) in note_under(participant, "others")
+def section_2_opens_when():
+    """✨ Section 2's opening condition, as the document words it (ticket 106)."""
+    return pathway_section("others")["opens_when"]
 
-    complete(participant, "designed")
+
+def section_2_note(italic=True):
+    """✨ The hub's note under Section 2 once Section 1 is done, as the page draws it, or with `italic` false as
+    `note_under` reads it: its opening condition's message, naming *Five trusted voices*, where the people it waits on
+    are invited (hand check of 18 Nov)."""
+    [waiting] = section_2_opens_when()["clauses"]
+    assert "{title}" in waiting["message"] and "{minimum}" in waiting["message"]
+    voices = escape(pathway_section("trusted-voices")["title"])
+    said = escape(waiting["message"]).replace("{minimum}", str(minimum_observers(the_pathway())))
+    return said.replace("{title}", f"<em>{voices}</em>" if italic else voices)
+
+
+@pytest.mark.django_db
+def test_section_2_opens_once_section_1_is_finished_and_enough_people_have_answered_then_stays_open(participant):
+    """✨ Ticket 106: Section 2 waits for the comparison, not on Section 1 alone (ADR 0019). Until the minimum of the
+    people invited have answered, its page and its comparison are refused, its lock note saying what it waits on; once
+    it has opened, a withdrawal leaving fewer never locks it again."""
+    to_section_2(participant)
+    browsers = people_answer(participant, count=minimum_observers(the_pathway()) - 1)
+    assert participant.get(SECTION_2).status_code == 302
+    assert participant.get(COMPARISON).status_code == 302
+    assert section_2_note(italic=False) in note_under(participant, "others")
+
+    last = Client()
+    claim(last, issue_link(participant, "Person 2"))
+    assert send(last, a_whole_sort()).status_code == 303
 
     assert participant.get(SECTION_2).status_code == 200
+    withdraw(browsers[0])
+    assert participant.get(SECTION_2).status_code == 200
+    assert participant.get(COMPARISON).status_code == 200
 
 
 @pytest.mark.django_db
@@ -1014,23 +1158,27 @@ def what_is_left(section_id, called=None):
 
 def note_under(client, section_id):
     """✨ A section's lock note on the hub, its titles' italics left out, so it reads as plain text: the description of
-    its "Locked" button (ticket 97), found by its id, as it follows any rows listed within the section."""
+    its "Locked" button (ticket 97), or the line under the section the hub explains (hand check of 18 Nov), found by
+    its id, as it follows any rows listed within the section."""
     page = client.get("/hub/").content.decode()
-    note = re.search(rf'id="lock-note-{section_id}"[^>]*>(.*?)</span>', page, re.S)
+    note = re.search(rf'id="lock-note-{section_id}"[^>]*>(.*?)</(?:span|p)>', page, re.S)
     assert note, f"{section_id} has no lock note"
     return re.sub(r"</?em>", "", note.group(1))
 
 
 @pytest.mark.django_db
 def test_each_lock_note_names_exactly_what_is_left_in_the_sections_still_unfinished(participant):
-    """✨ Each by its phrase in the document (ticket 79), and Sections 1, 2 and 3 named together (ticket 87)."""
+    """✨ Each by its phrase in the document (ticket 79), and Sections 1, 2 and 3 named together (ticket 87). Section 2
+    also waits on the people invited answering, which its note names after Section 1, then alone (ticket 106)."""
     answer_onboarding(participant)
     complete(participant, "onboarding")
 
     # ✨ Section 4 also waits on the coach, whom its note names after the sections (ticket 64).
     with_the_coach = opening_condition()["with_sections"].replace("{sections}", "{}")
     section_1, coach, voices = map(what_is_left, ["designed", "walk-with-a-coach", "trusted-voices"])
-    assert escape(OPENS_ONCE.format(section_1)) in note_under(participant, "others")
+    with_answers = section_2_opens_when()["with_sections"].replace("{sections}", section_1)
+    with_answers = with_answers.replace("{minimum}", str(minimum_observers(the_pathway())))
+    assert escape(with_answers) in note_under(participant, "others")
     assert escape(OPENS_ONCE.format(f"{section_1}, {coach} and {voices}")) in note_under(participant, "shape")
     assert escape(with_the_coach.format(what_is_left("designed", "Sections 1, 2 and 3"))) in note_under(
         participant, "calling"
@@ -1040,6 +1188,7 @@ def test_each_lock_note_names_exactly_what_is_left_in_the_sections_still_unfinis
     do_the_sort(participant)
     choose(participant)
     assert escape(OPENS_ONCE.format(voices)) in note_under(participant, "shape")
+    assert section_2_note(italic=False) in note_under(participant, "others")
 
     add_people(participant, 3)
     complete(participant, "shape")
@@ -1352,7 +1501,8 @@ def press_compare(client):
 
 
 def to_section_2(client):
-    """✨ Onboarding done, the sort sent and Section 1 finished, so Section 2 is open."""
+    """✨ Onboarding done, the sort sent and Section 1 finished, so Section 2 opens once enough of the people invited
+    have answered (ticket 106)."""
     answer_onboarding(client)
     complete(client, "onboarding")
     do_the_sort(client)
@@ -1451,7 +1601,9 @@ def test_while_section_2_waits_only_on_the_comparison_the_hubs_next_step_is_the_
 
 
 @pytest.mark.django_db
-def test_with_nothing_else_open_the_next_step_waits_on_answers_with_a_button_to_section_2(participant):
+def test_with_nothing_else_open_the_next_step_waits_on_answers_with_a_button_to_the_people_asked(participant):
+    """✨ Section 2 is locked until enough of them have answered (ticket 106), so the button leads to Five trusted
+    voices, where more people can be invited, as the coach's wait leads to the coach page."""
     client = to_section_2(participant)
     invite_everyone(client)
     complete(client, "shape")
@@ -1463,7 +1615,8 @@ def test_with_nothing_else_open_the_next_step_waits_on_answers_with_a_button_to_
     others = next(section for section in document["content"]["sections"] if section["id"] == "others")
     authored, minimum = others["next_step"]["waiting"], minimum_observers(document)
     assert escape(authored.replace("{section}", "Section 2").replace("{minimum}", str(minimum))) in panel
-    assert f'href="{SECTION_2}"' in panel
+    assert f'href="{CONTACTS_PAGE}"' in panel
+    assert f'href="{SECTION_2}"' not in panel
 
 
 @pytest.mark.django_db
@@ -1501,7 +1654,16 @@ def test_once_the_minimum_have_answered_the_next_step_is_the_press_on_to_the_com
 
 @pytest.mark.django_db
 def test_below_the_minimum_the_next_step_still_waits_on_answers_and_offers_no_comparison(participant):
-    panel = nothing_else_open(participant, answered=minimum_observers(the_pathway()) - 1)
+    """✨ Section 2 opened, then a withdrawal left fewer than the minimum before the comparison was viewed: it stays
+    open (ticket 106), its only open work waiting, so the button leads to it."""
+    to_section_2(participant)
+    invite_everyone(participant)
+    complete(participant, "shape")
+    browsers = people_answer(participant, count=minimum_observers(the_pathway()))
+    participant.get("/hub/")  # ✨ where Section 2's opening is stored
+    withdraw(browsers[0])
+
+    panel = next_step(participant.get("/hub/").content.decode())
 
     assert "Waiting on answers" in panel
     assert f'href="{SECTION_2}"' in panel
@@ -1518,6 +1680,68 @@ def test_with_the_minimum_in_another_open_section_is_still_the_next_step(partici
     panel = next_step(client.get("/hub/").content.decode())
 
     assert f'href="{SECTION_3}"' in panel
+
+
+# The warning before the comparison beside its press, with no page between (ticket 106)
+
+VISIT = 'action="/results/strengths-sort/comparison/visit/"'
+
+
+@pytest.mark.django_db
+def test_a_press_with_the_minimum_in_freezes_answer_collection_and_shows_the_comparison_with_no_page_between(
+    participant,
+):
+    """✨ The warning sits beside the press, so the press is the look (ADR 0017's freeze unchanged)."""
+    client = to_section_2(participant)
+    people_answer(client)
+
+    pressed = client.post("/results/strengths-sort/comparison/visit/")
+
+    assert (pressed.status_code, pressed["Location"]) == (303, COMPARISON)
+    response = Response.objects.get()
+    assert response.collection_frozen_at is not None
+    assert "strengths-sort" in response.comparisons_viewed
+
+
+@pytest.mark.django_db
+def test_while_a_press_would_freeze_answer_collection_the_hub_and_sidebar_offer_it_only_beside_the_warning(
+    participant, settings
+):
+    """✨ The next step's press carries the warning; the comparison's row, the sidebar's entry and the voices card, with
+    no room for it, lead to Section 2's card for the comparison instead, which carries it too. Once collection is
+    frozen there is nothing to warn of, and the row presses again."""
+    settings.ANVILLE_SIDEBAR = True
+    nothing_else_open(participant, answered=minimum_observers(the_pathway()))
+    warning = escape(FREEZE_WARNINGS["everyone"])  # ✨ the three invited have all answered
+
+    hub = main_of(participant.get("/hub/").content.decode())
+    panel = next_step(hub)
+    assert hub.count(VISIT) == 1 and VISIT in panel and warning in panel
+    assert VISIT not in sidebar_of(participant.get(SECTION_2).content.decode())
+    assert warning in section_2(participant)
+
+    press_compare(participant)
+
+    row, _ = comparison_row(main_of(participant.get("/hub/").content.decode()), "hub")
+    assert VISIT in row
+
+
+@pytest.mark.django_db
+def test_with_the_minimum_in_the_comparisons_own_address_offers_the_press_beside_its_warning_and_no_numbers(
+    participant,
+):
+    """✨ Opened from the menu or a typed address, the comparison never looks (sprint-3d-r1-fix-1): it offers the press
+    that does, with the warning beside it, as Section 2's card does, and the numbers show only once it is pressed."""
+    client = to_section_2(participant)
+    people_answer(client)
+
+    page = client.get(COMPARISON).content.decode()
+
+    assert VISIT in page and escape(FREEZE_WARNINGS["everyone"]) in page  # ✨ the three invited have all answered
+    assert "Others:" not in text_of(page)
+    assert Response.objects.get().collection_frozen_at is None
+    assert client.post(f"{COMPARISON}visit/").status_code == 303
+    assert "Others:" in text_of(client.get(COMPARISON).content.decode())
 
 
 # The hub while Section 4 waits on the coach (ticket 65)
@@ -1537,9 +1761,30 @@ def button_to(html, label):
     return found.group(1) if found else None
 
 
+def quick_links(client):
+    """✨ The links below the sidebar's entries, as {address: label}."""
+    sidebar = sidebar_of(client.get("/hub/").content.decode())
+    links = re.search(r'<ul class="pathway-nav-links">.*?</ul>', sidebar, re.S).group(0)
+    return {href: label for href, label in re.findall(r'<a href="([^"]+)"[^>]*>([^<]+)</a>', links)}
+
+
 def the_coach_page(client):
-    """✨ The coach page's address, as the sidebar's "Your coach" gives it."""
-    return button_to(sidebar_of(client.get("/hub/").content.decode()), "Your coach")
+    """✨ The coach page's address, as the sidebar's link named after the Walk with a coach card gives it."""
+    return next((href for href, label in quick_links(client).items() if label == title_of("walk-with-a-coach")), None)
+
+
+@pytest.mark.django_db
+def test_the_menus_links_to_the_side_cards_and_the_comparison_are_named_as_the_hub_names_them(participant):
+    """✨ The links below the sidebar's entries name the pages they open in this pathway's words (ticket 109): Five
+    trusted voices and Walk with a coach by their cards' titles, and the comparison by its row's."""
+    through_section_2(participant)
+    [comparison] = [block for block in the_pathway_blocks() if block["type"] == "comparison_signpost"]
+
+    links = quick_links(participant)
+
+    assert links["/invitations/"] == title_of("trusted-voices")
+    assert links[COACH_PAGE] == title_of("walk-with-a-coach")
+    assert links[f"/results/{comparison['sort']}/comparison/"] == comparison["title"]
 
 
 def revoke_coach_link(client):

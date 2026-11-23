@@ -1,0 +1,17 @@
+{# Copyright (C) New Community Church SE London 2026. #}
+{# For licensing information see ../../../LICENSE.md #}
+{% comment %}
+  ✨ The answers a press on the page sent that could not be stored (sprint-3d-r1-fix-6), each named by its prompt with
+  why, beneath the press: every answer on the page goes with every press, so the one refused may be anywhere on it. An
+  alert, as a refused press's list of what is missing is, whether the page came back or htmx put it in place.
+{% endcomment %}
+{% if not_saved %}
+  <ul class="gate-messages not-saved" role="alert">
+    {% for answer in not_saved %}
+      <li class="gate-item">
+        <span class="gate-mark" aria-hidden="true">•</span>
+        <span class="gate-message save-refused">“{{ answer.name }}” was not saved. {{ answer.refusal }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}

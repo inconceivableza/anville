@@ -1,12 +1,14 @@
 # Copyright (C) New Community Church SE London 2026.
 # For licensing information see ../../LICENSE.md
 
-"""✨ One entry per block type: what it renders, and what (if anything) it captures.
+"""✨ One entry per block type: what it renders, what (if anything) it captures, and the rules the views read for
+showing and saving it.
 
-Before this registry a new block type had to be found in four places at once. Adding one now means an
-entry here, its authored shape in `pathway.schema.json`, and a template in `engine/templates/engine/blocks/`.
-Nothing else needs to know the type exists: the answer schema, the refusal, the text a reader is shown,
-which gate clauses may name it and whether it counts towards progress all follow from the entry.
+Adding a block type means an entry here, its authored shape in `pathway.schema.json`, and a template in
+`engine/templates/engine/blocks/`. Unless its page needs something from the database, as a contact list's links or a
+sort's results do, nothing else needs to know the type exists: the answer schema, the refusal, the text a reader is
+shown, which gate clauses may name it, whether it counts towards progress, where a link to it lands and whether it saves
+quietly all follow from the entry.
 """
 
 import json
@@ -53,21 +55,25 @@ class AnswerKind(NamedTuple):
 
     The refusal is shown in place of the schema's own message, which would echo the participant's text back.
     `from_form` reads what a form sent; anything it does not recognise it passes on for the schema to refuse.
-    It is None for a kind whose form sends more than one value.
+    It reads the one value sent under the answer's name, or with `reads_every_value` all of them, as a list. It is
+    None for a kind whose form sends its answer under more than one name.
     Kinds are shared between block types, so a gate clause can say which kinds of answer it can read.
     """
 
     name: str
-    schema: dict | Callable[[dict, dict], dict]
+    schema: dict | Callable[[dict, dict, str], dict]
     refusal: str
-    from_form: Callable[[str], object] | None
+    from_form: Callable[[str], object] | Callable[[list[str]], object] | None
     # ✨ What an observer may leave out of the answer, filled in from the document before it is held to the schema.
     observer_defaults: Callable[[dict, object], object] | None = None
+    # ✨ Whether the form sends a value for each part of the answer, as a choice of many sends one for each option
+    # ticked, so `from_form` is given every value sent rather than the last.
+    reads_every_value: bool = False
 
-    def schema_for(self, document, block):
-        """✨ The answer schema for one block within its pathway document. Most kinds need neither; a sort
-        needs the document's items and buckets, and a choice its block's options."""
-        return self.schema(document, block) if callable(self.schema) else self.schema
+    def schema_for(self, document, block, role="participant"):
+        """✨ The answer schema for one block within its pathway document, for one role. Most kinds need none of them; a
+        sort needs the document's items and buckets, and whose sort it is, and a choice its block's options."""
+        return self.schema(document, block, role) if callable(self.schema) else self.schema
 
 
 TEXT = AnswerKind(
@@ -93,8 +99,13 @@ CONFIRMATION = AnswerKind(
 )
 
 
-def _sort_schema(document, block):
-    """✨ Every item of the instrument, each placed in one of its buckets with a whole value from 0 to 100."""
+# ✨ An item an observer placed in "Haven't seen this", as it is sent and kept (ticket 108): no bucket and no value.
+NOT_SEEN = {"seen": False}
+
+
+def _sort_schema(document, block, role):
+    """✨ Every item of the instrument, each placed in one of its buckets with a whole value from 0 to 100, or, in an
+    observer's sort where the document offers "Haven't seen this" (`offers_not_seen`), not seen (ticket 108)."""
     instrument = document["instrument"]
     placement = {
         "type": "object",
@@ -105,6 +116,8 @@ def _sort_schema(document, block):
             "value": {"type": "integer", "minimum": 0, "maximum": 100},
         },
     }
+    if offers_not_seen(document, role):
+        placement = {"oneOf": [placement, {"const": NOT_SEEN}]}
     item_ids = [item["id"] for item in instrument["items"]]
     return {
         "type": "object",
@@ -139,13 +152,39 @@ SORT = AnswerKind(
 )
 
 
-def _choice_schema(document, block):
+def _choice_schema(document, block, role):
     """✨ The identifier of one of the block's own options, never its label. The empty choice ("Select...")
     takes the answer back, as emptying a text box does: blank counts as unanswered everywhere."""
     return {"enum": ["", *(option["id"] for option in block["options"])]}
 
 
 CHOICE = AnswerKind("choice", _choice_schema, "Choose one of the options.", _text_from_form)
+
+
+def _choices_schema(document, block, role):
+    """✨ The identifiers of any of the block's own options, each at most once, never their labels. None at all takes
+    the answer back: an empty list counts as unanswered everywhere."""
+    return {"type": "array", "uniqueItems": True, "items": {"enum": [option["id"] for option in block["options"]]}}
+
+
+def _choices_from_form(sent):
+    # ✨ A value for each option ticked, after the blank one the form always sends first, so that a form sent with
+    # nothing ticked still says so, and unticking every option takes the answer back.
+    return [value for value in sent if value != ""]
+
+
+def choices_of(answer):
+    """✨ The identifiers a choice of many holds, as a list, for its template to tick. A single option's identifier, as
+    a single select stores it, reads as a choice of that one, so a reason given before it took many still shows; no
+    answer, or a blank one, as none."""
+    if isinstance(answer, list):
+        return answer
+    return [answer] if isinstance(answer, str) and answer else []
+
+
+CHOICES = AnswerKind(
+    "choices", _choices_schema, "Choose only from the options.", _choices_from_form, reads_every_value=True
+)
 
 # ✨ People other than the participant. A list is never sent as one form value: each person is added or changed on
 # their own (`contact_from_form` holds them to their rules), and they are kept as contacts rather than answers. The
@@ -189,6 +228,11 @@ SORT_WORDING = {
     "slider_min": {"participant": "Not me", "observer": "Not {name}"},
     "slider_max": "Real strength",
     "submit_label": {"participant": "See my results →", "observer": "Send my evaluation →"},
+    # ✨ Observers only, where "Haven't seen this" is offered: once every card is placed there, what sending means, and
+    # the press that sends it, in place of the others (ticket 120). Such a send is kept as a decline.
+    "nothing_seen": "You haven’t seen any of these in {name}, so there’s nothing to add to how others see them. If "
+    "that’s right, send it, and we’ll keep only that you couldn’t answer. To change a card, undo back to it.",
+    "decline_label": "Send that I couldn’t answer →",
     # ✨ The two-round prototype's, used only where some items are reworded (see `twin`): round 1 the originals, round 2
     # the rewordings, with a look at how the buckets were used between them.
     "round_1_title": {"participant": "What you’re good at", "observer": "What {name} is good at"},
@@ -219,6 +263,9 @@ SORT_WORDING = {
     "Change either answer if it doesn’t look right. If both are true, leave them as they are.",
 }
 
+# ✨ What an observer is told on sending an assessment a second time through the same claim: the first one stands.
+SENT_ALREADY = "Your evaluation has already been sent."
+
 
 def _sort_widget(document, role, name=""):
     """✨ What the sort widget shows: every item in the reader's wording, the buckets weakest first, and the widget's
@@ -227,7 +274,9 @@ def _sort_widget(document, role, name=""):
     always fine-tunes, unless the document skips fine-tuning for everyone. Each item names its twin, either way round,
     and, where any is reworded, its round: the second for a rewording, the first for the rest. Where fine-tuning is
     skipped, a participant gets a quick check of twins answered far apart instead; an observer never does, as several
-    observers' contradictions average out."""
+    observers' contradictions average out. An observer is offered "Haven't seen this" beside the buckets where the
+    document has it (`offers_not_seen`, ticket 108). How the cards were spread over the buckets is shown between the
+    rounds and once every card is placed, unless the document hides it, for everyone (ticket 108)."""
     instrument = document["instrument"]
     authored = document.get("presentation", {}).get("sort_wording", {})
     twins = {}
@@ -253,10 +302,18 @@ def _sort_widget(document, role, name=""):
             for bucket in instrument["buckets"]
         ],
         "wording": {field: shown(authored.get(field, default)) for field, default in SORT_WORDING.items()},
+        "not_seen": {"label": shown(instrument["not_seen"]["label"])} if offers_not_seen(document, role) else None,
+        "bucket_summary": not document.get("sorts_hide_bucket_summary", False),
         "fine_tunes": not skips_fine_tuning(document),
         "sends_before_fine_tuning": role == "observer",
         "quick_check": role == "participant" and skips_fine_tuning(document),
     }
+
+
+def offers_not_seen(document, role):
+    """✨ Whether `role`'s sort offers "Haven't seen this" beside the buckets (ticket 108): an observer's, where the
+    document's instrument has it (`not_seen`); never the participant's, who answers for themselves."""
+    return role == "observer" and "not_seen" in document["instrument"]
 
 
 def skips_fine_tuning(document):
@@ -275,6 +332,19 @@ class BlockType(NamedTuple):
     scored into a result once, when it is submitted. `widget` gives a bespoke block's JavaScript what it
     shows, from the document, in one role's wording and naming the participant; a block rendered by its template alone
     has none.
+
+    `onward_label` is the wording of a button leading on to a block of this type, as the comparison's last button does
+    to the block waiting on it. `quiet_setting` names the document setting under which its answer saves without saying
+    "Saved" (`saves_quietly`). `reached_at_top` marks a block reached at its page's top, with no anchor, when it opens
+    that page (`anchor_of`). `lists_links` marks a block whose people are listed with their links, so its page shows a
+    link just issued, this once.
+
+    `sent_with_its_page` marks an ordinary answer, whose fields belong to its page's one form under the block's own
+    name (`page_field`), so that every press on the page sends it, and the press stores it before anything else: the
+    page's Save without JavaScript, its way on with JavaScript or without, and the way back from a page that seals a
+    letter (sprint-3d-r1-fix-6). With JavaScript it also saves on its own as it changes. `names_its_way_on` marks a
+    block, the letter, that the press leading on from its page is for: worded by the block's `continue_label` where it
+    has one, and landed on going back to that page (`way_on_named_by`, ticket 107).
     """
 
     name: str
@@ -284,6 +354,12 @@ class BlockType(NamedTuple):
     opens_what_follows: bool = False
     scored: bool = False
     widget: Callable[[dict, str, str], dict] | None = None
+    onward_label: str = "On to your reflection →"
+    quiet_setting: str | None = None
+    reached_at_top: bool = False
+    lists_links: bool = False
+    sent_with_its_page: bool = False
+    names_its_way_on: bool = False
 
     @property
     def is_interactive(self):
@@ -312,21 +388,47 @@ BLOCK_TYPES = {
         BlockType(
             "scripture_passages", text_fields=("heading", "note"), text_lists=(("passages", ("reference", "text")),)
         ),
-        BlockType("long_text", text_fields=("prompt", "placeholder"), captures=TEXT),
-        # ✨ A long text sealed as its section is finished, until a date the participant picks (ticket 104).
+        BlockType("long_text", text_fields=("prompt", "placeholder"), captures=TEXT, sent_with_its_page=True),
+        # ✨ A long text sealed as its section is finished, until a date the participant picks (ticket 104). Where a page
+        # follows its own, the press leading there is worded for it, "Save my letter and continue →" (ticket 107).
         BlockType(
             "letter",
-            text_fields=("prompt", "placeholder", "copy_note", "seal_label", "seal_note", "date_label"),
+            text_fields=(
+                "prompt",
+                "placeholder",
+                "copy_note",
+                "continue_label",
+                "seal_label",
+                "seal_note",
+                "date_label",
+            ),
             captures=TEXT,
+            sent_with_its_page=True,
+            names_its_way_on=True,
         ),
-        BlockType("agreement_scale", text_fields=("prompt", "min_label", "max_label"), captures=SCALE_POINT),
+        BlockType(
+            "agreement_scale",
+            text_fields=("prompt", "min_label", "max_label"),
+            captures=SCALE_POINT,
+            quiet_setting="ratings_save_quietly",
+            sent_with_its_page=True,
+        ),
         BlockType(
             "single_select",
             text_fields=("prompt", "placeholder"),
             text_lists=(("options", ("label",)),),
             captures=CHOICE,
+            sent_with_its_page=True,
         ),
-        BlockType("contact_list", text_fields=("more_note",), captures=CONTACTS),
+        # ✨ One or more choices from a list, as cards, each a checkbox (ticket 112).
+        BlockType(
+            "multi_select",
+            text_fields=("prompt", "note"),
+            text_lists=(("options", ("label",)),),
+            captures=CHOICES,
+            sent_with_its_page=True,
+        ),
+        BlockType("contact_list", text_fields=("more_note", "note"), captures=CONTACTS, lists_links=True),
         # ✨ Captures nothing: its answers are opinions about another person, never kept (see `coach.py`).
         BlockType(
             "coach_checklist",
@@ -345,6 +447,9 @@ BLOCK_TYPES = {
                 "coach_declined",
             ),
             text_lists=(("questions", ("question", "note", "why", "coach_note", "coach_why", "commitment")),),
+            # ✨ An anchor on the checklist that opens its page would scroll past the page's title (ticket 82).
+            reached_at_top=True,
+            lists_links=True,
         ),
         BlockType("sort_assessment", captures=SORT, scored=True, widget=_sort_widget),
         # ✨ Its `sort`'s results in full, drawn as the results page draws them, once there are any (ticket 57).
@@ -353,7 +458,7 @@ BLOCK_TYPES = {
         # (ticket 67a).
         BlockType("comparison_signpost", text_fields=("title",)),
         BlockType("section_signpost", text_fields=("body", "button_label")),
-        BlockType("download", text_fields=("body", "button_label")),
+        BlockType("download", text_fields=("body", "button_label"), onward_label="On to your workbook →"),
         # ✨ Never shown: it splits its section into pages (`pages_of`).
         BlockType("page_break"),
     ]
@@ -425,6 +530,13 @@ COMPARISON_STATUSES = {
 }
 
 
+# ✨ What a comparison signpost says in place of its status between a retake and the new sort, as `(link, rest)`: the
+# words leading back to the sort, then the rest of the sentence. Its card makes the first part the link; the hub's row
+# and the sidebar show the two as one pill, without the full stop, as their other pills have none. Short, so the pill
+# wraps over no more than three lines in its narrow column (hand check of 18 Nov).
+COMPARISON_UNSORTED = ("Finish your evaluation", "first.")
+
+
 def comparison_status(answered, minimum, viewed):
     """✨ Where the way to a sort's comparison stands, as `(state, wording)`: viewed once the participant has pressed
     "Compare with how others see you →" with at least the minimum in, whatever has been answered since; otherwise ready
@@ -438,11 +550,55 @@ def comparison_status(answered, minimum, viewed):
     return state, COMPARISON_STATUSES[state].format(answered=answered, minimum=minimum)
 
 
+# ✨ The warning before the press that freezes answer collection (ADR 0017), engine wording as the statuses are: when
+# everyone invited has replied, and otherwise, with how many have, out of how many invited. Replied, not answered, since
+# ticket 120: someone who declined has replied, and is waited on no longer.
+FREEZE_WARNINGS = {
+    "everyone": "Everyone you invited has replied. Once you look, you can't add anyone else.",
+    "some": "{replied} of the {invited} people you invited have replied. Once you look, no more answers are added, "
+    "so anyone who hasn't replied yet won't be able to.",
+}
+
+
+def freeze_warning(replied, invited):
+    """✨ What the participant is told before the press on to the comparison freezes answer collection (ADR 0017): on
+    "Before you look", or beside the press where the document puts it there (`warns_beside_the_press`). `replied` counts
+    the assessments that count and the declines (ticket 120)."""
+    if replied >= invited:
+        return FREEZE_WARNINGS["everyone"]
+    return FREEZE_WARNINGS["some"].format(replied=replied, invited=invited)
+
+
+def warns_beside_the_press(document):
+    """✨ Whether the document puts the freeze warning beside the press on to the comparison wherever it is offered, the
+    press then showing the comparison with no page between (ticket 106); off, as in the faithful port, the press first
+    asks on "Before you look"."""
+    return document.get("freeze_warning_beside_the_press", False)
+
+
 def translation_shown(document, passage):
     """✨ The translation named beside a passage's reference: its own, unless that is the document's, which the
     credits page says is the one used unless otherwise indicated. None when nothing is to be named."""
     own = passage.get("translation")
     return own if own != document.get("translation") else None
+
+
+def text_shown(document, block, role):
+    """✨ A block's authored text in one role's wording (`authored_text`), with each passage of a block quoting
+    scripture naming its translation beside its reference, where `translation_shown` names one."""
+    text = authored_text(block, role)
+    if block["type"] in PASSAGE_BLOCK_TYPES:
+        for passage, shown in zip(block["passages"], text["passages"]):
+            shown["translation"] = translation_shown(document, passage)
+    return text
+
+
+def saves_quietly(document, section, block):
+    """✨ Whether a block's answer saves without saying "Saved": every answer on a wizard's pages (ticket 83), and one
+    whose type names a document setting for it (`quiet_setting`) where the document turns that setting on, as
+    *Whatever You Do*'s 1–10 ratings do (sprint-3c-r3-fix-15). A refusal still says why."""
+    setting = BLOCK_TYPES[block["type"]].quiet_setting
+    return bool(section.get("wizard")) or bool(setting and document.get(setting, False))
 
 
 def blocks_of(document):
@@ -483,6 +639,20 @@ def pages_of(section):
     return pages
 
 
+def way_on_named_by(page, sealed_ids):
+    """✨ The block on a page, a list of its blocks, that the press leading on from that page is for
+    (`names_its_way_on`), or None: a letter while it is written, not once it is sealed, when there is nothing of it to
+    save (ticket 107). `sealed_ids` are the blocks of the participant's sealed letters."""
+    named = (block for block in page if BLOCK_TYPES[block["type"]].names_its_way_on)
+    return next((block for block in named if block["id"] not in sealed_ids), None)
+
+
+def page_field(block):
+    """✨ The name an answer sent with its page is sent under (`sent_with_its_page`, sprint-3d-r1-fix-6): the block's
+    own, since one form sends every answer on the page and no two may share a name."""
+    return f"answer-{block['id']}"
+
+
 def page_count(section):
     """✨ How many pages a section has, and so the number of its last."""
     return len(pages_of(section))
@@ -504,6 +674,15 @@ def landing_of(block):
     return f"block-{block['id']}"
 
 
+def anchor_of(section, block_id):
+    """✨ The anchor a link to a block takes on its page: the block's own, or None for a block whose type is reached at
+    its page's top (`reached_at_top`) when it opens that page, so the page opens at its title (ticket 82)."""
+    opening = pages_of(section)[page_of(section, block_id) - 1][0]
+    if opening["id"] == block_id and BLOCK_TYPES[opening["type"]].reached_at_top:
+        return None
+    return f"block-{block_id}"
+
+
 def section_of(document, block_id):
     """✨ The section a block belongs to, or None. A block identifier is unique across the pathway."""
     for section in document["content"]["sections"]:
@@ -519,7 +698,10 @@ def section_ended_by(document, part):
     if "part_of" not in part:
         return None
     parent = next((section for section in document["content"]["sections"] if section["id"] == part["part_of"]), None)
-    last = parent["blocks"][-1] if parent and parent["blocks"] else None
-    if last is None or last["type"] != "section_signpost" or last["section"] != part["id"]:
-        return None
-    return parent
+    return parent if parent is not None and ends_in_signpost_to(parent, part) else None
+
+
+def ends_in_signpost_to(parent, part):
+    """✨ Whether a section's last block is its signpost to `part`, so the part's end is the section's (ticket 88)."""
+    last = parent["blocks"][-1] if parent["blocks"] else None
+    return last is not None and last["type"] == "section_signpost" and last["section"] == part["id"]

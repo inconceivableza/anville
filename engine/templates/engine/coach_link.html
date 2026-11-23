@@ -7,7 +7,8 @@
   offered, and said as a good outcome. Only the answer is kept, never the boxes, and the page says so.
 
   Once accepted, the mock-up's "What happens next" says what this link will show; once the participant consents, it
-  shows their results and comparison, read-only, through the same bodies as their own pages (ticket 27).
+  shows their results and comparison, read-only, through the same bodies as their own pages (ticket 27), worded about
+  them by name where the pathway gives coach wording, as an observer's pages are (ticket 118).
 
   With the results comes the sort's brief, open, beneath the answer and before them, as the mock-up's "What happens
   next" promises; it goes with them. The mock-up's "Thank you — Sam will be told" is said only on the page accepting
@@ -49,14 +50,19 @@
     {% if shared %}
       <section class="coach-shared">
         <h1>{{ name }}'s results</h1>
-        <p class="results-desc">{{ name }} is happy for you to see this, exactly as {{ name }} sees it. It goes from here if {{ name }} stops sharing it.</p>
+        {# ✨ What the participant sees, but worded about them, so no longer "exactly as" they see it (ticket 118). #}
+        <p class="results-desc">{{ name }} is happy for you to see this: the results and comparison {{ name }} sees. It goes from here if {{ name }} stops sharing it.</p>
         {% include "engine/results_body.html" with results=shared.results %}
-        <h1>How others experience {{ name }}</h1>
+        {# ✨ Headed as the participant's own page is, with their name in place of "you" (`comparison_heading`, sprint-3d-r1-fix-2). #}
+        <h1>{{ shared.comparison_heading }}</h1>
         {% include "engine/comparison_body.html" with comparison=shared.comparison for_coach=True %}
       </section>
     {% endif %}
-    {# ✨ As easy to take back as it was to give (ADR 0024): the page it leads to asks before anything is deleted. #}
-    <p><a href="{% url 'coach_withdrawal' token %}">Withdraw my data</a></p>
+    {% comment %}
+      ✨ As easy to take back as it was to give (ADR 0024): the page it leads to asks before anything is deleted. A
+      quiet line below the page's message (ticket 109), there to find but not competing with the thanks.
+    {% endcomment %}
+    <p class="withdraw-line"><a href="{% url 'coach_withdrawal' token %}">Withdraw my data</a></p>
   {% elif answer == "declined" %}
     <div class="coach-outcome coach-check">
       <h2>That's a good answer</h2>

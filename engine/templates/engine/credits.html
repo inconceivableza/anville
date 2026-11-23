@@ -1,6 +1,7 @@
 {# Copyright (C) New Community Church SE London 2026. #}
 {# For licensing information see ../../../LICENSE.md #}
 {% extends "engine/participant.html" %}
+{% load credits %}
 {% comment %}
   ✨ The credits page every page links to: the notice each quoted translation's publisher asks for, word for word.
   Public, so the participant header shows only to someone signed in, giving a participant their way back.
@@ -20,15 +21,17 @@
   {% endfor %}
   <h2 class="credits-name">New International Version Anglicised</h2>
   <p class="credits-notice">Scripture quotations marked NIV taken from the Holy Bible, New International Version Anglicised Copyright © 1979, 1984, 2011 Biblica. Used by permission of Hodder &amp; Stoughton Ltd, an Hachette UK company. All rights reserved. 'NIV' is a registered trademark of Biblica UK trademark number 1448790.</p>
-  {# ✨ The pathway's photos' credits, as its document lists them (ticket 49b). #}
+  {# ✨ The pathway's photos' credits, as its document lists them (ticket 49b), linked (sprint-3d-r1-fix-5). #}
   {% if photo_credits %}
     <h2 class="credits-name">Photographs</h2>
-    {% for credit in photo_credits %}<p class="credits-photo">{{ credit }}</p>{% endfor %}
+    {% for credit in photo_credits %}<p class="credits-photo">{{ credit|credit_shown }}</p>{% endfor %}
   {% endif %}
-  {# ✨ The site's own video and photographs, each a courtesy (ticket 101), shown with the pathway's courtesy credits and without repeating one the pathway lists. #}
-  {% if site_credits_shown %}
+  {% comment %}
+    ✨ The site's own video and photographs (ticket 101), by the pathway's rule: each a courtesy, shown with the
+    pathway's courtesy credits, unless one is required, shown always; none repeating one the pathway lists.
+  {% endcomment %}
+  {% if site_photo_credits %}
     <h2 class="credits-name">Video and photographs on the site</h2>
-    <p class="credits-site">Video by Marian Croitoru from <a href="https://www.pexels.com/video/healthy-light-landscape-nature-4524595/">Pexels</a></p>
-    {% for credit in site_photo_credits %}<p class="credits-site">{{ credit }}</p>{% endfor %}
+    {% for credit in site_photo_credits %}<p class="credits-site">{{ credit|credit_shown }}</p>{% endfor %}
   {% endif %}
 {% endblock content %}

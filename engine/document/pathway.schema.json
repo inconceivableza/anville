@@ -7,6 +7,17 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["format", "title", "content"],
+  "if": { "required": ["instrument"], "properties": { "instrument": { "required": ["not_seen"] } } },
+  "then": {
+    "$comment": "✨ An item an observer has not seen can be scored only by the method that leaves such items out.",
+    "required": ["measurement"],
+    "properties": {
+      "measurement": {
+        "required": ["scoring"],
+        "properties": { "scoring": { "properties": { "method": { "const": "compositional_share_of_seen" } } } }
+      }
+    }
+  },
   "properties": {
     "format": { "const": 1 },
     "title": { "$ref": "#/$defs/text" },
@@ -45,20 +56,50 @@
             "pattern": "^[a-z0-9][a-z0-9-]*\\.(jpg|jpeg|png|webp)$"
           },
           "credit": {
-            "description": "Who the photo is credited to. 'required' when its licence requires a credit, 'courtesy' when its licence does not ask for one, as Unsplash's does not, and 'none' when the author marks it as needing none (public domain, or the author's own). The credits page lists required credits always, courtesy ones while 'show_courtesy_credits' is on, and nothing for 'none'.",
+            "description": "Who the photo is credited to. 'required' when its licence requires a credit, 'courtesy' when its licence does not ask for one, as Unsplash's does not, and 'none' when the author marks it as needing none (public domain, or the author's own). The credits page lists required credits always, courtesy ones while 'show_courtesy_credits' is on, and nothing for 'none'. A credit with an 'author' is listed from its parts, as '[description], by [author] on [source], [licence].', or with a 'title' as '“[title]” by [author] on [source], [licence].', after '[description]: ' where it has one, each part linked to its address where it gives one: what a Creative Commons licence asks for. A credit without one is listed as its 'text'.",
             "type": "object",
             "additionalProperties": false,
             "required": ["kind"],
             "properties": {
               "kind": { "enum": ["required", "courtesy", "none"] },
               "text": {
-                "description": "The credit as the credits page lists it, such as 'Photograph by … on Unsplash.'",
+                "description": "The credit as the credits page lists it, for a credit without an author, such as 'Photograph by … on Unsplash.'",
                 "type": "string",
                 "minLength": 1
+              },
+              "description": {
+                "description": "What the photo shows, in the pathway's own words, such as 'Photograph of grass': shown before its title, where it has one.",
+                "type": "string",
+                "minLength": 1
+              },
+              "title": {
+                "description": "The work's own title, as its source gives it, shown in quotation marks, linked to its own page.",
+                "$ref": "#/$defs/credit_part"
+              },
+              "author": {
+                "description": "Who made it, linked to their page, such as their profile on Unsplash.",
+                "$ref": "#/$defs/credit_part"
+              },
+              "source": {
+                "description": "Where it is from, such as 'Unsplash' or 'Flickr', linked to the photo's page there.",
+                "$ref": "#/$defs/credit_part"
+              },
+              "licence": {
+                "description": "Its licence, by the name or abbreviation its source gives, such as 'CC BY 2.0' or 'Unsplash License', linked to the licence's own page (for Creative Commons, its deed).",
+                "$ref": "#/$defs/credit_part"
               }
             },
+            "dependentRequired": {
+              "description": ["author"],
+              "title": ["author"],
+              "source": ["author"],
+              "licence": ["author"]
+            },
+            "dependentSchemas": {
+              "author": { "anyOf": [{ "required": ["description"] }, { "required": ["title"] }] }
+            },
             "if": { "required": ["kind"], "properties": { "kind": { "enum": ["required", "courtesy"] } } },
-            "then": { "required": ["text"] }
+            "then": { "anyOf": [{ "required": ["text"] }, { "required": ["author"] }] }
           }
         }
       }
@@ -78,8 +119,18 @@
       "type": "boolean",
       "default": false
     },
+    "freeze_warning_beside_the_press": {
+      "description": "Whether the warning that no more answers are added once the participant looks at the comparison sits beside its press wherever it is offered, the press then showing the comparison at once. A hub row or sidebar entry that has no room for it leads to the comparison signpost instead, while a press would freeze answer collection. Off, the press first asks on a page of its own, 'Before you look'.",
+      "type": "boolean",
+      "default": false
+    },
     "sorts_skip_fine_tuning": {
       "description": "Whether a sort is sent once every card is placed, by participants and observers alike, each card at its bucket's seed, with no sliders. Off, a participant always fine-tunes and an observer may choose to.",
+      "type": "boolean",
+      "default": false
+    },
+    "sorts_hide_bucket_summary": {
+      "description": "Whether a sort never shows how the cards were spread over the buckets, for participants and observers alike: no counts once every card is placed, and no graph between the rounds, since seeing the spread invites people to even it out (ticket 108). Off, both show.",
       "type": "boolean",
       "default": false
     },
@@ -100,6 +151,13 @@
           "type": "array",
           "items": { "$ref": "#/$defs/bucket" }
         },
+        "not_seen": {
+          "description": "\"Haven't seen this\" (ticket 108): a place beside the buckets, offered to observers only, never the participant, for an item they have not seen the participant do. It is not a bucket: an item placed there is left out of that observer's scores, which needs the compositional_share_of_seen scoring method. Its label is what the observer sees. Left out, there is no such place.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["label"],
+          "properties": { "label": { "$ref": "#/$defs/text" } }
+        },
         "items": { "type": "array", "items": { "$ref": "#/$defs/item" } }
       }
     },
@@ -109,11 +167,11 @@
       "properties": {
         "frameworks": { "type": "array", "items": { "$ref": "#/$defs/framework" } },
         "scoring": {
-          "description": "How a sort is scored: a named method, frozen once any response is scored with it (ADR 0003).",
+          "description": "How a sort is scored: a named method, frozen once any response is scored with it (ADR 0003). compositional_share is the prototype's, each construct's share of the grand total; compositional_share_of_seen scores a sort with every item seen exactly as it does, and leaves out any item an observer placed in instrument.not_seen, taking each construct's seen items' mean (ticket 108).",
           "type": "object",
           "additionalProperties": false,
           "required": ["method"],
-          "properties": { "method": { "enum": ["compositional_share"] } }
+          "properties": { "method": { "enum": ["compositional_share", "compositional_share_of_seen"] } }
         },
         "tie_break": {
           "description": "When a participant's own sort leaves a framework's leaders too close to call (ticket 30a, ADR 0018). A framework is tied when its leader's unrounded share is at most percent more than another construct's; at most cluster constructs, leader first, enter the tie-break. A participant tied on one framework or both is marked for the tie-break, unless every construct on every framework stands in a band between the lowest and the highest (presentation.standing): then they are flat, and told they are a generalist in presentation.generalist's wording, with nothing asked. With no tie_break, nobody is marked.",
@@ -275,13 +333,14 @@
           }
         },
         "tie_break": {
-          "description": "The wording of the tie-break's pair screen (measurement.tie_break, ticket 30b): the question over each pair, the skip, and a quiet label naming each framework, keyed by its id (the framework's own label when left out). Then what the results page says on each framework the answers re-weighted (ticket 30c, ADR 0018): separated, with a new leader (changed) or the same one (same), genuinely balanced, the choices having gone in a circle (circle) or left the best of them level (level), or every pair skipped (skipped), which says nothing about the participant. In those sentences {top} is replaced with the leader after the answers, {previous} with the sort's leader among the tied, {next} with the closest behind the top after the answers, and {names} with the tied constructs as shown, joined \"A, B and C\", each by its text_label (its label when it has none); no other placeholder is allowed. Needed whenever the pathway has a tie-break.",
+          "description": "The wording of the tie-break's pair screen (measurement.tie_break, ticket 30b): the question over each pair, the skip, beside it \"Both are right\" (both, ticket 108) where given, either keeping the pair tied, and a quiet label naming each framework, keyed by its id (the framework's own label when left out). Then what the results page says on each framework the answers re-weighted (ticket 30c, ADR 0018): separated, with a new leader (changed) or the same one (same), genuinely balanced, the choices having gone in a circle (circle) or left the best of them level (level), or every pair left tied, by the skip or \"Both are right\" (skipped), which says nothing about the participant. In those sentences {top} is replaced with the leader after the answers, {previous} with the sort's leader among the tied, {next} with the closest behind the top after the answers, and {names} with the tied constructs as shown, joined \"A, B and C\", each by its text_label (its label when it has none); no other placeholder is allowed. Needed whenever the pathway has a tie-break.",
           "type": "object",
           "additionalProperties": false,
           "required": ["question", "skip", "separated", "balanced", "skipped"],
           "properties": {
             "question": { "$ref": "#/$defs/text" },
             "skip": { "$ref": "#/$defs/text" },
+            "both": { "$ref": "#/$defs/text" },
             "frameworks": { "type": "object", "additionalProperties": { "$ref": "#/$defs/text" } },
             "separated": {
               "type": "object",
@@ -431,6 +490,14 @@
             "slider_min": { "$ref": "#/$defs/text" },
             "slider_max": { "$ref": "#/$defs/text" },
             "submit_label": { "$ref": "#/$defs/text" },
+            "nothing_seen": {
+              "description": "Shown to observers only, where not_seen is offered, once every card is placed there: what sending means, since such a sort is kept as a decline.",
+              "$ref": "#/$defs/text"
+            },
+            "decline_label": {
+              "description": "Shown to observers only, in place of the other presses, once every card is in not_seen: sending the decline.",
+              "$ref": "#/$defs/text"
+            },
             "round_1_title": {
               "description": "Used only where some items are reworded (twin): the first round's, of the originals.",
               "$ref": "#/$defs/text"
@@ -476,7 +543,7 @@
       "maxLength": 64
     },
     "text": {
-      "description": "One string for every role, or wording per role. A blank observer wording means the same as the participant's.",
+      "description": "One string for every role, or wording per role. A blank observer wording means the same as the participant's; a blank coach wording, the observer's, and then the participant's (ticket 118). A coach reads only the results and comparison a participant shares with them, where {name} is the participant's name.",
       "oneOf": [
         { "type": "string" },
         {
@@ -485,10 +552,25 @@
           "required": ["participant"],
           "properties": {
             "participant": { "type": "string" },
-            "observer": { "type": "string" }
+            "observer": { "type": "string" },
+            "coach": { "type": "string" }
           }
         }
       ]
+    },
+    "credit_part": {
+      "description": "A part of a photo's credit: its name as the credits page shows it, and the address it links to, if any.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "url": {
+          "description": "A secure web address, beginning 'https://', so a page never links to anything else, such as a script.",
+          "type": "string",
+          "pattern": "^https://[^\\s\"'<>]+$"
+        }
+      }
     },
     "gap_direction": {
       "description": "One direction of a gap on the comparison: its badge, and what a significant gap that way may mean.",
@@ -610,6 +692,10 @@
           "description": "The wording of the button that completes the section, such as 'Continue →'. Without one, it reads 'Mark complete'.",
           "$ref": "#/$defs/text"
         },
+        "complete_note": {
+          "description": "A line shown just above the button that completes the section, until it is complete, such as when to come back and press it.",
+          "$ref": "#/$defs/text"
+        },
         "to_finish": {
           "description": "What finishing this section takes, as the hub's note under a section requiring it says it after 'Opens once you've', such as 'added at least {min} people in {title}'. {title} is the section's title, in italics; {section} is what the hub calls it, such as 'Section 1'; {min} is the minimum of the section's own links_issued clause, of which it must have exactly one. Unfinished sections sharing one are named together, as 'completed Sections 1 and 2'. Without one, the note says 'finished' and the title.",
           "$ref": "#/$defs/text"
@@ -620,7 +706,7 @@
       "type": "object",
       "required": ["id", "type"],
       "properties": {
-        "type": { "enum": ["rich_text", "scripture_reading", "scripture_passages", "long_text", "letter", "agreement_scale", "single_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "comparison_signpost", "section_signpost", "download", "page_break"] }
+        "type": { "enum": ["rich_text", "scripture_reading", "scripture_passages", "long_text", "letter", "agreement_scale", "single_select", "multi_select", "contact_list", "coach_checklist", "sort_assessment", "sort_results", "comparison_signpost", "section_signpost", "download", "page_break"] }
       },
       "allOf": [
         { "if": { "properties": { "type": { "const": "letter" } } }, "then": { "$ref": "#/$defs/letter" } },
@@ -630,6 +716,7 @@
         { "if": { "properties": { "type": { "const": "long_text" } } }, "then": { "$ref": "#/$defs/long_text" } },
         { "if": { "properties": { "type": { "const": "agreement_scale" } } }, "then": { "$ref": "#/$defs/agreement_scale" } },
         { "if": { "properties": { "type": { "const": "single_select" } } }, "then": { "$ref": "#/$defs/single_select" } },
+        { "if": { "properties": { "type": { "const": "multi_select" } } }, "then": { "$ref": "#/$defs/multi_select" } },
         { "if": { "properties": { "type": { "const": "contact_list" } } }, "then": { "$ref": "#/$defs/contact_list" } },
         { "if": { "properties": { "type": { "const": "coach_checklist" } } }, "then": { "$ref": "#/$defs/coach_checklist" } },        { "if": { "properties": { "type": { "const": "sort_assessment" } } }, "then": { "$ref": "#/$defs/sort_assessment" } },
         { "if": { "properties": { "type": { "const": "sort_results" } } }, "then": { "$ref": "#/$defs/sort_results" } },
@@ -640,7 +727,7 @@
       ]
     },
     "page_break": {
-      "description": "Where one page of a section ends and the next begins. The page before it ends in 'Continue →'; a section without one is a single page.",
+      "description": "Where one page of a section ends and the next begins. The page before it ends in 'Continue →', or, where that page holds a letter being written, in the letter's own press, which saves it first; a section without one is a single page.",
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "type"],
@@ -804,6 +891,24 @@
         }
       }
     },
+    "multi_select": {
+      "description": "Choices from a list, as checkbox cards. The answer is the chosen options' identifiers.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "prompt", "options"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "const": "multi_select" },
+        "estimate": { "$ref": "#/$defs/estimate" },
+        "after_comparison": { "$ref": "#/$defs/after_comparison" },
+        "prompt": { "$ref": "#/$defs/text" },
+        "note": {
+          "description": "A line beneath the prompt, such as 'Choose as many as apply.'",
+          "$ref": "#/$defs/text"
+        },
+        "options": { "$ref": "#/$defs/single_select/properties/options" }
+      }
+    },
     "contact_list": {
       "description": "People who know the participant, a first name and an email address per row, each added with their observer's link or changed on their own. 'Add another person' below the rows adds one more row at a time. They are kept as contacts, apart from the participant's answers. At most 50.",
       "type": "object",
@@ -829,6 +934,10 @@
         },
         "more_note": {
           "description": "One sentence above 'Add another person', saying more people can be added than the rows ask for.",
+          "$ref": "#/$defs/text"
+        },
+        "note": {
+          "description": "One quiet sentence above the rows, such as that adding someone sends them nothing, so the participant sends each their link.",
           "$ref": "#/$defs/text"
         }
       }
@@ -950,7 +1059,7 @@
           "$ref": "#/$defs/text"
         },
         "finished": {
-          "description": "What the signpost says once the linked section is complete, in place of its body and button label, such as 'View my results →'. Its button then leads to the results of the sort in that section, if it holds one, and otherwise to the section.",
+          "description": "What the signpost says once the linked section is complete, and the evaluation of any sort in it has ended, every tie-break pair answered or skipped, in place of its body and button label, such as 'View my results →'. Its button then leads to the results of the sort in that section, if it holds one, and otherwise to the section.",
           "type": "object",
           "additionalProperties": false,
           "required": ["button_label"],
@@ -1070,6 +1179,10 @@
           "description": "An optional line beside Print and Copy text while the letter is written, such as asking the participant to keep their own copy before it is sealed.",
           "$ref": "#/$defs/text"
         },
+        "continue_label": {
+          "description": "Where a page follows the letter's, the wording of the press leading there, which saves the letter first, such as 'Save my letter and continue →'. Without it, 'Continue →'.",
+          "$ref": "#/$defs/text"
+        },
         "seal_label": {
           "description": "The wording of the press that finishes the section and seals the letter, in place of the section's own while the letter is not sealed, such as 'Seal my letter and finish Section 6'.",
           "$ref": "#/$defs/text"
@@ -1109,14 +1222,14 @@
       }
     },
     "opens_when": {
-      "description": "What must be true before this section first opens, beside the sections it requires, such as the coach having accepted. Every clause must pass; while one fails the section is locked and the hub's note under it gives that clause's message. Once the section has opened it stays open, whatever later happens to these clauses.",
+      "description": "What must be true before this section first opens, beside the sections it requires, such as the coach having accepted. Every clause must pass; while one fails the section is locked and the hub's note under it gives that clause's message, where {title} is the title, in italics, of the section holding the block the clause reads, and {minimum} the pathway's minimum number of observer answers, such as 'Opens once at least {minimum} people you invite in {title} have answered.', which an observers_answered clause's message may also say as {min}, the minimum it waits on, as a links_issued clause's says its own. Once the section has opened it stays open, whatever later happens to these clauses.",
       "type": "object",
       "additionalProperties": false,
       "required": ["clauses"],
       "properties": {
         "clauses": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/clause" } },
         "with_sections": {
-          "description": "The hub's note while sections this one requires are unfinished too, naming what is left in them where it says {sections}, as each one's to_finish says it, such as 'Opens once you've {sections}, and your coach has accepted.' Without it, the note names only the sections.",
+          "description": "The hub's note while sections this one requires are unfinished too, naming what is left in them where it says {sections}, as each one's to_finish says it, and the pathway's minimum number of observer answers where it says {minimum}, such as 'Opens once you've {sections}, and your coach has accepted.' Without it, the note names only the sections.",
           "$ref": "#/$defs/text"
         }
       }
@@ -1135,7 +1248,8 @@
             "every_entry_has",
             "comparison_visited",
             "links_issued",
-            "coach_accepted"
+            "coach_accepted",
+            "observers_answered"
           ]
         }
       },
@@ -1147,7 +1261,8 @@
         { "if": { "properties": { "type": { "const": "every_entry_has" } } }, "then": { "$ref": "#/$defs/every_entry_has" } },
         { "if": { "properties": { "type": { "const": "comparison_visited" } } }, "then": { "$ref": "#/$defs/comparison_visited" } },
         { "if": { "properties": { "type": { "const": "links_issued" } } }, "then": { "$ref": "#/$defs/links_issued" } },
-        { "if": { "properties": { "type": { "const": "coach_accepted" } } }, "then": { "$ref": "#/$defs/coach_accepted" } }
+        { "if": { "properties": { "type": { "const": "coach_accepted" } } }, "then": { "$ref": "#/$defs/coach_accepted" } },
+        { "if": { "properties": { "type": { "const": "observers_answered" } } }, "then": { "$ref": "#/$defs/observers_answered" } }
       ]
     },
     "clause_message": {
@@ -1254,6 +1369,17 @@
       "required": ["type", "block", "message"],
       "properties": {
         "type": { "const": "coach_accepted" },
+        "block": { "$ref": "#/$defs/identifier" },
+        "message": { "$ref": "#/$defs/clause_message" }
+      }
+    },
+    "observers_answered": {
+      "description": "At least the pathway's minimum number of observers (observers.minimum_observers, the minimum the comparison shows numbers from) have sent their evaluations, the people this contact list holds being those asked. Answered, not only issued, so a section opening on it waits on other people. Every evaluation sent counts, whatever has since become of the person's link or their place on the list.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "block", "message"],
+      "properties": {
+        "type": { "const": "observers_answered" },
         "block": { "$ref": "#/$defs/identifier" },
         "message": { "$ref": "#/$defs/clause_message" }
       }

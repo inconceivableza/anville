@@ -6,12 +6,16 @@
   messages only after a press (fix-2), swapped into that same place so the page neither reloads nor moves. There the
   general line is left out: the list of what is missing is the refusal, and a line under it only said it again. On a
   section's last page the press was its completion; on any other, "Continue →".
+
+  Beneath it, any answer the press sent that was not stored, by name (sprint-3d-r1-fix-6): a way on refused for one,
+  or the page's Save. The general line is left out then too, as the page may be finished all the same.
 {% endcomment %}
 {% include "engine/gate_checklist.html" %}
+{% include "engine/not_saved.html" %}
 {# ✨ A sealing press refused for its date, which says the dates it may be (ticket 104). #}
 {% if seal_refusal %}<p class="gate-refused" role="alert">{{ seal_refusal }}</p>{% endif %}
 {# ✨ Not after the date's own refusal, which says what is missing already (Refusals: once, not again beneath it). #}
-{% if refused and not messages_after_a_press and not seal_refusal %}
+{% if refused and not messages_after_a_press and not seal_refusal and not not_saved %}
   {% if page.is_last %}
     <p class="gate-refused">This section was not marked complete: it is not finished yet.</p>
   {% else %}

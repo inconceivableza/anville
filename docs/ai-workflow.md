@@ -29,7 +29,7 @@ On a capped plan, the flows differ a lot in what they use:
 ## Where things were left (30 Oct 2026)
 
 - **Code review stopped with the checklist.** Sprint 3c was never reviewed as a whole: it ran in three runs (26–28 Oct), each reviewed at its end, runs 1 and 2 on both axes, run 3 (tickets 100 and 74) on the Spec axis alone. The hand-check fixes after each review were not reviewed again. Most of what was committed after the checklist method began (below) has not been through `/code-review`; the one exception is ticket 104 (the sealed letter), reviewed on 30 Oct before commit `be9fa6d`. A review of `main` since sprint 3b's merge, Standards axis especially, is worth doing early.
-- **Checklist, not tickets, at the end.** From about 27 Oct the content owner's feedback was worked straight from their checklist (`Whatever You Do feedback - checklist.md`, kept beside the repo), item by item, rather than written up as tickets in `.scratch/`. That was a temporary measure for the last days; go back to tickets (`/to-tickets`, `docs/agents/issue-tracker.md`) for new work.
+- **Checklist, not tickets, at the end.** From about 27 Oct the content owner's feedback was worked straight from their checklist (`Whatever You Do feedback - checklist.md`, untracked at the repo root), item by item, rather than written up as tickets in `.scratch/`. That was a temporary measure for the last days; go back to tickets (`/to-tickets`, `docs/agents/issue-tracker.md`) for new work.
 
 ## The flows used
 
@@ -50,7 +50,7 @@ Keep the grilling, spec and tickets in one session; start each ticket fresh. Tic
 
 - **Pairing on tests.** Before code, agree the seams and a short list of tests (about five, ranked by risk). The agent writes them failing, the developer sees them red, then the agent makes them pass.
 - **Commit points.** The agent stops at each commit with a proposed message; nothing is pushed by the agent.
-- **Wording.** Participant-facing wording the content owner has not seen is recorded the day it changes, in the wording document kept beside the repo (see `AGENTS.md`).
+- **Wording.** Participant-facing wording the content owner has not seen is recorded the day it changes, in `Whatever You Do - wording changes.md`, kept in the repo (see `AGENTS.md`).
 - **`✨` marks AI-produced comments and docs** (see `AGENTS.md`).
 
 ## Tools

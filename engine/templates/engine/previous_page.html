@@ -1,13 +1,19 @@
 {# Copyright (C) New Community Church SE London 2026. #}
 {# For licensing information see ../../../LICENSE.md #}
-{% load section_pages %}
 {% comment %}
   ✨ The way back to the page before, on every page but the first. As the prototype's screens go back with "← Back";
   a page already gone through stays open to return to. Worded "← Previous page" so it reads apart from "← Back to
   the hub" at the top, and it lands at that page's way on, the "Continue →" pressed to leave it, rather than its top
-  (ticket 41e).
+  (ticket 41e), or at the block whose form that press sent, as the letter (ticket 107).
+
+  On the page that seals a letter (`keeps_date`, the seal) it is a press of the page's form instead
+  (`engine/page_form.html`), drawn as the link is and placed after the seal, sending the date picked as it goes back,
+  for that page to offer again (sprint-3d-r1-fix-3), and every answer on the page, which it stores first, as any press
+  on a page does (sprint-3d-r1-fix-6). It is a plain press with JavaScript too, which also keeps the date as it changes.
 {% endcomment %}
-{% if page.number > 1 %}
-  {% page_url section.id page.number|add:"-1" as previous %}
-  <a class="pill ghost page-back" href="{{ previous }}#completion">← Previous page</a>
+{% if page.previous and keeps_date %}
+  <button type="submit" form="page-answers" formaction="{% url 'letter_date' keeps_date.letter %}#refused" name="back"
+          class="pill ghost page-back">← Previous page</button>
+{% elif page.previous %}
+  <a class="pill ghost page-back" href="{{ page.previous }}">← Previous page</a>
 {% endif %}

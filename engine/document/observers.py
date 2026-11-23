@@ -62,6 +62,15 @@ def minimum_observers(document):
     return document.get("observers", {}).get("minimum_observers", DEFAULT_MINIMUM_OBSERVERS)
 
 
+def counts(assessment):
+    """✨ Whether an observer's assessment counts: toward the minimum and in the comparison's averages and spread. One
+    with no card in a scored bucket, every card placed in "Haven't seen this" (ticket 108), has nothing to add, so it
+    counts for neither (sprint-3d-r1-fix-1). Sent, it is the observer declining (ticket 120): `ObserverResponse.send`
+    keeps only when they declined, neither the assessment nor the relationship, and a decline is never offered
+    withdrawal."""
+    return any(placement.get("seen", True) for placement in assessment.values())
+
+
 def privacy_notice(document, name):
     """✨ The notice an observer reads before any question, in the observer's wording, naming the participant.
 

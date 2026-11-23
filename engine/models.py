@@ -19,9 +19,10 @@ from engine.document.gates import (
     comparison_viewed_key,
     comparison_visit_key,
     links_issued_key,
+    observers_answered,
     opened_key,
 )
-from engine.document.observers import minimum_observers
+from engine.document.observers import counts, minimum_observers
 
 
 class CollectionFrozen(Exception):
@@ -185,6 +186,17 @@ class Response(models.Model):
         if viewed:
             self._stamp_once("comparisons_viewed", block_id, now)
 
+    def look_at_comparison(self, block_id):
+        """✨ The look at a sort's comparison, as its press records it once nothing is left to ask (ticket 55, ticket
+        106): with at least the minimum number of observer assessments that count in, answer collection frozen, counted
+        again under the freeze's lock, since a withdrawal may have left fewer meanwhile; then the visit, and the view
+        when the minimum is in (`visit_comparison`). The participant's press and the hub's demo shortcut (ticket 113)
+        both look through here."""
+        viewed = ObserverResponse.counted(self) >= minimum_observers(self.version.document)
+        if self.collection_frozen_at is None and viewed:
+            viewed = self.freeze_collection()
+        self.visit_comparison(block_id, viewed=viewed)
+
     def open_section(self, section_id):
         """✨ Record that a section with opening conditions has opened, in one UPDATE that merges it in. The first time
         is kept, and a later one writes nothing."""
@@ -200,34 +212,35 @@ class Response(models.Model):
         )
 
     def freeze_collection(self):
-        """✨ Freeze answer collection, if at least the minimum number of observer assessments are in, counted under a
-        lock on this response, which a send takes too, so no send lands between the count and the freeze. Freezing
-        again keeps the first time. Returns whether collection is frozen."""
+        """✨ Freeze answer collection, if at least the minimum number of observer assessments that count
+        (`ObserverResponse.counted`) are in, counted under a lock on this response, which a send takes too, so no send
+        lands between the count and the freeze. Freezing again keeps the first time. Returns whether collection is
+        frozen."""
         minimum = minimum_observers(self.version.document)
         with transaction.atomic():
             locked = Response.objects.select_for_update().get(pk=self.pk)
-            if locked.collection_frozen_at is None and _submitted_count(self) >= minimum:
+            if locked.collection_frozen_at is None and ObserverResponse.counted(self) >= minimum:
                 locked.collection_frozen_at = timezone.now()
                 locked.save(update_fields=["collection_frozen_at"])
         self.collection_frozen_at = locked.collection_frozen_at
         return self.collection_frozen_at is not None
 
     def unfreeze_below_minimum(self):
-        """✨ Open answer collection again if fewer than the minimum number of observer assessments are in, as after a
-        withdrawal (ticket 55). Counted under the same lock as freezing."""
+        """✨ Open answer collection again if fewer than the minimum number of observer assessments that count are in,
+        as after a withdrawal (ticket 55). Counted under the same lock as freezing."""
         minimum = minimum_observers(self.version.document)
         with transaction.atomic():
             Response.objects.select_for_update().filter(pk=self.pk).first()
-            if _submitted_count(self) < minimum:
+            if ObserverResponse.counted(self) < minimum:
                 Response.objects.filter(pk=self.pk).update(collection_frozen_at=None)
 
     def clear_sort(self, block_id):
-        """✨ The retake (29 Oct; fix-19's, once demo only): take back the participant's sort for `block_id` and all
+        """✨ The retake (29 Oct): take back the participant's sort for `block_id` and all
         worked out from it, so they can sort again from the start. Its answer and result go, and the tie-break's answers
         and re-weighted result with it. What observers sent goes too, and collection opens again, so the people they
         invited, whose links keep working, can send afresh and are reminded as before they sent (ADR 0016); nobody
-        withdrew, so the count of withdrawals starts again too. The coach no longer sees the results until the
-        participant chooses to show them again (ADR 0011).
+        withdrew, so the count of withdrawals starts again too. Declines go with them (ticket 120), so those people are
+        asked again. The coach no longer sees the results until the participant chooses to show them again (ADR 0011).
 
         The sections they finished stay finished, and the visit to the comparison and the view of it stay, so nothing
         already opened locks again (ADR 0019). The coach's link and every other answer stay. Done together or not at
@@ -324,7 +337,8 @@ class Response(models.Model):
         a sort's comparison is read in too, under a key no block can have, for a `comparison_visited` clause, and so is
         each view of one, for a block waiting on the comparison (ticket 68), how many of each block's people have a
         working link, for a `links_issued` clause, the coach's answer on their current link, expired or not, for a
-        `coach_accepted` clause, and when each section with opening conditions first opened, for the hub."""
+        `coach_accepted` clause, whether the minimum number of observers have answered, for an `observers_answered`
+        clause (ticket 106), and when each section with opening conditions first opened, for the hub."""
         kept, links, coach_answers = {}, {}, {}
         now = timezone.now()
         for contact in self.contacts.select_related("invitation").order_by("block_id", "position"):
@@ -341,7 +355,8 @@ class Response(models.Model):
         visits = {comparison_visit_key(block_id): at for block_id, at in self.comparisons_visited.items()}
         viewed = {comparison_viewed_key(block_id): at for block_id, at in self.comparisons_viewed.items()}
         opened = {opened_key(section_id): at for section_id, at in self.sections_opened.items()}
-        return {**self.answers, **kept, **visits, **viewed, **links, **coach_answers, **opened}
+        answered = observers_answered(self.version.document, ObserverResponse.counted(self))
+        return {**self.answers, **kept, **visits, **viewed, **links, **coach_answers, **answered, **opened}
 
 
 class Contact(models.Model):
@@ -605,13 +620,15 @@ class Invitation(models.Model):
     def expired_claim(cls, secret):
         """✨ The observer's link an own secret claimed once it has expired, if they sent answers through it, or None:
         what they sent can still be withdrawn through it, as easily as it was given (GDPR Article 7(3), 29 Oct). With
-        nothing sent there is nothing of theirs to withdraw, so it is refused as any dead link is."""
+        nothing sent there is nothing of theirs to withdraw, so it is refused as any dead link is; and so it is after a
+        decline, which kept nothing about the participant and is never offered withdrawal (ticket 120; code review of
+        23 Nov)."""
         if not secret:
             return None
         expired = cls.objects.filter(
             secret_hash=_hash_of(secret), expires_at__lte=timezone.now(), contact__role=Contact.Role.CONTACT
         ).first()
-        return expired if expired is not None and ObserverResponse.sent_with(secret) else None
+        return expired if expired is not None and ObserverResponse.answered_with(secret) else None
 
 
 def _hash_of(token):
@@ -630,8 +647,10 @@ class Result(models.Model):
     block_id = models.CharField(max_length=64)
     scores = models.JSONField()
     # ✨ The participant's answers to the tie-break's pairs (ticket 30b), in the order asked, each
-    # `{"framework", "constructs": [a, b], "round", "chosen"}`, `chosen` None for a skip. Kept beside the scores, which
-    # they never change.
+    # `{"framework", "constructs": [a, b], "round", "chosen"}`, `chosen` None where neither was chosen, and then
+    # `"both": true` where the answer was "Both are right" (ticket 108). An answer without it was "Neither is more true
+    # of me", as every one stored before ticket 108 was, the skip being the only such answer then. Kept beside the
+    # scores, which they never change.
     tie_break_answers = models.JSONField(default=list)
     # ✨ The scores re-weighted by those answers (ticket 30c), by their own named method, once every pair is answered or
     # skipped; None until then, and for anyone with no tie-break. Kept beside the scores, never in their place.
@@ -643,16 +662,17 @@ class Result(models.Model):
             models.UniqueConstraint(fields=["response", "block_id"], name="one_result_per_sort_per_response"),
         ]
 
-    def answer_pair(self, place, pair, chosen):
+    def answer_pair(self, place, pair, chosen, both=False):
         """✨ Store the answer to the tie-break's pair at `place` in the plan, `chosen` one of its constructs or None to
-        skip. Only the next unanswered pair takes one, checked under a lock, so a form sent twice or from a stale tab
-        stores nothing. Returns whether it was stored."""
+        skip, or None and `both` for "Both are right" (ticket 108). Only the next unanswered pair takes one, checked
+        under a lock, so a form sent twice or from a stale tab stores nothing. Returns whether it was stored."""
         with transaction.atomic():
             locked = Result.objects.select_for_update().get(pk=self.pk)
             if len(locked.tie_break_answers) != place:
                 return False
             answer = {key: pair[key] for key in ("framework", "constructs", "round")}
-            locked.tie_break_answers = [*locked.tie_break_answers, {**answer, "chosen": chosen}]
+            given = {"chosen": chosen, **({"both": True} if both else {})}
+            locked.tie_break_answers = [*locked.tie_break_answers, {**answer, **given}]
             locked.save(update_fields=["tie_break_answers"])
         self.tie_break_answers = locked.tie_break_answers
         return True
@@ -692,6 +712,9 @@ class ObserverResponse(models.Model):
     assessment = models.JSONField(null=True, blank=True)
     written_answers = models.JSONField(default=dict)
     submitted_at = models.DateTimeField(null=True, blank=True)
+    # ✨ When the observer declined, by sending a sort with every card in "Haven't seen this" (ticket 120): then this
+    # is all that is kept of what they sent, with no assessment, and it is never submitted, so it counts toward nothing.
+    declined_at = models.DateTimeField(null=True, blank=True)
     # ✨ How the observer knows the participant, by the id of a choice the document offers, or empty if they chose none.
     # Stored only: nothing reads it to slice or filter results (ticket 15b).
     relationship = models.CharField(max_length=64, null=True, blank=True)
@@ -707,6 +730,12 @@ class ObserverResponse(models.Model):
                 condition=models.Q(submitted_at__isnull=True) | models.Q(assessment__isnull=False),
                 name="a_submitted_observer_response_holds_an_assessment",
             ),
+            # ✨ A decline keeps only that the observer declined (ticket 120).
+            models.CheckConstraint(
+                condition=models.Q(declined_at__isnull=True)
+                | models.Q(assessment__isnull=True, submitted_at__isnull=True, relationship__isnull=True),
+                name="a_declined_observer_response_holds_nothing_else",
+            ),
         ]
 
     @classmethod
@@ -715,6 +744,10 @@ class ObserverResponse(models.Model):
         the relationship the observer chose, if any. It counts at once. A second from the same secret raises
         IntegrityError from the database and changes nothing. `is_test_data` is set only by a seeding command, never
         from a request.
+
+        An assessment with no card seen, every one in "Haven't seen this" (`counts`), is the observer declining (ticket
+        120): only that is kept, as `declined_at`, and neither the assessment nor the relationship, which say nothing
+        of the participant. Either way the observer has answered, and is never reminded again.
 
         The claimed link's row is locked first, as a withdrawal's ending of the claim locks it, so a send and a
         withdrawal at once take turns: a send that finds the claim ended meanwhile stores nothing and returns None, and
@@ -736,11 +769,13 @@ class ObserverResponse(models.Model):
             if open_to_answers is None:
                 raise CollectionFrozen
             now = timezone.now()
+            seen = counts(assessment)
             sent = cls.objects.create(
                 response=response,
-                assessment=assessment,
-                relationship=relationship,
-                submitted_at=now,
+                assessment=assessment if seen else None,
+                relationship=relationship if seen else None,
+                submitted_at=now if seen else None,
+                declined_at=None if seen else now,
                 sent_by=_sent_by(secret),
                 is_test_data=is_test_data,
             )
@@ -750,8 +785,19 @@ class ObserverResponse(models.Model):
 
     @classmethod
     def sent_with(cls, secret):
-        """✨ Whether an observer assessment has been sent with this secret."""
+        """✨ Whether an observer assessment has been sent with this secret, a decline included."""
         return cls.objects.filter(sent_by=_sent_by(secret)).exists()
+
+    @classmethod
+    def answered_with(cls, secret):
+        """✨ Whether an observer assessment has been sent with this secret that is not a decline (ticket 120): answers
+        about the participant, which can be withdrawn."""
+        return cls.objects.filter(sent_by=_sent_by(secret), declined_at__isnull=True).exists()
+
+    @classmethod
+    def declined_with(cls, secret):
+        """✨ Whether what was sent with this secret was a decline (ticket 120)."""
+        return cls.objects.filter(sent_by=_sent_by(secret), declined_at__isnull=False).exists()
 
     @classmethod
     def withdraw(cls, secret):
@@ -761,7 +807,8 @@ class ObserverResponse(models.Model):
 
         The participant's copy of the link stays used up, as it was, so nothing they can see changes. Ending the claim
         and deleting happen together or not at all. Withdrawing works while answer collection is frozen too, and if it
-        leaves fewer than the minimum, collection opens again (ticket 55).
+        leaves fewer than the minimum, collection opens again (ticket 55). A decline is never offered withdrawal, as a
+        coach's is not, but reached anyway it goes as answers do, without counting as answers withdrawn (ticket 120).
         """
         if not secret:
             return False
@@ -775,8 +822,10 @@ class ObserverResponse(models.Model):
             if claimed is None:
                 return False
             Invitation.objects.filter(pk=claimed.pk).update(secret_hash=None)
-            deleted, _ = cls.objects.filter(sent_by=_sent_by(secret)).delete()
-            if deleted:
+            sent = cls.objects.filter(sent_by=_sent_by(secret))
+            answered = sent.filter(declined_at__isnull=True).exists()
+            sent.delete()
+            if answered:
                 Response.objects.filter(pk=claimed.contact.response_id).update(
                     observers_withdrew=F("observers_withdrew") + 1
                 )
@@ -785,22 +834,39 @@ class ObserverResponse(models.Model):
 
     @classmethod
     def assessments_for(cls, response):
-        """✨ The submitted observer assessments of one participant's response, and whether every one is test data.
+        """✨ The submitted observer assessments of one participant's response that count, and whether every one is
+        test data. This is the one read of them: the comparison averages these, and the minimum, wherever it is
+        checked, counts these (`counted`).
 
-        Drafts never count, and nothing else of an observer travels with their assessment: not their written answers,
-        and not which record it came from. With no observers there is nothing to call illustrative, so that is False.
+        Drafts never count, and neither does an assessment with no card in a scored bucket (`counts`), which has nothing
+        to add (sprint-3d-r1-fix-1). Nothing else of an observer travels with their assessment: not their written
+        answers, and not which record it came from. With no observers there is nothing to call illustrative, so that is
+        False.
         """
         submitted = cls.objects.filter(response=response, submitted_at__isnull=False).order_by("pk")
-        rows = list(submitted.values_list("assessment", "is_test_data"))
+        rows = [row for row in submitted.values_list("assessment", "is_test_data") if counts(row[0])]
         return ObserverAssessments(
             assessments=[assessment for assessment, _ in rows],
             all_test_data=bool(rows) and all(is_test_data for _, is_test_data in rows),
         )
 
+    @classmethod
+    def counted(cls, response):
+        """✨ How many observer assessments of a participant's response count toward the minimum, as
+        `assessments_for` reads them."""
+        return len(cls.assessments_for(response).assessments)
 
-def _submitted_count(response):
-    """✨ How many observer assessments of a participant's response have been sent, as the minimum counts them."""
-    return ObserverResponse.objects.filter(response=response, submitted_at__isnull=False).count()
+    @classmethod
+    def declined(cls, response):
+        """✨ How many observers declined to answer about a participant's response (ticket 120): replies, but no
+        assessments, said to the participant only as a count, as withdrawals are."""
+        return cls.objects.filter(response=response, declined_at__isnull=False).count()
+
+    @classmethod
+    def sent_count(cls, response):
+        """✨ How many observer assessments of a participant's response have been sent, counting toward the minimum or
+        not. A retake deletes these and the declines (`declined`), which are no assessment and so are not among them."""
+        return cls.objects.filter(response=response, submitted_at__isnull=False).count()
 
 
 def _sent_by(secret):
@@ -847,8 +913,9 @@ class SealedLetter(models.Model):
 class SignUp(models.Model):
     """✨ An email address left under "Stay in touch" on the homepage (ticket 74, ADR 0023): one list for the
     newsletter, contact and the churches' waitlist, kept here for the operator to export from the admin, and nothing
-    sent from the app. Kept with when it was left and the version of the form's sentence it was left under. Belongs to
-    no account. One row per address, whatever its case, so a repeat address stores nothing new."""
+    sent from the app. Kept with when it was first left and the version of the form's wording it was left under, and
+    since ticket 111 with what it asked for (`SignUpChoice`, ADR 0027). Belongs to no account. One row per address,
+    whatever its case, so a repeat address adds only the choices it had not made."""
 
     email = models.EmailField(max_length=EMAIL_MAX_LENGTH)
     signed_up_at = models.DateTimeField(default=timezone.now)
@@ -860,6 +927,35 @@ class SignUp(models.Model):
 
     def __str__(self):
         return self.email
+
+    def choices_made(self):
+        """✨ Each choice this sign-up has made, by its value. Empty for one left before there were choices (wording
+        version 1), which agreed only to that version's one sentence."""
+        return {made.choice: made for made in self.choices.all()}
+
+
+class SignUpChoice(models.Model):
+    """✨ One thing a sign-up asked for under "Stay in touch" (ticket 111, ADR 0027): their church on the waitlist,
+    news by email, or to be contacted. Kept with when it was ticked and the version of the form's wording it was ticked
+    under, so a choice added by a later press keeps its own. The form only ever adds one; the operator deleting the
+    sign-up in the admin takes its choices with it."""
+
+    class Choice(models.TextChoices):
+        # ✨ In the form's order, which the admin's list and export keep.
+        WAITLIST = "waitlist", "Church on the waitlist"
+        NEWS = "news", "News by email"
+        CONTACT = "contact", "To be contacted"
+
+    sign_up = models.ForeignKey(SignUp, on_delete=models.CASCADE, related_name="choices")
+    choice = models.CharField(max_length=8, choices=Choice.choices)
+    chosen_at = models.DateTimeField(default=timezone.now)
+    wording_version = models.PositiveSmallIntegerField()
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["sign_up", "choice"], name="one_of_each_choice_per_sign_up")]
+
+    def __str__(self):
+        return self.get_choice_display()
 
 
 class _MergeJson(Func):

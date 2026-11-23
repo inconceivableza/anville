@@ -641,6 +641,22 @@ def test_section_1_is_completed_once_the_sort_is_in_the_comparison_visited_and_t
 
 
 @pytest.mark.django_db
+def test_with_work_of_its_own_section_1_waits_for_its_press_once_its_evaluation_ends(participant):
+    """✨ Ticket 119 completes a section as its evaluation ends only where the evaluation is all it asks, as in *Whatever
+    You Do*; here the reflection after the link is Section 1's own, so the sort and its results complete nothing."""
+    client = through_to_section_1s_activity(participant)
+    submit_the_sort(client)
+    visit_the_comparison(client)
+    answer(client, "gifts-summary", A_REFLECTION)
+
+    client.get("/results/strengths-sort/")
+    client.get("/hub/")
+
+    assert "designed" not in Response.objects.get().completed_sections
+    assert 'action="/sections/designed/complete/' in client.get("/sections/designed/").content.decode()
+
+
+@pytest.mark.django_db
 def test_completing_section_1_does_not_complete_the_strengths_assessment(participant):
     """✨ Each section is completed by its own explicit act."""
     client = through_to_section_1s_activity(participant)

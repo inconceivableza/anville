@@ -29,7 +29,8 @@
         <ul class="retake-list">
           <li>Your card sort and your results</li>
           {% if tie_break %}<li>Your answers to “Which is more true of you?”</li>{% endif %}
-          {% if answered %}<li>What the people you invited sent ({{ answered }} answer{{ answered|pluralize }}). Their links still work, so they can answer again.</li>{% endif %}
+          {# ✨ Declines too (ticket 120): they go with the answers, and those people are asked again. #}
+          {% if answered or declined %}<li>What the people you invited sent ({% if answered %}{{ answered }} answer{{ answered|pluralize }}{% if declined %} and {% endif %}{% endif %}{% if declined %}{{ declined }} repl{{ declined|pluralize:"y,ies" }} that they couldn’t answer{% endif %}). Their links still work, so they can answer again.</li>{% endif %}
           {% if coach_shown %}<li>Your coach’s view of your results, until you choose to show them again</li>{% endif %}
         </ul>
       </div>

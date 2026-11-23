@@ -593,26 +593,16 @@ body.wizard > main.container {
   z-index: 1;
 }
 
-/* ✨ A different photo for each page of a wizard, the hackathon prototype's five in its order (ticket 101); the shade
-   above keeps the verse readable on any of them, and the photo is drawn without JavaScript or a sign-in. */
-.ob-photo-1 {
-  background: var(--hero-bg) url("../img/facing-sun.jpg") center / cover;
-}
-
-.ob-photo-2 {
-  background: var(--hero-bg) url("../img/grass.jpg") center / cover;
-}
-
-.ob-photo-3 {
-  background: var(--hero-bg) url("../img/field-woman.jpg") center / cover;
-}
-
-.ob-photo-4 {
-  background: var(--hero-bg) url("../img/notebook.jpg") center / cover;
-}
-
-.ob-photo-5 {
-  background: var(--hero-bg) url("../img/hero.jpg") center / cover;
+/* ✨ A different photo for each page of a wizard, the page's own image (`WIZARD_PHOTOS` names each), filling the panel
+   as v3's does, beneath the shade above, which keeps the verse readable on any of them; it is drawn without JavaScript
+   or a sign-in. */
+.ob-photo > img {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .ob-photo .q {
@@ -710,7 +700,8 @@ body.wizard > main.container {
   animation: onboarding-enter 0.35s ease both;
 }
 
-/* ✨ v3's choices (sprint-3c-r3-fix-4): two columns of cards, each a radio, the chosen one brown, as v3's pressed. */
+/* ✨ v3's choices (sprint-3c-r3-fix-4): two columns of cards, each a radio, or a checkbox where many may be chosen
+   (ticket 112), the chosen ones brown, as v3's pressed. */
 .choice-q fieldset {
   border: 0;
   min-width: 0;
@@ -720,6 +711,13 @@ body.wizard > main.container {
   margin-bottom: var(--space-md);
   font-size: var(--text-md);
   color: var(--muted);
+}
+
+/* ✨ A choice of many's note, on its own line beneath the prompt, as v3's "Choose as many as apply." (ticket 112). */
+.choice-note {
+  display: block;
+  margin-top: var(--space-2xs);
+  font-size: var(--text-sm);
 }
 
 .opts {
@@ -785,14 +783,14 @@ body.wizard > main.container {
 }
 
 /* ✨ Closer together, as v3's compact ratings (sprint-3c-r3-fix-7): its smaller heading, and no empty row under each
-   rating, the wizard saving without saying "Saved"; the row comes back to say why a rating was refused, and stays
-   without JavaScript for its Save button. The letter's ratings in Whatever You Do save quietly too
-   (sprint-3c-r3-fix-15), so the rule follows the rating's own mark rather than the wizard. */
+   rating, the wizard saving without saying "Saved"; the row comes back to say why a rating was refused. Without
+   JavaScript too, since the page's one Save took the row's own (sprint-3d-r1-fix-6). The letter's ratings in Whatever
+   You Do save quietly too (sprint-3c-r3-fix-15), so the rule follows the rating's own mark rather than the wizard. */
 .ob-main .step:has(.baseline-q) h1 {
   font-size: clamp(32px, 3.6vw, 46px);
 }
 
-html[data-javascript="loaded"] .baseline-q.saves-quietly .save-row:has(.save-status:empty) {
+.baseline-q.saves-quietly .save-row:has(.save-status:empty) {
   display: none;
 }
 
@@ -837,6 +835,11 @@ html[data-javascript="loaded"] .baseline-q.saves-quietly .save-row:has(.save-sta
 .ob-main .way-on > .pill:not(.page-back) {
   flex: 0 1 auto;
   margin-left: auto;
+}
+
+/* ✨ The page's Save, shown only without JavaScript, keeps the way on beside it at the right (sprint-3d-r1-fix-6). */
+html:not([data-javascript="loaded"]) .ob-main .way-on > .page-save + .pill {
+  margin-left: 0;
 }
 
 .ob-main .way-on .pill.full {
@@ -1482,6 +1485,32 @@ main > .hub ~ .hub-consent {
   color: var(--muted);
 }
 
+/* ✨ The one locked section's note the hub shows as a line (hand check of 18 Nov): what the participant is waiting on,
+   with nothing listed left to do. Close under its title, as a section's "About 30–40 minutes" is, above any parts, in
+   the title's column, clear of "Locked"; in italics, in its locked title's colour, the titles it names set upright. */
+.srow-body > .lock-reason {
+  color: var(--muted);
+  font-style: italic;
+  text-wrap: pretty;
+}
+
+.srow-body > .lock-reason em {
+  font-style: normal;
+}
+
+/* ✨ On a phone the title's column is too narrow for it (a few words a line at 375px), so it reaches under "Locked" to
+   the row's right edge, as the parts do. A one-line title above it is made as tall as the plain pill (a line of
+   --text-xs at the body's line height, and its padding), so the line starts below the pill, not beside it. */
+@media (max-width: 560px) {
+  .srow-body > .lock-reason {
+    margin-right: calc(-1 * (var(--hub-pill-column) + var(--hub-arrow-column) + 2 * var(--space-md)));
+  }
+
+  .srow-body > h3:has(+ .lock-reason) {
+    min-height: calc(var(--text-xs) * 1.6 + 2 * var(--space-2xs));
+  }
+}
+
 .srow.locked h3 a {
   color: var(--muted);
 }
@@ -1602,6 +1631,19 @@ main > .hub ~ .hub-consent {
 .srow > .tag,
 .srow > .lock {
   justify-self: end;
+}
+
+/* ✨ A pill longer than its column, such as "Still need answers from 3 people who know you", wraps within the column,
+   its lines centred and balanced, rather than running left over the row's title (ticket 106). Its corners are rounded
+   by half a one-line pill's height, not fully: a one-line pill looks as every other does, and a wrapped one is a
+   rounded box, where full rounding made a tall stadium whose ends cut into its first and last lines (hand check of
+   18 Nov). */
+.srow > .tag {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  text-wrap: balance;
+  border-radius: calc(0.5lh + var(--space-2xs));
 }
 
 /* ✨ An open row is one link (fix-6): its title's link is stretched over the row, so the whole row is clickable, with
@@ -1943,6 +1985,27 @@ main > .hub ~ .hub-consent {
   color: var(--green-deep);
 }
 
+/* ✨ Demo only (ticket 113): the hub's shortcut and an observer's demo profiles, a choice and a press, as quiet as the
+   links above, on one line where they fit and wrapping on a phone. Laid out as a row, so `hidden` needs its own rule. */
+.demo-shortcut {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-sm);
+  margin-bottom: 16px;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.demo-shortcut[hidden] {
+  display: none;
+}
+
+.demo-shortcut select {
+  max-width: 100%;
+  font: inherit;
+}
+
 /* ✨ Demo only (fix-20): a title pressed and held on a phone to reveal a hidden demo-only link (the results page's
    retake) neither selects its text nor opens the callout menu. Only a demo system's markup carries the attribute. */
 [data-demo-reveal-hold] {
@@ -1957,6 +2020,15 @@ main > .hub ~ .hub-consent {
   border-top: 1px solid var(--border);
   padding-top: 24px;
   margin-top: var(--space-2xl);
+}
+
+/* ✨ The line above a section's finish, saying when to press it, such as Section 2's to come back once its workbook is
+   done (ticket 106). */
+.completion-note {
+  font-size: var(--text-sm);
+  color: var(--ink-light);
+  margin-bottom: var(--space-md);
+  text-wrap: pretty;
 }
 
 /* ✨ "Page 2 of 3", under a paged section's heading */
@@ -1986,7 +2058,8 @@ main > .hub ~ .hub-consent {
   flex-wrap: wrap;
 }
 
-.way-on > form {
+.way-on > form,
+.way-on > .pill.full {
   flex: 1 1 140px;
 }
 
@@ -1996,8 +2069,18 @@ form + .way-on,
   margin-top: 16px;
 }
 
-.page-back {
+.page-back,
+.page-save {
   flex-shrink: 0;
+}
+
+/* ✨ On the page that seals a letter, a button (sprint-3d-r1-fix-3), drawn as the link is: with the page's line height,
+   not the browser's for a button, and shown first, though it follows the seal in the markup, as "Back" in the coach
+   checklist does (fix-12), so that the page's form's first button, which Enter in an answer presses, is its Save
+   (sprint-3d-r1-fix-6). */
+button.page-back {
+  order: -1;
+  line-height: inherit;
 }
 
 .completion-done {
@@ -2141,6 +2224,22 @@ form + .way-on,
   margin-top: var(--space-xl);
   color: var(--muted);
   font-size: 12px;
+}
+
+/* ✨ The way to withdraw once a coach has accepted or an observer has sent: a quiet line below the page's message
+   (ticket 109), there to find but never competing with the thanks. */
+.withdraw-line {
+  margin: var(--space-lg) 0 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.withdraw-line a {
+  color: inherit;
+}
+
+.withdraw-line a:hover {
+  color: var(--green-deep);
 }
 
 /* ✨ A form's button that reads as a link in its sentence (29 Oct), for an action a plain link must not take, since
@@ -2291,7 +2390,14 @@ body:not(.framed) .question-card > p + form {
   color: var(--muted);
 }
 
-/* ✨ How many withdrew (29 Oct): quiet, below the list. */
+/* ✨ A list's own note above its rows (ticket 109), as quiet as the one below them. */
+.contact-list-note {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+/* ✨ How many withdrew (29 Oct), and how many couldn't answer (ticket 120): quiet, below the list. */
 .contact-withdrawn {
   margin: var(--space-sm) 0 0;
   font-size: 12px;
@@ -2990,6 +3096,26 @@ body:not(.framed) .question-card > p + form {
   color: var(--muted);
 }
 
+/* ✨ The freeze warning beside the press on to the comparison (ticket 106): a sentence to read before pressing, so
+   larger and darker than a status line. On the hub's dark next-step panel, under its press. */
+.signpost-line.freeze-warning {
+  font-size: var(--text-sm);
+  color: var(--ink-light);
+  text-wrap: pretty;
+}
+
+.next p.freeze-warning {
+  margin: var(--space-md) 0 0;
+  font-size: var(--text-sm);
+}
+
+/* ✨ On the comparison's own page, while a look would freeze collection (sprint-3d-r1-fix-1): under its press, as on
+   the hub's next step, and darker than the page's waiting lines, as on Section 2's card. */
+.comparison-ready p.freeze-warning {
+  margin-top: var(--space-md);
+  color: var(--ink-light);
+}
+
 /* ✨ Room between a signpost's words and its green button, which sat tight beneath them (ticket 95). */
 .signpost > p:has(> .pill) {
   margin-top: var(--space-md);
@@ -3110,6 +3236,20 @@ body:not(.framed) .question-card > p + form {
   cursor: pointer;
 }
 
+/* ✨ The skip and "Both are right" side by side, centred, one above the other where the screen is too narrow for both
+   (ticket 108). */
+.pair-neither {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-xs) var(--space-lg);
+  margin-top: 15px;
+}
+
+.pair-neither .pair-skip {
+  margin: 0;
+}
+
 /* Hint boxes: rich text set off from the page */
 
 .hint-box {
@@ -3121,6 +3261,12 @@ body:not(.framed) .question-card > p + form {
   font-size: var(--text-sm);
   color: var(--ink-light);
   line-height: 1.5;
+}
+
+/* ✨ A box of several paragraphs, as the note for people asked to rate someone, sets them apart as the pathway's rich
+   text does (`.rich-text p + p`), rather than running them together (hand check of ticket 109, 19 Nov). */
+.hint-box p + p {
+  margin-top: 12px;
 }
 
 .hint-box strong {
@@ -3160,6 +3306,30 @@ body:not(.framed) .question-card > p + form {
 .hero-copy .demo-notice {
   max-width: 520px;
   margin: var(--space-xl) auto 0;
+}
+
+/* ✨ Demo only (ticket 113): the made-up address to sign up with, a smaller line of its own in the notice's amber, just
+   below it on the homepage and the sign-up page. */
+.demo-address {
+  background: var(--warn-pale);
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  padding: var(--space-xs) var(--space-md);
+  margin-bottom: 20px;
+  font-size: var(--text-sm);
+  color: var(--ink);
+  line-height: 1.5;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.demo-notice + .demo-address {
+  margin-top: -12px;
+}
+
+.hero-copy .demo-address {
+  max-width: 520px;
+  margin: var(--space-sm) auto 0;
 }
 
 /* ✨ The smaller notice, atop every other page (ticket 46): one thin amber line in the page's flow, so it is plainly
@@ -4513,6 +4683,25 @@ html[data-javascript="loaded"] .sort-progress {
 .grade-5 { --tone: var(--green-deep); --k: 66%; }
 .grade-6 { --tone: var(--green-deep); --k: 95%; }
 
+/* ✨ "Haven't seen this", an observer's place beside the buckets (ticket 108), as the two-round prototype draws it:
+   below them, dashed and grey, with no dot, since it is no bucket and says nothing of strength. */
+.bucket-btn.not-seen {
+  --tone: var(--muted);
+  --k: 20%;
+  flex-direction: row;
+  justify-content: center;
+  width: 100%;
+  max-width: 420px;
+  min-height: 44px;
+  margin: var(--space-sm) auto 0;
+  border-style: dashed;
+  font-size: var(--text-sm);
+}
+
+.bucket-btn.not-seen::before {
+  display: none;
+}
+
 .scale-ends {
   display: flex;
   justify-content: space-between;
@@ -4735,6 +4924,18 @@ html[data-javascript="loaded"] .sort-progress {
 .check-dot[aria-checked="true"] {
   background: color-mix(in oklab, var(--tone) var(--k), var(--paper));
   border-color: color-mix(in oklab, var(--tone) 90%, var(--ink));
+}
+
+/* ✨ The answer chosen is marked as well as filled, so it shows without its colour, in greyscale too (ticket 108). */
+.check-dot[aria-checked="true"]::after {
+  content: "";
+  display: block;
+  width: 10px;
+  height: 10px;
+  margin: auto;
+  border-radius: var(--radius-round-shape);
+  background: var(--paper);
+  box-shadow: 0 0 0 2px var(--ink);
 }
 
 .check-scale {
@@ -4965,6 +5166,10 @@ html[data-javascript="loaded"] .save-fallback {
     justify-content: flex-start;
     text-align: left;
     font-size: var(--text-sm);
+  }
+
+  .bucket-btn.not-seen {
+    max-width: 360px;
   }
 
   .scale-ends {
@@ -5374,6 +5579,9 @@ body > svg[aria-hidden="true"] {
   justify-items: center;
 }
 
+/* ✨ The overview's heading balances its lines, as ticket 90 meant it to: `.mission .in` balances, but a rule of its
+   own here said `pretty`, which only keeps a lone word off the last line, so it broke into a wide line over a short
+   one (the content owner, 30 Oct; ticket 110). main.js wraps its words in spans, which balancing is unaffected by. */
 .reveal {
   font-family: var(--font-heading);
   font-weight: 300;
@@ -5382,7 +5590,7 @@ body > svg[aria-hidden="true"] {
   letter-spacing: -0.015em;
   color: var(--ink);
   margin: 0;
-  text-wrap: pretty;
+  text-wrap: balance;
 }
 
 .reveal .w,
@@ -5811,14 +6019,15 @@ body > svg[aria-hidden="true"] {
   width: 40%;
 }
 
-.s-btn {
-  justify-self: start;
-  padding: 9px 15px;
-  border-radius: 999px;
-  background: var(--green);
-  color: var(--green-ink);
-  font-size: 12.5px;
-  font-weight: 600;
+/* ✨ Steps 3 and 4's photograph in place of a drawn screen (the content owner, 30 Oct): the same rounded frame, with
+   no window bar, in a fixed shape so the panel does not change height from step to step. */
+.shot-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  max-height: 420px;
+  object-fit: cover;
+  object-position: center 55%;
 }
 
 .s-small {
@@ -5958,14 +6167,17 @@ body > svg[aria-hidden="true"] {
   text-shadow: 0 1px 8px var(--black-45);
 }
 
+/* ✨ The shared arrow points up and to the right, so a turn of 135 degrees points it straight down (the content owner,
+   30 Oct, who saw it point down and to the right at 90). The nudge on hover is straight down too, so it moves in the
+   page's direction and not along the arrow's own, which a rotated translate would. */
 .learn-more svg {
   width: 20px;
   height: 20px;
-  transform: rotate(90deg);
+  transform: rotate(135deg);
 }
 
 .learn-more:hover svg {
-  transform: rotate(90deg) translateX(3px);
+  transform: translateY(3px) rotate(135deg);
 }
 
 .imp-quote {
@@ -6530,7 +6742,7 @@ body > svg[aria-hidden="true"] {
   inset: 0;
   background:
     linear-gradient(90deg, var(--brown-78), var(--brown-45)),
-    url("../img/hero.jpg") center 55% / cover;
+    url("../img/hero-landscape-poster.jpg") center 55% / cover;
   transform: scale(1.01);
 }
 
@@ -6553,6 +6765,11 @@ body > svg[aria-hidden="true"] {
   line-height: 1.35;
   color: var(--on-dark);
   text-wrap: pretty;
+}
+
+/* ✨ The quote's three paragraphs (the content owner, 30 Oct): a line's gap between them, none above the first. */
+.story-copy blockquote p + p {
+  margin-top: 0.8em;
 }
 
 .story-sec [data-reveal] .w {
@@ -6606,14 +6823,60 @@ body > svg[aria-hidden="true"] {
   text-wrap: pretty;
 }
 
+/* ✨ The choices above the field and its button (ticket 111). */
 .stay form {
-  display: flex;
-  align-items: center;
+  display: grid;
   gap: var(--space-sm);
   margin: 0;
 }
 
-.stay input {
+.stay-choices {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.stay-choices legend {
+  margin-bottom: 4px;
+  padding: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.stay-choices label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--on-dark-2);
+  cursor: pointer;
+}
+
+.stay-choices input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--green);
+}
+
+.stay-send {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* ✨ "Sign up" on one line beside the field: the field gives way, not the button, which squeezed to two lines at
+   800px and wider (hand check of 17 Nov). */
+.stay-send .pill {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.stay input[type="email"] {
   width: 100%;
   min-width: 0;
   border: 1px solid var(--on-dark-22);
@@ -6625,16 +6888,16 @@ body > svg[aria-hidden="true"] {
   font-size: 14px;
 }
 
-.stay input::placeholder {
+.stay input[type="email"]::placeholder {
   color: var(--on-dark-2);
 }
 
-.stay input:focus {
+.stay input[type="email"]:focus {
   outline: 2px solid var(--green);
   outline-offset: 1px;
 }
 
-.stay input[aria-invalid="true"] {
+.stay input[type="email"][aria-invalid="true"] {
   border-color: var(--on-dark-refused);
 }
 
@@ -6649,8 +6912,14 @@ body > svg[aria-hidden="true"] {
 
 .stay-refusal,
 .stay-thanks {
-  margin: 0;
+  display: grid;
+  gap: 4px;
   font-size: var(--text-sm);
+}
+
+.stay-refusal p,
+.stay-thanks p {
+  margin: 0;
 }
 
 .stay-refusal {
@@ -6660,6 +6929,12 @@ body > svg[aria-hidden="true"] {
 .stay-thanks {
   color: var(--green);
   font-weight: 600;
+}
+
+/* ✨ Below the thanks, what happens next for each choice ticked (ticket 111), in the copy's own weight. */
+.stay-thanks p + p {
+  color: var(--on-dark);
+  font-weight: 400;
 }
 
 .stay small {
@@ -6680,7 +6955,7 @@ body > svg[aria-hidden="true"] {
     grid-row: auto;
   }
 
-  .stay form {
+  .stay-send {
     flex-wrap: wrap;
   }
 }

@@ -11,13 +11,24 @@
   "photos": {
     "designed": {
       "file": "grass.jpg",
-      "credit": { "kind": "courtesy", "text": "Photograph of grass, by Oliver Pacas on Unsplash." }
+      "credit": {
+        "kind": "courtesy",
+        "description": "Photograph of grass",
+        "author": { "name": "Oliver Pacas", "url": "https://unsplash.com/@oliverpacas" },
+        "source": {
+          "name": "Unsplash",
+          "url": "https://unsplash.com/photos/person-holding-tall-grass-during-sunset-LGD8eV8ar4E"
+        },
+        "licence": { "name": "Unsplash License", "url": "https://unsplash.com/license" }
+      }
     }
   },
   "show_courtesy_credits": true,
   "messages_after_a_press": true,
   "ratings_save_quietly": true,
+  "freeze_warning_beside_the_press": true,
   "sorts_skip_fine_tuning": true,
+  "sorts_hide_bucket_summary": true,
   "content": {
     "sections": [
       {
@@ -47,7 +58,7 @@
         ],
         "welcome": {
           "heading": "Welcome, {name}",
-          "sentence": "You’re all set. Section 1 starts with the ten-minute strengths evaluation.",
+          "sentence": "You’re all set. Section 1 starts with the strengths evaluation, which takes about 7 minutes.",
           "button": "Continue →",
           "verse": "Whatever you do, work heartily, as for the Lord and not for men",
           "reference": "Colossians 3:23",
@@ -56,9 +67,9 @@
         "blocks": [
           {
             "id": "reason",
-            "type": "single_select",
+            "type": "multi_select",
             "prompt": "What's bringing you to the course?",
-            "placeholder": "Select...",
+            "note": "Choose as many as apply. There's no wrong answer.",
             "options": [
               { "id": "post-secondary", "label": "Considering post-secondary options" },
               { "id": "graduating", "label": "About to graduate third-level education" },
@@ -139,7 +150,7 @@
         "complete_label": "I've finished Section 1",
         "next_step": {
           "heading": "Start with your gifts.",
-          "sentence": "Start with the ten-minute strengths evaluation."
+          "sentence": "Start with the strengths evaluation, which takes about 7 minutes."
         },
         "blocks": [
           {
@@ -179,7 +190,7 @@
             "id": "strengths-link",
             "type": "section_signpost",
             "section": "strengths",
-            "body": "Sort your strengths into buckets, fine-tune the intensity of each – then invite at least 3 trusted people to evaluate you too.",
+            "body": "Sort your strengths into buckets, in two quick rounds – then invite at least 3 trusted people to evaluate you too.",
             "button_label": "Open the strengths evaluation →",
             "finished": {
               "body": "You've completed the strengths evaluation. You can review your results any time.",
@@ -200,7 +211,7 @@
       {
         "id": "strengths",
         "title": "Strengths evaluation",
-        "estimate": "About 10 minutes",
+        "estimate": "About 7 minutes",
         "requires": ["onboarding"],
         "part_of": "designed",
         "blocks": [
@@ -240,8 +251,19 @@
         "title": "Your gifts, seen together",
         "number": "02",
         "requires": ["designed"],
+        "opens_when": {
+          "clauses": [
+            {
+              "type": "observers_answered",
+              "block": "contacts",
+              "message": "Opens once at least {minimum} people you invite in {title} have answered."
+            }
+          ],
+          "with_sections": "Opens once you've {sections}, and at least {minimum} people you invite have answered."
+        },
         "to_finish": "completed {section}",
         "complete_label": "I've finished Section 2",
+        "complete_note": "When you've finished Workbook 1, come back here to say so.",
         "next_step": {
           "waiting": "{section}'s Workbook 1 opens once at least {minimum} of the people you invited have answered and you've seen how others see you."
         },
@@ -256,7 +278,7 @@
             "id": "others-pdf",
             "type": "download",
             "file": "whatever-you-do-workbook-1.pdf",
-            "body": "Workbook 1, to work through on paper: two readings on how you've been designed, then a conversation with your coach about your results, your own answers and the answers others gave.\n\nIt is the first of four for the middle of the course, one for each of Sections 2 to 5. When you've finished this one, come back here to say so.",
+            "body": "Workbook 1, to work through on paper: two readings on how you've been designed, then a conversation with your coach about your results, your own answers and the answers others gave.\n\nIt is the first of four for the middle of the course, one for each of Sections 2 to 5.",
             "button_label": "Download Workbook 1 (PDF)",
             "after_comparison": {
               "sort": "strengths-sort",
@@ -273,12 +295,13 @@
         "requires": ["designed", "walk-with-a-coach", "trusted-voices"],
         "to_finish": "completed {section}",
         "complete_label": "I've finished Section 3",
+        "complete_note": "When you've finished Workbook 2, come back here to say so.",
         "blocks": [
           {
             "id": "shape-pdf",
             "type": "download",
             "file": "whatever-you-do-workbook-2.pdf",
-            "body": "Workbook 2, to work through on paper: mapping your story, and what has happened in each season of it.\n\nWhen you've finished it, come back here to say so.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their evaluations of you – don’t let that stop you making progress on your journey.",
+            "body": "Workbook 2, to work through on paper: mapping your story, and what has happened in each season of it.\n\nYou will need a pen, a Bible, and somewhere you’re unlikely to be interrupted. Your ‘gifts and talents’ results may not be fully complete, as it can take a while to get others to provide their evaluations of you – don’t let that stop you making progress on your journey.",
             "button_label": "Download Workbook 2 (PDF)"
           }
         ]
@@ -301,12 +324,13 @@
         },
         "to_finish": "completed {section}",
         "complete_label": "I've finished Section 4",
+        "complete_note": "When you've finished Workbook 3, come back here to say so, and Section 5 opens.",
         "blocks": [
           {
             "id": "calling-pdf",
             "type": "download",
             "file": "whatever-you-do-workbook-3.pdf",
-            "body": "Workbook 3, to work through on paper: narrowing your calling to a sentence, then opening it back up.\n\nWhen you've finished it, come back here to say so, and Section 5 opens.",
+            "body": "Workbook 3, to work through on paper: narrowing your calling to a sentence, then opening it back up.",
             "button_label": "Download Workbook 3 (PDF)"
           }
         ]
@@ -319,12 +343,13 @@
         "requires": ["calling"],
         "to_finish": "completed {section}",
         "complete_label": "I've finished Section 5",
+        "complete_note": "When you've finished Workbook 4, come back here to say so, and Section 6, a letter to your future self, opens.",
         "blocks": [
           {
             "id": "growth-pdf",
             "type": "download",
             "file": "whatever-you-do-workbook-4.pdf",
-            "body": "Workbook 4, to work through on paper: turning all of it into something you will actually do.\n\nWhen you've finished it, come back here to say so, and Section 6, a letter to your future self, opens.",
+            "body": "Workbook 4, to work through on paper: turning all of it into something you will actually do.",
             "button_label": "Download Workbook 4 (PDF)"
           }
         ]
@@ -372,8 +397,9 @@
             "placeholder": "Dear me,",
             "months": { "default": 12, "earliest": 3, "latest": 24 },
             "copy_note": "Keep your own copy too: once it's sealed, you can't read it here until the day you pick.",
+            "continue_label": "Save my letter and continue →",
             "seal_label": "Save my answers and seal my letter",
-            "seal_note": "Answer the five questions below, then pick the day your letter opens and seal it. Once it is sealed, it can't be changed, and it can't be read here until that day.",
+            "seal_note": "On the next page, answer five questions, then pick the day your letter opens and seal it. Once it is sealed, it can't be changed, and it can't be read here until that day.",
             "date_label": "Open it on",
             "sealed": "Your letter is sealed until {date}. On that day it opens here for you to read.",
             "email": {
@@ -381,6 +407,10 @@
               "body": "The letter you wrote to yourself in Whatever You Do is ready to open. Sign in to read it.",
               "link_label": "Read your letter"
             }
+          },
+          {
+            "id": "to-where-you-are-now",
+            "type": "page_break"
           },
           {
             "id": "pl-intro",
@@ -560,7 +590,8 @@
             "type": "contact_list",
             "needed": 3,
             "optional": 2,
-            "more_note": "Five is a good number, but you can add more."
+            "more_note": "Five is a good number, but you can add more.",
+            "note": "Adding someone doesn't email them: send each person their link yourself."
           }
         ],
         "gate": {
@@ -581,6 +612,7 @@
       { "id": "good-at-this", "label": "Good at this", "seed": 83 },
       { "id": "real-strength", "label": "Real strength", "seed": 100 }
     ],
+    "not_seen": { "label": "Haven’t seen this" },
     "items": [
       { "id": "a1", "text": "Pioneering new ideas through iteration and experimentation", "loads": ["apostle", "ideate"] },
       { "id": "a2", "text": "Identifying the right foundations and structures to put in place", "loads": ["apostle", "assess"] },
@@ -683,7 +715,7 @@
         ]
       }
     ],
-    "scoring": { "method": "compositional_share" },
+    "scoring": { "method": "compositional_share_of_seen" },
     "tie_break": {
       "percent": 5,
       "cluster": 4,
@@ -705,10 +737,10 @@
     }
   },
   "observers": {
-    "privacy_notice": "[Draft: this notice must be written properly before anyone real takes part.]\n\n{name} has asked you to help them see their strengths as others see them. You'll sort some strengths into buckets and adjust the intensity of each. Takes about 10–15 minutes.\n\nWhat we keep: your answers. You don't give your name: we know who this link was sent to because {name} added you to their list. {name} never sees which answers are whose, though the people who run the service can.\n\nWhat {name} sees of your answers: nothing until enough people have answered. Then, the average of everyone's answers, and each person's answers without their name, lowest first, as a word such as \"Strong\" and a dot on a line. {name} may also choose to show this to a trusted third party. Your name is never shown with your answers. Once {name} has looked at the combined results, no new answers are added.\n\nIf you change your mind, you can withdraw at any time, and your answers will be removed: through the link of your own you're shown when you start, even after it has expired, or by asking the people who run the service. If you haven't answered, we'll email you a reminder once a week until your link runs out, and every reminder lets you stop them. This link is yours alone, so you answer only once and can stop the reminders or withdraw. {name} sees your answers among everyone else's, never with your name on them.",
+    "privacy_notice": "{name} has asked you to help them see their strengths as others see them. You'll sort short statements about {name} into buckets, from \"Definitely not {name}\" to \"Real strength\", in two quick rounds, with nothing to adjust afterwards. If a statement describes something you haven't seen, choose \"Haven’t seen this\" rather than guessing: it isn't counted. If you haven't seen enough of {name} to place any of them, put every one there and send it: we'll keep only that you couldn't answer, and {name} sees only how many people couldn't. It takes about 7 minutes.\n\nWhat we keep: your answers. You don't give your name: we know who this link was sent to because {name} added you to their list. {name} never sees which answers are whose, though the people who run the service can.\n\nWhat {name} sees of your answers: nothing until enough people have answered. Then, the average of everyone's answers, and each person's answers without their name, lowest first, as a word such as \"Strong\" and a dot on a line. {name} may also choose to show this to a trusted third party. Your name is never shown with your answers. Once {name} has looked at the combined results, no new answers are added. If {name} later retakes the strengths evaluation, what you sent is deleted, and you can answer again through your link while it works.\n\nIf you change your mind, you can withdraw at any time, and your answers will be removed: through the link of your own you're shown when you start, even after it has expired, or by asking the people who run the service. If you haven't answered, we may email you a reminder once a week until your link runs out, and every reminder lets you stop them. This link is yours alone, so you answer only once and can stop the reminders or withdraw. {name} sees your answers among everyone else's, never with your name on them.",
     "reminder": {
       "subject": "How do you see {name}'s strengths?",
-      "body": "Hi {observer}, {name} asked how you see {name}'s strengths, as part of Whatever You Do. It takes about 10–15 minutes. Please answer through the link {name} sent you, or with the button below. Your link works until {until}.\n\nYour name is never shown to {name} with your answers. {name} gave us your name and email address; we use them only to remind you, once a week until you answer or your link runs out.",
+      "body": "Hi {observer}, {name} asked how you see {name}'s strengths, as part of Whatever You Do. It takes about 7 minutes. Please answer through the link {name} sent you, or with the button below. Your link works until {until}.\n\nYour name is never shown to {name} with your answers. {name} gave us your name and email address; we use them only to remind you, once a week until you answer or your link runs out.",
       "stop": "Don't want these reminders? Stop reminders about {name}",
       "answer": "Answer for {name} →",
       "details": "How we handle your details"
@@ -719,13 +751,13 @@
     "frameworks": [
       {
         "framework": "apest",
-        "heading": "✨ Your Contribution Profile",
-        "subtitle": "The kind of difference you tend to make among the people around you. Based on Ephesians 4:11–13."
+        "heading": { "participant": "✨ Your Contribution Profile", "coach": "✨ {name}’s Contribution Profile" },
+        "subtitle": { "participant": "The kind of difference you tend to make among the people around you. Based on Ephesians 4:11–13.", "coach": "The kind of difference {name} tends to make among the people around them. Based on Ephesians 4:11–13." }
       },
       {
         "framework": "pep",
-        "heading": "⚡ Your Professional Energy Profile (PEP)",
-        "subtitle": "Which types of work energise you most, and which drain you?"
+        "heading": { "participant": "⚡ Your Professional Energy Profile (PEP)", "coach": "⚡ {name}’s Professional Energy Profile (PEP)" },
+        "subtitle": { "participant": "Which types of work energise you most, and which drain you?", "coach": "Which types of work energise {name} most, and which drain them?" }
       }
     ],
     "constructs": [
@@ -742,7 +774,10 @@
       { "construct": "facilitate", "tone": "moss", "persona": "The Coach", "description": "Clearing hurdles, navigating logistics and supporting the team" },
       { "construct": "deliver", "tone": "brown", "persona": "The Doer", "description": "Rolling up sleeves and pushing the work over the finish line" }
     ],
-    "disclaimer": "Important: This is a free, rapid, directional tool, designed to give you a useful starting point for reflection and conversation. It is not backed by extensive psychometric datasets or rigorous validation (yet). Please treat these results as indicative, not definitive.",
+    "disclaimer": {
+      "participant": "Important: This is a free, rapid, directional tool, designed to give you a useful starting point for reflection and conversation. It is not backed by extensive psychometric datasets or rigorous validation (yet). Please treat these results as indicative, not definitive.",
+      "coach": "Important: This is a free, rapid, directional tool, designed to give {name} a useful starting point for reflection and conversation. It is not backed by extensive psychometric datasets or rigorous validation (yet). Please treat these results as indicative, not definitive."
+    },
     "generalist": {
       "heading": "You’re a generalist",
       "text": "Both your profiles are flat: every result reads Present or Strong, with none leading and none less used. That’s a real result rather than an error: you draw on all of these in much the same measure. Better to say so than force a winner.",
@@ -751,6 +786,7 @@
     "tie_break": {
       "question": "Which is more true of you?",
       "skip": "Neither is more true of me",
+      "both": "Both are right",
       "frameworks": { "apest": "Your role among people", "pep": "How you work" },
       "separated": {
         "heading": "Separated",
@@ -763,8 +799,8 @@
         "level": "{names} came out level after your answers to “Which is more true of you?”. That’s a real result rather than an error: they sit equally in you."
       },
       "skipped": {
-        "heading": "Skipped",
-        "text": "You skipped every “Which is more true of you?” pair here, so {names} stay as your sort placed them."
+        "heading": "Left as sorted",
+        "text": "You didn’t pick one over the other in any “Which is more true of you?” pair here, so {names} stay as your sort placed them."
       }
     },
     "standing": {
@@ -791,24 +827,36 @@
       },
       "gaps": {
         "heading": "🔍 Biggest Gaps",
-        "intro": "Where your self-perception differs most from how others experience you. These are the most fruitful areas for reflection and conversation.",
+        "intro": {
+          "participant": "Where your self-perception differs most from how others experience you. These are the most fruitful areas for reflection and conversation.",
+          "coach": "Where {name}’s self-perception differs most from how others experience them. These are the most fruitful areas for reflection and conversation."
+        },
         "others_higher": {
           "label": "Others rate higher",
-          "description": "Others see this as more of a strength in you than you do yourself. This could be a hidden strength – something that comes so naturally you don’t recognise it as special."
+          "description": {
+            "participant": "Others see this as more of a strength in you than you do yourself. This could be a hidden strength – something that comes so naturally you don’t recognise it as special.",
+            "coach": "Others see this as more of a strength in {name} than {name} does. This could be a hidden strength – something that comes so naturally to them they don’t recognise it as special."
+          }
         },
         "you_higher": {
-          "label": "You rate higher",
-          "description": "You rate yourself higher here than others do. This could mean you value this more than it’s currently visible to others, or that your self-image in this area is stronger than your current expression of it."
+          "label": { "participant": "You rate higher", "coach": "{name} rates higher" },
+          "description": {
+            "participant": "You rate yourself higher here than others do. This could mean you value this more than it’s currently visible to others, or that your self-image in this area is stronger than your current expression of it.",
+            "coach": "{name} rates themselves higher here than others do. This could mean they value this more than it’s currently visible to others, or that their self-image in this area is stronger than their current expression of it."
+          }
         },
         "modest": "A modest gap – worth noting but not necessarily significant."
       },
-      "prompts_heading": "💬 Questions to sit with",
-      "prompts_intro": "These are designed for honest reflection – ideally with a coach or trusted friend.",
+      "prompts_heading": { "participant": "💬 Questions to sit with", "coach": "💬 Questions to explore with {name}" },
+      "prompts_intro": {
+        "participant": "These are designed for honest reflection – ideally with a coach or trusted friend.",
+        "coach": "These are for {name}’s honest reflection, and for your conversations with them."
+      },
       "prompts": [
-        { "title": "Hidden strengths", "text": "Where others rate you higher than you rate yourself – what might it mean that you undervalue these? Could you lean into them more intentionally?" },
-        { "title": "Blind spots", "text": "Where you rate yourself higher than others do – is this an area where your intention doesn’t yet match your impact? Or do others simply not see this side of you?" },
-        { "title": "Confirmed strengths", "text": "Where you and others agree – these are your most reliable strengths. How are you stewarding them?" },
-        { "title": "The surprise", "text": "Which gap surprised you most? What would change if you took that feedback seriously?" }
+        { "title": "Hidden strengths", "text": { "participant": "Where others rate you higher than you rate yourself – what might it mean that you undervalue these? Could you lean into them more intentionally?", "coach": "Where others rate {name} higher than they rate themselves – what might it mean that they undervalue these? Could they lean into them more intentionally?" } },
+        { "title": "Blind spots", "text": { "participant": "Where you rate yourself higher than others do – is this an area where your intention doesn’t yet match your impact? Or do others simply not see this side of you?", "coach": "Where {name} rates themselves higher than others do – is this an area where their intention doesn’t yet match their impact? Or do others simply not see this side of them?" } },
+        { "title": "Confirmed strengths", "text": { "participant": "Where you and others agree – these are your most reliable strengths. How are you stewarding them?", "coach": "Where {name} and others agree – these are their most reliable strengths. How are they stewarding them?" } },
+        { "title": "The surprise", "text": { "participant": "Which gap surprised you most? What would change if you took that feedback seriously?", "coach": "Which gap surprised {name} most? What would change if they took that feedback seriously?" } }
       ]
     },
     "sort_wording": {

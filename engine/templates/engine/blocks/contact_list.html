@@ -17,10 +17,14 @@
   addresses to the server.
 
   While answer collection is frozen (ticket 55) the list says why, and has no empty rows; the form stays, for Save.
+
+  Its authored note, where it has one, sits quietly above the rows, such as Five trusted voices' that adding someone
+  sends them nothing (ticket 109).
 {% endcomment %}
 <div id="block-{{ block.id }}" class="question-card contact-list">
   {% if block.frozen %}<p class="hint-box">{{ block.frozen }} You can't add anyone or issue a link now, though you can still revoke one.</p>{% endif %}
   {% if block.refusal %}<p class="save-status" role="alert"><span class="save-refused">Not saved. {{ block.refusal }}</span></p>{% endif %}
+  {% if block.text.note %}<p class="contact-list-note">{{ block.text.note }}</p>{% endif %}
   <form id="list-{{ block.id }}" class="contact-new" novalidate method="post" action="{% url 'contacts' block.id %}">
     {% csrf_token %}
     <input type="hidden" name="version" value="{{ pathway.version_id }}">
@@ -30,7 +34,9 @@
     {% for row in block.rows %}{% include "engine/contact_row.html" %}{% endfor %}
   </ol>
   {% if block.adds_rows and block.text.more_note %}<p class="contact-more-note">{{ block.text.more_note }}</p>{% endif %}
-  {# ✨ How many withdrew their answers, naming nobody, as the participant never sees who answered (29 Oct). #}
+  {# ✨ How many withdrew their answers, naming nobody, as the participant never sees who answered (29 Oct), and how #}
+  {# many replied that they couldn't answer, in the same way (ticket 120). #}
   {% if block.withdrawn %}<p class="contact-withdrawn">{{ block.withdrawn }}</p>{% endif %}
+  {% if block.declined %}<p class="contact-withdrawn">{{ block.declined }}</p>{% endif %}
   {% include "engine/contact_more.html" %}
 </div>

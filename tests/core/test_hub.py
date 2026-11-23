@@ -10,6 +10,7 @@ to open is enforced separately, over HTTP, in tests/journeys/test_sections.py.
 import pytest
 from django.utils.html import conditional_escape
 
+from engine.document.gates import observers_answered_key
 from engine.hub import COMPLETE, IN_PROGRESS, LOCKED, NOT_STARTED, Piece, hub_for, is_locked, open_blocks
 
 
@@ -378,6 +379,24 @@ def test_a_section_with_no_gate_whose_download_waits_on_the_comparison_is_passed
     assert alone.waiting_on_answers.id == "others"
 
 
+def test_a_section_locked_only_until_enough_observers_have_answered_is_passed_over_as_waiting_on_answers():
+    """✨ As *Whatever You Do*'s Section 2 since ticket 106: locked, the next step is the next section open, or with
+    none, the wait on answers; but not while a section it requires is unfinished, nor once enough have answered."""
+    asked = {"type": "observers_answered", "block": "contacts", "message": "Opens once enough have answered."}
+    others = {**section("others", requires=["designed"], blocks=[long_text("a")]), "opens_when": {"clauses": [asked]}}
+    sections = [section("designed"), others, section("shape", requires=["designed"])]
+
+    passed_over = hub_for(sections, {}, completed=["designed"])
+    alone = hub_for(sections, {}, completed=["designed", "shape"])
+    unfinished = hub_for(sections[:2], {}, completed=[])
+    answered = hub_for(sections[1:], {observers_answered_key("contacts"): True}, completed=["designed", "shape"])
+
+    assert passed_over.sections[1].is_locked and passed_over.next_step.id == "shape"
+    assert alone.next_step is None and alone.waiting_on_answers.id == "others"
+    assert unfinished.next_step.id == "designed" and unfinished.waiting_on_answers is None
+    assert answered.next_step.id == "others"
+
+
 def test_a_locked_section_names_the_sections_it_still_waits_for():
     """✨ As Section 2 names Walk with a coach and Five trusted voices once Section 1 is complete (ticket 52)."""
     sections = [section("a"), section("b"), section("c"), section("last", requires=["a", "b", "c"])]
@@ -460,6 +479,88 @@ def test_every_title_a_note_names_is_in_italics_and_escaped():
     assert conditional_escape(lock_note(sections)) == (
         "Opens once you&#x27;ve added people in <em>&lt;b&gt;Voices&lt;/b&gt;</em> and finished <em>B</em>."
     )
+
+
+def test_an_opening_conditions_note_names_the_section_holding_its_block_in_italics_where_it_says_title():
+    """✨ As Section 2's names *Five trusted voices*, where the people it waits on are invited, once Section 1 is done
+    (hand check of 18 Nov). Each failing condition is said once, in the order authored."""
+    voices = {**section("voices", blocks=[long_text("contacts")]), "title": "<b>Voices</b>"}
+    asked = {"type": "observers_answered", "block": "contacts", "message": "Opens once 3 you invite in {title} answer."}
+    coached = {"type": "coach_accepted", "block": "coach", "message": "And your coach accepts."}
+    others = {**section("others", requires=["designed"]), "opens_when": {"clauses": [asked, asked, coached]}}
+    sections = [section("designed"), voices, others]
+
+    note = lock_note(sections, completed=["designed"], title_of="others")
+
+    assert note == "Opens once 3 you invite in <b>Voices</b> answer. And your coach accepts."
+    assert conditional_escape(note) == (
+        "Opens once 3 you invite in <em>&lt;b&gt;Voices&lt;/b&gt;</em> answer. And your coach accepts."
+    )
+
+
+def explained(sections, completed, answers=None):
+    """✨ The ids of the sections whose lock note the hub shows under them, not only on "Locked"."""
+    return [state.id for state in hub_for(sections, answers or {}, completed).sections if state.explains_lock]
+
+
+def waits_on_answers(id, requires=()):
+    """✨ A section that opens once enough observers have answered, as *Whatever You Do*'s Section 2 does."""
+    asked = {"type": "observers_answered", "block": "contacts", "message": "Opens once enough have answered."}
+    return {**section(id, requires, blocks=[long_text(f"{id}-work")]), "opens_when": {"clauses": [asked]}}
+
+
+def test_with_a_listed_section_open_no_lock_note_is_shown_under_its_section():
+    """✨ Where to go next is the open section, and the notes of those locked wait on "Locked" (ticket 97)."""
+    sections = [section("first"), waits_on_answers("second", ["first"]), section("third", ["first"])]
+
+    assert explained(A_CHAIN, completed=[]) == []
+    assert explained(sections, completed=["first"]) == []  # ✨ the third is open, passing the second by
+
+
+def test_once_nothing_listed_is_left_to_do_the_first_locked_sections_note_is_shown_under_it():
+    """✨ What the participant is waiting on, whatever the pathway's requirements and opening conditions are (hand check
+    of 18 Nov): here answers, then a section waiting on them, and only the first locked shows its note."""
+    sections = [section("first"), waits_on_answers("second", ["first"]), section("third", ["second"])]
+    chained = [section("first"), section("second", ["first", "elsewhere"]), section("third", ["second"])]
+
+    assert explained(sections, completed=["first"]) == ["second"]
+    assert explained(chained, completed=["first"]) == ["second"]
+    assert explained(sections, completed=["first", "second"]) == []
+
+
+def test_a_side_card_left_to_do_does_not_hold_the_note_back_and_a_part_is_never_explained_alone():
+    """✨ Side cards are drawn beside the list, not in it, and the note names one where it is what is needed; a locked
+    part is explained by its section's note."""
+    part = {**section("part", ["second"]), "part_of": "second"}
+    sections = [section("first"), side_card("card"), waits_on_answers("second", ["first"]), part]
+
+    assert explained(sections, completed=["first"]) == ["second"]
+
+
+def test_a_lock_note_says_the_pathways_minimum_number_of_observer_answers_where_it_says_minimum():
+    """✨ As the waiting sentence does, so the number is written once, in the pathway's observers (hand check of 18 Nov):
+    in an opening condition's message, and in the sentence naming the sections still unfinished beside it."""
+    asked = {"type": "observers_answered", "block": "contacts", "message": "Opens once {minimum} have answered."}
+    opens_when = {"clauses": [asked], "with_sections": "Opens once you've {sections}, and {minimum} have answered."}
+    others = {**section("others", requires=["designed"]), "opens_when": opens_when}
+
+    def note(completed):
+        hub = hub_for([section("designed"), others], {}, completed, minimum=4)
+        return next(state for state in hub.sections if state.id == "others").lock_note
+
+    assert note(["designed"]) == "Opens once 4 have answered."
+    assert note([]) == "Opens once you've finished Designed, and 4 have answered."
+
+
+def test_an_opening_condition_on_observers_answering_says_the_minimum_it_waits_on_where_it_says_min():
+    """✨ The pathway's minimum number of observer answers, as {minimum} (code review of 23 Nov: "{min}" reached the
+    participant as written)."""
+    asked = {"type": "observers_answered", "block": "contacts", "message": "Opens once {min} have answered."}
+    others = {**section("others", requires=["designed"]), "opens_when": {"clauses": [asked]}}
+
+    hub = hub_for([section("designed"), others], {}, ["designed"], minimum=4)
+
+    assert next(state for state in hub.sections if state.id == "others").lock_note == "Opens once 4 have answered."
 
 
 # What the hub says about each section

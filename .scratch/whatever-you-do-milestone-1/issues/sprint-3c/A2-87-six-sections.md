@@ -26,3 +26,9 @@
 
 - The room above Section 1's green button: 95, under **Carried from 87**
 - The activity's status pill and the "Complete the…" prompts shown only after a refused press: 89's and 83's own criteria
+
+## Comments
+
+- First criterion: the hub's Section 2 is titled "Your gifts, seen together" (27 Oct), not "How others see you", which its comparison row and card keep, so it is not confused with the comparison inside it
+- Second criterion (open; its room above the green button is carried to 95): Section 2 no longer holds the reflection. On 29 Oct it gave way to Workbook 1, a download that waits on the comparison, with the section's finishing waiting on it too, so "Section 2 holds the comparison card and the reflection" now reads the comparison card and Workbook 1
+- Fourth criterion: "Download Section N (PDF)" and Section 3's body as the wording sheet gives it were replaced on 29 Oct by the four new workbooks' own words, "Download Workbook N (PDF)" and "Workbook 2, to work through on paper: …" (`Whatever You Do - wording changes.md`, Sections)

@@ -75,13 +75,14 @@ def test_a_sort_that_breaks_the_contract_stores_neither_an_answer_nor_a_result(s
 
 @pytest.mark.django_db
 def test_a_second_sort_is_refused_and_the_first_result_stands(signed_in, participant):
-    """✨ Retake is not offered in this milestone. When it is, it makes a new attempt and keeps this one."""
+    """✨ A sort sent again, as from a page left open, is refused, and says so: sorting again is the retake's, which asks
+    first (ADR 0025)."""
     submit_sort(signed_in, complete_sort())
 
     again = submit_sort(signed_in, complete_sort(a5={"bucket": "not-me", "value": 0}))
 
     assert again.status_code == 409
-    assert "not offered" in again.content.decode()
+    assert 'class="save-refused"' in again.content.decode()
     assert Response.objects.get(participant=participant).answers[SORT] == complete_sort()
     assert [result.scores for result in Result.objects.all()] == [score(sort_pathway(), complete_sort())]
 
@@ -325,7 +326,7 @@ def test_the_sorts_section_is_refused_completion_before_the_sort_is_in(signed_in
 def test_once_the_sort_is_in_its_section_can_be_completed(signed_in):
     submit_sort(signed_in, complete_sort())
 
-    assert f'action="/sections/{STRENGTHS}/complete/"' in signed_in.get(f"/sections/{STRENGTHS}/").content.decode()
+    assert f'action="/sections/{STRENGTHS}/complete/' in signed_in.get(f"/sections/{STRENGTHS}/").content.decode()
     assert signed_in.post(f"/sections/{STRENGTHS}/complete/").status_code == 303
 
 

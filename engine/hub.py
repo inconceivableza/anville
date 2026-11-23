@@ -14,8 +14,9 @@ from typing import NamedTuple
 from django.utils.html import escape, format_html
 from django.utils.safestring import mark_safe
 
-from engine.document.blocks import BLOCK_TYPES, page_count, page_of, pages_of
+from engine.document.blocks import BLOCK_TYPES, ends_in_signpost_to, page_count, page_of, pages_of
 from engine.document.gates import (
+    clause_message,
     clause_passes,
     clauses_of,
     comparison_viewed,
@@ -28,6 +29,7 @@ from engine.document.gates import (
     waits_on_comparison,
     with_people_minimum,
 )
+from engine.document.photos import REQUIRED, Credit, CreditPart, on_pexels, on_unsplash
 from engine.document.text import text_for
 
 LOCKED = "locked"
@@ -125,7 +127,10 @@ class SectionState(NamedTuple):
     the hub shows beside it, if any, and `side_card` the authored sentence of a section the hub draws as a side card, or
     None for one it lists (ticket 49a), with `side_card_lead` the bold line above it, if it has one (ticket 95).
     `next_step` is the authored heading and sentence the hub's next step shows while
-    this section is the next step, or None for a section without them (ticket 49b)."""
+    this section is the next step, or None for a section without them (ticket 49b). `shows_status` is False for a part
+    that is all its section's work, whose row shows no pill of its own: its section's says it (ticket 106).
+    `explains_lock` marks the one locked section whose lock note the hub shows under it, not only on its "Locked"
+    (`_explained`)."""
 
     id: str
     title: str
@@ -141,6 +146,8 @@ class SectionState(NamedTuple):
     side_card_lead: str | None = None
     next_step: NextStepWording | None = None
     tone: str | None = None
+    shows_status: bool = True
+    explains_lock: bool = False
 
     @property
     def is_locked(self):
@@ -213,8 +220,9 @@ def _coach_wait_wording(answer):
 class Hub(NamedTuple):
     """✨ A participant's whole hub: their track's sections, the one to do next, how many of the sections it
     counts (`counted_sections`) are complete, out of `total`, and the first section waiting on the coach, as a
-    `CoachWait`, if any. With no next step, `waiting_on_answers` is the first section passed over because its only open
-    work waits on the comparison, and so on other people's answers (ticket 68), or None."""
+    `CoachWait`, if any. With no next step, `waiting_on_answers` is the first section passed over because it waits on
+    other people's answers: its only open work waits on the comparison (ticket 68), or it is locked by nothing but
+    observers yet to answer (ticket 106); or None."""
 
     sections: tuple
     next_step: SectionState | None
@@ -248,6 +256,80 @@ def track_sections(document):
     return document["content"]["sections"]
 
 
+class WizardPhoto(NamedTuple):
+    """✨ A photo a wizard's step is drawn beside: its `file`, in `frontend/img`, and its `credit`, a `Credit`, as the
+    credits page lists it."""
+
+    file: str
+    credit: Credit
+
+
+# ✨ The homepage's video, by its page on Pexels, and so of its stills, such as its poster (sprint-3d-r1-fix-5). The
+# credits page lists it first among the site's.
+HERO_VIDEO_CREDIT = on_pexels(
+    "Video of a woman running through a field of wheat",
+    "Marian Croitoru",
+    "https://www.pexels.com/@marian-croitoru-2984359/",
+    "https://www.pexels.com/video/healthy-light-landscape-nature-4524595/",
+)
+
+# ✨ The ratings step's photo's page on Wikimedia Commons (sprint-3d-r1-fix-5).
+COMMONS_PAGE = (
+    "https://commons.wikimedia.org/wiki/"
+    "File:A_rock_band_in_Iran_-_Mortaz_Band_-_Canon_Photography-_Mostafa_Meraji_07.jpg"
+)
+
+# ✨ The wizard's photos, one for each step in order: in *Whatever You Do*, "About you", the reason, the ratings and the
+# welcome, the fifth for a longer wizard. Changing a step's photo is changing its line here, with the file in
+# `frontend/img`: the page and the credits page both read it. They are static files, so the entry page shows one before
+# consent, unlike the pathway's own photos. For now, the hackathon prototype's five (ticket 101) but for two
+# (sprint-3d-r1-fix-5): the ratings step's, a photo from Wikimedia Commons, under CC BY-SA 4.0, so its credit is
+# required and the file is as Commons gives it, unedited (the page may crop it for display); and the fifth, the homepage
+# video's poster, in place of a photo whose source was never found. Not `hero-poster.jpg`: `frontend/img`'s is a still
+# of the video, but `frontend/public`'s, of a forest, shadows it. Each credit is as traced to its page.
+WIZARD_PHOTOS = (
+    WizardPhoto(
+        "facing-sun.jpg",
+        on_unsplash(
+            "Photograph of a figure facing the sun",
+            "Andreas Rasmussen",
+            "https://unsplash.com/@andreasdress",
+            "https://unsplash.com/photos/woman-sitting-in-front-of-grassfield-VLYvYq4da-A",
+        ),
+    ),
+    WizardPhoto(
+        "grass.jpg",
+        on_unsplash(
+            "Photograph of grass",
+            "Oliver Pacas",
+            "https://unsplash.com/@oliverpacas",
+            "https://unsplash.com/photos/person-holding-tall-grass-during-sunset-LGD8eV8ar4E",
+        ),
+    ),
+    WizardPhoto(
+        "musicians-in-wheat.jpg",
+        Credit(
+            REQUIRED,
+            description="Photograph of a violinist and a bass guitarist playing in a field of wheat",
+            title=CreditPart("A rock band in Iran - Mortaz Band - Canon Photography- Mostafa Meraji 07", COMMONS_PAGE),
+            author=CreditPart("Mostafameraji", "https://commons.wikimedia.org/wiki/User:Mostafameraji"),
+            source=CreditPart("Wikimedia Commons", COMMONS_PAGE),
+            licence=CreditPart("CC BY-SA 4.0", "https://creativecommons.org/licenses/by-sa/4.0/"),
+        ),
+    ),
+    WizardPhoto(
+        "notebook.jpg",
+        on_unsplash(
+            "Photograph of a notebook, a pen and a cup of coffee",
+            "Andres Molina",
+            "https://unsplash.com/@nomadicfitlust",
+            "https://unsplash.com/photos/a-cup-of-coffee-and-a-notebook-on-a-table-8CGOX7oSMbI",
+        ),
+    ),
+    WizardPhoto("hero-landscape-poster.jpg", HERO_VIDEO_CREDIT),
+)
+
+
 class WizardStep(NamedTuple):
     """✨ Where a wizard's page stands in its "Step N of M" counter: its `number`, out of `count`; and what the document
     has the step say, its verse, reference, word and heading (sprint-3c-r3-fix-7), or None."""
@@ -255,13 +337,12 @@ class WizardStep(NamedTuple):
     number: int
     count: int
     authored: dict | None = None
-    PHOTOS = 5  # ✨ the photos the stylesheet draws, the hackathon prototype's five (ticket 101)
 
     @property
     def photo(self):
-        """✨ Which of the wizard's photos this step is drawn beside, counted from 1: each page differs from the one
-        before, and a wizard longer than the photos there are begins them again."""
-        return (self.number - 1) % self.PHOTOS + 1
+        """✨ The `WizardPhoto` this step is drawn beside: each page's differs from the one before, and a wizard longer
+        than the photos there are begins them again."""
+        return WIZARD_PHOTOS[(self.number - 1) % len(WIZARD_PHOTOS)]
 
     @property
     def numbers(self):
@@ -458,22 +539,23 @@ class LockNote(str):
 GENERAL_LOCK_NOTE = "Complete what comes before this to open it."
 
 
-def _lock_note(section, completed, answers, sections, moved_past, role):
+def _lock_note(section, completed, answers, sections, moved_past, role, minimum=None):
     """✨ What the hub says of a locked section: the sections it requires still unfinished, and with them its
     opening conditions in the sentence it carries for that; once those sections are done, the message of each failing
     opening condition (ADR 0019); for a part waiting on its section, where it opens from and, while a reading there is
-    unconfirmed, what opens it; otherwise the engine's general note."""
+    unconfirmed, what opens it; otherwise the engine's general note. The opening conditions' wording says the pathway's
+    `minimum` number of observer answers wherever it says {minimum} (hand check of 18 Nov)."""
     notes = unmet_opening_notes(section, answers, role)
     if not _requires_met(section, completed):
         named = _unfinished_named(section, completed, sections, role)
         with_sections = section.get("opens_when", {}).get("with_sections")
         if named and notes and with_sections:
-            return LockNote(_filled(text_for(with_sections, role), "{sections}", named))
+            return LockNote(_filled(_with_minimum(text_for(with_sections, role), minimum), "{sections}", named))
         if not named:
             return LockNote([plain(GENERAL_LOCK_NOTE)])
         return LockNote([plain("Opens once you've "), *named, plain(".")])
     if notes:
-        return LockNote([plain(" ".join(notes))])
+        return LockNote(_opening_note(section, answers, sections, role, minimum))
     waiting = _waiting_on(section, completed, answers, sections, moved_past)
     if waiting is None:
         return LockNote([plain(GENERAL_LOCK_NOTE)])
@@ -481,6 +563,41 @@ def _lock_note(section, completed, answers, sections, moved_past, role):
     if waiting.holding is not None and BLOCK_TYPES[waiting.holding["type"]].opens_what_follows:
         return LockNote([plain("Opens from "), title, plain(", once you've read the passages.")])
     return LockNote([plain("Opens from "), title, plain(".")])
+
+
+def _opening_note(section, answers, sections, role, minimum=None):
+    """✨ What a section's failing opening conditions say, as a lock note's pieces: each authored message once, in the
+    order authored (ADR 0019). Where a message says {title}, the title, in italics, of the section holding the block its
+    condition reads, as Section 2's names *Five trusted voices*, where the people it waits on are invited (hand check
+    of 18 Nov). A section outside the track is not named."""
+    said = {}
+    for clause in _failing_opening_clauses(section, answers):
+        message = _opening_message(clause, role, minimum)
+        holding = next((other for other in sections if _holds(other, clause["block"])), None)
+        title = [italic(text_for(holding["title"], role))] if holding else []
+        said.setdefault(message, _filled(message, "{title}", title))
+    return [piece for index, note in enumerate(said.values()) for piece in [*([plain(" ")] if index else []), *note]]
+
+
+def _opening_message(clause, role, minimum):
+    """✨ An opening condition's message with the numbers it may say: {min}, the minimum its clause waits on, that is a
+    `links_issued` clause's own (`clause_message`) or, for an `observers_answered` clause, the pathway's `minimum`
+    number of observer answers (code review of 23 Nov); and {minimum}, that number, whatever the clause."""
+    message = clause_message(clause, role)
+    if clause["type"] == "observers_answered":
+        message = message.replace("{min}", "{minimum}")
+    return _with_minimum(message, minimum)
+
+
+def _with_minimum(text, minimum):
+    """✨ `text` with the pathway's `minimum` number of observer answers wherever it says {minimum}, or as written
+    without one. Replaced as plain text, never through `format()`, so other braces stay."""
+    return text if minimum is None else text.replace("{minimum}", str(minimum))
+
+
+def _holds(section, block_id):
+    """✨ Whether `section` holds the block `block_id`."""
+    return any(block["id"] == block_id for block in section.get("blocks", ()))
 
 
 def _unfinished_named(section, completed, sections, role):
@@ -584,21 +701,26 @@ def counted_sections(sections, completed):
     return numbered or listed
 
 
-def hub_for(sections, answers, completed, role="participant", moved_past=None):
+def hub_for(sections, answers, completed, role="participant", moved_past=None, minimum=None):
     """✨ A participant's hub over one track's sections, less any once-only section once complete. `moved_past` holds,
-    by section, the pages moved past."""
+    by section, the pages moved past; `minimum` is the pathway's minimum number of observer answers, which a lock note
+    says wherever its wording says {minimum}, as the waiting sentence does."""
     moved_past = moved_past or {}
     completed = complete_sections(sections, answers, completed)
     listed = listed_sections(sections, completed)
-    states = [_state(section, answers, completed, role, moved_past, sections) for section in listed]
+    states = [_state(section, answers, completed, role, moved_past, sections, minimum) for section in listed]
     blocks = {block["id"]: block for section in sections for block in section["blocks"]}
     open_states = [state for state in states if state.status in (NOT_STARTED, IN_PROGRESS)]
     waiting = {
-        state.id for state, section in zip(states, listed) if _waits_only_on_comparison(section, answers, blocks)
+        state.id
+        for state, section in zip(states, listed)
+        if (state.status in (NOT_STARTED, IN_PROGRESS) and _waits_only_on_comparison(section, answers, blocks))
+        or (state.is_locked and _shut_only_by_answers(section, answers, completed, sections, moved_past))
     }
     next_step = next((state for state in open_states if state.id not in waiting), None)
-    states = [state._replace(is_next=state is next_step) for state in states]
-    waiting_on_answers = next((state for state in open_states if state.id in waiting), None)
+    explained = _explained(states, waiting)
+    states = [state._replace(is_next=state is next_step, explains_lock=state.id == explained) for state in states]
+    waiting_on_answers = next((state for state in states if state.id in waiting), None)
     coach_wait = next(
         (
             CoachWait(
@@ -622,6 +744,22 @@ def hub_for(sections, answers, completed, role="participant", moved_past=None):
     )
 
 
+def _explained(states, waiting):
+    """✨ The section whose lock note the hub shows under it, not only on its "Locked", or None (hand check of 18 Nov).
+    While a section listed is open with work the participant can do, it is where to go next, and the notes of those
+    locked can wait on "Locked" (ticket 97). Once every one is finished, locked, or open with nothing but other
+    people's answers to wait for (`waiting`), the first locked one is what the participant is waiting on, and its note
+    says what opens it, from the pathway's own requirements and opening conditions: people invited answering, a coach
+    accepting, a side card to finish. Side cards are drawn beside the list, not in it, so one left to do does not hold
+    the note back; the note names it where it is what is needed. A part is explained by its section's note."""
+    listed = [state for state in states if state.side_card is None]
+    if any(state.status in (NOT_STARTED, IN_PROGRESS) and state.id not in waiting for state in listed):
+        return None
+    sections = {state.id for state in listed if state.part_of is None}
+    explained = (state for state in listed if state.is_locked and state.lock_note and state.part_of not in sections)
+    return next((state.id for state in explained), None)
+
+
 def _waits_only_on_comparison(section, answers, blocks):
     """✨ Whether a section's only open work waits on other people: something holds it, a block of its own waiting on the
     comparison (ticket 68) or a clause of its gate still unmet, and every such clause names a block waiting so, as
@@ -633,15 +771,35 @@ def _waits_only_on_comparison(section, answers, blocks):
     return all(waits_on_comparison(blocks.get(clause["block"], {}), answers) for clause in clauses)
 
 
+def _shut_only_by_answers(section, answers, completed, sections, moved_past):
+    """✨ Whether a section waits on nothing but observers yet to answer (ticket 106): the sections it requires are done,
+    it is no part still waiting on its section, and each of its opening conditions that fails is `observers_answered`,
+    as *Whatever You Do*'s Section 2's is. The hub's next step passes over it, as over a section whose only open work
+    waits on the comparison (ADR 0019)."""
+    failing = _failing_opening_clauses(section, answers)
+    return (
+        bool(failing)
+        and all(clause["type"] == "observers_answered" for clause in failing)
+        and _requires_met(section, completed)
+        and _waiting_on(section, completed, answers, sections, moved_past) is None
+    )
+
+
 def _waits_on_coach(section, answers):
     """✨ Whether a section not yet opened has a `coach_accepted` opening condition that fails (ADR 0019)."""
+    return any(clause["type"] == "coach_accepted" for clause in _failing_opening_clauses(section, answers))
+
+
+def _failing_opening_clauses(section, answers):
+    """✨ The opening conditions of a section not yet opened that fail, in the order authored; none once it has opened,
+    since that is stored and they are never asked again (ADR 0019)."""
     if _has_opened(section, answers):
-        return False
+        return []
     clauses = section.get("opens_when", {}).get("clauses", [])
-    return any(clause["type"] == "coach_accepted" and not clause_passes(clause, answers) for clause in clauses)
+    return [clause for clause in clauses if not clause_passes(clause, answers)]
 
 
-def _state(section, answers, completed, role, moved_past, sections):
+def _state(section, answers, completed, role, moved_past, sections, minimum=None):
     status = _status(section, answers, completed, sections, moved_past)
     return SectionState(
         id=section["id"],
@@ -652,12 +810,56 @@ def _state(section, answers, completed, role, moved_past, sections):
         # ✨ A completed section is reopened to reread, so from its start rather than where it was left (ticket 41e).
         page=1 if status == COMPLETE else page_reached(section, moved_past, answers, sections),
         part_of=section.get("part_of"),
-        lock_note=_lock_note(section, completed, answers, sections, moved_past, role) if status == LOCKED else None,
+        lock_note=(
+            _lock_note(section, completed, answers, sections, moved_past, role, minimum) if status == LOCKED else None
+        ),
         number=section.get("number"),
         side_card=text_for(section["side_card"]["sentence"], role) if "side_card" in section else None,
         side_card_lead=text_for(section["side_card"]["lead"], role) if "lead" in section.get("side_card", {}) else None,
         next_step=_next_step_wording(section, role),
+        shows_status=not _is_all_its_sections_work(section, sections),
     )
+
+
+def _is_all_its_sections_work(part, sections):
+    """✨ Whether a part of a section is all that section asks, as `works_through_its_parts` says of the section."""
+    parent = next((section for section in sections if section["id"] == part.get("part_of")), None)
+    return parent is not None and works_through_its_parts(parent, sections)
+
+
+def works_through_its_parts(section, sections):
+    """✨ Whether a section's work is all in its parts among `sections`: it has one, and none of its own blocks takes an
+    answer, as *Whatever You Do*'s Section 1, whose strengths evaluation is all it asks (ticket 106). Its parts then
+    show no status of their own on the hub and in the sidebar, the section's saying it, and its finish waits for them
+    (`finish_waits`). The faithful port's Section 1, with a reading to confirm and a summary to write, is not one."""
+    has_parts = any(other.get("part_of") == section["id"] for other in sections)
+    return has_parts and not _interactive_blocks(section)
+
+
+def completes_with_its_evaluation(section, sections):
+    """✨ The sort whose evaluation completes `section` as it ends, with no press (ticket 119), or None. A section whose
+    work is all in its parts (`works_through_its_parts`) and that ends in its signpost to one of them, as *Whatever You
+    Do*'s Section 1 ends in the strengths evaluation, has nothing left to do once that part's last block, a sort, is
+    done: the sort in and every tie-break pair answered or skipped. Its finish was only a press saying so, so it is
+    stored then, and its label becomes a way on to the hub's next step. The faithful port's Section 1, with work of its
+    own, keeps its press."""
+    if not works_through_its_parts(section, sections):
+        return None
+    part = next(
+        (other for other in sections if other.get("part_of") == section["id"] and ends_in_signpost_to(section, other)),
+        None,
+    )
+    ending = part["blocks"][-1] if part is not None and part["blocks"] else None
+    return ending["id"] if ending is not None and BLOCK_TYPES[ending["type"]].scored else None
+
+
+def finish_waits(section, sections, completed):
+    """✨ Whether a section's finish is not offered yet: its work is all in its parts (`works_through_its_parts`) and one
+    of them is not complete, so there is nothing yet to finish (ticket 106). It is not there at all, rather than greyed
+    or refused (sprint 3c), the section's page still saying what to do."""
+    if not works_through_its_parts(section, sections):
+        return False
+    return any(other.get("part_of") == section["id"] and other["id"] not in completed for other in sections)
 
 
 def _next_step_wording(section, role):

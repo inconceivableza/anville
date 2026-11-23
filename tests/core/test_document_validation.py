@@ -46,9 +46,18 @@ def test_a_block_type_the_engine_does_not_know_is_refused():
 def test_role_keyed_text_must_name_the_participant_wording_and_only_known_roles():
     document = pathway_document()
     document["title"] = {"observer": "Their pathway"}
-    document["instrument"]["items"][0]["text"] = {"participant": "Pioneering", "coach": "Pioneering"}
+    document["instrument"]["items"][0]["text"] = {"participant": "Pioneering", "mentor": "Pioneering"}
 
     assert [problem.path for problem in validate(document)] == ["/instrument/items/0/text", "/title"]
+
+
+def test_role_keyed_text_may_word_it_for_a_coach():
+    """✨ A coach reads the results and comparison a participant shares with them, worded about the participant (ticket
+    118)."""
+    document = pathway_document()
+    document["title"] = {"participant": "Your pathway", "coach": "{name}'s pathway"}
+
+    assert validate(document) == []
 
 
 def test_an_identifier_must_be_a_name_and_never_a_position():
@@ -340,14 +349,15 @@ def test_a_coach_checklists_questions_may_not_share_an_identifier():
 
 def test_every_section_and_every_kind_of_block_shown_may_carry_a_time_estimate():
     """✨ The Whatever You Do pathway holds a block of every kind but a sort's results shown in a section, which it
-    stopped showing (fix-5), a scripture reading to confirm, which it stopped asking for (ticket 87), and a long text,
-    its letter's now a letter (ticket 104); each is added here, so each gets one. A page break is never shown, so it
-    takes no time of its own."""
+    stopped showing (fix-5), a scripture reading to confirm, which it stopped asking for (ticket 87), a long text, its
+    letter's now a letter (ticket 104), and a single select, its reason taking many now (ticket 112); each is added
+    here, so each gets one. A page break is never shown, so it takes no time of its own."""
     document = json.loads(WHATEVER_YOU_DO.read_text(encoding="utf-8"))
     shown = {"id": "strengths-results", "type": "sort_results", "sort": "strengths-sort"}
     confirmed = {"id": "a-reading", "type": "scripture_reading", "passages": [{"reference": "Psalm 1", "text": "Blessed."}]}
     written = {"id": "a-thought", "type": "long_text", "prompt": "Anything else?"}
-    document["content"]["sections"][1]["blocks"] += [shown, confirmed, written]
+    chosen = {"id": "a-choice", "type": "single_select", "prompt": "Which?", "options": [{"id": "one", "label": "One"}]}
+    document["content"]["sections"][1]["blocks"] += [shown, confirmed, written, chosen]
     for section in document["content"]["sections"]:
         section["estimate"] = "About 15 minutes"
         for block in section["blocks"]:

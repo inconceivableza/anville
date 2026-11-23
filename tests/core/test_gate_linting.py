@@ -186,6 +186,48 @@ def test_an_opening_condition_must_be_a_clause_from_the_fixed_set():
     assert [problem.path for problem in validate(document)] == ["/content/sections/1/opens_when/clauses/0/type"]
 
 
+def test_an_opening_conditions_message_may_say_its_blocks_section_and_the_minimum_and_no_other_placeholder():
+    """✨ The hub fills {title} and {minimum} (hand check of 18 Nov); a typo such as {titel} would reach the participant
+    as written."""
+    accepted = {"type": "coach_accepted", "block": "coach", "message": "Opens once {minimum} accept in {title}."}
+    assert validate(document_whose_section_opens_when(accepted)) == []
+
+    mistyped = {"participant": "In {titel}.", "observer": "."}
+    document = document_whose_section_opens_when({**accepted, "message": mistyped})
+
+    assert validate(document) == [
+        Problem(
+            path="/content/sections/1/opens_when/clauses/0/message/participant",
+            message=OPENING_PLACEHOLDERS_SAID.format(name="titel"),
+        )
+    ]
+
+
+# ✨ What the linter says of a placeholder an opening condition's message may not hold, as `name`.
+OPENING_PLACEHOLDERS_SAID = (
+    "The engine fills no {{{name}}} here: an opening condition's message may say {{title}}, the title of the section "
+    "holding its block, {{minimum}}, and for a 'links_issued' or 'observers_answered' clause {{min}}."
+)
+
+
+def test_an_opening_condition_on_observers_answering_may_say_the_minimum_it_waits_on_as_min():
+    """✨ The hub fills it with the pathway's minimum number of observer answers, as {minimum} (code review of 23 Nov)."""
+    document = with_voices()
+    asked = {"type": "observers_answered", "block": "contacts", "message": "Opens once {min} people have answered."}
+    document["content"]["sections"][1]["opens_when"] = {"clauses": [asked]}
+
+    assert validate(document) == []
+
+
+def test_an_opening_condition_with_no_minimum_may_not_say_min():
+    """✨ Nothing would fill it, so it would reach the participant as written (code review of 23 Nov)."""
+    accepted = {"type": "coach_accepted", "block": "coach", "message": "Opens once {min} coach accepts."}
+
+    assert validate(document_whose_section_opens_when(accepted)) == [
+        Problem("/content/sections/1/opens_when/clauses/0/message", OPENING_PLACEHOLDERS_SAID.format(name="min"))
+    ]
+
+
 def test_coach_accepted_must_name_a_coach_checklist_and_may_name_one_in_another_section():
     accepted = {"type": "coach_accepted", "block": "coach", "message": "Opens once your coach has accepted."}
     assert validate(document_whose_section_opens_when(accepted)) == []
@@ -271,6 +313,21 @@ def test_a_phrase_may_write_min_only_in_a_section_with_one_links_issued_clause()
             "/content/sections/2/to_finish",
             "{min} is the minimum of the section's own 'links_issued' clause, and this section has none, or more "
             "than one.",
+        )
+    ]
+
+
+def test_a_gate_clause_other_than_links_issued_may_not_say_min():
+    """✨ Only a `links_issued` clause's {min} is filled, so any other's would reach the participant as written (code
+    review of 23 Nov)."""
+    document = with_voices()
+    counted = {"type": "entry_count", "block": "contacts", "min": 2, "message": "Add {min} people."}
+    document["content"]["sections"][2]["gate"]["clauses"].append(counted)
+
+    assert validate(document) == [
+        Problem(
+            "/content/sections/2/gate/clauses/1/message",
+            "{min} is the minimum of a 'links_issued' clause, and this clause is not one.",
         )
     ]
 

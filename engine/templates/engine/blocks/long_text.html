@@ -4,13 +4,19 @@
   ✨ Autosaves after a pause in typing. hx-sync queues saves so an older draft can never land after a newer one.
   maxlength is the server's own limit; main.js shows how much room is left as the participant nears it.
   The newline after <textarea> is deliberate: browsers drop the first one, so an answer's own leading newline survives.
+
+  The box belongs to the page's one form (`engine/page_form.html`), under the block's own name, so that without
+  JavaScript every press on the page, its Save or its way on, sends it with every other answer (sprint-3d-r1-fix-6);
+  this form only holds it in place, with its status. With JavaScript htmx sends the page's form, and `hx-params` keeps
+  only this answer of it.
 {% endcomment %}
-<form id="block-{{ block.id }}" class="question-card" method="post" action="{% url 'save_answer' block.id %}">
-  {% csrf_token %}
+<form id="block-{{ block.id }}" class="question-card">
   <label for="answer-{{ block.id }}">{{ block.text.prompt }}</label>
-  <textarea id="answer-{{ block.id }}" name="value" rows="5" maxlength="{{ pathway.long_text_max_length }}"
+  <textarea id="answer-{{ block.id }}" form="page-answers" name="{{ block.field }}" rows="5"
+            maxlength="{{ pathway.long_text_max_length }}"
             aria-describedby="length-{{ block.id }}"{% if block.text.placeholder %} placeholder="{{ block.text.placeholder }}"{% endif %}
             hx-post="{% url 'save_answer' block.id %}" hx-trigger="input changed delay:800ms, change"
+            hx-params="{{ block.field }}, version, csrfmiddlewaretoken"
             hx-sync="this:queue last" hx-target="next .save-status">
 {{ block.answer|default_if_none:"" }}</textarea>
   <p class="length-left" id="length-{{ block.id }}" aria-live="polite" hidden></p>

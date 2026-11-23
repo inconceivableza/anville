@@ -86,6 +86,10 @@ _Avoid_: hub card, side section, right column, sidebar (the pathway's list besid
 A section a participant completes before first seeing the hub, shown page by page without the hub or the sidebar. Unless it is also once-only, it is afterwards listed in the hub as any other section.
 _Avoid_: opening section, onboarding (one section's identifier), steps ("Step 2 of 3" is only the participant's counter).
 
+**Welcome** (of a wizard):
+The page a participant sees once they complete a wizard, greeting them by first name before it leads on to the hub. It is the wizard's last step, not a section or a page of one.
+_Avoid_: landing page, thank-you page, home.
+
 **Entry page**:
 The engine's page every participant passes once, before any of a pathway's own pages, giving their first name, that they are 18 or over, and their consent. It belongs to the account, not to a pathway, and is neither a section nor a page of one; consent asked for again later is asked on its own page.
 _Avoid_: the wizard's first page, first page, About you (its heading), sign-up step, onboarding.
@@ -133,23 +137,27 @@ A named quality an instrument measures. Items load onto constructs; items never 
 _Avoid_: dimension, axis, trait, category, pillar.
 
 **Bucket**:
-One of five named, ordered piles items are placed into before fine-tuning, from weakest to strongest.
+One of a pathway's named, ordered piles items are placed into, from weakest to strongest: five in the faithful port, seven in *Whatever You Do*.
 _Avoid_: pile, band, tier.
 
 **Assessment**:
-One person's answer to the instrument, made by *placing* each item in a bucket and then *fine-tuning* its value. A participant's own is their **self-assessment**; an observer's about them is an **observer assessment**.
+One person's answer to the instrument, made by *placing* each item in a bucket and, where the pathway has it, then *fine-tuning* its value. A participant's own is their **self-assessment**; an observer's about them is an **observer assessment**.
 _Avoid_: sort, sorting (for the answer or the step), ratings, test.
 
 **Placement**:
-One item's bucket and fine-tuned value within an assessment.
+One item's bucket and value within an assessment: its fine-tuned value, or, where the pathway has no fine-tuning, its bucket's own.
 _Avoid_: rating, card.
+
+**Haven't seen this**:
+The eighth place an observer can put an item, beside the buckets, for something they have not seen the participant do. It is not a bucket and is not scored: an item placed there is left out of that observer's results, as if it had not been shown. An observer who sends with any item in a bucket still counts toward the minimum number of observers; one who placed every item here has nothing to add, so counts toward no minimum and is left out of the comparison, though what they sent is kept and can be withdrawn.
+_Avoid_: skip (the tie-break's word), not sure (the middle bucket's), unscored bucket.
 
 **Compositional score**:
 A score expressed as a share of a grand total, so only relative shape survives and absolute strength is discarded. The prototype's profile is compositional; the plans call the same property *ipsative*.
 _Avoid_: normalised score, percentage score.
 
 **Tie-break**:
-The few "Which is more true of you?" pairs a participant answers straight after their self-assessment, before their results, when it leaves the leading constructs of one framework or both too close to call. Any pair may be skipped. Observers never get one.
+The few "Which is more true of you?" pairs a participant answers straight after their self-assessment, before their results, when it leaves the leading constructs of one framework or both too close to call. Any pair may be skipped ("Neither is more true of me") or answered "Both are right"; either leaves it tied, and each is kept as given. Observers never get one.
 _Avoid_: tiebreaker, decider, play-off.
 
 **Too close to call**:
@@ -242,6 +250,10 @@ _Avoid_: submission, result, entry.
 One block's captured value within a response, keyed by that block's permanent identifier.
 _Avoid_: field value, datum.
 
+**Sealed letter**:
+The letter a participant writes to their future self at the end of the pathway, held back from the moment they finish that section until a date they pick, three months to two years on. From that day it opens in place for them to read, and an email to their own address says it is ready. Sealing holds it back from the participant, not from the operator.
+_Avoid_: time capsule, scheduled letter, delayed email, locked (a section's word).
+
 **Result**:
 The scores and presentation computed from an assessment against the pathway version it was answered on. A **self-result** comes from a self-assessment and is persisted once rather than recomputed. An **observer result** comes from one observer assessment and is worked out when needed, never stored or shown on its own. The comparison's spread shows each observer's standing and a dot at their share for one construct at a time, each construct's in ascending order on its own, so no observer result can be put back together from it.
 _Avoid_: report, profile, profiling, outcome.
@@ -249,6 +261,10 @@ _Avoid_: report, profile, profiling, outcome.
 **Re-weighted result**:
 A self-result with the tie-break's answers applied, by a second named scoring method, once every pair is answered or skipped. It is stored beside the self-result, which is kept, and is what the participant's results and comparison show.
 _Avoid_: rescored result, adjusted result, final result.
+
+**Retake**:
+A participant's sorting the strengths evaluation again, from their results. It deletes their sort, its result and its tie-break and every observer assessment of them, and opens answer collection again; the sections they finished stay finished and the comparison stays viewed.
+_Avoid_: redo, reset, start over.
 
 **Standing**:
 Where a construct's share sits against an even share of its framework, said in a word from the pathway document, such as "Leading", "Strong", "Present" or "Less used". Results and the comparison show standings, never percents. In the document, a standing's thresholds are its `bands`, as the agreement's are; on the page it is always a standing.
@@ -267,7 +283,7 @@ The period in which a participant's observers may send their observer assessment
 _Avoid_: collection (on its own), answer window, lock, closing.
 
 **Viewed**:
-What a participant's comparison is once they have pressed through to it with at least the minimum number of observers' answers in. It stays viewed whatever answer collection does afterwards, and only a demonstration taking back the self-assessment can undo it. The first such press also freezes answer collection, but the two are separate: when collection unfreezes, the comparison is still viewed. Any press through to the comparison, including one below the minimum, is a **visit**, and sharing with the coach depends on a visit. Opening the comparison's address directly counts as neither.
+What a participant's comparison is once they have pressed through to it with at least the minimum number of observers' answers in. It stays viewed whatever answer collection does afterwards, and after a retake. The first such press also freezes answer collection, but the two are separate: when collection unfreezes, the comparison is still viewed. Any press through to the comparison, including one below the minimum, is a **visit**, and sharing with the coach depends on a visit. Opening the comparison's address directly counts as neither.
 _Avoid_: seen, opened, unlocked, visited (for viewed), frozen (for viewed).
 
 **Waiting on the comparison**:

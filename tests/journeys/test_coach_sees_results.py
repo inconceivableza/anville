@@ -13,6 +13,7 @@ import re
 
 import pytest
 
+from access.models import name_shown_for
 from engine.models import Invitation, Response
 from tests.documents import complete_sort, sort_pathway
 from tests.journeys.test_answers import CALLING, answer, participant  # noqa: F401 (a fixture)
@@ -39,15 +40,21 @@ def with_a_sort_and_a_coach():
     return document
 
 
-@pytest.fixture
-def signed_in(client, participant, load_pathway):  # noqa: F811
-    """✨ A participant who has chosen Sam as their coach and completed onboarding, so the sort is open."""
-    load_pathway(with_a_sort_and_a_coach())
+def signed_in_over(document, client, participant, load_pathway):  # noqa: F811
+    """✨ A participant of the pathway `document` who has chosen Sam as their coach and completed onboarding, so the sort
+    is open."""
+    load_pathway(document)
     client.force_login(participant)
     give_consent(client)
     assert choose(client).status_code == 200
     client.post("/sections/onboarding/complete/")
     return client
+
+
+@pytest.fixture
+def signed_in(client, participant, load_pathway):  # noqa: F811
+    """✨ A participant who has chosen Sam as their coach and completed onboarding, so the sort is open."""
+    return signed_in_over(with_a_sort_and_a_coach(), client, participant, load_pathway)
 
 
 def with_a_result(client, participant, observers=THREE_OBSERVERS, visited=True):  # noqa: F811
@@ -118,6 +125,133 @@ def test_below_the_minimum_the_coach_sees_how_many_have_answered_and_no_observer
     assert "2 of 3" in shared
     assert "Others:" not in shared
     assert not A_PERCENT.search(shared)
+
+
+@pytest.mark.django_db
+def test_the_coach_sees_the_observers_numbers_only_once_the_participant_has_looked(
+    signed_in, participant, observer  # noqa: F811
+):
+    """✨ Shared after a press below the minimum, which visits and freezes nothing: a third answer then brings the
+    minimum in while collection is open, and the coach sees no more than the participant, nothing of the observers'
+    until the participant's press freezes it (ADR 0017; sprint-3d-r1-fix-1)."""
+    response = with_a_result(signed_in, participant, observers=THREE_OBSERVERS[:2])
+    link = an_accepted_coach(signed_in, observer)
+    assert share(signed_in).status_code == 303
+    an_observer(response, THREE_OBSERVERS[2])
+
+    before = what_the_coach_sees(observer, link)
+    assert signed_in.post(f"/results/{SORT}/comparison/visit/", {"confirmed": "yes"}).status_code == 303
+    after = what_the_coach_sees(observer, link)
+
+    assert SHOWN in before  # ✨ the participant's own result
+    assert "Others:" not in before
+    assert "Others: Leading" in after
+
+
+# ✨ What a pathway's comparison signpost may be titled: neither of the engine's own wordings, so that the test reads the
+# title from the document it gave.
+OWN_TITLE = "What others notice about you"
+
+
+def the_headings(page):
+    """✨ The words of each `<h1>` on a page, in order."""
+    return [text(heading).strip() for heading in re.findall(r"<h1[^>]*>(.*?)</h1>", page.content.decode(), re.S)]
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("titled", [True, False], ids=["a signpost titles it", "no signpost"])
+def test_the_coach_sees_the_comparison_headed_as_the_participant_does_with_their_name_in_place_of_you(
+    client, participant, observer, load_pathway, titled  # noqa: F811
+):
+    """✨ From the document, never from which pathway it is (sprint-3d-r1-fix-2): the signpost's title where there is
+    one, as the participant's own page is headed, otherwise the engine's own."""
+    document = with_a_sort_and_a_coach()
+    if titled:
+        document["content"]["sections"][1]["blocks"].append(
+            {"id": "others", "type": "comparison_signpost", "sort": SORT, "title": OWN_TITLE}
+        )
+    signed_in = signed_in_over(document, client, participant, load_pathway)
+    with_a_result(signed_in, participant)
+    link = an_accepted_coach(signed_in, observer)
+    assert share(signed_in).status_code == 303
+    named = name_shown_for(participant)
+
+    own = the_headings(signed_in.get(f"/results/{SORT}/comparison/"))[-1]
+    coach_headings = the_headings(observer.get(link))
+
+    assert (own == OWN_TITLE) is titled
+    assert "you" in own
+    assert coach_headings[-1] == own.replace("you", named)
+    assert f"{named}'s results" in coach_headings
+
+
+@pytest.mark.django_db
+def test_where_the_signposts_title_has_a_sentence_for_the_coach_the_coach_sees_the_comparison_headed_by_it(
+    client, participant, observer, load_pathway  # noqa: F811
+):
+    """✨ "How you’re seen" would read "How Sam’re seen" with the name in place of "you" (code review of 23 Nov)."""
+    document = with_a_sort_and_a_coach()
+    title = {"participant": "How you’re seen by your friends", "coach": "How {name} is seen by your friends"}
+    document["content"]["sections"][1]["blocks"].append(
+        {"id": "others", "type": "comparison_signpost", "sort": SORT, "title": title}
+    )
+    signed_in = signed_in_over(document, client, participant, load_pathway)
+    with_a_result(signed_in, participant)
+    link = an_accepted_coach(signed_in, observer)
+    assert share(signed_in).status_code == 303
+
+    own = the_headings(signed_in.get(f"/results/{SORT}/comparison/"))[-1]
+
+    assert own == "How you’re seen by your friends"
+    assert the_headings(observer.get(link))[-1] == f"How {name_shown_for(participant)} is seen by your friends"
+
+
+def worded_for_a_coach():
+    """✨ The sort's test pathway with a coach, worded for the coach about the participant by name where the document
+    says so, and where it does not, through the observer's wording, as an item's text is (ticket 118)."""
+    document = with_a_sort_and_a_coach()
+    presentation = document["presentation"]
+    presentation["frameworks"][0]["heading"] = {"participant": "Your gifting", "coach": "{name}'s gifting"}
+    gaps = presentation["comparison"]["gaps"]
+    gaps["you_higher"]["label"] = {"participant": "You rate higher", "coach": "{name} rates higher"}
+    presentation["comparison"]["prompts"] = [
+        {
+            "title": "The surprise",
+            "text": {"participant": "Which gap surprised you most?", "coach": "Which surprised {name}?"},
+        }
+    ]
+    document["instrument"]["items"][0]["text"] = {
+        "participant": "Starting things where you are",
+        "observer": "Starting things where they are",
+    }
+    return document
+
+
+@pytest.mark.django_db
+def test_the_coachs_link_speaks_of_the_participant_by_name_and_their_own_pages_still_speak_to_them(
+    client, participant, observer, load_pathway  # noqa: F811
+):
+    """✨ The coach is not the participant, so their link names them, as an observer's pages do (ticket 118); the
+    participant's own results and comparison are as they were."""
+    signed_in = signed_in_over(worded_for_a_coach(), client, participant, load_pathway)
+    with_a_result(signed_in, participant)
+    link = an_accepted_coach(signed_in, observer)
+    assert share(signed_in).status_code == 303
+    named = name_shown_for(participant)
+
+    shared = what_the_coach_sees(observer, link)
+    own = text(signed_in.get(f"/results/{SORT}/")) + text(signed_in.get(f"/results/{SORT}/comparison/"))
+
+    for theirs, yours in [
+        (f"{named}'s gifting", "Your gifting"),
+        (f"{named} rates higher", "You rate higher"),
+        (f"Which surprised {named}?", "Which gap surprised you most?"),
+        ("Starting things where they are", "Starting things where you are"),
+    ]:
+        assert theirs in shared and yours not in shared
+        assert yours in own and theirs not in own
+    assert "{name}" not in shared
+    assert f"{named} is happy for you to see this: the results and comparison {named} sees." in shared
 
 
 @pytest.mark.django_db

@@ -47,6 +47,12 @@ def checklist_outcome(questions, answers):
     return Outcome("confirm" if flagged else "proceed", flagged)
 
 
+def asked_in_a_sentence(question):
+    """✨ A checklist question as it reads completing "Do you think <name>…" in one sentence: its first letter
+    lowered."""
+    return question[:1].lower() + question[1:]
+
+
 def checklist_answers(questions, posted):
     """✨ Whatever answers a form holds so far, by question, leaving out anything that is not Yes, Not sure or No."""
     answers = {question["id"]: posted.get(f"answer-{question['id']}") for question in questions}

@@ -10,7 +10,10 @@
 //
 // Where some items reword others (twins), the sort runs in two rounds, as in the two-round prototype: the originals,
 // a look at how the buckets were used, then the rewordings. A participant whose sort skips fine-tuning then gets the
-// prototype's quick check: the pairs answered furthest apart, to change if they look wrong.
+// prototype's quick check: the pairs answered furthest apart, to change if they look wrong. A document may hide how the
+// buckets were used, between the rounds and at the end alike (ticket 108), and may offer observers the prototype's
+// "Haven't seen this" beside the buckets, which is no bucket: a card placed there is sent as not seen. An observer who
+// places every card there is told what sending it means, since the server keeps it as a decline (ticket 120).
 //
 // The widget's own wording ("Sort your strengths", "Not me", …) comes with the items, in the reader's wording: an
 // observer's is about the participant, in the third person.
@@ -33,15 +36,27 @@ export function mountSorts() {
 
 function mountSort(form) {
   // ✨ `placed` comes only with a demo profile, on a development or demo system (fix-23): each item's bucket and value,
-  // so the sort opens with every card already placed and fine-tuning's sliders already set. The participant still
-  // sends it themselves. Everyone else gets none and starts from a full deck.
-  const { items, buckets, wording, fine_tunes, sends_before_fine_tuning, quick_check, placed = {} } = JSON.parse(
-    document.getElementById(form.dataset.sort).textContent,
-  );
+  // or for an observer's, `{ seen: false }` for a card in "Haven't seen this" (ticket 113), so the sort opens with
+  // every card already placed and fine-tuning's sliders already set. The participant or observer still sends it
+  // themselves. Everyone else gets none and starts from a full deck.
+  const {
+    items,
+    buckets,
+    wording,
+    bucket_summary,
+    not_seen,
+    fine_tunes,
+    sends_before_fine_tuning,
+    quick_check,
+    placed = {},
+  } = JSON.parse(document.getElementById(form.dataset.sort).textContent);
+  // ✨ "Haven't seen this", where offered: placed as a bucket is, but none of them, so never counted or seeded.
+  const notSeen = not_seen ? { id: null, label: not_seen.label } : null;
   const stage = form.querySelector(".sort-stage");
   const announcer = form.querySelector("[data-sort-announcer]");
   const progress = form.querySelector(".sort-progress");
-  const bucketOf = (item) => buckets.find((bucket) => bucket.id === placed[item.id]?.bucket);
+  const bucketOf = (item) =>
+    placed[item.id]?.seen === false ? notSeen : buckets.find((bucket) => bucket.id === placed[item.id]?.bucket);
   const deck = dealt(items).filter((item) => !bucketOf(item)); // ✨ Still to sort; the first is the card on show.
   const sortedPercent = fine_tunes ? SORTED_PERCENT : 100;
   // ✨ Every placement, { item, bucket }, in the order made, so undo can go all the way back.
@@ -119,7 +134,7 @@ function mountSort(form) {
                 el("span", {}, bucket.label),
               ),
               "click",
-              () => sortInto(bucket, index),
+              (event) => sortInto(bucket, event.currentTarget, flight(index)),
             ),
           ),
         ),
@@ -129,21 +144,65 @@ function mountSort(form) {
           el("span", {}, wording.scale_less),
           el("span", {}, wording.scale_more),
         ),
+        ...(notSeen ? [notSeenButton()] : []),
         el(
           "div",
           { class: "sort-foot" },
           undoButton(),
-          el("span", { class: "sort-hint" }, `Tip: press 1–${Math.min(buckets.length, 9)}`),
+          el(
+            "span",
+            { class: "sort-hint" },
+            `Tip: press 1–${Math.min(buckets.length, 9)}${notSeen ? `, or 0 for “${notSeen.label}”` : ""}`,
+          ),
         ),
       ),
     ];
   }
 
-  // ✨ Between the rounds: how round 1's cards were spread over the buckets, praised where well spread, 5 or more of 7
-  // buckets used and none holding more than a third of the cards, so a reader who used only a few can spread round 2's
-  // more.
+  // ✨ "Haven't seen this", below the buckets, as the two-round prototype has it, with the key 0. Not a bucket, so its
+  // card drops, as the middle bucket's does.
+  function notSeenButton() {
+    return on(
+      el(
+        "button",
+        { type: "button", class: "bucket-btn not-seen", "data-focus": "not-seen" },
+        el("span", { class: "bucket-key", "aria-hidden": "true" }, 0),
+        el("span", {}, notSeen.label),
+      ),
+      "click",
+      (event) => sortInto(notSeen, event.currentTarget, "fly-down"),
+    );
+  }
+
+  // ✨ Between the rounds, where the document shows how the buckets were used: how round 1's cards were spread over the
+  // buckets, praised where well spread, 5 or more of 7 buckets used and none holding more than a third of the cards, so
+  // a reader who used only a few can spread round 2's more. Otherwise the screen says only what round 2 is.
   function halfway() {
     announcer.textContent = "";
+    return [
+      stepHeader("Halfway", wording.halfway_heading, wording.halfway_intro),
+      ...(bucket_summary ? [bucketGraph()] : []),
+      el(
+        "div",
+        { class: "sort-row-actions" },
+        on(
+          el("button", { type: "button", class: "pill", "data-focus": "start-round-2" }, wording.start_round_2_label),
+          "click",
+          () => {
+            onRound2 = true;
+            render(sorting);
+          },
+        ),
+        on(
+          el("button", { type: "button", class: "undo-btn", "data-focus": "undo" }, wording.undo_last_card_label),
+          "click",
+          undo,
+        ),
+      ),
+    ];
+  }
+
+  function bucketGraph() {
     const counts = buckets.map(
       (bucket) => history.filter((placed) => placed.bucket === bucket && placed.item.round === 1).length,
     );
@@ -164,54 +223,34 @@ function mountSort(form) {
       )
       .replaceAll("{used}", spread)
       .replaceAll("{buckets}", buckets.length);
-    return [
-      stepHeader("Halfway", wording.halfway_heading, wording.halfway_intro),
-      el(
-        "section",
-        { class: "sort-graph" },
-        el("h3", {}, wording.buckets_used_heading),
-        el("p", {}, used),
-        columns(
-          el(
-            "div",
-            {
-              class: "graph-bars",
-              role: "img",
-              "aria-label": buckets.map((bucket, index) => `${bucket.label}: ${counts[index]}`).join(", "),
-            },
-            ...counts.map((count, index) => {
-              const bar = el("i", {});
-              bar.style.height = `${Math.round((count / most) * 64)}px`;
-              return el("div", { class: `graph-bar ${grade(index)}` }, el("b", {}, count), bar);
-            }),
-          ),
-        ),
-        columns(
-          el(
-            "div",
-            { class: "graph-labels", "aria-hidden": "true" },
-            ...buckets.map((bucket) => el("span", {}, bucket.label)),
-          ),
-        ),
-      ),
-      el(
-        "div",
-        { class: "sort-row-actions" },
-        on(
-          el("button", { type: "button", class: "pill", "data-focus": "start-round-2" }, wording.start_round_2_label),
-          "click",
-          () => {
-            onRound2 = true;
-            render(sorting);
+    return el(
+      "section",
+      { class: "sort-graph" },
+      el("h3", {}, wording.buckets_used_heading),
+      el("p", {}, used),
+      columns(
+        el(
+          "div",
+          {
+            class: "graph-bars",
+            role: "img",
+            "aria-label": buckets.map((bucket, index) => `${bucket.label}: ${counts[index]}`).join(", "),
           },
-        ),
-        on(
-          el("button", { type: "button", class: "undo-btn", "data-focus": "undo" }, wording.undo_last_card_label),
-          "click",
-          undo,
+          ...counts.map((count, index) => {
+            const bar = el("i", {});
+            bar.style.height = `${Math.round((count / most) * 64)}px`;
+            return el("div", { class: `graph-bar ${grade(index)}` }, el("b", {}, count), bar);
+          }),
         ),
       ),
-    ];
+      columns(
+        el(
+          "div",
+          { class: "graph-labels", "aria-hidden": "true" },
+          ...buckets.map((bucket) => el("span", {}, bucket.label)),
+        ),
+      ),
+    );
   }
 
   // ✨ The quick check, or none where there is nothing to check.
@@ -303,15 +342,15 @@ function mountSort(form) {
     return element;
   }
 
-  // ✨ The chosen bucket is marked while the card goes, by mouse or key alike; with reduced motion the card stays put,
-  // but the mark still shows for a moment.
-  function sortInto(bucket, index) {
+  // ✨ The chosen bucket's `button` is marked while the card goes its `way`, by mouse or key alike; with reduced motion
+  // the card stays put, but the mark still shows for a moment.
+  function sortInto(bucket, button, way) {
     if (flying || deck.length === 0) return;
     history.push({ item: deck.shift(), bucket });
     flying = true;
-    stage.querySelectorAll(".bucket-btn")[index].classList.add("chosen");
+    button.classList.add("chosen");
     const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!still) stage.querySelector(".sort-card").classList.add(flight(index));
+    if (!still) stage.querySelector(".sort-card").classList.add(way);
     setTimeout(
       () => {
         flying = false;
@@ -345,6 +384,7 @@ function mountSort(form) {
 
   function allSorted() {
     announcer.textContent = `All ${items.length} sorted.`;
+    if (notSeen && inBucket(notSeen).length === items.length) return nothingSeen();
     return [
       stepHeader(fine_tunes && "Step 1 of 2 — Sort", wording.sort_heading),
       el(
@@ -352,18 +392,7 @@ function mountSort(form) {
         { class: "sort-done" },
         el("p", { class: "sort-done-mark", "aria-hidden": "true" }, "✅"),
         el("h3", {}, wording.all_sorted.replaceAll("{count}", items.length)),
-        el(
-          "ul",
-          { class: "sort-done-counts" },
-          ...strongestFirst().map(([bucket, index]) =>
-            el(
-              "li",
-              {},
-              el("span", { class: `bucket-name ${tone(index)}` }, bucket.label),
-              el("strong", {}, inBucket(bucket).length),
-            ),
-          ),
-        ),
+        ...(bucket_summary ? [bucketCounts()] : []),
         ...(fine_tunes && sends_before_fine_tuning
           ? [el("p", { class: "sort-done-choice" }, wording.send_or_fine_tune)]
           : []),
@@ -376,6 +405,46 @@ function mountSort(form) {
         undoButton(),
       ),
     ];
+  }
+
+  // ✨ Every card in "Haven't seen this" (ticket 120): there is nothing to fine-tune and nothing to count, so the
+  // observer is told that sending keeps only that they couldn't answer, with one press to send it and undo to go back.
+  function nothingSeen() {
+    return [
+      stepHeader(fine_tunes && "Step 1 of 2 — Sort", wording.sort_heading),
+      el(
+        "div",
+        { class: "sort-done" },
+        el("h3", {}, wording.all_sorted.replaceAll("{count}", items.length)),
+        el("p", { class: "sort-done-choice" }, wording.nothing_seen),
+        el("div", { class: "sort-done-actions" }, declineButton()),
+        undoButton(),
+      ),
+    ];
+  }
+
+  function declineButton() {
+    return on(
+      el("button", { type: "submit", class: "pill sort-submit", "data-focus": "send" }, wording.decline_label),
+      "click",
+      writeBuckets,
+    );
+  }
+
+  // ✨ How many cards each bucket holds, strongest first, where the document shows how the buckets were used.
+  function bucketCounts() {
+    return el(
+      "ul",
+      { class: "sort-done-counts" },
+      ...strongestFirst().map(([bucket, index]) =>
+        el(
+          "li",
+          {},
+          el("span", { class: `bucket-name ${tone(index)}` }, bucket.label),
+          el("strong", {}, inBucket(bucket).length),
+        ),
+      ),
+    );
   }
 
   function fineTuneButton() {
@@ -410,8 +479,13 @@ function mountSort(form) {
   }
 
   function writeBuckets() {
-    const sort = Object.fromEntries(history.map(({ item, bucket }) => [item.id, { bucket: bucket.id }]));
+    const sort = Object.fromEntries(history.map(({ item, bucket }) => [item.id, placement(bucket)]));
     form.querySelector('input[name="value"]').value = JSON.stringify(sort);
+  }
+
+  // ✨ A card's placement as sent: its bucket, or not seen, which has no bucket.
+  function placement(bucket) {
+    return bucket === notSeen ? { seen: false } : { bucket: bucket.id };
   }
 
   function fineTuning() {
@@ -460,9 +534,10 @@ function mountSort(form) {
     );
   }
 
-  // ✨ The one answer: every slider's item, its bucket and its value, untouched sliders keeping their seed.
+  // ✨ The one answer: every slider's item, its bucket and its value, untouched sliders keeping their seed, and every
+  // card not seen, which has no slider.
   function writeAnswer() {
-    const sort = {};
+    const sort = Object.fromEntries(inBucket(notSeen).map((item) => [item.id, placement(notSeen)]));
     for (const slider of stage.querySelectorAll(".score-slider")) {
       sort[slider.dataset.item] = { bucket: slider.dataset.bucket, value: Number(slider.value) };
     }
@@ -473,13 +548,17 @@ function mountSort(form) {
     if (event.target.matches(".score-slider")) writeAnswer();
   });
 
-  // ✨ The prototype's keys: 1 for the weakest bucket upwards, while the buckets are on show, but not while typing
-  // elsewhere on the page or with a modifier held, so the browser's own shortcuts still work. A key press hides the
-  // hover tint until the mouse moves, so the bucket under a still pointer never looks like the one chosen.
+  // ✨ The prototype's keys: 1 for the weakest bucket upwards, and 0 for "Haven't seen this" where offered, while the
+  // buckets are on show, but not while typing elsewhere on the page or with a modifier held, so the browser's own
+  // shortcuts still work. A key press hides the hover tint until the mouse moves, so the bucket under a still pointer
+  // never looks like the one chosen.
   document.addEventListener("keydown", (event) => {
-    if (event.metaKey || event.ctrlKey || event.altKey || !/^[1-9]$/.test(event.key)) return;
+    if (event.metaKey || event.ctrlKey || event.altKey || !/^[0-9]$/.test(event.key)) return;
     if (event.target.closest?.("input, select, textarea, [contenteditable]")) return;
-    const button = stage.querySelectorAll(".bucket-btn")[Number(event.key) - 1];
+    const button =
+      event.key === "0"
+        ? stage.querySelector(".not-seen")
+        : stage.querySelectorAll(".bucket-buttons .bucket-btn")[Number(event.key) - 1];
     if (!button) return;
     event.preventDefault();
     stage.classList.add("keyed");

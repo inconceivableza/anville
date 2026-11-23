@@ -370,13 +370,16 @@ def test_how_others_see_you_is_listed_within_section_1_after_the_assessment_as_t
 
 @pytest.mark.django_db
 def test_with_the_side_cards_and_the_row_listed_every_link_below_the_entries_stays(listing):
-    """✨ They are quick ways in beside the entries, as before (developer's call, 23 Oct)."""
+    """✨ They are quick ways in beside the entries, as before (developer's call, 23 Oct), the comparison and the side
+    cards named as the hub names them (ticket 109)."""
+    sections = {section["id"]: section for section in with_the_hubs_entries()["content"]["sections"]}
+    [signpost] = [block for block in sections[CALLING]["blocks"] if block["type"] == "comparison_signpost"]
     sidebar = sidebar_of(started(listing).get(f"/sections/{CALLING}/").content.decode())
     links = re.search(r'<ul class="pathway-nav-links">.*?</ul>', sidebar, re.S).group(0)
 
     assert re.findall(r">([^<]+)</a>", links) == [
         "Your results",
-        "How others experience you",
-        "Invite others to assess you",
-        "Your coach",
+        signpost["title"],
+        sections["voices"]["title"],
+        sections["walk-with-a-coach"]["title"],
     ]

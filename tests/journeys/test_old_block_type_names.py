@@ -88,6 +88,7 @@ def test_a_version_stored_under_the_old_names_reads_with_the_new_ones_and_its_ro
 @pytest.mark.django_db
 def test_a_participant_on_a_version_stored_under_the_old_names_finds_both_signposts_as_before(participant):
     client = to_section_2(participant)
+    people_answer(client)  # ✨ which opens Section 2 (ticket 106)
 
     assert "View my results →" in section_1(client)
     # ✨ the comparison signpost is Section 2's (ticket 87); what it says below the minimum is fix-3's, tested there
@@ -95,7 +96,6 @@ def test_a_participant_on_a_version_stored_under_the_old_names_finds_both_signpo
     assert VIEWED not in client.get("/hub/").content.decode()
     assert client.get(WORKBOOK_1).status_code == 403
 
-    people_answer(client)
     assert press_compare(client).status_code == 303
 
     assert VIEWED in section_2(client)

@@ -4,6 +4,7 @@
 import hashlib
 import json
 import mimetypes
+from datetime import date
 from typing import NamedTuple
 
 from django.conf import settings
@@ -19,6 +20,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.vary import vary_on_headers
 
 from access.consent import consent_required
 from access.models import name_shown_for
@@ -36,21 +38,29 @@ from engine.document import (
     unmet,
 )
 from engine.document.blocks import (
+    COMPARISON_UNSORTED,
     CONTACTS,
-    PASSAGE_BLOCK_TYPES,
+    SENT_ALREADY,
+    anchor_of,
     blocks_of,
     coach_brief,
     comparison_status,
+    freeze_warning,
     landing_of,
     page_count,
+    page_field,
     page_of,
     pages_of,
+    saves_quietly,
     section_ended_by,
     section_of,
     signpost_shown,
-    translation_shown,
+    text_shown,
+    warns_beside_the_press,
+    way_on_named_by,
 )
 from engine.document.coach import (
+    asked_in_a_sentence,
     candidate_name_from_form,
     checklist_answers,
     checklist_answers_from_form,
@@ -65,6 +75,7 @@ from engine.document.contacts import (
     MAX_CONTACTS,
     can_add_row,
     contact_from_form,
+    declined_sentence,
     needed,
     rows_of,
     voices_card,
@@ -78,6 +89,7 @@ from engine.document.gates import (
     comparison_viewed,
     comparison_wait_message,
     links_issued_key,
+    messages_after_a_press,
     opened_key,
 )
 from engine.document.scoring import score
@@ -87,6 +99,8 @@ from engine.hub import (
     COMPLETE,
     block_ids_fixed_on_completion,
     complete_sections,
+    completes_with_its_evaluation,
+    finish_waits,
     hub_for,
     is_locked,
     is_once_only_and_complete,
@@ -95,6 +109,8 @@ from engine.hub import (
     section_by_id,
     track_sections,
     with_coach_answer,
+    HERO_VIDEO_CREDIT,
+    WIZARD_PHOTOS,
     WizardStep,
     wizard_step,
 )
@@ -106,7 +122,8 @@ from engine.document.observers import (
     relationship_question,
 )
 from engine.document.letter import letter_shown, opens_on_from_form, seal_press, unsealed_letter
-from engine.document.photos import credits_listed
+from engine.document.photos import credits_listed, listed, on_pexels, on_unsplash
+from engine.document.text import speaking_of, worded_for
 from engine.models import (
     CollectionFrozen,
     Contact,
@@ -118,7 +135,7 @@ from engine.models import (
     Result,
     SealedLetter,
 )
-from engine import reminders, scenario_loading, stay_in_touch
+from engine import demo_shortcuts, reminders, scenario_loading, stay_in_touch
 from engine.document.tie_break import pair_plan, reweigh
 from engine.results import comparison_page, pair_page, results_page
 
@@ -160,10 +177,10 @@ class ParticipantState(NamedTuple):
 
 
 class Invite(NamedTuple):
-    """✨ The way to invite people, beside the press on to the comparison on the comparison signpost (ticket 88, fix-3,
-    reversed by fix-8: it is offered before and after the minimum, and below it the press is greyed rather than
-    replaced; fix-10 took it off the results page): the address of the Five trusted voices card's page, the phrase
-    beside it (empty from the minimum), and whether the comparison is still waiting on answers."""
+    """✨ The way to invite people, beside the press on to the comparison on the comparison signpost alone (ticket 88,
+    fix-3, fix-8, fix-10), offered before and after the minimum, the press greyed below it: the address of the Five
+    trusted voices card's page, the phrase beside it (empty from the minimum), and whether the comparison is still
+    waiting on answers."""
 
     href: str
     phrase: str
@@ -172,74 +189,202 @@ class Invite(NamedTuple):
 
 class Finish(NamedTuple):
     """✨ The finish a part's end offers when the part is the last thing in its section (ticket 88): that section's
-    identifier, its finish button's label, and whether it is complete already. (Fix-10: the results page no longer
-    carries the way to invite people beside it; that is the comparison signpost's.)"""
+    identifier, its finish button's label, whether it is complete already, and whether it completes itself as its
+    evaluation ends (`completes_with_its_evaluation`, ticket 119), so that its label is a way on to the hub, not a
+    press."""
 
     section_id: str
     label: str
     done: bool
+    way_on: bool = False
 
 
+@vary_on_headers("HX-Request")
 def home(request):
     """✨ The public homepage (ticket 32a), the same for everyone; "Begin" leads to sign-up, or to the hub once
     signed in.
 
     Its "Stay in touch" form posts here (ticket 74): with htmx the section alone comes back to take the form's place,
     thanks or refusal, so there is no new page; without, the homepage comes back opened at the section, by the
-    fragment in the form's action."""
-    stay = stay_in_touch.subscribe(request.POST) if request.method == "POST" else stay_in_touch.StayInTouch()
-    status = 400 if stay.refusal else 200
-    if request.method == "POST" and _is_htmx(request):
+    fragment in the form's action. A link to the form may name a choice to tick in it (ticket 111); with htmx, which
+    asks for it to bring the form back in place of the thanks (sprint-3d-r1-fix-4), it is the section alone again, so
+    the response varies with that header, or a cache could hand the section alone to a visit for the page."""
+    if request.method == "POST":
+        stay = stay_in_touch.subscribe(request.POST)
+    else:
+        stay = stay_in_touch.opened_with(request.GET)
+    status = 400 if stay.refused else 200
+    if _is_htmx(request):
         return render(request, "engine/stay_in_touch.html", {"stay": stay}, status=status)
     begin = reverse("hub") if request.user.is_authenticated else reverse("account_signup")
     return render(request, "engine/home.html", {"begin": begin, "stay": stay}, status=status)
 
 
-# ✨ The photographs the stylesheet draws on the homepage, in the wizard and behind the hub's next step, each a courtesy
-# credit (ticket 101). The credits page lists them after the pathway's own, leaving out one the pathway lists too,
-# and with them the video's, while the document's setting for courtesy credits is on.
+# ✨ The photographs the stylesheet draws on the homepage and behind the hub's next step, and the two the homepage's
+# steps 3 and 4 show (the notebook and the Bible, stand-ins for journalling until the final photos are picked; ticket
+# 110), each a courtesy credit (ticket 101), linked to its photographer and its page as traced (sprint-3d-r1-fix-5).
+# The credits page lists them after the pathway's own, after the video's and before the wizard's (`WIZARD_PHOTOS`),
+# leaving out one listed already: a required credit always, a courtesy one while the document's setting for courtesy
+# credits is on.
 SITE_PHOTO_CREDITS = [
-    "Photograph of a church gathering with Bibles open, by Sincerely Media on Unsplash.",
-    "Photograph of a figure facing the sun, by Andreas Rasmussen on Unsplash.",
-    "Photograph of grass, by Oliver Pacas on Unsplash.",
-    "Photograph of a woman walking through a field of wheat, by Hannah Skelly on Unsplash.",
-    "Photograph of a notebook, a pen and a cup of coffee, by Andres Molina on Unsplash.",
-    "Photograph of a woman walking in a field at sunset, by Sasha Freemind on Unsplash.",
-    "Photograph of misty hills at sunrise, by Alexander Philipp on Unsplash.",
-    "Photograph of two friends talking beside a lake, by Aarón Blanco Tejedor on Unsplash.",
-    "Photograph of hands shaping clay, by Alex Jones on Unsplash.",
-    "Photograph of a carpenter planing wood, by Minh Đức on Unsplash.",
-    "Photograph of an open Bible on a jetty at sunrise, by Aaron Burden on Unsplash.",
-    "Photograph of a woman in a summer dress looking out over a field of wheat, by Klara Kulikova on Unsplash.",
-    "Still of a woman in a sunhat walking through a field at sunset, from the video by Marian Croitoru on Pexels.",
-    "Photograph of a teacher standing before a classroom of pupils, by Quilia on Unsplash.",
-    "Photograph of a woman working in a rice paddy, by Nandhu Kumar on Pexels.",
-    "Photograph of a chef chopping vegetables in a restaurant kitchen, by Pylyp Sukhenko on Unsplash.",
-    "Photograph of a man and a child looking at a plant, by OPPO Find X5 Pro on Unsplash.",
-    "Photograph of a mechanic working on a machine in a garage, by Kato Blackmore on Unsplash.",
-    "Photograph of a doctor in blue scrubs, by Bruno Rodrigues on Unsplash.",
-    "Photograph of a builder in a hard hat on a building frame, by Josh Olalde on Unsplash.",
-    "Photograph of a grandmother peeling potatoes with her grandson, by CDC on Unsplash.",
-    "Photograph of an artist holding a paint palette, by Vitaly Gariev on Unsplash.",
-    "Photograph of a woman working at a laptop by a window, by Andrew Neel on Unsplash.",
-    "Photograph of a scientist in a white coat, by National Cancer Institute on Unsplash.",
-    "Photograph of a fisherman holding a cormorant on a raft, by Willian Justen de Vasconcellos on Unsplash.",
-    "Photograph of a carer helping an elderly couple with colouring, by Age Cymru on Unsplash.",
+    on_unsplash(
+        "Photograph of a church gathering with Bibles open",
+        "Sincerely Media",
+        "https://unsplash.com/@sincerelymedia",
+        "https://unsplash.com/photos/woman-reading-book-dGxOgeXAXm8",
+    ),
+    on_unsplash(
+        "Photograph of a figure facing the sun",
+        "Andreas Rasmussen",
+        "https://unsplash.com/@andreasdress",
+        "https://unsplash.com/photos/woman-sitting-in-front-of-grassfield-VLYvYq4da-A",
+    ),
+    on_unsplash(
+        "Photograph of a notebook, a pen and a cup of coffee",
+        "Andres Molina",
+        "https://unsplash.com/@nomadicfitlust",
+        "https://unsplash.com/photos/a-cup-of-coffee-and-a-notebook-on-a-table-8CGOX7oSMbI",
+    ),
+    on_unsplash(
+        "Photograph of a woman walking in a field at sunset",
+        "Sasha Freemind",
+        "https://unsplash.com/@sashafreemind",
+        "https://unsplash.com/photos/woman-standing-on-grass-field-frq5Q6Ne9k4",
+    ),
+    on_unsplash(
+        "Photograph of misty hills at sunrise",
+        "Alexander Philipp",
+        "https://unsplash.com/@alexphily",
+        "https://unsplash.com/photos/golden-sunrise-over-misty-hills-and-distant-ocean-22-PF7Tkk7E",
+    ),
+    on_unsplash(
+        "Photograph of two friends talking beside a lake",
+        "Aarón Blanco Tejedor",
+        "https://unsplash.com/@the_meaning_of_love",
+        "https://unsplash.com/photos/man-in-black-jacket-standing-beside-body-of-water-during-sunset-aocUkMcxeqI",
+    ),
+    on_unsplash(
+        "Photograph of hands shaping clay",
+        "Alex Jones",
+        "https://unsplash.com/@alexjones",
+        "https://unsplash.com/photos/"
+        "a-clay-stained-hand-of-a-potter-engaging-in-a-craft-work-of-pottery-or-molding-Tq4YjCa2BSc",
+    ),
+    on_unsplash(
+        "Photograph of a carpenter planing wood",
+        "Minh Đức",
+        "https://unsplash.com/@meanduck",
+        "https://unsplash.com/photos/craftsman-planing-wood-on-a-workbench-P4mxT-OgYho",
+    ),
+    on_unsplash(
+        "Photograph of an open Bible on a jetty at sunrise",
+        "Aaron Burden",
+        "https://unsplash.com/@aaronburden",
+        "https://unsplash.com/photos/book-on-top-of-table-and-body-of-water-535Npq1wFG8",
+    ),
+    on_unsplash(
+        "Photograph of a woman in a summer dress looking out over a field of wheat",
+        "Hannah Skelly",
+        "https://unsplash.com/@ivelisseskelly",
+        "https://unsplash.com/photos/woman-in-orange-dress-on-wheat-field-4aJ9VluXAgo",
+    ),
+    on_unsplash(
+        "Photograph of a teacher standing before a classroom of pupils",
+        "Quilia",
+        "https://unsplash.com/@heyquilia",
+        "https://unsplash.com/photos/students-in-classroom-with-teacher-presenting-zFSo6bnZJTw",
+    ),
+    on_pexels(
+        "Photograph of a woman working in a rice paddy",
+        "Nandhu Kumar",
+        "https://www.pexels.com/@nandhukumar/",
+        "https://www.pexels.com/photo/woman-working-on-rice-paddy-field-12883428/",
+    ),
+    on_unsplash(
+        "Photograph of a chef chopping vegetables in a restaurant kitchen",
+        "Pylyp Sukhenko",
+        "https://unsplash.com/@novokayn",
+        "https://unsplash.com/photos/chef-chopping-vegetables-in-restaurant-kitchen-y-XZf_TNRms",
+    ),
+    on_unsplash(
+        "Photograph of a man and a child looking at a plant",
+        "OPPO Find X5 Pro",
+        "https://unsplash.com/@oppofindx5pro",
+        "https://unsplash.com/photos/a-man-and-a-child-looking-at-a-plant-Nc-hc5g5yhw",
+    ),
+    on_unsplash(
+        "Photograph of a mechanic working on a machine in a garage",
+        "Kato Blackmore",
+        "https://unsplash.com/@katoblackmore",
+        "https://unsplash.com/photos/a-man-working-on-a-machine-in-a-garage-KhF58h0hTbc",
+    ),
+    on_unsplash(
+        "Photograph of a doctor in blue scrubs",
+        "Bruno Rodrigues",
+        "https://unsplash.com/@naosouogagliasso",
+        "https://unsplash.com/photos/man-in-blue-medical-scrubs-279xIHymPYY",
+    ),
+    on_unsplash(
+        "Photograph of a builder in a hard hat on a building frame",
+        "Josh Olalde",
+        "https://unsplash.com/@josholalde",
+        "https://unsplash.com/photos/construction-worker-in-hard-hat-on-building-frame-X1P1_EDNnok",
+    ),
+    on_unsplash(
+        "Photograph of a grandmother peeling potatoes with her grandson",
+        "CDC",
+        "https://unsplash.com/@cdc",
+        "https://unsplash.com/photos/"
+        "woman-in-yellow-and-white-floral-button-up-shirt-holding-yellow-banana-E9BR0lNMiQE",
+    ),
+    on_unsplash(
+        "Photograph of an artist holding a paint palette",
+        "Vitaly Gariev",
+        "https://unsplash.com/@silverkblack",
+        "https://unsplash.com/photos/artist-holding-colorful-paint-palette-malUrSBj1v8",
+    ),
+    on_unsplash(
+        "Photograph of a woman working at a laptop by a window",
+        "Andrew Neel",
+        "https://unsplash.com/@andrewtneel",
+        "https://unsplash.com/photos/"
+        "girl-wearing-grey-long-sleeved-shirt-using-macbook-pro-on-brown-wooden-table-ute2XAFQU2I",
+    ),
+    on_unsplash(
+        "Photograph of a scientist in a white coat",
+        "National Cancer Institute",
+        "https://unsplash.com/@nci",
+        "https://unsplash.com/photos/woman-in-white-robe-sitting-on-black-office-rolling-chair-uVnRa6mOLOM",
+    ),
+    on_unsplash(
+        "Photograph of a fisherman holding a cormorant on a raft",
+        "Willian Justen de Vasconcellos",
+        "https://unsplash.com/@willianjusten",
+        "https://unsplash.com/photos/fisherman-holding-a-cormorant-on-a-raft-BDO8psCMUFU",
+    ),
+    on_unsplash(
+        "Photograph of a carer helping an elderly couple with colouring",
+        "Age Cymru",
+        "https://unsplash.com/@agecymru",
+        "https://unsplash.com/photos/caregiver-assisting-elderly-couple-with-coloring-bSXk1lOp8T0",
+    ),
 ]
 
 
 def credits_page(request):
     """✨ The copyright notice of each translation the published pathway quotes, open to anyone, since the public
     homepage quotes scripture too. The publishers ask for their notices on the work's copyright page (ticket 39). After
-    them, the credits of the pathway's photos that the document lists (ticket 49b)."""
+    them, the credits of the pathway's photos that the document lists (ticket 49b), then the site's own, by the same
+    rule: a required credit always, a courtesy one only while the document's setting is on (sprint-3d-r1-fix-5)."""
     version = Publication.current_version()
     translations = version.document.get("translations", {}) if version else {}
     photo_credits = credits_listed(version.document) if version else []
+    site_credits = dict.fromkeys([HERO_VIDEO_CREDIT, *SITE_PHOTO_CREDITS, *(photo.credit for photo in WIZARD_PHOTOS)])
+    courtesy = bool(version and version.document.get("show_courtesy_credits", False))
     shown = {
         "translations": translations.values(),
         "photo_credits": photo_credits,
-        "site_photo_credits": [credit for credit in SITE_PHOTO_CREDITS if credit not in photo_credits],
-        "site_credits_shown": bool(version and version.document.get("show_courtesy_credits", False)),
+        "site_photo_credits": [credit for credit in listed(site_credits, courtesy) if credit not in photo_credits],
     }
     return render(request, "engine/credits.html", shown)
 
@@ -262,7 +407,7 @@ def hub(request):
     wizard = _wizard_due(state)
     if wizard is not None:
         return redirect(wizard)
-    hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    hub = _hub_of(state)
     coach = _coach_of(state.response, state.answers)
     coach_section = _coach_section_of(state.version.document)
     coach_page = _coach_page_of(state.version.document, hub)
@@ -280,14 +425,17 @@ def hub(request):
             "hub": hub,
             "photo": _photo_of(state.version.document, hub.next_step.id if hub.next_step else None),
             "coach_wait": coach_wait,
-            "next_look": next_look(hub, coach_wait),
+            "next_look": _next_look(hub, coach_wait),
             "side_cards": side_cards,
             "coach_card": _coach_card(coach, coach_section, coach_page),
             "voices": voices,
             "comparison": comparison,
             "comparison_next": _comparison_next(hub, comparison),
             "waiting_sentence": waiting.waiting_sentence(minimum) if waiting is not None else None,
+            "waiting_way": _waiting_way(state.version.document, hub),
             "name": name_shown_for(state.response.participant) if state.response else None,
+            # ✨ Demo only (ticket 113): the sections the hidden shortcut offers to open.
+            "demo_shortcut": demo_shortcuts.offered(state.version.document, hub) if demo_shortcuts.tools_on() else [],
         },
     )
 
@@ -306,7 +454,26 @@ def _comparison_next(hub, comparison):
     return {**comparison, "sentence": COMPARISON_READY_SENTENCE.replace("{section}", waiting.called)}
 
 
-def next_look(hub, coach_wait):
+def _waiting_way(document, hub):
+    """✨ Where the hub's "Waiting on answers" panel leads, as {"label", "href"}: to the section waiting, by its title,
+    at the page reached, while it is open (ticket 68); while it is locked by observers yet to answer, to the page of the
+    contact list its opening condition names, by that list's section's title, where more people can be invited (ticket
+    106), as the coach's wait leads to the coach page. None with no wait, or with that list's section locked too."""
+    waiting = hub.waiting_on_answers
+    if waiting is None:
+        return None
+    if not waiting.is_locked:
+        return {"label": waiting.title, "href": page_url(waiting.id, waiting.page)}
+    clauses = section_by_id(document, waiting.id)["opens_when"]["clauses"]
+    asked = next(clause["block"] for clause in clauses if clause["type"] == "observers_answered")
+    holding = section_of(document, asked)
+    if any(state.id == holding["id"] and state.is_locked for state in hub.sections):
+        return None
+    href = page_url(holding["id"], page_of(holding, asked))
+    return {"label": text_for(holding["title"], "participant"), "href": href}
+
+
+def _next_look(hub, coach_wait):
     """✨ The class the hub's next-step panel takes, so the stylesheet can give each state its own photo (fix-8): the
     section's own while one is next, then one each for waiting on answers (trusted voices'), the coach's wait and
     nothing waiting. The panels' order is the template's."""
@@ -437,14 +604,63 @@ def _coach_page_of(document, hub):
 
 
 def _block_address(document, block_id):
-    """✨ The address of the page a block is on, at the block. A coach checklist that opens its page is reached at the
-    page's top, with no anchor, which would scroll past the page's title (ticket 82)."""
+    """✨ The address of the page a block is on, at the block's anchor where it has one (`anchor_of`)."""
     section = section_of(document, block_id)
-    number = page_of(section, block_id)
-    opening_block = pages_of(section)[number - 1][0]
-    if opening_block["id"] == block_id and opening_block["type"] == "coach_checklist":
-        return page_url(section["id"], number)
-    return f"{page_url(section['id'], number)}#block-{block_id}"
+    address = page_url(section["id"], page_of(section, block_id))
+    anchor = anchor_of(section, block_id)
+    return f"{address}#{anchor}" if anchor else address
+
+
+# ✨ What the comparison is called where no comparison signpost names it, as in the faithful port: the original
+# prototype's heading for it.
+COMPARISON_TITLE = "How others experience you"
+
+
+def _comparison_title(document, sort_id):
+    """✨ What the comparison of the sort `sort_id` is called, in the sidebar's link to it and as its own page's
+    heading: the title of the comparison signpost pointing at it, as the hub's row names it (ticket 109;
+    sprint-3d-r1-fix-1), or where no signpost does, the engine's own."""
+    return text_for(_comparison_title_field(document, sort_id), "participant")
+
+
+def _comparison_title_field(document, sort_id):
+    """✨ The title of the comparison signpost pointing at the sort `sort_id`, as authored, or else the engine's own."""
+    for block in blocks_of(document):
+        if block["type"] == "comparison_signpost" and block["sort"] == sort_id:
+            return block["title"]
+    return COMPARISON_TITLE
+
+
+def _comparison_title_for_coach(document, sort_id, name):
+    """✨ What a coach's shared view calls the comparison of the sort `sort_id`. Where the signpost's title has wording
+    for a coach (`worded_for`), a sentence of its own saying the participant's `name` as {name} (ticket 118), that:
+    "How you’re seen by your friends" needs one, "How {name} is seen by your friends", and the linter asks for it.
+    Otherwise the title the participant's own page is headed with (`_comparison_title`), with their `name` in place of
+    "you" (`speaking_of`), so "How others see you" reads "How others see Sam" and the engine's own "How others experience
+    you" reads "How others experience Sam" (sprint-3d-r1-fix-2). A title that never says "you" is kept as written."""
+    title = _comparison_title_field(document, sort_id)
+    if worded_for(title, "coach"):
+        return text_for(title, "coach").replace("{name}", name)
+    return speaking_of(text_for(title, "participant"), name)
+
+
+def _quick_link_names(document, hub, scored):
+    """✨ What the sidebar's links to the comparison of the `scored` block, to the invitations and to the coach page are
+    called, as {"comparison", "invitations", "coach"}: what the hub calls each page they open, in the pathway's words
+    (ticket 109), the title of the comparison signpost's row (`_comparison_title`) or of the side card holding the
+    contact list or the coach checklist. Where the hub names no such page, as for a list or a checklist within a larger
+    section, the engine's own."""
+    names = {
+        "comparison": _comparison_title(document, scored["id"]) if scored is not None else COMPARISON_TITLE,
+        "invitations": "Invite others to assess you",
+        "coach": "Your coach",
+    }
+    cards = {card.id: card.title for card in hub.side_cards()}
+    for name, block_type in (("invitations", "contact_list"), ("coach", "coach_checklist")):
+        held = [section_of(document, block["id"])["id"] for block in blocks_of(document) if block["type"] == block_type]
+        if held and held[0] in cards:
+            names[name] = cards[held[0]]
+    return names
 
 
 def participant_nav(request):
@@ -454,8 +670,8 @@ def participant_nav(request):
     their statuses and locks are the hub's; a locked section carries no address, and neither does a page within it,
     such as the coach page. Below them are links, kept beside the entries as quick ways in (developer's call, 23 Oct):
     results and the comparison once there is a result, since before then they lead only back to the sort, the
-    comparison only while it is open too (fix-19), the invitations, and the coach page. `current` is the section whose
-    page this is, if any."""
+    comparison only while it is open too (fix-19), the invitations, and the coach page, each named as the hub names the
+    page it opens (`_quick_link_names`). `current` is the section whose page this is, if any."""
     state = _participant(request.user)
     if state.version is None:
         return {"title": None, "sidebar": None}
@@ -463,17 +679,18 @@ def participant_nav(request):
     title = text_for(document["title"], "participant")
     if not settings.ANVILLE_SIDEBAR or not any(section["blocks"] for section in state.sections):
         return {"title": title, "sidebar": None}
-    hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    hub = _hub_of(state)
     links = []
     scored = _scored_block(document)
+    names = _quick_link_names(document, hub, scored)
     if scored and Result.objects.filter(response=state.response, block_id=scored["id"]).exists():
         links.append(("Your results", reverse("results", args=[scored["id"]])))
         if not _comparison_locked(state, scored["id"]):
-            links.append(("How others experience you", reverse("comparison", args=[scored["id"]])))
-    links.append(("Invite others to assess you", reverse("invitations")))
+            links.append((names["comparison"], reverse("comparison", args=[scored["id"]])))
+    links.append((names["invitations"], reverse("invitations")))
     coach_page = _coach_page_of(document, hub)
     if coach_page:
-        links.append(("Your coach", coach_page))
+        links.append((names["coach"], coach_page))
     return {
         "title": title,
         "sidebar": {
@@ -506,7 +723,7 @@ def start(request):
     state = _participant(request.user)
     if state.response is not None or state.version is None:
         return redirect("hub")
-    next_step = hub_for(state.sections, state.answers, state.completed).next_step
+    next_step = _hub_of(state).next_step
     if next_step is None or not any(section["blocks"] for section in state.sections):
         return redirect("hub")  # ✨ the hub's empty state says there is nothing to begin
     return redirect("section", next_step.id)
@@ -528,14 +745,15 @@ def section(request, section_id, page=1):
     sort_done = _sort_done_with(state, section)
     if sort_done is not None:
         return redirect("results", sort_done)
-    # ✨ A link just issued, a coach's or an observer's, shown this once. Read only on a page holding a coach checklist or
-    # a contact list, whose address is the path the cookie was set for, so deleting it here reaches it; the section's
-    # later pages sit under that path too when the block is on its first.
-    shows_links = any(block["type"] in LISTED_WITH_LINKS for block in pages_of(section)[page - 1])
+    # ✨ A link just issued, a coach's or an observer's, shown this once. Read only on a page holding a block that
+    # lists people with their links (`lists_links`), whose address is the path the cookie was set for, so deleting it
+    # here reaches it; the section's later pages sit under that path too when the block is on its first.
+    shows_links = any(BLOCK_TYPES[block["type"]].lists_links for block in pages_of(section)[page - 1])
     issued = _issued_link(request) if shows_links else None
     demo = _demo_prefill(request, state.version.document)
     _open_letters_due(state, pages_of(section)[page - 1])
-    shown = _section_shown(request, state, section, _section_page(state, section, page, issued=issued, demo=demo))
+    drawn = _section_page(state, section, page, issued=issued, demo=demo, kept=_letter_dates(request))
+    shown = _section_shown(request, state, section, drawn)
     if issued is not None:
         shown["Cache-Control"] = "no-store"
         shown.delete_cookie(ISSUED_COOKIE, path=request.path)
@@ -557,9 +775,6 @@ def _sort_done_with(state, section):
     return block["id"] if _section_this_is_part_of(state, section) else None
 
 
-# ✨ The blocks whose people are listed with their links: a coach checklist's coach, and a contact list's people.
-LISTED_WITH_LINKS = ("coach_checklist", "contact_list")
-
 
 @login_required
 @consent_required
@@ -567,8 +782,9 @@ LISTED_WITH_LINKS = ("coach_checklist", "contact_list")
 def move_past_page(request, section_id, page):
     """✨ "Continue →" from one page of a section to the next, allowed exactly when the page offers it: once that page's
     clauses pass and nothing on the way to it (an unconfirmed reading, a held link) holds what follows. Re-checked here
-    rather than trusted to the page. The last page has no way on but completing the section."""
-    state = _participant(request.user)
+    rather than trusted to the page. The last page has no way on but completing the section. Every answer on the page
+    the press sends is stored first (`_page_answers_stored`)."""
+    state = _participant(request.user, first_version=lambda: _version_sent(request))
     section = _section_or_404(state.version, section_id)
     reached = state.reached(section)
     if reached is None:
@@ -577,9 +793,13 @@ def move_past_page(request, section_id, page):
         raise Http404("The last page of a section is moved past by completing it.")
     if page > reached:
         return _go_to(request, page_url(section_id, reached))
+    # ✨ Every answer on the page is sent with the press and stored first, as its own save would store it, so what was
+    # chosen or typed since is kept whether or not the page then lets the participant on, without JavaScript too (ticket
+    # 107's letter, then every answer: sprint-3d-r1-fix-6). One refused refuses the press, saying which.
+    state, not_saved = _page_answers_stored(request, state, section, page)
     shown = _section_page(state, section, page)
-    if not shown["offers_way_on"] or shown["unmet"]:
-        return _way_on_refused(request, state, section, shown)
+    if not_saved or not shown["offers_way_on"] or shown["unmet"]:
+        return _way_on_refused(request, state, section, {**shown, "not_saved": not_saved})
 
     state.stored_response(request.user).move_past_page(section_id, page)
     return _go_to(request, page_url(section_id, page + 1))
@@ -591,8 +811,10 @@ def move_past_page(request, section_id, page):
 def complete_section(request, section_id):
     """✨ The participant's own act of finishing a section, re-checked here rather than trusted to the page. It is
     done from the section's last page, so a participant who has not reached it is sent to the page they have. A part of
-    a section, or a hub side card, has no completion of its own: it is complete once its gate passes."""
-    state = _participant(request.user)
+    a section, or a hub side card, has no completion of its own: it is complete once its gate passes. Every answer on
+    the last page the press sends is stored first, so the gate reads them (`_page_answers_stored`, sprint-3d-r1-fix-6),
+    and a refusal lists only what is still missing."""
+    state = _participant(request.user, first_version=lambda: _version_sent(request))
     section = _section_or_404(state.version, section_id)
     if _completes_itself(section):
         raise Http404("This section is complete once its gate passes, with no completion of its own.")
@@ -602,15 +824,16 @@ def complete_section(request, section_id):
     last = page_count(section)
     if reached < last:
         return _go_to(request, page_url(section_id, reached))
+    state, not_saved = _page_answers_stored(request, state, section, last)
     # ✨ The press that finishes a section holding a letter not yet sealed seals it too, until the date it chose (ticket
     # 104); a letter sealed already keeps its first date, whatever is sent.
     letter = unsealed_letter(section, _seals(state))
     chosen = request.POST.get("opens_on")
     opens_on, seal_refusal = opens_on_from_form(letter, chosen, timezone.localdate()) if letter else (None, None)
-    if unmet(section, state.answers) or seal_refusal:
+    if not_saved or unmet(section, state.answers) or seal_refusal:
         # ✨ The date the press sent comes back as sent, so a page drawn again without JavaScript keeps it.
         shown = _section_page(state, section, last, chosen=chosen)
-        return _way_on_refused(request, state, section, {**shown, "seal_refusal": seal_refusal})
+        return _way_on_refused(request, state, section, {**shown, "seal_refusal": seal_refusal, "not_saved": not_saved})
 
     fixed_block_ids = block_ids_fixed_on_completion(section, state.answers)
     with transaction.atomic():
@@ -619,6 +842,7 @@ def complete_section(request, section_id):
         if letter is not None:
             SealedLetter.seal(participant_response, letter["id"], opens_on)
     if letter is not None:
+        _keep_letter_date(request, letter["id"], None)  # ✨ sealed, it keeps no date picked (sprint-3d-r1-fix-3)
         # ✨ Back to the letter, so the participant sees it sealed and until when, rather than only a tick on the hub.
         return _go_to(request, f"{page_url(section_id, page_of(section, letter['id']))}#{landing_of(letter)}")
     # ✨ Back to the hub, which points at the next step, as the prototype's `completePillar` goes (ticket 41b); a wizard
@@ -626,6 +850,56 @@ def complete_section(request, section_id):
     if section.get("wizard") and "welcome" in section:
         return _go_to(request, reverse("wizard_welcome", args=[section_id]))
     return _go_to(request, reverse("hub"))
+
+
+# ✨ The date last picked for each letter not yet sealed, by its block, kept in the participant's session as it is
+# changed, so the page that seals it offers it again after going back to the letter and on (sprint-3d-r1-fix-3). Never
+# stored beyond the session: sealing takes only the date its own press sends.
+LETTER_DATES_KEY = "letter_dates"
+
+
+@login_required
+@consent_required
+@require_POST
+def letter_date(request, block_id):
+    """✨ The date a letter not yet sealed opens on, kept quietly as it is picked (sprint-3d-r1-fix-3): with JavaScript
+    as its field changes; without, as "← Previous page" goes back from the page that seals it, sending the page's form
+    (`back`), which this then leads on to. Anything but a date forgets the one kept, and a letter sealed keeps none.
+    Going back stores every answer on the page sent with it too, as any press on a page does (sprint-3d-r1-fix-6), or,
+    with one refused, draws the page again saying which, at its refusal."""
+    state = _participant(request.user)
+    block = _block_of_type(state.version, block_id, "letter")
+    section = section_of(state.version.document, block_id)
+    last = page_count(section)
+    if state.reached(section) != last:
+        return _refused(request, NOT_OPEN, status=403)
+    seals = _seals(state)
+    _keep_letter_date(request, block["id"], None if block["id"] in seals else _date_sent(request))
+    if "back" not in request.POST:
+        return HttpResponse(status=204)
+    state, not_saved = _page_answers_stored(request, state, section, last)
+    if not_saved:
+        return _answers_refused(request, state, section, last, not_saved)
+    return _go_to(request, _previous_page(section, last, seals) or page_url(section["id"], last))
+
+
+def _date_sent(request):
+    """✨ The date a press sent for a letter to open on, as an ISO date, or None for anything but a date."""
+    try:
+        return date.fromisoformat(request.POST.get("opens_on") or "").isoformat()
+    except ValueError:
+        return None
+
+
+def _letter_dates(request):
+    """✨ The dates kept for the participant's letters not yet sealed, by block (`LETTER_DATES_KEY`)."""
+    return request.session.get(LETTER_DATES_KEY, {})
+
+
+def _keep_letter_date(request, block_id, picked):
+    """✨ Keep `picked`, an ISO date, as the date last picked for the letter `block_id`, or forget it with None."""
+    kept = {letter: day for letter, day in _letter_dates(request).items() if letter != block_id}
+    request.session[LETTER_DATES_KEY] = {**kept, block_id: picked} if picked else kept
 
 
 @login_required
@@ -662,8 +936,9 @@ def _to_the_hub_when_locked(request):
 
 
 def _way_on_refused(request, state, section, shown):
-    """✨ A refused "Continue →" or completion, nothing stored: with htmx, only what sits beneath the button, for the
-    page's `#gate-refusal`, so the page neither reloads nor moves (fix-2); without, the page again."""
+    """✨ A refused "Continue →" or completion, nothing stored by it but the answers it sent (`not_saved` lists any of
+    those refused): with htmx, only what sits beneath the button, for the page's `#gate-refusal`, so the page neither
+    reloads nor moves (fix-2); without, the page again."""
     shown = {**shown, "refused": True}
     if _is_htmx(request):
         return render(request, "engine/gate_refusal.html", shown, status=400)
@@ -675,10 +950,10 @@ def _way_on_refused(request, state, section, shown):
 @require_POST
 def reopen_section(request, section_id):
     """✨ The participant taking back their own completion. Their answers stay exactly as they left them. A section that
-    completes itself was never theirs to take back, and a side card stays complete (ticket 52). Nor is a wizard's, which
-    the hub never asks for again once given (ticket 50)."""
+    completes itself was never theirs to take back, and a side card stays complete (ticket 52), as does a section its
+    evaluation completed (ticket 119). Nor is a wizard's, which the hub never asks for again once given (ticket 50)."""
     state = _participant(request.user)
-    if not _reopens(_section_or_404(state.version, section_id)):
+    if not _reopens(_section_or_404(state.version, section_id), state.sections):
         raise Http404("This section's completion is not taken back.")
     if state.response is not None:
         state.response.reopen_section(section_id)
@@ -713,20 +988,12 @@ def save_answer(request, block_id):
         return _go_to(request, reverse("hub"))
     if not _is_open(state, section, block):
         return _refused(request, NOT_OPEN, status=403)
-    if block_id in _seals(state):
-        # ✨ Sealed, it is never changed, and the refusal, like the page, never carries it (ticket 104).
-        return _answer_refused(request, state, section, block_id, SEALED_REFUSAL, status=409)
-    if block_id in state.fixed:
-        # ✨ Refused here, not only disabled on the page, so a page left open from before completing cannot change it.
-        return _answer_refused(request, state, section, block_id, FIXED_REFUSAL, status=409)
-    waiting = comparison_wait_message(block, state.answers)
-    if waiting is not None:
-        # ✨ Refused here, not only disabled on the page, so the reflection is written only once its comparison has been
-        # seen (ADR 0019).
-        return _answer_refused(request, state, section, block_id, waiting, status=403)
+    unstorable = _why_not_stored(state, block)
+    if unstorable is not None:
+        return _answer_refused(request, state, section, block_id, *unstorable)
     block_type = BLOCK_TYPES[block["type"]]
     try:
-        value = answer_from_form(state.version.document, block, request.POST.get("value"))
+        value = answer_from_form(state.version.document, block, _answer_sent(request, block))
     except AnswerRefused as refused:
         return _answer_refused(request, state, section, block_id, str(refused), status=400)
 
@@ -738,16 +1005,126 @@ def save_answer(request, block_id):
         try:
             participant_response.submit_sort(block_id, value, scores)
         except IntegrityError:
-            refusal = "Your results are already in. Retaking the sort is not offered yet."
+            # ✨ A sort sent from a page left open: the retake, at the foot of the results, is the way to sort again.
+            refusal = "Your results are already in. To sort again, retake the strengths evaluation from your results."
             return _answer_refused(request, state, section, block_id, refusal, status=409)
         # ✨ A sort too close to call on one framework or both, and not flat, leads to the tie-break's pairs first.
         if pair_plan(state.version.document, scores):
             return _go_to(request, _with_demo_profile(request, reverse("tie_break", args=[block_id])))
+        _complete_what_the_evaluation_ended(participant_response)
         return _to_results(request, block_id)
     if not participant_response.save_answer(block_id, value):
         # ✨ a completion fixed it after the check above, and the UPDATE saw that
         return _answer_refused(request, state, section, block_id, FIXED_REFUSAL, status=409)
     return _saved(request, saved, section, block_id)
+
+
+def _why_not_stored(state, block):
+    """✨ Why an answer to a block the participant has reached may not be stored now, as `(refusal, status)`, or None
+    when it may."""
+    if block["id"] in _seals(state):
+        # ✨ Sealed, it is never changed, and the refusal, like the page, never carries it (ticket 104).
+        return SEALED_REFUSAL, 409
+    if block["id"] in state.fixed:
+        # ✨ Refused here, not only disabled on the page, so a page left open from before completing cannot change it.
+        return FIXED_REFUSAL, 409
+    waiting = comparison_wait_message(block, state.answers)
+    if waiting is not None:
+        # ✨ Refused here, not only disabled on the page, so the reflection is written only once its comparison has been
+        # seen (ADR 0019).
+        return waiting, 403
+    return None
+
+
+def _answer_sent(request, block):
+    """✨ What a form sent as one block's answer, every value under its name: its page's name for it (`page_field`), as
+    its page's form and its own save with JavaScript send it (sprint-3d-r1-fix-6), or else `value`, as a form of its
+    own sends it (a reading's confirmation, the sort)."""
+    field = page_field(block)
+    return request.POST.getlist(field if field in request.POST else "value")
+
+
+@login_required
+@consent_required
+@require_POST
+def save_page(request, section_id, page):
+    """✨ A page's own Save, beside its way on, for a browser without JavaScript (sprint-3d-r1-fix-6): every answer on
+    the page stored at once, as each saves on its own with JavaScript, then the page again at the Save; or, with any
+    refused, the page drawn again at its refusal, saying which. The date a letter opens on, sent from the page that
+    seals it, is kept as going back from that page keeps it (sprint-3d-r1-fix-3), so the page offers it again. A page
+    shut, or not reached, is refused as an answer on it would be, on a page of its own (ticket 71); a once-only section
+    complete leads to the hub (ticket 69)."""
+    state = _participant(request.user, first_version=lambda: _version_sent(request))
+    section = _section_or_404(state.version, section_id)
+    _page_or_404(section, page)
+    if is_once_only_and_complete(section, state.completed):
+        return _go_to(request, reverse("hub"))
+    reached = state.reached(section)
+    if reached is None or page > reached:
+        return _refused(request, NOT_OPEN, status=403)
+    state, not_saved = _page_answers_stored(request, state, section, page)
+    letter = unsealed_letter(section, _seals(state)) if page == page_count(section) else None
+    if letter is not None and "opens_on" in request.POST:
+        _keep_letter_date(request, letter["id"], _date_sent(request))
+    if not_saved:
+        return _answers_refused(request, state, section, page, not_saved)
+    return _see_other(f"{page_url(section_id, page)}#completion")
+
+
+def _version_sent(request):
+    """✨ The pathway version a press on a page records a first answer against, as `save_answer` does: the published
+    version the page was drawn from, which its form names, or else the one published now, for a press sending none."""
+    return _published_version(request.POST.get("version")) or Publication.current_version()
+
+
+def _answer_stored(request, state, section, block, sent):
+    """✨ One answer sent with a press, `sent` its values, stored as the block's own save would store it, and refused for
+    the same reasons, as `(value, refusal)`: the value stored and None, or None and why it was not."""
+    if not _is_open(state, section, block):
+        return None, NOT_OPEN
+    unstorable = _why_not_stored(state, block)
+    if unstorable is not None:
+        return None, unstorable[0]
+    try:
+        value = answer_from_form(state.version.document, block, sent)
+    except AnswerRefused as refused:
+        return None, str(refused)
+    if not state.stored_response(request.user).save_answer(block["id"], value):
+        return None, FIXED_REFUSAL  # ✨ a completion fixed it after the check above, and the UPDATE saw that
+    return value, None
+
+
+def _page_answers_stored(request, state, section, page):
+    """✨ Every answer on one page of a section that a press there sent (sprint-3d-r1-fix-6). The page's answers belong
+    to its one form (`sent_with_its_page`), so its Save, its way on and the way back from a page that seals a letter all
+    send them, and each is stored as its own save would store it, refused for the same reasons: without JavaScript,
+    nothing chosen on the page is lost to a press, and none is refused silently. An answer not sent, as a rating with no
+    point chosen or one fixed and so disabled, is left as it was.
+
+    Returns `(state, not_saved)`: the state with what was stored in it, and each answer refused, in the page's order, as
+    {"name", "refusal"}: its prompt, which names it on the press's refusal, and why."""
+    stored, not_saved = {}, []
+    for block in pages_of(section)[page - 1]:
+        field = page_field(block)
+        if not BLOCK_TYPES[block["type"]].sent_with_its_page or field not in request.POST:
+            continue
+        value, refusal = _answer_stored(request, state, section, block, request.POST.getlist(field))
+        if refusal is None:
+            stored[block["id"]] = value
+        else:
+            not_saved.append({"name": text_for(block["prompt"], "participant"), "refusal": refusal})
+    if stored:
+        state = state._replace(response=state.stored_response(request.user))
+        state = state.with_answers({**state.answers, **stored})
+    return state, not_saved
+
+
+def _answers_refused(request, state, section, page, not_saved):
+    """✨ A press on a page that is not a way on (its Save, or going back from the page that seals a letter) with answers
+    refused: the page drawn again, those stored in it, opened at its refusal (`#refused`), which names each answer not
+    saved and says why. Only without JavaScript, which saves each answer on its own."""
+    shown = _section_page(state, section, page, chosen=request.POST.get("opens_on"), kept=_letter_dates(request))
+    return _section_shown(request, state, section, {**shown, "not_saved": not_saved}, status=400)
 
 
 def _answer_refused(request, state, section, block_id, refusal, status):
@@ -756,7 +1133,7 @@ def _answer_refused(request, state, section, block_id, refusal, status):
     the bare status line (fix-7)."""
 
     def its_page(status):
-        shown = _section_page(state, section, page_of(section, block_id))
+        shown = _section_page(state, section, page_of(section, block_id), kept=_letter_dates(request))
         _on_page(shown, block_id)["refusal"] = refusal
         return _section_shown(request, state, section, shown, status=status)
 
@@ -892,12 +1269,12 @@ def _checklist_screen(
     (`issued` is a link just issued, shown this once). On the intro while choosing again, `kept` is the coach who
     stays until another is saved."""
     answers = answers or {}
-    # ✨ `asked` completes "Do you think <name>…" in one sentence, its first letter lowered; the flags keep the question.
+    # ✨ `asked` completes "Do you think <name>…" in one sentence; the flags keep the question as authored.
     questions = [
         {
             **question,
             "answer": answers.get(question["id"]),
-            "asked": question["question"][:1].lower() + question["question"][1:],
+            "asked": asked_in_a_sentence(question["question"]),
         }
         for question in text["questions"]
     ]
@@ -960,7 +1337,7 @@ def _saved(request, state, section, block_id):
     block = next(block for block in section["blocks"] if block["id"] == block_id)
     if request.headers.get("HX-Request") == "true":
         shown = _section_page(state, section, page)
-        quietly = _saves_quietly(state.version.document, section, block)
+        quietly = saves_quietly(state.version.document, section, block)
         status = render_to_string("engine/save_status.html", {**shown, "saves_quietly": quietly}, request).strip()
         gate = render_to_string("engine/completion.html", {**shown, "out_of_band": True}, request).strip()
         return HttpResponse(status + gate)
@@ -988,7 +1365,7 @@ def results(request, block_id):
         "section": section,
         "finish": _results_finish(state, block_id),
         # ✨ How a refused finish comes back, as on a section's page (fix-2).
-        "messages_after_a_press": state.version.document.get("messages_after_a_press", False),
+        "messages_after_a_press": messages_after_a_press(state.version.document),
     }
     return render(request, "engine/results.html", context)
 
@@ -996,8 +1373,8 @@ def results(request, block_id):
 def _results_finish(state, block_id):
     """✨ What the results page offers in place of "Compare with how others see you →", when its sort is the last
     thing in a part that is the last thing in its section, so the results are that section's end (ticket 88): the
-    section's finish alone, as `_finish_of` gives it (fix-10: the comparison and the invitation are the comparison
-    signpost's, in the section after). None otherwise, when the page is as before."""
+    section's finish alone, as `_finish_of` gives it, the comparison and the way to invite people being the comparison
+    signpost's, in the section after (fix-10). None otherwise, when the page offers the press on to the comparison."""
     document = state.version.document
     part = section_of(document, block_id)
     return _finish_of(state, part) if part["blocks"][-1]["id"] == block_id else None
@@ -1011,7 +1388,7 @@ def _invite(state):
     phrase is empty. None for a pathway without that card or while it is locked, where the press is offered alone, as
     before."""
     answered, minimum = _answered(state.response), minimum_observers(state.version.document)
-    hub = hub_for(state.sections, state.answers, state.completed, moved_past=state.moved_past)
+    hub = _hub_of(state)
     voices = _hub_voices(state, hub)
     if voices is None:
         return None
@@ -1044,8 +1421,8 @@ def _results_drawn(state, result, block_id):
 def tie_break(request, block_id):
     """✨ The tie-break's next unanswered pair (ticket 30b), for a participant whose own sort left one framework or both
     too close to call; anyone else, or one who has answered or skipped every pair, goes on to their results. Answering stores the
-    choice beside the sort's result and comes back here for the next. Only the participant's own result is read, so an
-    observer's sort never leads here."""
+    choice beside the sort's result, "Both are right" as given beside the skip (ticket 108), and comes back here for the
+    next. Only the participant's own result is read, so an observer's sort never leads here."""
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
@@ -1056,15 +1433,24 @@ def tie_break(request, block_id):
         except ValueError:
             place = -1
         chosen = request.POST.get("chosen") or None
-        if not 0 <= place < len(plan) or (chosen is not None and chosen not in plan[place]["constructs"]):
+        # ✨ "Both are right" (ticket 108) chooses neither, as the skip does, and only where the version offers it.
+        both = request.POST.get("both") == "true"
+        offers_both = "both" in state.version.document.get("presentation", {}).get("tie_break", {})
+        if (
+            not 0 <= place < len(plan)
+            or (chosen is not None and chosen not in plan[place]["constructs"])
+            or (both and (chosen is not None or not offers_both))
+        ):
             refusal = "That is not one of this pair’s answers."
             # ✨ Without JavaScript, the next pair again, saying why (fix-2); with every pair answered, a page of its own.
             left = len(result.tie_break_answers) < len(plan)
             page = (lambda status: _pair_shown(request, state, result, block_id, plan, status, refusal)) if left else None
             return _refused(request, refusal, status=400, page=page)
         # ✨ A pair already answered (a form sent twice, or from a stale tab) stores nothing; either way the next is shown.
-        result.answer_pair(place, plan[place], chosen)
+        result.answer_pair(place, plan[place], chosen, both=both)
         _scores_shown_storing_reweighted(state.version.document, result)  # ✨ the last answer re-weights the result
+        if not _pairs_left(state.version.document, result):
+            _complete_what_the_evaluation_ended(state.response)
         return _see_other(_with_demo_profile(request, reverse("tie_break", args=[block_id])))
     if len(result.tie_break_answers) >= len(plan):
         return redirect("results", block_id)
@@ -1078,6 +1464,20 @@ def _pair_shown(request, state, result, block_id, plan, status=200, refusal=None
     demo = _demo_prefill(request, state.version.document)
     context = {"pair": shown, "block_id": block_id, "demo": demo, "refusal": refusal}
     return render(request, "engine/tie_break.html", context, status=status)
+
+
+def _signposted_pairs_left(state, block):
+    """✨ For a section signpost, whether the section it leads to holds a sort that is in with tie-break pairs still to
+    answer or skip: its evaluation has not ended, so the signpost keeps its own wording, its button leading through
+    that section and the results on to the next pair, rather than saying it is finished (hand check of 18 Nov). False
+    for any other block, and for a section with no sort or none in yet."""
+    if block["type"] != "section_signpost" or state.response is None:
+        return False
+    document = state.version.document
+    linked = section_by_id(document, block["section"]) or {"blocks": []}
+    sort = next((other["id"] for other in linked["blocks"] if BLOCK_TYPES[other["type"]].scored), None)
+    result = Result.objects.filter(response=state.response, block_id=sort).first() if sort else None
+    return result is not None and _pairs_left(document, result)
 
 
 def _pairs_left(document, result):
@@ -1101,7 +1501,10 @@ def comparison(request, block_id):
     sections they have done, save where a section holds a comparison signpost to the sort: the comparison is then that
     section's, refused while it is locked, as its pages are (fix-19). Below the minimum it shows how many have
     answered and no numbers; it never shows which person has answered, and single observers' percents only in the
-    distribution strip, in ascending order."""
+    distribution strip, in ascending order. From the minimum, the numbers show only while answer collection is frozen
+    (ADR 0017): before the press that looks, and again once withdrawals unfreeze collection, this address shows that
+    press and its warning in their place, so loading it, from the menu or a typed address, never looks
+    (sprint-3d-r1-fix-1)."""
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return redirect(page_url(section["id"], section["page"]))
@@ -1114,13 +1517,25 @@ def _comparison_shown(request, state, result, section, block_id, status=200, sha
     """✨ The comparison page, from `_own_result`'s state, result and section, with `share_refusal`, a refused tick of the
     coach's box sent without JavaScript, said above the box (fix-2). Below the minimum, where the pathway has a Five
     trusted voices card, `invite` is the way to it, and the page waits on answers with it in place of its refusal
-    (fix-16); otherwise None, and the refusal stands, as in the faithful port."""
-    scores = _scores_shown_storing_reweighted(state.version.document, result)
+    (fix-16); otherwise None, and the refusal stands, as in the faithful port.
+
+    From the minimum while answer collection is open (`ready`), `warning` is the freeze warning, which the page says
+    beneath the press that looks, as Section 2's card does (ticket 106); where the document asks on a page of its own
+    instead, as the faithful port does, the page is that one, "Before you look", unless a refused tick is to be said
+    (sprint-3d-r1-fix-1)."""
+    document = state.version.document
+    scores = _scores_shown_storing_reweighted(document, result)
     shown = _comparison_of(state.response, scores, state.answers[block_id])
-    sort = next(block for block in blocks_of(state.response.version.document) if block["id"] == block_id)
+    warning = _freeze_warning(state.response, shown["observers"], shown["minimum"]) if shown["ready"] else None
+    if warning and not warns_beside_the_press(document) and share_refusal is None:
+        context = {"block_id": block_id, "warning": warning}
+        return render(request, "engine/comparison_confirm.html", context, status=status)
+    sort = next(block for block in blocks_of(document) if block["id"] == block_id)
     invite = _invite(state) if shown["frameworks"] is None else None
     context = {
+        "heading": _comparison_title(document, block_id),
         "comparison": shown,
+        "warning": warning,
         "invite": invite if invite and invite.waiting else None,
         "block_id": block_id,
         "coach": _coach_sharing(state.response, block_id),
@@ -1160,12 +1575,21 @@ def share_with_coach(request, block_id):
     return _see_other(f"{reverse('comparison', args=[block_id])}#coach-share")
 
 
-def _comparison_of(response, scores, sort):
-    """✨ The comparison of one participant's result with their observers, as both they and their coach see it."""
+def _comparison_of(response, scores, sort, role="participant", name=""):
+    """✨ The comparison of one participant's result with their observers, as both they and their coach see it, worded
+    for `role`, the coach's about the participant by `name` (ticket 118). The
+    observers' answers are worked into it only while answer collection is frozen, which the participant's look does
+    (ADR 0017): with the minimum in while it is open, it is `ready`, with a count and no numbers, as below the minimum,
+    so neither they nor their coach can see what one more answer adds (sprint-3d-r1-fix-1)."""
     document = response.version.document
     assessments = ObserverResponse.assessments_for(response)
-    shown = comparison_page(document, scores, sort, aggregate(document, assessments.assessments))
-    # ✨ Below the minimum there is no comparison on the page to call illustrative.
+    if response.collection_frozen_at is not None:
+        average = aggregate(document, assessments.assessments)
+    else:
+        average = {"observers": len(assessments.assessments), "frameworks": None}
+    shown = comparison_page(document, scores, sort, average, role, name)
+    shown["ready"] = response.collection_frozen_at is None and shown["observers"] >= shown["minimum"]
+    # ✨ Below the minimum, or before the look, there is no comparison on the page to call illustrative.
     shown["illustrative"] = assessments.all_test_data and shown["frameworks"] is not None
     return shown
 
@@ -1194,7 +1618,7 @@ def _coach_of(response, answers=None):
     """✨ The coach kept, as the hub and the comparison read them, or None: their name, the coach page, their answer as
     the coach page tells it, whether they can be shown the results (accepted through a working link) and whether they
     are. The answer is read from the `answers` the gate reads (the response's own, if not given), as a `coach_accepted`
-    clause reads it, so the hub's wording and Section 4's lock never disagree (fix-2; Section 3's until ticket 87)."""
+    clause reads it, so the hub's wording and Section 4's lock never disagree (fix-2)."""
     coach = response.contacts.filter(role=Contact.Role.COACH).first() if response is not None else None
     if coach is None:
         return None
@@ -1225,15 +1649,28 @@ def _hub_voices(state, hub):
         invited = state.answers.get(links_issued_key(block["id"]), 0)
         answered = _answered(state.response) if state.response else 0
         withdrew = state.response.observers_withdrew if state.response else 0
+        declined = ObserverResponse.declined(state.response) if state.response else 0
         minimum = minimum_observers(document)
-        shown = voices_card(block, card, invited, answered, minimum, frozen=_frozen(state.response), withdrew=withdrew)
+        frozen = _frozen(state.response)
+        shown = voices_card(block, card, invited, answered, minimum, frozen, withdrew=withdrew, declined=declined)
         return {"section": section_id, **shown}
     return None
 
 
 def _answered(response):
-    """✨ How many observers' assessments of a participant's `response` are in."""
-    return len(ObserverResponse.assessments_for(response).assessments)
+    """✨ How many observers' assessments of a participant's `response` are in and count toward the minimum, as every
+    count on the way to the comparison reads it (`ObserverResponse.counted`)."""
+    return ObserverResponse.counted(response)
+
+
+def _freeze_warning(response, answered, minimum):
+    """✨ The warning a press on to the comparison carries (`freeze_warning`) while it would freeze answer collection:
+    with `answered`, the observer assessments in, at least the `minimum` and collection not yet frozen; None
+    otherwise. Those who declined have replied too, and are waited on no longer (ticket 120)."""
+    if response.collection_frozen_at is not None or answered < minimum:
+        return None
+    replied = answered + ObserverResponse.declined(response)
+    return freeze_warning(replied, response.contacts.filter(role=Contact.Role.CONTACT).count())
 
 
 @login_required
@@ -1247,41 +1684,57 @@ def visit_comparison(request, block_id):
 
     With at least the minimum number of observer assessments in, and collection not yet frozen, the press first asks:
     how many of the people invited have answered, and that once they look no more answers are added. Its button
-    confirms, which freezes collection, then goes on as before (ticket 55). Below the minimum nothing is asked.
+    confirms, which freezes collection, then goes on as before (ticket 55). Below the minimum nothing is asked. Where
+    the document puts that warning beside the press (`warns_beside_the_press`), the press is the look: it freezes
+    collection and goes on with no page between (ticket 106).
 
     A press with the minimum in, confirmed or with collection already frozen, is also the view a comparison signpost's
-    "Viewed" reads (ticket 67a), kept once withdrawals unfreeze collection."""
+    "Viewed" reads (ticket 67a), kept once withdrawals unfreeze collection. Only this press freezes, so only it shows
+    the observers' numbers: the comparison's own address offers it while collection is open (sprint-3d-r1-fix-1)."""
     state, result, section = _own_result(request.user, block_id)
     if result is None:
         return _see_other(page_url(section["id"], section["page"]))
     if _comparison_locked(state, block_id):
         return _to_the_hub_when_locked(request)  # ✨ nothing recorded or frozen, as on the page itself (fix-19)
     response = state.response
-    answered = _answered(response)
-    viewed = answered >= minimum_observers(state.version.document)
-    if response.collection_frozen_at is None and viewed:
-        if request.POST.get("confirmed") != "yes":
-            invited = response.contacts.filter(role=Contact.Role.CONTACT).count()
-            context = {
-                "block_id": block_id,
-                "answered": answered,
-                "invited": invited,
-                "everyone": answered >= invited,
-            }
+    answered, minimum = _answered(response), minimum_observers(state.version.document)
+    if response.collection_frozen_at is None and answered >= minimum:
+        asks = not warns_beside_the_press(state.version.document)
+        if asks and request.POST.get("confirmed") != "yes":
+            context = {"block_id": block_id, "warning": _freeze_warning(response, answered, minimum)}
             # ✨ No `back`: the button leads to the hub, as a section's does, since the page is reached from the hub's
             # cards and the sidebar as well as from the results page (fix-21).
             return render(request, "engine/comparison_confirm.html", context)
-        # ✨ Counted again under the freeze's lock: a withdrawal since may have left fewer than the minimum.
-        viewed = response.freeze_collection()
-    response.visit_comparison(block_id, viewed=viewed)
+    # ✨ The freeze is counted again under its lock: a withdrawal since may have left fewer than the minimum.
+    response.look_at_comparison(block_id)
     return _see_other("comparison", block_id)
 
 
-def _demo_tools_on():
-    """✨ Whether this is a development or demo system, where tools that write made-up data or take back a
-    participant's answers are offered: DEBUG on, or a demo notice set, as for `seed_tie_break` (fix-15). A production
-    deployment has neither."""
-    return bool(settings.DEBUG or settings.ANVILLE_DEMO_NOTICE)
+@login_required
+@consent_required
+@require_POST
+def demo_shortcut(request):
+    """✨ Demo only (ticket 113): the hub's hidden control, completing what the section chosen needs to open, and only
+    that (`demo_shortcuts.open_section`), then back to the hub with no message. A section not offered now, as one
+    opened since the hub was drawn, is left as it is. Off a development or demo system there is no such control, so it
+    is a 404; something it can't make up without changing what the participant has is refused, keeping nothing."""
+    if not demo_shortcuts.tools_on():
+        raise Http404("There are no demo shortcuts here.")
+    state = _participant(request.user)
+    if state.version is None or _wizard_due(state) is not None:
+        return _see_other("hub")  # ✨ the hub sends them on, as it would without the press
+    section = _section_or_404(state.version, request.POST.get("section", ""))
+    hub = _hub_of(state)
+    if section["id"] in {offered.id for offered in demo_shortcuts.offered(state.version.document, hub)}:
+        try:
+            demo_shortcuts.open_section(state.stored_response(request.user), section["id"])
+        except demo_shortcuts.CannotMakeUp:
+            return _refused(request, DEMO_SHORTCUT_REFUSED, status=409)
+    return _see_other("hub")
+
+
+# ✨ What the hub's demo shortcut says when it can't open a section without changing what the participant has.
+DEMO_SHORTCUT_REFUSED = "The demo shortcut can't open that section without changing what you've already done."
 
 
 @login_required
@@ -1290,8 +1743,8 @@ def _demo_tools_on():
 def retake(request, block_id):
     """✨ The results page's quiet "Retake the strengths evaluation" asks first, saying what will be cleared, and warning
     that what the people invited sent will be deleted; only its button clears the participant's own sort and everything
-    worked out from it (`Response.clear_sort`), then opens the sort afresh (29 Oct; fix-19's, once demo only). The
-    sections they finished stay finished. It is the same on every system, and offers no demo profile.
+    worked out from it (`Response.clear_sort`), then opens the sort afresh (29 Oct). The sections they finished stay
+    finished. It is the same on every system, and offers no demo profile.
 
     Before any sort, on a development or demo system alone, the same address is where the sort page's hidden link leads,
     to load a demo profile (fix-21): one of `seed_tie_break`'s starting profiles, and how to answer its pairs, chosen
@@ -1301,8 +1754,8 @@ def retake(request, block_id):
     404. A combination not offered, as none is with a sort in, is refused with its reason and nothing cleared."""
     state, result, section = _own_result(request.user, block_id)
     demo_profiles = result is None
-    if demo_profiles and not _demo_tools_on():
-        raise Http404("There is no strengths evaluation to retake yet.")
+    if demo_profiles and not demo_shortcuts.tools_on():
+        raise Http404("There is no self-assessment to retake yet.")
     sort_page = page_url(section["id"], section["page"])
     document = state.version.document
     # ✨ Before any sort, only a participant the sort is open to may have one loaded for them (fix-21).
@@ -1324,8 +1777,11 @@ def retake(request, block_id):
             ),
             "sort_page": sort_page,
             "offer": offer,
-            # ✨ None or 0 when nobody has sent anything, which leaves nothing to warn of.
-            "answered": _answered(response) if result is not None else None,
+            # ✨ None or 0 when nobody has sent anything, which leaves nothing to warn of. Every send, counting or not
+            # (sprint-3d-r1-fix-1), and every decline (ticket 120), since the retake deletes them all and those people
+            # are asked again.
+            "answered": ObserverResponse.sent_count(response) if result is not None else None,
+            "declined": ObserverResponse.declined(response) if result is not None else None,
             "tie_break": bool(result and result.tie_break_answers),
             "coach_shown": result is not None and bool((_coach_of(response) or {}).get("shared")),
             "refusal": refusal,
@@ -1356,7 +1812,7 @@ def _demo_prefill(request, document):
     gives them, or None: off a development or demo system, with no profile named, or with a combination not offered on
     this pathway."""
     profile = request.GET.get(scenario_loading.PROFILE_FIELD)
-    if not profile or not _demo_tools_on():
+    if not profile or not demo_shortcuts.tools_on():
         return None
     return scenario_loading.prefill(document, profile, request.GET.get(scenario_loading.ANSWERS_FIELD) or None)
 
@@ -1365,7 +1821,7 @@ def _with_demo_profile(request, url):
     """✨ `url` naming the same demo profile and answers as this request's address, on a development or demo system
     (fix-23), so the pairs that follow a demo profile's sort show its guide too."""
     profile = request.GET.get(scenario_loading.PROFILE_FIELD)
-    if not profile or not _demo_tools_on():
+    if not profile or not demo_shortcuts.tools_on():
         return url
     return f"{url}?{scenario_loading.demo_query(profile, request.GET.get(scenario_loading.ANSWERS_FIELD) or None)}"
 
@@ -1384,7 +1840,7 @@ def _own_result(user, block_id):
     section = section_of(state.version.document, block_id)
     result = Result.objects.filter(response=state.response, block_id=block_id).first()
     title, page = text_for(section["title"], "participant"), page_of(section, block_id)
-    back = _section_this_is_part_of(state, section) or {"title": title, "href": page_url(section["id"], page)}
+    back = _section_this_is_part_of(state, section) or _way_back(section, page)
     return state, result, {"id": section["id"], "title": title, "page": page, "back": back}
 
 
@@ -2008,9 +2464,9 @@ def observe(request, token):
     """
     invitation = Invitation.live(token)
     if invitation is None:
-        expired = Invitation.expired_claim(token)
+        expired = _expired_withdrawal(request, token, Contact.Role.CONTACT)
         if expired is not None:
-            return _expired_link(request, expired, reverse("withdrawal_by_link", args=[token]))
+            return expired
         return _observers_page(request, token, came_by_link=True)  # ✨ an observer's own link, or the refusal
     if invitation.claimed_at is not None:
         return render(request, "engine/link_used.html", status=410)
@@ -2106,10 +2562,8 @@ def coaching(request, token):
     """
     invitation = Invitation.live(token, role=Contact.Role.COACH)
     if invitation is None:
-        expired = Invitation.expired_acceptance(token)
-        if expired is not None:
-            return _expired_link(request, expired, reverse("coach_withdrawal", args=[token]))
-        return _refuse_link(request)
+        expired = _expired_withdrawal(request, token, Contact.Role.COACH)
+        return expired if expired is not None else _refuse_link(request)
     return _coach_page(request, invitation, token)
 
 
@@ -2147,25 +2601,16 @@ def coach_withdrawal(request, token):
     coach withdrew. Only a working link that accepted can, whether or not the participant's consent stands; any other
     gets the one refusal, naming nobody.
 
-    Before the acceptance goes, whatever it opened is recorded as opened, as the participant's next page would have
-    recorded it, so a section it opened stays open (ADR 0019) however soon the coach withdraws.
+    Before the acceptance goes, whatever it opened is recorded as opened (`_withdraw`).
 
-    An expired link that accepted still withdraws (29 Oct), on the expired link's page (`_expired_link`)."""
+    An expired link that accepted still withdraws (29 Oct), on the expired link's page (`_expired_withdrawal`)."""
     invitation = Invitation.withdrawable_by_coach(token)
     if invitation is None:
-        expired = Invitation.expired_acceptance(token)
-        if expired is None:
-            return _refuse_link(request)
-        if request.method == "GET":
-            return _expired_link(request, expired, reverse("coach_withdrawal", args=[token]))
-        _store_completions_and_openings(expired.contact.response)
-        if not Invitation.withdraw_as_coach(token):
-            return _refuse_link(request)
-        return _expired_link(request, withdrawn=True)
+        expired = _expired_withdrawal(request, token, Contact.Role.COACH, withdraws=request.method == "POST")
+        return expired if expired is not None else _refuse_link(request)
     _, name = _asked_by(invitation)
     if request.method == "POST":
-        _store_completions_and_openings(invitation.contact.response)
-        if not Invitation.withdraw_as_coach(token):
+        if not _withdraw(invitation, token):
             return _refuse_link(request)
         shown = render(request, "engine/coach_withdrawal.html", {"name": name, "withdrawn": True})
     else:
@@ -2234,10 +2679,11 @@ COACH_TEXT_FIELDS = ("coach_invitation", "coach_accepted", "coach_declined")
 
 
 def _shared_with_coach(invitation, name):
-    """✨ The participant's results and comparison, as they see them, for a coach who accepted through this link and
-    whom they are happy to show; otherwise None. Read afresh on every visit, so a withdrawal shows at once (ticket 27).
-    Nothing else of the participant's is read: only the stored result, the sort it was scored from and the observers'
-    assessments, through the same suppression as the participant's own comparison."""
+    """✨ The participant's results and comparison, as they see them but worded about them by `name`, as the observer's
+    pages are (ticket 118), for a coach who accepted through this link and whom they are happy to show; otherwise None.
+    Read afresh on every visit, so a withdrawal shows at once (ticket 27). Nothing else of the participant's is read:
+    only the stored result, the sort it was scored from and the observers' assessments, through the same suppression
+    as the participant's own comparison."""
     if invitation.coach_answer != Invitation.CoachAnswer.ACCEPTED or invitation.results_shared_at is None:
         return None
     participant_response = invitation.contact.response
@@ -2249,8 +2695,9 @@ def _shared_with_coach(invitation, name):
     sort = participant_response.answers[scored["id"]]
     scores = _scores_shown_storing_reweighted(document, result)
     return {
-        "results": results_page(document, scores, sort, name),
-        "comparison": _comparison_of(participant_response, scores, sort),
+        "results": results_page(document, scores, sort, name, role="coach"),
+        "comparison": _comparison_of(participant_response, scores, sort, role="coach", name=name),
+        "comparison_heading": _comparison_title_for_coach(document, scored["id"], name),
     }
 
 
@@ -2265,7 +2712,8 @@ def send_assessment(request, token=None):
     """✨ The observer sending their observer assessment, once, with the secret they claimed: from their own link
     (`token`), or else from the cookie. It counts at once, and nothing of it is ever shown back. The participant's copy
     of the link is not a secret, so it is refused here as any wrong link is. Then back to the page it was sent from,
-    which now says thank you.
+    which now says thank you. One with every card in "Haven't seen this" is kept as a decline (ticket 120), however it
+    was sent, though the sort asks first.
 
     A second send from the same secret is refused, and the first stands. A reissued link is a new claim, so its observer
     may send one too, and both count (ADR 0007).
@@ -2289,8 +2737,7 @@ def send_assessment(request, token=None):
     try:
         sent = ObserverResponse.send(invitation.contact.response, secret, assessment, relationship=relationship)
     except IntegrityError:
-        refusal = "Your evaluation has already been sent."
-        return render(request, "engine/save_status.html", {"refusal": refusal}, status=409)
+        return render(request, "engine/save_status.html", {"refusal": SENT_ALREADY}, status=409)
     except CollectionFrozen:
         return render(request, "engine/save_status.html", {"refusal": NO_MORE_ANSWERS}, status=409)
     if sent is None:
@@ -2309,22 +2756,17 @@ def withdrawal(request, token=None):
     the observer's, never this one (ticket 45).
 
     An own link that has expired, once its observer sent answers, still withdraws (29 Oct), on the expired link's page
-    (`_expired_link`).
+    (`_expired_withdrawal`); the cookie alone never reaches it.
     """
     secret = request.COOKIES.get(OBSERVER_COOKIE) if token is None else token
     invitation = Invitation.claimed_by(secret, for_withdrawal=True)
     if invitation is None:
-        expired = Invitation.expired_claim(token) if token is not None else None
-        if expired is None:
-            return _refuse_link(request)
-        if request.method == "GET":
-            return _expired_link(request, expired, reverse("withdrawal_by_link", args=[token]))
-        ObserverResponse.withdraw(token)
-        return _expired_link(request, withdrawn=True)
+        expired = _expired_withdrawal(request, token, Contact.Role.CONTACT, withdraws=request.method == "POST")
+        return expired if expired is not None else _refuse_link(request)
     _, name = _asked_by(invitation)
     action = reverse("withdrawal") if token is None else reverse("withdrawal_by_link", args=[token])
     if request.method == "POST":
-        ObserverResponse.withdraw(secret)
+        _withdraw(invitation, secret)
         shown = render(request, "engine/withdrawal.html", {"name": name, "withdrawn": True})
         shown.delete_cookie(OBSERVER_COOKIE, path=reverse("observer"))
     else:
@@ -2368,16 +2810,20 @@ OBSERVER_COOKIE = "observer"
 
 def _observers_page(request, secret, came_by_link=False):
     """✨ The observer's page for the invitation a secret claimed, or the refusal if there is none: the observer
-    assessment until it is sent, then thanks. While answer collection is frozen, one who has not sent is told no more
-    answers are being taken, and offered no assessment (ticket 55). An observer who `came_by_link` rather than by the
-    cookie is at their own link, which the page offers to copy, and sends the assessment through it. Never cached,
-    since it is reached by a secret."""
+    assessment until it is sent, then thanks, worded for a decline where they saw nothing (ticket 120). While answer
+    collection is frozen, one who has not sent is told no more answers are being taken, and offered no assessment
+    (ticket 55). An observer who `came_by_link` rather than by the cookie is at their own link, which the page offers
+    to copy, and sends the assessment through it. Never cached, since it is reached by a secret.
+
+    Demo only (ticket 113): the sort offers the participant's demo profiles, hidden until revealed, and starts from the
+    one the address names (`_observer_demo_prefill`)."""
     invitation = Invitation.claimed_by(secret)
     if invitation is None:
         return _refuse_link(request)
     document, name = _asked_by(invitation)
     scored = _scored_block(document)
     sent = ObserverResponse.sent_with(secret)
+    declined = sent and ObserverResponse.declined_with(secret)
     frozen = not sent and invitation.contact.response.collection_frozen_at is not None
     assessment = None
     if scored and not sent and not frozen:
@@ -2386,19 +2832,35 @@ def _observers_page(request, secret, came_by_link=False):
             "widget": BLOCK_TYPES[scored["type"]].widget(document, "observer", name),
             "action": reverse("send_assessment_by_link", args=[secret]) if came_by_link else reverse("send_assessment"),
             "relationship": relationship_question(document, name),
+            "demo_profiles": scenario_loading.offered(document).profiles if demo_shortcuts.tools_on() else [],
         }
+        placed = _observer_demo_prefill(request, document)
+        if placed is not None:
+            # ✨ Each card already where the profile places it, so the widget opens at "All sorted" (`placed` in sort.js).
+            assessment["widget"] = {**assessment["widget"], "placed": placed}
     withdraw_at = reverse("withdrawal_by_link", args=[secret]) if came_by_link else reverse("withdrawal")
     context = {
         "name": name,
         "own_link": request.build_absolute_uri(reverse("observe", args=[secret])) if came_by_link else None,
         "assessment": assessment,
         "sent": sent,
+        "declined": declined,
         "frozen": NO_MORE_ANSWERS if frozen else None,
         "withdraw_at": withdraw_at,
     }
     shown = render(request, "engine/observer.html", context)
     shown["Cache-Control"] = "no-store"
     return shown
+
+
+def _observer_demo_prefill(request, document):
+    """✨ Demo only (ticket 113): the observer version of the demo profile the address names, as
+    `scenario_loading.observer_sort` gives it, for an observer's sort to start from, storing nothing until they send it;
+    or None: off a development or demo system, with no profile named, or with one not offered on this pathway."""
+    profile = request.GET.get(scenario_loading.PROFILE_FIELD)
+    if not profile or not demo_shortcuts.tools_on():
+        return None
+    return scenario_loading.observer_sort(document, profile)
 
 
 def _scored_block(document):
@@ -2411,6 +2873,43 @@ def _refuse_link(request):
     """✨ The one refusal for a wrong, expired or revoked link, or an observer's own link or cookie that no longer
     works: the same for all, naming nobody."""
     return render(request, "engine/link_refused.html", status=404)
+
+
+# ✨ How an expired link that can still withdraw is found, by the role of the person it was for, and the address its
+# page posts to: a coach's link once it accepted, an observer's own link once they sent answers through it (ADR 0026).
+EXPIRED_WITHDRAWALS = {
+    Contact.Role.COACH: (Invitation.expired_acceptance, "coach_withdrawal"),
+    Contact.Role.CONTACT: (Invitation.expired_claim, "withdrawal_by_link"),
+}
+
+
+def _expired_withdrawal(request, token, role, *, withdraws=False):
+    """✨ The one way through an expired link that can still withdraw, a coach's or an observer's as `role` says
+    (`EXPIRED_WITHDRAWALS`): its page, asking, with a button posting to the withdrawal by that link; or, when
+    `withdraws`, what was shared through it withdrawn (`_withdraw`) and word that it is done. None for a token that is
+    no such link, which each caller answers its own way."""
+    find, withdrawal = EXPIRED_WITHDRAWALS[role]
+    expired = find(token)
+    if expired is None:
+        return None
+    if not withdraws:
+        return _expired_link(request, expired, reverse(withdrawal, args=[token]))
+    if not _withdraw(expired, token):
+        return _refuse_link(request)
+    return _expired_link(request, withdrawn=True)
+
+
+def _withdraw(invitation, secret):
+    """✨ Withdraw what the person holding `secret` shared through `invitation`, its link working or expired, and say
+    whether it is done. A coach's acceptance goes once whatever it opened is recorded as opened, as the participant's
+    next page would have recorded it, so a section it opened stays open however soon the coach withdraws (ADR 0019,
+    ADR 0024); False if the link never accepted. An observer's answers go, and it is done even when an earlier press
+    left nothing to withdraw."""
+    if invitation.contact.role == Contact.Role.COACH:
+        _store_completions_and_openings(invitation.contact.response)
+        return Invitation.withdraw_as_coach(secret)
+    ObserverResponse.withdraw(secret)
+    return True
 
 
 def _expired_link(request, expired=None, action=None, *, withdrawn=False):
@@ -2444,7 +2943,7 @@ def _own_contact_or_404(user, contact_id):
 
 
 def page_url(section_id, page=1):
-    """✨ The address of one page of a section. The first is the section's own address, as before it had pages.
+    """✨ The address of one page of a section. The first is the section's own address, with no page number.
     Templates reach it as the `page_url` tag (`engine/templatetags/section_pages.py`)."""
     if page == 1:
         return reverse("section", args=[section_id])
@@ -2468,6 +2967,18 @@ def _go_to(request, where):
     if request.headers.get("HX-Request") == "true":
         return HttpResponse(headers={"HX-Redirect": where})
     return _see_other(where)
+
+
+def _hub_of(state, answers=None):
+    """✨ The participant's hub as `hub_for` works it out from their state, with `answers` in place of their stored ones
+    where a page has newer, and the pathway's minimum number of observer answers, which a lock note may say."""
+    return hub_for(
+        state.sections,
+        state.answers if answers is None else answers,
+        state.completed,
+        moved_past=state.moved_past,
+        minimum=minimum_observers(state.version.document),
+    )
 
 
 def _participant(user, first_version=Publication.current_version):
@@ -2497,14 +3008,19 @@ def _participant(user, first_version=Publication.current_version):
 
 
 def _store_completions_and_openings(participant_response):
-    """✨ Store each hub side card's completion and each opened section's opening the first time either is seen, and
-    return the response's track sections, the answers the gate reads, the sections complete and the pages moved past,
-    those included."""
+    """✨ Store each hub side card's completion, the completion of each section its evaluation's end completes (ticket
+    119), and each opened section's opening the first time any is seen, and return the response's track sections, the
+    answers the gate reads, the sections complete and the pages moved past, those included."""
     sections = track_sections(participant_response.version.document)
     answers = participant_response.answers_with_contacts_and_visits()
     # ✨ A part of a section, or a hub side card, is complete once its gate passes, so locks and the hub count it without
     # a completion.
     completed = complete_sections(sections, answers, participant_response.completed_sections)
+    moved_past = participant_response.moved_past_by_section()
+    # ✨ Likewise a section that completes itself as its evaluation ends, the first time it is seen to have (ticket 119),
+    # before the side cards and openings that may wait on it.
+    if _complete_those_ended_by_their_evaluation(participant_response, sections, answers, completed, moved_past):
+        completed = complete_sections(sections, answers, participant_response.completed_sections)
     # ✨ A side card's completion is stored the first time it is seen, so it stays complete once its links expire or are revoked, or
     # its people are taken off the list, and never locks again what it opened (ticket 52).
     stored = participant_response.completed_sections
@@ -2513,7 +3029,6 @@ def _store_completions_and_openings(participant_response):
             participant_response.complete_section(section["id"])
     # ✨ Likewise the first time a section with opening conditions is open, so it stays open once the coach's link is
     # revoked or reissued, or the coach changed (ADR 0019).
-    moved_past = participant_response.moved_past_by_section()
     for section in sections:
         if (
             "opens_when" in section
@@ -2523,6 +3038,55 @@ def _store_completions_and_openings(participant_response):
             participant_response.open_section(section["id"])
             answers[opened_key(section["id"])] = True
     return sections, answers, completed, moved_past
+
+
+def _complete_what_the_evaluation_ended(participant_response):
+    """✨ Store, now, the completion of each section the participant's evaluation has just ended (ticket 119): called
+    as the sort with no pairs is sent and as the last tie-break pair is answered, so the completion is stored by the
+    press that ends the evaluation, not left for the next request's `_participant` to find. A write, returning nothing
+    (code review of 23 Nov: it was a call to `_participant` whose state was thrown away). The response is read again
+    first, since the press stored the sort or the pair by an UPDATE its copy here never saw."""
+    participant_response.refresh_from_db()
+    sections = track_sections(participant_response.version.document)
+    answers = participant_response.answers_with_contacts_and_visits()
+    completed = complete_sections(sections, answers, participant_response.completed_sections)
+    moved_past = participant_response.moved_past_by_section()
+    _complete_those_ended_by_their_evaluation(participant_response, sections, answers, completed, moved_past)
+
+
+def _complete_those_ended_by_their_evaluation(participant_response, sections, answers, completed, moved_past):
+    """✨ Store the completion of each section that completes itself as its evaluation ends (ticket 119,
+    `completes_with_its_evaluation`) and has not been stored yet, once that evaluation has ended: the sort in, and every
+    tie-break pair answered or skipped. It is re-checked as the participant's own press is (`complete_section`): open
+    and reached to its last page, its parts done and its gate met. Stored, never worked out on the fly, so a retake,
+    which clears the sort, leaves it complete (ADR 0025). Whether any was stored; the response's completions are read
+    again if so."""
+    waiting = [
+        (section, sort_id)
+        for section in sections
+        if (sort_id := completes_with_its_evaluation(section, sections)) is not None
+        and section["id"] not in participant_response.completed_sections
+    ]
+    document = participant_response.version.document
+    stored = False
+    for section, sort_id in waiting:
+        if (
+            is_locked(section, completed, answers, sections, moved_past)
+            or page_reached(section, moved_past, answers, sections) < page_count(section)
+            or finish_waits(section, sections, completed)
+            or unmet(section, answers)
+        ):
+            continue
+        result = Result.objects.filter(response=participant_response, block_id=sort_id).first()
+        if result is None or _pairs_left(document, result):
+            continue
+        participant_response.complete_section(
+            section["id"], fixed_block_ids=block_ids_fixed_on_completion(section, answers)
+        )
+        stored = True
+    if stored:
+        participant_response.refresh_from_db(fields=["completed_sections", "fixed_answers", "updated_at"])
+    return stored
 
 
 def _is_open(state, section, block):
@@ -2563,8 +3127,6 @@ def _open_letters_due(state, page_blocks):
 
 def _letter_of(block, seals):
     """✨ For a letter block, where it stands, as `letter_shown` gives it (ticket 104); None for any other block."""
-    if block["type"] != "letter":
-        return None
     sealed = seals.get(block["id"])
     return letter_shown(block, sealed.opens_on if sealed else None, timezone.localdate())
 
@@ -2584,14 +3146,15 @@ def _section_or_404(version, section_id):
     return section
 
 
-def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None, chosen=None):
+def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None, chosen=None, kept=None):
     """✨ One page of a section as its template needs it. Every page but the last ends in "Continue →", held by that
     page's own clauses; the last ends in the section's completion, held by the whole gate. `issued` is a link just
     issued, a coach's or an observer's, which the page shows this once beside the person it is for. `demo` is a demo
     profile, from `_demo_prefill`, that a sort not yet in starts from (fix-23). `rows_back` is how a contact list's
     rows come back from a press without JavaScript, by its identifier, as `_contact_rows` takes it (ticket 70,
     fix-1). `chosen` is the date a refused press to seal a letter sent, offered again in place of the default (ticket
-    104)."""
+    104); `kept` the dates last picked for the participant's letters, by block, as their session keeps them, each
+    offered while its letter still accepts it (`_letter_dates`, sprint-3d-r1-fix-3)."""
     rows_back = rows_back or {}
     version, answers, fixed = state.version, state.answers, state.fixed
     opened, activity_open = open_blocks(section, answers, state.sections, up_to_page=page)
@@ -2601,14 +3164,20 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
     # ✨ A sort leads only to its results, as in the prototype, so completing is not offered beside it until it
     # is in. The linter makes its section's gate require it, so the server refuses completion before then too.
     sort_pending = any(BLOCK_TYPES[block["type"]].scored and block["id"] not in answers for block in blocks)
+    # ✨ Nor is it offered in a section whose work is all in its parts until they are done (ticket 106).
+    parts_pending = is_last and finish_waits(section, state.sections, state.completed)
     # ✨ A link shows the section it leads to exactly as the hub would: its title, its status and whether it is open.
-    hub = hub_for(state.sections, answers, state.completed, moved_past=state.moved_past)
-    links = _requirement_links(state, section)
+    hub = _hub_of(state, answers)
+    links = _requirement_links(state, section, page)
     gate_checklist = [(message, met, links.get(message)) for message, met in checklist(section, answers, page=page)]
     states = {other.id: other for other in hub.sections}
     seals = _seals(state)
     letter = unsealed_letter(section, seals) if is_last else None
-    press = seal_press(letter, timezone.localdate(), chosen) if letter else None
+    press = seal_press(letter, timezone.localdate(), chosen, (kept or {}).get(letter["id"])) if letter else None
+    named = None if is_last else way_on_named_by(pages_of(section)[page - 1], seals)
+    # ✨ How many observers declined, read only for a page that holds a contact list, the one place it is said.
+    lists = state.response is not None and any(block["type"] == "contact_list" for block in blocks)
+    declined = ObserverResponse.declined(state.response) if lists else 0
     return {
         # ✨ Where "← Back" at the top leads: the section this is a part of, or else the hub.
         "back": _section_this_is_part_of(state, section),
@@ -2616,6 +3185,16 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
             "number": page,
             "count": page_count(section),
             "is_last": is_last,
+            # ✨ The press's own label where the block it is for gives one, as the letter's "Save my letter and continue
+            # →" (ticket 107), or None for "Continue →".
+            "way_on_label": _way_on_label(named),
+            # ✨ Whether the page has its own Save, shown without JavaScript beside its way on (sprint-3d-r1-fix-6):
+            # while any answer on it can be sent with its form, or while it seals the letter, whose date the Save keeps
+            # (sprint-3d-r1-fix-3). Drawn before the seal, the Save is the form's first button, the one Enter in the
+            # date presses, so Enter there never seals the letter, even on a page with no other answer (code review of
+            # 23 Nov); with JavaScript, main.js then cancels it.
+            "saves": press is not None or any(_sent_with_its_page(state, block, seals) for block in blocks),
+            "previous": _previous_page(section, page, seals),
         },
         "pathway": {
             "version_id": version.pk,
@@ -2627,11 +3206,15 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
             "title": text_for(section["title"], "participant"),
             # ✨ While it holds a letter not yet sealed, the press that finishes it says it seals it (ticket 104).
             "complete_label": press["label"] if press else _complete_label(section),
+            # ✨ The line above the finish, such as when to come back and press it (ticket 106), or None.
+            "complete_note": text_for(section["complete_note"], "participant") if "complete_note" in section else None,
             "is_part": "part_of" in section,
             # ✨ On a part's last page, the finish of the section it is the last thing in, if it is (ticket 88).
             "finish": _finish_of(state, section) if is_last else None,
             "is_side_card": "side_card" in section,
-            "reopens": _reopens(section),
+            "reopens": _reopens(section, state.sections),
+            # ✨ Completed as its evaluation ends, with no press, its label then a way on to the hub (ticket 119).
+            "completes_with_evaluation": completes_with_its_evaluation(section, state.sections) is not None,
             "blocks": [
                 _block_for_participant(
                     version.document,
@@ -2644,39 +3227,64 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
                     drawn=_sort_results_drawn(state, block),
                     demo=demo,
                     comparison=_comparison_signpost_shown(state, block),
+                    pairs_left=_signposted_pairs_left(state, block),
                     rows_back=rows_back.get(block["id"]),
                     coach_withdrew=state.response is not None and state.response.coach_withdrew,
                     observers_withdrew=state.response.observers_withdrew if state.response is not None else 0,
-                    saves_quietly=_saves_quietly(version.document, section, block),
+                    observers_declined=declined,
+                    saves_quietly=saves_quietly(version.document, section, block),
                     letter=_letter_of(block, seals),
                 )
                 for block in blocks
             ],
         },
-        # ✨ The date the press that finishes the section seals its letter until, while it holds one not yet sealed.
-        "seal": press,
+        # ✨ The date the press that finishes the section seals its letter until, while it holds one not yet sealed, and
+        # the letter's block, whose date is kept as it is picked (sprint-3d-r1-fix-3).
+        "seal": {**press, "letter": letter["id"]} if press else None,
         "is_complete": section["id"] in state.completed,
         # ✨ Demo only (fix-21): a sort not yet in offers a hidden "Load a demo profile (demo only)", where one holds.
-        "demo_profile": sort_pending and _demo_tools_on() and bool(scenario_loading.offered(version.document).profiles),
+        "demo_profile": (
+            sort_pending and demo_shortcuts.tools_on() and bool(scenario_loading.offered(version.document).profiles)
+        ),
         # ✨ Over the whole section, since the ratings it fixed may be on an earlier page than its completion.
         "holds_fixed_answers": any(block["id"] in fixed for block in section["blocks"]),
         # ✨ The way on, "Continue →" or completion. Going on from a page is refused on exactly these and `unmet`.
-        "offers_way_on": activity_open and not sort_pending,
+        "offers_way_on": activity_open and not sort_pending and not parts_pending,
         # ✨ What the checklist marks unmet: on the last page, where completing checks it, the whole gate.
         "unmet": [message for message, met, _ in gate_checklist if not met],
         "checklist": gate_checklist,
         # ✨ Where the document asks for it (ticket 83), the checklist only once a press is refused, and unmet alone.
-        "messages_after_a_press": version.document.get("messages_after_a_press", False),
+        "messages_after_a_press": messages_after_a_press(version.document),
     }
 
 
-def _saves_quietly(document, section, block):
-    """✨ Whether a block's answer saves without saying "Saved": every answer on a wizard's pages (ticket 83), and a 1–10
-    rating where the document asks for it (`ratings_save_quietly`, sprint-3c-r3-fix-15), as *Whatever You Do*'s letter
-    does. A refusal still says why."""
-    return bool(section.get("wizard")) or (
-        document.get("ratings_save_quietly", False) and block["type"] == "agreement_scale"
-    )
+def _way_on_label(block):
+    """✨ The label of the press leading on from a page, from the block it is for (`way_on_named_by`): its
+    `continue_label`, or None for "Continue →", as where the press is for no block (ticket 107)."""
+    if block is None or "continue_label" not in block:
+        return None
+    return text_for(block["continue_label"], "participant")
+
+
+def _sent_with_its_page(state, block, seals):
+    """✨ Whether a block shown on a page has an answer its page's form sends (sprint-3d-r1-fix-6): an ordinary answer
+    (`sent_with_its_page`) that can still be changed there, so not fixed, not a sealed letter and not waiting on the
+    comparison, each of which the page draws with nothing to send."""
+    if not BLOCK_TYPES[block["type"]].sent_with_its_page:
+        return False
+    if block["id"] in state.fixed or block["id"] in seals:
+        return False
+    return comparison_wait_message(block, state.answers) is None
+
+
+def _previous_page(section, page, sealed_ids):
+    """✨ Where "← Previous page" leads: the page before, at its way on, the press that left it (ticket 41e), or at the
+    block that press was for, so going back to the letter lands on it (ticket 107). None on the first page."""
+    if page == 1:
+        return None
+    named = way_on_named_by(pages_of(section)[page - 2], sealed_ids)
+    anchor = f"block-{named['id']}" if named else "completion"
+    return f"{page_url(section['id'], page - 1)}#{anchor}"
 
 
 def _completes_itself(section):
@@ -2685,10 +3293,15 @@ def _completes_itself(section):
     return "part_of" in section or "side_card" in section
 
 
-def _reopens(section):
-    """✨ Whether the participant can take back a section's completion: not one that completes itself, nor a wizard,
-    which once complete is never asked for again (ticket 50)."""
-    return not _completes_itself(section) and not section.get("wizard")
+def _reopens(section, sections):
+    """✨ Whether the participant can take back a section's completion: not one that completes itself, nor one its
+    evaluation completes (ticket 119), which would complete again at once, nor a wizard, which once complete is never
+    asked for again (ticket 50)."""
+    return (
+        not _completes_itself(section)
+        and completes_with_its_evaluation(section, sections) is None
+        and not section.get("wizard")
+    )
 
 
 def _section_this_is_part_of(state, section):
@@ -2698,7 +3311,7 @@ def _section_this_is_part_of(state, section):
     reached = state.reached(parent_section) if parent_section else None
     if reached is None:
         return None
-    return {"title": text_for(parent_section["title"], "participant"), "href": page_url(parent_section["id"], reached)}
+    return _way_back(parent_section, reached)
 
 
 def _section_holding_comparison_signpost(state, sort_id):
@@ -2710,7 +3323,12 @@ def _section_holding_comparison_signpost(state, sort_id):
     if held is None:
         return None
     section, reached = held
-    return {"title": text_for(section["title"], "participant"), "href": page_url(section["id"], reached)}
+    return _way_back(section, reached)
+
+
+def _way_back(section, page):
+    """✨ A way back to a page of a section, as a back button names it: {"title", "href"}."""
+    return {"title": text_for(section["title"], "participant"), "href": page_url(section["id"], page)}
 
 
 def _sections_holding_comparison_signpost(state, sort_id):
@@ -2752,7 +3370,7 @@ def _reflection_after_comparison(state, sort_id):
     for block in section["blocks"]:
         if block.get("after_comparison", {}).get("sort") == sort_id and page_of(section, block["id"]) is not None:
             return {
-                "label": "On to your workbook →" if block["type"] == "download" else "On to your reflection →",
+                "label": BLOCK_TYPES[block["type"]].onward_label,
                 "href": f"{page_url(section['id'], page_of(section, block['id']))}#{landing_of(block)}",
             }
     return None
@@ -2761,13 +3379,15 @@ def _reflection_after_comparison(state, sort_id):
 def _finish_of(state, part):
     """✨ The finish a part's end offers when the part is the last thing in its section (ticket 88), as a `Finish`;
     once its section is complete, the end offers nothing in its place, the way back at the
-    page's top being the only one (ticket 96). None for a part that ends nothing, or whose section the participant
+    page's top being the only one (ticket 96), save where its evaluation completed it, when its label is the way on to
+    the hub's next step (ticket 119). None for a part that ends nothing, or whose section the participant
     has not reached. Pressing it is that section's own completion, so its gate refuses it exactly as it refuses the
     section's own button."""
     ended = section_ended_by(state.version.document, part)
     if ended is None or state.reached(ended) is None:
         return None
-    return Finish(ended["id"], _complete_label(ended), ended["id"] in state.completed)
+    way_on = completes_with_its_evaluation(ended, state.sections) is not None
+    return Finish(ended["id"], _complete_label(ended), ended["id"] in state.completed, way_on)
 
 
 def _complete_label(section):
@@ -2775,13 +3395,17 @@ def _complete_label(section):
     return text_for(section.get("complete_label", "Mark complete"), "participant")
 
 
-def _requirement_links(state, section):
+def _requirement_links(state, section, page):
     """✨ Where each of a section's requirements met on another page is met, by its message (ticket 41b): a coach's link
     on the coach page, people's links on the invitations page. One whose page is not open yet is left out, and so is one
-    met in this section itself, as on a hub side card (ticket 52)."""
+    met in this section itself, as on a hub side card (ticket 52). One met on another page of this section, as the
+    letter is on the page before its seal, leads to its block there (ticket 107)."""
     document = state.version.document
     links = {}
     for clause in clauses_of(section):
+        on_page = page_of(section, clause["block"])
+        if on_page is not None and on_page != page:
+            links.setdefault(clause_message(clause), _block_address(document, clause["block"]))
         if clause["type"] != "links_issued":
             continue
         block = next(block for block in blocks_of(document) if block["id"] == clause["block"])
@@ -2816,8 +3440,11 @@ def _comparison_signpost_shown(state, block):
     `comparison_status` words it, once there is a result; None before, and for any other block (ticket 67a). Below the
     minimum, where `_invite` marks the way to invite people `waiting`, the status says its phrase (fix-3), and the press
     is greyed (fix-8). Between a retake and the new sort, it is `unsorted`: the press greyed and its line leading back
-    to the sort (29 Oct), where before it showed nothing. That is while the sort's section, or the one it is part of,
-    stays finished, as a retake leaves it; before the first sort it cannot be."""
+    to the sort (29 Oct), in `COMPARISON_UNSORTED`'s words. That is while the sort's section, or the one it is part
+    of, stays finished, as a retake leaves it; before the first sort it cannot be. Where the document puts the freeze
+    warning beside the press, `warning` is that warning while a press would freeze answer collection, or None; and
+    `signpost` is the address of the signpost on its page, where a hub row or sidebar entry with no room for the
+    warning leads meanwhile (ticket 106)."""
     if block["type"] != "comparison_signpost":
         return None
     sort = block["sort"]
@@ -2825,19 +3452,30 @@ def _comparison_signpost_shown(state, block):
         section = section_of(state.version.document, sort)
         if not {section["id"], section.get("part_of")} & set(state.completed):
             return None
+        link, rest = COMPARISON_UNSORTED
         return {
             "sort": sort,
             "status": "waiting",
-            "label": "Finish your strengths evaluation to compare.",
+            "label": f"{link} {rest}".removesuffix("."),
             "invite": _invite(state),
             "unsorted": page_url(section["id"], page_of(section, sort)),
+            "unsorted_line": {"link": link, "rest": rest},
         }
-    answered = _answered(state.response)
+    document = state.version.document
+    answered, minimum = _answered(state.response), minimum_observers(document)
     viewed = comparison_viewed(state.answers, sort)
-    status, label = comparison_status(answered, minimum_observers(state.version.document), viewed)
+    status, label = comparison_status(answered, minimum, viewed)
     invite = _invite(state)
     shown = invite.phrase if invite and invite.waiting else label
-    return {"sort": sort, "status": status, "label": shown, "invite": invite}
+    warning = _freeze_warning(state.response, answered, minimum) if warns_beside_the_press(document) else None
+    return {
+        "sort": sort,
+        "status": status,
+        "label": shown,
+        "invite": invite,
+        "warning": warning,
+        "signpost": _block_address(document, block["id"]),
+    }
 
 
 def _block_for_participant(
@@ -2851,9 +3489,11 @@ def _block_for_participant(
     drawn=None,
     demo=None,
     comparison=None,
+    pairs_left=False,
     rows_back=None,
     coach_withdrew=False,
     observers_withdrew=0,
+    observers_declined=0,
     saves_quietly=False,
     letter=None,
 ):
@@ -2863,12 +3503,13 @@ def _block_for_participant(
     nobody (ticket 55); otherwise it offers "Add another person" until it shows the most rows it may (ticket 70). Its
     rows come back from a press without JavaScript as `rows_back` gives them (fix-1). `drawn` is a `sort_results`
     block's results, from `_sort_results_drawn`, and `comparison` a `comparison_signpost`'s status, from
-    `_comparison_signpost_shown`. A sort not yet in starts from `demo`, a demo profile, with its guide beside it
-    (fix-23). A coach checklist opens saying the coach withdrew while the response keeps that they did
+    `_comparison_signpost_shown`. A section signpost whose section's sort has `pairs_left`, from
+    `_signposted_pairs_left`, is not yet finished. A sort not yet in starts from `demo`, a demo profile, with its guide
+    beside it (fix-23). A coach checklist opens saying the coach withdrew while the response keeps that they did
     (`coach_withdrew`, ADR 0024). A contact list says how many observers withdrew, naming nobody
-    (`observers_withdrew`). One that `saves_quietly` says nothing on a save (`_saves_quietly`). A letter stands as
-    `letter` says (`letter_shown`), and while it is sealed its answer is left out, so nothing on the page can carry it
-    (ticket 104)."""
+    (`observers_withdrew`), and how many declined (`observers_declined`, ticket 120). One that `saves_quietly` says
+    nothing on a save (`blocks.saves_quietly`). A letter stands as `letter` says (`letter_shown`), and while it is
+    sealed its answer is left out, so nothing on the page can carry it (ticket 104)."""
     rows = _contact_rows(block, answers, issued, **(rows_back or {})) if block["type"] == "contact_list" else None
     widget = BLOCK_TYPES[block["type"]].widget
     shown_widget = widget(document, "participant", "") if widget else None  # ✨ the participant's wording names no one
@@ -2877,16 +3518,13 @@ def _block_for_participant(
         shown_widget = {**shown_widget, "placed": demo.sort}
     else:
         demo = None
-    text = authored_text(block, "participant")
-    if block["type"] in PASSAGE_BLOCK_TYPES:
-        for passage, shown in zip(block["passages"], text["passages"]):
-            shown["translation"] = translation_shown(document, passage)
+    text = text_shown(document, block, "participant")
     is_checklist = block["type"] == "coach_checklist"
     link = states.get(block["section"]) if block["type"] == "section_signpost" else None
     results = None
     if link is not None:
         linked = section_by_id(document, block["section"])
-        text, sort = signpost_shown(block, text, linked, link.status == COMPLETE, "participant")
+        text, sort = signpost_shown(block, text, linked, link.status == COMPLETE and not pairs_left, "participant")
         results = reverse("results", args=[sort]) if sort else None
     return {
         "rows": rows,
@@ -2899,6 +3537,9 @@ def _block_for_participant(
             else None
         ),
         "id": block["id"],
+        # ✨ The name its page's form sends its answer under, every answer on a page being sent at once
+        # (sprint-3d-r1-fix-6).
+        "field": page_field(block),
         "landing": landing_of(block),  # ✨ where saving it without JavaScript comes back to
         "type": block["type"],
         "template": f"engine/blocks/{block['type']}.html",
@@ -2912,6 +3553,7 @@ def _block_for_participant(
         "results": results,  # ✨ where a section signpost's button leads instead, once its section is done (ticket 61)
         "frozen": RESULTS_SEEN if frozen and block["type"] == "contact_list" else None,
         "withdrawn": withdrawn_sentence(observers_withdrew) if block["type"] == "contact_list" else None,
+        "declined": declined_sentence(observers_declined) if block["type"] == "contact_list" else None,
         "drawn": drawn,
         "comparison": comparison,
         # ✨ While it waits on the comparison, its authored message, and it is drawn disabled (ticket 68).

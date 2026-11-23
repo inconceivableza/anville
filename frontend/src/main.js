@@ -58,10 +58,43 @@ function notSaved(event) {
 document.addEventListener("htmx:responseError", notSaved);
 document.addEventListener("htmx:sendError", notSaved);
 
+// ✨ A press refused beneath its button (fix-2) stays until an answer changes after it. A text box saves as it loses the
+// focus to that press, and the save redraws `#gate-refusal`, replacing it, to take away a refused press's list once an
+// answer changes. Back before the press's answer, the redraw left that answer going into the replaced, unseen box;
+// back after it, the redraw wiped it. Either way the press seemed to do nothing (hand check of ticket 107, 18 Nov: a
+// letter too short). The press sent every answer and stored them before it was checked, so its answer is the newer:
+// a redraw is swapped in only while no press is on its way, and once something has been typed or chosen since the
+// last refusal came.
+let pressesOnTheirWay = 0;
+let answeredSinceRefusal = true;
+
+// ✨ A press is sent in the background into `#gate-refusal` beneath its button (fix-2); nothing else is sent there.
+const isPress = (event) => event.detail.target?.id === "gate-refusal";
+
+document.addEventListener("input", () => (answeredSinceRefusal = true));
+
+document.addEventListener("htmx:beforeRequest", (event) => {
+  if (isPress(event)) pressesOnTheirWay += 1;
+});
+
+document.addEventListener("htmx:afterRequest", (event) => {
+  if (isPress(event)) pressesOnTheirWay = Math.max(0, pressesOnTheirWay - 1);
+});
+
+document.addEventListener("htmx:afterSwap", (event) => {
+  if (event.detail.target?.id === "gate-refusal") answeredSinceRefusal = false;
+});
+
+document.addEventListener("htmx:oobBeforeSwap", (event) => {
+  if (event.detail.target?.id !== "gate-refusal") return;
+  if (pressesOnTheirWay > 0 || !answeredSinceRefusal) event.detail.shouldSwap = false;
+});
+
 // ✨ An autosaved answer is saved as it changes, so its form is never submitted as a page while JavaScript runs:
 // Enter in it would otherwise send it through the hidden fallback button and reload the page (fix-7). Without
 // JavaScript, that button and Enter still save it.
-// ✨ A contact list's Save belongs to the list's one form, not its row's (fix-1), hence the submitter too.
+// ✨ A contact list's Save belongs to the list's one form, not its row's (fix-1), and an answer's to its page's one
+// form, as the page's Save (sprint-3d-r1-fix-6), hence the submitter too.
 document.addEventListener("submit", (event) => {
   const fallback = event.target.querySelector(".save-fallback") || event.submitter?.matches(".save-fallback");
   if (fallback) event.preventDefault();
@@ -220,9 +253,11 @@ const OPENS_ON_IN_WORDS = new Intl.DateTimeFormat("en-GB", {
   timeZone: "UTC",
 });
 
+// ✨ The field belongs to the page's one form, away from it in the page (sprint-3d-r1-fix-6), so the words are found
+// beside the field itself.
 document.addEventListener("input", (event) => {
   if (!event.target.matches?.("[data-opens-on]")) return;
-  const words = event.target.closest("form").querySelector("[data-opens-on-words]");
+  const words = event.target.parentElement.querySelector("[data-opens-on-words]");
   const chosen = event.target.valueAsDate;
   words.textContent = chosen ? OPENS_ON_IN_WORDS.format(chosen).replace(",", "") : "";
 });
@@ -245,11 +280,12 @@ document.addEventListener("change", (event) => {
   shown.classList.remove("unset");
 });
 
-// ✨ Demo only (fix-20): a demo-only element marked data-demo-reveal (the sort page's "Load a demo profile (demo only)")
-// comes `hidden`, and only a demo system's markup carries one. Option/Alt held on its own for a second shows
-// it, or on a phone the element marked data-demo-reveal-hold (the page's title) pressed and held for a second; another
-// key, a click, letting go early or a scroll cancels. Once shown it stays until the page is left, so the participant
-// can let go and click it. On a page without one no listener is added.
+// ✨ Demo only (fix-20): a demo-only element marked data-demo-reveal (the sort page's "Load a demo profile (demo only)",
+// and since ticket 113 the observer's sort's demo profiles and the hub's demo shortcut) comes `hidden`, and only a demo
+// system's markup carries one. Option/Alt held on its own for a second shows it, or on a phone the element marked
+// data-demo-reveal-hold (the page's title, or the hub's "Welcome") pressed and held for a second; another key, a click,
+// letting go early or a scroll cancels. Once shown it stays until the page is left, so the participant can let go and
+// click it. On a page without one no listener is added.
 (() => {
   const hidden = [...document.querySelectorAll("[data-demo-reveal]")];
   if (!hidden.length) return;
@@ -387,6 +423,41 @@ if (document.querySelector("main.page") && !reducedMotion) {
     navigating = false;
   });
 }
+
+// --- "Join the waitlist" and "Contact us": "Stay in touch" opened with their own choice ticked (ticket 111) ---
+// ✨ Each link names its choice for the server to tick, and to put the focus on the address, which reloads the homepage
+// at the box. With JavaScript the page stays as it is and the box is brought to the top of the window with the focus
+// on the address (fix-4), whichever the box is showing:
+//   - the form on the page: tick the choice here, leaving any other tick and anything typed as it was;
+//   - the thanks in the form's place: ask the server for the form again by the link's own query, with htmx, and swap it
+//     in, the choice ticked and the address empty as on a fresh visit. Following the link itself would load the page
+//     again, restarting the hero video.
+// `settle:0` has htmx finish the swap, and focus the swapped-in form's `autofocus` address, before the scroll below.
+document.addEventListener("click", (event) => {
+  const modified = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+  if (event.defaultPrevented || event.button !== 0 || modified) return;
+  const link = event.target.closest("a[data-stay-choice]");
+  const box = document.getElementById("stay-in-touch");
+  if (!link || !box) return;
+  event.preventDefault();
+  const show = () => {
+    // ✨ as the page's other links jump, by the stylesheet's scroll padding
+    document.getElementById("stay-in-touch").scrollIntoView({ block: "start" });
+    document.getElementById("stayEmail").focus({ preventScroll: true });
+  };
+  const choice = [...box.querySelectorAll('input[name="choice"]')].find(
+    (input) => input.value === link.dataset.stayChoice,
+  );
+  if (choice) {
+    choice.checked = true;
+    show();
+    return;
+  }
+  htmx
+    .ajax("GET", `${link.pathname}${link.search}`, { target: "#stay-in-touch", swap: "outerHTML settle:0" })
+    .then(show)
+    .catch(() => window.location.assign(link.href)); // ✨ as without JavaScript
+});
 
 // --- "The difference it makes": each figure and its bar count up from 0 as it scrolls into view, as v3's do ---
 // ✨ The page holds the final figures, so with JavaScript off, with reduced motion, or in a browser without
