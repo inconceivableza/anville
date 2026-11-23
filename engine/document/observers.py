@@ -65,7 +65,9 @@ def minimum_observers(document):
 def counts(assessment):
     """✨ Whether an observer's assessment counts: toward the minimum and in the comparison's averages and spread. One
     with no card in a scored bucket, every card placed in "Haven't seen this" (ticket 108), has nothing to add, so it
-    counts for neither, though it is kept and can be withdrawn as any other (sprint-3d-r1-fix-1)."""
+    counts for neither (sprint-3d-r1-fix-1). Sent, it is the observer declining (ticket 120): `ObserverResponse.send`
+    keeps only when they declined, neither the assessment nor the relationship, and a decline is never offered
+    withdrawal."""
     return any(placement.get("seen", True) for placement in assessment.values())
 
 
