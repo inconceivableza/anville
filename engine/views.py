@@ -3165,8 +3165,11 @@ def _section_page(state, section, page=1, issued=None, demo=None, rows_back=None
             # →" (ticket 107), or None for "Continue →".
             "way_on_label": _way_on_label(named),
             # ✨ Whether the page has its own Save, shown without JavaScript beside its way on (sprint-3d-r1-fix-6):
-            # while any answer on it can be sent with its form.
-            "saves": any(_sent_with_its_page(state, block, seals) for block in blocks),
+            # while any answer on it can be sent with its form, or while it seals the letter, whose date the Save keeps
+            # (sprint-3d-r1-fix-3). Drawn before the seal, the Save is the form's first button, the one Enter in the
+            # date presses, so Enter there never seals the letter, even on a page with no other answer (code review of
+            # 23 Nov); with JavaScript, main.js then cancels it.
+            "saves": press is not None or any(_sent_with_its_page(state, block, seals) for block in blocks),
             "previous": _previous_page(section, page, seals),
         },
         "pathway": {

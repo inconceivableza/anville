@@ -12,7 +12,7 @@ from html import unescape
 
 import pytest
 
-from engine.models import Response
+from engine.models import Response, SealedLetter
 from tests.journeys.pages import gate_checklist, version_on
 from tests.journeys.test_hub import signed_in_client  # noqa: F401  (a fixture, used by name)
 from tests.journeys.test_letter_sealed import date_field
@@ -137,3 +137,34 @@ def test_without_javascript_the_save_on_the_page_that_seals_the_letter_keeps_the
     press(participant, QUESTIONS_PAGE, "Save", {QUESTIONS[0]: "4"}, opens_on=picked)
 
     assert date_field(participant.get(QUESTIONS_PAGE).content.decode())["value"] == picked
+
+
+@pytest.fixture
+def sealing_alone(signed_in_client, load_pathway):  # noqa: F811
+    """✨ *Whatever You Do* with the closing ratings taken off Section 6's second page, so the page that seals the
+    letter has no answer of its own to send."""
+    document = the_pathway()
+    [letter] = [section for section in document["content"]["sections"] if section["id"] == "letter"]
+    letter["blocks"] = [block for block in letter["blocks"] if block["type"] != "agreement_scale"]
+    letter["gate"]["clauses"] = [clause for clause in letter["gate"]["clauses"] if clause["block"] == "lt-message"]
+    load_pathway(document)
+    return signed_in_client
+
+
+@pytest.mark.django_db
+def test_on_a_page_sealing_the_letter_beside_no_answer_enter_in_the_date_presses_its_save_never_the_seal(
+    sealing_alone,
+):
+    """✨ Enter in a field presses its form's first button: with no Save drawn, that was the seal, which can't be undone
+    (code review of 23 Nov)."""
+    through_to_the_questions(sealing_alone)
+    page = sealing_alone.get(QUESTIONS_PAGE).content.decode()
+
+    buttons = re.findall(r"<button\b([^>]*)>(.*?)</button>", page, re.S)
+    first = next((tag, label.strip()) for tag, label in buttons if 'form="page-answers"' in tag)
+
+    assert first[1] == "Save" and "save-fallback" in first[0]
+    picked = date_field(page)["max"]
+    saved = sealing_alone.post(address_of(page, "Save"), {"opens_on": picked, "version": version_on(page)})
+    assert saved.status_code == 303 and not SealedLetter.objects.exists()
+    assert date_field(sealing_alone.get(QUESTIONS_PAGE).content.decode())["value"] == picked
